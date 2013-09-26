@@ -65,6 +65,8 @@ Release 2.3.0 - UNRELEASED
     created by CombineFileInputFormat to fail (Robert Parker and Jason Lowe
     via jlowe)
 
+    MAPREDUCE-5514. Fix TestRMContainerAllocator. (Zhijie Shen via acmurthy) 
+
 
 Release 2.2.0 - 2013-10-13
 

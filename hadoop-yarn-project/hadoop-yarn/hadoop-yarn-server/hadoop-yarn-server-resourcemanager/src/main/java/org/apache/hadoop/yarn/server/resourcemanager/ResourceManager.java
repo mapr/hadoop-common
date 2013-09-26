@@ -150,6 +150,12 @@ public class ResourceManager extends CompositeService implements Recoverable {
     return this.rmContext;
   }
   
+
+  @VisibleForTesting
+  protected static void setClusterTimeStamp(long timestamp) {
+    clusterTimeStamp = timestamp;
+  }
+
   @Override
   protected void serviceInit(Configuration conf) throws Exception {
 
