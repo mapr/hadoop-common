@@ -388,6 +388,36 @@ public class ResourceManager extends CompositeService implements Recoverable {
           + ", " + YarnConfiguration.RM_NM_HEARTBEAT_INTERVAL_MS + "="
           + heartbeatIntvl);
     }
+
+    protected void createPolicyMonitors() {
+      if (scheduler instanceof PreemptableResourceScheduler
+          && conf.getBoolean(YarnConfiguration.RM_SCHEDULER_ENABLE_MONITORS,
+          YarnConfiguration.DEFAULT_RM_SCHEDULER_ENABLE_MONITORS)) {
+        LOG.info("Loading policy monitors");
+        List<SchedulingEditPolicy> policies = conf.getInstances(
+            YarnConfiguration.RM_SCHEDULER_MONITOR_POLICIES,
+            SchedulingEditPolicy.class);
+        if (policies.size() > 0) {
+          rmDispatcher.register(ContainerPreemptEventType.class,
+              new RMContainerPreemptEventDispatcher(
+                  (PreemptableResourceScheduler) scheduler));
+          for (SchedulingEditPolicy policy : policies) {
+            LOG.info("LOADING SchedulingEditPolicy:" + policy.getPolicyName());
+            policy.init(conf, rmContext.getDispatcher().getEventHandler(),
+                (PreemptableResourceScheduler) scheduler);
+            // periodically check whether we need to take action to guarantee
+            // constraints
+            SchedulingMonitor mon = new SchedulingMonitor(policy);
+            addService(mon);
+          }
+        } else {
+          LOG.warn("Policy monitors configured (" +
+              YarnConfiguration.RM_SCHEDULER_ENABLE_MONITORS +
+              ") but none specified (" +
+              YarnConfiguration.RM_SCHEDULER_MONITOR_POLICIES + ")");
+        }
+      }
+    }
   }
 
   @Private
@@ -754,37 +784,6 @@ public class ResourceManager extends CompositeService implements Recoverable {
 
   protected ApplicationMasterService createApplicationMasterService() {
     return new ApplicationMasterService(this.rmContext, scheduler);
-  }
-
-  protected void createPolicyMonitors() {
-    if (scheduler instanceof PreemptableResourceScheduler
-        && conf.getBoolean(YarnConfiguration.RM_SCHEDULER_ENABLE_MONITORS,
-          YarnConfiguration.DEFAULT_RM_SCHEDULER_ENABLE_MONITORS)) {
-      LOG.info("Loading policy monitors");
-      List<SchedulingEditPolicy> policies = conf.getInstances(
-              YarnConfiguration.RM_SCHEDULER_MONITOR_POLICIES,
-              SchedulingEditPolicy.class);
-      if (policies.size() > 0) {
-        this.rmDispatcher.register(ContainerPreemptEventType.class,
-          new RMContainerPreemptEventDispatcher(
-            (PreemptableResourceScheduler) scheduler));
-        for (SchedulingEditPolicy policy : policies) {
-          LOG.info("LOADING SchedulingEditPolicy:" + policy.getPolicyName());
-          policy.init(conf, this.rmContext.getDispatcher().getEventHandler(),
-              (PreemptableResourceScheduler) scheduler);
-          // periodically check whether we need to take action to guarantee
-          // constraints
-          SchedulingMonitor mon = new SchedulingMonitor(policy);
-          addService(mon);
-
-        }
-      } else {
-        LOG.warn("Policy monitors configured (" +
-            YarnConfiguration.RM_SCHEDULER_ENABLE_MONITORS +
-            ") but none specified (" +
-            YarnConfiguration.RM_SCHEDULER_MONITOR_POLICIES + ")");
-      }
-    }
   }
 
   protected AdminService createAdminService(

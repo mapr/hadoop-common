@@ -94,6 +94,9 @@ Release 2.3.0 - UNRELEASED
     YARN-1053. Diagnostic message from ContainerExitEvent is ignored in
     ContainerImpl (Omkar Vinit Joshi via bikas)
 
+    YARN-1374. Changed ResourceManager to start the preemption policy monitors
+    as active services. (Karthik Kambatla via vinodkv)
+
 
 Release 2.2.0 - 2013-10-13
 
