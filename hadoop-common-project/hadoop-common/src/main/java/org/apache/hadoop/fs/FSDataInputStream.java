@@ -31,6 +31,15 @@ public class FSDataInputStream extends DataInputStream
     implements Seekable, PositionedReadable, Closeable,
     ByteBufferReadable, HasFileDescriptor, CanSetDropBehind, CanSetReadahead {
 
+  /**
+   * Used by MapR Client for Random and Sequential File Access.
+   */
+  public static enum FadviseType {
+    FILE_DONTNEED,
+    FILE_RANDOM,
+    FILE_SEQUENTIAL;
+  }
+
   public FSDataInputStream(InputStream in)
     throws IOException {
     super(in);

@@ -35,9 +35,32 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <is.hadoop.component>true</is.hadoop.component>
     <require.fuse>false</require.fuse>
     <require.libwebhdfs>false</require.libwebhdfs>
+    <mapr.version>1.0.3-mapr-3.2.0-SNAPSHOT</mapr.version>
   </properties>
 
   <dependencies>
+    <!-- MapR -->
+    <dependency>
+      <groupId>com.mapr.hadoop</groupId>
+      <artifactId>maprfs</artifactId>
+      <version>${mapr.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.mapr.hadoop</groupId>
+      <artifactId>maprfs-jni</artifactId>
+      <version>${mapr.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.mapr.fs</groupId>
+      <artifactId>security</artifactId>
+      <version>${mapr.version}</version>
+      <scope>test</scope>
+    </dependency>
+
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-annotations</artifactId>
@@ -181,6 +204,80 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>default-testCompile</id>
+            <phase>test-compile</phase>
+            <configuration>
+              <testIncludes>
+                <include>**/TestFileCreation.java</include>
+                <include>**/HATestUtil.java</include>
+		<include>**/TestStandbyCheckpoints.java</include>
+              </testIncludes>
+              <testExcludes>
+                <exclude>**/TestDFSUpgradeWithHA.java</exclude>
+                <exclude>**/TestFailureOfSharedDir.java</exclude>
+                <exclude>**/TestFSImageWithSnapshot.java</exclude>
+                <exclude>**/TestSnapshotDiffReport.java</exclude>
+                <exclude>**/TestEditLog.java</exclude>
+                <exclude>**/TestINodeFile.java</exclude>
+                <exclude>**/TestCheckpoint.java</exclude>
+                <exclude>**/TestSetQuotaWithSnapshot.java</exclude>
+                <exclude>**/TestMiniDFSCluster.java</exclude>
+                <exclude>**/OfflineEditsViewerHelper.java</exclude>
+                <exclude>**/TestSecurityTokenEditLog.java</exclude>
+                <exclude>**/TestPendingReplication.java</exclude>
+                <exclude>**/TestInterDatanodeProtocol.java</exclude>
+                <exclude>**/TestRefreshNamenodes.java</exclude>
+                <exclude>**/TestSnapshot.java</exclude>
+                <exclude>**/TestDelegationToken.java</exclude>
+                <exclude>**/TestSnapshotListing.java</exclude>
+                <exclude>**/TestSnapshotMetrics.java</exclude>
+                <exclude>**/TestAbandonBlock.java</exclude>
+                <exclude>**/TestSnapshotBlocksMap.java</exclude>
+                <exclude>**/TestSafeMode.java</exclude>
+                <exclude>**/TestDFSClientRetries.java</exclude>
+                <exclude>**/TestRenameWithSnapshots.java</exclude>
+                <exclude>**/TestDistributedFileSystem.java</exclude>
+                <exclude>**/TestLeaseRecovery2.java</exclude>
+                <exclude>**/TestNestedSnapshots.java</exclude>
+                <exclude>**/TestFileStatus.java</exclude>
+                <exclude>**/TestWebHdfsDataLocality.java</exclude>
+                <exclude>**/TestDataNodeMultipleRegistrations.java</exclude>
+                <exclude>**/TestDiskError.java</exclude>
+                <exclude>**/TestDFSClientFailover.java</exclude>
+                <exclude>**/TestFileAppend4.java</exclude>
+                <exclude>**/TestSnapshotReplication.java</exclude>
+                <exclude>**/TestSnapshotRename.java</exclude>
+                <exclude>**/TestINodeFileUnderConstructionWithSnapshot.java</exclude>
+                <exclude>**/TestSnapshotPathINodes.java</exclude>
+                <exclude>**/TestFcHdfsSymlink.java</exclude>
+                <exclude>**/TestSnapshottableDirListing.java</exclude>
+                <exclude>**/TestSymlinkHdfs.java</exclude>
+                <exclude>**/TestDisallowModifyROSnapshot.java</exclude>
+                <exclude>**/TestBlockRecovery.java</exclude>
+                <exclude>**/TestFSDirectory.java</exclude>
+                <exclude>**/TestSnapshotDeletion.java</exclude>
+                <exclude>**/TestFavoredNodesEndToEnd.java</exclude>
+                <exclude>**/TestSnapshotFileLength.java</exclude>
+                <exclude>**/TestFileAppendRestart.java</exclude>
+                <exclude>**/TestBlockReaderLocal.java</exclude>
+                <exclude>**/TestNamenodeRetryCache.java</exclude>
+                <exclude>**/TestInterDatanodeProtocol.java</exclude>
+                <exclude>**/MiniDFSClusterWithNodeGroup.java</exclude>
+                <exclude>**/TestTransferRbw.java</exclude>
+              </testExcludes>
+            </configuration>
+            <goals>
+              <goal>testCompile</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <properties>
@@ -189,6 +286,20 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
               <value>org.apache.hadoop.test.TimedOutTestsListener</value>
             </property>
           </properties>
+
+          <excludes>
+            <exclude>**/TestStandbyCheckpoints.java</exclude>
+          </excludes>
+
+          <systemProperties>
+            <property>
+              <name>java.library.path</name>
+              <value>/opt/mapr/lib/</value>
+            </property>
+          </systemProperties>
+          <environmentVariables>
+            <LD_LIBRARY_PATH>/opt/mapr/lib</LD_LIBRARY_PATH>
+          </environmentVariables>
         </configuration>
       </plugin>
       <plugin>
