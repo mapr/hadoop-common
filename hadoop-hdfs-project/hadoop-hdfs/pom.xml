@@ -212,8 +212,8 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
             <configuration>
               <testIncludes>
                 <include>**/TestFileCreation.java</include>
-                <include>**/HATestUtil.java</include>
-		<include>**/TestStandbyCheckpoints.java</include>
+                <!--include>**/HATestUtil.java</include>
+		<include>**/TestStandbyCheckpoints.java</include-->
               </testIncludes>
               <testExcludes>
                 <exclude>**/TestDFSUpgradeWithHA.java</exclude>
@@ -226,6 +226,7 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
                 <exclude>**/TestSetQuotaWithSnapshot.java</exclude>
                 <exclude>**/TestMiniDFSCluster.java</exclude>
                 <exclude>**/OfflineEditsViewerHelper.java</exclude>
+                <exclude>**/TestOfflineEditsViewer.java</exclude>
                 <exclude>**/TestSecurityTokenEditLog.java</exclude>
                 <exclude>**/TestPendingReplication.java</exclude>
                 <exclude>**/TestInterDatanodeProtocol.java</exclude>
@@ -238,9 +239,11 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
                 <exclude>**/TestSnapshotBlocksMap.java</exclude>
                 <exclude>**/TestSafeMode.java</exclude>
                 <exclude>**/TestDFSClientRetries.java</exclude>
+                <exclude>**/TestWebHDFS.java</exclude>
                 <exclude>**/TestRenameWithSnapshots.java</exclude>
                 <exclude>**/TestDistributedFileSystem.java</exclude>
                 <exclude>**/TestLeaseRecovery2.java</exclude>
+                <exclude>**/TestLeaseRecovery.java</exclude>
                 <exclude>**/TestNestedSnapshots.java</exclude>
                 <exclude>**/TestFileStatus.java</exclude>
                 <exclude>**/TestWebHdfsDataLocality.java</exclude>
@@ -255,6 +258,8 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
                 <exclude>**/TestFcHdfsSymlink.java</exclude>
                 <exclude>**/TestSnapshottableDirListing.java</exclude>
                 <exclude>**/TestSymlinkHdfs.java</exclude>
+                <exclude>**/TestSymlinkHdfsDisable.java</exclude>
+                <exclude>**/TestSymlinkHdfsFileContext.java</exclude>
                 <exclude>**/TestDisallowModifyROSnapshot.java</exclude>
                 <exclude>**/TestBlockRecovery.java</exclude>
                 <exclude>**/TestFSDirectory.java</exclude>
@@ -264,9 +269,14 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
                 <exclude>**/TestFileAppendRestart.java</exclude>
                 <exclude>**/TestBlockReaderLocal.java</exclude>
                 <exclude>**/TestNamenodeRetryCache.java</exclude>
-                <exclude>**/TestInterDatanodeProtocol.java</exclude>
+                <exclude>**/TestLeaseReccovery.java</exclude>
                 <exclude>**/MiniDFSClusterWithNodeGroup.java</exclude>
+                <exclude>**/TestBalancerWithNodeGroup.java</exclude>
                 <exclude>**/TestTransferRbw.java</exclude>
+                <exclude>**/TestDFSClientExcludedNodes.java</exclude>
+                <exclude>**/TestBackupNode.java</exclude>
+                <exclude>**/TestListPathServlet.java</exclude>
+                <exclude>**/TestSymlinkHdfsFileSystem.java</exclude>
               </testExcludes>
             </configuration>
             <goals>

@@ -18,20 +18,59 @@
 
 package org.apache.hadoop.hdfs;
 
-import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
+import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_RPC_ADDRESS_KEY;
+import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_SERVICE_RPC_ADDRESS_KEY;
+import static org.junit.Assert.assertEquals;
+
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.URL;
+import java.net.URLConnection;
+import java.security.PrivilegedExceptionAction;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.TimeoutException;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.*;
+import org.apache.hadoop.fs.BlockLocation;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileContext;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileSystem.Statistics;
 import org.apache.hadoop.fs.Options.Rename;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.hadoop.hdfs.MiniDFSCluster.NameNodeInfo;
 import org.apache.hadoop.hdfs.client.HdfsDataInputStream;
-import org.apache.hadoop.hdfs.protocol.*;
+import org.apache.hadoop.hdfs.protocol.DatanodeID;
+import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo.AdminStates;
+import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
+import org.apache.hadoop.hdfs.protocol.HdfsConstants;
+import org.apache.hadoop.hdfs.protocol.LocatedBlock;
+import org.apache.hadoop.hdfs.protocol.LocatedBlocks;
 import org.apache.hadoop.hdfs.protocol.datatransfer.Sender;
 import org.apache.hadoop.hdfs.protocol.proto.DataTransferProtos.BlockOpResponseProto;
 import org.apache.hadoop.hdfs.security.token.block.BlockTokenIdentifier;
@@ -53,15 +92,8 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.util.VersionInfo;
 
-import java.io.*;
-import java.net.*;
-import java.security.PrivilegedExceptionAction;
-import java.util.*;
-import java.util.concurrent.TimeoutException;
-
-import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_RPC_ADDRESS_KEY;
-import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_SERVICE_RPC_ADDRESS_KEY;
-import static org.junit.Assert.assertEquals;
+import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 
 /** Utilities for HDFS tests */
 public class DFSTestUtil {
@@ -299,7 +331,7 @@ public class DFSTestUtil {
   public static boolean allBlockReplicasCorrupt(MiniDFSCluster cluster,
       Path file, int blockNo) throws IOException {
     DFSClient client = new DFSClient(new InetSocketAddress("localhost",
-        cluster.getNameNodePort()), cluster.getConfiguration(0));
+        ((MiniHDFSCluster) cluster).getNameNodePort()), ((MiniHDFSCluster) cluster).getConfiguration(0));
     LocatedBlocks blocks;
     try {
        blocks = client.getNamenode().getBlockLocations(
@@ -326,7 +358,7 @@ public class DFSTestUtil {
 
     do {
       Thread.sleep(1000);
-      int[] r = BlockManagerTestUtil.getReplicaInfo(cluster.getNamesystem(),
+      int[] r = BlockManagerTestUtil.getReplicaInfo(((MiniHDFSCluster) cluster).getNamesystem(),
           b.getLocalBlock());
       curRacks = r[0];
       curReplicas = r[1];
@@ -407,9 +439,9 @@ public class DFSTestUtil {
    */
   public static int firstDnWithBlock(MiniDFSCluster cluster, ExtendedBlock b)
       throws IOException {
-    int numDatanodes = cluster.getDataNodes().size();
+    int numDatanodes = ((MiniHDFSCluster) cluster).getDataNodes().size();
     for (int i = 0; i < numDatanodes; i++) {
-      String blockContent = cluster.readBlockOnDataNode(i, b);
+      String blockContent = ((MiniHDFSCluster) cluster).readBlockOnDataNode(i, b);
       if (blockContent != null) {
         return i;
       }
@@ -775,7 +807,7 @@ public class DFSTestUtil {
   public static void setFederatedConfiguration(MiniDFSCluster cluster,
       Configuration conf) {
     Set<String> nameservices = new HashSet<String>();
-    for (NameNodeInfo info : cluster.getNameNodeInfos()) {
+    for (MiniHDFSCluster.NameNodeInfo info : ((MiniHDFSCluster) cluster).getNameNodeInfos()) {
       assert info.nameserviceId != null;
       nameservices.add(info.nameserviceId);
       conf.set(DFSUtil.addKeySuffixes(DFS_NAMENODE_RPC_ADDRESS_KEY,
@@ -924,7 +956,7 @@ public class DFSTestUtil {
       DistributedFileSystem filesystem, Configuration conf, long blockSize, 
       int nnIndex) throws IOException {
     // create FileContext for rename2
-    FileContext fc = FileContext.getFileContext(cluster.getURI(0), conf);
+    FileContext fc = FileContext.getFileContext(((MiniHDFSCluster) cluster).getURI(0), conf);
     
     // OP_ADD 0
     final Path pathFileCreate = new Path("/file_create");
@@ -1003,7 +1035,7 @@ public class DFSTestUtil {
     leaseRecoveryPath.write(bytes);
     leaseRecoveryPath.hflush();
     // Set the hard lease timeout to 1 second.
-    cluster.setLeasePeriod(60 * 1000, 1000, nnIndex);
+    ((MiniHDFSCluster) cluster).setLeasePeriod(60 * 1000, 1000, nnIndex);
     // wait for lease recovery to complete
     LocatedBlocks locatedBlocks;
     do {
@@ -1011,7 +1043,7 @@ public class DFSTestUtil {
         Thread.sleep(1000);
       } catch (InterruptedException e) {}
       locatedBlocks = DFSClientAdapter.callGetBlockLocations(
-          cluster.getNameNodeRpc(nnIndex), filePath, 0L, bytes.length);
+          ((MiniHDFSCluster) cluster).getNameNodeRpc(nnIndex), filePath, 0L, bytes.length);
     } while (locatedBlocks.isUnderConstruction());
   }
 }

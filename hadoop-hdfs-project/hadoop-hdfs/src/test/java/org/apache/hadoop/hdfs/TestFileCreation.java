@@ -60,7 +60,6 @@ import org.apache.hadoop.fs.ParentNotDirectoryException;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.client.HdfsDataOutputStream;
-import org.apache.hadoop.hdfs.protocol.AlreadyBeingCreatedException;
 import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
@@ -78,7 +77,6 @@ import org.apache.hadoop.hdfs.server.protocol.NamenodeProtocols;
 import org.apache.hadoop.io.EnumSetWritable;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.util.Time;
 import org.apache.log4j.Level;
 import org.junit.Test;
@@ -220,9 +218,9 @@ public class TestFileCreation {
     if (simulatedStorage) {
       SimulatedFSDataset.setFactory(conf);
     }
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
       .checkDataNodeHostConfig(true)
-      .build();
+      .buildHDFS();
     FileSystem fs = cluster.getFileSystem();
     try {
 
@@ -258,9 +256,8 @@ public class TestFileCreation {
       Path file1 = new Path("filestatus.dat");
       Path parent = file1.getParent();
       fs.mkdirs(parent);
-      // krajah:dfs
-      /*DistributedFileSystem dfs = (DistributedFileSystem)fs;
-      dfs.setQuota(file1.getParent(), 100L, blockSize*5);*/
+      DistributedFileSystem dfs = (DistributedFileSystem) fs;
+      dfs.setQuota(file1.getParent(), 100L, blockSize*5);
       FSDataOutputStream stm = createFile(fs, file1, 1);
 
       // verify that file exists in FS namespace
@@ -370,7 +367,7 @@ public class TestFileCreation {
     Configuration conf = new HdfsConfiguration();
     SimulatedFSDataset.setFactory(conf);
     conf.setBoolean(DFSConfigKeys.DFS_PERMISSIONS_ENABLED_KEY, false);
-    final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).build();
+    final MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
     FileSystem fs = cluster.getFileSystem();
 
     UserGroupInformation otherUgi = UserGroupInformation.createUserForTesting(
@@ -420,8 +417,7 @@ public class TestFileCreation {
   /**
    * Test that file data does not become corrupted even in the face of errors.
    */
-  //@Test
-  // krajah:dfsclient
+  @Test
   public void testFileCreationError1() throws IOException {
     Configuration conf = new HdfsConfiguration();
     conf.setInt(DFS_NAMENODE_HEARTBEAT_RECHECK_INTERVAL_KEY, 1000);
@@ -430,7 +426,7 @@ public class TestFileCreation {
       SimulatedFSDataset.setFactory(conf);
     }
     // create cluster
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
     FileSystem fs = cluster.getFileSystem();
     cluster.waitActive();
     InetSocketAddress addr = new InetSocketAddress("localhost",
@@ -494,9 +490,7 @@ public class TestFileCreation {
    * Test that the filesystem removes the last block from a file if its
    * lease expires.
    */
-  // krajah:dfs
-  /*
-  //@Test
+  @Test
   public void testFileCreationError2() throws IOException {
     long leasePeriod = 1000;
     System.out.println("testFileCreationError2 start");
@@ -507,7 +501,7 @@ public class TestFileCreation {
       SimulatedFSDataset.setFactory(conf);
     }
     // create cluster
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
     DistributedFileSystem dfs = null;
     try {
       cluster.waitActive();
@@ -560,17 +554,14 @@ public class TestFileCreation {
       cluster.shutdown();
     }
   }
-  */
 
   /** test addBlock(..) when replication<min and excludeNodes==null. */
-  // krajah:dfs
-  /*
-  //@Test
+  @Test
   public void testFileCreationError3() throws IOException {
     System.out.println("testFileCreationError3 start");
     Configuration conf = new HdfsConfiguration();
     // create cluster
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(0).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(0).buildHDFS();
     DistributedFileSystem dfs = null;
     try {
       cluster.waitActive();
@@ -594,13 +585,11 @@ public class TestFileCreation {
       cluster.shutdown();
     }
   }
-  */
 
   /**
    * Test that file leases are persisted across namenode restarts.
    */
-  // krajah:dfs
-  /*//@Test
+  @Test
   public void testFileCreationNamenodeRestart() throws IOException {
     Configuration conf = new HdfsConfiguration();
     final int MAX_IDLE_TIME = 2000; // 2s
@@ -612,7 +601,7 @@ public class TestFileCreation {
     }
 
     // create cluster
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
     DistributedFileSystem fs = null;
     try {
       cluster.waitActive();
@@ -680,7 +669,7 @@ public class TestFileCreation {
       }
       cluster = new MiniDFSCluster.Builder(conf).nameNodePort(nnport)
                                                .format(false)
-                                               .build();
+                                               .buildHDFS();
       cluster.waitActive();
 
       // restart cluster yet again. This triggers the code to read in
@@ -692,7 +681,7 @@ public class TestFileCreation {
       }
       cluster = new MiniDFSCluster.Builder(conf).nameNodePort(nnport)
                                                 .format(false)
-                                                .build();
+                                                .buildHDFS();
       cluster.waitActive();
       fs = cluster.getFileSystem();
 
@@ -735,20 +724,18 @@ public class TestFileCreation {
       cluster.shutdown();
     }
   }
-*/
 
   /**
    * Test that all open files are closed when client dies abnormally.
    */
-  //@Test
-  // krajah:dfs
+  @Test
   public void testDFSClientDeath() throws IOException, InterruptedException {
     Configuration conf = new HdfsConfiguration();
     System.out.println("Testing adbornal client death.");
     if (simulatedStorage) {
       SimulatedFSDataset.setFactory(conf);
     }
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
     FileSystem fs = cluster.getFileSystem();
     DistributedFileSystem dfs = (DistributedFileSystem) fs;
     DFSClient dfsclient = dfs.dfs;
@@ -778,14 +765,13 @@ public class TestFileCreation {
   /**
    * Test file creation using createNonRecursive().
    */
-  //@Test
-  // krajah:dfs
+  @Test
   public void testFileCreationNonRecursive() throws IOException {
     Configuration conf = new HdfsConfiguration();
     if (simulatedStorage) {
       SimulatedFSDataset.setFactory(conf);
     }
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).build();
+    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
     FileSystem fs = cluster.getFileSystem();
     final Path path = new Path("/" + Time.now()
         + "-testFileCreationNonRecursive");
@@ -874,7 +860,7 @@ public class TestFileCreation {
 /**
  * Test that file data becomes available before file is closed.
  */
-  //@Test
+  @Test
   public void testFileCreationSimulated() throws IOException {
     simulatedStorage = true;
     testFileCreation();
@@ -953,8 +939,7 @@ public class TestFileCreation {
    * Then change lease period and wait for lease recovery.
    * Finally, read the block directly from each Datanode and verify the content.
    */
-  // krajah:dfs
-  /*//@Test
+  @Test
   public void testLeaseExpireHardLimit() throws Exception {
     System.out.println("testLeaseExpireHardLimit start");
     final long leasePeriod = 1000;
@@ -965,7 +950,7 @@ public class TestFileCreation {
     conf.setInt(DFS_HEARTBEAT_INTERVAL_KEY, 1);
 
     // create cluster
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(DATANODE_NUM).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(DATANODE_NUM).buildHDFS();
     DistributedFileSystem dfs = null;
     try {
       cluster.waitActive();
@@ -1016,7 +1001,6 @@ public class TestFileCreation {
 
     System.out.println("testLeaseExpireHardLimit successful");
   }
-  */
 
   // test closing file system before all file handles are closed.
   @Test
@@ -1102,7 +1086,7 @@ public class TestFileCreation {
    * This test RPCs directly to the NN, to ensure that even an old client
    * which passes an invalid path won't cause corrupt edits.
    */
-  //@Test
+  @Test
   public void testCreateNonCanonicalPathAndRestartRpc() throws Exception {
     doCreateTest(CreationMethod.DIRECT_NN_RPC);
   }
@@ -1111,7 +1095,7 @@ public class TestFileCreation {
    * Another regression test for HDFS-3626. This one creates files using
    * a Path instantiated from a string object.
    */
-  //@Test
+  @Test
   public void testCreateNonCanonicalPathAndRestartFromString()
       throws Exception {
     doCreateTest(CreationMethod.PATH_FROM_STRING);
@@ -1121,7 +1105,7 @@ public class TestFileCreation {
    * Another regression test for HDFS-3626. This one creates files using
    * a Path instantiated from a URI object.
    */
-  //@Test
+  @Test
   public void testCreateNonCanonicalPathAndRestartFromUri()
       throws Exception {
     doCreateTest(CreationMethod.PATH_FROM_URI);
@@ -1134,8 +1118,8 @@ public class TestFileCreation {
   };
   private void doCreateTest(CreationMethod method) throws Exception {
     Configuration conf = new HdfsConfiguration();
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
-        .numDataNodes(1).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+        .numDataNodes(1).buildHDFS();
     try {
       FileSystem fs = cluster.getFileSystem();
       NamenodeProtocols nnrpc = cluster.getNameNodeRpc();
@@ -1188,12 +1172,11 @@ public class TestFileCreation {
    * This test checks that FileNotFoundException exception is thrown in case
    * the fileId does not match.
    */
-  // krajah.dfs
-  /*//@Test
+  @Test
   public void testFileIdMismatch() throws IOException {
     Configuration conf = new HdfsConfiguration();
-    MiniDFSCluster cluster =
-        new MiniDFSCluster.Builder(conf).numDataNodes(3).build();
+    MiniHDFSCluster cluster =
+        new MiniDFSCluster.Builder(conf).numDataNodes(3).buildHDFS();
     DistributedFileSystem dfs = null;
     try {
       cluster.waitActive();
@@ -1215,6 +1198,4 @@ public class TestFileCreation {
       cluster.shutdown();
     }
   }
-  */
-
 }
