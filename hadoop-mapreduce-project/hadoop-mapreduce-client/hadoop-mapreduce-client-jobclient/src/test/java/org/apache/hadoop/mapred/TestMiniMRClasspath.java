@@ -24,8 +24,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
 
-import junit.framework.TestCase;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
@@ -169,7 +167,7 @@ public class TestMiniMRClasspath {
       final int jobTrackerPort = 60050;
 
       Configuration conf = new Configuration();
-      dfs = new MiniDFSCluster(conf, 1, true, null);
+      dfs = new MiniDFSCluster.Builder(conf).numDataNodes(1).build();
       fileSys = dfs.getFileSystem();
       namenode = fileSys.getUri().toString();
       mr = new MiniMRCluster(taskTrackers, namenode, 3);
@@ -201,7 +199,7 @@ public class TestMiniMRClasspath {
       final int taskTrackers = 4;
 
       Configuration conf = new Configuration();
-      dfs = new MiniDFSCluster(conf, 1, true, null);
+      dfs = new MiniDFSCluster.Builder(conf).numDataNodes(1).build();
       fileSys = dfs.getFileSystem();
       namenode = fileSys.getUri().toString();
       mr = new MiniMRCluster(taskTrackers, namenode, 3);      

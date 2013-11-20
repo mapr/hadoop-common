@@ -19,6 +19,8 @@ package org.apache.hadoop.hdfs;
 
 import java.io.IOException;
 
+import java.net.URI;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceStability;
@@ -29,16 +31,18 @@ import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 
 /**
  * This class creates a single-process DFS cluster for junit testing.
- * Sub classes of this class provide the actual implementaion to create, start, stop the cluster.
- * Set the Java system property specified by field <code>CLUSTER_TYPE</code> to determine the sub class to instantiate.
+ * Sub classes of this class provide the actual implementaion to create, start,
+ * stop the cluster. Set the Java system property specified by field
+ * <code>CLUSTER_TYPE</code> to determine the sub class to instantiate.
  */
 @InterfaceStability.Unstable
 public abstract class MiniDFSCluster {
-  private static final Log LOG = LogFactory.getLog(MiniDFSCluster.class);
+  protected static final Log LOG = LogFactory.getLog(MiniDFSCluster.class);
 
   /**
-   * System property to be set while running the tests. If it is set to mapr, then MiniMapRDFSCluster will be created.
-   * Otherwise, by default, MiniHDFSCluster will be created.
+   * System property to be set while running the tests. If it is set to mapr,
+   * then MiniMapRDFSCluster will be created. By default, MiniHDFSCluster will
+   * be created.
    */
   private static final String CLUSTER_TYPE = "clusterType";
 
@@ -521,4 +525,9 @@ public abstract class MiniDFSCluster {
       cluster.shutdown();
     }
   }
+
+  /**
+   * Returns the URI of the cluster.
+   */
+  public abstract URI getURI();
 }

@@ -24,7 +24,7 @@ import junit.framework.TestCase;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.KeyValueTextInputFormat;
@@ -37,9 +37,9 @@ public class TestDelegatingInputFormat extends TestCase {
 
   public void testSplitting() throws Exception {
     JobConf conf = new JobConf();
-    MiniDFSCluster dfs = null;
+    MiniHDFSCluster dfs = null;
     try {
-      dfs = new MiniDFSCluster(conf, 4, true, new String[] { "/rack0",
+      dfs = new MiniHDFSCluster(conf, 4, true, new String[] { "/rack0",
          "/rack0", "/rack1", "/rack1" }, new String[] { "host0", "host1",
          "host2", "host3" });
       FileSystem fs = dfs.getFileSystem();

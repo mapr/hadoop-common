@@ -37,7 +37,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.server.common.HdfsServerConstants.StartupOption;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRClientCluster;
@@ -64,7 +64,7 @@ public class MiniHadoopClusterManager {
       .getLog(MiniHadoopClusterManager.class);
 
   private MiniMRClientCluster mr;
-  private MiniDFSCluster dfs;
+  private MiniHDFSCluster dfs;
   private String writeDetails;
   private int numNodeManagers;
   private int numDataNodes;
@@ -151,7 +151,7 @@ public class MiniHadoopClusterManager {
   public void start() throws IOException, FileNotFoundException,
       URISyntaxException {
     if (!noDFS) {
-      dfs = new MiniDFSCluster(nnPort, conf, numDataNodes, true, true,
+      dfs = new MiniHDFSCluster(nnPort, conf, numDataNodes, true, true,
           dfsOpts, null, null);
       LOG.info("Started MiniDFSCluster -- namenode on port "
           + dfs.getNameNodePort());

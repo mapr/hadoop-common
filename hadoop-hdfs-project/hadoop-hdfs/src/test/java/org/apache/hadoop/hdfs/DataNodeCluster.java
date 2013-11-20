@@ -165,7 +165,7 @@ public class DataNodeCluster {
   
     System.setProperty("test.build.data", dataNodeDirs);
 
-    MiniDFSCluster mc = new MiniDFSCluster();
+    MiniHDFSCluster mc = new MiniHDFSCluster();
     try {
       mc.formatDataNodeDirs();
     } catch (IOException e) {

@@ -21,10 +21,8 @@ package org.apache.hadoop.mapred;
 import junit.framework.TestCase;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.MRConfig;
 
-import java.io.File;
 import java.io.IOException;
 
 /**
@@ -146,7 +144,9 @@ public abstract class HadoopTestCase extends TestCase {
       fileSystem = FileSystem.getLocal(new JobConf());
     }
     else {
-      dfsCluster = new MiniDFSCluster(new JobConf(), dataNodes, true, null);
+      dfsCluster = new MiniDFSCluster.Builder(new JobConf())
+                       .numDataNodes(dataNodes)
+                       .format(true).build();
       fileSystem = dfsCluster.getFileSystem();
     }
     if (localMR) {

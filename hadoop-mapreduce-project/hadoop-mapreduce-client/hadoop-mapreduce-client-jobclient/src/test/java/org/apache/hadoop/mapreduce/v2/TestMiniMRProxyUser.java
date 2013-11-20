@@ -17,7 +17,13 @@
  */
 package org.apache.hadoop.mapreduce.v2;
 
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.net.InetAddress;
+import java.security.PrivilegedExceptionAction;
+
 import junit.framework.TestCase;
+
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -29,14 +35,6 @@ import org.apache.hadoop.mapred.MiniMRCluster;
 import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.ProxyUsers;
-
-import java.net.InetAddress;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.security.PrivilegedExceptionAction;
 
 public class TestMiniMRProxyUser extends TestCase {
 
@@ -70,7 +68,8 @@ public class TestMiniMRProxyUser extends TestCase {
     UserGroupInformation.createUserForTesting("u1", userGroups);
     UserGroupInformation.createUserForTesting("u2", new String[]{"gg"});
 
-    dfsCluster = new MiniDFSCluster(conf, dataNodes, true, null);
+    dfsCluster = new MiniDFSCluster.Builder(conf).numDataNodes(dataNodes).
+                     format(true).build();
     FileSystem fileSystem = dfsCluster.getFileSystem();
     fileSystem.mkdirs(new Path("/tmp"));
     fileSystem.mkdirs(new Path("/user"));

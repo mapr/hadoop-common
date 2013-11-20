@@ -17,10 +17,14 @@
  */
 package org.apache.hadoop.hdfs;
 
+import static org.apache.hadoop.hdfs.MiniDFSCluster.LOG;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Random;
 
 import org.apache.hadoop.conf.Configuration;
@@ -588,7 +592,8 @@ public class MiniMapRDFSCluster extends MiniDFSCluster {
           operation, racks, null, simulatedCapacities);
   }
 
-  public static final String MAPRFS_URI = "maprfs:///";
+  public static final String MAPRFS_SCHEME = "maprfs://";
+
   /**
    * NOTE: if possible, the other constructors that don't have nameNode port
    * parameter should be used as they will ensure that the servers use free ports.
@@ -623,7 +628,7 @@ public class MiniMapRDFSCluster extends MiniDFSCluster {
 
     this.conf = conf;
     //Use mfs cluster.
-    conf.set("fs.default.name", MAPRFS_URI);
+    conf.set("fs.default.name", MAPRFS_SCHEME);
     int replication = conf.getInt("dfs.replication", 3);
     conf.setInt("dfs.replication", Math.min(replication, numDataNodes));
     conf.set("fs.maprfs.impl", "com.mapr.fs.MapRFileSystem");
@@ -649,7 +654,8 @@ public class MiniMapRDFSCluster extends MiniDFSCluster {
     ProxyUsers.refreshSuperUserGroupsConfiguration(conf);
   }
 
-  // This is meant for debugging purpose only. Not to be used in normal automated tests as the script is not checked in.
+  // This is meant for debugging purpose only. Not to be used in normal
+  // automated tests as the script is not checked in.
   private void teardownServices() {
     RunCommand rc = new RunCommand();
     String[] cmd = {
@@ -976,10 +982,6 @@ public class MiniMapRDFSCluster extends MiniDFSCluster {
     waitActive(true);
   }
 
-  public void waitActive(int nnIndex) throws IOException {
-    waitActive();
-  }
-
   /**
    * Wait until the cluster is active.
    * @param waitHeartbeats if true, will wait until all DNs have heartbeat
@@ -996,5 +998,19 @@ public class MiniMapRDFSCluster extends MiniDFSCluster {
   }
 
   public void formatDataNodeDirs() throws IOException {
+  }
+
+  /**
+   * Returns the URI of CLDB node. This is the first node in <code>nodes</code>.
+   */
+  public URI getURI() {
+    URI uri = null;
+    try {
+      uri = new URI(MAPRFS_SCHEME + nodes[0].localhost + ":" + nodes[0].port);
+    } catch (URISyntaxException e) {
+      LOG.warn("Unexpected URISyntaxException: ", e);
+    }
+
+    return uri;
   }
 }

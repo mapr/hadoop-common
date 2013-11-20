@@ -33,6 +33,8 @@ import org.apache.hadoop.hdfs.HAUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
+
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.server.namenode.FSImage;
 import org.apache.hadoop.hdfs.server.namenode.NNStorage;
 import org.apache.hadoop.hdfs.server.namenode.NameNode;
@@ -63,10 +65,10 @@ public class TestEditLogTailer {
 
     HAUtil.setAllowStandbyReads(conf, true);
     
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
       .nnTopology(MiniDFSNNTopology.simpleHATopology())
       .numDataNodes(0)
-      .build();
+      .buildHDFS();
     cluster.waitActive();
     
     cluster.transitionToActive(0);
@@ -127,10 +129,10 @@ public class TestEditLogTailer {
         .addNN(new MiniDFSNNTopology.NNConf("nn1").setIpcPort(10001))
         .addNN(new MiniDFSNNTopology.NNConf("nn2").setIpcPort(10002)));
 
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
       .nnTopology(topology)
       .numDataNodes(0)
-      .build();
+      .buildHDFS();
     try {
       cluster.transitionToActive(activeIndex);
       waitForLogRollInSharedDir(cluster, 3);
@@ -143,7 +145,7 @@ public class TestEditLogTailer {
     return DIR_PREFIX + suffix;
   }
   
-  private static void waitForLogRollInSharedDir(MiniDFSCluster cluster,
+  private static void waitForLogRollInSharedDir(MiniHDFSCluster cluster,
       long startTxId) throws Exception {
     URI sharedUri = cluster.getSharedEditsDir(0, 1);
     File sharedDir = new File(sharedUri.getPath(), "current");

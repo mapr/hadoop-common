@@ -35,6 +35,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.server.namenode.FSImage;
 import org.apache.hadoop.hdfs.server.namenode.FSImageTestUtil;
 import org.apache.hadoop.hdfs.server.namenode.FSNamesystem;
@@ -62,7 +63,7 @@ import com.google.common.collect.Lists;
 
 public class TestStandbyCheckpoints {
   private static final int NUM_DIRS_IN_LOG = 200000;
-  protected MiniDFSCluster cluster;
+  protected MiniHDFSCluster cluster;
   protected NameNode nn0, nn1;
   protected FileSystem fs;
   
@@ -95,7 +96,7 @@ public class TestStandbyCheckpoints {
     cluster = new MiniDFSCluster.Builder(conf)
       .nnTopology(topology)
       .numDataNodes(0)
-      .build();
+      .buildHDFS();
     cluster.waitActive();
     
     nn0 = cluster.getNameNode(0);
@@ -210,7 +211,7 @@ public class TestStandbyCheckpoints {
     // (only ~15MB)
     URI sharedUri = cluster.getSharedEditsDir(0, 1);
     File sharedDir = new File(sharedUri.getPath(), "current");
-    File tmpDir = new File(MiniDFSCluster.getBaseDirectory(),
+    File tmpDir = new File(MiniHDFSCluster.getBaseDirectory(),
         "testCheckpointCancellation-tmp");
     FSNamesystem fsn = cluster.getNamesystem(0);
     FSImageTestUtil.createAbortedLogWithMkdirs(tmpDir, NUM_DIRS_IN_LOG, 3,

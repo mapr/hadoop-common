@@ -24,7 +24,7 @@ import junit.framework.TestCase;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.mapred.SortValidator.RecordStatsChecker.NonSplitableSequenceFileInputFormat;
 import org.apache.hadoop.mapred.lib.IdentityMapper;
@@ -79,7 +79,7 @@ public class TestMultipleLevelCaching extends TestCase {
 
   private void testCachingAtLevel(int level) throws Exception {
     String namenode = null;
-    MiniDFSCluster dfs = null;
+    MiniHDFSCluster dfs = null;
     MiniMRCluster mr = null;
     FileSystem fileSys = null;
     String testName = "TestMultiLevelCaching";
@@ -92,14 +92,14 @@ public class TestMultipleLevelCaching extends TestCase {
       String rack2 = getRack(1, level);
       Configuration conf = new Configuration();
       // Run a datanode on host1 under /a/b/c/..../d1/e1/f1
-      dfs = new MiniDFSCluster(conf, 1, true, new String[] {rack1}, 
+      dfs = new MiniHDFSCluster(conf, 1, true, new String[] {rack1}, 
                                new String[] {"host1.com"});
       dfs.waitActive();
       fileSys = dfs.getFileSystem();
       if (!fileSys.mkdirs(inDir)) {
         throw new IOException("Mkdirs failed to create " + inDir.toString());
       }
-      UtilsForTests.writeFile(dfs.getNameNode(), conf, 
+      UtilsForTests.writeFile(conf, 
     		                        new Path(inDir + "/file"), (short)1);
       namenode = (dfs.getFileSystem()).getUri().getHost() + ":" + 
                  (dfs.getFileSystem()).getUri().getPort();

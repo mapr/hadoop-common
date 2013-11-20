@@ -212,10 +212,10 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
             <configuration>
               <testIncludes>
                 <include>**/TestFileCreation.java</include>
-                <!--include>**/HATestUtil.java</include>
-		<include>**/TestStandbyCheckpoints.java</include-->
+                <include>**/HATestUtil.java</include>
+		<include>**/TestStandbyCheckpoints.java</include>
               </testIncludes>
-              <testExcludes>
+              <!--testExcludes>
                 <exclude>**/TestDFSUpgradeWithHA.java</exclude>
                 <exclude>**/TestFailureOfSharedDir.java</exclude>
                 <exclude>**/TestFSImageWithSnapshot.java</exclude>
@@ -277,7 +277,7 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
                 <exclude>**/TestBackupNode.java</exclude>
                 <exclude>**/TestListPathServlet.java</exclude>
                 <exclude>**/TestSymlinkHdfsFileSystem.java</exclude>
-              </testExcludes>
+              </testExcludes-->
             </configuration>
             <goals>
               <goal>testCompile</goal>

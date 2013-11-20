@@ -34,7 +34,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSUtil;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 import org.apache.hadoop.hdfs.server.datanode.DataNode;
 import org.apache.hadoop.hdfs.server.datanode.DataNodeTestUtils;
@@ -91,7 +91,7 @@ public abstract class HATestUtil {
    * Wait for the datanodes in the cluster to process any block
    * deletions that have already been asynchronously queued.
    */
-  public static void waitForDNDeletions(final MiniDFSCluster cluster)
+  public static void waitForDNDeletions(final MiniHDFSCluster cluster)
       throws TimeoutException, InterruptedException {
     GenericTestUtils.waitFor(new Supplier<Boolean>() {
       @Override
@@ -131,7 +131,7 @@ public abstract class HATestUtil {
   }
   
   /** Gets the filesystem instance by setting the failover configurations */
-  public static FileSystem configureFailoverFs(MiniDFSCluster cluster, Configuration conf)
+  public static FileSystem configureFailoverFs(MiniHDFSCluster cluster, Configuration conf)
       throws IOException, URISyntaxException {
     return configureFailoverFs(cluster, conf, 0);
   }
@@ -143,7 +143,7 @@ public abstract class HATestUtil {
    * @param nsIndex namespace index starting with zero
    * @throws IOException if an error occurs rolling the edit log
    */
-  public static FileSystem configureFailoverFs(MiniDFSCluster cluster, Configuration conf,
+  public static FileSystem configureFailoverFs(MiniHDFSCluster cluster, Configuration conf,
       int nsIndex) throws IOException, URISyntaxException {
     conf = new Configuration(conf);
     String logicalName = getLogicalHostname(cluster);
@@ -152,19 +152,19 @@ public abstract class HATestUtil {
     return fs;
   }
   
-  public static void setFailoverConfigurations(MiniDFSCluster cluster,
+  public static void setFailoverConfigurations(MiniHDFSCluster cluster,
       Configuration conf) {
     setFailoverConfigurations(cluster, conf, getLogicalHostname(cluster));
   }
   
   /** Sets the required configurations for performing failover of default namespace. */
-  public static void setFailoverConfigurations(MiniDFSCluster cluster,
+  public static void setFailoverConfigurations(MiniHDFSCluster cluster,
       Configuration conf, String logicalName) {
     setFailoverConfigurations(cluster, conf, logicalName, 0);
   }
   
   /** Sets the required configurations for performing failover.  */
-  public static void setFailoverConfigurations(MiniDFSCluster cluster,
+  public static void setFailoverConfigurations(MiniHDFSCluster cluster,
       Configuration conf, String logicalName, int nsIndex) {
     InetSocketAddress nnAddr1 = cluster.getNameNode(2 * nsIndex).getNameNodeAddress();
     InetSocketAddress nnAddr2 = cluster.getNameNode(2 * nsIndex + 1).getNameNodeAddress();
@@ -195,17 +195,17 @@ public abstract class HATestUtil {
   }
   
 
-  public static String getLogicalHostname(MiniDFSCluster cluster) {
+  public static String getLogicalHostname(MiniHDFSCluster cluster) {
     return String.format(LOGICAL_HOSTNAME, cluster.getInstanceId());
   }
   
-  public static URI getLogicalUri(MiniDFSCluster cluster)
+  public static URI getLogicalUri(MiniHDFSCluster cluster)
       throws URISyntaxException {
     return new URI(HdfsConstants.HDFS_URI_SCHEME + "://" +
         getLogicalHostname(cluster));
   }
   
-  public static void waitForCheckpoint(MiniDFSCluster cluster, int nnIdx,
+  public static void waitForCheckpoint(MiniHDFSCluster cluster, int nnIdx,
       List<Integer> txids) throws InterruptedException {
     long start = Time.now();
     while (true) {

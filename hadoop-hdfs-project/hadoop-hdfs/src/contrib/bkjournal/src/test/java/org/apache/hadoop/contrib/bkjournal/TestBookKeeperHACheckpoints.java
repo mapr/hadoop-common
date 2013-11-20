@@ -65,7 +65,7 @@ public class TestBookKeeperHACheckpoints extends TestStandbyCheckpoints {
       .nnTopology(topology)
       .numDataNodes(0)
       .manageNameDfsSharedDirs(false)
-      .build();
+      .buildHDFS();
     cluster.waitActive();
 
     nn0 = cluster.getNameNode(0);

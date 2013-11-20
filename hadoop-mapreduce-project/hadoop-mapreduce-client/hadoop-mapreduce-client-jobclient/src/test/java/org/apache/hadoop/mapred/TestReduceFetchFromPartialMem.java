@@ -30,7 +30,6 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableComparator;
 import org.apache.hadoop.mapreduce.TaskCounter;
-import org.apache.hadoop.mapreduce.MRConfig;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -57,7 +56,9 @@ public class TestReduceFetchFromPartialMem extends TestCase {
     TestSetup setup = new TestSetup(mySuite) {
       protected void setUp() throws Exception {
         Configuration conf = new Configuration();
-        dfsCluster = new MiniDFSCluster(conf, 2, true, null);
+        dfsCluster = new MiniDFSCluster.Builder(conf)
+                         .numDataNodes(2)
+                         .format(true).build();
         mrCluster = new MiniMRCluster(2,
             dfsCluster.getFileSystem().getUri().toString(), 1);
       }
