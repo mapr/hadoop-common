@@ -89,6 +89,12 @@ Release 2.3.0 - UNRELEASED
     YARN-1138. yarn.application.classpath is set to point to $HADOOP_CONF_DIR
     etc., which does not work on Windows. (Chuan Liu via cnauroth)
 
+  MAPR CHERRY PICKS
+  
+    YARN-1053. Diagnostic message from ContainerExitEvent is ignored in
+    ContainerImpl (Omkar Vinit Joshi via bikas)
+
+
 Release 2.2.0 - 2013-10-13
 
   INCOMPATIBLE CHANGES
