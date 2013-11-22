@@ -51,7 +51,7 @@ class MapRNode {
   boolean format;
   NodeState state;
 
-  public void Init(
+  public void init(
     boolean isCldb, boolean isZookeeper, boolean isFileServer, int nodeId) {
 
     this.isCldb = isCldb;
@@ -82,7 +82,7 @@ class MapRNode {
 
     RunCommand rc = new RunCommand();
     for (int i = 0; i < commands.length; ++i) {
-      rc.Init(commands[i], "", false, false);
+      rc.init(commands[i], "", false, false);
       rc.Run();
     }
     if (isCldb) {
@@ -93,7 +93,7 @@ class MapRNode {
         {"/bin/sh", "-c", "echo my.cluster.com " + localhost + ":" + MiniMapRDFSCluster.cldbPort + " > " + MiniMapRDFSCluster.maprClustersFile}
       };
       for (int i = 0; i < cldbCommands.length; ++i) {
-        rc.Init(cldbCommands[i], "", false, false);
+        rc.init(cldbCommands[i], "", false, false);
         rc.Run();
       }
 
@@ -124,7 +124,7 @@ class MapRNode {
     };
     RunCommand rc = new RunCommand();
     for (int i = 0; i < commands.length; ++i) {
-      rc.Init(commands[i], "", false, false);
+      rc.init(commands[i], "", false, false);
       rc.Run();
     }
   }
@@ -155,7 +155,7 @@ class MapRNode {
   void DecrementCldbVolMinReplica() {
     //Decrease the replication count of cldb.internal volume
     RunCommand rc = new RunCommand();
-    rc.Init(MiniMapRDFSCluster.maprCli + " volume modify -name mapr.cldb.internal -minreplication 1", "", false, false);
+    rc.init(MiniMapRDFSCluster.maprCli + " volume modify -name mapr.cldb.internal -minreplication 1", "", false, false);
     rc.Run();
   }
 
@@ -177,7 +177,7 @@ class MapRNode {
 
   int ListSPs() {
     RunCommand rc = new RunCommand();
-    rc.Init("/opt/mapr/server/mrconfig -p " + port + " sp list", "", false,
+    rc.init("/opt/mapr/server/mrconfig -p " + port + " sp list", "", false,
       false);
     rc.Run();
     return 0;
@@ -186,20 +186,20 @@ class MapRNode {
 
   public int MountTheDisk() {
     RunCommand rc = new RunCommand();
-    rc.Init(MiniMapRDFSCluster.testConfigPy + " -h " + localhost + " -p " + port + " -m single -d " + diskName, "", false, false);
+    rc.init(MiniMapRDFSCluster.testConfigPy + " -h " + localhost + " -p " + port + " -m single -d " + diskName, "", false, false);
     rc.Run();
     return 0;
   }
 
   int PrepareTheDisk() {
     RunCommand rc = new RunCommand();
-    rc.Init(MiniMapRDFSCluster.testConfigPy + " -h " + localhost + " -p " + port + " -P -s 8192 -d " + diskName, "", false, false);
+    rc.init(MiniMapRDFSCluster.testConfigPy + " -h " + localhost + " -p " + port + " -P -s 8192 -d " + diskName, "", false, false);
     return rc.Run();
   }
 
   public int StartFileServer() {
     RunCommand rc = new RunCommand();
-    rc.Init(MiniMapRDFSCluster.mfsExe + " -e -p "+port+" -m 512 both -h " + hostnameFile + " -H " +hostIdFile + " -L " + logFile, "", true, false);
+    rc.init(MiniMapRDFSCluster.mfsExe + " -e -p "+port+" -m 512 both -h " + hostnameFile + " -H " +hostIdFile + " -L " + logFile, "", true, false);
     rc.Run();
     mfsPr = rc.BGProcess();
     if (mfsPr != null) {
@@ -212,7 +212,7 @@ class MapRNode {
 
   public int StopFileServer() {
     //GIRIRunCommand rc = new RunCommand();
-    //GIRI rc.Init(MiniMapRDFSCluster.mfsExe + " -e -p "+port+" -m 512 both -h " + hostnameFile + " -H " +hostIdFile + " -L " + logFile, "", true, false);
+    //GIRI rc.init(MiniMapRDFSCluster.mfsExe + " -e -p "+port+" -m 512 both -h " + hostnameFile + " -H " +hostIdFile + " -L " + logFile, "", true, false);
     //GIRIrc.Run();
 
     return KillFileServer();
@@ -235,7 +235,7 @@ class MapRNode {
     }
 
     RunCommand rc = new RunCommand();
-    rc.Init(MiniMapRDFSCluster.cldbInitScript + " start", "", false, false);
+    rc.init(MiniMapRDFSCluster.cldbInitScript + " start", "", false, false);
     return rc.Run();
   }
 
@@ -246,7 +246,7 @@ class MapRNode {
     }
 
     RunCommand rc = new RunCommand();
-    rc.Init(MiniMapRDFSCluster.cldbInitScript + " stop", "", false, false);
+    rc.init(MiniMapRDFSCluster.cldbInitScript + " stop", "", false, false);
     return rc.Run();
   }
 
@@ -261,7 +261,7 @@ class MapRNode {
 
     RunCommand rc = new RunCommand();
     for (int i = 0; i < commands.length; ++i) {
-      rc.Init(commands[i], "", false, false);
+      rc.init(commands[i], "", false, false);
       rc.Run();
     }
     return 0;
@@ -279,7 +279,7 @@ class MapRNode {
 
     RunCommand rc = new RunCommand();
     for (int i = 0; i < commands.length; ++i) {
-      rc.Init(commands[i], "", false, false);
+      rc.init(commands[i], "", false, false);
       rc.Run();
     }
     return 0;
@@ -296,7 +296,7 @@ class MapRNode {
 
     RunCommand rc = new RunCommand();
     for (int i = 0; i < commands.length; ++i) {
-      rc.Init(commands[i], "", false, false);
+      rc.init(commands[i], "", false, false);
       rc.Run();
     }
     return 0;
@@ -312,7 +312,7 @@ class MapRNode {
       fid+"."+offset+"\""
     };
 
-    rc.Init(cmd, "", false, true);
+    rc.init(cmd, "", false, true);
     rc.Run();
     Start();
     return Long.parseLong(rc.OutPutStr());
@@ -333,7 +333,7 @@ class MapRNode {
       " " + rand + " " + badString+ " string "+ " \" "
     };
 
-    rc.Init(cmd, "", false, false);
+    rc.init(cmd, "", false, false);
     rc.Run();
     Start();
 
@@ -351,7 +351,7 @@ class RunCommand {
   boolean reqOutput;
   String outputStr;
 
-  public void Init(String command, String args, boolean isBG,
+  public void init(String command, String args, boolean isBG,
     boolean reqOutput) {
 
     this.singleCommand = command;
@@ -360,7 +360,7 @@ class RunCommand {
     this.reqOutput = reqOutput;
   }
 
-  public void Init(String[] command, String args, boolean isBG,
+  public void init(String[] command, String args, boolean isBG,
     boolean reqOutput) {
     this.command = command;
     this.args = args;
@@ -640,7 +640,7 @@ public class MiniMapRDFSCluster extends MiniDFSCluster {
     // Hack to handle any test case that failed to shut down the cluter.
     //teardownServices();
 
-    InitNodes("TestVolume", numDataNodes);
+    initNodes("TestVolume", numDataNodes);
     // Start the DataNodes
     startDataNodes(conf, numDataNodes, manageDataDfsDirs,
                     operation, racks, hosts, simulatedCapacities);
@@ -662,11 +662,11 @@ public class MiniMapRDFSCluster extends MiniDFSCluster {
       "/bin/sh", "-c", "/usr/local/bin/teardown_mapr.sh"
     };
 
-    rc.Init(cmd, "", false, true);
+    rc.init(cmd, "", false, true);
     rc.Run();
   }
 
-  void InitNodes(String volName, int numNodes)
+  void initNodes(String volName, int numNodes)
   {
     this.volName = volName;
     this.numNodes = numNodes;
@@ -677,9 +677,9 @@ public class MiniMapRDFSCluster extends MiniDFSCluster {
     for (int i = 0; i < numNodes; ++i) {
       nodes[i] = new MapRNode();
       if (i == 0) {
-        nodes[i].Init(true, true, true, i);
+        nodes[i].init(true, true, true, i);
       } else {
-        nodes[i].Init(false, false, true, i);
+        nodes[i].init(false, false, true, i);
       }
     }
   }
@@ -690,7 +690,7 @@ public class MiniMapRDFSCluster extends MiniDFSCluster {
    */
   public void waitClusterUp() {
     RunCommand rc = new RunCommand();
-    rc.Init(hadoopExe+" fs -lsr /", "", false, false);
+    rc.init(hadoopExe+" fs -lsr /", "", false, false);
     for(int i=0; i < 6; ++i) {
       if (rc.Run() == 0) {
         isClusterUp = true;
@@ -881,7 +881,7 @@ public class MiniMapRDFSCluster extends MiniDFSCluster {
       "i=$[i+1]; " +
       "done)"
     };
-    rc.Init(cmd, "", false, true);
+    rc.init(cmd, "", false, true);
     rc.Run();
     if (rc.OutPutStr() == null) {
       // no fid for the given offset

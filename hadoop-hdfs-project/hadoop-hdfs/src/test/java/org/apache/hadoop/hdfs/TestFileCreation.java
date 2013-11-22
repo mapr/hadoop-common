@@ -245,7 +245,7 @@ public class TestFileCreation {
         fs.close();
         assertTrue("Did not prevent directory from being overwritten.", false);
       } catch (IOException ie) {
-        // krajah:io_message
+        // TODO krajah:io_message
         /*if (!ie.getMessage().contains("already exists as a directory."))
           throw ie;
         */
@@ -277,7 +277,7 @@ public class TestFileCreation {
                   len == fileSize);
 
       // verify the disk space the file occupied
-      long diskSpace = fs.getContentSummary(file1.getParent()).getLength();
+      long diskSpace = dfs.getContentSummary(file1.getParent()).getLength();
       assertEquals(file1 + " should take " + fileSize + " bytes disk space " +
           "but found to take " + diskSpace + " bytes", fileSize, diskSpace);
 
@@ -390,7 +390,7 @@ public class TestFileCreation {
         fs2.create(p, false);
         fail("Did not throw!");
       } catch (IOException abce) {
-        // krajah:io_message
+        // TODO krajah:io_message
         //GenericTestUtils.assertExceptionContains("already being created by",
         //    abce);
       }
@@ -403,7 +403,7 @@ public class TestFileCreation {
         stm1.close();
         fail("Should have exception closing stm1 since it was deleted");
       } catch (IOException ioe) {
-        // krajah:io_message
+        // TODO krajah:io_message
         //GenericTestUtils.assertExceptionContains("File is not open for writing", ioe);
       }
 
