@@ -39,6 +39,7 @@ import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 import org.apache.hadoop.util.StringUtils;
 import org.junit.Test;
@@ -57,14 +58,14 @@ public class TestListCorruptFileBlocks {
   /** check if nn.getCorruptFiles() returns a file that has corrupted blocks */
   @Test
   public void testListCorruptFilesCorruptedBlock() throws Exception {
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     Random random = new Random();
     
     try {
       Configuration conf = new HdfsConfiguration();
       conf.setInt(DFSConfigKeys.DFS_DATANODE_DIRECTORYSCAN_INTERVAL_KEY, 1); // datanode scans directories
       conf.setInt(DFSConfigKeys.DFS_BLOCKREPORT_INTERVAL_MSEC_KEY, 3 * 1000); // datanode sends block reports
-      cluster = new MiniDFSCluster.Builder(conf).build();
+      cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
       FileSystem fs = cluster.getFileSystem();
 
       // create two files with one block each
@@ -83,7 +84,7 @@ public class TestListCorruptFileBlocks {
       // Now deliberately corrupt one block
       String bpid = cluster.getNamesystem().getBlockPoolId();
       File storageDir = cluster.getInstanceStorageDir(0, 1);
-      File data_dir = MiniDFSCluster.getFinalizedDir(storageDir, bpid);
+      File data_dir = MiniHDFSCluster.getFinalizedDir(storageDir, bpid);
       assertTrue("data directory does not exist", data_dir.exists());
       File[] blocks = data_dir.listFiles();
       assertTrue("Blocks do not exist in data-dir", (blocks != null) && (blocks.length > 0));
@@ -133,7 +134,7 @@ public class TestListCorruptFileBlocks {
    */
   @Test
   public void testListCorruptFileBlocksInSafeMode() throws Exception {
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     Random random = new Random();
 
     try {
@@ -148,7 +149,7 @@ public class TestListCorruptFileBlocks {
       // start populating repl queues immediately 
       conf.setFloat(DFSConfigKeys.DFS_NAMENODE_REPL_QUEUE_THRESHOLD_PCT_KEY,
                     0f);
-      cluster = new MiniDFSCluster.Builder(conf).waitSafeMode(false).build();
+      cluster = new MiniDFSCluster.Builder(conf).waitSafeMode(false).buildHDFS();
       cluster.getNameNodeRpc().setSafeMode(
           HdfsConstants.SafeModeAction.SAFEMODE_LEAVE, false);
       FileSystem fs = cluster.getFileSystem();
@@ -167,7 +168,7 @@ public class TestListCorruptFileBlocks {
 
       // Now deliberately corrupt one block
       File storageDir = cluster.getInstanceStorageDir(0, 0);
-      File data_dir = MiniDFSCluster.getFinalizedDir(storageDir, 
+      File data_dir = MiniHDFSCluster.getFinalizedDir(storageDir, 
           cluster.getNamesystem().getBlockPoolId());
       assertTrue("data directory does not exist", data_dir.exists());
       File[] blocks = data_dir.listFiles();
@@ -270,9 +271,9 @@ public class TestListCorruptFileBlocks {
                                                            // directories
     FileSystem fs = null;
 
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
-      cluster = new MiniDFSCluster.Builder(conf).build();
+      cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
       cluster.waitActive();
       fs = cluster.getFileSystem();
       DFSTestUtil util = new DFSTestUtil.Builder().
@@ -290,7 +291,7 @@ public class TestListCorruptFileBlocks {
       for (int i = 0; i < 4; i++) {
         for (int j = 0; j <= 1; j++) {
           File storageDir = cluster.getInstanceStorageDir(i, j);
-          File data_dir = MiniDFSCluster.getFinalizedDir(storageDir, bpid);
+          File data_dir = MiniHDFSCluster.getFinalizedDir(storageDir, bpid);
           File[] blocks = data_dir.listFiles();
           if (blocks == null)
             continue;
@@ -380,9 +381,9 @@ public class TestListCorruptFileBlocks {
                                                            // directories
     FileSystem fs = null;
 
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
-      cluster = new MiniDFSCluster.Builder(conf).build();
+      cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
       cluster.waitActive();
       fs = cluster.getFileSystem();
       DistributedFileSystem dfs = (DistributedFileSystem) fs;
@@ -400,7 +401,7 @@ public class TestListCorruptFileBlocks {
       // For loop through number of datadirectories per datanode (2)
       for (int i = 0; i < 2; i++) {
         File storageDir = cluster.getInstanceStorageDir(0, i);
-        File data_dir = MiniDFSCluster.getFinalizedDir(storageDir, bpid);
+        File data_dir = MiniHDFSCluster.getFinalizedDir(storageDir, bpid);
         File[] blocks = data_dir.listFiles();
         if (blocks == null)
           continue;
@@ -447,12 +448,12 @@ public class TestListCorruptFileBlocks {
    */
   @Test
   public void testMaxCorruptFiles() throws Exception {
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
       Configuration conf = new HdfsConfiguration();
       conf.setInt(DFSConfigKeys.DFS_DATANODE_DIRECTORYSCAN_INTERVAL_KEY, 15); // datanode scans directories
       conf.setInt(DFSConfigKeys.DFS_BLOCKREPORT_INTERVAL_MSEC_KEY, 3 * 1000); // datanode sends block reports
-      cluster = new MiniDFSCluster.Builder(conf).build();
+      cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
       FileSystem fs = cluster.getFileSystem();
       final int maxCorruptFileBlocks = 
         FSNamesystem.DEFAULT_MAX_CORRUPT_FILEBLOCKS_RETURNED;
@@ -476,7 +477,7 @@ public class TestListCorruptFileBlocks {
       for (int i=0; i<4; i++) {
         for (int j=0; j<=1; j++) {
           File storageDir = cluster.getInstanceStorageDir(i, j);
-          File data_dir = MiniDFSCluster.getFinalizedDir(storageDir, bpid);
+          File data_dir = MiniHDFSCluster.getFinalizedDir(storageDir, bpid);
           LOG.info("Removing files from " + data_dir);
           File[] blocks = data_dir.listFiles();
           if (blocks == null)

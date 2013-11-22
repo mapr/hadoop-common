@@ -45,7 +45,7 @@ import org.apache.hadoop.net.NetUtils;
 public class BlockReaderTestUtil {
 
   private HdfsConfiguration conf = null;
-  private MiniDFSCluster cluster = null;
+  private MiniHDFSCluster cluster = null;
 
   /**
    * Setup the cluster
@@ -57,7 +57,7 @@ public class BlockReaderTestUtil {
   public BlockReaderTestUtil(int replicationFactor, HdfsConfiguration config) throws Exception {
     this.conf = config;
     conf.setInt(DFSConfigKeys.DFS_REPLICATION_KEY, replicationFactor);
-    cluster = new MiniDFSCluster.Builder(conf).format(true).build();
+    cluster = new MiniDFSCluster.Builder(conf).format(true).buildHDFS();
     cluster.waitActive();
   }
 
@@ -70,7 +70,7 @@ public class BlockReaderTestUtil {
     }
   }
 
-  public MiniDFSCluster getCluster() {
+  public MiniHDFSCluster getCluster() {
     return cluster;
   }
 

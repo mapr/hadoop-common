@@ -135,7 +135,7 @@ public class TestDFSMkdirs {
    */
   @Test
   public void testMkdirRpcNonCanonicalPath() throws IOException {
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(0).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(0).buildHDFS();
     try {
       NamenodeProtocols nnrpc = cluster.getNameNodeRpc();
       

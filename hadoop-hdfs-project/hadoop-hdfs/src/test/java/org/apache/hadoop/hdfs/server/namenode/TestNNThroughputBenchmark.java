@@ -26,7 +26,7 @@ import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.junit.After;
 import org.junit.Test;
 
@@ -34,7 +34,7 @@ public class TestNNThroughputBenchmark {
 
   @After
   public void cleanUp() {
-    FileUtil.fullyDeleteContents(new File(MiniDFSCluster.getBaseDirectory()));
+    FileUtil.fullyDeleteContents(new File(MiniHDFSCluster.getBaseDirectory()));
   }
 
   /**
@@ -43,7 +43,7 @@ public class TestNNThroughputBenchmark {
   @Test
   public void testNNThroughput() throws Exception {
     Configuration conf = new HdfsConfiguration();
-    File nameDir = new File(MiniDFSCluster.getBaseDirectory(), "name");
+    File nameDir = new File(MiniHDFSCluster.getBaseDirectory(), "name");
     conf.set(DFSConfigKeys.DFS_NAMENODE_NAME_DIR_KEY,
         nameDir.getAbsolutePath());
     FileSystem.setDefaultUri(conf, "hdfs://localhost:" + 0);

@@ -72,7 +72,7 @@ public class TestLeaseRecovery2 {
   static private String fakeUsername = "fakeUser1";
   static private String fakeGroup = "supergroup";
 
-  static private MiniDFSCluster cluster;
+  static private MiniHDFSCluster cluster;
   static private DistributedFileSystem dfs;
   final static private Configuration conf = new HdfsConfiguration();
   final static private int BUF_SIZE = conf.getInt(
@@ -90,7 +90,7 @@ public class TestLeaseRecovery2 {
     conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, BLOCK_SIZE);
     conf.setInt(DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_KEY, 1);
 
-    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(5).build();
+    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(5).buildHDFS();
     cluster.waitActive();
     dfs = cluster.getFileSystem();
   }

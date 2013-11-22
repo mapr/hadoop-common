@@ -63,6 +63,8 @@ import org.apache.hadoop.fs.FileSystem.Statistics;
 import org.apache.hadoop.fs.Options.Rename;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
+
+import org.apache.hadoop.hdfs.MiniHDFSCluster.NameNodeInfo;
 import org.apache.hadoop.hdfs.client.HdfsDataInputStream;
 import org.apache.hadoop.hdfs.protocol.DatanodeID;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
@@ -328,10 +330,10 @@ public class DFSTestUtil {
   /*
    * Check if the given block in the given file is corrupt.
    */
-  public static boolean allBlockReplicasCorrupt(MiniDFSCluster cluster,
+  public static boolean allBlockReplicasCorrupt(MiniHDFSCluster cluster,
       Path file, int blockNo) throws IOException {
     DFSClient client = new DFSClient(new InetSocketAddress("localhost",
-        ((MiniHDFSCluster) cluster).getNameNodePort()), ((MiniHDFSCluster) cluster).getConfiguration(0));
+        cluster.getNameNodePort()), cluster.getConfiguration(0));
     LocatedBlocks blocks;
     try {
        blocks = client.getNamenode().getBlockLocations(
@@ -347,7 +349,7 @@ public class DFSTestUtil {
    * the requested number of racks, with the requested number of
    * replicas, and the requested number of replicas still needed.
    */
-  public static void waitForReplication(MiniDFSCluster cluster, ExtendedBlock b,
+  public static void waitForReplication(MiniHDFSCluster cluster, ExtendedBlock b,
       int racks, int replicas, int neededReplicas)
       throws IOException, TimeoutException, InterruptedException {
     int curRacks = 0;
@@ -358,7 +360,7 @@ public class DFSTestUtil {
 
     do {
       Thread.sleep(1000);
-      int[] r = BlockManagerTestUtil.getReplicaInfo(((MiniHDFSCluster) cluster).getNamesystem(),
+      int[] r = BlockManagerTestUtil.getReplicaInfo(cluster.getNamesystem(),
           b.getLocalBlock());
       curRacks = r[0];
       curReplicas = r[1];
@@ -437,11 +439,11 @@ public class DFSTestUtil {
    * Returns the index of the first datanode which has a copy
    * of the given block, or -1 if no such datanode exists.
    */
-  public static int firstDnWithBlock(MiniDFSCluster cluster, ExtendedBlock b)
+  public static int firstDnWithBlock(MiniHDFSCluster cluster, ExtendedBlock b)
       throws IOException {
-    int numDatanodes = ((MiniHDFSCluster) cluster).getDataNodes().size();
+    int numDatanodes = cluster.getDataNodes().size();
     for (int i = 0; i < numDatanodes; i++) {
-      String blockContent = ((MiniHDFSCluster) cluster).readBlockOnDataNode(i, b);
+      String blockContent = cluster.readBlockOnDataNode(i, b);
       if (blockContent != null) {
         return i;
       }
@@ -804,10 +806,10 @@ public class DFSTestUtil {
     return BlockOpResponseProto.parseDelimitedFrom(in);
   }
   
-  public static void setFederatedConfiguration(MiniDFSCluster cluster,
+  public static void setFederatedConfiguration(MiniHDFSCluster cluster,
       Configuration conf) {
     Set<String> nameservices = new HashSet<String>();
-    for (MiniHDFSCluster.NameNodeInfo info : ((MiniHDFSCluster) cluster).getNameNodeInfos()) {
+    for (NameNodeInfo info : cluster.getNameNodeInfos()) {
       assert info.nameserviceId != null;
       nameservices.add(info.nameserviceId);
       conf.set(DFSUtil.addKeySuffixes(DFS_NAMENODE_RPC_ADDRESS_KEY,
@@ -952,11 +954,11 @@ public class DFSTestUtil {
   /**
    * Run a set of operations and generate all edit logs
    */
-  public static void runOperations(MiniDFSCluster cluster,
+  public static void runOperations(MiniHDFSCluster cluster,
       DistributedFileSystem filesystem, Configuration conf, long blockSize, 
       int nnIndex) throws IOException {
     // create FileContext for rename2
-    FileContext fc = FileContext.getFileContext(((MiniHDFSCluster) cluster).getURI(0), conf);
+    FileContext fc = FileContext.getFileContext(cluster.getURI(0), conf);
     
     // OP_ADD 0
     final Path pathFileCreate = new Path("/file_create");
@@ -1035,7 +1037,7 @@ public class DFSTestUtil {
     leaseRecoveryPath.write(bytes);
     leaseRecoveryPath.hflush();
     // Set the hard lease timeout to 1 second.
-    ((MiniHDFSCluster) cluster).setLeasePeriod(60 * 1000, 1000, nnIndex);
+    cluster.setLeasePeriod(60 * 1000, 1000, nnIndex);
     // wait for lease recovery to complete
     LocatedBlocks locatedBlocks;
     do {
@@ -1043,7 +1045,7 @@ public class DFSTestUtil {
         Thread.sleep(1000);
       } catch (InterruptedException e) {}
       locatedBlocks = DFSClientAdapter.callGetBlockLocations(
-          ((MiniHDFSCluster) cluster).getNameNodeRpc(nnIndex), filePath, 0L, bytes.length);
+          cluster.getNameNodeRpc(nnIndex), filePath, 0L, bytes.length);
     } while (locatedBlocks.isUnderConstruction());
   }
 }

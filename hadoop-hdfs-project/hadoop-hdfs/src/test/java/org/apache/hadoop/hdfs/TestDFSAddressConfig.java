@@ -34,7 +34,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hdfs.MiniDFSCluster.DataNodeProperties;
+import org.apache.hadoop.hdfs.MiniHDFSCluster.DataNodeProperties;
 import org.apache.hadoop.hdfs.server.common.HdfsServerConstants.StartupOption;
 import org.apache.hadoop.hdfs.server.datanode.DataNode;
 import org.junit.Test;
@@ -49,7 +49,7 @@ public class TestDFSAddressConfig {
     /*-------------------------------------------------------------------------
      * By default, the DataNode socket address should be localhost (127.0.0.1).
      *------------------------------------------------------------------------*/
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
     cluster.waitActive();
 
     ArrayList<DataNode> dns = cluster.getDataNodes();

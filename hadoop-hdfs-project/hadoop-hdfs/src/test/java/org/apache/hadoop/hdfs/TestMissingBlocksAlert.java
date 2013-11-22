@@ -48,7 +48,7 @@ public class TestMissingBlocksAlert {
   public void testMissingBlocksAlert() throws IOException, 
                                        InterruptedException {
     
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     
     try {
       Configuration conf = new HdfsConfiguration();
@@ -58,7 +58,7 @@ public class TestMissingBlocksAlert {
       conf.setInt(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, fileLen/2);
 
       //start a cluster with single datanode
-      cluster = new MiniDFSCluster.Builder(conf).build();
+      cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
       cluster.waitActive();
 
       final BlockManager bm = cluster.getNamesystem().getBlockManager();

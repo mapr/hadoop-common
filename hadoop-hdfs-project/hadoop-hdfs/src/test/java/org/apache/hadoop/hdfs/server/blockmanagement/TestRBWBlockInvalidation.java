@@ -36,7 +36,8 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.apache.hadoop.hdfs.MiniDFSCluster.DataNodeProperties;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster.DataNodeProperties;
 import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
 import org.apache.hadoop.hdfs.server.datanode.DataNode;
@@ -78,8 +79,8 @@ public class TestRBWBlockInvalidation {
     conf.setLong(DFSConfigKeys.DFS_BLOCKREPORT_INTERVAL_MSEC_KEY, 300);
     conf.setLong(DFSConfigKeys.DFS_DATANODE_DIRECTORYSCAN_INTERVAL_KEY, 1);
     conf.setLong(DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_KEY, 1);
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2)
-        .build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2)
+        .buildHDFS();
     FSDataOutputStream out = null;
     try {
       final FSNamesystem namesystem = cluster.getNamesystem();
@@ -170,8 +171,8 @@ public class TestRBWBlockInvalidation {
       testPaths.add(new Path("/test" + i));
     }
     
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2)
-        .build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2)
+        .buildHDFS();
     try {
       List<FSDataOutputStream> streams = Lists.newArrayList();
       try {

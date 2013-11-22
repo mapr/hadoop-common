@@ -63,7 +63,7 @@ public class TestDFSUpgradeFromImage {
   private static final Log LOG = LogFactory
       .getLog(TestDFSUpgradeFromImage.class);
   private static File TEST_ROOT_DIR =
-                      new File(MiniDFSCluster.getBaseDirectory());
+                      new File(MiniHDFSCluster.getBaseDirectory());
   private static final String HADOOP_DFS_DIR_TXT = "hadoop-dfs-dir.txt";
   private static final String HADOOP22_IMAGE = "hadoop-22-dfs-dir.tgz";
   private static final String HADOOP1_BBW_IMAGE = "hadoop1-bbw.tgz";
@@ -292,7 +292,7 @@ public class TestDFSUpgradeFromImage {
     unpackStorage(HADOOP22_IMAGE);
     
     // Overwrite the md5 stored in the VERSION files
-    File baseDir = new File(MiniDFSCluster.getBaseDirectory());
+    File baseDir = new File(MiniHDFSCluster.getBaseDirectory());
     FSImageTestUtil.corruptVersionFile(
         new File(baseDir, "name1/current/VERSION"),
         "imageMD5Digest", "22222222222222222222222222222222");

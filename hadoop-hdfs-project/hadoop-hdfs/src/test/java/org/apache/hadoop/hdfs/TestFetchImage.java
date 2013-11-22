@@ -48,7 +48,7 @@ public class TestFetchImage {
   public void testFetchImage() throws Exception {
     FETCHED_IMAGE_FILE.mkdirs();
     Configuration conf = new Configuration();
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
     FileSystem fs = null;
     try {
       DFSAdmin dfsAdmin = new DFSAdmin();
@@ -82,7 +82,7 @@ public class TestFetchImage {
    * Run `hdfs dfsadmin -fetchImage ...' and verify that the downloaded image is
    * correct.
    */
-  private static void runFetchImage(DFSAdmin dfsAdmin, MiniDFSCluster cluster)
+  private static void runFetchImage(DFSAdmin dfsAdmin, MiniHDFSCluster cluster)
       throws Exception {
     int retVal = dfsAdmin.run(new String[]{"-fetchImage",
         FETCHED_IMAGE_FILE.getPath() });
@@ -100,7 +100,7 @@ public class TestFetchImage {
   /**
    * @return the fsimage with highest transaction ID in the cluster.
    */
-  private static File getHighestFsImageOnCluster(MiniDFSCluster cluster) {
+  private static File getHighestFsImageOnCluster(MiniHDFSCluster cluster) {
     long highestImageTxId = -1;
     File highestImageOnNn = null;
     for (URI nameDir : cluster.getNameDirs(0)) {

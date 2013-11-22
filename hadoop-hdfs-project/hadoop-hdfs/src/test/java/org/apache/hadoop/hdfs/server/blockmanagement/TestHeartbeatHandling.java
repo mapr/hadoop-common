@@ -20,12 +20,12 @@ package org.apache.hadoop.hdfs.server.blockmanagement;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.server.common.GenerationStamp;
@@ -53,7 +53,7 @@ public class TestHeartbeatHandling {
   @Test
   public void testHeartbeat() throws Exception {
     final Configuration conf = new HdfsConfiguration();
-    final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).build();
+    final MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
     try {
       cluster.waitActive();
       final FSNamesystem namesystem = cluster.getNamesystem();
@@ -133,8 +133,8 @@ public class TestHeartbeatHandling {
   @Test
   public void testHeartbeatBlockRecovery() throws Exception {
     final Configuration conf = new HdfsConfiguration();
-    final MiniDFSCluster cluster =
-        new MiniDFSCluster.Builder(conf).numDataNodes(3).build();
+    final MiniHDFSCluster cluster =
+        new MiniDFSCluster.Builder(conf).numDataNodes(3).buildHDFS();
     try {
       cluster.waitActive();
       final FSNamesystem namesystem = cluster.getNamesystem();

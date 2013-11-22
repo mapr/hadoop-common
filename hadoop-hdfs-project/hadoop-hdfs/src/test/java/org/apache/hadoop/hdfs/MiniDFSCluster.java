@@ -19,7 +19,6 @@ package org.apache.hadoop.hdfs;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayList;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -27,12 +26,7 @@ import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.ha.ServiceFailedException;
 import org.apache.hadoop.hdfs.server.common.HdfsServerConstants.StartupOption;
-import org.apache.hadoop.hdfs.server.datanode.DataNode;
-import org.apache.hadoop.hdfs.server.namenode.FSNamesystem;
-import org.apache.hadoop.hdfs.server.namenode.NameNode;
-import org.apache.hadoop.hdfs.server.protocol.NamenodeProtocols;
 import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 
 /**
@@ -511,119 +505,4 @@ public abstract class MiniDFSCluster {
    * Returns the URI of the cluster.
    */
   public abstract URI getURI();
-
-  public ArrayList<DataNode> getDataNodes() {
-    throw new UnsupportedOperationException();
-  }
-
-  /** @return the datanode having the ipc server listen port */
-  public DataNode getDataNode(int ipcPort) {
-    throw new UnsupportedOperationException();
-  }
-
-  /**
-   * Gets the rpc port used by the NameNode, because the caller
-   * supplied port is not necessarily the actual port used.
-   * Assumption: cluster has a single namenode
-   */
-  public int getNameNodePort() {
-    throw new UnsupportedOperationException();
-  }
-
-  /**
-   * Gets the rpc port used by the NameNode at the given index, because the
-   * caller supplied port is not necessarily the actual port used.
-   */
-  public int getNameNodePort(int nnIndex) {
-    throw new UnsupportedOperationException();
-  }
-
-  public void transitionToActive(int nnIndex) throws IOException,
-      ServiceFailedException {
-    throw new UnsupportedOperationException();
-  }
-
-  public void transitionToStandby(int nnIndex) throws IOException,
-      ServiceFailedException {
-    throw new UnsupportedOperationException();
-  }
-
-  public static String getBaseDirectory() {
-    return "";
-  }
-
-  /**
-   * Return the {@link FSNamesystem} object.
-   * @return {@link FSNamesystem} object.
-   */
-  public FSNamesystem getNamesystem() {
-    throw new UnsupportedOperationException();
-  }
-
-  public FSNamesystem getNamesystem(int nnIndex) {
-    throw new UnsupportedOperationException();
-  }
-
-  /**
-   * Get an instance of the NameNode's RPC handler.
-   */
-  public NamenodeProtocols getNameNodeRpc() {
-    throw new UnsupportedOperationException();
-  }
-
-  /**
-   * Get an instance of the NameNode's RPC handler.
-   */
-  public NamenodeProtocols getNameNodeRpc(int nnIndex) {
-    throw new UnsupportedOperationException();
-  }
-
-  /**
-   * Gets the started NameNode.  May be null.
-   */
-  public NameNode getNameNode() {
-    throw new UnsupportedOperationException();
-  }
-
-  /**
-   * Restart all namenodes.
-   */
-  public synchronized void restartNameNodes() throws IOException {
-  }
-
-  /**
-   * Restart the namenode.
-   */
-  public synchronized void restartNameNode() throws IOException {
-  }
-
-  /**
-   * Restart the namenode. Optionally wait for the cluster to become active.
-   */
-  public synchronized void restartNameNode(boolean waitActive)
-      throws IOException {
-  }
-
-  /**
-   * Restart the namenode at a given index.
-   */
-  public synchronized void restartNameNode(int nnIndex) throws IOException {
-  }
-
-  /**
-   * Restart the namenode at a given index. Optionally wait for the cluster
-   * to become active.
-   */
-  public synchronized void restartNameNode(int nnIndex, boolean waitActive)
-      throws IOException {
-  }
-
-  /**
-   * Set the softLimit and hardLimit of client lease periods
-   */
-  public void setLeasePeriod(long soft, long hard) {
-  }
-
-  public void setLeasePeriod(long soft, long hard, int nnIndex) {
-  }
 }

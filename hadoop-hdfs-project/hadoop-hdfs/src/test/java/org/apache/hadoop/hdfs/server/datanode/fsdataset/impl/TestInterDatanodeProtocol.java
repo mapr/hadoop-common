@@ -34,6 +34,7 @@ import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.protocol.ClientProtocol;
 import org.apache.hadoop.hdfs.protocol.DatanodeID;
@@ -148,7 +149,7 @@ public class TestInterDatanodeProtocol {
    * @param useDnHostname whether DNs should connect to other DNs by hostname
    */
   private void checkBlockMetaDataInfo(boolean useDnHostname) throws Exception {
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
 
     conf.setBoolean(DFSConfigKeys.DFS_DATANODE_USE_DN_HOSTNAME, useDnHostname);
     if (useDnHostname) {
@@ -163,7 +164,7 @@ public class TestInterDatanodeProtocol {
       cluster = new MiniDFSCluster.Builder(conf)
         .numDataNodes(3)
         .checkDataNodeHostConfig(true)
-        .build();
+        .buildHDFS();
       cluster.waitActive();
 
       //create a file
@@ -321,10 +322,10 @@ public class TestInterDatanodeProtocol {
    * */
   @Test
   public void testUpdateReplicaUnderRecovery() throws IOException {
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
 
     try {
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).buildHDFS();
       cluster.waitActive();
       String bpid = cluster.getNamesystem().getBlockPoolId();
 

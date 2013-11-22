@@ -45,12 +45,12 @@ public class TestAbandonBlock {
   private static final Configuration CONF = new HdfsConfiguration();
   static final String FILE_NAME_PREFIX
       = "/" + TestAbandonBlock.class.getSimpleName() + "_"; 
-  private MiniDFSCluster cluster;
+  private MiniHDFSCluster cluster;
   private DistributedFileSystem fs;
 
   @Before
   public void setUp() throws Exception {
-    cluster = new MiniDFSCluster.Builder(CONF).numDataNodes(2).build();
+    cluster = new MiniDFSCluster.Builder(CONF).numDataNodes(2).buildHDFS();
     fs = cluster.getFileSystem();
     cluster.waitActive();
   }

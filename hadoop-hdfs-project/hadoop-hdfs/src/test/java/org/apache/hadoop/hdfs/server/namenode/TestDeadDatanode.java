@@ -29,6 +29,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.server.blockmanagement.BlockManagerTestUtil;
 import org.apache.hadoop.hdfs.server.blockmanagement.DatanodeDescriptor;
@@ -53,7 +54,7 @@ import org.junit.Test;
  */
 public class TestDeadDatanode {
   private static final Log LOG = LogFactory.getLog(TestDeadDatanode.class);
-  private MiniDFSCluster cluster;
+  private MiniHDFSCluster cluster;
 
   @After
   public void cleanup() {
@@ -95,7 +96,7 @@ public class TestDeadDatanode {
     Configuration conf = new HdfsConfiguration();
     conf.setInt(DFSConfigKeys.DFS_NAMENODE_HEARTBEAT_RECHECK_INTERVAL_KEY, 500);
     conf.setLong(DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_KEY, 1L);
-    cluster = new MiniDFSCluster.Builder(conf).build();
+    cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
     cluster.waitActive();
 
     String poolId = cluster.getNamesystem().getBlockPoolId();

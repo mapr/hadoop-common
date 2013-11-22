@@ -68,7 +68,7 @@ public class UpgradeUtilities {
 
   // Root scratch directory on local filesystem 
   private static File TEST_ROOT_DIR = 
-                      new File(MiniDFSCluster.getBaseDirectory());
+                      new File(MiniHDFSCluster.getBaseDirectory());
   // The singleton master storage directory for Namenode
   private static File namenodeStorage = new File(TEST_ROOT_DIR, "namenodeMaster");
   // A checksum of the contents in namenodeStorage directory
@@ -108,7 +108,7 @@ public class UpgradeUtilities {
     config.set(DFSConfigKeys.DFS_NAMENODE_NAME_DIR_KEY, namenodeStorage.toString());
     config.set(DFSConfigKeys.DFS_NAMENODE_EDITS_DIR_KEY, namenodeStorage.toString());
     config.set(DFSConfigKeys.DFS_DATANODE_DATA_DIR_KEY, datanodeStorage.toString());
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     String bpid = null;
     try {
       // format data-node
@@ -122,7 +122,7 @@ public class UpgradeUtilities {
                                    .format(false)
                                    .manageDataDfsDirs(false)
                                    .manageNameDfsDirs(false)
-                                   .build();
+                                   .buildHDFS();
         
       NamenodeProtocols namenode = cluster.getNameNodeRpc();
       namenodeStorageNamespaceID = namenode.versionRequest().getNamespaceID();
@@ -384,7 +384,7 @@ public class UpgradeUtilities {
   public static File[] createBlockPoolStorageDirs(String[] parents,
       String dirName, String bpid) throws Exception {
     File[] retVal = new File[parents.length];
-    Path bpCurDir = new Path(MiniDFSCluster.getBPDir(datanodeStorage,
+    Path bpCurDir = new Path(MiniHDFSCluster.getBPDir(datanodeStorage,
         bpid, Storage.STORAGE_DIR_CURRENT));
     for (int i = 0; i < parents.length; i++) {
       File newDir = new File(parents[i] + "/current/" + bpid, dirName);
@@ -524,7 +524,7 @@ public class UpgradeUtilities {
    * The UpgradeUtilities.initialize() method must be called once before
    * calling this method.
    */
-  public static int getCurrentNamespaceID(MiniDFSCluster cluster) throws IOException {
+  public static int getCurrentNamespaceID(MiniHDFSCluster cluster) throws IOException {
     if (cluster != null) {
       return cluster.getNameNodeRpc().versionRequest().getNamespaceID();
     }
@@ -535,7 +535,7 @@ public class UpgradeUtilities {
    * Return the cluster ID inherent in the currently running
    * Namenode. 
    */
-  public static String getCurrentClusterID(MiniDFSCluster cluster) throws IOException {
+  public static String getCurrentClusterID(MiniHDFSCluster cluster) throws IOException {
     if (cluster != null) {
       return cluster.getNameNodeRpc().versionRequest().getClusterID();
     }
@@ -546,7 +546,7 @@ public class UpgradeUtilities {
    * Return the blockpool ID inherent in the currently running
    * Namenode. 
    */
-  public static String getCurrentBlockPoolID(MiniDFSCluster cluster) throws IOException {
+  public static String getCurrentBlockPoolID(MiniHDFSCluster cluster) throws IOException {
     if (cluster != null) {
       return cluster.getNameNodeRpc().versionRequest().getBlockPoolID();
     }
@@ -561,7 +561,7 @@ public class UpgradeUtilities {
    * The UpgradeUtilities.initialize() method must be called once before
    * calling this method.
    */
-  public static long getCurrentFsscTime(MiniDFSCluster cluster) throws IOException {
+  public static long getCurrentFsscTime(MiniHDFSCluster cluster) throws IOException {
     if (cluster != null) {
       return cluster.getNameNodeRpc().versionRequest().getCTime();
     }
@@ -576,7 +576,7 @@ public class UpgradeUtilities {
       throws IOException {
     String[] bpDirs = new String[baseDirs.length];
     for (int i = 0; i < baseDirs.length; i++) {
-      bpDirs[i] = MiniDFSCluster.getBPDir(new File(baseDirs[i]), bpid);
+      bpDirs[i] = MiniHDFSCluster.getBPDir(new File(baseDirs[i]), bpid);
     }
     createEmptyDirs(bpDirs);
     return bpDirs;

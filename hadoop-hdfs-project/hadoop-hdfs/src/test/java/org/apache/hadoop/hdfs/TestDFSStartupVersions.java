@@ -43,7 +43,7 @@ public class TestDFSStartupVersions {
   
   private static final Log LOG = LogFactory.getLog(
                                                    "org.apache.hadoop.hdfs.TestDFSStartupVersions");
-  private MiniDFSCluster cluster = null;
+  private MiniHDFSCluster cluster = null;
   
   /**
    * Writes an INFO log message containing the parameters.
@@ -250,7 +250,7 @@ public class TestDFSStartupVersions {
                                               .manageDataDfsDirs(false)
                                               .manageNameDfsDirs(false)
                                               .startupOption(StartupOption.REGULAR)
-                                              .build();
+                                              .buildHDFS();
     StorageData nameNodeVersion = new StorageData(
         UpgradeUtilities.getCurrentLayoutVersion(),
         UpgradeUtilities.getCurrentNamespaceID(cluster),

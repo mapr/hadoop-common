@@ -39,6 +39,7 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 import org.apache.hadoop.hdfs.protocol.LocatedBlocks;
 import org.apache.hadoop.hdfs.server.common.Storage.StorageDirectory;
@@ -59,7 +60,7 @@ public class OfflineEditsViewerHelper {
     LogFactory.getLog(OfflineEditsViewerHelper.class);
 
     long           blockSize = 512;
-    MiniDFSCluster cluster   = null;
+    MiniHDFSCluster cluster   = null;
     Configuration  config    = new Configuration();
 
   /**
@@ -108,7 +109,7 @@ public class OfflineEditsViewerHelper {
     config.setBoolean(
         DFSConfigKeys.DFS_NAMENODE_DELEGATION_TOKEN_ALWAYS_USE_KEY, true);
     cluster =
-      new MiniDFSCluster.Builder(config).manageNameDfsDirs(false).build();
+      new MiniDFSCluster.Builder(config).manageNameDfsDirs(false).buildHDFS();
     cluster.waitClusterUp();
   }
 
