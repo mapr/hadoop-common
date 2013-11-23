@@ -60,11 +60,11 @@ class MapRNode {
     this.nodeId = nodeId;
     format = true;
 
-    this.port = MiniMapRDFSCluster.defaultMfsPort + nodeId;
+    this.port = MiniMapRFSCluster.defaultMfsPort + nodeId;
     this.diskName = "/tmp/disk" + this.port + ".img";
-    this.logFile = MiniMapRDFSCluster.installDir + "/logs/mfs." + this.port + ".log";
-    this.hostnameFile = MiniMapRDFSCluster.installDir + "/hostname" + this.port;
-    this.hostIdFile = MiniMapRDFSCluster.installDir + "/hostid" + this.port;
+    this.logFile = MiniMapRFSCluster.installDir + "/logs/mfs." + this.port + ".log";
+    this.hostnameFile = MiniMapRFSCluster.installDir + "/hostname" + this.port;
+    this.hostIdFile = MiniMapRFSCluster.installDir + "/hostid" + this.port;
 
     this.state = NodeState.STOPPED;
 
@@ -77,7 +77,7 @@ class MapRNode {
     String[] commands[] = {
       {"/bin/sh", "-c", "dd bs=8192 seek=1048584 count=1 if=/dev/zero of=" + this.diskName},
       {"/bin/sh", "-c", "echo host-" + this.port + " > " + this.hostnameFile},
-      {"/bin/sh", "-c", MiniMapRDFSCluster.mruuidgen + " > " + this.hostIdFile}
+      {"/bin/sh", "-c", MiniMapRFSCluster.mruuidgen + " > " + this.hostIdFile}
     };
 
     RunCommand rc = new RunCommand();
@@ -88,9 +88,9 @@ class MapRNode {
     if (isCldb) {
       String[] cldbCommands[] = {
         {"/bin/sh", "-c", "/bin/hostname --fqdn > " + this.hostnameFile},
-        {"/bin/sh", "-c", "cp " + this.hostnameFile + " " + MiniMapRDFSCluster.installDir + "/hostname"},
-        {"/bin/sh", "-c", "cp " + this.hostIdFile + " " + MiniMapRDFSCluster.installDir + "/hostid"},
-        {"/bin/sh", "-c", "echo my.cluster.com " + localhost + ":" + MiniMapRDFSCluster.cldbPort + " > " + MiniMapRDFSCluster.maprClustersFile}
+        {"/bin/sh", "-c", "cp " + this.hostnameFile + " " + MiniMapRFSCluster.installDir + "/hostname"},
+        {"/bin/sh", "-c", "cp " + this.hostIdFile + " " + MiniMapRFSCluster.installDir + "/hostid"},
+        {"/bin/sh", "-c", "echo my.cluster.com " + localhost + ":" + MiniMapRFSCluster.cldbPort + " > " + MiniMapRFSCluster.maprClustersFile}
       };
       for (int i = 0; i < cldbCommands.length; ++i) {
         rc.init(cldbCommands[i], "", false, false);
@@ -155,7 +155,7 @@ class MapRNode {
   void DecrementCldbVolMinReplica() {
     //Decrease the replication count of cldb.internal volume
     RunCommand rc = new RunCommand();
-    rc.init(MiniMapRDFSCluster.maprCli + " volume modify -name mapr.cldb.internal -minreplication 1", "", false, false);
+    rc.init(MiniMapRFSCluster.maprCli + " volume modify -name mapr.cldb.internal -minreplication 1", "", false, false);
     rc.Run();
   }
 
@@ -186,20 +186,20 @@ class MapRNode {
 
   public int MountTheDisk() {
     RunCommand rc = new RunCommand();
-    rc.init(MiniMapRDFSCluster.testConfigPy + " -h " + localhost + " -p " + port + " -m single -d " + diskName, "", false, false);
+    rc.init(MiniMapRFSCluster.testConfigPy + " -h " + localhost + " -p " + port + " -m single -d " + diskName, "", false, false);
     rc.Run();
     return 0;
   }
 
   int PrepareTheDisk() {
     RunCommand rc = new RunCommand();
-    rc.init(MiniMapRDFSCluster.testConfigPy + " -h " + localhost + " -p " + port + " -P -s 8192 -d " + diskName, "", false, false);
+    rc.init(MiniMapRFSCluster.testConfigPy + " -h " + localhost + " -p " + port + " -P -s 8192 -d " + diskName, "", false, false);
     return rc.Run();
   }
 
   public int StartFileServer() {
     RunCommand rc = new RunCommand();
-    rc.init(MiniMapRDFSCluster.mfsExe + " -e -p "+port+" -m 512 both -h " + hostnameFile + " -H " +hostIdFile + " -L " + logFile, "", true, false);
+    rc.init(MiniMapRFSCluster.mfsExe + " -e -p "+port+" -m 512 both -h " + hostnameFile + " -H " +hostIdFile + " -L " + logFile, "", true, false);
     rc.Run();
     mfsPr = rc.BGProcess();
     if (mfsPr != null) {
@@ -212,7 +212,7 @@ class MapRNode {
 
   public int StopFileServer() {
     //GIRIRunCommand rc = new RunCommand();
-    //GIRI rc.init(MiniMapRDFSCluster.mfsExe + " -e -p "+port+" -m 512 both -h " + hostnameFile + " -H " +hostIdFile + " -L " + logFile, "", true, false);
+    //GIRI rc.init(MiniMapRFSCluster.mfsExe + " -e -p "+port+" -m 512 both -h " + hostnameFile + " -H " +hostIdFile + " -L " + logFile, "", true, false);
     //GIRIrc.Run();
 
     return KillFileServer();
@@ -235,7 +235,7 @@ class MapRNode {
     }
 
     RunCommand rc = new RunCommand();
-    rc.init(MiniMapRDFSCluster.cldbInitScript + " start", "", false, false);
+    rc.init(MiniMapRFSCluster.cldbInitScript + " start", "", false, false);
     return rc.Run();
   }
 
@@ -246,7 +246,7 @@ class MapRNode {
     }
 
     RunCommand rc = new RunCommand();
-    rc.init(MiniMapRDFSCluster.cldbInitScript + " stop", "", false, false);
+    rc.init(MiniMapRFSCluster.cldbInitScript + " stop", "", false, false);
     return rc.Run();
   }
 
@@ -308,7 +308,7 @@ class MapRNode {
     RunCommand rc = new RunCommand();
     String[] cmd = {
       "/bin/sh", "-c",
-      MiniMapRDFSCluster.mfsdbFile + " " + diskName + " -c \"fid blocknum " +
+      MiniMapRFSCluster.mfsdbFile + " " + diskName + " -c \"fid blocknum " +
       fid+"."+offset+"\""
     };
 
@@ -324,12 +324,12 @@ class MapRNode {
     Stop();
     Random random = new Random();
     String badString = "BADBAD";
-    int rand = random.nextInt(MiniMapRDFSCluster.blockSize/2);
+    int rand = random.nextInt(MiniMapRFSCluster.blockSize/2);
     boolean corrupted = false;
     RunCommand rc = new RunCommand();
     String[] cmd = {
       "/bin/sh", "-c",
-      MiniMapRDFSCluster.mfsdbFile + " " + diskName + " -c \"write " + blockNum +
+      MiniMapRFSCluster.mfsdbFile + " " + diskName + " -c \"write " + blockNum +
       " " + rand + " " + badString+ " string "+ " \" "
     };
 
@@ -425,7 +425,7 @@ class RunCommand {
   }
 }
 
-public class MiniMapRDFSCluster extends MiniDFSCluster {
+public class MiniMapRFSCluster extends MiniDFSCluster {
   static String installDir="/opt/mapr";
   static String tmpPath="/tmp/mapr-scratch/";
   static String mfsExe=installDir+"/server/mfs";
@@ -455,13 +455,13 @@ public class MiniMapRDFSCluster extends MiniDFSCluster {
    * This null constructor is used only when wishing to start a data node cluster
    * without a name node (ie when the name node is started elsewhere).
    */
-  public MiniMapRDFSCluster() {
+  public MiniMapRFSCluster() {
   }
 
   /**
-   * Used by builder to create and return an instance of MiniMapRDFSCluster
+   * Used by builder to create and return an instance of MiniMapRFSCluster
    */
-  protected MiniMapRDFSCluster(Builder builder) throws IOException {
+  protected MiniMapRFSCluster(Builder builder) throws IOException {
     this (0,
             builder.conf,
             builder.numDataNodes,
@@ -484,7 +484,7 @@ public class MiniMapRDFSCluster extends MiniDFSCluster {
    * @param nameNodeOperation the operation with which to start the servers.  If null
    *          or StartupOption.FORMAT, then StartupOption.REGULAR will be used.
    */
-  public MiniMapRDFSCluster(Configuration conf,
+  public MiniMapRFSCluster(Configuration conf,
                         int numDataNodes,
                         StartupOption nameNodeOperation) throws IOException {
     this(0, conf, numDataNodes, false, false, false,  nameNodeOperation,
@@ -504,7 +504,7 @@ public class MiniMapRDFSCluster extends MiniDFSCluster {
    * @param format if true, format the NameNode and DataNodes before starting up
    * @param racks array of strings indicating the rack that each DataNode is on
    */
-  public MiniMapRDFSCluster(Configuration conf,
+  public MiniMapRFSCluster(Configuration conf,
                         int numDataNodes,
                         boolean format,
                         String[] racks) throws IOException {
@@ -525,7 +525,7 @@ public class MiniMapRDFSCluster extends MiniDFSCluster {
    * @param racks array of strings indicating the rack that each DataNode is on
    * @param hosts array of strings indicating the hostname for each DataNode
    */
-  public MiniMapRDFSCluster(Configuration conf,
+  public MiniMapRFSCluster(Configuration conf,
                         int numDataNodes,
                         boolean format,
                         String[] racks, String[] hosts) throws IOException {
@@ -550,7 +550,7 @@ public class MiniMapRDFSCluster extends MiniDFSCluster {
    *          or StartupOption.FORMAT, then StartupOption.REGULAR will be used.
    * @param racks array of strings indicating the rack that each DataNode is on
    */
-  public MiniMapRDFSCluster(int nameNodePort,
+  public MiniMapRFSCluster(int nameNodePort,
                         Configuration conf,
                         int numDataNodes,
                         boolean format,
@@ -580,7 +580,7 @@ public class MiniMapRDFSCluster extends MiniDFSCluster {
    * @param racks array of strings indicating the rack that each DataNode is on
    * @param simulatedCapacities array of capacities of the simulated data nodes
    */
-  public MiniMapRDFSCluster(int nameNodePort,
+  public MiniMapRFSCluster(int nameNodePort,
                         Configuration conf,
                         int numDataNodes,
                         boolean format,
@@ -616,7 +616,7 @@ public class MiniMapRDFSCluster extends MiniDFSCluster {
    * @param hosts array of strings indicating the hostnames of each DataNode
    * @param simulatedCapacities array of capacities of the simulated data nodes
    */
-  public MiniMapRDFSCluster(int nameNodePort,
+  public MiniMapRFSCluster(int nameNodePort,
                         Configuration conf,
                         int numDataNodes,
                         boolean format,
@@ -868,7 +868,7 @@ public class MiniMapRDFSCluster extends MiniDFSCluster {
     String[] cmd = {
       "/bin/sh",
       "-c",
-      MiniMapRDFSCluster.hadoopExe+" mfs -ls "+ file +
+      MiniMapRFSCluster.hadoopExe+" mfs -ls "+ file +
       "| (offset=" + offset +
       "; chunkSize=" + chunkSize +
       "; read line; read line; read line; if [ $offset -lt " + clusterSize +

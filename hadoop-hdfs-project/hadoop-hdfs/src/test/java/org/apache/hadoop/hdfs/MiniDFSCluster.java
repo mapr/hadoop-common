@@ -42,7 +42,7 @@ public abstract class MiniDFSCluster {
 
   /**
    * System property to be set while running the tests. If it is set to mapr,
-   * then MiniMapRDFSCluster will be created. By default, MiniHDFSCluster will
+   * then MiniMapRFSCluster will be created. By default, MiniHDFSCluster will
    * be created.
    */
   private static final String CLUSTER_TYPE = "clusterType";
@@ -246,7 +246,7 @@ public abstract class MiniDFSCluster {
 
       if (clusterType != null && clusterType.equalsIgnoreCase(MAPR)) {
         LOG.info("Creating MapR cluster");
-        return new MiniMapRDFSCluster(this);
+        return new MiniMapRFSCluster(this);
       } else {
         LOG.info("Creating HDFS cluster");
         return new MiniHDFSCluster(this);
