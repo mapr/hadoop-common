@@ -205,6 +205,8 @@ Release 2.3.0 - UNRELEASED
     
     HDFS-5449. WebHdfs compatibility broken between 2.2 and 1.x / 23.x (kihwal)
 
+    HDFS-5526. Datanode cannot roll back to previous layout version (kihwal)
+
 
 
 Release 2.2.0 - 2013-10-13
