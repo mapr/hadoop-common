@@ -17,8 +17,6 @@
  */
 package org.apache.hadoop.hdfs;
 
-import static org.apache.hadoop.hdfs.MiniDFSCluster.LOG;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -426,6 +424,8 @@ class RunCommand {
 }
 
 public class MiniMapRFSCluster extends MiniDFSCluster {
+  public static final String MAPRFS_SCHEME = "maprfs:///";
+
   static String installDir="/opt/mapr";
   static String tmpPath="/tmp/mapr-scratch/";
   static String mfsExe=installDir+"/server/mfs";
@@ -452,185 +452,14 @@ public class MiniMapRFSCluster extends MiniDFSCluster {
   private Configuration conf;
 
   /**
-   * This null constructor is used only when wishing to start a data node cluster
-   * without a name node (ie when the name node is started elsewhere).
-   */
-  public MiniMapRFSCluster() {
-  }
-
-  /**
    * Used by builder to create and return an instance of MiniMapRFSCluster
    */
   protected MiniMapRFSCluster(Builder builder) throws IOException {
-    this (0,
-            builder.conf,
-            builder.numDataNodes,
-            builder.format,
-            builder.manageNameDfsDirs,
-            builder.manageDataDfsDirs,
-            builder.option,
-            builder.racks, builder.hosts,
-            builder.simulatedCapacities);
-  }
-
-  /**
-   * Modify the config and start up the servers with the given operation.
-   * Servers will be started on free ports.
-   * <p>
-   *
-   * @param conf the base configuration to use in starting the servers.  This
-   *          will be modified as necessary.
-   * @param numDataNodes Number of DataNodes to start; may be zero
-   * @param nameNodeOperation the operation with which to start the servers.  If null
-   *          or StartupOption.FORMAT, then StartupOption.REGULAR will be used.
-   */
-  public MiniMapRFSCluster(Configuration conf,
-                        int numDataNodes,
-                        StartupOption nameNodeOperation) throws IOException {
-    this(0, conf, numDataNodes, false, false, false,  nameNodeOperation,
-          null, null, null);
-  }
-
-  /**
-   * Modify the config and start up the servers.  The rpc and info ports for
-   * servers are guaranteed to use free ports.
-   * <p>
-   * NameNode and DataNode directory creation and configuration will be
-   * managed by this class.
-   *
-   * @param conf the base configuration to use in starting the servers.  This
-   *          will be modified as necessary.
-   * @param numDataNodes Number of DataNodes to start; may be zero
-   * @param format if true, format the NameNode and DataNodes before starting up
-   * @param racks array of strings indicating the rack that each DataNode is on
-   */
-  public MiniMapRFSCluster(Configuration conf,
-                        int numDataNodes,
-                        boolean format,
-                        String[] racks) throws IOException {
-    this(0, conf, numDataNodes, format, true, true,  null, racks, null, null);
-  }
-
-  /**
-   * Modify the config and start up the servers.  The rpc and info ports for
-   * servers are guaranteed to use free ports.
-   * <p>
-   * NameNode and DataNode directory creation and configuration will be
-   * managed by this class.
-   *
-   * @param conf the base configuration to use in starting the servers.  This
-   *          will be modified as necessary.
-   * @param numDataNodes Number of DataNodes to start; may be zero
-   * @param format if true, format the NameNode and DataNodes before starting up
-   * @param racks array of strings indicating the rack that each DataNode is on
-   * @param hosts array of strings indicating the hostname for each DataNode
-   */
-  public MiniMapRFSCluster(Configuration conf,
-                        int numDataNodes,
-                        boolean format,
-                        String[] racks, String[] hosts) throws IOException {
-    this(0, conf, numDataNodes, format, true, true, null, racks, hosts, null);
-  }
-
-  /**
-   * NOTE: if possible, the other constructors that don't have nameNode port
-   * parameter should be used as they will ensure that the servers use free ports.
-   * <p>
-   * Modify the config and start up the servers.
-   *
-   * @param nameNodePort suggestion for which rpc port to use.  caller should
-   *          use getNameNodePort() to get the actual port used.
-   * @param conf the base configuration to use in starting the servers.  This
-   *          will be modified as necessary.
-   * @param numDataNodes Number of DataNodes to start; may be zero
-   * @param format if true, format the NameNode and DataNodes before starting up
-   * @param manageDfsDirs if true, the data directories for servers will be
-   *          created and dfs.name.dir and dfs.data.dir will be set in the conf
-   * @param operation the operation with which to start the servers.  If null
-   *          or StartupOption.FORMAT, then StartupOption.REGULAR will be used.
-   * @param racks array of strings indicating the rack that each DataNode is on
-   */
-  public MiniMapRFSCluster(int nameNodePort,
-                        Configuration conf,
-                        int numDataNodes,
-                        boolean format,
-                        boolean manageDfsDirs,
-                        StartupOption operation,
-                        String[] racks) throws IOException {
-    this(nameNodePort, conf, numDataNodes, format, manageDfsDirs, manageDfsDirs,
-         operation, racks, null, null);
-  }
-
-  /**
-   * NOTE: if possible, the other constructors that don't have nameNode port
-   * parameter should be used as they will ensure that the servers use free ports.
-   * <p>
-   * Modify the config and start up the servers.
-   *
-   * @param nameNodePort suggestion for which rpc port to use.  caller should
-   *          use getNameNodePort() to get the actual port used.
-   * @param conf the base configuration to use in starting the servers.  This
-   *          will be modified as necessary.
-   * @param numDataNodes Number of DataNodes to start; may be zero
-   * @param format if true, format the NameNode and DataNodes before starting up
-   * @param manageDfsDirs if true, the data directories for servers will be
-   *          created and dfs.name.dir and dfs.data.dir will be set in the conf
-   * @param operation the operation with which to start the servers.  If null
-   *          or StartupOption.FORMAT, then StartupOption.REGULAR will be used.
-   * @param racks array of strings indicating the rack that each DataNode is on
-   * @param simulatedCapacities array of capacities of the simulated data nodes
-   */
-  public MiniMapRFSCluster(int nameNodePort,
-                        Configuration conf,
-                        int numDataNodes,
-                        boolean format,
-                        boolean manageDfsDirs,
-                        StartupOption operation,
-                        String[] racks,
-                        long[] simulatedCapacities) throws IOException {
-    this(nameNodePort, conf, numDataNodes, format, manageDfsDirs, manageDfsDirs,
-          operation, racks, null, simulatedCapacities);
-  }
-
-  public static final String MAPRFS_SCHEME = "maprfs://";
-
-  /**
-   * NOTE: if possible, the other constructors that don't have nameNode port
-   * parameter should be used as they will ensure that the servers use free ports.
-   * <p>
-   * Modify the config and start up the servers.
-   *
-   * @param nameNodePort suggestion for which rpc port to use.  caller should
-   *          use getNameNodePort() to get the actual port used.
-   * @param conf the base configuration to use in starting the servers.  This
-   *          will be modified as necessary.
-   * @param numDataNodes Number of DataNodes to start; may be zero
-   * @param format if true, format the NameNode and DataNodes before starting up
-   * @param manageNameDfsDirs if true, the data directories for servers will be
-   *          created and dfs.name.dir and dfs.data.dir will be set in the conf
-   * @param manageDataDfsDirs if true, the data directories for datanodes will
-   *          be created and dfs.data.dir set to same in the conf
-   * @param operation the operation with which to start the servers.  If null
-   *          or StartupOption.FORMAT, then StartupOption.REGULAR will be used.
-   * @param racks array of strings indicating the rack that each DataNode is on
-   * @param hosts array of strings indicating the hostnames of each DataNode
-   * @param simulatedCapacities array of capacities of the simulated data nodes
-   */
-  public MiniMapRFSCluster(int nameNodePort,
-                        Configuration conf,
-                        int numDataNodes,
-                        boolean format,
-                        boolean manageNameDfsDirs,
-                        boolean manageDataDfsDirs,
-                        StartupOption operation,
-                        String[] racks, String hosts[],
-                        long[] simulatedCapacities) throws IOException {
-
-    this.conf = conf;
+    this.conf = builder.conf;
     //Use mfs cluster.
     conf.set("fs.default.name", MAPRFS_SCHEME);
     int replication = conf.getInt("dfs.replication", 3);
-    conf.setInt("dfs.replication", Math.min(replication, numDataNodes));
+    conf.setInt("dfs.replication", Math.min(replication, builder.numDataNodes));
     conf.set("fs.maprfs.impl", "com.mapr.fs.MapRFileSystem");
     conf.set("io.file.buffer.size", "65536");  //TODO: other sizes?
 
@@ -640,10 +469,10 @@ public class MiniMapRFSCluster extends MiniDFSCluster {
     // Hack to handle any test case that failed to shut down the cluter.
     //teardownServices();
 
-    initNodes("TestVolume", numDataNodes);
+    initNodes("TestVolume", builder.numDataNodes);
     // Start the DataNodes
-    startDataNodes(conf, numDataNodes, manageDataDfsDirs,
-                    operation, racks, hosts, simulatedCapacities);
+    startDataNodes(conf, builder.numDataNodes, builder.manageDataDfsDirs,
+                    builder.option, builder.racks, builder.hosts, builder.simulatedCapacities);
 
     waitClusterUp();
     if (!isClusterUp) {
@@ -717,53 +546,22 @@ public class MiniMapRFSCluster extends MiniDFSCluster {
   }
 
   /**
-   * Modify the config and start up additional DataNodes.  The info port for
-   * DataNodes is guaranteed to use a free port.
-   *
-   *  Data nodes can run with the name node in the mini cluster or
-   *  a real name node. For example, running with a real name node is useful
-   *  when running simulated data nodes with a real name node.
-   *  If minicluster's name node is null assume that the conf has been
-   *  set with the right address:port of the name node.
-   *
-   * @param conf the base configuration to use in starting the DataNodes.  This
-   *          will be modified as necessary.
-   * @param numDataNodes Number of DataNodes to start; may be zero
-   * @param manageDfsDirs if true, the data directories for DataNodes will be
-   *          created and dfs.data.dir will be set in the conf
-   * @param operation the operation with which to start the DataNodes.  If null
-   *          or StartupOption.FORMAT, then StartupOption.REGULAR will be used.
-   * @param racks array of strings indicating the rack that each DataNode is on
-   * @param hosts array of strings indicating the hostnames for each DataNode
-   * @param simulatedCapacities array of capacities of the simulated data nodes
-   *
-   * @throws IllegalStateException if NameNode has been shutdown
+   * {@inheritDoc}
+   * @see MiniDFSCluster#startDataNodes(Configuration,int,boolean,StartupOption,String[],String[],long[])
    */
   public synchronized void startDataNodes(Configuration conf, int numDataNodes,
-                             boolean manageDfsDirs, StartupOption operation,
-                             String[] racks, String[] hosts,
-                             long[] simulatedCapacities) throws IOException {
+      boolean manageDfsDirs, StartupOption operation,
+      String[] racks, String[] hosts,
+      long[] simulatedCapacities) throws IOException {
 
     Start();
   }
 
   /**
-   * Modify the config and start up the DataNodes.  The info port for
-   * DataNodes is guaranteed to use a free port.
-   *
-   * @param conf the base configuration to use in starting the DataNodes.  This
-   *          will be modified as necessary.
-   * @param numDataNodes Number of DataNodes to start; may be zero
-   * @param manageDfsDirs if true, the data directories for DataNodes will be
-   *          created and dfs.data.dir will be set in the conf
-   * @param operation the operation with which to start the DataNodes.  If null
-   *          or StartupOption.FORMAT, then StartupOption.REGULAR will be used.
-   * @param racks array of strings indicating the rack that each DataNode is on
-   *
-   * @throws IllegalStateException if NameNode has been shutdown
+   * {@inheritDoc}
+   * @see MiniDFSCluster#startDataNodes(Configuration,int,boolean,StartupOption,String[])
    */
-
-  public void startDataNodes(Configuration conf, int numDataNodes,
+  public synchronized void startDataNodes(Configuration conf, int numDataNodes,
       boolean manageDfsDirs, StartupOption operation, String[] racks
       ) throws IOException {
 
@@ -771,46 +569,27 @@ public class MiniMapRFSCluster extends MiniDFSCluster {
   }
 
   /**
-   * Modify the config and start up additional DataNodes.  The info port for
-   * DataNodes is guaranteed to use a free port.
-   *
-   *  Data nodes can run with the name node in the mini cluster or
-   *  a real name node. For example, running with a real name node is useful
-   *  when running simulated data nodes with a real name node.
-   *  If minicluster's name node is null assume that the conf has been
-   *  set with the right address:port of the name node.
-   *
-   * @param conf the base configuration to use in starting the DataNodes.  This
-   *          will be modified as necessary.
-   * @param numDataNodes Number of DataNodes to start; may be zero
-   * @param manageDfsDirs if true, the data directories for DataNodes will be
-   *          created and dfs.data.dir will be set in the conf
-   * @param operation the operation with which to start the DataNodes.  If null
-   *          or StartupOption.FORMAT, then StartupOption.REGULAR will be used.
-   * @param racks array of strings indicating the rack that each DataNode is on
-   * @param simulatedCapacities array of capacities of the simulated data nodes
-   *
-   * @throws IllegalStateException if NameNode has been shutdown
+   * {@inheritDoc}
+   * @see MiniDFSCluster#startDataNodes(Configuration,int,boolean,StartupOption,String[],long[])
    */
-  public void startDataNodes(Configuration conf, int numDataNodes,
-                             boolean manageDfsDirs, StartupOption operation,
-                             String[] racks, long[] simulatedCapacities)
-                             throws IOException {
+  public synchronized void startDataNodes(Configuration conf, int numDataNodes,
+      boolean manageDfsDirs, StartupOption operation,
+      String[] racks, long[] simulatedCapacities) throws IOException {
 
     startDataNodes(conf, numDataNodes, manageDfsDirs, operation, racks, null,
                    simulatedCapacities);
-
   }
 
-  public void startDataNodes(Configuration conf, int numDataNodes,
-                             boolean manageDfsDirs, StartupOption operation,
-                             String[] racks, String[] hosts,
-                             long[] simulatedCapacities,
-                             boolean setupHostsFile) throws IOException {
+  public synchronized void startDataNodes(Configuration conf, int numDataNodes,
+      boolean manageDfsDirs, StartupOption operation,
+      String[] racks, String[] hosts,
+      long[] simulatedCapacities,
+      boolean setupHostsFile) throws IOException {
+
     Start();
   }
 
-  public void startDataNodes(Configuration conf, int numDataNodes,
+  public synchronized void startDataNodes(Configuration conf, int numDataNodes,
       boolean manageDfsDirs, StartupOption operation,
       String[] racks, String[] hosts,
       long[] simulatedCapacities,

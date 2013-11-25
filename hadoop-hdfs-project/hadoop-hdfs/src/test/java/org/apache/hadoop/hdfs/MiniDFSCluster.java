@@ -33,7 +33,8 @@ import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
  * This class creates a single-process DFS cluster for junit testing.
  * Sub classes of this class provide the actual implementaion to create, start,
  * stop the cluster. Set the Java system property specified by field
- * <code>CLUSTER_TYPE</code> to determine the sub class to instantiate.
+ * <code>CLUSTER_IMPL</code> to the fully qualified class name of the
+ * sub class to load.
  */
 @InterfaceAudience.LimitedPrivate({"HBase", "HDFS", "Hive", "MapReduce", "Pig"})
 @InterfaceStability.Unstable
@@ -41,13 +42,13 @@ public abstract class MiniDFSCluster {
   protected static final Log LOG = LogFactory.getLog(MiniDFSCluster.class);
 
   /**
-   * System property to be set while running the tests. If it is set to mapr,
-   * then MiniMapRFSCluster will be created. By default, MiniHDFSCluster will
-   * be created.
+   * System property to be set while running the tests. The value of this
+   * property should be a fully qualified class name that extends
+   * MiniDFSCluster. An instance of this class will be used as the actual
+   * cluster. If this property is not set, then it will default to HDFS
+   * implementation - @see MiniHDFSCluster.
    */
-  private static final String CLUSTER_TYPE = "clusterType";
-
-  private static final String MAPR = "mapr";
+  private static final String CLUSTER_IMPL = "clusterImpl";
 
   static { DefaultMetricsSystem.setMiniClusterMode(true); }
 
@@ -237,16 +238,22 @@ public abstract class MiniDFSCluster {
 
     /**
      * Construct the actual MiniDFSCluster instance by looking at the system
-     * property <code>CLUSTER_TYPE</code>.
+     * property <code>CLUSTER_IMPL</code>.
      *
      * @return instance of MiniDFSCluster subclass
      */
     public MiniDFSCluster build() throws IOException {
-      String clusterType = System.getProperty(CLUSTER_TYPE);
+      String implClassName = System.getProperty(CLUSTER_IMPL);
 
-      if (clusterType != null && clusterType.equalsIgnoreCase(MAPR)) {
-        LOG.info("Creating MapR cluster");
-        return new MiniMapRFSCluster(this);
+      if (implClassName != null && !implClassName.isEmpty()) {
+        LOG.info("Creating cluster: " + implClassName);
+        try {
+          return this.getClass().getClassLoader().loadClass(implClassName)
+              .asSubclass(MiniDFSCluster.class)
+              .getDeclaredConstructor(Builder.class).newInstance(this);
+        } catch (Exception e) {
+          throw new RuntimeException(e);
+        }
       } else {
         LOG.info("Creating HDFS cluster");
         return new MiniHDFSCluster(this);
