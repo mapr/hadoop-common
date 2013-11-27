@@ -87,7 +87,7 @@ public class DefaultContainerExecutor extends ContainerExecutor {
 
     ContainerLocalizer localizer =
         new ContainerLocalizer(lfs, user, appId, locId, getPaths(localDirs),
-            RecordFactoryProvider.getRecordFactory(getConf()));
+            RecordFactoryProvider.getRecordFactory(getConf()), getConf());
 
     createUserLocalDirs(localDirs, user);
     createUserCacheDirs(localDirs, user);

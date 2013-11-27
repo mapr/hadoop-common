@@ -95,7 +95,7 @@ public class ContainerLocalizer {
 
   public ContainerLocalizer(FileContext lfs, String user, String appId,
       String localizerId, List<Path> localDirs,
-      RecordFactory recordFactory) throws IOException {
+      RecordFactory recordFactory, Configuration conf) throws IOException {
     if (null == user) {
       throw new IOException("Cannot initialize for null user");
     }
@@ -108,7 +108,7 @@ public class ContainerLocalizer {
     this.localDirs = localDirs;
     this.localizerId = localizerId;
     this.recordFactory = recordFactory;
-    this.conf = new Configuration();
+    this.conf = conf;
     this.appCacheDirContextName = String.format(APPCACHE_CTXT_FMT, appId);
     this.pendingResources = new HashMap<LocalResource,Future<Path>>();
   }
@@ -340,7 +340,7 @@ public class ContainerLocalizer {
       ContainerLocalizer localizer =
           new ContainerLocalizer(FileContext.getLocalFSFileContext(), user,
               appId, locId, localDirs,
-              RecordFactoryProvider.getRecordFactory(null));
+              RecordFactoryProvider.getRecordFactory(null), null);
       System.exit(localizer.runLocalization(nmAddr));
     } catch (Throwable e) {
       // Print error to stdout so that LCE can use it.
