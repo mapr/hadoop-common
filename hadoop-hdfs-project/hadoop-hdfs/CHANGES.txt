@@ -3552,6 +3552,9 @@ Release 0.23.10 - UNRELEASED
     HDFS-4998. TestUnderReplicatedBlocks fails intermittently (kihwal)
 
 Release 0.23.9 - UNRELEASED
+    HDFS-5557. Write pipeline recovery for the last packet in the block may
+    cause rejection of valid replicas. (kihwal)
+
 
   INCOMPATIBLE CHANGES
 
