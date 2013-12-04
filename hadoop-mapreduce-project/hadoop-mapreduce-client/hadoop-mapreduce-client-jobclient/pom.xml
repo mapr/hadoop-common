@@ -31,9 +31,32 @@
     <fork.mode>always</fork.mode>
     <!-- Needed for generating FindBugs warnings using parent pom -->
     <mr.basedir>${project.parent.basedir}/../</mr.basedir>
+    <mapr.version>1.0.3-mapr-3.2.0-SNAPSHOT</mapr.version>
   </properties>
 
   <dependencies>
+    <!-- MapR -->
+    <dependency>
+      <groupId>com.mapr.hadoop</groupId>
+      <artifactId>maprfs</artifactId>
+      <version>${mapr.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.mapr.hadoop</groupId>
+      <artifactId>maprfs-jni</artifactId>
+      <version>${mapr.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.mapr.fs</groupId>
+      <artifactId>security</artifactId>
+      <version>${mapr.version}</version>
+      <scope>test</scope>
+    </dependency>
+
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-mapreduce-client-common</artifactId>
@@ -156,6 +179,7 @@
         <configuration>
           <environmentVariables>
             <JAVA_HOME>${java.home}</JAVA_HOME>
+	    <LD_LIBRARY_PATH>/opt/mapr/lib</LD_LIBRARY_PATH>
           </environmentVariables>
           <additionalClasspathElements>
             <!-- workaround for JobConf#setJarByClass -->

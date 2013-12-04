@@ -48,7 +48,9 @@ public abstract class MiniDFSCluster {
    * cluster. If this property is not set, then it will default to HDFS
    * implementation - @see MiniHDFSCluster.
    */
-  private static final String CLUSTER_IMPL = "clusterImpl";
+  private static final String CLUSTER_IMPL = "cluster";
+
+  private static MiniDFSCluster runningInstance = null;
 
   static { DefaultMetricsSystem.setMiniClusterMode(true); }
 
@@ -237,35 +239,64 @@ public abstract class MiniDFSCluster {
     }
 
     /**
-     * Construct the actual MiniDFSCluster instance by looking at the system
+     * Constructs the actual MiniDFSCluster instance by looking at the system
      * property <code>CLUSTER_IMPL</code>.
+     *
+     * Assumption: Only one cluster can be existing at any point of time. So the
+     * test is not expected to make concurrent calls to this method.
      *
      * @return instance of MiniDFSCluster subclass
      */
     public MiniDFSCluster build() throws IOException {
       String implClassName = System.getProperty(CLUSTER_IMPL);
 
+      Class<? extends MiniDFSCluster> clazz = MiniHDFSCluster.class;
       if (implClassName != null && !implClassName.isEmpty()) {
-        LOG.info("Creating cluster: " + implClassName);
         try {
-          return this.getClass().getClassLoader().loadClass(implClassName)
-              .asSubclass(MiniDFSCluster.class)
-              .getDeclaredConstructor(Builder.class).newInstance(this);
+          clazz = this.getClass().getClassLoader()
+              .loadClass(implClassName)
+              .asSubclass(MiniDFSCluster.class);
+
+          build(clazz);
         } catch (Exception e) {
           throw new RuntimeException(e);
         }
-      } else {
-        LOG.info("Creating HDFS cluster");
-        return new MiniHDFSCluster(this);
       }
+
+      return build(clazz);
     }
 
     /**
-     * Construct MiniHDFSCluster
+     * Constructs MiniHDFSCluster
      */
     public MiniHDFSCluster buildHDFS() throws IOException {
-      LOG.info("Creating HDFS cluster");
-      return new MiniHDFSCluster(this);
+      return build(MiniHDFSCluster.class);
+    }
+
+    /**
+     * Instantiates a mini DFS cluster specified by given <code>clazz</code>.
+     * If there is a cluster already running, then it will be shutdown before
+     * creating a new cluster instance. This is useful when test cases fail to
+     * shutdown the cluster.
+     *
+     * @param clazz class to instantiate
+     */
+    public <T extends MiniDFSCluster> T build(Class<T> clazz) throws IOException {
+      if (runningInstance != null) {
+        runningInstance.shutdown();
+      }
+
+      LOG.info("Creating cluster: " + clazz.getClass().getName());
+      try {
+        T t = clazz.getDeclaredConstructor(Builder.class)
+          .newInstance(this);
+
+        runningInstance = t;
+
+        return t;
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
     }
   }
 
@@ -504,7 +535,10 @@ public abstract class MiniDFSCluster {
    */
   public final static void shutdownCluster(MiniDFSCluster cluster) {
     if (cluster != null) {
+      LOG.info("Shutting down cluster");
+
       cluster.shutdown();
+      runningInstance = null;
     }
   }
 
@@ -512,4 +546,8 @@ public abstract class MiniDFSCluster {
    * Returns the URI of the cluster.
    */
   public abstract URI getURI();
+
+  public static MiniDFSCluster getRunningInstance() {
+    return runningInstance;
+  }
 }

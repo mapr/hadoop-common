@@ -466,9 +466,6 @@ public class MiniMapRFSCluster extends MiniDFSCluster {
     conf.set("dfs.http.address", "127.0.0.1:0");
     //conf.set("fs.mapr.trace", "debug");
 
-    // Hack to handle any test case that failed to shut down the cluter.
-    //teardownServices();
-
     initNodes("TestVolume", builder.numDataNodes);
     // Start the DataNodes
     startDataNodes(conf, builder.numDataNodes, builder.manageDataDfsDirs,
@@ -481,18 +478,6 @@ public class MiniMapRFSCluster extends MiniDFSCluster {
 
     //make sure ProxyUsers uses the latest conf
     ProxyUsers.refreshSuperUserGroupsConfiguration(conf);
-  }
-
-  // This is meant for debugging purpose only. Not to be used in normal
-  // automated tests as the script is not checked in.
-  private void teardownServices() {
-    RunCommand rc = new RunCommand();
-    String[] cmd = {
-      "/bin/sh", "-c", "/usr/local/bin/teardown_mapr.sh"
-    };
-
-    rc.init(cmd, "", false, true);
-    rc.Run();
   }
 
   void initNodes(String volName, int numNodes)
