@@ -286,10 +286,11 @@ public abstract class MiniDFSCluster {
         runningInstance.shutdown();
       }
 
-      LOG.info("Creating cluster: " + clazz.getClass().getName());
       try {
         T t = clazz.getDeclaredConstructor(Builder.class)
           .newInstance(this);
+
+        LOG.info("Created cluster: " + t.getClass().getName());
 
         runningInstance = t;
 
@@ -463,7 +464,16 @@ public abstract class MiniDFSCluster {
   /**
    * Shutdown all the nodes in the cluster.
    */
-  public abstract void shutdown();
+  public void shutdown() {
+    LOG.info("Shutting down MiniDFSCluster");
+    doShutdown();
+    runningInstance = null;
+  }
+
+  /**
+   * Actual shutdown method to be implented by subclasses.
+   */
+  public abstract void doShutdown();
 
   /**
    * Shutdown all DataNodes started by this class.  The NameNode
@@ -535,10 +545,7 @@ public abstract class MiniDFSCluster {
    */
   public final static void shutdownCluster(MiniDFSCluster cluster) {
     if (cluster != null) {
-      LOG.info("Shutting down cluster");
-
       cluster.shutdown();
-      runningInstance = null;
     }
   }
 

@@ -1212,8 +1212,7 @@ public class MiniHDFSCluster extends MiniDFSCluster {
   /**
    * Shutdown all the nodes in the cluster.
    */
-  public void shutdown() {
-    LOG.info("Shutting down the Mini HDFS Cluster");
+  public void doShutdown() {
     if (checkExitOnShutdown)  {
       if (ExitUtil.terminateCalled()) {
         LOG.fatal("Test resulted in an unexpected exit",

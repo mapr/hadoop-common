@@ -598,8 +598,7 @@ public class MiniMapRFSCluster extends MiniDFSCluster {
   /**
    * Shut down the servers that are up.
    */
-  public void shutdown() {
-    System.out.println("Shutting down the MiniMapRCluster");
+  public void doShutdown() {
     for (int i = 0; i < numNodes; ++i) {
       nodes[i].Stop();
     }
