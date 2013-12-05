@@ -33,6 +33,7 @@ import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants.SafeModeAction;
 import org.junit.Test;
 
@@ -48,7 +49,7 @@ import com.google.common.base.Joiner;
 public class TestNNStorageRetentionFunctional {
 
   private static File TEST_ROOT_DIR =
-    new File(MiniDFSCluster.getBaseDirectory());
+    new File(MiniHDFSCluster.getBaseDirectory());
   private static Log LOG = LogFactory.getLog(
       TestNNStorageRetentionFunctional.class);
 
@@ -61,7 +62,7 @@ public class TestNNStorageRetentionFunctional {
   @Test
   public void testPurgingWithNameEditsDirAfterFailure()
       throws Exception {
-    MiniDFSCluster cluster = null;    
+    MiniHDFSCluster cluster = null;    
     Configuration conf = new HdfsConfiguration();
     conf.setLong(DFSConfigKeys.DFS_NAMENODE_NUM_EXTRA_EDITS_RETAINED_KEY, 0);
 
@@ -76,7 +77,7 @@ public class TestNNStorageRetentionFunctional {
       cluster = new MiniDFSCluster.Builder(conf)
         .numDataNodes(0)
         .manageNameDfsDirs(false)
-        .format(true).build();
+        .format(true).buildHDFS();
   
       NameNode nn = cluster.getNameNode();
 

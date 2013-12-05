@@ -36,7 +36,7 @@ import org.apache.hadoop.net.StaticMapping;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.ssl.SSLFactory;
 
-public class MiniDFSClusterWithNodeGroup extends MiniDFSCluster {
+public class MiniDFSClusterWithNodeGroup extends MiniHDFSCluster {
 
   private static String[] NODE_GROUPS = null;
   private static final Log LOG = LogFactory.getLog(MiniDFSClusterWithNodeGroup.class);

@@ -18,6 +18,9 @@
 
 package org.apache.hadoop.hdfs.server.datanode;
 
+import static org.apache.hadoop.hdfs.server.datanode.DataBlockScanner.SLEEP_PERIOD_MS;
+import static org.junit.Assert.fail;
+
 import java.io.IOException;
 
 import junit.framework.Assert;
@@ -34,20 +37,16 @@ import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
-import org.apache.hadoop.hdfs.server.datanode.BlockPoolSliceScanner;
-import static org.apache.hadoop.hdfs.server.datanode.DataBlockScanner.SLEEP_PERIOD_MS;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.junit.Test;
-import org.junit.Ignore;
-import static org.junit.Assert.fail;
 
 
 public class TestMultipleNNDataBlockScanner {
   private static final Log LOG = 
     LogFactory.getLog(TestMultipleNNDataBlockScanner.class);
   Configuration conf;
-  MiniDFSCluster cluster = null;
+  MiniHDFSCluster cluster = null;
   String bpids[] = new String[3];
   FileSystem fs[] = new FileSystem[3];
   
@@ -57,7 +56,7 @@ public class TestMultipleNNDataBlockScanner {
     conf.setInt(DFSConfigKeys.DFS_BYTES_PER_CHECKSUM_KEY, 100);
     cluster = new MiniDFSCluster.Builder(conf)
         .nnTopology(MiniDFSNNTopology.simpleFederatedTopology(3))
-        .build();
+        .buildHDFS();
     for (int i = 0; i < 3; i++) {
       cluster.waitActive(i);
     }
@@ -182,7 +181,7 @@ public class TestMultipleNNDataBlockScanner {
     Configuration conf = new HdfsConfiguration();
     cluster = new MiniDFSCluster.Builder(conf)
         .nnTopology(MiniDFSNNTopology.simpleFederatedTopology(3))
-        .build();
+        .buildHDFS();
 
     try {
       FileSystem fs = cluster.getFileSystem(1);
@@ -210,7 +209,7 @@ public class TestMultipleNNDataBlockScanner {
   public void testBlockRescanInterval() throws IOException {
     ((Log4JLogger)BlockPoolSliceScanner.LOG).getLogger().setLevel(Level.ALL);
     Configuration conf = new HdfsConfiguration();
-    cluster = new MiniDFSCluster.Builder(conf).build();
+    cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
 
     try {
       FileSystem fs = cluster.getFileSystem();

@@ -38,6 +38,7 @@ import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.LogVerificationAppender;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 import org.apache.hadoop.hdfs.server.datanode.DataNode;
@@ -555,8 +556,8 @@ public class TestReplicationPolicy {
                                   "host4", "host5", "host6"};
     String[] racks = new String[]{"/d1/r1", "/d1/r1", "/d1/r2", 
                                   "/d1/r2", "/d2/r3", "/d2/r3"};
-    MiniDFSCluster miniCluster = new MiniDFSCluster.Builder(conf).racks(racks)
-        .hosts(hosts).numDataNodes(hosts.length).build();
+    MiniHDFSCluster miniCluster = new MiniDFSCluster.Builder(conf).racks(racks)
+        .hosts(hosts).numDataNodes(hosts.length).buildHDFS();
     miniCluster.waitActive();
     
     try {
@@ -757,8 +758,8 @@ public class TestReplicationPolicy {
     int HIGH_PRIORITY = 0;
     Configuration conf = new Configuration();
     conf.setInt(DFSConfigKeys.DFS_NAMENODE_REPLICATION_INTERVAL_KEY, 1);
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2)
-        .format(true).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2)
+        .format(true).buildHDFS();
     try {
       cluster.waitActive();
       final UnderReplicatedBlocks neededReplications = cluster.getNameNode()

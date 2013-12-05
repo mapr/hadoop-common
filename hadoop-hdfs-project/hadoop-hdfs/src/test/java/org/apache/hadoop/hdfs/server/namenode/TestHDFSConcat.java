@@ -38,6 +38,7 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.protocol.LocatedBlocks;
 import org.apache.hadoop.hdfs.server.protocol.NamenodeProtocols;
@@ -51,7 +52,7 @@ public class TestHDFSConcat {
 
   private static final short REPL_FACTOR = 2;
   
-  private MiniDFSCluster cluster;
+  private MiniHDFSCluster cluster;
   private NamenodeProtocols nn;
   private DistributedFileSystem dfs;
 
@@ -67,7 +68,7 @@ public class TestHDFSConcat {
   
   @Before
   public void startUpCluster() throws IOException {
-    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(REPL_FACTOR).build();
+    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(REPL_FACTOR).buildHDFS();
     assertNotNull("Failed Cluster Creation", cluster);
     cluster.waitClusterUp();
     dfs = (DistributedFileSystem) cluster.getFileSystem();

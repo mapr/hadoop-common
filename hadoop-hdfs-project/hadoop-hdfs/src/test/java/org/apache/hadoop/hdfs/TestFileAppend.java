@@ -113,7 +113,7 @@ public class TestFileAppend{
     if (simulatedStorage) {
       SimulatedFSDataset.setFactory(conf);
     }
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
     FileSystem fs = cluster.getFileSystem();
     InetSocketAddress addr = new InetSocketAddress("localhost",
                                                    cluster.getNameNodePort());
@@ -350,8 +350,8 @@ public class TestFileAppend{
     final long softLimit = 1L;
     final long hardLimit = 9999999L;
 
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1)
-        .build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1)
+        .buildHDFS();
     cluster.setLeasePeriod(softLimit, hardLimit);
     cluster.waitActive();
 

@@ -37,6 +37,7 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.HAUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.server.namenode.EditLogInputStream;
 import org.apache.hadoop.hdfs.server.namenode.FSEditLog;
 import org.apache.hadoop.hdfs.server.namenode.FSEditLogOp;
@@ -60,7 +61,7 @@ public class TestFailureToReadEdits {
   private static final String TEST_DIR3 = "/test3";
   
   private Configuration conf;
-  private MiniDFSCluster cluster;
+  private MiniHDFSCluster cluster;
   private NameNode nn0;
   private NameNode nn1;
   private FileSystem fs;
@@ -82,7 +83,7 @@ public class TestFailureToReadEdits {
       .nnTopology(topology)
       .numDataNodes(0)
       .checkExitOnShutdown(false)
-      .build();
+      .buildHDFS();
     
     cluster.waitActive();
     

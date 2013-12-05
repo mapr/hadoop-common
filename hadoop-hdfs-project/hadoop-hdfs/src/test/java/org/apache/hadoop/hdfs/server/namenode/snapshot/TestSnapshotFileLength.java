@@ -17,22 +17,20 @@
  */
 package org.apache.hadoop.hdfs.server.namenode.snapshot;
 
-import java.util.Random;
-
-import org.apache.hadoop.fs.FileStatus;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 public class TestSnapshotFileLength {
 
@@ -41,7 +39,7 @@ public class TestSnapshotFileLength {
   private static final int BLOCKSIZE = 1024;
 
   private static Configuration conf = new Configuration();
-  private static MiniDFSCluster cluster;
+  private static MiniHDFSCluster cluster;
   private static DistributedFileSystem hdfs;
 
   private final Path dir = new Path("/TestSnapshotFileLength");
@@ -52,7 +50,7 @@ public class TestSnapshotFileLength {
   @Before
   public void setUp() throws Exception {
     cluster = new MiniDFSCluster.Builder(conf).numDataNodes(REPLICATION)
-                                              .build();
+                                              .buildHDFS();
     cluster.waitActive();
     hdfs = cluster.getFileSystem();
   }

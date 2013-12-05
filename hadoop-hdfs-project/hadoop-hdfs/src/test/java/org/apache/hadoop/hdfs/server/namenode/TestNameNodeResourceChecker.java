@@ -31,6 +31,7 @@ import java.util.Set;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.server.namenode.FSNamesystem.NameNodeResourceMonitor;
 import org.apache.hadoop.hdfs.server.namenode.NameNodeResourceChecker.CheckedVolume;
 import org.apache.hadoop.util.Time;
@@ -88,13 +89,13 @@ public class TestNameNodeResourceChecker {
   @Test
   public void testCheckThatNameNodeResourceMonitorIsRunning()
       throws IOException, InterruptedException {
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
       conf.set(DFSConfigKeys.DFS_NAMENODE_EDITS_DIR_KEY, nameDir.getAbsolutePath());
       conf.setLong(DFSConfigKeys.DFS_NAMENODE_RESOURCE_CHECK_INTERVAL_KEY, 1);
       
       cluster = new MiniDFSCluster.Builder(conf)
-          .numDataNodes(1).build();
+          .numDataNodes(1).buildHDFS();
 
       NameNodeResourceChecker mockResourceChecker = Mockito.mock(NameNodeResourceChecker.class);
       Mockito.when(mockResourceChecker.hasAvailableDiskSpace()).thenReturn(true);

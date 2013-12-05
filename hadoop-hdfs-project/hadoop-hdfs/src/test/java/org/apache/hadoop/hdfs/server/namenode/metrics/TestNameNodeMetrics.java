@@ -38,6 +38,7 @@ import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants.SafeModeAction;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.apache.hadoop.hdfs.server.blockmanagement.BlockManager;
@@ -87,7 +88,7 @@ public class TestNameNodeMetrics {
       .getLogger().setLevel(Level.DEBUG);
   }
   
-  private MiniDFSCluster cluster;
+  private MiniHDFSCluster cluster;
   private DistributedFileSystem fs;
   private Random rand = new Random();
   private FSNamesystem namesystem;
@@ -99,7 +100,7 @@ public class TestNameNodeMetrics {
   
   @Before
   public void setUp() throws Exception {
-    cluster = new MiniDFSCluster.Builder(CONF).numDataNodes(DATANODE_COUNT).build();
+    cluster = new MiniDFSCluster.Builder(CONF).numDataNodes(DATANODE_COUNT).buildHDFS();
     cluster.waitActive();
     namesystem = cluster.getNamesystem();
     bm = namesystem.getBlockManager();

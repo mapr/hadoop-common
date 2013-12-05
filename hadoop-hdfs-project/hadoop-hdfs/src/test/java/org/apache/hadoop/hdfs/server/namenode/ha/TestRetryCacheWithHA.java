@@ -50,6 +50,7 @@ import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.NameNodeProxies;
 import org.apache.hadoop.hdfs.client.HdfsDataOutputStream;
 import org.apache.hadoop.hdfs.client.HdfsDataOutputStream.SyncFlag;
@@ -83,7 +84,7 @@ public class TestRetryCacheWithHA {
   private static final short DataNodes = 3;
   private static final int CHECKTIMES = 10;
   
-  private MiniDFSCluster cluster;
+  private MiniHDFSCluster cluster;
   private DistributedFileSystem dfs;
   private Configuration conf = new HdfsConfiguration();
   
@@ -118,7 +119,7 @@ public class TestRetryCacheWithHA {
     conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, BlockSize);
     cluster = new MiniDFSCluster.Builder(conf)
         .nnTopology(MiniDFSNNTopology.simpleHATopology())
-        .numDataNodes(DataNodes).build();
+        .numDataNodes(DataNodes).buildHDFS();
     cluster.waitActive();
     cluster.transitionToActive(0);
     // setup the configuration

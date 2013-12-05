@@ -38,6 +38,7 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.server.namenode.TestGenericJournalConf.DummyJournalManager;
 import org.apache.hadoop.hdfs.server.namenode.ha.HATestUtil;
 import org.apache.hadoop.util.StringUtils;
@@ -55,7 +56,7 @@ public class TestAllowFormat {
   private static final Log LOG =
     LogFactory.getLog(TestAllowFormat.class.getName());
   private static Configuration config;
-  private static MiniDFSCluster cluster = null;
+  private static MiniHDFSCluster cluster = null;
   private static File hdfsDir=null;
 
   @BeforeClass
@@ -120,7 +121,7 @@ public class TestAllowFormat {
     config.setBoolean(DFS_NAMENODE_SUPPORT_ALLOW_FORMAT_KEY, true);
     cluster = new MiniDFSCluster.Builder(config).manageDataDfsDirs(false)
                                                 .manageNameDfsDirs(false)
-                                                .build();
+                                                .buildHDFS();
     cluster.waitActive();
     assertNotNull(cluster);
 

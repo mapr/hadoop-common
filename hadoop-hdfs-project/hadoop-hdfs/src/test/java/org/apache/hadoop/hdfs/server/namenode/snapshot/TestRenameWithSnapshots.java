@@ -43,6 +43,7 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants.SafeModeAction;
 import org.apache.hadoop.hdfs.protocol.QuotaExceededException;
@@ -85,7 +86,7 @@ public class TestRenameWithSnapshots {
   private static final long BLOCKSIZE = 1024;
   
   private static Configuration conf = new Configuration();
-  private static MiniDFSCluster cluster;
+  private static MiniHDFSCluster cluster;
   private static FSNamesystem fsn;
   private static FSDirectory fsdir;
   private static DistributedFileSystem hdfs;
@@ -103,7 +104,7 @@ public class TestRenameWithSnapshots {
   @Before
   public void setUp() throws Exception {
     cluster = new MiniDFSCluster.Builder(conf).numDataNodes(REPL).format(true)
-        .build();
+        .buildHDFS();
     cluster.waitActive();
 
     fsn = cluster.getNamesystem();
@@ -517,7 +518,7 @@ public class TestRenameWithSnapshots {
     
     cluster.shutdown();
     cluster = new MiniDFSCluster.Builder(conf).format(false)
-        .numDataNodes(REPL).build();
+        .numDataNodes(REPL).buildHDFS();
     cluster.waitActive();
     fsn = cluster.getNamesystem();
     fsdir = fsn.getFSDirectory();
@@ -531,7 +532,7 @@ public class TestRenameWithSnapshots {
     hdfs.setSafeMode(SafeModeAction.SAFEMODE_LEAVE);
     cluster.shutdown();
     cluster = new MiniDFSCluster.Builder(conf).format(false)
-        .numDataNodes(REPL).build();
+        .numDataNodes(REPL).buildHDFS();
     cluster.waitActive();
     fsn = cluster.getNamesystem();
     fsdir = fsn.getFSDirectory();
@@ -1725,7 +1726,7 @@ public class TestRenameWithSnapshots {
     hdfs.setSafeMode(SafeModeAction.SAFEMODE_LEAVE);
     cluster.shutdown();
     cluster = new MiniDFSCluster.Builder(conf).format(false)
-        .numDataNodes(REPL).build();
+        .numDataNodes(REPL).buildHDFS();
     cluster.waitActive();
     restartClusterAndCheckImage(true);
   }

@@ -29,6 +29,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.server.common.HdfsServerConstants.StartupOption;
 import org.apache.hadoop.hdfs.server.common.Storage;
 import org.apache.hadoop.test.GenericTestUtils;
@@ -52,13 +53,13 @@ public class TestDFSUpgradeWithHA {
     for (StartupOption startOpt : Lists.newArrayList(new StartupOption[] {
         StartupOption.UPGRADE, StartupOption.FINALIZE,
         StartupOption.ROLLBACK })) {
-      MiniDFSCluster cluster = null;
+      MiniHDFSCluster cluster = null;
       try {
         cluster = new MiniDFSCluster.Builder(new Configuration())
             .nnTopology(MiniDFSNNTopology.simpleHATopology())
             .startupOption(startOpt)
             .numDataNodes(0)
-            .build();
+            .buildHDFS();
         fail("Should not have been able to start an HA NN in upgrade mode");
       } catch (IllegalArgumentException iae) {
         GenericTestUtils.assertExceptionContains(
@@ -77,12 +78,12 @@ public class TestDFSUpgradeWithHA {
    */
   @Test
   public void testStartingWithUpgradeInProgressFails() throws Exception {
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
       cluster = new MiniDFSCluster.Builder(new Configuration())
           .nnTopology(MiniDFSNNTopology.simpleHATopology())
           .numDataNodes(0)
-          .build();
+          .buildHDFS();
       
       // Simulate an upgrade having started.
       for (int i = 0; i < 2; i++) {

@@ -257,7 +257,6 @@ public abstract class MiniDFSCluster {
               .loadClass(implClassName)
               .asSubclass(MiniDFSCluster.class);
 
-          build(clazz);
         } catch (Exception e) {
           throw new RuntimeException(e);
         }
@@ -283,6 +282,7 @@ public abstract class MiniDFSCluster {
      */
     public <T extends MiniDFSCluster> T build(Class<T> clazz) throws IOException {
       if (runningInstance != null) {
+        LOG.info("Old cluster instance found ... terminating it");
         runningInstance.shutdown();
       }
 
@@ -299,6 +299,17 @@ public abstract class MiniDFSCluster {
         throw new RuntimeException(e);
       }
     }
+  }
+
+  /**
+   * Set the softLimit and hardLimit of client lease periods
+   */
+  public void setLeasePeriod(long soft, long hard) {
+    // Do nothing by default
+  }
+
+  public void setLeasePeriod(long soft, long hard, int nnIndex) {
+    // Do nothing by default
   }
 
   /**
@@ -538,6 +549,8 @@ public abstract class MiniDFSCluster {
   public abstract void waitActive() throws IOException;
 
   public abstract void formatDataNodeDirs() throws IOException;
+
+  public abstract int getNameNodePort();
 
   /**
    * Shut down a cluster if it is not null

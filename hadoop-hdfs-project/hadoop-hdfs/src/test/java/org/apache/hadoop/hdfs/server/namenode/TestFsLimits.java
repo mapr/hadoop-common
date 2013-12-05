@@ -33,7 +33,7 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.fs.permission.PermissionStatus;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSUtil;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.FSLimitException.MaxDirectoryItemsExceededException;
 import org.apache.hadoop.hdfs.protocol.FSLimitException.PathComponentTooLongException;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
@@ -72,7 +72,7 @@ public class TestFsLimits {
   public void setUp() throws IOException {
     conf = new Configuration();
     conf.set(DFSConfigKeys.DFS_NAMENODE_NAME_DIR_KEY,
-             fileAsURI(new File(MiniDFSCluster.getBaseDirectory(),
+             fileAsURI(new File(MiniHDFSCluster.getBaseDirectory(),
                                 "namenode")).toString());
 
     rootInode = new INodeDirectoryWithQuota(getMockNamesystem()

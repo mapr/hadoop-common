@@ -41,8 +41,9 @@ import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.HftpFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.apache.hadoop.hdfs.web.WebHdfsTestUtil;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.web.WebHdfsFileSystem;
+import org.apache.hadoop.hdfs.web.WebHdfsTestUtil;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.log4j.Level;
@@ -76,7 +77,7 @@ public class TestAuditLogs {
   static final String fileName = "/srcdat";
 
   DFSTestUtil util;
-  MiniDFSCluster cluster;
+  MiniHDFSCluster cluster;
   FileSystem fs;
   String fnames[];
   Configuration conf;
@@ -91,7 +92,7 @@ public class TestAuditLogs {
     conf.setBoolean(DFSConfigKeys.DFS_WEBHDFS_ENABLED_KEY, true);
     util = new DFSTestUtil.Builder().setName("TestAuditAllowed").
         setNumFiles(20).build();
-    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(4).build();
+    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(4).buildHDFS();
     fs = cluster.getFileSystem();
     util.createFiles(fs, fileName);
 

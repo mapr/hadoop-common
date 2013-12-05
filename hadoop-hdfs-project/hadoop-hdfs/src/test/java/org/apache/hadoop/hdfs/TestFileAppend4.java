@@ -61,7 +61,7 @@ public class TestFileAppend4 {
   static final Object [] NO_ARGS = new Object []{};
 
   Configuration conf;
-  MiniDFSCluster cluster;
+  MiniHDFSCluster cluster;
   Path file1;
   FSDataOutputStream stm;
   boolean simulatedStorage = false;
@@ -147,7 +147,7 @@ public class TestFileAppend4 {
    */
   @Test(timeout=60000)
   public void testRecoverFinalizedBlock() throws Throwable {
-    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(5).build();
+    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(5).buildHDFS();
  
     try {
       cluster.waitActive();
@@ -219,7 +219,7 @@ public class TestFileAppend4 {
    */
   @Test(timeout=60000)
   public void testCompleteOtherLeaseHoldersFile() throws Throwable {
-    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(5).build();
+    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(5).buildHDFS();
  
     try {
       cluster.waitActive();
@@ -299,8 +299,8 @@ public class TestFileAppend4 {
   @Test(timeout = 60000)
   public void testUpdateNeededReplicationsForAppendedFile() throws Exception {
     Configuration conf = new Configuration();
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1)
-        .build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1)
+        .buildHDFS();
     DistributedFileSystem fileSystem = null;
     try {
       // create a file.

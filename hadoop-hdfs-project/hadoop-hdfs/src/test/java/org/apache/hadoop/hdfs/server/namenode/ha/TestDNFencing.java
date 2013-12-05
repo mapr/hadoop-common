@@ -38,6 +38,7 @@ import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
 import org.apache.hadoop.hdfs.protocolPB.DatanodeProtocolClientSideTranslatorPB;
@@ -76,7 +77,7 @@ public class TestDNFencing {
   private static final int SMALL_BLOCK = 1024;
   
   private Configuration conf;
-  private MiniDFSCluster cluster;
+  private MiniHDFSCluster cluster;
   private NameNode nn1, nn2;
   private FileSystem fs;
 
@@ -102,7 +103,7 @@ public class TestDNFencing {
     cluster = new MiniDFSCluster.Builder(conf)
       .nnTopology(MiniDFSNNTopology.simpleHATopology())
       .numDataNodes(3)
-      .build();
+      .buildHDFS();
     nn1 = cluster.getNameNode(0);
     nn2 = cluster.getNameNode(1);
     
@@ -543,7 +544,7 @@ public class TestDNFencing {
     }
   }
 
-  private void waitForTrueReplication(final MiniDFSCluster cluster,
+  private void waitForTrueReplication(final MiniHDFSCluster cluster,
       final ExtendedBlock block, final int waitFor) throws Exception {
     GenericTestUtils.waitFor(new Supplier<Boolean>() {
       @Override
@@ -557,7 +558,7 @@ public class TestDNFencing {
     }, 500, 10000);
   }
 
-  private int getTrueReplication(MiniDFSCluster cluster, ExtendedBlock block)
+  private int getTrueReplication(MiniHDFSCluster cluster, ExtendedBlock block)
       throws IOException {
     int count = 0;
     for (DataNode dn : cluster.getDataNodes()) {

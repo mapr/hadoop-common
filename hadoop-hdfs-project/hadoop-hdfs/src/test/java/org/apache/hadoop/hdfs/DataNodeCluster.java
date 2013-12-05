@@ -165,8 +165,9 @@ public class DataNodeCluster {
   
     System.setProperty("test.build.data", dataNodeDirs);
 
-    MiniHDFSCluster mc = new MiniHDFSCluster();
+    MiniHDFSCluster mc = null;
     try {
+      mc = new MiniDFSCluster.Builder(conf).buildHDFS();
       mc.formatDataNodeDirs();
     } catch (IOException e) {
       System.out.println("Error formating data node dirs:" + e);

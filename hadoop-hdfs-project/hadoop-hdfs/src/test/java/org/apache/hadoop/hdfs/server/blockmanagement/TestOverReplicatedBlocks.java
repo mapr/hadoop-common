@@ -148,7 +148,7 @@ public class TestOverReplicatedBlocks {
     try {
       Configuration conf = new HdfsConfiguration();
       conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, SMALL_BLOCK_SIZE);
-      cluster = new MiniHDFSCluster.Builder(conf).numDataNodes(3).buildHDFS();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).buildHDFS();
       fs = cluster.getFileSystem();
       final FSNamesystem namesystem = cluster.getNamesystem();
 

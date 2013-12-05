@@ -17,14 +17,11 @@
  */
 package org.apache.hadoop.hdfs.server.namenode;
 
-import static org.junit.Assert.fail;
 import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_NAME_DIR_KEY;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 import org.apache.hadoop.fs.FileContext;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileUtil;
@@ -34,6 +31,9 @@ import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.server.common.Util;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * Tests the CreateEditsLog utility.
@@ -46,7 +46,7 @@ public class TestCreateEditsLog {
     System.getProperty("test.build.data", "build/test/data"),
     "TestCreateEditsLog").getAbsoluteFile();
 
-  private MiniDFSCluster cluster;
+  private MiniHDFSCluster cluster;
 
   @Before
   public void setUp() throws Exception {
@@ -93,7 +93,7 @@ public class TestCreateEditsLog {
       .format(false)
       .manageNameDfsDirs(false)
       .waitSafeMode(false)
-      .build();
+      .buildHDFS();
     cluster.waitClusterUp();
 
     // Test successful, because no exception thrown.

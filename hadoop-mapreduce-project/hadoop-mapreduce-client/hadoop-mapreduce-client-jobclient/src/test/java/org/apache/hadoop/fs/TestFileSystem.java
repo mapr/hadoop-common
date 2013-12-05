@@ -39,6 +39,7 @@ import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.server.namenode.NameNode;
 import org.apache.hadoop.fs.shell.CommandFormat;
@@ -523,7 +524,8 @@ public class TestFileSystem extends TestCase {
     Configuration conf = new Configuration();
     MiniHDFSCluster cluster = null;
     try {
-      cluster = new MiniHDFSCluster(port, conf, 2, true, true, null, null);
+      cluster = new MiniDFSCluster.Builder(conf).nameNodePort(port)
+        .numDataNodes(2).buildHDFS();
       URI uri = cluster.getFileSystem().getUri();
       LOG.info("uri=" + uri);
 

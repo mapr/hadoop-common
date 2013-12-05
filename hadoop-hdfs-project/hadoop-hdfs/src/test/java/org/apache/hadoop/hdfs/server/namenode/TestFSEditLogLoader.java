@@ -42,6 +42,7 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 import org.apache.hadoop.hdfs.server.common.Storage.StorageDirectory;
 import org.apache.hadoop.hdfs.server.namenode.FSEditLogLoader.EditLogValidation;
@@ -69,10 +70,10 @@ public class TestFSEditLogLoader {
   public void testDisplayRecentEditLogOpCodes() throws IOException {
     // start a cluster 
     Configuration conf = new HdfsConfiguration();
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     FileSystem fileSys = null;
     cluster = new MiniDFSCluster.Builder(conf).numDataNodes(NUM_DATA_NODES)
-        .enableManagedDfsDirsRedundancy(false).build();
+        .enableManagedDfsDirsRedundancy(false).buildHDFS();
     cluster.waitActive();
     fileSys = cluster.getFileSystem();
     final FSNamesystem namesystem = cluster.getNamesystem();
@@ -102,7 +103,7 @@ public class TestFSEditLogLoader {
     bld.append("Recent opcode offsets: (\\d+\\s*){4}$");
     try {
       cluster = new MiniDFSCluster.Builder(conf).numDataNodes(NUM_DATA_NODES)
-          .enableManagedDfsDirsRedundancy(false).format(false).build();
+          .enableManagedDfsDirsRedundancy(false).format(false).buildHDFS();
       fail("should not be able to start");
     } catch (IOException e) {
       assertTrue("error message contains opcodes message",
@@ -123,10 +124,10 @@ public class TestFSEditLogLoader {
     conf.setInt(DFSConfigKeys.DFS_NAMENODE_REPLICATION_INTERVAL_KEY, 1);
     conf.setInt(DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_KEY, 1);
 
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
       cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2)
-          .build();
+          .buildHDFS();
       cluster.waitActive();
       FileSystem fs = cluster.getFileSystem();
   
@@ -142,7 +143,7 @@ public class TestFSEditLogLoader {
       conf.setInt(DFSConfigKeys.DFS_NAMENODE_REPLICATION_MIN_KEY, 2);
   
       cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2)
-        .format(false).build();
+        .format(false).buildHDFS();
       cluster.waitActive();
       fs = cluster.getFileSystem();
       

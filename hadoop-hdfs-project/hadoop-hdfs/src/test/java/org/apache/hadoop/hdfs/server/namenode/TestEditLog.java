@@ -61,6 +61,7 @@ import org.apache.hadoop.fs.permission.PermissionStatus;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.server.common.Storage.StorageDirectory;
@@ -196,10 +197,10 @@ public class TestEditLog {
   @Test
   public void testPreTxidEditLogWithEdits() throws Exception {
     Configuration conf = new HdfsConfiguration();
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
 
     try {
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(0).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(0).buildHDFS();
       cluster.waitActive();
       final FSNamesystem namesystem = cluster.getNamesystem();
 
@@ -226,10 +227,10 @@ public class TestEditLog {
   public void testSimpleEditLog() throws IOException {
     // start a cluster 
     Configuration conf = new HdfsConfiguration();
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     FileSystem fileSys = null;
     try {
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(NUM_DATA_NODES).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(NUM_DATA_NODES).buildHDFS();
       cluster.waitActive();
       fileSys = cluster.getFileSystem();
       final FSNamesystem namesystem = cluster.getNamesystem();
@@ -275,7 +276,7 @@ public class TestEditLog {
   }
   
   
-  private void assertExistsInStorageDirs(MiniDFSCluster cluster,
+  private void assertExistsInStorageDirs(MiniHDFSCluster cluster,
       NameNodeDirType dirType,
       String filename) {
     NNStorage storage = cluster.getNamesystem().getFSImage().getStorage();
@@ -295,11 +296,11 @@ public class TestEditLog {
 
     // start a cluster 
     Configuration conf = new HdfsConfiguration();
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     FileSystem fileSys = null;
 
     try {
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(NUM_DATA_NODES).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(NUM_DATA_NODES).buildHDFS();
       cluster.waitActive();
       fileSys = cluster.getFileSystem();
       final FSNamesystem namesystem = cluster.getNamesystem();
@@ -427,12 +428,12 @@ public class TestEditLog {
   public void testSyncBatching() throws Exception {
     // start a cluster 
     Configuration conf = new HdfsConfiguration();
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     FileSystem fileSys = null;
     ExecutorService threadA = Executors.newSingleThreadExecutor();
     ExecutorService threadB = Executors.newSingleThreadExecutor();
     try {
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(NUM_DATA_NODES).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(NUM_DATA_NODES).buildHDFS();
       cluster.waitActive();
       fileSys = cluster.getFileSystem();
       final FSNamesystem namesystem = cluster.getNamesystem();
@@ -490,12 +491,12 @@ public class TestEditLog {
   public void testBatchedSyncWithClosedLogs() throws Exception {
     // start a cluster 
     Configuration conf = new HdfsConfiguration();
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     FileSystem fileSys = null;
     ExecutorService threadA = Executors.newSingleThreadExecutor();
     ExecutorService threadB = Executors.newSingleThreadExecutor();
     try {
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(NUM_DATA_NODES).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(NUM_DATA_NODES).buildHDFS();
       cluster.waitActive();
       fileSys = cluster.getFileSystem();
       final FSNamesystem namesystem = cluster.getNamesystem();
@@ -530,9 +531,9 @@ public class TestEditLog {
   public void testEditChecksum() throws Exception {
     // start a cluster 
     Configuration conf = new HdfsConfiguration();
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     FileSystem fileSys = null;
-    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(NUM_DATA_NODES).build();
+    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(NUM_DATA_NODES).buildHDFS();
     cluster.waitActive();
     fileSys = cluster.getFileSystem();
     final FSNamesystem namesystem = cluster.getNamesystem();
@@ -565,7 +566,7 @@ public class TestEditLog {
     }
     
     try {
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(NUM_DATA_NODES).format(false).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(NUM_DATA_NODES).format(false).buildHDFS();
       fail("should not be able to start");
     } catch (IOException e) {
       // expected
@@ -599,7 +600,7 @@ public class TestEditLog {
    * down, and restoring that edits directory.
    */
   private void testCrashRecovery(int numTransactions) throws Exception {
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     Configuration conf = new HdfsConfiguration();
     conf.setInt(DFSConfigKeys.DFS_NAMENODE_CHECKPOINT_TXNS_KEY,
         CHECKPOINT_ON_STARTUP_MIN_TXNS);
@@ -611,7 +612,7 @@ public class TestEditLog {
         cluster = new MiniDFSCluster.Builder(conf)
           .numDataNodes(NUM_DATA_NODES)
           .format(true)
-          .build();
+          .buildHDFS();
         cluster.waitActive();
         
         FileSystem fs = cluster.getFileSystem();
@@ -657,7 +658,7 @@ public class TestEditLog {
         cluster = new MiniDFSCluster.Builder(conf)
           .numDataNodes(NUM_DATA_NODES)
           .format(false)
-          .build();
+          .buildHDFS();
         cluster.waitActive();
         
         // We should still have the files we wrote prior to the simulated crash
@@ -688,7 +689,7 @@ public class TestEditLog {
         cluster = new MiniDFSCluster.Builder(conf)
         .numDataNodes(NUM_DATA_NODES)
         .format(false)
-        .build();
+        .buildHDFS();
         cluster.waitActive();
     } finally {
       if (cluster != null) {
@@ -746,9 +747,9 @@ public class TestEditLog {
       throws Exception {
     // start a cluster 
     Configuration conf = new HdfsConfiguration();
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     cluster = new MiniDFSCluster.Builder(conf)
-      .numDataNodes(NUM_DATA_NODES).build();
+      .numDataNodes(NUM_DATA_NODES).buildHDFS();
     cluster.shutdown();
     
     Collection<URI> editsDirs = cluster.getNameEditsDirs(0);
@@ -784,7 +785,7 @@ public class TestEditLog {
     
     try {
       cluster = new MiniDFSCluster.Builder(conf)
-        .numDataNodes(NUM_DATA_NODES).format(false).build();
+        .numDataNodes(NUM_DATA_NODES).format(false).buildHDFS();
       if (!shouldSucceed) {
         fail("Should not have succeeded in startin cluster");
       }
@@ -1410,10 +1411,10 @@ public class TestEditLog {
     final int NUM_EDIT_LOG_ROLLS = 1000;
     // start a cluster
     Configuration conf = new HdfsConfiguration();
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     FileSystem fileSys = null;
     try {
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(NUM_DATA_NODES).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(NUM_DATA_NODES).buildHDFS();
       cluster.waitActive();
       fileSys = cluster.getFileSystem();
       final FSNamesystem namesystem = cluster.getNamesystem();
@@ -1440,7 +1441,7 @@ public class TestEditLog {
     long startTime = Time.now();
     try {
       cluster = new MiniDFSCluster.Builder(conf).
-          numDataNodes(NUM_DATA_NODES).build();
+          numDataNodes(NUM_DATA_NODES).buildHDFS();
       cluster.waitActive();
     } finally {
       if (cluster != null) {

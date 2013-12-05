@@ -27,6 +27,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.SnapshottableDirectoryStatus;
 import org.junit.After;
 import org.junit.Before;
@@ -49,7 +50,7 @@ public class TestSnapshotMetrics {
   private final Path file2 = new Path(sub1, "file2");
   
   private Configuration conf;
-  private MiniDFSCluster cluster;
+  private MiniHDFSCluster cluster;
   private DistributedFileSystem hdfs;
 
   @Before
@@ -57,7 +58,7 @@ public class TestSnapshotMetrics {
     conf = new Configuration();
     cluster = new MiniDFSCluster.Builder(conf)
       .numDataNodes(REPLICATION)
-      .build();
+      .buildHDFS();
     cluster.waitActive();
     hdfs = cluster.getFileSystem();
     

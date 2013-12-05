@@ -17,9 +17,14 @@
  */
 package org.apache.hadoop.hdfs.server.namenode;
 
-import static org.apache.hadoop.hdfs.server.namenode.startupprogress.StartupProgressTestHelper.*;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.apache.hadoop.hdfs.server.namenode.startupprogress.StartupProgressTestHelper.setStartupProgressForFinalState;
+import static org.apache.hadoop.hdfs.server.namenode.startupprogress.StartupProgressTestHelper.setStartupProgressForRunningState;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -32,11 +37,12 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.google.common.collect.ImmutableMap;
 import org.apache.hadoop.hdfs.server.namenode.startupprogress.StartupProgress;
 import org.junit.Before;
 import org.junit.Test;
 import org.mortbay.util.ajax.JSON;
+
+import com.google.common.collect.ImmutableMap;
 
 public class TestStartupProgressServlet {
 

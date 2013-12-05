@@ -45,6 +45,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.server.common.Storage.StorageDirectory;
 import org.apache.hadoop.hdfs.server.namenode.JournalSet.JournalAndStream;
 import org.apache.hadoop.util.Shell;
@@ -68,11 +69,11 @@ public class TestStorageRestore {
   static final int blockSize = 4096;
   static final int fileSize = 8192;
   private File path1, path2, path3;
-  private MiniDFSCluster cluster;  
+  private MiniHDFSCluster cluster;  
   @Before
   public void setUpNameDirs() throws Exception {
     config = new HdfsConfiguration();
-    hdfsDir = new File(MiniDFSCluster.getBaseDirectory()).getCanonicalFile();
+    hdfsDir = new File(MiniHDFSCluster.getBaseDirectory()).getCanonicalFile();
     if ( hdfsDir.exists() && !FileUtil.fullyDelete(hdfsDir) ) {
       throw new IOException("Could not delete hdfs directory '" + hdfsDir + "'");
     }
@@ -158,7 +159,7 @@ public class TestStorageRestore {
     int numDatanodes = 0;
     cluster = new MiniDFSCluster.Builder(config).numDataNodes(numDatanodes)
                                                 .manageNameDfsDirs(false)
-                                                .build();
+                                                .buildHDFS();
     cluster.waitActive();
     
     SecondaryNameNode secondary = new SecondaryNameNode(config);
@@ -259,7 +260,7 @@ public class TestStorageRestore {
   public void testDfsAdminCmd() throws Exception {
     cluster = new MiniDFSCluster.Builder(config).
                                  numDataNodes(2).
-                                 manageNameDfsDirs(false).build();
+                                 manageNameDfsDirs(false).buildHDFS();
     cluster.waitActive();
     try {
 
@@ -315,7 +316,7 @@ public class TestStorageRestore {
     SecondaryNameNode secondary = null;
     try {
       cluster = new MiniDFSCluster.Builder(config).numDataNodes(1)
-          .manageNameDfsDirs(false).build();
+          .manageNameDfsDirs(false).buildHDFS();
       cluster.waitActive();
       
       secondary = new SecondaryNameNode(config);
@@ -392,7 +393,7 @@ public class TestStorageRestore {
 
     try {
       cluster = new MiniDFSCluster.Builder(config).numDataNodes(0)
-          .manageNameDfsDirs(false).build();
+          .manageNameDfsDirs(false).buildHDFS();
       cluster.waitActive();
 
       secondary = new SecondaryNameNode(config);

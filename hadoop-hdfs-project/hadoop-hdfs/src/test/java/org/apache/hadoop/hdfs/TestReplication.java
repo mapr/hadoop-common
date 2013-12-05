@@ -160,7 +160,8 @@ public class TestReplication {
     LocatedBlocks blocks = null;
     int replicaCount = 0;
     short replFactor = 1;
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2)
+      .buildHDFS();
     cluster.waitActive();
     fs = cluster.getFileSystem();
     dfsClient = new DFSClient(new InetSocketAddress("localhost",
@@ -208,9 +209,9 @@ public class TestReplication {
     if (simulated) {
       SimulatedFSDataset.setFactory(conf);
     }
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
                                                .numDataNodes(numDatanodes)
-                                               .racks(racks).build();
+                                               .racks(racks).buildHDFS();
     cluster.waitActive();
     
     InetSocketAddress addr = new InetSocketAddress("localhost",
@@ -307,7 +308,7 @@ public class TestReplication {
   @Test
   public void testPendingReplicationRetry() throws IOException {
     
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     int numDataNodes = 4;
     String testFile = "/replication-test-file";
     Path testPath = new Path(testFile);
@@ -321,7 +322,7 @@ public class TestReplication {
       Configuration conf = new HdfsConfiguration();
       conf.set(DFSConfigKeys.DFS_REPLICATION_KEY, Integer.toString(numDataNodes));
       //first time format
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(numDataNodes).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(numDataNodes).buildHDFS();
       cluster.waitActive();
       DFSClient dfsClient = new DFSClient(new InetSocketAddress("localhost",
                                             cluster.getNameNodePort()),
@@ -347,7 +348,7 @@ public class TestReplication {
       int fileCount = 0;
       // Choose 3 copies of block file - delete 1 and corrupt the remaining 2
       for (int dnIndex=0; dnIndex<3; dnIndex++) {
-        File blockFile = MiniDFSCluster.getBlockFile(dnIndex, block);
+        File blockFile = MiniHDFSCluster.getBlockFile(dnIndex, block);
         LOG.info("Checking for file " + blockFile);
         
         if (blockFile != null && blockFile.exists()) {
@@ -387,7 +388,7 @@ public class TestReplication {
       cluster = new MiniDFSCluster.Builder(conf)
                                   .numDataNodes(numDataNodes * 2)
                                   .format(false)
-                                  .build();
+                                  .buildHDFS();
       cluster.waitActive();
       
       dfsClient = new DFSClient(new InetSocketAddress("localhost",
@@ -409,7 +410,8 @@ public class TestReplication {
    */
   @Test
   public void testReplicateLenMismatchedBlock() throws Exception {
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(new HdfsConfiguration()).numDataNodes(2).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(
+        new HdfsConfiguration()).numDataNodes(2).buildHDFS();
     try {
       cluster.waitActive();
       // test truncated block
@@ -421,7 +423,7 @@ public class TestReplication {
     }
   }
   
-  private void changeBlockLen(MiniDFSCluster cluster, int lenDelta)
+  private void changeBlockLen(MiniHDFSCluster cluster, int lenDelta)
       throws IOException, InterruptedException, TimeoutException {
     final Path fileName = new Path("/file1");
     final short REPLICATION_FACTOR = (short)1;

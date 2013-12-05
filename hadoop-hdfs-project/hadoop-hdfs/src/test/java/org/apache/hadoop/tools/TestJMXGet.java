@@ -34,6 +34,7 @@ import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.tools.JMXGet;
 import org.junit.After;
 import org.junit.Before;
@@ -47,7 +48,7 @@ import org.junit.Test;
 public class TestJMXGet {
 
   private Configuration config;
-  private MiniDFSCluster cluster;
+  private MiniHDFSCluster cluster;
 
   static final long seed = 0xAAAAEEFL;
   static final int blockSize = 4096;
@@ -93,7 +94,8 @@ public class TestJMXGet {
   @Test
   public void testNameNode() throws Exception {
     int numDatanodes = 2;
-    cluster = new MiniDFSCluster.Builder(config).numDataNodes(numDatanodes).build();
+    cluster = new MiniDFSCluster.Builder(config).numDataNodes(numDatanodes)
+      .buildHDFS();
     cluster.waitActive();
 
     writeFile(cluster.getFileSystem(), new Path("/test1"), 2);
@@ -122,7 +124,8 @@ public class TestJMXGet {
   @Test
   public void testDataNode() throws Exception {
     int numDatanodes = 2;
-    cluster = new MiniDFSCluster.Builder(config).numDataNodes(numDatanodes).build();
+    cluster = new MiniDFSCluster.Builder(config).numDataNodes(numDatanodes)
+      .buildHDFS();
     cluster.waitActive();
 
     writeFile(cluster.getFileSystem(), new Path("/test"), 2);

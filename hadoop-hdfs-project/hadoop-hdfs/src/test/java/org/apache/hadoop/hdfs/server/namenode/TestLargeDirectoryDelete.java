@@ -29,6 +29,7 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.util.Time;
 import org.junit.Assert;
 import org.junit.Test;
@@ -42,7 +43,7 @@ public class TestLargeDirectoryDelete {
   private static final Log LOG = LogFactory.getLog(TestLargeDirectoryDelete.class);
   private static final Configuration CONF = new HdfsConfiguration();
   private static final int TOTAL_BLOCKS = 10000;
-  private MiniDFSCluster mc = null;
+  private MiniHDFSCluster mc = null;
   private int createOps = 0;
   private int lockOps = 0;
   
@@ -211,7 +212,7 @@ public class TestLargeDirectoryDelete {
   
   @Test
   public void largeDelete() throws Throwable {
-    mc = new MiniDFSCluster.Builder(CONF).build();
+    mc = new MiniDFSCluster.Builder(CONF).buildHDFS();
     try {
       mc.waitActive();
       Assert.assertNotNull("No Namenode in cluster", mc.getNameNode());

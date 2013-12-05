@@ -209,10 +209,6 @@ class MapRNode {
   }
 
   public int StopFileServer() {
-    //GIRIRunCommand rc = new RunCommand();
-    //GIRI rc.init(MiniMapRFSCluster.mfsExe + " -e -p "+port+" -m 512 both -h " + hostnameFile + " -H " +hostIdFile + " -L " + logFile, "", true, false);
-    //GIRIrc.Run();
-
     return KillFileServer();
   }
 
@@ -455,6 +451,11 @@ public class MiniMapRFSCluster extends MiniDFSCluster {
    * Used by builder to create and return an instance of MiniMapRFSCluster
    */
   protected MiniMapRFSCluster(Builder builder) throws IOException {
+    // This is a temp workaround for tests that do not fail gracefully and end
+    // up leaving MapR processes running. For e.g., CLDB, MFS, etc. Until we
+    // figure out why the cleanup does not happen, this will be useful.
+    teardownServices();
+
     this.conf = builder.conf;
     //Use mfs cluster.
     conf.set("fs.default.name", MAPRFS_SCHEME);
@@ -466,6 +467,7 @@ public class MiniMapRFSCluster extends MiniDFSCluster {
     conf.set("dfs.http.address", "127.0.0.1:0");
     //conf.set("fs.mapr.trace", "debug");
 
+    assert (builder.numDataNodes != 0) : "numDataNodes = 0";
     initNodes("TestVolume", builder.numDataNodes);
     // Start the DataNodes
     startDataNodes(conf, builder.numDataNodes, builder.manageDataDfsDirs,
@@ -478,6 +480,25 @@ public class MiniMapRFSCluster extends MiniDFSCluster {
 
     //make sure ProxyUsers uses the latest conf
     ProxyUsers.refreshSuperUserGroupsConfiguration(conf);
+  }
+
+  /**
+   * Terminates all MapR related processes.
+   */
+  private void teardownServices() {
+    String commands[] = {
+      "/opt/mapr/cldb/cldb stop",
+      "/opt/mapr/zookeeper/zookeeper-3.3.6/bin/zkServer.sh stop",
+      "pkill -9 mfs",
+      "ps -ef | grep QuorumPeerMain | grep -v grep | awk '{print $2}' | xargs --no-run-if-empty kill -9",
+      "ps -ef | grep FsShell | grep -v grep | awk '{print $2}' | xargs --no-run-if-empty kill -9"
+    };
+
+    RunCommand rc = new RunCommand();
+    for (int i = 0; i < commands.length; ++i) {
+      rc.init(commands[i], "", false, false);
+      rc.Run();
+    }
   }
 
   void initNodes(String volName, int numNodes)
@@ -510,10 +531,13 @@ public class MiniMapRFSCluster extends MiniDFSCluster {
         isClusterUp = true;
         break;
       }
+
       try {
-        Thread.sleep(5*1000);
         System.out.println("Waiting for cluster to come up");
-      } catch(InterruptedException e) {
+        Thread.sleep(5*1000);
+      } catch (InterruptedException e) {
+        System.out.println("Got interrupted while wating for cluster to come up");
+        return;
       }
     }
   }
@@ -606,11 +630,6 @@ public class MiniMapRFSCluster extends MiniDFSCluster {
     for (int i = 0; i < nodes.length; ++i) {
       nodes[i].CleanUp();
     }
-  }
-
-  public void Restart() {
-    Stop();
-    Start();
   }
 
   public void shutdownDataNodes() {
@@ -776,4 +795,9 @@ public class MiniMapRFSCluster extends MiniDFSCluster {
 
     return uri;
   }
+
+  public int getNameNodePort() {
+    return cldbPort;
+  }
+
 }

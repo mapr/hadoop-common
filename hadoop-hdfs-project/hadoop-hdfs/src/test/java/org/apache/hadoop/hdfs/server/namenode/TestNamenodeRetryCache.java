@@ -43,6 +43,7 @@ import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.DatanodeID;
 import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
@@ -76,7 +77,7 @@ import org.junit.Test;
  */
 public class TestNamenodeRetryCache {
   private static final byte[] CLIENT_ID = ClientId.getClientId();
-  private static MiniDFSCluster cluster;
+  private static MiniHDFSCluster cluster;
   private static FSNamesystem namesystem;
   private static PermissionStatus perm = new PermissionStatus(
       "TestNamenodeRetryCache", null, FsPermission.getDefault());
@@ -91,7 +92,7 @@ public class TestNamenodeRetryCache {
     conf = new HdfsConfiguration();
     conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, BlockSize);
     conf.setBoolean(DFSConfigKeys.DFS_NAMENODE_ENABLE_RETRY_CACHE_KEY, true);
-    cluster = new MiniDFSCluster.Builder(conf).build();
+    cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
     cluster.waitActive();
     namesystem = cluster.getNamesystem();
     filesystem = cluster.getFileSystem();
@@ -311,7 +312,7 @@ public class TestNamenodeRetryCache {
     namesystem = null;
     filesystem = null;
     cluster = new MiniDFSCluster.Builder(conf).nnTopology(
-        MiniDFSNNTopology.simpleHATopology()).numDataNodes(1).build();
+        MiniDFSNNTopology.simpleHATopology()).numDataNodes(1).buildHDFS();
     FSNamesystem ns0 = cluster.getNamesystem(0);
     ExtendedBlock oldBlock = new ExtendedBlock();
     ExtendedBlock newBlock = new ExtendedBlock();
@@ -408,7 +409,7 @@ public class TestNamenodeRetryCache {
    * been rebuilt based on the editlog.
    */
   @Test
-  public void testRetryCacheRebuild() throws Exception {
+  public void testRetryCacheRebuildHDFS() throws Exception {
     DFSTestUtil.runOperations(cluster, filesystem, conf, BlockSize, 0);
     
     LightWeightCache<CacheEntry, CacheEntry> cacheSet = 

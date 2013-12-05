@@ -33,6 +33,7 @@ import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 import org.apache.hadoop.hdfs.protocol.NSQuotaExceededException;
 import org.apache.hadoop.hdfs.protocol.SnapshotException;
@@ -65,13 +66,13 @@ public class TestNestedSnapshots {
   private static final long BLOCKSIZE = 1024;
   
   private static Configuration conf = new Configuration();
-  private static MiniDFSCluster cluster;
+  private static MiniHDFSCluster cluster;
   private static DistributedFileSystem hdfs;
   
   @Before
   public void setUp() throws Exception {
     cluster = new MiniDFSCluster.Builder(conf).numDataNodes(REPLICATION)
-        .build();
+        .buildHDFS();
     cluster.waitActive();
     hdfs = cluster.getFileSystem();
   }

@@ -61,18 +61,18 @@ public class TestFileCorruption {
   /** check if DFS can handle corrupted blocks properly */
   @Test
   public void testFileCorruption() throws Exception {
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     DFSTestUtil util = new DFSTestUtil.Builder().setName("TestFileCorruption").
         setNumFiles(20).build();
     try {
       Configuration conf = new HdfsConfiguration();
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).buildHDFS();
       FileSystem fs = cluster.getFileSystem();
       util.createFiles(fs, "/srcdat");
       // Now deliberately remove the blocks
       File storageDir = cluster.getInstanceStorageDir(2, 0);
       String bpid = cluster.getNamesystem().getBlockPoolId();
-      File data_dir = MiniDFSCluster.getFinalizedDir(storageDir, bpid);
+      File data_dir = MiniHDFSCluster.getFinalizedDir(storageDir, bpid);
       assertTrue("data directory does not exist", data_dir.exists());
       File[] blocks = data_dir.listFiles();
       assertTrue("Blocks do not exist in data-dir", (blocks != null) && (blocks.length > 0));
@@ -121,10 +121,10 @@ public class TestFileCorruption {
    */
   @Test
   public void testArrayOutOfBoundsException() throws Exception {
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
       Configuration conf = new HdfsConfiguration();
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2).buildHDFS();
       cluster.waitActive();
       
       FileSystem fs = cluster.getFileSystem();
@@ -135,11 +135,11 @@ public class TestFileCorruption {
       // get the block
       final String bpid = cluster.getNamesystem().getBlockPoolId();
       File storageDir = cluster.getInstanceStorageDir(0, 0);
-      File dataDir = MiniDFSCluster.getFinalizedDir(storageDir, bpid);
+      File dataDir = MiniHDFSCluster.getFinalizedDir(storageDir, bpid);
       ExtendedBlock blk = getBlock(bpid, dataDir);
       if (blk == null) {
         storageDir = cluster.getInstanceStorageDir(0, 1);
-        dataDir = MiniDFSCluster.getFinalizedDir(storageDir, bpid);
+        dataDir = MiniHDFSCluster.getFinalizedDir(storageDir, bpid);
         blk = getBlock(bpid, dataDir);
       }
       assertFalse(blk==null);

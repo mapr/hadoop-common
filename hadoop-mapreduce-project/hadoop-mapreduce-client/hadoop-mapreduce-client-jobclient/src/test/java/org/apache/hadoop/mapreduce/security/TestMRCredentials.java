@@ -29,6 +29,7 @@ import java.net.URI;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRClientCluster;
@@ -57,7 +58,8 @@ public class TestMRCredentials {
   public static void setUp() throws Exception {
     System.setProperty("hadoop.log.dir", "logs");
     Configuration conf = new Configuration();
-    dfsCluster = new MiniHDFSCluster(conf, numSlaves, true, null);  
+    dfsCluster = new MiniDFSCluster.Builder(conf).numDataNodes(numSlaves)
+      .buildHDFS();
     jConf = new JobConf(conf);
     FileSystem.setDefaultUri(conf, dfsCluster.getFileSystem().getUri().toString());
     mrCluster = MiniMRClientClusterFactory.create(TestMRCredentials.class, 1, jConf);

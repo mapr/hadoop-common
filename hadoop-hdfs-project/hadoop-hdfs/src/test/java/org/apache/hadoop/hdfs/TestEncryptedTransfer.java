@@ -135,10 +135,10 @@ public class TestEncryptedTransfer {
   
   @Test
   public void testEncryptedReadAfterNameNodeRestart() throws IOException {
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
       Configuration conf = new Configuration();
-      cluster = new MiniDFSCluster.Builder(conf).build();
+      cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
       
       FileSystem fs = getFileSystem(conf);
       writeTestDataToFile(fs);
@@ -154,7 +154,7 @@ public class TestEncryptedTransfer {
           .manageNameDfsDirs(false)
           .format(false)
           .startupOption(StartupOption.REGULAR)
-          .build();
+          .buildHDFS();
       
       fs = getFileSystem(conf);
       assertEquals(PLAIN_TEXT, DFSTestUtil.readFile(fs, TEST_PATH));
@@ -226,10 +226,10 @@ public class TestEncryptedTransfer {
   
   @Test
   public void testLongLivedReadClientAfterRestart() throws IOException {
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
       Configuration conf = new Configuration();
-      cluster = new MiniDFSCluster.Builder(conf).build();
+      cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
       
       FileSystem fs = getFileSystem(conf);
       writeTestDataToFile(fs);
@@ -245,7 +245,7 @@ public class TestEncryptedTransfer {
           .manageNameDfsDirs(false)
           .format(false)
           .startupOption(StartupOption.REGULAR)
-          .build();
+          .buildHDFS();
       
       fs = getFileSystem(conf);
       assertEquals(PLAIN_TEXT, DFSTestUtil.readFile(fs, TEST_PATH));
@@ -269,11 +269,11 @@ public class TestEncryptedTransfer {
   
   @Test
   public void testLongLivedWriteClientAfterRestart() throws IOException {
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
       Configuration conf = new Configuration();
       setEncryptionConfigKeys(conf);
-      cluster = new MiniDFSCluster.Builder(conf).build();
+      cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
       
       FileSystem fs = getFileSystem(conf);
       
@@ -299,10 +299,10 @@ public class TestEncryptedTransfer {
   
   @Test
   public void testLongLivedClient() throws IOException, InterruptedException {
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
       Configuration conf = new Configuration();
-      cluster = new MiniDFSCluster.Builder(conf).build();
+      cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
       
       FileSystem fs = getFileSystem(conf);
       writeTestDataToFile(fs);
@@ -318,7 +318,7 @@ public class TestEncryptedTransfer {
           .manageNameDfsDirs(false)
           .format(false)
           .startupOption(StartupOption.REGULAR)
-          .build();
+          .buildHDFS();
       
       BlockTokenSecretManager btsm = cluster.getNamesystem().getBlockManager()
           .getBlockTokenSecretManager();
@@ -410,13 +410,13 @@ public class TestEncryptedTransfer {
   
   @Test
   public void testEncryptedAppendRequiringBlockTransfer() throws IOException {
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
       Configuration conf = new Configuration();
       setEncryptionConfigKeys(conf);
       
       // start up 4 DNs
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(4).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(4).buildHDFS();
       
       FileSystem fs = getFileSystem(conf);
       

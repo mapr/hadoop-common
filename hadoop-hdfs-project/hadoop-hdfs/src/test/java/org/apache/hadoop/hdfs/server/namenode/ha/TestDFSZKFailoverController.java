@@ -35,6 +35,7 @@ import org.apache.hadoop.ha.ZKFailoverController;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.server.namenode.NameNode;
 import org.apache.hadoop.hdfs.tools.DFSHAAdmin;
 import org.apache.hadoop.hdfs.tools.DFSZKFailoverController;
@@ -49,7 +50,7 @@ import com.google.common.base.Supplier;
 
 public class TestDFSZKFailoverController extends ClientBaseWithFixes {
   private Configuration conf;
-  private MiniDFSCluster cluster;
+  private MiniHDFSCluster cluster;
   private TestContext ctx;
   private ZKFCThread thr1, thr2;
   private FileSystem fs;
@@ -80,7 +81,7 @@ public class TestDFSZKFailoverController extends ClientBaseWithFixes {
     cluster = new MiniDFSCluster.Builder(conf)
         .nnTopology(topology)
         .numDataNodes(0)
-        .build();
+        .buildHDFS();
     cluster.waitActive();
 
     ctx = new TestContext();

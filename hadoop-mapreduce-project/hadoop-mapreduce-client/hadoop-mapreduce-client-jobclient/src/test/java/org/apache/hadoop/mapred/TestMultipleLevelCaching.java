@@ -24,6 +24,7 @@ import junit.framework.TestCase;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.mapred.SortValidator.RecordStatsChecker.NonSplitableSequenceFileInputFormat;
@@ -92,8 +93,11 @@ public class TestMultipleLevelCaching extends TestCase {
       String rack2 = getRack(1, level);
       Configuration conf = new Configuration();
       // Run a datanode on host1 under /a/b/c/..../d1/e1/f1
-      dfs = new MiniHDFSCluster(conf, 1, true, new String[] {rack1}, 
-                               new String[] {"host1.com"});
+      dfs = new MiniDFSCluster.Builder(conf)
+        .numDataNodes(1).format(true)
+        .racks(new String[] {rack1})
+        .hosts(new String[] { "host1.com"} )
+        .buildHDFS();
       dfs.waitActive();
       fileSys = dfs.getFileSystem();
       if (!fileSys.mkdirs(inDir)) {

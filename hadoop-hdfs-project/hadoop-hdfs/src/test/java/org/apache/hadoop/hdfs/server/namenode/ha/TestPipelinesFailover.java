@@ -39,6 +39,7 @@ import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.DatanodeID;
 import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
 import org.apache.hadoop.hdfs.protocolPB.DatanodeProtocolClientSideTranslatorPB;
@@ -89,20 +90,20 @@ public class TestPipelinesFailover {
   enum TestScenario {
     GRACEFUL_FAILOVER {
       @Override
-      void run(MiniDFSCluster cluster) throws IOException {
+      void run(MiniHDFSCluster cluster) throws IOException {
         cluster.transitionToStandby(0);
         cluster.transitionToActive(1);
       }
     },
     ORIGINAL_ACTIVE_CRASHED {
       @Override
-      void run(MiniDFSCluster cluster) throws IOException {
+      void run(MiniHDFSCluster cluster) throws IOException {
         cluster.restartNameNode(0);
         cluster.transitionToActive(1);
       }
     };
 
-    abstract void run(MiniDFSCluster cluster) throws IOException;
+    abstract void run(MiniHDFSCluster cluster) throws IOException;
   }
   
   enum MethodToTestIdempotence {
@@ -139,10 +140,10 @@ public class TestPipelinesFailover {
     conf.setInt(DFSConfigKeys.DFS_NAMENODE_REPLICATION_INTERVAL_KEY, 1000);
     
     FSDataOutputStream stm = null;
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
       .nnTopology(MiniDFSNNTopology.simpleHATopology())
       .numDataNodes(3)
-      .build();
+      .buildHDFS();
     try {
       int sizeWritten = 0;
       
@@ -217,10 +218,10 @@ public class TestPipelinesFailover {
     conf.setInt(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, BLOCK_SIZE);
     
     FSDataOutputStream stm = null;
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
       .nnTopology(MiniDFSNNTopology.simpleHATopology())
       .numDataNodes(5)
-      .build();
+      .buildHDFS();
     try {
       cluster.waitActive();
       cluster.transitionToActive(0);
@@ -279,10 +280,10 @@ public class TestPipelinesFailover {
     conf.setInt(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, BLOCK_SIZE);
     
     FSDataOutputStream stm = null;
-    final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    final MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
       .nnTopology(MiniDFSNNTopology.simpleHATopology())
       .numDataNodes(3)
-      .build();
+      .buildHDFS();
     try {
       cluster.waitActive();
       cluster.transitionToActive(0);
@@ -333,10 +334,10 @@ public class TestPipelinesFailover {
     conf.setInt(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, BLOCK_SIZE);
     
     FSDataOutputStream stm = null;
-    final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    final MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
       .nnTopology(MiniDFSNNTopology.simpleHATopology())
       .numDataNodes(3)
-      .build();
+      .buildHDFS();
     try {
       cluster.waitActive();
       cluster.transitionToActive(0);
@@ -428,7 +429,7 @@ public class TestPipelinesFailover {
     harness.conf.setInt(DFSConfigKeys.DFS_CLIENT_FAILOVER_SLEEPTIME_MAX_KEY,
       1000);
 
-    final MiniDFSCluster cluster = harness.startCluster();
+    final MiniHDFSCluster cluster = harness.startCluster();
     try {
       cluster.waitActive();
       cluster.transitionToActive(0);
@@ -536,7 +537,7 @@ public class TestPipelinesFailover {
   }
 
   private DistributedFileSystem createFsAsOtherUser(
-      final MiniDFSCluster cluster, final Configuration conf)
+      final MiniHDFSCluster cluster, final Configuration conf)
       throws IOException, InterruptedException {
     return (DistributedFileSystem) UserGroupInformation.createUserForTesting(
         "otheruser", new String[] { "othergroup"})

@@ -32,6 +32,7 @@ import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.qjournal.MiniJournalCluster;
 import org.apache.hadoop.hdfs.server.namenode.FSImageTestUtil;
 import org.apache.hadoop.hdfs.server.namenode.NameNode;
@@ -55,7 +56,7 @@ public class TestBootstrapStandbyWithQJM {
   private static final int NN2_IPC_PORT = 10002;
   private static final int NN2_INFO_PORT = 10003;
   
-  private MiniDFSCluster cluster;
+  private MiniHDFSCluster cluster;
   private MiniJournalCluster jCluster;
   
   @Before
@@ -75,7 +76,7 @@ public class TestBootstrapStandbyWithQJM {
     
     Configuration conf = initHAConf(journalURI);
     cluster = new MiniDFSCluster.Builder(conf).nnTopology(topology)
-        .numDataNodes(1).manageNameDfsSharedDirs(false).build();
+        .numDataNodes(1).manageNameDfsSharedDirs(false).buildHDFS();
     cluster.waitActive();
     
     Configuration confNN0 = new Configuration(conf);
@@ -87,7 +88,7 @@ public class TestBootstrapStandbyWithQJM {
     // restart the cluster
     cluster = new MiniDFSCluster.Builder(conf).format(false)
         .nnTopology(topology).numDataNodes(1).manageNameDfsSharedDirs(false)
-        .build();
+        .buildHDFS();
     cluster.waitActive();
     
     // make nn0 active

@@ -35,6 +35,7 @@ import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.TestDFSClientRetries;
 import org.apache.hadoop.hdfs.server.namenode.web.resources.NamenodeWebHdfsMethods;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -95,9 +96,9 @@ public class TestWebHDFS {
   static void largeFileTest(final long fileLength) throws Exception {
     final Configuration conf = WebHdfsTestUtil.createConf();
 
-    final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    final MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
         .numDataNodes(3)
-        .build();
+        .buildHDFS();
     try {
       cluster.waitActive();
 
@@ -225,8 +226,8 @@ public class TestWebHDFS {
     // during listStatus
     FsPermission.setUMask(conf, new FsPermission((short)0077));
     
-    final MiniDFSCluster cluster =
-        new MiniDFSCluster.Builder(conf).numDataNodes(3).build();
+    final MiniHDFSCluster cluster =
+        new MiniDFSCluster.Builder(conf).numDataNodes(3).buildHDFS();
     try {
       cluster.waitActive();
       WebHdfsTestUtil.getWebHdfsFileSystem(conf).setPermission(

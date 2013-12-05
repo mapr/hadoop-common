@@ -49,6 +49,7 @@ import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants.SafeModeAction;
 import org.apache.hadoop.hdfs.server.common.HdfsServerConstants.NamenodeRole;
 import org.apache.hadoop.hdfs.server.common.Storage.StorageDirectory;
@@ -502,8 +503,8 @@ public class TestSaveNamespace {
    */
   @Test
   public void testSaveNamespaceWithRenamedLease() throws Exception {
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(new Configuration())
-        .numDataNodes(1).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(new Configuration())
+        .numDataNodes(1).buildHDFS();
     cluster.waitActive();
     DistributedFileSystem fs = (DistributedFileSystem) cluster.getFileSystem();
     OutputStream out = null;
@@ -605,8 +606,8 @@ public class TestSaveNamespace {
   
   @Test (timeout=30000)
   public void testSaveNamespaceWithDanglingLease() throws Exception {
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(new Configuration())
-        .numDataNodes(1).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(new Configuration())
+        .numDataNodes(1).buildHDFS();
     cluster.waitActive();
     DistributedFileSystem fs = (DistributedFileSystem) cluster.getFileSystem();
     try {
@@ -636,7 +637,7 @@ public class TestSaveNamespace {
   }
 
   private Configuration getConf() throws IOException {
-    String baseDir = MiniDFSCluster.getBaseDirectory();
+    String baseDir = MiniHDFSCluster.getBaseDirectory();
     String nameDirs = fileAsURI(new File(baseDir, "name1")) + "," + 
                       fileAsURI(new File(baseDir, "name2"));
 

@@ -48,6 +48,7 @@ import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.LogVerificationAppender;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants.DatanodeReportType;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants.SafeModeAction;
@@ -98,7 +99,7 @@ public class TestStartup {
   @Before
   public void setUp() throws Exception {
     config = new HdfsConfiguration();
-    hdfsDir = new File(MiniDFSCluster.getBaseDirectory());
+    hdfsDir = new File(MiniHDFSCluster.getBaseDirectory());
 
     if ( hdfsDir.exists() && !FileUtil.fullyDelete(hdfsDir) ) {
       throw new IOException("Could not delete hdfs directory '" + hdfsDir + "'");
@@ -137,13 +138,13 @@ public class TestStartup {
   public void createCheckPoint(int count) throws IOException {
     LOG.info("--starting mini cluster");
     // manage dirs parameter set to false 
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     SecondaryNameNode sn = null;
     
     try {
       cluster = new MiniDFSCluster.Builder(config)
                                   .manageDataDfsDirs(false)
-                                  .manageNameDfsDirs(false).build();
+                                  .manageNameDfsDirs(false).buildHDFS();
       cluster.waitActive();
 
       LOG.info("--starting Secondary Node");
@@ -249,13 +250,13 @@ public class TestStartup {
 
     // start namenode with import option
     LOG.info("-- about to start DFS cluster");
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
       cluster = new MiniDFSCluster.Builder(config)
                                   .format(false)
                                   .manageDataDfsDirs(false)
                                   .manageNameDfsDirs(false)
-                                  .startupOption(IMPORT).build();
+                                  .startupOption(IMPORT).buildHDFS();
       cluster.waitActive();
       LOG.info("--NN started with checkpoint option");
       NameNode nn = cluster.getNameNode();
@@ -365,13 +366,13 @@ public class TestStartup {
         fileAsURI(new File(hdfsDir, "chkpt")).toString());
 
     LOG.info("--starting NN ");
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     SecondaryNameNode sn = null;
     NameNode nn = null;
     try {
       cluster = new MiniDFSCluster.Builder(config).manageDataDfsDirs(false)
                                                   .manageNameDfsDirs(false)
-                                                  .build();
+                                                  .buildHDFS();
       cluster.waitActive();
       nn = cluster.getNameNode();
       assertNotNull(nn);
@@ -479,7 +480,7 @@ public class TestStartup {
   }
 
   private void testImageChecksum(boolean compress) throws Exception {
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     if (compress) {
       config.setBoolean(DFSConfigKeys.DFS_IMAGE_COMPRESSION_CODEC_KEY, true);
     }
@@ -491,7 +492,7 @@ public class TestStartup {
         cluster = new MiniDFSCluster.Builder(config)
           .numDataNodes(0)
           .format(true)
-          .build();
+          .buildHDFS();
         cluster.waitActive();
         
         FileSystem fs = cluster.getFileSystem();
@@ -516,7 +517,7 @@ public class TestStartup {
           cluster = new MiniDFSCluster.Builder(config)
             .numDataNodes(0)
             .format(false)
-            .build();
+            .buildHDFS();
           fail("Should not have successfully started with corrupt image");
         } catch (IOException ioe) {
           GenericTestUtils.assertExceptionContains(
@@ -540,11 +541,11 @@ public class TestStartup {
     // Delete a single md5sum
     corruptFSImageMD5(false);
     // Should still be able to start
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(config)
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(config)
         .format(false)
         .manageDataDfsDirs(false)
         .manageNameDfsDirs(false)
-        .build();
+        .buildHDFS();
     try {
       cluster.waitActive();
     } finally {
@@ -559,7 +560,7 @@ public class TestStartup {
    */
   @Test
   public void testNNRestart() throws IOException, InterruptedException {
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     FileSystem localFileSys;
     Path hostsFile;
     Path excludeFile;
@@ -585,7 +586,7 @@ public class TestStartup {
     
     try {
       cluster = new MiniDFSCluster.Builder(config)
-      .numDataNodes(numDatanodes).setupHostsFile(true).build();
+      .numDataNodes(numDatanodes).setupHostsFile(true).buildHDFS();
       cluster.waitActive();
   
       cluster.restartNameNode();

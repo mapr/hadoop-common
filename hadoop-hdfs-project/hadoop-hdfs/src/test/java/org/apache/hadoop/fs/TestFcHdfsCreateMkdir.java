@@ -26,6 +26,7 @@ import javax.security.auth.login.LoginException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -35,7 +36,7 @@ import org.junit.BeforeClass;
 public class TestFcHdfsCreateMkdir extends
                     FileContextCreateMkdirBaseTest {
   
-  private static MiniDFSCluster cluster;
+  private static MiniHDFSCluster cluster;
   private static Path defaultWorkingDirectory;
   
   @Override
@@ -48,7 +49,7 @@ public class TestFcHdfsCreateMkdir extends
   public static void clusterSetupAtBegining()
                                     throws IOException, LoginException, URISyntaxException  {
     Configuration conf = new HdfsConfiguration();
-    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2).build();
+    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2).buildHDFS();
     fc = FileContext.getFileContext(cluster.getURI(0), conf);
     defaultWorkingDirectory = fc.makeQualified( new Path("/user/" + 
         UserGroupInformation.getCurrentUser().getShortUserName()));

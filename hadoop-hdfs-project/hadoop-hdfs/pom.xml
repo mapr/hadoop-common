@@ -204,64 +204,6 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>default-testCompile</id>
-            <phase>test-compile</phase>
-            <configuration>
-	      <testExcludes>
-		<exclude>org/apache/hadoop/hdfs/server/namenode/*.java</exclude>
-		<exclude>org/apache/hadoop/hdfs/server/namenode/ha/*.java</exclude>
-		<exclude>org/apache/hadoop/hdfs/server/namenode/metrics/*.java</exclude>
-		<exclude>org/apache/hadoop/hdfs/server/namenode/snapshot/*.java</exclude>
-		<exclude>org/apache/hadoop/hdfs/server/datanode/*.java</exclude>
-		<exclude>org/apache/hadoop/hdfs/server/balancer/*.java</exclude>
-		<exclude>org/apache/hadoop/hdfs/server/blockmanagement/*.java</exclude>
-		<exclude>org/apache/hadoop/hdfs/web/*.java</exclude>
-		<exclude>org/apache/hadoop/hdfs/tools/*.java</exclude>
-		<exclude>org/apache/hadoop/hdfs/qjournal/*.java</exclude>
-		<exclude>org/apache/hadoop/fs/viewfs/*.java</exclude>
-		<exclude>org/apache/hadoop/fs/*.java</exclude>
-		<exclude>**/TestDFSClientFailover.java</exclude>
-		<exclude>**/UpgradeUtilities.java</exclude>
-		<exclude>**/TestBlockMisingException.java</exclude>
-		<exclude>**/TestBlockReaderLocal.java</exclude>
-		<exclude>**/TestBlockReaderLocalLegacy.java</exclude>
-		<exclude>**/TestDFSUpgrade.java</exclude>
-		<exclude>**/TestDFSShell.java</exclude>
-		<exclude>**/TestCrcCorruption.java</exclude>
-		<exclude>**/TestDFSFinalize.java</exclude>
-		<exclude>**/TestFileAppend.java</exclude>
-		<exclude>**/TestJMXGet.java</exclude>
-		<exclude>**/TestFileCorruption.java</exclude>
-		<exclude>**/TestDatanodeConfig.java</exclude>
-		<exclude>**/TestShortCircuitLocalRead.java</exclude>
-		<exclude>**/TestBlockMissingException.java</exclude>
-		<exclude>**/TestReplication.java</exclude>
-		<exclude>**/TestListFilesInFileContext.java</exclude>
-		<exclude>**/TestInjectionForSimulatedStorage.java</exclude>
-		<exclude>**/TestBookKeeperHACheckpoints.java</exclude>
-                <exclude>**/TestMiniDFSCluster.java</exclude>
-                <exclude>**/TestDFSClientExcludedNodes.java</exclude>
-                <exclude>**/MiniDFSClusterWithNodeGroup.java</exclude>
-                <exclude>**/TestFileAppend3.java</exclude>
-                <exclude>**/TestFileAppend4.java</exclude>
-                <exclude>**/TestEncryptedTransfer.java</exclude>
-                <exclude>**/TestReadWhileWriting.java</exclude>
-                <exclude>**/TestRenameWhileOpen.java</exclude>
-                <exclude>**/TestSetTimes.java</exclude>
-              </testExcludes>
-            </configuration>
-            <goals>
-              <goal>testCompile</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <properties>

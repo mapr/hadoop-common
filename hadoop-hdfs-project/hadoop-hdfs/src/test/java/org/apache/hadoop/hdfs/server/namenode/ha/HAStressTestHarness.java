@@ -25,6 +25,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.server.blockmanagement.BlockManagerTestUtil;
 import org.apache.hadoop.hdfs.server.datanode.DataNode;
 import org.apache.hadoop.hdfs.server.datanode.DataNodeTestUtils;
@@ -39,7 +40,7 @@ import org.apache.hadoop.test.MultithreadedTestUtil.TestContext;
  */
 public class HAStressTestHarness {
   Configuration conf;
-  private MiniDFSCluster cluster;
+  private MiniHDFSCluster cluster;
   static final int BLOCK_SIZE = 1024;
   TestContext testCtx = new TestContext();
   
@@ -55,11 +56,11 @@ public class HAStressTestHarness {
   /**
    * Start and return the MiniDFSCluster.
    */
-  public MiniDFSCluster startCluster() throws IOException {
+  public MiniHDFSCluster startCluster() throws IOException {
     cluster = new MiniDFSCluster.Builder(conf)
       .nnTopology(MiniDFSNNTopology.simpleHATopology())
       .numDataNodes(3)
-      .build();
+      .buildHDFS();
     return cluster;
   }
 

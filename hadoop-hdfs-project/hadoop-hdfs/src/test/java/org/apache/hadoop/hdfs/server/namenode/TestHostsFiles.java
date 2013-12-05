@@ -33,6 +33,7 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
 import org.junit.Test;
 
@@ -92,8 +93,8 @@ public class TestHostsFiles {
 
     // Two blocks and four racks
     String racks[] = {"/rack1", "/rack1", "/rack2", "/rack2"};
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
-      .numDataNodes(racks.length).racks(racks).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+      .numDataNodes(racks.length).racks(racks).buildHDFS();
     final FSNamesystem ns = cluster.getNameNode().getNamesystem();
 
     try {
