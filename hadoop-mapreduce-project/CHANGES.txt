@@ -67,6 +67,9 @@ Release 2.3.0 - UNRELEASED
 
     MAPREDUCE-5514. Fix TestRMContainerAllocator. (Zhijie Shen via acmurthy) 
 
+    MAPREDUCE-5656. bzip2 codec can drop records when reading data in splits
+    (jlowe)
+
 
 Release 2.2.0 - 2013-10-13
 
