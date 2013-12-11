@@ -36,7 +36,9 @@ import org.junit.Test;
  */
 public class TestFSOutputSummer {
   private static final long seed = 0xDEADBEEFL;
-  private static final int BYTES_PER_CHECKSUM = 10;
+  // mapr_fix
+  private static final int BYTES_PER_CHECKSUM = 65536;
+  //private static final int BYTES_PER_CHECKSUM = 10;
   private static final int BLOCK_SIZE = 2*BYTES_PER_CHECKSUM;
   private static final int HALF_CHUNK_SIZE = BYTES_PER_CHECKSUM/2;
   private static final int FILE_SIZE = 2*BLOCK_SIZE-1;

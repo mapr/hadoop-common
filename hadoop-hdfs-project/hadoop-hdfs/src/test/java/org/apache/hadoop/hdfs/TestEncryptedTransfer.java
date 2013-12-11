@@ -193,7 +193,7 @@ public class TestEncryptedTransfer {
           .manageNameDfsDirs(false)
           .format(false)
           .startupOption(StartupOption.REGULAR)
-          .build();
+          .buildHDFS();
       
       
       fs = getFileSystem(conf);

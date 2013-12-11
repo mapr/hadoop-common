@@ -46,7 +46,11 @@ public class TestReadWhileWriting {
 
   private static final String DIR = "/"
       + TestReadWhileWriting.class.getSimpleName() + "/";
-  private static final int BLOCK_SIZE = 8192;
+
+  // mapr_fix
+  private static final int BLOCK_SIZE = 65536;
+  //private static final int BLOCK_SIZE = 8192;
+
   // soft limit is short and hard limit is long, to test that
   // another thread can lease file after soft limit expired
   private static final long SOFT_LEASE_LIMIT = 500;

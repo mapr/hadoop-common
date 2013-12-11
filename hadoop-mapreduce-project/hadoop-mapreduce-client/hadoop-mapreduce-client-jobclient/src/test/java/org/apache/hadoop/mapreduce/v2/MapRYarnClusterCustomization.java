@@ -70,7 +70,7 @@ public class MapRYarnClusterCustomization implements MiniMRYarnClusterCustomizat
     MiniDFSCluster runningInstance = MiniDFSCluster.getRunningInstance();
     if (runningInstance != null) {
       assert runningInstance instanceof MiniMapRFSCluster
-        : "Expect MiniMapRFSCluster to be running";
+        : "Expect MiniMapRFSCluster to be running. But found " + runningInstance.getClass().getName();
 
       LOG.info("Cluster already running");
     } else {

@@ -45,7 +45,10 @@ public class TestWriteRead {
 
   private static final int BUFFER_SIZE = 8192 * 100;
   private static final String ROOT_DIR = "/tmp/";
-  private static final long blockSize = 1024*100;
+
+  // mapr_fix
+  private static final long blockSize = 65536;
+  //private static final long blockSize = 1024*100;
 
   // command-line options. Different defaults for unit test vs real cluster
   String filenameOption = ROOT_DIR + "fileX1";

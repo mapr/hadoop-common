@@ -40,7 +40,7 @@ public class TestSetrepIncreasing {
     conf.set(DFSConfigKeys.DFS_REPLICATION_KEY, "" + fromREP);
     conf.setLong(DFSConfigKeys.DFS_BLOCKREPORT_INTERVAL_MSEC_KEY, 1000L);
     conf.set(DFSConfigKeys.DFS_NAMENODE_REPLICATION_PENDING_TIMEOUT_SEC_KEY, Integer.toString(2));
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(10).build();
+    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(10).buildHDFS();
     FileSystem fs = cluster.getFileSystem();
     assertTrue("Not a HDFS: "+fs.getUri(), fs instanceof DistributedFileSystem);
 

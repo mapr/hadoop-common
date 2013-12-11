@@ -63,7 +63,9 @@ public class AppendTestUtil {
       return r;
     }
   };
-  static final int BLOCK_SIZE = 1024;
+  // mapr_fix
+  static final int BLOCK_SIZE = 65536;
+  //static final int BLOCK_SIZE = 1024;
   static final int NUM_BLOCKS = 10;
   static final int FILE_SIZE = NUM_BLOCKS * BLOCK_SIZE + 1;
   static long seed = -1;

@@ -95,6 +95,7 @@ public class TestFileCreation {
   }
 
   static final long seed = 0xDEADBEEFL;
+  // mapr_fix
   static final int blockSize = 65536;
   static final int numBlocks = 2;
   static final int fileSize = numBlocks * blockSize + 1;

@@ -55,7 +55,9 @@ public class TestDatanodeDeath {
     ((Log4JLogger)InterDatanodeProtocol.LOG).getLogger().setLevel(Level.ALL);
   }
 
-  static final int blockSize = 8192;
+  // mapr_fix
+  static final int blockSize = 65536;
+  //static final int blockSize = 8192;
   static final int numBlocks = 2;
   static final int fileSize = numBlocks * blockSize + 1;
   static final int numDatanodes = 15;

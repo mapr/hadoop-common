@@ -347,7 +347,7 @@ public class TestDFSUpgradeFromImage {
     try {
       bld.format(false).startupOption(StartupOption.UPGRADE)
         .clusterId("testClusterId");
-      cluster = bld.build();
+      cluster = bld.buildHDFS();
       cluster.waitActive();
       DistributedFileSystem dfs = (DistributedFileSystem)cluster.getFileSystem();
       DFSClient dfsClient = dfs.dfs;
