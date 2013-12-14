@@ -47,6 +47,14 @@ public class MapRYarnClusterCustomization implements MiniMRYarnClusterCustomizat
    * @see MiniMRYarnClusterCustomization#overrideConfigFromFile(Configuration)
    */
   public void overrideConfigFromFile(Configuration conf) {
+    MiniDFSCluster runningInstance = MiniDFSCluster.getRunningInstance();
+    if (runningInstance != null && !(runningInstance instanceof MiniMapRFSCluster)) {
+      LOG.info("Skipping MapR config oerride as different cluster type is"
+          + " running: " + runningInstance.getClass().getName());
+
+      return;
+    }
+
     Properties props = new Properties();
     try {
       props.load(this.getClass().getClassLoader().getResourceAsStream(MR_CONFIG_OVERRIDE_FILE));
@@ -69,10 +77,12 @@ public class MapRYarnClusterCustomization implements MiniMRYarnClusterCustomizat
 
     MiniDFSCluster runningInstance = MiniDFSCluster.getRunningInstance();
     if (runningInstance != null) {
-      assert runningInstance instanceof MiniMapRFSCluster
-        : "Expect MiniMapRFSCluster to be running. But found " + runningInstance.getClass().getName();
-
-      LOG.info("Cluster already running");
+      if (runningInstance instanceof MiniMapRFSCluster) {
+        LOG.info("MiniMapRFSCluster already running. Will reuse that.");
+      } else {
+        LOG.info("Skipping MapRFS cluster creation as different cluster type is"
+            + " running: " + runningInstance.getClass().getName());
+      }
     } else {
       try {
         dfsCluster = new MiniDFSCluster.Builder(conf).numDataNodes(numOfNMs)

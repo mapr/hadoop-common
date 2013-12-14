@@ -26,6 +26,12 @@ import org.apache.hadoop.conf.Configuration;
  */
 public interface MiniMRYarnClusterCustomization {
   /**
+   * Java system property that is set to the fully qualified name of the
+   * customization class.
+   */
+  static final String CUSTOMIZATION_CLASS_NAME = "mr.customization";
+
+  /**
    * Run before creating the mini MR cluster.
    */
   void overrideConfigFromFile(Configuration conf);

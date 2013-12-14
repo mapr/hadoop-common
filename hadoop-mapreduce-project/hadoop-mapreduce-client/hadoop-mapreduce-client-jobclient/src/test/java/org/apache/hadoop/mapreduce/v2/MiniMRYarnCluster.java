@@ -57,8 +57,6 @@ import org.apache.hadoop.yarn.webapp.util.WebAppUtils;
  */
 public class MiniMRYarnCluster extends MiniYARNCluster {
 
-  private static final String CUSTOMIZATION_CLASS_NAME = "mr.customization";
-
   public static final String APPJAR = JarFinder.getJar(LocalContainerLauncher.class);
 
   private static final Log LOG = LogFactory.getLog(MiniMRYarnCluster.class);
@@ -117,7 +115,8 @@ public class MiniMRYarnCluster extends MiniYARNCluster {
 
   @Override
   public void serviceInit(Configuration conf) throws Exception {
-    String customizationClassName = System.getProperty(CUSTOMIZATION_CLASS_NAME);
+    String customizationClassName = System.getProperty(
+        MiniMRYarnClusterCustomization.CUSTOMIZATION_CLASS_NAME);
 
     if (customizationClassName != null && !customizationClassName.isEmpty()) {
       try {

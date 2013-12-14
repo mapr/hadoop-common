@@ -26,6 +26,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.v2.MiniMRYarnCluster;
+import org.apache.hadoop.mapreduce.v2.MiniMRYarnClusterCustomization;
 import org.apache.hadoop.util.JarFinder;
 
 /**
@@ -46,6 +47,22 @@ public class MiniMRClientClusterFactory {
 
     if (conf == null) {
       conf = new Configuration();
+    }
+
+    // Apply config customizations
+    String customizationClassName = System.getProperty(
+        MiniMRYarnClusterCustomization.CUSTOMIZATION_CLASS_NAME);
+
+    if (customizationClassName != null && !customizationClassName.isEmpty()) {
+      try {
+         MiniMRClientClusterFactory.class.getClassLoader()
+          .loadClass(customizationClassName)
+          .asSubclass(MiniMRYarnClusterCustomization.class)
+          .getDeclaredConstructor().newInstance()
+          .overrideConfigFromFile(conf);
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
     }
 
     FileSystem fs = FileSystem.get(conf);
