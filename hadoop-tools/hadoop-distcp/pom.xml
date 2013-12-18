@@ -135,6 +135,18 @@
               <value>warn</value>
             </property>
           </systemProperties>
+
+          <!-- mapr_fix -->
+          <excludes>
+            <exclude>**/TestCopyListing.java</exclude>
+            <exclude>**/TestCopyMapper.java</exclude>
+            <exclude>**/TestDistCpUtils.java</exclude>
+            <exclude>**/TestFileBasedCopyListing.java</exclude>
+            <exclude>**/TestCopyCommitter.java</exclude>
+            <exclude>**/TestUniformSizeInputFormat.java</exclude>
+            <exclude>**/TestDynamicInputFormat.java</exclude>
+            <exclude>**/TestGlobbedCopyListing.java</exclude>
+          </excludes>
         </configuration>
       </plugin>
       <plugin>

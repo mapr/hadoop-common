@@ -53,6 +53,11 @@
           <systemPropertyVariables>
             <log4j.configuration>file:///${project.basedir}/src/test/resources/log4j.properties</log4j.configuration>
           </systemPropertyVariables>
+
+          <!-- mapr_fix -->
+          <excludes>
+            <exclude>**/TestJobConf.java</exclude>
+          </excludes>
         </configuration>
       </plugin>
       <plugin>

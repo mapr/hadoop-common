@@ -173,6 +173,12 @@
             <exclude>**/TestMRJobs.java</exclude>
             <exclude>**/TestEncryptedShuffle.java</exclude>
             <exclude>**/TestMRAppWithCombiner.java</exclude>
+            <exclude>**/TestUberAM.java</exclude>
+            <exclude>**/TestMRCredentials.java</exclude>
+            <exclude>**/TestBinaryTokenFile.java</exclude>
+            <exclude>**/TestMRAMWithNonNormalizedCapabilities.java</exclude>
+            <exclude>**/TestClusterMRNotification.java</exclude>
+            <exclude>**/TestMRJobsWithHistoryService.java</exclude>
 
 	    <!-- try to fix -->
             <exclude>**/TestJobCounters.java</exclude>

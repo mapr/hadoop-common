@@ -150,6 +150,8 @@
           </systemPropertyVariables>
           <excludes>
             <exclude>**/TestFSDownload.java</exclude>
+            <exclude>**/TestLocalResourcesTrackerImpl.java</exclude>
+            <exclude>**/TestLogAggregationService.java</exclude>
           </excludes>
         </configuration>
       </plugin>

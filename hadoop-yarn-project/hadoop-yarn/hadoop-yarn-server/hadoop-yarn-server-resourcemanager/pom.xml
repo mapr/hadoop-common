@@ -66,6 +66,21 @@
 
     <plugins>
 
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <!-- mapr_fix -->
+          <excludes>
+            <exclude>**/TestApplicationCleanup.java</exclude>
+            <exclude>**/TestRMStateStore.java</exclude>
+            <exclude>**/TestAMAuthorization.java</exclude>
+            <exclude>**/TestClientRMTokens.java</exclude>
+            <exclude>**/TestResourceTrackerService.java</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+
       <!-- Publish tests jar -->
       <plugin>
         <artifactId>maven-jar-plugin</artifactId>
