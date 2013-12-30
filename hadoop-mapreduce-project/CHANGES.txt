@@ -68,6 +68,10 @@ Release 2.3.0 - UNRELEASED
     MAPREDUCE-5656. bzip2 codec can drop records when reading data in splits
     (jlowe)
 
+    MAPREDUCE-5685. Fixed a bug with JobContext getCacheFiles API inside the
+    WrappedReducer class. (Yi Song via vinodkv)
+
+
 
 Release 2.2.0 - 2013-10-13
 
