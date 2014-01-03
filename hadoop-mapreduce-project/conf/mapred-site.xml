@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0"?>
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
 <!--
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,23 +18,13 @@
 
 <configuration>
   <property>
-    <name>fs.AbstractFileSystem.maprfs.impl</name>
-    <value>com.mapr.fs.MapRYarnFileSystem</value>
-    <description> MapR Yarn FileSystem </description>
+    <name>mapreduce.framework.name</name>
+    <value>yarn</value>
+    <final>true</final>
   </property>
 
   <property>
-    <name>fs.maprfs.impl</name>
-    <value>com.mapr.fs.MapRFileSystem</value>
-  </property>
-
-  <property>
-    <name>fs.defaultFS</name>
-    <value>maprfs://localhost:7222</value>
-  </property>
-
-  <property>
-    <name>fs.mapr.working.dir</name>
+    <name>yarn.app.mapreduce.am.staging-dir</name>
     <value>${fs.defaultFS}/tmp/staging</value>
   </property>
 
