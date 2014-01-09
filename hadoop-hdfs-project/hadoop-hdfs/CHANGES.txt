@@ -36,9 +36,7 @@ Release 2.3.0 - UNRELEASED
 
     HDFS-5675. Add Mkdirs operation to NNThroughputBenchmark.
     (Plamen Jeliazkov via shv)
-    HDFS-5438. Flaws in block report processing can cause data loss. (kihwal)
-
-
+    
     HDFS-5677. Need error checking for HA cluster configuration.
     (Vincent Sheffer via cos)
 
@@ -200,6 +198,14 @@ Release 2.3.0 - UNRELEASED
 
     HDFS-5649. Unregister NFS and Mount service when NFS gateway is shutting down.
     (brandonli)
+
+  MAPR CHERRY PICKS
+  
+    HDFS-5438. Flaws in block report processing can cause data loss. (kihwal)
+    
+    HDFS-5449. WebHdfs compatibility broken between 2.2 and 1.x / 23.x (kihwal)
+
+
 
 Release 2.2.0 - 2013-10-13
 
