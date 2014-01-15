@@ -298,7 +298,7 @@ public class TestDatanodeDeath {
     conf.setInt(DFSConfigKeys.DFS_NAMENODE_REPLICATION_PENDING_TIMEOUT_SEC_KEY, 2);
     conf.setInt(DFSConfigKeys.DFS_CLIENT_SOCKET_TIMEOUT_KEY, 5000);
     MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
-                                               .numDataNodes(numDatanodes).build();
+                                               .numDataNodes(numDatanodes).buildHDFS();
     cluster.waitActive();
     FileSystem fs = cluster.getFileSystem();
     Modify modThread = null;
@@ -356,7 +356,7 @@ public class TestDatanodeDeath {
     int myMaxNodes = 5;
     System.out.println("SimpleTest starting with DataNode to Kill " + 
                        datanodeToKill);
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(myMaxNodes).build();
+    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(myMaxNodes).buildHDFS();
     cluster.waitActive();
     FileSystem fs = cluster.getFileSystem();
     short repl = 3;

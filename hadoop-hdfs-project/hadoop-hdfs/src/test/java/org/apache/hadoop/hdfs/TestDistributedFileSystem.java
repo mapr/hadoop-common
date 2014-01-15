@@ -108,7 +108,10 @@ public class TestDistributedFileSystem {
     try {
       FileSystem.closeAll();
 
-      conf = getTestConfiguration();
+      // mapr_fix Why do we need to get this instance again? The call to
+      // MiniDFSCluster.build sets the default scheme in conf which corresponds
+      // to the URI obtained earlier.
+      //conf = getTestConfiguration();
       FileSystem.setDefaultUri(conf, address);
       FileSystem.get(conf);
       FileSystem.get(conf);
@@ -459,8 +462,7 @@ public class TestDistributedFileSystem {
         current.getShortUserName() + "x", new String[]{"user"});
     
     try {
-      ((DistributedFileSystem) hdfs).getFileChecksum(new Path(
-          "/test/TestNonExistingFile"));
+      hdfs.getFileChecksum(new Path("/test/TestNonExistingFile"));
       fail("Expecting FileNotFoundException");
     } catch (FileNotFoundException e) {
       assertTrue("Not throwing the intended exception message", e.getMessage()
@@ -470,7 +472,7 @@ public class TestDistributedFileSystem {
     try {
       Path path = new Path("/test/TestExistingDir/");
       hdfs.mkdirs(path);
-      ((DistributedFileSystem) hdfs).getFileChecksum(path);
+      hdfs.getFileChecksum(path);
       fail("Expecting FileNotFoundException");
     } catch (FileNotFoundException e) {
       assertTrue("Not throwing the intended exception message", e.getMessage()

@@ -101,7 +101,7 @@ public class TestSmallBlock {
       SimulatedFSDataset.setFactory(conf);
     }
     conf.set(DFSConfigKeys.DFS_BYTES_PER_CHECKSUM_KEY, "1");
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).build();
+    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
     FileSystem fileSys = cluster.getFileSystem();
     try {
       Path file1 = new Path("smallblocktest.dat");

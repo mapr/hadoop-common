@@ -197,6 +197,8 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
             <exclude>**/TestLoadGenerator.java</exclude>
             <exclude>**/TestStickyBit.java</exclude>
             <exclude>**/TestFileAppend.java</exclude>
+            <exclude>**/TestPread.java</exclude>
+            <exclude>**/TestDistributedFileSystem.java</exclude>
 
             <!-- to investigate -->
             <exclude>**/TestHDFSFileSystemContract.java</exclude>
@@ -230,29 +232,13 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
             <exclude>**/TestReplicationPolicyWithNodeGroup.java</exclude>
             <exclude>**/TestClose.java</exclude>
             <exclude>**/TestCrcCorruption.java</exclude>
-            <exclude>**/TestDistributedFileSystem.java</exclude>
             <exclude>**/TestDFSPermission.java</exclude>
             <exclude>**/TestFileConcurrentReader.java</exclude>
-            <exclude>**/TestRefreshUserMappings.java</exclude>
             <exclude>**/TestPermission.java</exclude>
-            <exclude>**/TestHDFSTrash.java</exclude>
             <exclude>**/TestNNWithQJM.java</exclude>
-            <exclude>**/TestDistributedFileSystem.java</exclude>
-            <exclude>**/TestHdfsAdmin.java</exclude>
-            <exclude>**/TestPread.java</exclude>
 
 	    <!-- VM exits -->
             <exclude>**/TestQuorumJournalManager.java</exclude>
-
-	    <!-- known to not work -->
-	    <!-- ClassCast -->
-            <exclude>**/TestDatanodeDeath.java</exclude>
-            <exclude>**/TestReadWhileWriting.java</exclude>
-
-	    <!-- 0 data nodes -->
-            <exclude>**/TestNameNodeHttpServer.java</exclude>
-
-            <exclude>**/TestSmallBlock.java</exclude>
           </excludes>
         </configuration>
       </plugin>

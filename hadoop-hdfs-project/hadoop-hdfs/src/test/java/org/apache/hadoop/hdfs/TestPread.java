@@ -222,7 +222,9 @@ public class TestPread {
     // mapr_fix
     conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, 65536);
     //conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, 4096);
-    conf.setLong(DFSConfigKeys.DFS_CLIENT_READ_PREFETCH_SIZE_KEY, 4096);
+    // mapr_fix
+    conf.setLong(DFSConfigKeys.DFS_CLIENT_READ_PREFETCH_SIZE_KEY, 65536);
+    //conf.setLong(DFSConfigKeys.DFS_CLIENT_READ_PREFETCH_SIZE_KEY, 4096);
     if (simulatedStorage) {
       SimulatedFSDataset.setFactory(conf);
     }

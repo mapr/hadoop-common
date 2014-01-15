@@ -35,6 +35,8 @@ enum NodeState {
 }
 
 class MapRNode {
+  public static final String ZOOKEEPER_HOME="/opt/mapr/zookeeper/zookeeper-3.4.5";
+
   boolean isCldb;
   boolean isFileServer;
   boolean isZookeeper;
@@ -250,7 +252,7 @@ class MapRNode {
     }
 
     String commands[] = {
-      "/opt/mapr/zookeeper/zookeeper-3.3.6/bin/zkServer.sh start"
+      ZOOKEEPER_HOME + "/bin/zkServer.sh start"
     };
 
     RunCommand rc = new RunCommand();
@@ -267,8 +269,8 @@ class MapRNode {
     }
 
     String commands[] = {
-      "/opt/mapr/zookeeper/zookeeper-3.3.6/bin/zkCli.sh -server localhost:5181 delete /datacenter/controlnodes/cldb/active/CLDBMaster",
-      "/opt/mapr/zookeeper/zookeeper-3.3.6/bin/zkCli.sh -server localhost:5181 delete /datacenter/controlnodes/cldb/epoch/1/KvStoreContainerInfo"
+      ZOOKEEPER_HOME + "/bin/zkCli.sh -server localhost:5181 delete /datacenter/controlnodes/cldb/active/CLDBMaster",
+      ZOOKEEPER_HOME + "/bin/zkCli.sh -server localhost:5181 delete /datacenter/controlnodes/cldb/epoch/1/KvStoreContainerInfo"
     };
 
     RunCommand rc = new RunCommand();
@@ -285,7 +287,7 @@ class MapRNode {
     }
 
     String commands[] = {
-      "/opt/mapr/zookeeper/zookeeper-3.3.6/bin/zkServer.sh stop"
+      ZOOKEEPER_HOME + "/bin/zkServer.sh stop"
     };
 
     RunCommand rc = new RunCommand();
@@ -462,12 +464,18 @@ public class MiniMapRFSCluster extends MiniDFSCluster {
     int replication = conf.getInt("dfs.replication", 3);
     conf.setInt("dfs.replication", Math.min(replication, builder.numDataNodes));
     conf.set("fs.maprfs.impl", "com.mapr.fs.MapRFileSystem");
+    conf.set("fs.AbstractFileSystem.maprfs.impl", "com.mapr.fs.MapRYarnFileSystem");
     conf.set("io.file.buffer.size", "65536");  //TODO: other sizes?
 
     conf.set("dfs.http.address", "127.0.0.1:0");
     //conf.set("fs.mapr.trace", "debug");
 
-    assert (builder.numDataNodes != 0) : "numDataNodes = 0";
+    // HDFS tests can create a cluster with 0 data nodes as the name node
+    // initialization is not tied to it. But in our case, CLDB and other
+    // services are started as part of the node. So default to 1 data node.
+    if (builder.numDataNodes == 0) {
+      builder.numDataNodes = 1;
+    }
     initNodes("TestVolume", builder.numDataNodes);
     // Start the DataNodes
     startDataNodes(conf, builder.numDataNodes, builder.manageDataDfsDirs,
@@ -488,7 +496,7 @@ public class MiniMapRFSCluster extends MiniDFSCluster {
   private void teardownServices() {
     String commands[] = {
       "/opt/mapr/cldb/cldb stop",
-      "/opt/mapr/zookeeper/zookeeper-3.3.6/bin/zkServer.sh stop",
+      MapRNode.ZOOKEEPER_HOME + "/bin/zkServer.sh stop",
       "pkill -9 mfs",
       "ps -ef | grep QuorumPeerMain | grep -v grep | awk '{print $2}' | xargs --no-run-if-empty kill -9",
       "ps -ef | grep FsShell | grep -v grep | awk '{print $2}' | xargs --no-run-if-empty kill -9"

@@ -110,6 +110,10 @@
             <exclude>**/TestFileArgs.java</exclude>
             <exclude>**/TestMultipleArchiveFiles.java</exclude>
             <exclude>**/TestMultipleCachefiles.java</exclude>
+
+            <!-- fails on hdfs also. The VM exits - seems like surefire issue
+              that terminates long running test. -->
+            <exclude>**/TestStreamingStatus.java</exclude>
           </excludes>
         </configuration>
       </plugin>
