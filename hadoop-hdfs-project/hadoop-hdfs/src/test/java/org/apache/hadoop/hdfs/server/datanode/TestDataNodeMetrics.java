@@ -37,6 +37,7 @@ import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.metrics2.MetricsRecordBuilder;
 import org.junit.Test;
@@ -47,7 +48,7 @@ public class TestDataNodeMetrics {
   public void testDataNodeMetrics() throws Exception {
     Configuration conf = new HdfsConfiguration();
     SimulatedFSDataset.setFactory(conf);
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
     try {
       FileSystem fs = cluster.getFileSystem();
       final long LONG_FILE_LEN = Integer.MAX_VALUE+1L; 
@@ -68,7 +69,7 @@ public class TestDataNodeMetrics {
     Configuration conf = new HdfsConfiguration();
     final int interval = 1;
     conf.set(DFSConfigKeys.DFS_METRICS_PERCENTILES_INTERVALS_KEY, "" + interval);
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
     try {
       FileSystem fs = cluster.getFileSystem();
       // Create and read a 1 byte file
@@ -100,7 +101,7 @@ public class TestDataNodeMetrics {
     Configuration conf = new HdfsConfiguration();
     final int interval = 1;
     conf.set(DFSConfigKeys.DFS_METRICS_PERCENTILES_INTERVALS_KEY, "" + interval);
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
     try {
       cluster.waitActive();
       DistributedFileSystem fs = (DistributedFileSystem) cluster.getFileSystem();
@@ -139,8 +140,8 @@ public class TestDataNodeMetrics {
     final int interval = 1;
     Configuration conf = new HdfsConfiguration();
     conf.set(DFSConfigKeys.DFS_METRICS_PERCENTILES_INTERVALS_KEY, "" + interval);
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(
-        datanodeCount).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(
+        datanodeCount).buildHDFS();
     try {
       cluster.waitActive();
       FileSystem fs = cluster.getFileSystem();

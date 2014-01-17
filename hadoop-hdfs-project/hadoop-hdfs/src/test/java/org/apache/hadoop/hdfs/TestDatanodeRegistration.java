@@ -70,10 +70,10 @@ public class TestDatanodeRegistration {
     MonitorDNS sm = new MonitorDNS();
     System.setSecurityManager(sm);
     
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
       HdfsConfiguration conf = new HdfsConfiguration();
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(8).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(8).buildHDFS();
       cluster.waitActive();
       
       int initialLookups = sm.lookups;
@@ -114,9 +114,9 @@ public class TestDatanodeRegistration {
   @Test
   public void testChangeIpcPort() throws Exception {
     HdfsConfiguration conf = new HdfsConfiguration();
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
-      cluster = new MiniDFSCluster.Builder(conf).build();
+      cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
       InetSocketAddress addr = new InetSocketAddress(
         "localhost",
         cluster.getNameNodePort());
@@ -161,11 +161,11 @@ public class TestDatanodeRegistration {
     final int DN_INFO_SECURE_PORT = 12347;
     final int DN_IPC_PORT = 12348;
     Configuration conf = new HdfsConfiguration();
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
       cluster = new MiniDFSCluster.Builder(conf)
           .numDataNodes(0)
-          .build();
+          .buildHDFS();
       InetSocketAddress addr = new InetSocketAddress(
         "localhost",
         cluster.getNameNodePort());
@@ -212,11 +212,11 @@ public class TestDatanodeRegistration {
     Configuration conf = new HdfsConfiguration();
     conf.set(DFSConfigKeys.DFS_DATANODE_MIN_SUPPORTED_NAMENODE_VERSION_KEY, "3.0.0");
     conf.set(DFSConfigKeys.DFS_NAMENODE_MIN_SUPPORTED_DATANODE_VERSION_KEY, "3.0.0");
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
       cluster = new MiniDFSCluster.Builder(conf)
           .numDataNodes(0)
-          .build();
+          .buildHDFS();
       
       NamenodeProtocols rpcServer = cluster.getNameNodeRpc();
       
@@ -260,11 +260,11 @@ public class TestDatanodeRegistration {
       throws Exception {
     Configuration conf = new HdfsConfiguration();
     conf.set(DFSConfigKeys.DFS_DATANODE_MIN_SUPPORTED_NAMENODE_VERSION_KEY, "1.0.0");
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
       cluster = new MiniDFSCluster.Builder(conf)
           .numDataNodes(0)
-          .build();
+          .buildHDFS();
       
       NamenodeProtocols rpcServer = cluster.getNameNodeRpc();
       

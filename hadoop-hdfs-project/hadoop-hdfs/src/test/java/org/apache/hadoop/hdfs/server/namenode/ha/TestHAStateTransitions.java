@@ -42,6 +42,7 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.security.token.delegation.DelegationTokenIdentifier;
 import org.apache.hadoop.hdfs.server.common.Storage.StorageDirectory;
 import org.apache.hadoop.hdfs.server.namenode.EditLogFileOutputStream;
@@ -86,10 +87,10 @@ public class TestHAStateTransitions {
   @Test
   public void testTransitionActiveToStandby() throws Exception {
     Configuration conf = new Configuration();
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
       .nnTopology(MiniDFSNNTopology.simpleHATopology())
       .numDataNodes(1)
-      .build();
+      .buildHDFS();
     try {
       cluster.waitActive();
       cluster.transitionToActive(0);
@@ -131,10 +132,10 @@ public class TestHAStateTransitions {
   @Test
   public void testTransitionToCurrentStateIsANop() throws Exception {
     Configuration conf = new Configuration();
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
       .nnTopology(MiniDFSNNTopology.simpleHATopology())
       .numDataNodes(1)
-      .build();
+      .buildHDFS();
     try {
       cluster.waitActive();
       cluster.transitionToActive(0);
@@ -153,7 +154,7 @@ public class TestHAStateTransitions {
    * @param nsIndex namespace index starting from zero
    * @throws Exception
    */
-  private void testManualFailoverFailback(MiniDFSCluster cluster, 
+  private void testManualFailoverFailback(MiniHDFSCluster cluster, 
 		  Configuration conf, int nsIndex) throws Exception {
       int nn0 = 2 * nsIndex, nn1 = 2 * nsIndex + 1;
 
@@ -192,10 +193,10 @@ public class TestHAStateTransitions {
   @Test
   public void testManualFailoverAndFailback() throws Exception {
     Configuration conf = new Configuration();
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
       .nnTopology(MiniDFSNNTopology.simpleHATopology())
       .numDataNodes(1)
-      .build();
+      .buildHDFS();
     try {
       cluster.waitActive();
       // test the only namespace
@@ -215,10 +216,10 @@ public class TestHAStateTransitions {
   @Test(timeout=120000)
   public void testTransitionSynchronization() throws Exception {
     Configuration conf = new Configuration();
-    final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    final MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
       .nnTopology(MiniDFSNNTopology.simpleHATopology())
       .numDataNodes(0)
-      .build();
+      .buildHDFS();
     try {
       cluster.waitActive();
       ReentrantReadWriteLock spyLock = NameNodeAdapter.spyOnFsLock(
@@ -269,10 +270,10 @@ public class TestHAStateTransitions {
   public void testLeasesRenewedOnTransition() throws Exception {
     Configuration conf = new Configuration();
     conf.setInt(DFSConfigKeys.DFS_HA_TAILEDITS_PERIOD_KEY, 1);
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
       .nnTopology(MiniDFSNNTopology.simpleHATopology())
       .numDataNodes(1)
-      .build();
+      .buildHDFS();
     FSDataOutputStream stm = null;
     FileSystem fs = HATestUtil.configureFailoverFs(cluster, conf);
     NameNode nn0 = cluster.getNameNode(0);
@@ -321,10 +322,10 @@ public class TestHAStateTransitions {
     conf.setBoolean(
         DFSConfigKeys.DFS_NAMENODE_DELEGATION_TOKEN_ALWAYS_USE_KEY, true);
     
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
         .nnTopology(MiniDFSNNTopology.simpleHATopology())
         .numDataNodes(0)
-        .build();
+        .buildHDFS();
     try {
       cluster.waitActive();
       cluster.transitionToActive(0);
@@ -355,10 +356,10 @@ public class TestHAStateTransitions {
   @Test
   public void testManualFailoverFailbackFederationHA() throws Exception {
     Configuration conf = new Configuration();
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
       .nnTopology(MiniDFSNNTopology.simpleHAFederatedTopology(2))
       .numDataNodes(1)
-      .build();
+      .buildHDFS();
     try {
       cluster.waitActive();
    
@@ -387,10 +388,10 @@ public class TestHAStateTransitions {
       throws Exception {
     Configuration conf = new Configuration();
     conf.setInt(DFSConfigKeys.DFS_HA_TAILEDITS_PERIOD_KEY, Integer.MAX_VALUE);
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
       .nnTopology(MiniDFSNNTopology.simpleHATopology())
       .numDataNodes(0)
-      .build();
+      .buildHDFS();
     FileSystem fs = HATestUtil.configureFailoverFs(cluster, conf);
     try {
       cluster.transitionToActive(0);
@@ -405,7 +406,7 @@ public class TestHAStateTransitions {
     }
   }
   
-  private static void createEmptyInProgressEditLog(MiniDFSCluster cluster,
+  private static void createEmptyInProgressEditLog(MiniHDFSCluster cluster,
       NameNode nn, boolean writeHeader) throws IOException {
     long txid = nn.getNamesystem().getEditLog().getLastWrittenTxId();
     URI sharedEditsUri = cluster.getSharedEditsDir(0, 1);
@@ -448,11 +449,11 @@ public class TestHAStateTransitions {
     conf.setInt(
         DFSConfigKeys.DFS_NAMENODE_DELEGATION_KEY_UPDATE_INTERVAL_KEY, 50);
     conf.setInt(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, 1024);
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
         .nnTopology(MiniDFSNNTopology.simpleHATopology())
         .numDataNodes(1)
          .waitSafeMode(false)
-        .build();
+        .buildHDFS();
     try {
       cluster.transitionToActive(0);
       DFSTestUtil.createFile(cluster.getFileSystem(0),

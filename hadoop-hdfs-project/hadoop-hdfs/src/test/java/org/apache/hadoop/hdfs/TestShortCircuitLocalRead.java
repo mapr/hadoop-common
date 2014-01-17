@@ -351,8 +351,8 @@ public class TestShortCircuitLocalRead {
   public void testDeprecatedGetBlockLocalPathInfoRpc()
       throws IOException, InterruptedException {
     final Configuration conf = new Configuration();
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1)
-        .format(true).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1)
+        .format(true).buildHDFS();
     cluster.waitActive();
     FileSystem fs = cluster.getFileSystem();
     try {
@@ -429,7 +429,7 @@ public class TestShortCircuitLocalRead {
 
   @Test
   public void testHandleTruncatedBlockFile() throws IOException {
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     HdfsConfiguration conf = new HdfsConfiguration();
     conf.setBoolean(DFSConfigKeys.DFS_CLIENT_READ_SHORTCIRCUIT_KEY, true);
     conf.setBoolean(DFSConfigKeys.DFS_CLIENT_READ_SHORTCIRCUIT_SKIP_CHECKSUM_KEY, false);
@@ -444,7 +444,7 @@ public class TestShortCircuitLocalRead {
     final int TEST_LENGTH = 3456;
     
     try {
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1).buildHDFS();
       cluster.waitActive();
       FileSystem fs = cluster.getFileSystem();
       DFSTestUtil.createFile(fs, TEST_PATH,
@@ -466,7 +466,7 @@ public class TestShortCircuitLocalRead {
             "waitReplication: " + e);
       }
       ExtendedBlock block = DFSTestUtil.getFirstBlock(fs, TEST_PATH);
-      File dataFile = MiniDFSCluster.getBlockFile(0, block);
+      File dataFile = MiniHDFSCluster.getBlockFile(0, block);
       cluster.shutdown();
       cluster = null;
       RandomAccessFile raf = null;
@@ -476,7 +476,7 @@ public class TestShortCircuitLocalRead {
       } finally {
         if (raf != null) raf.close();
       }
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1).format(false).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1).format(false).buildHDFS();
       cluster.waitActive();
       fs = cluster.getFileSystem();
       fsIn = fs.open(TEST_PATH);

@@ -360,6 +360,11 @@
             <startKdc>${startKdc}</startKdc>
             <kdc.resource.dir>${kdc.resource.dir}</kdc.resource.dir>
           </systemPropertyVariables>
+
+          <!-- mapr_fix -->
+          <excludes>
+            <exclude>**/TestMetricsSystemImpl.java</exclude>
+          </excludes>
         </configuration>
       </plugin>
       <plugin>
@@ -470,6 +475,13 @@
               <value>org.apache.hadoop.test.TimedOutTestsListener</value>
             </property>
           </properties>
+
+          <!-- mapr_fix -->
+          <excludes>
+            <exclude>**/TestDoAsEffectiveUser.java</exclude>
+            <exclude>**/TestFilterFileSystem.java</exclude>
+            <exclude>**/TestMetricsSystemImpl.java</exclude>
+          </excludes>
         </configuration>
       </plugin>
     </plugins>

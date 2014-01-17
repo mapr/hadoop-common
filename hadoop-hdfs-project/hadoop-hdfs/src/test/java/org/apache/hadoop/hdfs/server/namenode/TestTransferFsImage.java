@@ -36,6 +36,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.http.HttpServer;
 import org.apache.hadoop.http.HttpServerFunctionalTest;
 import org.apache.hadoop.net.NetUtils;
@@ -59,8 +60,8 @@ public class TestTransferFsImage {
   @Test
   public void testClientSideException() throws IOException {
     Configuration conf = new HdfsConfiguration();
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
-      .numDataNodes(0).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+      .numDataNodes(0).buildHDFS();
     NNStorage mockStorage = Mockito.mock(NNStorage.class);
     List<File> localPath = Collections.<File>singletonList(
         new File("/xxxxx-does-not-exist/blah"));
@@ -89,8 +90,8 @@ public class TestTransferFsImage {
   @Test
   public void testClientSideExceptionOnJustOneDir() throws IOException {
     Configuration conf = new HdfsConfiguration();
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
-      .numDataNodes(0).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+      .numDataNodes(0).buildHDFS();
     NNStorage mockStorage = Mockito.mock(NNStorage.class);
     List<File> localPaths = ImmutableList.of(
         new File("/xxxxx-does-not-exist/blah"),

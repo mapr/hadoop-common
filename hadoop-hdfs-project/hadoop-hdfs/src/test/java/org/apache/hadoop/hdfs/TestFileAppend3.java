@@ -64,7 +64,7 @@ public class TestFileAppend3  {
 
   private static Configuration conf;
   private static int buffersize;
-  private static MiniDFSCluster cluster;
+  private static MiniHDFSCluster cluster;
   private static DistributedFileSystem fs;
 
   @BeforeClass
@@ -73,7 +73,8 @@ public class TestFileAppend3  {
     conf = new HdfsConfiguration();
     conf.setInt(DFSConfigKeys.DFS_BYTES_PER_CHECKSUM_KEY, 512);
     buffersize = conf.getInt(CommonConfigurationKeys.IO_FILE_BUFFER_SIZE_KEY, 4096);
-    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(DATANODE_NUM).build();
+    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(DATANODE_NUM)
+      .buildHDFS();
     fs = (DistributedFileSystem)cluster.getFileSystem();
   }
    

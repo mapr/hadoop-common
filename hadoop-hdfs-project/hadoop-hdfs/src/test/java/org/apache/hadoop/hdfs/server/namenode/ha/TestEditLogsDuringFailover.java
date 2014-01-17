@@ -34,6 +34,7 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.HAUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.server.namenode.EditLogFileOutputStream;
 import org.apache.hadoop.hdfs.server.namenode.FSImageTestUtil;
 import org.apache.hadoop.hdfs.server.namenode.FSNamesystem;
@@ -65,10 +66,10 @@ public class TestEditLogsDuringFailover {
   public void testStartup() throws Exception {
     Configuration conf = new Configuration();
     HAUtil.setAllowStandbyReads(conf, true);
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
       .nnTopology(MiniDFSNNTopology.simpleHATopology())
       .numDataNodes(0)
-      .build();
+      .buildHDFS();
     try {
       // During HA startup, both nodes should be in
       // standby and we shouldn't have any edits files
@@ -132,10 +133,10 @@ public class TestEditLogsDuringFailover {
   private void testFailoverFinalizesAndReadsInProgress(
       boolean partialTxAtEnd) throws Exception {
     Configuration conf = new Configuration();
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
       .nnTopology(MiniDFSNNTopology.simpleHATopology())
       .numDataNodes(0)
-      .build();
+      .buildHDFS();
     try {
       // Create a fake in-progress edit-log in the shared directory
       URI sharedUri = cluster.getSharedEditsDir(0, 1);

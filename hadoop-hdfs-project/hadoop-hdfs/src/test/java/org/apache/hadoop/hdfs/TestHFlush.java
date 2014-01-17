@@ -29,6 +29,7 @@ import org.apache.commons.logging.impl.Log4JLogger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.client.HdfsDataOutputStream.SyncFlag;
 import org.apache.hadoop.hdfs.server.datanode.DataNode;
@@ -102,7 +103,7 @@ public class TestHFlush {
   public void hSyncUpdateLength_00() throws IOException {
     Configuration conf = new HdfsConfiguration();
     MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(
-        2).build();
+        2).buildHDFS();
     DistributedFileSystem fileSystem =
         (DistributedFileSystem)cluster.getFileSystem();
     
@@ -195,7 +196,7 @@ public class TestHFlush {
 
     fileContent = AppendTestUtil.initBuffer(AppendTestUtil.FILE_SIZE);
     MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
-                                               .numDataNodes(replicas).build();
+      .numDataNodes(replicas).buildHDFS();
     // Make sure we work with DFS in order to utilize all its functionality
     DistributedFileSystem fileSystem =
         (DistributedFileSystem)cluster.getFileSystem();
@@ -278,7 +279,7 @@ public class TestHFlush {
     
     MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(DATANODE_NUM).build();
     try {
-      DistributedFileSystem fs = (DistributedFileSystem)cluster.getFileSystem();
+      FileSystem fs = cluster.getFileSystem();
 
       byte[] fileContents = AppendTestUtil.initBuffer(fileLen);
 
@@ -328,7 +329,7 @@ public class TestHFlush {
 
     MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(DATANODE_NUM).build();
     try {
-      DistributedFileSystem fs = (DistributedFileSystem)cluster.getFileSystem();
+      FileSystem fs = cluster.getFileSystem();
 
       // create a new file.
       FSDataOutputStream stm = AppendTestUtil.createFile(fs, p, DATANODE_NUM);

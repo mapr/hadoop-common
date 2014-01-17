@@ -18,20 +18,61 @@
 
 package org.apache.hadoop.hdfs;
 
-import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
+import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_RPC_ADDRESS_KEY;
+import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_SERVICE_RPC_ADDRESS_KEY;
+import static org.junit.Assert.assertEquals;
+
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.URL;
+import java.net.URLConnection;
+import java.security.PrivilegedExceptionAction;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.TimeoutException;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.*;
+import org.apache.hadoop.fs.BlockLocation;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileContext;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileSystem.Statistics;
 import org.apache.hadoop.fs.Options.Rename;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.hadoop.hdfs.MiniDFSCluster.NameNodeInfo;
+
+import org.apache.hadoop.hdfs.MiniHDFSCluster.NameNodeInfo;
 import org.apache.hadoop.hdfs.client.HdfsDataInputStream;
-import org.apache.hadoop.hdfs.protocol.*;
+import org.apache.hadoop.hdfs.protocol.DatanodeID;
+import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo.AdminStates;
+import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
+import org.apache.hadoop.hdfs.protocol.HdfsConstants;
+import org.apache.hadoop.hdfs.protocol.LocatedBlock;
+import org.apache.hadoop.hdfs.protocol.LocatedBlocks;
 import org.apache.hadoop.hdfs.protocol.datatransfer.Sender;
 import org.apache.hadoop.hdfs.protocol.proto.DataTransferProtos.BlockOpResponseProto;
 import org.apache.hadoop.hdfs.security.token.block.BlockTokenIdentifier;
@@ -53,15 +94,8 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.util.VersionInfo;
 
-import java.io.*;
-import java.net.*;
-import java.security.PrivilegedExceptionAction;
-import java.util.*;
-import java.util.concurrent.TimeoutException;
-
-import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_RPC_ADDRESS_KEY;
-import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_SERVICE_RPC_ADDRESS_KEY;
-import static org.junit.Assert.assertEquals;
+import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 
 /** Utilities for HDFS tests */
 public class DFSTestUtil {
@@ -296,7 +330,7 @@ public class DFSTestUtil {
   /*
    * Check if the given block in the given file is corrupt.
    */
-  public static boolean allBlockReplicasCorrupt(MiniDFSCluster cluster,
+  public static boolean allBlockReplicasCorrupt(MiniHDFSCluster cluster,
       Path file, int blockNo) throws IOException {
     DFSClient client = new DFSClient(new InetSocketAddress("localhost",
         cluster.getNameNodePort()), cluster.getConfiguration(0));
@@ -315,7 +349,7 @@ public class DFSTestUtil {
    * the requested number of racks, with the requested number of
    * replicas, and the requested number of replicas still needed.
    */
-  public static void waitForReplication(MiniDFSCluster cluster, ExtendedBlock b,
+  public static void waitForReplication(MiniHDFSCluster cluster, ExtendedBlock b,
       int racks, int replicas, int neededReplicas)
       throws IOException, TimeoutException, InterruptedException {
     int curRacks = 0;
@@ -405,7 +439,7 @@ public class DFSTestUtil {
    * Returns the index of the first datanode which has a copy
    * of the given block, or -1 if no such datanode exists.
    */
-  public static int firstDnWithBlock(MiniDFSCluster cluster, ExtendedBlock b)
+  public static int firstDnWithBlock(MiniHDFSCluster cluster, ExtendedBlock b)
       throws IOException {
     int numDatanodes = cluster.getDataNodes().size();
     for (int i = 0; i < numDatanodes; i++) {
@@ -772,7 +806,7 @@ public class DFSTestUtil {
     return BlockOpResponseProto.parseDelimitedFrom(in);
   }
   
-  public static void setFederatedConfiguration(MiniDFSCluster cluster,
+  public static void setFederatedConfiguration(MiniHDFSCluster cluster,
       Configuration conf) {
     Set<String> nameservices = new HashSet<String>();
     for (NameNodeInfo info : cluster.getNameNodeInfos()) {
@@ -920,7 +954,7 @@ public class DFSTestUtil {
   /**
    * Run a set of operations and generate all edit logs
    */
-  public static void runOperations(MiniDFSCluster cluster,
+  public static void runOperations(MiniHDFSCluster cluster,
       DistributedFileSystem filesystem, Configuration conf, long blockSize, 
       int nnIndex) throws IOException {
     // create FileContext for rename2

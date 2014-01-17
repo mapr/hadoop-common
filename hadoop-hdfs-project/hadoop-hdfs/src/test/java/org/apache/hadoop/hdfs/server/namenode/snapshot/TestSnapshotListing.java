@@ -27,6 +27,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.server.namenode.FSNamesystem;
 import org.apache.hadoop.test.GenericTestUtils;
 import org.junit.After;
@@ -42,7 +43,7 @@ public class TestSnapshotListing {
   private final Path dir = new Path("/test.snapshot/dir");
   
   Configuration conf;
-  MiniDFSCluster cluster;
+  MiniHDFSCluster cluster;
   FSNamesystem fsn;
   DistributedFileSystem hdfs;
   
@@ -50,7 +51,7 @@ public class TestSnapshotListing {
   public void setUp() throws Exception {
     conf = new Configuration();
     cluster = new MiniDFSCluster.Builder(conf).numDataNodes(REPLICATION)
-        .build();
+        .buildHDFS();
     cluster.waitActive();
     fsn = cluster.getNamesystem();
     hdfs = cluster.getFileSystem();

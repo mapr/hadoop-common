@@ -49,6 +49,7 @@ import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants.SafeModeAction;
@@ -78,7 +79,7 @@ public class TestHASafeMode {
   private NameNode nn0;
   private NameNode nn1;
   private FileSystem fs;
-  private MiniDFSCluster cluster;
+  private MiniHDFSCluster cluster;
   
   static {
     ((Log4JLogger)LogFactory.getLog(FSImage.class)).getLogger().setLevel(Level.ALL);
@@ -97,7 +98,7 @@ public class TestHASafeMode {
       .nnTopology(MiniDFSNNTopology.simpleHATopology())
       .numDataNodes(3)
       .waitSafeMode(false)
-      .build();
+      .buildHDFS();
     cluster.waitActive();
     
     nn0 = cluster.getNameNode(0);

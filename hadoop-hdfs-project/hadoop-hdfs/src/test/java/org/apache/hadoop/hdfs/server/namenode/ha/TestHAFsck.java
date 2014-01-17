@@ -31,6 +31,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.tools.DFSck;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.Level;
@@ -55,10 +56,10 @@ public class TestHAFsck {
         .addNN(new MiniDFSNNTopology.NNConf("nn1").setHttpPort(10001))
         .addNN(new MiniDFSNNTopology.NNConf("nn2").setHttpPort(10002)));
     
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
       .nnTopology(topology)
       .numDataNodes(0)
-      .build();
+      .buildHDFS();
     FileSystem fs = null;
     try {
       cluster.waitActive();

@@ -45,7 +45,7 @@ import org.junit.Test;
  */
 public class TestListPathServlet {
   private static final Configuration CONF = new HdfsConfiguration();
-  private static MiniDFSCluster cluster;
+  private static MiniHDFSCluster cluster;
   private static FileSystem fs;
   private static URI hftpURI;
   private static HftpFileSystem hftpFs;
@@ -55,7 +55,7 @@ public class TestListPathServlet {
   @BeforeClass
   public static void setup() throws Exception {
     // start a cluster with single datanode
-    cluster = new MiniDFSCluster.Builder(CONF).build();
+    cluster = new MiniDFSCluster.Builder(CONF).buildHDFS();
     cluster.waitActive();
     fs = cluster.getFileSystem();
 

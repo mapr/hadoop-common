@@ -37,6 +37,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.server.common.JspHelper;
 import org.apache.hadoop.hdfs.server.namenode.NameNode;
 import org.apache.hadoop.net.NetUtils;
@@ -50,7 +51,7 @@ public class TestDatanodeJsp {
   private static final HdfsConfiguration CONF = new HdfsConfiguration();
   private static String viewFilePage;
   
-  private static void testViewingFile(MiniDFSCluster cluster, String filePath)
+  private static void testViewingFile(MiniHDFSCluster cluster, String filePath)
       throws IOException {
     FileSystem fs = cluster.getFileSystem();
     
@@ -113,9 +114,9 @@ public class TestDatanodeJsp {
   
   @Test
   public void testViewFileJsp() throws IOException {
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
-      cluster = new MiniDFSCluster.Builder(CONF).build();
+      cluster = new MiniDFSCluster.Builder(CONF).buildHDFS();
       cluster.waitActive();
       String paths[] = {
         "/test-file",
@@ -142,8 +143,8 @@ public class TestDatanodeJsp {
   
   @Test
   public void testGenStamp() throws Exception {
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(CONF).numDataNodes(1)
-        .build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(CONF).numDataNodes(1)
+        .buildHDFS();
     try {
       FileSystem fs = cluster.getFileSystem();
       Path testFile = new Path("/test/mkdirs/TestchunkSizeToView");

@@ -17,7 +17,7 @@
  */
 package org.apache.hadoop.hdfs.qjournal;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,7 +25,7 @@ import java.net.URI;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.qjournal.server.JournalNode;
 import org.junit.Test;
 
@@ -44,7 +44,7 @@ public class TestMiniJournalCluster {
       JournalNode node = c.getJournalNode(0);
       String dir = node.getConf().get(DFSConfigKeys.DFS_JOURNALNODE_EDITS_DIR_KEY);
       assertEquals(
-          new File(MiniDFSCluster.getBaseDirectory() + "journalnode-0")
+          new File(MiniHDFSCluster.getBaseDirectory() + "journalnode-0")
             .getAbsolutePath(),
           dir);
     } finally {

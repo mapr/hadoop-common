@@ -28,13 +28,12 @@ import static org.junit.Assert.fail;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.net.InetSocketAddress;
-import java.net.Socket;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hdfs.MiniDFSCluster.DataNodeProperties;
+import org.apache.hadoop.hdfs.MiniHDFSCluster.DataNodeProperties;
 import org.apache.hadoop.hdfs.net.Peer;
 import org.apache.hadoop.hdfs.server.datanode.DataNode;
 import org.apache.hadoop.hdfs.server.datanode.DataNodeTestUtils;
@@ -50,7 +49,7 @@ import com.google.common.io.NullOutputStream;
 
 public class TestDataTransferKeepalive {
   Configuration conf = new HdfsConfiguration();
-  private MiniDFSCluster cluster;
+  private MiniHDFSCluster cluster;
   private FileSystem fs;
   private InetSocketAddress dnAddr;
   private DataNode dn;
@@ -68,7 +67,7 @@ public class TestDataTransferKeepalive {
         0);
     
     cluster = new MiniDFSCluster.Builder(conf)
-      .numDataNodes(1).build();
+      .numDataNodes(1).buildHDFS();
     fs = cluster.getFileSystem();
     dfsClient = ((DistributedFileSystem)fs).dfs;
     dfsClient.peerCache.clear();

@@ -29,6 +29,7 @@ import org.apache.hadoop.fs.FileSystemTestHelper;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -39,7 +40,7 @@ import org.junit.BeforeClass;
  */
 public class TestViewFileSystemAtHdfsRoot extends ViewFileSystemBaseTest {
 
-  private static MiniDFSCluster cluster;
+  private static MiniHDFSCluster cluster;
   private static Configuration CONF = new Configuration();
   private static FileSystem fHdfs;
   
@@ -57,7 +58,7 @@ public class TestViewFileSystemAtHdfsRoot extends ViewFileSystemBaseTest {
     
     cluster = new MiniDFSCluster.Builder(CONF)
       .numDataNodes(2)
-      .build();
+      .buildHDFS();
     cluster.waitClusterUp();
     
     fHdfs = cluster.getFileSystem();

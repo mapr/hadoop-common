@@ -50,7 +50,7 @@ public class TestPipelines {
   private static final int RAND_LIMIT = 2000;
   private static final int FILE_SIZE = 10000;
 
-  private MiniDFSCluster cluster;
+  private MiniHDFSCluster cluster;
   private DistributedFileSystem fs;
   private static Configuration conf;
   static Random rand = new Random(RAND_LIMIT);
@@ -62,7 +62,8 @@ public class TestPipelines {
 
   @Before
   public void startUpCluster() throws IOException {
-    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(REPL_FACTOR).build();
+    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(REPL_FACTOR)
+        .buildHDFS();
     fs = (DistributedFileSystem) cluster.getFileSystem();
   }
 

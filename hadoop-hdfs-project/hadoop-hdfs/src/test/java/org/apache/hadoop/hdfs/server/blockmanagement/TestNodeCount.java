@@ -29,7 +29,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.apache.hadoop.hdfs.MiniDFSCluster.DataNodeProperties;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster.DataNodeProperties;
 import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
 import org.apache.hadoop.hdfs.server.namenode.FSNamesystem;
@@ -55,8 +56,9 @@ public class TestNodeCount {
   public void testNodeCount() throws Exception {
     // start a mini dfs cluster of 2 nodes
     final Configuration conf = new HdfsConfiguration();
-    final MiniDFSCluster cluster = 
-      new MiniDFSCluster.Builder(conf).numDataNodes(REPLICATION_FACTOR).build();
+    final MiniHDFSCluster cluster = 
+      new MiniDFSCluster.Builder(conf).numDataNodes(REPLICATION_FACTOR)
+          .buildHDFS();
     try {
       final FSNamesystem namesystem = cluster.getNamesystem();
       final BlockManager bm = namesystem.getBlockManager();

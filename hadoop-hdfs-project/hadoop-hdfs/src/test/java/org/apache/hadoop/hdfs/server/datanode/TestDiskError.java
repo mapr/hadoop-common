@@ -34,6 +34,7 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.apache.hadoop.hdfs.protocol.LocatedBlocks;
@@ -52,14 +53,14 @@ import org.junit.Test;
 public class TestDiskError {
 
   private FileSystem fs;
-  private MiniDFSCluster cluster;
+  private MiniHDFSCluster cluster;
   private Configuration conf;
 
   @Before
   public void setUp() throws Exception {
     conf = new HdfsConfiguration();
     conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, 512L);
-    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1).build();
+    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1).buildHDFS();
     cluster.waitActive();
     fs = cluster.getFileSystem();
   }
@@ -89,9 +90,9 @@ public class TestDiskError {
     final int dnIndex = 0;
     String bpid = cluster.getNamesystem().getBlockPoolId();
     File storageDir = cluster.getInstanceStorageDir(dnIndex, 0);
-    File dir1 = MiniDFSCluster.getRbwDir(storageDir, bpid);
+    File dir1 = MiniHDFSCluster.getRbwDir(storageDir, bpid);
     storageDir = cluster.getInstanceStorageDir(dnIndex, 1);
-    File dir2 = MiniDFSCluster.getRbwDir(storageDir, bpid);
+    File dir2 = MiniHDFSCluster.getRbwDir(storageDir, bpid);
     try {
       // make the data directory of the first datanode to be readonly
       assertTrue("Couldn't chmod local vol", dir1.setReadOnly());
@@ -157,9 +158,9 @@ public class TestDiskError {
     // the temporary block & meta files should be deleted
     String bpid = cluster.getNamesystem().getBlockPoolId();
     File storageDir = cluster.getInstanceStorageDir(sndNode, 0);
-    File dir1 = MiniDFSCluster.getRbwDir(storageDir, bpid);
+    File dir1 = MiniHDFSCluster.getRbwDir(storageDir, bpid);
     storageDir = cluster.getInstanceStorageDir(sndNode, 1);
-    File dir2 = MiniDFSCluster.getRbwDir(storageDir, bpid);
+    File dir2 = MiniHDFSCluster.getRbwDir(storageDir, bpid);
     while (dir1.listFiles().length != 0 || dir2.listFiles().length != 0) {
       Thread.sleep(100);
     }

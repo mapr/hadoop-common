@@ -63,12 +63,19 @@ public class MiniMRYarnCluster extends MiniYARNCluster {
   private JobHistoryServer historyServer;
   private JobHistoryServerWrapper historyServerWrapper;
 
+  private MiniMRYarnClusterCustomization customizationObj;
+
+  private int numOfNMs;
+
   public MiniMRYarnCluster(String testName) {
     this(testName, 1);
   }
 
   public MiniMRYarnCluster(String testName, int noOfNMs) {
     super(testName, noOfNMs, 4, 4);
+
+    this.numOfNMs = noOfNMs;
+
     //TODO: add the history server
     historyServerWrapper = new JobHistoryServerWrapper();
     addService(historyServerWrapper);
@@ -108,6 +115,23 @@ public class MiniMRYarnCluster extends MiniYARNCluster {
 
   @Override
   public void serviceInit(Configuration conf) throws Exception {
+    String customizationClassName = System.getProperty(
+        MiniMRYarnClusterCustomization.CUSTOMIZATION_CLASS_NAME);
+
+    if (customizationClassName != null && !customizationClassName.isEmpty()) {
+      try {
+        this.customizationObj = this.getClass().getClassLoader()
+          .loadClass(customizationClassName)
+          .asSubclass(MiniMRYarnClusterCustomization.class)
+          .getDeclaredConstructor().newInstance();
+
+        customizationObj.overrideConfigFromFile(conf);
+        customizationObj.setupServices(conf, numOfNMs);
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+
     conf.set(MRConfig.FRAMEWORK_NAME, MRConfig.YARN_FRAMEWORK_NAME);
     if (conf.get(MRJobConfig.MR_AM_STAGING_DIR) == null) {
       conf.set(MRJobConfig.MR_AM_STAGING_DIR, new File(getTestWorkDir(),
@@ -238,6 +262,10 @@ public class MiniMRYarnCluster extends MiniYARNCluster {
         historyServer.stop();
       }
       super.serviceStop();
+
+      if (customizationObj != null) {
+        customizationObj.teardownServices();
+      }
     }
   }
 

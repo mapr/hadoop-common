@@ -40,7 +40,7 @@ public class TestHdfsAdmin {
   
   @Before
   public void setUpCluster() throws IOException {
-    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(0).build();
+    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(0).buildHDFS();
   }
   
   @After

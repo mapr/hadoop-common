@@ -21,7 +21,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 
@@ -35,6 +34,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.server.namenode.JournalSet.JournalAndStream;
 import org.apache.hadoop.ipc.RemoteException;
 import org.apache.hadoop.test.GenericTestUtils;
@@ -47,7 +47,7 @@ import org.mockito.Mockito;
 public class TestEditLogJournalFailures {
 
   private int editsPerformed = 0;
-  private MiniDFSCluster cluster;
+  private MiniHDFSCluster cluster;
   private FileSystem fs;
 
   /**
@@ -62,7 +62,7 @@ public class TestEditLogJournalFailures {
   public void setUpMiniCluster(Configuration conf, boolean manageNameDfsDirs)
       throws IOException {
     cluster = new MiniDFSCluster.Builder(conf).numDataNodes(0)
-        .manageNameDfsDirs(manageNameDfsDirs).checkExitOnShutdown(false).build();
+        .manageNameDfsDirs(manageNameDfsDirs).checkExitOnShutdown(false).buildHDFS();
     cluster.waitActive();
     fs = cluster.getFileSystem();
   }

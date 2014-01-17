@@ -35,6 +35,7 @@ import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.apache.hadoop.hdfs.protocol.LocatedBlocks;
 import org.apache.hadoop.hdfs.security.token.block.BlockTokenIdentifier;
@@ -57,7 +58,7 @@ public class TestFailoverWithBlockTokensEnabled {
   private static final String TEST_DATA = "very important text";
   
   private Configuration conf;
-  private MiniDFSCluster cluster;
+  private MiniHDFSCluster cluster;
   
   @Before
   public void startCluster() throws IOException {
@@ -66,7 +67,7 @@ public class TestFailoverWithBlockTokensEnabled {
     cluster = new MiniDFSCluster.Builder(conf)
         .nnTopology(MiniDFSNNTopology.simpleHATopology())
         .numDataNodes(1)
-        .build();
+        .buildHDFS();
   }
   
   @After
@@ -174,7 +175,7 @@ public class TestFailoverWithBlockTokensEnabled {
     DFSTestUtil.writeFile(fs, TEST_PATH, TEST_DATA);
   }
   
-  private static void lowerKeyUpdateIntervalAndClearKeys(MiniDFSCluster cluster) {
+  private static void lowerKeyUpdateIntervalAndClearKeys(MiniHDFSCluster cluster) {
     lowerKeyUpdateIntervalAndClearKeys(cluster.getNamesystem(0));
     lowerKeyUpdateIntervalAndClearKeys(cluster.getNamesystem(1));
     for (DataNode dn : cluster.getDataNodes()) {

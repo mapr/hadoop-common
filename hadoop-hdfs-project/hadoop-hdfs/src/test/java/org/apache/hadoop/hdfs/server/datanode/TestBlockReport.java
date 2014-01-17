@@ -42,6 +42,7 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.protocol.BlockListAsLongs;
 import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
@@ -86,7 +87,7 @@ public class TestBlockReport {
   static final int FILE_SIZE = NUM_BLOCKS * BLOCK_SIZE + 1;
   static String bpid;
 
-  private MiniDFSCluster cluster;
+  private MiniHDFSCluster cluster;
   private DistributedFileSystem fs;
 
   Random rand = new Random(RAND_LIMIT);
@@ -101,7 +102,8 @@ public class TestBlockReport {
   @Before
   public void startUpCluster() throws IOException {
     REPL_FACTOR = 1; //Reset if case a test has modified the value
-    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(REPL_FACTOR).build();
+    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(REPL_FACTOR)
+        .buildHDFS();
     fs = (DistributedFileSystem) cluster.getFileSystem();
     bpid = cluster.getNamesystem().getBlockPoolId();
   }

@@ -39,8 +39,8 @@ public class TestFileLengthOnClusterRestart {
     // create cluster
     conf.setInt(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, 512);
 
-    final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
-        .numDataNodes(2).build();
+    final MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+        .numDataNodes(2).buildHDFS();
     HdfsDataInputStream in = null;
     try {
       Path path = new Path("/tmp/TestFileLengthOnClusterRestart", "test");

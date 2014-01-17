@@ -40,6 +40,7 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.server.common.HdfsServerConstants.StartupOption;
 import org.apache.hadoop.hdfs.server.common.Storage.StorageDirectory;
 import org.apache.hadoop.hdfs.server.namenode.FSEditLogOp.DeleteOp;
@@ -488,7 +489,7 @@ public class TestNameNodeRecovery {
     conf.set(DFSUtil.addKeySuffixes(DFSConfigKeys.DFS_HA_NAMENODES_KEY_PREFIX,
       "ns1"), "nn1,nn2");
     String baseDir = System.getProperty(
-        MiniDFSCluster.PROP_TEST_BUILD_DATA, "build/test/data") + "/dfs/";
+        MiniHDFSCluster.PROP_TEST_BUILD_DATA, "build/test/data") + "/dfs/";
     File nameDir = new File(baseDir, "nameR");
     File secondaryDir = new File(baseDir, "namesecondaryR");
     conf.set(DFSUtil.addKeySuffixes(DFSConfigKeys.
@@ -520,12 +521,12 @@ public class TestNameNodeRecovery {
     // start a cluster
     Configuration conf = new HdfsConfiguration();
     setupRecoveryTestConf(conf);
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     FileSystem fileSys = null;
     StorageDirectory sd = null;
     try {
       cluster = new MiniDFSCluster.Builder(conf).numDataNodes(0)
-          .manageNameDfsDirs(false).build();
+          .manageNameDfsDirs(false).buildHDFS();
       cluster.waitActive();
       if (!finalize) {
         // Normally, the in-progress edit log would be finalized by
@@ -561,7 +562,7 @@ public class TestNameNodeRecovery {
     try {
       LOG.debug("trying to start normally (this should fail)...");
       cluster = new MiniDFSCluster.Builder(conf).numDataNodes(0)
-          .enableManagedDfsDirsRedundancy(false).format(false).build();
+          .enableManagedDfsDirsRedundancy(false).format(false).buildHDFS();
       cluster.waitActive();
       cluster.shutdown();
       if (needRecovery) {
@@ -587,7 +588,7 @@ public class TestNameNodeRecovery {
       LOG.debug("running recovery...");
       cluster = new MiniDFSCluster.Builder(conf).numDataNodes(0)
           .enableManagedDfsDirsRedundancy(false).format(false)
-          .startupOption(recoverStartOpt).build();
+          .startupOption(recoverStartOpt).buildHDFS();
     } catch (IOException e) {
       fail("caught IOException while trying to recover. " +
           "message was " + e.getMessage() +
@@ -603,7 +604,7 @@ public class TestNameNodeRecovery {
     try {
       LOG.debug("starting cluster normally after recovery...");
       cluster = new MiniDFSCluster.Builder(conf).numDataNodes(0)
-          .enableManagedDfsDirsRedundancy(false).format(false).build();
+          .enableManagedDfsDirsRedundancy(false).format(false).buildHDFS();
       LOG.debug("successfully recovered the " + corruptor.getName() +
           " corrupted edit log");
       cluster.waitActive();

@@ -33,6 +33,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.server.common.HdfsServerConstants.StartupOption;
 import org.apache.hadoop.hdfs.server.namenode.FSImageTestUtil;
 import org.apache.hadoop.hdfs.server.namenode.NameNode;
@@ -59,9 +60,9 @@ public class TestDataNodeMultipleRegistrations {
    */
   @Test
   public void test2NNRegistration() throws IOException {
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
         .nnTopology(MiniDFSNNTopology.simpleFederatedTopology(2))
-        .build();
+        .buildHDFS();
     try {
       cluster.waitActive();
       NameNode nn1 = cluster.getNameNode(0);
@@ -138,8 +139,8 @@ public class TestDataNodeMultipleRegistrations {
    */
   @Test
   public void testFedSingleNN() throws IOException {
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
-        .nameNodePort(9927).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+        .nameNodePort(9927).buildHDFS();
     try {
       NameNode nn1 = cluster.getNameNode();
       assertNotNull("cannot create nn1", nn1);
@@ -190,9 +191,9 @@ public class TestDataNodeMultipleRegistrations {
   
   @Test
   public void testClusterIdMismatch() throws IOException {
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
         .nnTopology(MiniDFSNNTopology.simpleFederatedTopology(2))
-        .build();
+        .buildHDFS();
     try {
       cluster.waitActive();
 
@@ -225,9 +226,9 @@ public class TestDataNodeMultipleRegistrations {
   public void testMiniDFSClusterWithMultipleNN() throws IOException {
     Configuration conf = new HdfsConfiguration();
     // start Federated cluster and add a node.
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
       .nnTopology(MiniDFSNNTopology.simpleFederatedTopology(2))
-      .build();
+      .buildHDFS();
     
     // add a node
     try {
@@ -247,7 +248,7 @@ public class TestDataNodeMultipleRegistrations {
     conf = new HdfsConfiguration();
     cluster = new MiniDFSCluster.Builder(conf)
       .nnTopology(MiniDFSNNTopology.simpleFederatedTopology(1))
-      .build();
+      .buildHDFS();
     
     try {
       Assert.assertNotNull(cluster);
@@ -265,7 +266,7 @@ public class TestDataNodeMultipleRegistrations {
 
     // 3. start non-federated
     conf = new HdfsConfiguration();
-    cluster = new MiniDFSCluster.Builder(conf).build();
+    cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
     
     // add a node
     try {

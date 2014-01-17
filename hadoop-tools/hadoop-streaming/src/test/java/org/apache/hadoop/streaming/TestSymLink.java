@@ -18,15 +18,14 @@
 
 package org.apache.hadoop.streaming;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import org.junit.Test;
-import static org.junit.Assert.*;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -36,7 +35,7 @@ import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRCluster;
 import org.apache.hadoop.mapred.Utils;
-import org.apache.hadoop.mapreduce.server.jobtracker.JTConfig;
+import org.junit.Test;
 /**
  * This test case tests the symlink creation
  * utility provided by distributed caching 
@@ -61,7 +60,7 @@ public class TestSymLink
     MiniDFSCluster dfs = null; 
     try {
       Configuration conf = new Configuration();
-      dfs = new MiniDFSCluster(conf, 1, true, null);
+      dfs = new MiniDFSCluster.Builder(conf).numDataNodes(1).build();
       FileSystem fileSys = dfs.getFileSystem();
       String namenode = fileSys.getUri().toString();
       mr  = new MiniMRCluster(1, namenode, 3);

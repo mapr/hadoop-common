@@ -49,7 +49,6 @@ import org.junit.Test;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.TreeMultiset;
 
 public class TestFileJournalManager {
   static final Log LOG = LogFactory.getLog(TestFileJournalManager.class);

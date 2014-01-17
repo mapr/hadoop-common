@@ -38,6 +38,7 @@ import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 import org.apache.hadoop.hdfs.server.blockmanagement.BlockInfo;
@@ -78,7 +79,7 @@ public class TestSnapshotDeletion {
   private final Path subsub = new Path(sub, "subsub1");
   
   protected Configuration conf;
-  protected MiniDFSCluster cluster;
+  protected MiniHDFSCluster cluster;
   protected FSNamesystem fsn;
   protected FSDirectory fsdir;
   protected BlockManager blockmanager;
@@ -91,7 +92,7 @@ public class TestSnapshotDeletion {
   public void setUp() throws Exception {
     conf = new Configuration();
     cluster = new MiniDFSCluster.Builder(conf).numDataNodes(REPLICATION)
-        .format(true).build();
+        .format(true).buildHDFS();
     cluster.waitActive();
 
     fsn = cluster.getNamesystem();
@@ -794,7 +795,7 @@ public class TestSnapshotDeletion {
     cluster.shutdown();
     Configuration newConf = new Configuration(conf);
     newConf.setBoolean(DFSConfigKeys.DFS_PERMISSIONS_ENABLED_KEY, false);
-    cluster = new MiniDFSCluster.Builder(newConf).numDataNodes(0).build();
+    cluster = new MiniDFSCluster.Builder(newConf).numDataNodes(0).buildHDFS();
     cluster.waitActive();
     hdfs = cluster.getFileSystem();
 

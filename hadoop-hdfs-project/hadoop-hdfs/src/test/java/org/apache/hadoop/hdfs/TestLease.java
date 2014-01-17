@@ -54,12 +54,12 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 public class TestLease {
-  static boolean hasLease(MiniDFSCluster cluster, Path src) {
+  static boolean hasLease(MiniHDFSCluster cluster, Path src) {
     return NameNodeAdapter.getLeaseManager(cluster.getNamesystem()
         ).getLeaseByPath(src.toString()) != null;
   }
 
-  static int leaseCount(MiniDFSCluster cluster) {
+  static int leaseCount(MiniHDFSCluster cluster) {
     return NameNodeAdapter.getLeaseManager(cluster.getNamesystem()).countLease();
   }
   
@@ -70,8 +70,8 @@ public class TestLease {
 
   @Test
   public void testLeaseAbort() throws Exception {
-    MiniDFSCluster cluster =
-        new MiniDFSCluster.Builder(conf).numDataNodes(2).build();
+    MiniHDFSCluster cluster =
+        new MiniDFSCluster.Builder(conf).numDataNodes(2).buildHDFS();
     try {
       cluster.waitActive();
       NamenodeProtocols preSpyNN = cluster.getNameNodeRpc();
@@ -159,7 +159,8 @@ public class TestLease {
 
   @Test
   public void testLeaseAfterRename() throws Exception {
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2)
+                              .buildHDFS();
     try {
       Path p = new Path("/test-file");
       Path d = new Path("/test-d");
@@ -249,7 +250,8 @@ public class TestLease {
   
   @Test
   public void testLease() throws Exception {
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2)
+                              .buildHDFS();
     try {
       FileSystem fs = cluster.getFileSystem();
       Assert.assertTrue(fs.mkdirs(dir));

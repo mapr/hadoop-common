@@ -213,7 +213,8 @@ public class TestDataTransferProtocol {
     int numDataNodes = 1;
     final long BLOCK_ID_FUDGE = 128;
     Configuration conf = new HdfsConfiguration();
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(numDataNodes).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+                              .numDataNodes(numDataNodes).buildHDFS();
     try {
       cluster.waitActive();
       String poolId = cluster.getNamesystem().getBlockPoolId(); 
@@ -348,7 +349,8 @@ public class TestDataTransferProtocol {
     
     Configuration conf = new HdfsConfiguration();
     conf.setInt(DFSConfigKeys.DFS_REPLICATION_KEY, numDataNodes); 
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(numDataNodes).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+                              .numDataNodes(numDataNodes).buildHDFS();
     try {
     cluster.waitActive();
     DFSClient dfsClient = new DFSClient(

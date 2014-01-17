@@ -36,6 +36,7 @@ import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants.DatanodeReportType;
 import org.apache.hadoop.hdfs.server.blockmanagement.DatanodeDescriptor;
@@ -52,7 +53,7 @@ public class TestDecommissioningStatus {
   private static final int blockSize = 8192;
   private static final int fileSize = 16384;
   private static final int numDatanodes = 2;
-  private static MiniDFSCluster cluster;
+  private static MiniHDFSCluster cluster;
   private static FileSystem fileSys;
   private static Path excludeFile;
   private static FileSystem localFileSys;
@@ -85,7 +86,7 @@ public class TestDecommissioningStatus {
     writeConfigFile(localFileSys, excludeFile, null);
     writeConfigFile(localFileSys, includeFile, null);
 
-    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(numDatanodes).build();
+    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(numDatanodes).buildHDFS();
     cluster.waitActive();
     fileSys = cluster.getFileSystem();
   }

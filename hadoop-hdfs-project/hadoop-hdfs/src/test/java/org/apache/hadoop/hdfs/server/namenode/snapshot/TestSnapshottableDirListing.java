@@ -29,6 +29,7 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.SnapshottableDirectoryStatus;
 import org.apache.hadoop.hdfs.server.namenode.FSNamesystem;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -47,7 +48,7 @@ public class TestSnapshottableDirListing {
   private final Path dir2 = new Path("/TestSnapshot2");
   
   Configuration conf;
-  MiniDFSCluster cluster;
+  MiniHDFSCluster cluster;
   FSNamesystem fsn;
   DistributedFileSystem hdfs;
   
@@ -55,7 +56,7 @@ public class TestSnapshottableDirListing {
   public void setUp() throws Exception {
     conf = new Configuration();
     cluster = new MiniDFSCluster.Builder(conf).numDataNodes(REPLICATION)
-        .build();
+        .buildHDFS();
     cluster.waitActive();
     fsn = cluster.getNamesystem();
     hdfs = cluster.getFileSystem();

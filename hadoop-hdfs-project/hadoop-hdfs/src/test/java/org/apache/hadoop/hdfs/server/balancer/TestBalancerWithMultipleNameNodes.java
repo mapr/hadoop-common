@@ -37,6 +37,7 @@ import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.protocol.ClientProtocol;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
@@ -79,11 +80,11 @@ public class TestBalancerWithMultipleNameNodes {
   /** Common objects used in various methods. */
   private static class Suite {
     final Configuration conf;
-    final MiniDFSCluster cluster;
+    final MiniHDFSCluster cluster;
     final ClientProtocol[] clients;
     final short replication;
     
-    Suite(MiniDFSCluster cluster, final int nNameNodes, final int nDataNodes,
+    Suite(MiniHDFSCluster cluster, final int nNameNodes, final int nDataNodes,
         Configuration conf) throws IOException {
       this.conf = conf;
       this.cluster = cluster;
@@ -252,13 +253,13 @@ public class TestBalancerWithMultipleNameNodes {
     final ExtendedBlock[][] blocks;
     {
       LOG.info("UNEVEN 1");
-      final MiniDFSCluster cluster = new MiniDFSCluster
+      final MiniHDFSCluster cluster = new MiniDFSCluster
           .Builder(new Configuration(conf))
           .nnTopology(MiniDFSNNTopology.simpleFederatedTopology(2))
           .numDataNodes(nDataNodes)
           .racks(racks)
           .simulatedCapacities(capacities)
-          .build();
+          .buildHDFS();
       LOG.info("UNEVEN 2");
       try {
         cluster.waitActive();
@@ -275,13 +276,13 @@ public class TestBalancerWithMultipleNameNodes {
     conf.set(DFSConfigKeys.DFS_NAMENODE_SAFEMODE_THRESHOLD_PCT_KEY, "0.0f");
     {
       LOG.info("UNEVEN 10");
-      final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+      final MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
           .nnTopology(MiniDFSNNTopology.simpleFederatedTopology(nNameNodes))
           .numDataNodes(nDataNodes)
           .racks(racks)
           .simulatedCapacities(capacities)
           .format(false)
-          .build();
+          .buildHDFS();
       LOG.info("UNEVEN 11");
       try {
         cluster.waitActive();
@@ -329,13 +330,13 @@ public class TestBalancerWithMultipleNameNodes {
     Assert.assertEquals(nDataNodes, racks.length);
 
     LOG.info("RUN_TEST -1");
-    final MiniDFSCluster cluster = new MiniDFSCluster
+    final MiniHDFSCluster cluster = new MiniDFSCluster
         .Builder(new Configuration(conf))
         .nnTopology(MiniDFSNNTopology.simpleFederatedTopology(nNameNodes))
         .numDataNodes(nDataNodes)
         .racks(racks)
         .simulatedCapacities(capacities)
-        .build();
+        .buildHDFS();
     LOG.info("RUN_TEST 0");
     DFSTestUtil.setFederatedConfiguration(cluster, conf);
 

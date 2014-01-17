@@ -31,6 +31,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.server.namenode.CheckpointSignature;
 import org.apache.hadoop.hdfs.server.namenode.FSImageTestUtil;
 import org.apache.hadoop.hdfs.server.namenode.NNStorage;
@@ -47,7 +48,7 @@ import com.google.common.collect.ImmutableList;
 public class TestBootstrapStandby {
   private static final Log LOG = LogFactory.getLog(TestBootstrapStandby.class);
   
-  private MiniDFSCluster cluster;
+  private MiniHDFSCluster cluster;
   private NameNode nn0;
   
   @Before
@@ -62,7 +63,7 @@ public class TestBootstrapStandby {
     cluster = new MiniDFSCluster.Builder(conf)
       .nnTopology(topology)
       .numDataNodes(0)
-      .build();
+      .buildHDFS();
     cluster.waitActive();
     
     nn0 = cluster.getNameNode(0);

@@ -38,8 +38,8 @@ public class TestBlocksScheduledCounter {
 
   @Test
   public void testBlocksScheduledCounter() throws IOException {
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(new HdfsConfiguration())
-                                               .build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(new HdfsConfiguration())
+        .buildHDFS();
 
     cluster.waitActive();
     FileSystem fs = cluster.getFileSystem();

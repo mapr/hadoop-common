@@ -32,9 +32,8 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.ipc.RemoteException;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.junit.Test;
 
 /**
@@ -50,7 +49,7 @@ public class TestAuditLogger {
     Configuration conf = new HdfsConfiguration();
     conf.set(DFS_NAMENODE_AUDIT_LOGGERS_KEY,
         DummyAuditLogger.class.getName());
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
 
     try {
       cluster.waitClusterUp();
@@ -73,7 +72,7 @@ public class TestAuditLogger {
     Configuration conf = new HdfsConfiguration();
     conf.set(DFS_NAMENODE_AUDIT_LOGGERS_KEY,
         BrokenAuditLogger.class.getName());
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
 
     try {
       cluster.waitClusterUp();

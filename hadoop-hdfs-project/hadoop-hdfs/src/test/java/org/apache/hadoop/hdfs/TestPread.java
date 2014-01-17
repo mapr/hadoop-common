@@ -40,7 +40,10 @@ import org.junit.Test;
  */
 public class TestPread {
   static final long seed = 0xDEADBEEFL;
-  static final int blockSize = 4096;
+
+  // mapr_fix
+  static final int blockSize = 65536;
+  //static final int blockSize = 4096;
   boolean simulatedStorage = false;
 
   private void writeFile(FileSystem fileSys, Path name) throws IOException {
@@ -216,8 +219,12 @@ public class TestPread {
   private void dfsPreadTest(boolean disableTransferTo, boolean verifyChecksum)
       throws IOException {
     Configuration conf = new HdfsConfiguration();
-    conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, 4096);
-    conf.setLong(DFSConfigKeys.DFS_CLIENT_READ_PREFETCH_SIZE_KEY, 4096);
+    // mapr_fix
+    conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, 65536);
+    //conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, 4096);
+    // mapr_fix
+    conf.setLong(DFSConfigKeys.DFS_CLIENT_READ_PREFETCH_SIZE_KEY, 65536);
+    //conf.setLong(DFSConfigKeys.DFS_CLIENT_READ_PREFETCH_SIZE_KEY, 4096);
     if (simulatedStorage) {
       SimulatedFSDataset.setFactory(conf);
     }

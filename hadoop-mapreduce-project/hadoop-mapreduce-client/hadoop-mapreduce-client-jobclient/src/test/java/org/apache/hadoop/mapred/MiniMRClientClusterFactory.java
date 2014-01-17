@@ -26,6 +26,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.v2.MiniMRYarnCluster;
+import org.apache.hadoop.mapreduce.v2.MiniMRYarnClusterCustomization;
 import org.apache.hadoop.util.JarFinder;
 
 /**
@@ -48,6 +49,22 @@ public class MiniMRClientClusterFactory {
       conf = new Configuration();
     }
 
+    // Apply config customizations
+    String customizationClassName = System.getProperty(
+        MiniMRYarnClusterCustomization.CUSTOMIZATION_CLASS_NAME);
+
+    if (customizationClassName != null && !customizationClassName.isEmpty()) {
+      try {
+         MiniMRClientClusterFactory.class.getClassLoader()
+          .loadClass(customizationClassName)
+          .asSubclass(MiniMRYarnClusterCustomization.class)
+          .getDeclaredConstructor().newInstance()
+          .overrideConfigFromFile(conf);
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+
     FileSystem fs = FileSystem.get(conf);
 
     Path testRootDir = new Path("target", identifier + "-tmpDir")
@@ -57,17 +74,12 @@ public class MiniMRClientClusterFactory {
     // Copy MRAppJar and make it private.
     Path appMasterJar = new Path(MiniMRYarnCluster.APPJAR);
 
-    fs.copyFromLocalFile(appMasterJar, appJar);
-    fs.setPermission(appJar, new FsPermission("744"));
-
     Job job = Job.getInstance(conf);
 
     job.addFileToClassPath(appJar);
 
     Path callerJar = new Path(JarFinder.getJar(caller));
     Path remoteCallerJar = new Path(testRootDir, callerJar.getName());
-    fs.copyFromLocalFile(callerJar, remoteCallerJar);
-    fs.setPermission(remoteCallerJar, new FsPermission("744"));
     job.addFileToClassPath(remoteCallerJar);
 
     MiniMRYarnCluster miniMRYarnCluster = new MiniMRYarnCluster(identifier,
@@ -78,6 +90,14 @@ public class MiniMRClientClusterFactory {
         noOfNMs);
     miniMRYarnCluster.init(job.getConfiguration());
     miniMRYarnCluster.start();
+
+    // Run file system operations after creating MR cluster. This will ensure
+    // the mini DFS cluster is created.
+    fs.copyFromLocalFile(appMasterJar, appJar);
+    fs.setPermission(appJar, new FsPermission("744"));
+
+    fs.copyFromLocalFile(callerJar, remoteCallerJar);
+    fs.setPermission(remoteCallerJar, new FsPermission("744"));
 
     return new MiniMRYarnClusterAdapter(miniMRYarnCluster);
   }

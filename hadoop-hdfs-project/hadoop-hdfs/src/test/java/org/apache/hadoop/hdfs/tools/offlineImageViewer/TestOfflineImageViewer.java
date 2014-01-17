@@ -50,6 +50,7 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants.SafeModeAction;
 import org.apache.hadoop.hdfs.server.namenode.FSImageTestUtil;
 import org.apache.hadoop.security.token.Token;
@@ -97,7 +98,7 @@ public class TestOfflineImageViewer {
   // multiple tests.
   @BeforeClass
   public static void createOriginalFSImage() throws IOException {
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
       Configuration conf = new HdfsConfiguration();
       conf.setLong(DFSConfigKeys.DFS_NAMENODE_DELEGATION_TOKEN_MAX_LIFETIME_KEY, 10000);
@@ -105,7 +106,7 @@ public class TestOfflineImageViewer {
       conf.setBoolean(DFSConfigKeys.DFS_NAMENODE_DELEGATION_TOKEN_ALWAYS_USE_KEY, true);
       conf.set(CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTH_TO_LOCAL,
           "RULE:[2:$1@$0](JobTracker@.*FOO.COM)s/@.*//" + "DEFAULT");
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(4).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(4).buildHDFS();
       cluster.waitActive();
       FileSystem hdfs = cluster.getFileSystem();
       

@@ -55,7 +55,7 @@ public class TestLeaseRecovery {
     return m;
   }
 
-  void waitLeaseRecovery(MiniDFSCluster cluster) {
+  void waitLeaseRecovery(MiniHDFSCluster cluster) {
     cluster.setLeasePeriod(LEASE_PERIOD, LEASE_PERIOD);
     // wait for the lease to expire
     try {
@@ -74,10 +74,10 @@ public class TestLeaseRecovery {
     final int ORG_FILE_SIZE = 3000; 
     Configuration conf = new HdfsConfiguration();
     conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, BLOCK_SIZE);
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
 
     try {
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(5).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(5).buildHDFS();
       cluster.waitActive();
 
       //create a file

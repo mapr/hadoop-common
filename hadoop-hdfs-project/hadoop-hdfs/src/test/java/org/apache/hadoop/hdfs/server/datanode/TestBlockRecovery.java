@@ -56,6 +56,7 @@ import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.DatanodeID;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
@@ -94,7 +95,7 @@ import org.mockito.stubbing.Answer;
 public class TestBlockRecovery {
   private static final Log LOG = LogFactory.getLog(TestBlockRecovery.class);
   private static final String DATA_DIR =
-    MiniDFSCluster.getBaseDirectory() + "data";
+    MiniHDFSCluster.getBaseDirectory() + "data";
   private DataNode dn;
   private Configuration conf;
   private final static long RECOVERY_ID = 3000L;
@@ -578,9 +579,9 @@ public class TestBlockRecovery {
     tearDown();// Stop the Mocked DN started in startup()
 
     Configuration conf = new HdfsConfiguration();
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
         .nnTopology(MiniDFSNNTopology.simpleSingleNN(8020, 50070))
-        .numDataNodes(1).build();
+        .numDataNodes(1).buildHDFS();
     try {
       cluster.waitClusterUp();
       DistributedFileSystem fs = cluster.getFileSystem();

@@ -40,7 +40,7 @@ public class TestMountd {
     // Start minicluster
     Configuration config = new Configuration();
     MiniDFSCluster cluster = new MiniDFSCluster.Builder(config).numDataNodes(1)
-        .build();
+        .buildHDFS();
     cluster.waitActive();
     
     // Use emphral port in case tests are running in parallel

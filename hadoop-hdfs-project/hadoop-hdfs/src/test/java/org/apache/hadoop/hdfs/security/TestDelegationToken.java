@@ -28,6 +28,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.security.PrivilegedExceptionAction;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.impl.Log4JLogger;
@@ -39,6 +40,7 @@ import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.security.token.delegation.DelegationTokenIdentifier;
 import org.apache.hadoop.hdfs.security.token.delegation.DelegationTokenSecretManager;
 import org.apache.hadoop.hdfs.server.common.HdfsServerConstants.StartupOption;
@@ -59,7 +61,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class TestDelegationToken {
-  private MiniDFSCluster cluster;
+  private MiniHDFSCluster cluster;
   private DelegationTokenSecretManager dtSecretManager;
   private Configuration config;
   private static final Log LOG = LogFactory.getLog(TestDelegationToken.class);
@@ -74,7 +76,7 @@ public class TestDelegationToken {
     config.set("hadoop.security.auth_to_local",
         "RULE:[2:$1@$0](JobTracker@.*FOO.COM)s/@.*//" + "DEFAULT");
     FileSystem.setDefaultUri(config, "hdfs://localhost:" + "0");
-    cluster = new MiniDFSCluster.Builder(config).numDataNodes(0).build();
+    cluster = new MiniDFSCluster.Builder(config).numDataNodes(0).buildHDFS();
     cluster.waitActive();
     dtSecretManager = NameNodeAdapter.getDtSecretManager(
         cluster.getNamesystem());

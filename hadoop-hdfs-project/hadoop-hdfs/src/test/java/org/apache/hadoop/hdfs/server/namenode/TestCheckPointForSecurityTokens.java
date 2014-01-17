@@ -28,6 +28,7 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants.SafeModeAction;
 import org.apache.hadoop.hdfs.security.token.delegation.DelegationTokenIdentifier;
 import org.apache.hadoop.hdfs.server.common.Storage.StorageDirectory;
@@ -47,7 +48,7 @@ public class TestCheckPointForSecurityTokens {
   static final int fileSize = 8192;
   static final int numDatanodes = 3;
   short replication = 3;
-  MiniDFSCluster cluster = null;
+  MiniHDFSCluster cluster = null;
 
   private void cancelToken(Token<DelegationTokenIdentifier> token)
       throws IOException {
@@ -69,7 +70,8 @@ public class TestCheckPointForSecurityTokens {
       Configuration conf = new HdfsConfiguration();
       conf.setBoolean(
           DFSConfigKeys.DFS_NAMENODE_DELEGATION_TOKEN_ALWAYS_USE_KEY, true);
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(numDatanodes).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(numDatanodes)
+                .buildHDFS();
       cluster.waitActive();
       fs = (DistributedFileSystem)(cluster.getFileSystem());
       FSNamesystem namesystem = cluster.getNamesystem();
@@ -115,7 +117,8 @@ public class TestCheckPointForSecurityTokens {
       cluster.shutdown();
       cluster = null;
 
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(numDatanodes).format(false).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(numDatanodes)
+                .format(false).buildHDFS();
       cluster.waitActive();
       //Should be able to renew & cancel the delegation token after cluster restart
       try {
@@ -135,7 +138,8 @@ public class TestCheckPointForSecurityTokens {
       cluster.shutdown();
       cluster = null;
 
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(numDatanodes).format(false).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(numDatanodes)
+                .format(false).buildHDFS();
       cluster.waitActive();
 
       namesystem = cluster.getNamesystem();
@@ -157,7 +161,8 @@ public class TestCheckPointForSecurityTokens {
       cluster.shutdown();
       cluster = null;
 
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(numDatanodes).format(false).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(numDatanodes)
+                .format(false).buildHDFS();
       cluster.waitActive();
 
       namesystem = cluster.getNamesystem();

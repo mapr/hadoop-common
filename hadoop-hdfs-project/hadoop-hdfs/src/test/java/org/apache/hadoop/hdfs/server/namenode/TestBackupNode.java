@@ -41,6 +41,7 @@ import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.HAUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.server.common.HdfsServerConstants.NamenodeRole;
 import org.apache.hadoop.hdfs.server.common.HdfsServerConstants.StartupOption;
 import org.apache.hadoop.hdfs.server.common.Storage.StorageDirectory;
@@ -66,7 +67,7 @@ public class TestBackupNode {
     ((Log4JLogger)BackupImage.LOG).getLogger().setLevel(Level.ALL);
   }
   
-  static final String BASE_DIR = MiniDFSCluster.getBaseDirectory();
+  static final String BASE_DIR = MiniHDFSCluster.getBaseDirectory();
 
   @Before
   public void setUp() throws Exception {
@@ -106,7 +107,7 @@ public class TestBackupNode {
     return bn;
   }
 
-  void waitCheckpointDone(MiniDFSCluster cluster, long txid) {
+  void waitCheckpointDone(MiniHDFSCluster cluster, long txid) {
     long thisCheckpointTxId;
     do {
       try {
@@ -137,13 +138,13 @@ public class TestBackupNode {
   public void testBackupNodeTailsEdits() throws Exception {
     Configuration conf = new HdfsConfiguration();
     HAUtil.setAllowStandbyReads(conf, true);
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     FileSystem fileSys = null;
     BackupNode backup = null;
 
     try {
       cluster = new MiniDFSCluster.Builder(conf)
-                                  .numDataNodes(0).build();
+                                  .numDataNodes(0).buildHDFS();
       fileSys = cluster.getFileSystem();
       backup = startBackupNode(conf, StartupOption.BACKUP, 1);
       
@@ -207,7 +208,7 @@ public class TestBackupNode {
     assertStorageDirsMatch(cluster.getNameNode(), backup);
   }
 
-  private void testBNInSync(MiniDFSCluster cluster, final BackupNode backup,
+  private void testBNInSync(MiniHDFSCluster cluster, final BackupNode backup,
       int testIdx) throws Exception {
     
     final NameNode nn = cluster.getNameNode();
@@ -269,13 +270,13 @@ public class TestBackupNode {
     conf.set(DFSConfigKeys.DFS_BLOCKREPORT_INITIAL_DELAY_KEY, "0");
     conf.setInt(DFSConfigKeys.DFS_DATANODE_SCAN_PERIOD_HOURS_KEY, -1); // disable block scanner
     conf.setInt(DFSConfigKeys.DFS_NAMENODE_CHECKPOINT_TXNS_KEY, 1);
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     FileSystem fileSys = null;
     BackupNode backup = null;
 
     try {
       cluster = new MiniDFSCluster.Builder(conf)
-                                  .numDataNodes(0).build();
+                                  .numDataNodes(0).buildHDFS();
       fileSys = cluster.getFileSystem();
       //
       // verify that 'format' really blew away all pre-existing files
@@ -314,7 +315,7 @@ public class TestBackupNode {
       // Restart cluster and verify that file1 still exist.
       //
       cluster = new MiniDFSCluster.Builder(conf).numDataNodes(numDatanodes)
-                                                .format(false).build();
+                                                .format(false).buildHDFS();
       fileSys = cluster.getFileSystem();
       // check that file1 still exists
       assertTrue(fileSys.exists(file1));
@@ -392,7 +393,7 @@ public class TestBackupNode {
       // Restart cluster and verify that file2 exists and
       // file1 does not exist.
       //
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(0).format(false).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(0).format(false).buildHDFS();
       fileSys = cluster.getFileSystem();
 
       assertTrue(!fileSys.exists(file1));
@@ -415,13 +416,13 @@ public class TestBackupNode {
   public void testCanReadData() throws IOException {
     Path file1 = new Path("/fileToRead.dat");
     Configuration conf = new HdfsConfiguration();
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     FileSystem fileSys = null;
     BackupNode backup = null;
     try {
       // Start NameNode and BackupNode
       cluster = new MiniDFSCluster.Builder(conf)
-                                  .numDataNodes(0).format(true).build();
+                                  .numDataNodes(0).format(true).buildHDFS();
       fileSys = cluster.getFileSystem();
       long txid = cluster.getNameNodeRpc().getTransactionID();
       backup = startBackupNode(conf, StartupOption.BACKUP, 1);

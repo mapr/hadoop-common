@@ -29,7 +29,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.qjournal.server.JournalNode;
 
 import com.google.common.base.Joiner;
@@ -79,7 +79,7 @@ public class MiniJournalCluster {
     if (b.baseDir != null) {
       this.baseDir = new File(b.baseDir);
     } else {
-      this.baseDir = new File(MiniDFSCluster.getBaseDirectory());
+      this.baseDir = new File(MiniHDFSCluster.getBaseDirectory());
     }
     
     nodes = new JournalNode[b.numJournalNodes];

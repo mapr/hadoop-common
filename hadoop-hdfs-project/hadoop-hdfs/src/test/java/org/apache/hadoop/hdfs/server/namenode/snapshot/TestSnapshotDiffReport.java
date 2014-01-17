@@ -30,6 +30,7 @@ import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.SnapshotDiffReport;
 import org.apache.hadoop.hdfs.protocol.SnapshotDiffReport.DiffReportEntry;
 import org.apache.hadoop.hdfs.protocol.SnapshotDiffReport.DiffType;
@@ -52,7 +53,7 @@ public class TestSnapshotDiffReport {
   private final Path sub1 = new Path(dir, "sub1");
   
   protected Configuration conf;
-  protected MiniDFSCluster cluster;
+  protected MiniHDFSCluster cluster;
   protected DistributedFileSystem hdfs;
   
   private HashMap<Path, Integer> snapshotNumberMap = new HashMap<Path, Integer>();
@@ -61,7 +62,7 @@ public class TestSnapshotDiffReport {
   public void setUp() throws Exception {
     conf = new Configuration();
     cluster = new MiniDFSCluster.Builder(conf).numDataNodes(REPLICATION)
-        .format(true).build();
+        .format(true).buildHDFS();
     cluster.waitActive();
     hdfs = cluster.getFileSystem();
   }

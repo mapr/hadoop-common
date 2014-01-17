@@ -32,6 +32,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -41,7 +42,7 @@ import org.junit.BeforeClass;
 
 public class TestViewFileSystemHdfs extends ViewFileSystemBaseTest {
 
-  private static MiniDFSCluster cluster;
+  private static MiniHDFSCluster cluster;
   private static Path defaultWorkingDirectory;
   private static Path defaultWorkingDirectory2;
   private static Configuration CONF = new Configuration();
@@ -66,7 +67,7 @@ public class TestViewFileSystemHdfs extends ViewFileSystemBaseTest {
         new MiniDFSCluster.Builder(CONF).nnTopology(
                 MiniDFSNNTopology.simpleFederatedTopology(2))
             .numDataNodes(2)
-            .build();
+            .buildHDFS();
     cluster.waitClusterUp();
     
     fHdfs = cluster.getFileSystem(0);

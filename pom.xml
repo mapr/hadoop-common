@@ -85,7 +85,27 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xs
     <distMgmtStagingId>apache.staging.https</distMgmtStagingId>
     <distMgmtStagingName>Apache Release Distribution Repository</distMgmtStagingName>
     <distMgmtStagingUrl>https://repository.apache.org/service/local/staging/deploy/maven2</distMgmtStagingUrl>
+    <!-- mapr_fix -->
+    <mapr.version>1.0.3-mapr-3.1.1-SNAPSHOT</mapr.version>
   </properties>
+
+  <dependencies>
+    <!-- MapR dependencies defined at top level to avoid adding them in multiple pom files -->
+    <!-- mapr_fix -->
+    <dependency>
+      <groupId>com.mapr.hadoop</groupId>
+      <artifactId>maprfs</artifactId>
+      <version>${mapr.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.json</groupId>
+      <artifactId>json</artifactId>
+      <version>20080701</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
 
   <modules>
     <module>hadoop-project</module>

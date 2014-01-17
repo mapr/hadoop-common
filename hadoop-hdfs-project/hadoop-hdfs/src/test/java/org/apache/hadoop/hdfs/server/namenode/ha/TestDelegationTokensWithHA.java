@@ -45,6 +45,7 @@ import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.HAUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.security.token.delegation.DelegationTokenIdentifier;
 import org.apache.hadoop.hdfs.security.token.delegation.DelegationTokenSecretManager;
 import org.apache.hadoop.hdfs.security.token.delegation.DelegationTokenSelector;
@@ -75,7 +76,7 @@ public class TestDelegationTokensWithHA {
   private static Configuration conf = new Configuration();
   private static final Log LOG =
     LogFactory.getLog(TestDelegationTokensWithHA.class);
-  private static MiniDFSCluster cluster;
+  private static MiniHDFSCluster cluster;
   private static NameNode nn0;
   private static NameNode nn1;
   private static FileSystem fs;
@@ -96,7 +97,7 @@ public class TestDelegationTokensWithHA {
     cluster = new MiniDFSCluster.Builder(conf)
       .nnTopology(MiniDFSNNTopology.simpleHATopology())
       .numDataNodes(0)
-      .build();
+      .buildHDFS();
     cluster.waitActive();
     
     nn0 = cluster.getNameNode(0);

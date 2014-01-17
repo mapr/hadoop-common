@@ -323,7 +323,9 @@ public class TestMiniMRChildTask {
   @BeforeClass
   public static void setup() throws IOException {
     // create configuration, dfs, file system and mapred cluster 
-    dfs = new MiniDFSCluster(conf, 1, true, null);
+    dfs = new MiniDFSCluster.Builder(conf).
+              numDataNodes(1)
+              .format(true).build();
     fileSys = dfs.getFileSystem();
 
     if (!(new File(MiniMRYarnCluster.APPJAR)).exists()) {

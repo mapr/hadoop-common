@@ -39,6 +39,7 @@ import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.NameNodeProxies;
 import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.protocol.ClientProtocol;
@@ -65,7 +66,7 @@ public class TestBalancer {
   final static String RACK2 = "/rack2";
   final private static String fileName = "/tmp.txt";
   final static Path filePath = new Path(fileName);
-  private MiniDFSCluster cluster;
+  private MiniHDFSCluster cluster;
 
   ClientProtocol client;
 
@@ -88,7 +89,7 @@ public class TestBalancer {
   }
 
   /* create a file with a length of <code>fileLen</code> */
-  static void createFile(MiniDFSCluster cluster, Path filePath, long fileLen,
+  static void createFile(MiniHDFSCluster cluster, Path filePath, long fileLen,
       short replicationFactor, int nnIndex)
   throws IOException, InterruptedException, TimeoutException {
     FileSystem fs = cluster.getFileSystem(nnIndex);
@@ -102,7 +103,7 @@ public class TestBalancer {
    */
   private ExtendedBlock[] generateBlocks(Configuration conf, long size,
       short numNodes) throws IOException, InterruptedException, TimeoutException {
-    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(numNodes).build();
+    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(numNodes).buildHDFS();
     try {
       cluster.waitActive();
       client = NameNodeProxies.createProxy(conf, cluster.getFileSystem(0).getUri(),
@@ -198,7 +199,7 @@ public class TestBalancer {
                                               .format(false)
                                               .racks(racks)
                                               .simulatedCapacities(capacities)
-                                              .build();
+                                              .buildHDFS();
     cluster.waitActive();
     client = NameNodeProxies.createProxy(conf, cluster.getFileSystem(0).getUri(),
         ClientProtocol.class).getProxy();
@@ -220,7 +221,7 @@ public class TestBalancer {
    * @throws TimeoutException
    */
   static void waitForHeartBeat(long expectedUsedSpace,
-      long expectedTotalSpace, ClientProtocol client, MiniDFSCluster cluster)
+      long expectedTotalSpace, ClientProtocol client, MiniHDFSCluster cluster)
   throws IOException, TimeoutException {
     long timeout = TIMEOUT;
     long failtime = (timeout <= 0L) ? Long.MAX_VALUE
@@ -258,7 +259,7 @@ public class TestBalancer {
    * @throws TimeoutException
    */
   static void waitForBalancer(long totalUsedSpace, long totalCapacity,
-      ClientProtocol client, MiniDFSCluster cluster)
+      ClientProtocol client, MiniHDFSCluster cluster)
   throws IOException, TimeoutException {
     long timeout = TIMEOUT;
     long failtime = (timeout <= 0L) ? Long.MAX_VALUE
@@ -314,7 +315,7 @@ public class TestBalancer {
                                 .numDataNodes(capacities.length)
                                 .racks(racks)
                                 .simulatedCapacities(capacities)
-                                .build();
+                                .buildHDFS();
     try {
       cluster.waitActive();
       client = NameNodeProxies.createProxy(conf, cluster.getFileSystem(0).getUri(),
@@ -462,7 +463,7 @@ public class TestBalancer {
                                 .numDataNodes(capacities.length)
                                 .racks(racks)
                                 .simulatedCapacities(capacities)
-                                .build();
+                                .buildHDFS();
     try {
       cluster.waitActive();
       client = NameNodeProxies.createProxy(conf, cluster.getFileSystem(0).getUri(),

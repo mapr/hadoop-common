@@ -119,7 +119,7 @@ public class TestReplaceDatanodeOnFailure {
     final String[] racks = new String[REPLICATION];
     Arrays.fill(racks, RACK0);
     final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf
-        ).racks(racks).numDataNodes(REPLICATION).build();
+        ).racks(racks).numDataNodes(REPLICATION).buildHDFS();
 
     try {
       final DistributedFileSystem fs = (DistributedFileSystem)cluster.getFileSystem();
@@ -243,7 +243,7 @@ public class TestReplaceDatanodeOnFailure {
     Assert.assertEquals(ReplaceDatanodeOnFailure.DEFAULT, ReplaceDatanodeOnFailure.get(conf));
 
     final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf
-        ).numDataNodes(1).build();
+        ).numDataNodes(1).buildHDFS();
 
     try {
       final DistributedFileSystem fs = (DistributedFileSystem)cluster.getFileSystem();

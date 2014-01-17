@@ -17,7 +17,10 @@
  */
 package org.apache.hadoop.fs;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.regex.Pattern;
@@ -26,7 +29,11 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.junit.*;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 public class TestGlobPaths {
   
@@ -44,7 +51,7 @@ public class TestGlobPaths {
 
   }
   
-  static private MiniDFSCluster dfsCluster;
+  static private MiniHDFSCluster dfsCluster;
   static private FileSystem fs;
   static final private int NUM_OF_PATHS = 4;
   static private String USER_DIR;
@@ -53,7 +60,7 @@ public class TestGlobPaths {
   @BeforeClass
   public static void setUp() throws Exception {
     Configuration conf = new HdfsConfiguration();
-    dfsCluster = new MiniDFSCluster.Builder(conf).build();
+    dfsCluster = new MiniDFSCluster.Builder(conf).buildHDFS();
     fs = FileSystem.get(conf);
     USER_DIR = fs.getHomeDirectory().toUri().getPath().toString();
   }

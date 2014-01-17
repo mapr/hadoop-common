@@ -31,7 +31,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 /**
- * Tests MiniDFS cluster setup/teardown and isolation.
+ * Tests MiniHDFS cluster setup/teardown and isolation.
  * Every instance is brought up with a new data dir, to ensure that
  * shutdown work in background threads don't interfere with bringing up
  * the new cluster.
@@ -47,7 +47,7 @@ public class TestMiniDFSCluster {
   protected File testDataDir;
   @Before
   public void setUp() {
-    testDataPath = System.getProperty(MiniDFSCluster.PROP_TEST_BUILD_DATA,
+    testDataPath = System.getProperty(MiniHDFSCluster.PROP_TEST_BUILD_DATA,
         "build/test/data");
     testDataDir = new File(new File(testDataPath).getParentFile(),
                            "miniclusters");
@@ -56,7 +56,7 @@ public class TestMiniDFSCluster {
   }
   @After
   public void tearDown() {
-    System.setProperty(MiniDFSCluster.PROP_TEST_BUILD_DATA, testDataPath);
+    System.setProperty(MiniHDFSCluster.PROP_TEST_BUILD_DATA, testDataPath);
   }
 
   /**
@@ -67,12 +67,12 @@ public class TestMiniDFSCluster {
    */
   @Test(timeout=100000)
   public void testClusterWithoutSystemProperties() throws Throwable {
-    System.clearProperty(MiniDFSCluster.PROP_TEST_BUILD_DATA);
+    System.clearProperty(MiniHDFSCluster.PROP_TEST_BUILD_DATA);
     Configuration conf = new HdfsConfiguration();
     File testDataCluster1 = new File(testDataPath, CLUSTER_1);
     String c1Path = testDataCluster1.getAbsolutePath();
-    conf.set(MiniDFSCluster.HDFS_MINIDFS_BASEDIR, c1Path);
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).build();
+    conf.set(MiniHDFSCluster.HDFS_MINIDFS_BASEDIR, c1Path);
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
     try {
       assertEquals(new File(c1Path + "/data"),
           new File(cluster.getDataDirectory()));
@@ -91,23 +91,23 @@ public class TestMiniDFSCluster {
     File testDataCluster3 = new File(testDataPath, CLUSTER_3);
     Configuration conf = new HdfsConfiguration();
     String c2Path = testDataCluster2.getAbsolutePath();
-    conf.set(MiniDFSCluster.HDFS_MINIDFS_BASEDIR, c2Path);
-    MiniDFSCluster cluster2 = new MiniDFSCluster.Builder(conf).build();
-    MiniDFSCluster cluster3 = null;
+    conf.set(MiniHDFSCluster.HDFS_MINIDFS_BASEDIR, c2Path);
+    MiniHDFSCluster cluster2 = new MiniDFSCluster.Builder(conf).buildHDFS();
+    MiniHDFSCluster cluster3 = null;
     try {
       String dataDir2 = cluster2.getDataDirectory();
       assertEquals(new File(c2Path + "/data"), new File(dataDir2));
       //change the data dir
-      conf.set(MiniDFSCluster.HDFS_MINIDFS_BASEDIR,
+      conf.set(MiniHDFSCluster.HDFS_MINIDFS_BASEDIR,
                testDataCluster3.getAbsolutePath());
-      MiniDFSCluster.Builder builder = new MiniDFSCluster.Builder(conf);
-      cluster3 = builder.build();
+      MiniHDFSCluster.Builder builder = new MiniDFSCluster.Builder(conf);
+      cluster3 = builder.buildHDFS();
       String dataDir3 = cluster3.getDataDirectory();
       assertTrue("Clusters are bound to the same directory: " + dataDir2,
                         !dataDir2.equals(dataDir3));
     } finally {
-      MiniDFSCluster.shutdownCluster(cluster3);
-      MiniDFSCluster.shutdownCluster(cluster2);
+      MiniHDFSCluster.shutdownCluster(cluster3);
+      MiniHDFSCluster.shutdownCluster(cluster2);
     }
   }
 
@@ -116,8 +116,8 @@ public class TestMiniDFSCluster {
     Configuration conf = new HdfsConfiguration();
     File testDataCluster4 = new File(testDataPath, CLUSTER_4);
     String c4Path = testDataCluster4.getAbsolutePath();
-    conf.set(MiniDFSCluster.HDFS_MINIDFS_BASEDIR, c4Path);
-    MiniDFSCluster cluster4 = new MiniDFSCluster.Builder(conf).build();
+    conf.set(MiniHDFSCluster.HDFS_MINIDFS_BASEDIR, c4Path);
+    MiniHDFSCluster cluster4 = new MiniDFSCluster.Builder(conf).buildHDFS();
     try {
       DistributedFileSystem dfs = (DistributedFileSystem) cluster4.getFileSystem();
       dfs.setSafeMode(FSConstants.SafeModeAction.SAFEMODE_ENTER);
@@ -129,7 +129,7 @@ public class TestMiniDFSCluster {
     }
   }
 
-  /** MiniDFSCluster should not clobber dfs.datanode.hostname if requested */
+  /** MiniHDFSCluster should not clobber dfs.datanode.hostname if requested */
   @Test(timeout=100000)
   public void testClusterSetDatanodeHostname() throws Throwable {
     assumeTrue(System.getProperty("os.name").startsWith("Linux"));
@@ -137,16 +137,16 @@ public class TestMiniDFSCluster {
     conf.set(DFSConfigKeys.DFS_DATANODE_HOST_NAME_KEY, "MYHOST");
     File testDataCluster5 = new File(testDataPath, CLUSTER_5);
     String c5Path = testDataCluster5.getAbsolutePath();
-    conf.set(MiniDFSCluster.HDFS_MINIDFS_BASEDIR, c5Path);
-    MiniDFSCluster cluster5 = new MiniDFSCluster.Builder(conf)
+    conf.set(MiniHDFSCluster.HDFS_MINIDFS_BASEDIR, c5Path);
+    MiniHDFSCluster cluster5 = new MiniDFSCluster.Builder(conf)
       .numDataNodes(1)
       .checkDataNodeHostConfig(true)
-      .build();
+      .buildHDFS();
     try {
       assertEquals("DataNode hostname config not respected", "MYHOST",
           cluster5.getDataNodes().get(0).getDatanodeId().getHostName());
     } finally {
-      MiniDFSCluster.shutdownCluster(cluster5);
+      MiniHDFSCluster.shutdownCluster(cluster5);
     }
   }
 }

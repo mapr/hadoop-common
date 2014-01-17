@@ -39,15 +39,15 @@ import org.junit.Test;
  */
 public class TestDatanodeConfig {
   private static final File BASE_DIR =
-                                new File(MiniDFSCluster.getBaseDirectory());
+                                new File(MiniHDFSCluster.getBaseDirectory());
 
-  private static MiniDFSCluster cluster;
+  private static MiniHDFSCluster cluster;
 
   @BeforeClass
   public static void setUp() throws Exception {
     clearBaseDir();
     Configuration conf = new HdfsConfiguration();
-    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(0).build();
+    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(0).buildHDFS();
     cluster.waitActive();
   }
 

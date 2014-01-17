@@ -45,8 +45,8 @@ public class TestBalancerBandwidth {
         DEFAULT_BANDWIDTH);
 
     /* Create and start cluster */
-    MiniDFSCluster cluster = 
-      new MiniDFSCluster.Builder(conf).numDataNodes(NUM_OF_DATANODES).build();
+    MiniHDFSCluster cluster = 
+      new MiniDFSCluster.Builder(conf).numDataNodes(NUM_OF_DATANODES).buildHDFS();
     try {
       cluster.waitActive();
 

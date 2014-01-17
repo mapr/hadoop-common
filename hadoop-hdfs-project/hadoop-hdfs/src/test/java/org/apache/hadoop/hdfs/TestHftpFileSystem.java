@@ -49,7 +49,7 @@ public class TestHftpFileSystem {
   private static final Random RAN = new Random();
   
   private static Configuration config = null;
-  private static MiniDFSCluster cluster = null;
+  private static MiniHDFSCluster cluster = null;
   private static String blockPoolId = null;
   private static String hftpUri = null;
   private FileSystem hdfs = null;
@@ -92,7 +92,7 @@ public class TestHftpFileSystem {
     RAN.setSeed(seed);
 
     config = new Configuration();
-    cluster = new MiniDFSCluster.Builder(config).numDataNodes(2).build();
+    cluster = new MiniDFSCluster.Builder(config).numDataNodes(2).buildHDFS();
     blockPoolId = cluster.getNamesystem().getBlockPoolId();
     hftpUri = 
       "hftp://" + config.get(DFSConfigKeys.DFS_NAMENODE_HTTP_ADDRESS_KEY);

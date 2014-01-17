@@ -32,6 +32,7 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
 import org.apache.hadoop.hdfs.server.blockmanagement.BlockInfo;
 import org.apache.hadoop.hdfs.server.blockmanagement.BlockManager;
@@ -57,7 +58,7 @@ public class TestSnapshotBlocksMap {
   private final Path sub1 = new Path(dir, "sub1");
   
   protected Configuration conf;
-  protected MiniDFSCluster cluster;
+  protected MiniHDFSCluster cluster;
   protected FSNamesystem fsn;
   FSDirectory fsdir;
   BlockManager blockmanager;
@@ -68,7 +69,7 @@ public class TestSnapshotBlocksMap {
     conf = new Configuration();
     conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, BLOCKSIZE);
     cluster = new MiniDFSCluster.Builder(conf).numDataNodes(REPLICATION)
-        .build();
+        .buildHDFS();
     cluster.waitActive();
 
     fsn = cluster.getNamesystem();

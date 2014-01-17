@@ -32,7 +32,7 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
-import org.apache.hadoop.hdfs.server.datanode.DataNode;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.server.namenode.FSNamesystem;
 import org.apache.hadoop.hdfs.server.namenode.LeaseManager;
 import org.apache.hadoop.hdfs.server.namenode.NameNode;
@@ -59,7 +59,7 @@ public class TestWebHdfsWithMultipleNameNodes {
   }
 
   private static final Configuration conf = new HdfsConfiguration();
-  private static MiniDFSCluster cluster;
+  private static MiniHDFSCluster cluster;
   private static WebHdfsFileSystem[] webhdfs;
 
   @BeforeClass
@@ -81,7 +81,7 @@ public class TestWebHdfsWithMultipleNameNodes {
     cluster = new MiniDFSCluster.Builder(conf)
         .nnTopology(MiniDFSNNTopology.simpleFederatedTopology(nNameNodes))
         .numDataNodes(nDataNodes)
-        .build();
+        .buildHDFS();
     cluster.waitActive();
     
     webhdfs = new WebHdfsFileSystem[nNameNodes];

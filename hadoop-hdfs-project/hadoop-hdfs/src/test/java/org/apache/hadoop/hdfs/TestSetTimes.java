@@ -41,7 +41,6 @@ import org.apache.hadoop.hdfs.server.namenode.NameNodeAdapter;
 import org.apache.hadoop.test.MockitoUtil;
 import org.apache.hadoop.util.Time;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 /**
  * This class tests the access time on files.
@@ -287,9 +286,9 @@ public class TestSetTimes {
   public void testGetBlockLocationsOnlyUsesReadLock() throws IOException {
     Configuration conf = new HdfsConfiguration();
     conf.setInt(DFSConfigKeys.DFS_NAMENODE_ACCESSTIME_PRECISION_KEY, 100*1000);
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
       .numDataNodes(0)
-      .build();
+      .buildHDFS();
     ReentrantReadWriteLock spyLock = NameNodeAdapter.spyOnFsLock(cluster.getNamesystem());
     try {
       // Create empty file in the FSN.

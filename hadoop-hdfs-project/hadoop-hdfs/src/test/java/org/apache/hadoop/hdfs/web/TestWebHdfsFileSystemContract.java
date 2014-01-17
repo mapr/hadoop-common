@@ -43,6 +43,7 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.AppendTestUtil;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.web.resources.DoAsParam;
 import org.apache.hadoop.hdfs.web.resources.GetOpParam;
 import org.apache.hadoop.hdfs.web.resources.HttpOpParam;
@@ -57,7 +58,7 @@ import org.junit.Assert;
 
 public class TestWebHdfsFileSystemContract extends FileSystemContractBaseTest {
   private static final Configuration conf = new Configuration();
-  private static final MiniDFSCluster cluster;
+  private static final MiniHDFSCluster cluster;
   private String defaultWorkingDirectory;
   
   private UserGroupInformation ugi;
@@ -65,7 +66,7 @@ public class TestWebHdfsFileSystemContract extends FileSystemContractBaseTest {
   static {
     conf.setBoolean(DFSConfigKeys.DFS_WEBHDFS_ENABLED_KEY, true);
     try {
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2).buildHDFS();
       cluster.waitActive();
 
       //change root permission to 777

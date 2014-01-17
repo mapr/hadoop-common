@@ -289,7 +289,7 @@ public class TestDFSClientRetries {
     // Set short retry timeouts so this test runs faster
     conf.setInt(DFSConfigKeys.DFS_CLIENT_RETRY_WINDOW_BASE, 10);
     conf.setInt(DFS_CLIENT_SOCKET_TIMEOUT_KEY, 2 * 1000);
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
 
     try {
       cluster.waitActive();
@@ -363,7 +363,7 @@ public class TestDFSClientRetries {
     Path file = new Path(src);
 
     conf.setInt(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, 4096);
-    final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).build();
+    final MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
 
     try {
       cluster.waitActive();
@@ -589,7 +589,8 @@ public class TestDFSClientRetries {
     // Disable keepalive
     conf.setInt(DFSConfigKeys.DFS_DATANODE_SOCKET_REUSE_KEEPALIVE_KEY, 0);
 
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(replicationFactor).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+        .numDataNodes(replicationFactor).buildHDFS();
     cluster.waitActive();
     
     FileSystem fs = cluster.getFileSystem();
@@ -673,11 +674,11 @@ public class TestDFSClientRetries {
     byte[] expected_sha;
     FileSystem  fs;
     Path filePath;
-    MiniDFSCluster cluster;
+    MiniHDFSCluster cluster;
     int len;
     Counter counter;
 
-    DFSClientReader(Path file, MiniDFSCluster cluster, byte[] hash_sha, int fileLen, Counter cnt) {
+    DFSClientReader(Path file, MiniHDFSCluster cluster, byte[] hash_sha, int fileLen, Counter cnt) {
       filePath = file;
       this.cluster = cluster;
       counter = cnt;
@@ -744,7 +745,7 @@ public class TestDFSClientRetries {
     final String f = "/testGetFileChecksum";
     final Path p = new Path(f);
 
-    final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).build();
+    final MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).buildHDFS();
     try {
       cluster.waitActive();
 
@@ -825,12 +826,12 @@ public class TestDFSClientRetries {
       conf.setBoolean(DFSConfigKeys.DFS_CLIENT_RETRY_POLICY_ENABLED_KEY, true);
     }
     conf.setInt(DFSConfigKeys.DFS_NAMENODE_SAFEMODE_MIN_DATANODES_KEY, 1);
-    conf.setInt(MiniDFSCluster.DFS_NAMENODE_SAFEMODE_EXTENSION_TESTING_KEY, 5000);
+    conf.setInt(MiniHDFSCluster.DFS_NAMENODE_SAFEMODE_EXTENSION_TESTING_KEY, 5000);
 
     final short numDatanodes = 3;
-    final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    final MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
         .numDataNodes(numDatanodes)
-        .build();
+        .buildHDFS();
     try {
       cluster.waitActive();
       final DistributedFileSystem dfs = cluster.getFileSystem();
@@ -1084,8 +1085,8 @@ public class TestDFSClientRetries {
   @Test
   public void testRetryOnChecksumFailure() throws Exception {
     HdfsConfiguration conf = new HdfsConfiguration();
-    MiniDFSCluster cluster =
-      new MiniDFSCluster.Builder(conf).numDataNodes(1).build();
+    MiniHDFSCluster cluster =
+      new MiniDFSCluster.Builder(conf).numDataNodes(1).buildHDFS();
 
     try {
       final short REPL_FACTOR = 1;

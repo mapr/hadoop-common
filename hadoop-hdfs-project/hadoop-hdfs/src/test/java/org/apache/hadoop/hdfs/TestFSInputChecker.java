@@ -46,7 +46,9 @@ import org.junit.Test;
  */
 public class TestFSInputChecker {
   static final long seed = 0xDEADBEEFL;
-  static final int BYTES_PER_SUM = 10;
+  // mapr_fix
+  static final int BYTES_PER_SUM = 65536;
+  //static final int BYTES_PER_SUM = 10;
   static final int BLOCK_SIZE = 2*BYTES_PER_SUM;
   static final int HALF_CHUNK_SIZE = BYTES_PER_SUM/2;
   static final int FILE_SIZE = 2*BLOCK_SIZE-1;

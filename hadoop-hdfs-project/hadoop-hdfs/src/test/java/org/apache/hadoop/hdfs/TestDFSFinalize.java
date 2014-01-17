@@ -45,7 +45,7 @@ public class TestDFSFinalize {
                                                    "org.apache.hadoop.hdfs.TestDFSFinalize");
   private Configuration conf;
   private int testCounter = 0;
-  private MiniDFSCluster cluster = null;
+  private MiniHDFSCluster cluster = null;
     
   /**
    * Writes an INFO log message containing the parameters.
@@ -116,7 +116,7 @@ public class TestDFSFinalize {
                                   .manageDataDfsDirs(false)
                                   .manageNameDfsDirs(false)
                                   .startupOption(StartupOption.REGULAR)
-                                  .build();
+                                  .buildHDFS();
       cluster.finalizeCluster(conf);
       checkResult(nameNodeDirs, dataNodeDirs);
 

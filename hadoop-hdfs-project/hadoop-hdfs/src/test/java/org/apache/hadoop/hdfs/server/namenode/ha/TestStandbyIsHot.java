@@ -31,8 +31,9 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.HAUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.apache.hadoop.hdfs.MiniDFSCluster.DataNodeProperties;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster.DataNodeProperties;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.LocatedBlocks;
 import org.apache.hadoop.hdfs.server.blockmanagement.BlockManager;
@@ -71,10 +72,10 @@ public class TestStandbyIsHot {
     // We read from the standby to watch block locations
     HAUtil.setAllowStandbyReads(conf, true);
     conf.setInt(DFSConfigKeys.DFS_HA_TAILEDITS_PERIOD_KEY, 1);
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
       .nnTopology(MiniDFSNNTopology.simpleHATopology())
       .numDataNodes(3)
-      .build();
+      .buildHDFS();
     try {
       cluster.waitActive();
       cluster.transitionToActive(0);
@@ -145,10 +146,10 @@ public class TestStandbyIsHot {
     HAUtil.setAllowStandbyReads(conf, true);
     conf.setLong(DFSConfigKeys.DFS_NAMENODE_ACCESSTIME_PRECISION_KEY, 0);
     conf.setInt(DFSConfigKeys.DFS_HA_TAILEDITS_PERIOD_KEY, 1);
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
       .nnTopology(MiniDFSNNTopology.simpleHATopology())
       .numDataNodes(1)
-      .build();
+      .buildHDFS();
     try {
       NameNode nn0 = cluster.getNameNode(0);
       NameNode nn1 = cluster.getNameNode(1);
@@ -202,7 +203,7 @@ public class TestStandbyIsHot {
     }
   }
 
-  static void waitForBlockLocations(final MiniDFSCluster cluster,
+  static void waitForBlockLocations(final MiniHDFSCluster cluster,
       final NameNode nn,
       final String path, final int expectedReplicas)
       throws Exception {

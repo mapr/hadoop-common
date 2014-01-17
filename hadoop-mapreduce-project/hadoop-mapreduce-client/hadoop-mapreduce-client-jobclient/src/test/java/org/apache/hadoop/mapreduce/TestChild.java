@@ -32,9 +32,14 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.log4j.Level;
 
 public class TestChild extends HadoopTestCase {
+  // mapr_fix Don't set the scheme to file:/ by using toURI.
+  // This will allow us to add test cases that create this file on top of
+  // remote FS such as HDFS or MapRFS.
   private static String TEST_ROOT_DIR =
     new File(System.getProperty("test.build.data","/tmp"))
-    .toURI().toString().replace(' ', '+');
+    //.toURI()
+    .toString().replace(' ', '+');
+
   private final Path inDir = new Path(TEST_ROOT_DIR, "./wc/input");
   private final Path outDir = new Path(TEST_ROOT_DIR, "./wc/output");
   

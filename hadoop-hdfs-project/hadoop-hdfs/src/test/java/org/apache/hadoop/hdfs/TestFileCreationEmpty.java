@@ -59,7 +59,8 @@ public class TestFileCreationEmpty {
     conf.setInt(DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_KEY, 1);
 
     // create cluster
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(DATANODE_NUM).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+        .numDataNodes(DATANODE_NUM).buildHDFS();
     try {
       cluster.waitActive();
       DistributedFileSystem dfs = (DistributedFileSystem)cluster.getFileSystem();

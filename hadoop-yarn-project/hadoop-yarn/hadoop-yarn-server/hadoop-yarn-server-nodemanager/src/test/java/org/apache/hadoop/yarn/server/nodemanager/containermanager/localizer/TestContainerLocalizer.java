@@ -252,7 +252,7 @@ public class TestContainerLocalizer {
     }
     RecordFactory mockRF = getMockLocalizerRecordFactory();
     ContainerLocalizer concreteLoc = new ContainerLocalizer(lfs, appUser,
-        appId, containerId, localDirs, mockRF);
+        appId, containerId, localDirs, mockRF, conf);
     ContainerLocalizer localizer = spy(concreteLoc);
 
     // return credential stream instead of opening local file

@@ -33,6 +33,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 import org.apache.hadoop.hdfs.protocol.SnapshotException;
 import org.apache.hadoop.hdfs.server.namenode.FSDirectory;
@@ -61,7 +62,7 @@ public class TestSnapshotRename {
   private final Path file1 = new Path(sub1, "file1");
   
   Configuration conf;
-  MiniDFSCluster cluster;
+  MiniHDFSCluster cluster;
   FSNamesystem fsn;
   DistributedFileSystem hdfs;
   FSDirectory fsdir;
@@ -70,7 +71,7 @@ public class TestSnapshotRename {
   public void setUp() throws Exception {
     conf = new Configuration();
     cluster = new MiniDFSCluster.Builder(conf).numDataNodes(REPLICATION)
-        .build();
+        .buildHDFS();
     cluster.waitActive();
     fsn = cluster.getNamesystem();
     hdfs = cluster.getFileSystem();

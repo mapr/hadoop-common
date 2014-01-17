@@ -33,6 +33,7 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.server.blockmanagement.DatanodeManager;
 import org.junit.After;
 import org.junit.Before;
@@ -43,7 +44,7 @@ import org.junit.Test;
  */
 public class TestDataNodeVolumeFailureToleration {
   private FileSystem fs;
-  private MiniDFSCluster cluster;
+  private MiniHDFSCluster cluster;
   private Configuration conf;
   private String dataDir;
 
@@ -68,7 +69,7 @@ public class TestDataNodeVolumeFailureToleration {
     conf.setInt(DFSConfigKeys.DFS_NAMENODE_HEARTBEAT_RECHECK_INTERVAL_KEY, 1000);
     // Allow a single volume failure (there are two volumes)
     conf.setInt(DFSConfigKeys.DFS_DATANODE_FAILED_VOLUMES_TOLERATED_KEY, 1);
-    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1).build();
+    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1).buildHDFS();
     cluster.waitActive();
     fs = cluster.getFileSystem();
     dataDir = cluster.getDataDirectory();
@@ -100,7 +101,7 @@ public class TestDataNodeVolumeFailureToleration {
 
     // We use subdirectories 0 and 1 in order to have only a single
     // data dir's parent inject a failure.
-    File tld = new File(MiniDFSCluster.getBaseDirectory(), "badData");
+    File tld = new File(MiniHDFSCluster.getBaseDirectory(), "badData");
     File dataDir1 = new File(tld, "data1");
     File dataDir1Actual = new File(dataDir1, "1");
     dataDir1Actual.mkdirs();

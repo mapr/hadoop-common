@@ -30,6 +30,7 @@ import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology.NNConf;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.NameNodeProxies;
 import org.apache.hadoop.hdfs.protocol.ClientProtocol;
 import org.apache.hadoop.hdfs.server.namenode.NameNode;
@@ -40,7 +41,7 @@ import org.junit.Test;
  * Test balancer with HA NameNodes
  */
 public class TestBalancerWithHANameNodes {
-  private MiniDFSCluster cluster;
+  private MiniHDFSCluster cluster;
   ClientProtocol client;
 
   static {
@@ -74,7 +75,7 @@ public class TestBalancerWithHANameNodes {
         .numDataNodes(capacities.length)
         .racks(racks)
         .simulatedCapacities(capacities)
-        .build();
+        .buildHDFS();
     HATestUtil.setFailoverConfigurations(cluster, conf);
     try {
       cluster.waitActive();

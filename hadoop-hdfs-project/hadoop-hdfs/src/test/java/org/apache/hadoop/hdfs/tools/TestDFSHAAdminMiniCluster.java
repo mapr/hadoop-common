@@ -34,6 +34,7 @@ import org.apache.hadoop.ha.HAAdmin;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.server.namenode.NameNode;
 import org.apache.hadoop.hdfs.server.namenode.NameNodeAdapter;
 import org.apache.hadoop.util.Shell;
@@ -56,7 +57,7 @@ public class TestDFSHAAdminMiniCluster {
   }
   private static final Log LOG = LogFactory.getLog(TestDFSHAAdminMiniCluster.class);
   
-  private MiniDFSCluster cluster;
+  private MiniHDFSCluster cluster;
   private Configuration conf; 
   private DFSHAAdmin tool;
   private ByteArrayOutputStream errOutBytes = new ByteArrayOutputStream();
@@ -70,7 +71,7 @@ public class TestDFSHAAdminMiniCluster {
     conf = new Configuration();
     cluster = new MiniDFSCluster.Builder(conf)
         .nnTopology(MiniDFSNNTopology.simpleHATopology()).numDataNodes(0)
-        .build();
+        .buildHDFS();
     tool = new DFSHAAdmin();  
     tool.setConf(conf);
     tool.setErrOut(new PrintStream(errOutBytes));

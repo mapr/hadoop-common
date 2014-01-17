@@ -27,6 +27,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.JobStatus;
@@ -49,8 +50,8 @@ public class TestSocketFactory {
   public void testSocketFactory() throws IOException {
     // Create a standard mini-cluster
     Configuration sconf = new Configuration();
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(sconf).numDataNodes(1)
-        .build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(sconf).numDataNodes(1)
+        .buildHDFS();
     final int nameNodePort = cluster.getNameNodePort();
 
     // Get a reference to its DFS directly

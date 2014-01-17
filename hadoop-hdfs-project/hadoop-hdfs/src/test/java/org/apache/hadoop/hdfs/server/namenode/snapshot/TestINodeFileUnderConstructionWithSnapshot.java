@@ -36,6 +36,7 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.client.HdfsDataOutputStream;
 import org.apache.hadoop.hdfs.client.HdfsDataOutputStream.SyncFlag;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
@@ -66,7 +67,7 @@ public class TestINodeFileUnderConstructionWithSnapshot {
   private final Path dir = new Path("/TestSnapshot");
   
   Configuration conf;
-  MiniDFSCluster cluster;
+  MiniHDFSCluster cluster;
   FSNamesystem fsn;
   DistributedFileSystem hdfs;
   FSDirectory fsdir;
@@ -76,7 +77,7 @@ public class TestINodeFileUnderConstructionWithSnapshot {
     conf = new Configuration();
     conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, BLOCKSIZE);
     cluster = new MiniDFSCluster.Builder(conf).numDataNodes(REPLICATION)
-        .build();
+        .buildHDFS();
     cluster.waitActive();
     fsn = cluster.getNamesystem();
     fsdir = fsn.getFSDirectory();

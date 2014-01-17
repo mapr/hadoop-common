@@ -29,27 +29,21 @@ import org.apache.hadoop.ha.ServiceFailedException;
 import org.apache.hadoop.ha.HAServiceProtocol.RequestSource;
 import org.apache.hadoop.ha.HAServiceProtocol.StateChangeRequestInfo;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
-
 import org.apache.hadoop.hdfs.HAUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
-
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.server.namenode.ha.HATestUtil;
 import org.apache.hadoop.hdfs.server.namenode.NameNode;
 import org.apache.hadoop.hdfs.server.namenode.NameNodeAdapter;
-
 import org.apache.hadoop.ipc.RemoteException;
-
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
-
 import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.util.ExitUtil;
 import org.apache.hadoop.util.ExitUtil.ExitException;
-
 import org.apache.bookkeeper.proto.BookieServer;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -90,7 +84,7 @@ public class TestBookKeeperAsHASharedDir {
    */
   @Test
   public void testFailoverWithBK() throws Exception {
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
       Configuration conf = new Configuration();
       conf.setInt(DFSConfigKeys.DFS_HA_TAILEDITS_PERIOD_KEY, 1);
@@ -102,7 +96,7 @@ public class TestBookKeeperAsHASharedDir {
         .nnTopology(MiniDFSNNTopology.simpleHATopology())
         .numDataNodes(0)
         .manageNameDfsSharedDirs(false)
-        .build();
+        .buildHDFS();
       NameNode nn1 = cluster.getNameNode(0);
       NameNode nn2 = cluster.getNameNode(1);
 
@@ -141,7 +135,7 @@ public class TestBookKeeperAsHASharedDir {
 
     BookieServer replacementBookie = null;
 
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
 
     try {
       Configuration conf = new Configuration();
@@ -159,7 +153,7 @@ public class TestBookKeeperAsHASharedDir {
         .numDataNodes(0)
         .manageNameDfsSharedDirs(false)
         .checkExitOnShutdown(false)
-        .build();
+        .buildHDFS();
       NameNode nn1 = cluster.getNameNode(0);
       NameNode nn2 = cluster.getNameNode(1);
 
@@ -219,7 +213,7 @@ public class TestBookKeeperAsHASharedDir {
   public void testMultiplePrimariesStarted() throws Exception {
     Path p1 = new Path("/testBKJMMultiplePrimary");
 
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
       Configuration conf = new Configuration();
       conf.setInt(DFSConfigKeys.DFS_HA_TAILEDITS_PERIOD_KEY, 1);
@@ -232,7 +226,7 @@ public class TestBookKeeperAsHASharedDir {
         .numDataNodes(0)
         .manageNameDfsSharedDirs(false)
         .checkExitOnShutdown(false)
-        .build();
+        .buildHDFS();
       NameNode nn1 = cluster.getNameNode(0);
       NameNode nn2 = cluster.getNameNode(1);
       cluster.waitActive();
@@ -265,7 +259,7 @@ public class TestBookKeeperAsHASharedDir {
    */
   @Test
   public void testInitializeBKSharedEdits() throws Exception {
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
       Configuration conf = new Configuration();
       HAUtil.setAllowStandbyReads(conf, true);
@@ -273,7 +267,7 @@ public class TestBookKeeperAsHASharedDir {
 
       MiniDFSNNTopology topology = MiniDFSNNTopology.simpleHATopology();
       cluster = new MiniDFSCluster.Builder(conf).nnTopology(topology)
-          .numDataNodes(0).build();
+          .numDataNodes(0).buildHDFS();
       cluster.waitActive();
       // Shutdown and clear the current filebased shared dir.
       cluster.shutdownNameNodes();
@@ -308,7 +302,7 @@ public class TestBookKeeperAsHASharedDir {
     }
   }
 
-  private void assertCanNotStartNamenode(MiniDFSCluster cluster, int nnIndex) {
+  private void assertCanNotStartNamenode(MiniHDFSCluster cluster, int nnIndex) {
     try {
       cluster.restartNameNode(nnIndex, false);
       fail("Should not have been able to start NN" + (nnIndex)
@@ -320,7 +314,7 @@ public class TestBookKeeperAsHASharedDir {
     }
   }
 
-  private void assertCanStartHANameNodes(MiniDFSCluster cluster,
+  private void assertCanStartHANameNodes(MiniHDFSCluster cluster,
       Configuration conf, String path) throws ServiceFailedException,
       IOException, URISyntaxException, InterruptedException {
     // Now should be able to start both NNs. Pass "false" here so that we don't
@@ -356,7 +350,7 @@ public class TestBookKeeperAsHASharedDir {
    */
   @Test
   public void testNameNodeMultipleSwitchesUsingBKJM() throws Exception {
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
       Configuration conf = new Configuration();
       conf.setInt(DFSConfigKeys.DFS_HA_TAILEDITS_PERIOD_KEY, 1);
@@ -366,7 +360,7 @@ public class TestBookKeeperAsHASharedDir {
 
       cluster = new MiniDFSCluster.Builder(conf)
           .nnTopology(MiniDFSNNTopology.simpleHATopology()).numDataNodes(0)
-          .manageNameDfsSharedDirs(false).build();
+          .manageNameDfsSharedDirs(false).buildHDFS();
       NameNode nn1 = cluster.getNameNode(0);
       NameNode nn2 = cluster.getNameNode(1);
       cluster.waitActive();

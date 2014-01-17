@@ -66,7 +66,7 @@ public class TestGetBlocks {
    *          The hostName of the datanode to be stopped
    * @return The DataNode whose heartbeat has been stopped
    */
-  private DataNode stopDataNodeHeartbeat(MiniDFSCluster cluster, String hostName) {
+  private DataNode stopDataNodeHeartbeat(MiniHDFSCluster cluster, String hostName) {
     for (DataNode dn : cluster.getDataNodes()) {
       if (dn.getDatanodeId().getHostName().equals(hostName)) {
         DataNodeTestUtils.setHeartbeatsDisabledForTests(dn, true);
@@ -92,8 +92,8 @@ public class TestGetBlocks {
     long staleInterval = 30 * 1000 * 60;
     conf.setLong(DFSConfigKeys.DFS_NAMENODE_STALE_DATANODE_INTERVAL_KEY,
         staleInterval);
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
-        .numDataNodes(numDatanodes).racks(racks).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+        .numDataNodes(numDatanodes).racks(racks).buildHDFS();
 
     cluster.waitActive();
     InetSocketAddress addr = new InetSocketAddress("localhost",
@@ -183,8 +183,8 @@ public class TestGetBlocks {
     final Random r = new Random();
 
     CONF.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, DEFAULT_BLOCK_SIZE);
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(CONF).numDataNodes(
-        REPLICATION_FACTOR).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(CONF).numDataNodes(
+        REPLICATION_FACTOR).buildHDFS();
     try {
       cluster.waitActive();
 

@@ -19,7 +19,9 @@ package org.apache.hadoop.hdfs.server.namenode.snapshot;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
 import java.util.ArrayList;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Options;
 import org.apache.hadoop.fs.Path;
@@ -27,6 +29,7 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.SnapshotAccessControlException;
 import org.apache.hadoop.hdfs.server.namenode.FSNamesystem;
 import org.junit.AfterClass;
@@ -44,7 +47,7 @@ public class TestDisallowModifyROSnapshot {
   private final static Path sub2 = new Path(dir, "sub2");
 
   protected static Configuration conf;
-  protected static MiniDFSCluster cluster;
+  protected static MiniHDFSCluster cluster;
   protected static FSNamesystem fsn;
   protected static DistributedFileSystem fs;
 
@@ -58,7 +61,7 @@ public class TestDisallowModifyROSnapshot {
   @BeforeClass
   public static void setUp() throws Exception {
     conf = new Configuration();
-    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1).build();
+    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1).buildHDFS();
     cluster.waitActive();
 
     fsn = cluster.getNamesystem();

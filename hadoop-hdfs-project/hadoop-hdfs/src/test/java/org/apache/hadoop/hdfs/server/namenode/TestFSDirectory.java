@@ -29,6 +29,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -56,7 +57,7 @@ public class TestFSDirectory {
   private final Path sub2 = new Path(dir, "sub2");
 
   private Configuration conf;
-  private MiniDFSCluster cluster;
+  private MiniHDFSCluster cluster;
   private FSNamesystem fsn;
   private FSDirectory fsdir;
 
@@ -67,7 +68,7 @@ public class TestFSDirectory {
     conf = new Configuration();
     cluster = new MiniDFSCluster.Builder(conf)
       .numDataNodes(REPLICATION)
-      .build();
+      .buildHDFS();
     cluster.waitActive();
     
     fsn = cluster.getNamesystem();

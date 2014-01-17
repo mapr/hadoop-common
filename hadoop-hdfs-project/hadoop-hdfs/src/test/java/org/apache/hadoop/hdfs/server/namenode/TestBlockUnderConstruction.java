@@ -31,6 +31,7 @@ import org.apache.hadoop.hdfs.DFSClientAdapter;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.TestFileCreation;
 import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
@@ -48,13 +49,13 @@ public class TestBlockUnderConstruction {
   static final int BLOCK_SIZE = 8192; // same as TestFileCreation.blocksize
   static final int NUM_BLOCKS = 5;  // number of blocks to write
 
-  private static MiniDFSCluster cluster;
+  private static MiniHDFSCluster cluster;
   private static DistributedFileSystem hdfs;
 
   @BeforeClass
   public static void setUp() throws Exception {
     Configuration conf = new HdfsConfiguration();
-    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).build();
+    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).buildHDFS();
     cluster.waitActive();
     hdfs = (DistributedFileSystem)cluster.getFileSystem();
   }
