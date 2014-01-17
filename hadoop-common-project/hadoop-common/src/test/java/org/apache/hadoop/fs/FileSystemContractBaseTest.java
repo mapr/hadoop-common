@@ -55,7 +55,9 @@ public abstract class FileSystemContractBaseTest extends TestCase {
   }
   
   protected int getBlockSize() {
-    return 1024;
+    // mapr_fix
+    return 65536;
+    //return 1024;
   }
   
   protected String getDefaultWorkingDirectory() {

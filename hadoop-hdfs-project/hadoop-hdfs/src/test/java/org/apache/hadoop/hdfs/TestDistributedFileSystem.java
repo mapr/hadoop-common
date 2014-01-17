@@ -108,7 +108,10 @@ public class TestDistributedFileSystem {
     try {
       FileSystem.closeAll();
 
-      conf = getTestConfiguration();
+      // mapr_fix Why do we need to get this instance again? The call to
+      // MiniDFSCluster.build sets the default scheme in conf which corresponds
+      // to the URI obtained earlier.
+      //conf = getTestConfiguration();
       FileSystem.setDefaultUri(conf, address);
       FileSystem.get(conf);
       FileSystem.get(conf);
@@ -192,10 +195,11 @@ public class TestDistributedFileSystem {
   public void testDFSClient() throws Exception {
     Configuration conf = getTestConfiguration();
     final long grace = 1000L;
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
 
     try {
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2)
+          .buildHDFS();
       final String filepathstring = "/test/LeaseChecker/foo";
       final Path[] filepaths = new Path[4];
       for(int i = 0; i < filepaths.length; i++) {
@@ -458,8 +462,7 @@ public class TestDistributedFileSystem {
         current.getShortUserName() + "x", new String[]{"user"});
     
     try {
-      ((DistributedFileSystem) hdfs).getFileChecksum(new Path(
-          "/test/TestNonExistingFile"));
+      hdfs.getFileChecksum(new Path("/test/TestNonExistingFile"));
       fail("Expecting FileNotFoundException");
     } catch (FileNotFoundException e) {
       assertTrue("Not throwing the intended exception message", e.getMessage()
@@ -469,7 +472,7 @@ public class TestDistributedFileSystem {
     try {
       Path path = new Path("/test/TestExistingDir/");
       hdfs.mkdirs(path);
-      ((DistributedFileSystem) hdfs).getFileChecksum(path);
+      hdfs.getFileChecksum(path);
       fail("Expecting FileNotFoundException");
     } catch (FileNotFoundException e) {
       assertTrue("Not throwing the intended exception message", e.getMessage()
@@ -649,8 +652,8 @@ public class TestDistributedFileSystem {
     final Configuration conf = getTestConfiguration();
     conf.setBoolean(DFSConfigKeys.DFS_HDFS_BLOCKS_METADATA_ENABLED,
         true);
-    final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
-        .numDataNodes(2).build();
+    final MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+        .numDataNodes(2).buildHDFS();
     try {
       DistributedFileSystem fs = cluster.getFileSystem();
       // Create two files
@@ -705,8 +708,8 @@ public class TestDistributedFileSystem {
     final Configuration conf = getTestConfiguration();
     conf.setBoolean(DFSConfigKeys.DFS_HDFS_BLOCKS_METADATA_ENABLED,
         true);
-    final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
-        .numDataNodes(2).build();
+    final MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+        .numDataNodes(2).buildHDFS();
     try {
       cluster.getDataNodes();
       DistributedFileSystem fs = cluster.getFileSystem();
@@ -794,7 +797,7 @@ public class TestDistributedFileSystem {
   @Test(timeout=60000)
   public void testFileCloseStatus() throws IOException {
     Configuration conf = new HdfsConfiguration();
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
     DistributedFileSystem fs = cluster.getFileSystem();
     try {
       // create a new file.
@@ -816,7 +819,7 @@ public class TestDistributedFileSystem {
   @Test(timeout=60000)
   public void testListFiles() throws IOException {
     Configuration conf = new HdfsConfiguration();
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
     
     try {
       DistributedFileSystem fs = cluster.getFileSystem();

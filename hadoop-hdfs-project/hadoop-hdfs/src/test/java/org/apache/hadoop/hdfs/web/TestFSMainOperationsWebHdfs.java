@@ -31,6 +31,7 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.server.datanode.web.resources.DatanodeWebHdfsMethods;
 import org.apache.hadoop.hdfs.web.resources.ExceptionHandler;
 import org.apache.hadoop.security.AccessControlException;
@@ -47,7 +48,7 @@ public class TestFSMainOperationsWebHdfs extends FSMainOperationsBaseTest {
     ((Log4JLogger)DatanodeWebHdfsMethods.LOG).getLogger().setLevel(Level.ALL);
   }
 
-  private static MiniDFSCluster cluster = null;
+  private static MiniHDFSCluster cluster = null;
   private static Path defaultWorkingDirectory;
   private static FileSystem fileSystem;
   
@@ -66,7 +67,7 @@ public class TestFSMainOperationsWebHdfs extends FSMainOperationsBaseTest {
     conf.setBoolean(DFSConfigKeys.DFS_WEBHDFS_ENABLED_KEY, true);
     conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, 1024);
     try {
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2).buildHDFS();
       cluster.waitActive();
 
       //change root permission to 777

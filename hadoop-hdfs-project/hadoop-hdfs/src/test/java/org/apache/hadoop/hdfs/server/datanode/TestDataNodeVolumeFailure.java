@@ -40,6 +40,7 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.net.TcpPeerServer;
 import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
@@ -62,7 +63,7 @@ import org.junit.Test;
  */
 public class TestDataNodeVolumeFailure {
   final private int block_size = 512;
-  MiniDFSCluster cluster = null;
+  MiniHDFSCluster cluster = null;
   private Configuration conf;
   int dn_num = 2;
   int blocks_num = 30;
@@ -86,7 +87,7 @@ public class TestDataNodeVolumeFailure {
     conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, block_size);
     // Allow a single volume failure (there are two volumes)
     conf.setInt(DFSConfigKeys.DFS_DATANODE_FAILED_VOLUMES_TOLERATED_KEY, 1);
-    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(dn_num).build();
+    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(dn_num).buildHDFS();
     cluster.waitActive();
   }
 
@@ -130,7 +131,7 @@ public class TestDataNodeVolumeFailure {
     // fail the volume
     // delete/make non-writable one of the directories (failed volume)
     data_fail = new File(dataDir, "data3");
-    failedDir = MiniDFSCluster.getFinalizedDir(dataDir, 
+    failedDir = MiniHDFSCluster.getFinalizedDir(dataDir, 
         cluster.getNamesystem().getBlockPoolId());
     if (failedDir.exists() &&
         //!FileUtil.fullyDelete(failedDir)
@@ -339,7 +340,7 @@ public class TestDataNodeVolumeFailure {
     for(int i=0; i<dn_num; i++) {
       for(int j=0; j<=1; j++) {
         File storageDir = cluster.getInstanceStorageDir(i, j);
-        File dir = MiniDFSCluster.getFinalizedDir(storageDir, bpid);
+        File dir = MiniHDFSCluster.getFinalizedDir(storageDir, bpid);
         if(dir == null) {
           System.out.println("dir is null for dn=" + i + " and data_dir=" + j);
           continue;

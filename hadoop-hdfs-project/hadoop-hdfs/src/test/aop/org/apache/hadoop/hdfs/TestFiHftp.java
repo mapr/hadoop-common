@@ -83,7 +83,7 @@ public class TestFiHftp {
     final Configuration conf = new Configuration();
     MiniDFSCluster cluster = null;
     try {
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(DATANODE_NUM).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(DATANODE_NUM).buildHDFS();
       cluster.waitActive();
 
       //test with a file

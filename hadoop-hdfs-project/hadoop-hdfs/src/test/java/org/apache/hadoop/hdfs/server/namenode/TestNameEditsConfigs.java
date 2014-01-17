@@ -38,6 +38,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.server.namenode.NNStorage.NameNodeDirType;
 import org.junit.Before;
 import org.junit.Test;
@@ -144,7 +145,7 @@ public class TestNameEditsConfigs {
     Path file1 = new Path("TestNameEditsConfigs1");
     Path file2 = new Path("TestNameEditsConfigs2");
     Path file3 = new Path("TestNameEditsConfigs3");
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     SecondaryNameNode secondary = null;
     Configuration conf = null;
     FileSystem fileSys = null;
@@ -179,7 +180,7 @@ public class TestNameEditsConfigs {
     // Manage our own dfs directories
     cluster = new MiniDFSCluster.Builder(conf)
                                 .numDataNodes(NUM_DATA_NODES)
-                                .manageNameDfsDirs(false).build();
+                                .manageNameDfsDirs(false).buildHDFS();
 
     cluster.waitActive();
     secondary = startSecondaryNameNode(conf);
@@ -214,7 +215,7 @@ public class TestNameEditsConfigs {
     cluster = new MiniDFSCluster.Builder(conf).numDataNodes(NUM_DATA_NODES)
                                               .format(false)
                                               .manageNameDfsDirs(false)
-                                              .build();
+                                              .buildHDFS();
 
     cluster.waitActive();
     secondary = startSecondaryNameNode(conf);
@@ -249,7 +250,7 @@ public class TestNameEditsConfigs {
                                 .numDataNodes(NUM_DATA_NODES)
                                 .format(false)
                                 .manageNameDfsDirs(false)
-                                .build();
+                                .buildHDFS();
 
     cluster.waitActive();
     secondary = startSecondaryNameNode(conf);
@@ -293,7 +294,7 @@ public class TestNameEditsConfigs {
                                 .numDataNodes(NUM_DATA_NODES)
                                 .format(false)
                                 .manageNameDfsDirs(false)
-                                .build();
+                                .buildHDFS();
     cluster.waitActive();
     secondary = startSecondaryNameNode(conf);
     fileSys = cluster.getFileSystem();
@@ -330,7 +331,7 @@ public class TestNameEditsConfigs {
    */
   @Test
   public void testNameEditsRequiredConfigs() throws IOException {
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     File nameAndEditsDir = new File(base_dir, "name_and_edits");
     File nameAndEditsDir2 = new File(base_dir, "name_and_edits2");
     File nameDir = new File(base_dir, "name");
@@ -351,7 +352,7 @@ public class TestNameEditsConfigs {
       cluster = new MiniDFSCluster.Builder(conf)
           .numDataNodes(NUM_DATA_NODES)
           .manageNameDfsDirs(false)
-          .build();
+          .buildHDFS();
       fail("Successfully started cluster but should not have been able to.");
     } catch (IllegalArgumentException iae) { // expect to fail
       LOG.info("EXPECTED: cluster start failed due to bad configuration" + iae);
@@ -379,7 +380,7 @@ public class TestNameEditsConfigs {
       cluster = new MiniDFSCluster.Builder(conf)
           .numDataNodes(NUM_DATA_NODES)
           .manageNameDfsDirs(false)
-          .build();
+          .buildHDFS();
     } finally {
       if (cluster != null) {
         cluster.shutdown();
@@ -400,7 +401,7 @@ public class TestNameEditsConfigs {
       cluster = new MiniDFSCluster.Builder(conf)
           .numDataNodes(NUM_DATA_NODES)
           .manageNameDfsDirs(false)
-          .build();
+          .buildHDFS();
     } finally {
       if (cluster != null) {
         cluster.shutdown();
@@ -425,7 +426,7 @@ public class TestNameEditsConfigs {
     Path file1 = new Path("TestNameEditsConfigs1");
     Path file2 = new Path("TestNameEditsConfigs2");
     Path file3 = new Path("TestNameEditsConfigs3");
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     Configuration conf = null;
     FileSystem fileSys = null;
     File nameOnlyDir = new File(base_dir, "name");
@@ -444,7 +445,7 @@ public class TestNameEditsConfigs {
       cluster = new MiniDFSCluster.Builder(conf)
                                   .numDataNodes(NUM_DATA_NODES)
                                   .manageNameDfsDirs(false)
-                                  .build();
+                                  .buildHDFS();
       cluster.waitActive();
       
       // Check that the dir has a VERSION file
@@ -478,7 +479,7 @@ public class TestNameEditsConfigs {
                                   .numDataNodes(NUM_DATA_NODES)
                                   .format(false)
                                   .manageNameDfsDirs(false)
-                                  .build();
+                                  .buildHDFS();
       cluster.waitActive();
   
       // Check that the dirs have a VERSION file
@@ -510,7 +511,7 @@ public class TestNameEditsConfigs {
                                   .numDataNodes(NUM_DATA_NODES)
                                   .format(false)
                                   .manageNameDfsDirs(false)
-                                  .build();
+                                  .buildHDFS();
       cluster.waitActive();
       fileSys = cluster.getFileSystem();
 
@@ -537,7 +538,7 @@ public class TestNameEditsConfigs {
                                   .numDataNodes(NUM_DATA_NODES)
                                   .format(false)
                                   .manageNameDfsDirs(false)
-                                  .build();
+                                  .buildHDFS();
       fail("Successfully started cluster but should not have been able to.");
     } catch (IOException e) { // expect to fail
       LOG.info("EXPECTED: cluster start failed due to missing " +
@@ -563,7 +564,7 @@ public class TestNameEditsConfigs {
                                   .numDataNodes(NUM_DATA_NODES)
                                   .format(false)
                                   .manageNameDfsDirs(false)
-                                  .build();
+                                  .buildHDFS();
       
       fileSys = cluster.getFileSystem();
       
@@ -586,7 +587,7 @@ public class TestNameEditsConfigs {
    */
   @Test
   public void testCheckPointDirsAreTrimmed() throws Exception {
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     SecondaryNameNode secondary = null;
     File checkpointNameDir1 = new File(base_dir, "chkptName1");
     File checkpointEditsDir1 = new File(base_dir, "chkptEdits1");
@@ -603,7 +604,7 @@ public class TestNameEditsConfigs {
         whiteSpace + checkpointEditsDir1.getPath() + whiteSpace, whiteSpace
             + checkpointEditsDir2.getPath() + whiteSpace);
     cluster = new MiniDFSCluster.Builder(conf).manageNameDfsDirs(false)
-        .numDataNodes(3).build();
+        .numDataNodes(3).buildHDFS();
     try {
       cluster.waitActive();
       secondary = startSecondaryNameNode(conf);

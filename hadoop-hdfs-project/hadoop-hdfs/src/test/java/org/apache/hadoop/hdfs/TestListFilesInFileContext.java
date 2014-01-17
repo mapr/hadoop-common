@@ -53,7 +53,7 @@ public class TestListFilesInFileContext {
   static final long seed = 0xDEADBEEFL;
 
   final private static Configuration conf = new Configuration();
-  private static MiniDFSCluster cluster;
+  private static MiniHDFSCluster cluster;
   private static FileContext fc;
   final private static Path TEST_DIR = new Path("/main_");
   final private static int FILE_LEN = 10;
@@ -64,7 +64,7 @@ public class TestListFilesInFileContext {
 
   @BeforeClass
   public static void testSetUp() throws Exception {
-    cluster = new MiniDFSCluster.Builder(conf).build();
+    cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
     fc = FileContext.getFileContext(cluster.getConfiguration(0));
     fc.delete(TEST_DIR, true);
   }

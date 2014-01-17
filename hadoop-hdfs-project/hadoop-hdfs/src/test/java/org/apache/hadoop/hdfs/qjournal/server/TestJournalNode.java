@@ -33,7 +33,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSTestUtil;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 import org.apache.hadoop.hdfs.qjournal.QJMTestUtil;
 import org.apache.hadoop.hdfs.qjournal.client.IPCLoggerChannel;
@@ -76,7 +76,7 @@ public class TestJournalNode {
   
   @Before
   public void setup() throws Exception {
-    File editsDir = new File(MiniDFSCluster.getBaseDirectory() +
+    File editsDir = new File(MiniHDFSCluster.getBaseDirectory() +
         File.separator + "TestJournalNode");
     FileUtil.fullyDelete(editsDir);
     

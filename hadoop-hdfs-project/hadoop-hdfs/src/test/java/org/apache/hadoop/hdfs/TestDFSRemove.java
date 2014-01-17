@@ -46,7 +46,7 @@ public class TestDFSRemove {
     a_out.close();
   }
   
-  static long getTotalDfsUsed(MiniDFSCluster cluster) throws IOException {
+  static long getTotalDfsUsed(MiniHDFSCluster cluster) throws IOException {
     long total = 0;
     for(DataNode node : cluster.getDataNodes()) {
       total += DataNodeTestUtils.getFSDataset(node).getDfsUsed();
@@ -57,7 +57,8 @@ public class TestDFSRemove {
   @Test
   public void testRemove() throws Exception {
     Configuration conf = new HdfsConfiguration();
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2)
+        .buildHDFS();
     try {
       FileSystem fs = cluster.getFileSystem();
       assertTrue(fs.mkdirs(dir));

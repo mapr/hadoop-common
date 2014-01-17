@@ -149,7 +149,8 @@ public class TestMultiThreadedHflush {
    * The hflushing threads should eventually catch an IOException stating that the stream
    * was closed -- and not an NPE or anything like that.
    */
-  @Test
+  // mapr_fix
+  @Test(timeout=120000)
   public void testHflushWhileClosing() throws Throwable {
     Configuration conf = new Configuration();
     MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).build();

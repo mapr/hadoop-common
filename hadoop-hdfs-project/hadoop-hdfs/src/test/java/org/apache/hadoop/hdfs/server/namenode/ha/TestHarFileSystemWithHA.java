@@ -28,6 +28,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.junit.Test;
 
 public class TestHarFileSystemWithHA {
@@ -41,12 +42,12 @@ public class TestHarFileSystemWithHA {
   @Test
   public void testHarUriWithHaUriWithNoPort() throws Exception {
     Configuration conf = new HdfsConfiguration();
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
       cluster = new MiniDFSCluster.Builder(conf)
           .numDataNodes(1)
           .nnTopology(MiniDFSNNTopology.simpleHATopology())
-          .build();
+          .buildHDFS();
       cluster.transitionToActive(0);
       HATestUtil.setFailoverConfigurations(cluster, conf);
       

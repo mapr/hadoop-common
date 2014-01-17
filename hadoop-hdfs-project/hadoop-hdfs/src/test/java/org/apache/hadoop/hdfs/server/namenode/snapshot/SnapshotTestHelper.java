@@ -42,7 +42,7 @@ import org.apache.hadoop.fs.UnresolvedLinkException;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 import org.apache.hadoop.hdfs.server.blockmanagement.BlockInfo;
 import org.apache.hadoop.hdfs.server.blockmanagement.BlockInfoUnderConstruction;
@@ -471,7 +471,7 @@ public class SnapshotTestHelper {
     }
   }
   
-  public static void dumpTree(String message, MiniDFSCluster cluster
+  public static void dumpTree(String message, MiniHDFSCluster cluster
       ) throws UnresolvedLinkException {
     System.out.println("XXX " + message);
     cluster.getNameNode().getNamesystem().getFSDirectory().getINode("/"

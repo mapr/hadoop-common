@@ -80,11 +80,11 @@ public class TestFileAppendRestart {
     conf.setInt(
         CommonConfigurationKeysPublic.IPC_CLIENT_CONNECTION_MAXIDLETIME_KEY,
         0);
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
 
     FSDataOutputStream stream = null;
     try {
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1).buildHDFS();
       FileSystem fs = cluster.getFileSystem();
       File editLog =
         new File(FSImageTestUtil.getNameNodeCurrentDirs(cluster, 0).get(0),
@@ -181,12 +181,12 @@ public class TestFileAppendRestart {
   @Test
   public void testAppendWithPipelineRecovery() throws Exception {
     Configuration conf = new Configuration();
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
       cluster = new MiniDFSCluster.Builder(conf).manageDataDfsDirs(true)
           .manageNameDfsDirs(true).numDataNodes(4)
           .racks(new String[] { "/rack1", "/rack1", "/rack1", "/rack2" })
-          .build();
+          .buildHDFS();
       cluster.waitActive();
 
       DistributedFileSystem fs = cluster.getFileSystem();

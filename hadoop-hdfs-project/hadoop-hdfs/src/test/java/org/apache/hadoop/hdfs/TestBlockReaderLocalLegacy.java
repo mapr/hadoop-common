@@ -78,8 +78,8 @@ public class TestBlockReaderLocalLegacy {
     final long FILE_LENGTH = 512L;
     
     HdfsConfiguration conf = getConfiguration(null);
-    MiniDFSCluster cluster =
-        new MiniDFSCluster.Builder(conf).numDataNodes(1).build();
+    MiniHDFSCluster cluster =
+        new MiniDFSCluster.Builder(conf).numDataNodes(1).buildHDFS();
     cluster.waitActive();
     FileSystem fs = cluster.getFileSystem();
 

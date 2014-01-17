@@ -19,8 +19,8 @@
 package org.apache.hadoop.hdfs.server.namenode;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.FileNotFoundException;
@@ -52,6 +52,7 @@ import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.protocol.DirectoryListing;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.apache.hadoop.hdfs.protocol.LocatedBlocks;
@@ -186,10 +187,10 @@ public class TestINodeFile {
     long fileLen = 1024;
     replication = 3;
     Configuration conf = new Configuration();
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
       cluster =
-          new MiniDFSCluster.Builder(conf).numDataNodes(replication).build();
+          new MiniDFSCluster.Builder(conf).numDataNodes(replication).buildHDFS();
       cluster.waitActive();
       FSNamesystem fsn = cluster.getNamesystem();
       FSDirectory fsdir = fsn.getFSDirectory();
@@ -379,9 +380,9 @@ public class TestINodeFile {
     Configuration conf = new Configuration();
     conf.setInt(DFSConfigKeys.DFS_BLOCK_SIZE_KEY,
         DFSConfigKeys.DFS_BYTES_PER_CHECKSUM_DEFAULT);
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1).buildHDFS();
       cluster.waitActive();
 
       FSNamesystem fsn = cluster.getNamesystem();
@@ -491,8 +492,8 @@ public class TestINodeFile {
   @Test
   public void testWriteToRenamedFile() throws IOException {
     Configuration conf = new Configuration();
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1)
-        .build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1)
+        .buildHDFS();
     cluster.waitActive();
     FileSystem fs = cluster.getFileSystem();
 
@@ -545,9 +546,9 @@ public class TestINodeFile {
     Configuration conf = new Configuration();
     conf.setInt(DFSConfigKeys.DFS_BLOCK_SIZE_KEY,
         DFSConfigKeys.DFS_BYTES_PER_CHECKSUM_DEFAULT);
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1).buildHDFS();
       cluster.waitActive();
       DistributedFileSystem fs = cluster.getFileSystem();
       NamenodeProtocols nnRpc = cluster.getNameNodeRpc();
@@ -706,10 +707,10 @@ public class TestINodeFile {
   @Test
   public void testReservedFileNames() throws IOException {
     Configuration conf = new Configuration();
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
       // First start a cluster with reserved file names check turned off
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1).buildHDFS();
       cluster.waitActive();
       FileSystem fs = cluster.getFileSystem();
       
@@ -756,7 +757,7 @@ public class TestINodeFile {
     }
   }
   
-  private void ensureReservedFileNamesCannotBeLoaded(MiniDFSCluster cluster)
+  private void ensureReservedFileNamesCannotBeLoaded(MiniHDFSCluster cluster)
       throws IOException {
     // Turn on reserved file name checking. Loading of edits should fail
     FSDirectory.CHECK_RESERVED_FILE_NAMES = true;
@@ -771,7 +772,7 @@ public class TestINodeFile {
     ensureClusterRestartFails(cluster);
   }
   
-  private void ensureClusterRestartFails(MiniDFSCluster cluster) {
+  private void ensureClusterRestartFails(MiniHDFSCluster cluster) {
     try {
       cluster.restartNameNode();
       fail("Cluster should not have successfully started");
@@ -781,7 +782,7 @@ public class TestINodeFile {
     assertFalse(cluster.isClusterUp());
   }
   
-  private void ensureClusterRestartSucceeds(MiniDFSCluster cluster)
+  private void ensureClusterRestartSucceeds(MiniHDFSCluster cluster)
       throws IOException {
     cluster.restartNameNode();
     cluster.waitActive();
@@ -899,9 +900,9 @@ public class TestINodeFile {
   @Test
   public void testDotdotInodePath() throws Exception {
     final Configuration conf = new Configuration();
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1).buildHDFS();
       cluster.waitActive();
       final DistributedFileSystem hdfs = cluster.getFileSystem();
       final FSDirectory fsdir = cluster.getNamesystem().getFSDirectory();

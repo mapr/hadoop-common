@@ -35,6 +35,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CreateFlag;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.apache.hadoop.hdfs.protocol.LocatedBlocks;
 import org.apache.hadoop.hdfs.server.blockmanagement.BlockManager;
@@ -59,7 +60,7 @@ public class TestAddBlockRetry {
   private static final short REPLICATION = 3;
 
   private Configuration conf;
-  private MiniDFSCluster cluster;
+  private MiniHDFSCluster cluster;
 
   private int count = 0;
   private LocatedBlock lb1;
@@ -70,7 +71,7 @@ public class TestAddBlockRetry {
     conf = new Configuration();
     cluster = new MiniDFSCluster.Builder(conf)
       .numDataNodes(REPLICATION)
-      .build();
+      .buildHDFS();
     cluster.waitActive();
   }
 

@@ -41,6 +41,7 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants.SafeModeAction;
 import org.apache.hadoop.hdfs.server.common.HdfsServerConstants.NamenodeRole;
 import org.apache.hadoop.hdfs.server.common.Storage.StorageDirectory;
@@ -64,7 +65,7 @@ public class TestEditLogRace {
   private static final Log LOG = LogFactory.getLog(TestEditLogRace.class);
 
   private static final String NAME_DIR =
-    MiniDFSCluster.getBaseDirectory() + "name1";
+    MiniHDFSCluster.getBaseDirectory() + "name1";
 
   // This test creates NUM_THREADS threads and each thread continuously writes
   // transactions
@@ -174,13 +175,14 @@ public class TestEditLogRace {
   public void testEditLogRolling() throws Exception {
     // start a cluster 
     Configuration conf = new HdfsConfiguration();
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     FileSystem fileSys = null;
 
 
     AtomicReference<Throwable> caughtErr = new AtomicReference<Throwable>();
     try {
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(NUM_DATA_NODES).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(NUM_DATA_NODES)
+          .buildHDFS();
       cluster.waitActive();
       fileSys = cluster.getFileSystem();
       final FSNamesystem namesystem = cluster.getNamesystem();
@@ -255,12 +257,12 @@ public class TestEditLogRace {
   public void testSaveNamespace() throws Exception {
     // start a cluster 
     Configuration conf = new HdfsConfiguration();
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     FileSystem fileSys = null;
 
     AtomicReference<Throwable> caughtErr = new AtomicReference<Throwable>();
     try {
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(NUM_DATA_NODES).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(NUM_DATA_NODES).buildHDFS();
       cluster.waitActive();
       fileSys = cluster.getFileSystem();
       final FSNamesystem namesystem = cluster.getNamesystem();

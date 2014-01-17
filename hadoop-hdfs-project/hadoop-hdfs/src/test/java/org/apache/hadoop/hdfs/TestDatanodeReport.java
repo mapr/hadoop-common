@@ -45,8 +45,9 @@ public class TestDatanodeReport {
     conf.setInt(
         DFSConfigKeys.DFS_NAMENODE_HEARTBEAT_RECHECK_INTERVAL_KEY, 500); // 0.5s
     conf.setLong(DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_KEY, 1L);
-    MiniDFSCluster cluster = 
-      new MiniDFSCluster.Builder(conf).numDataNodes(NUM_OF_DATANODES).build();
+    MiniHDFSCluster cluster = 
+      new MiniDFSCluster.Builder(conf).numDataNodes(NUM_OF_DATANODES)
+      .buildHDFS();
     try {
       //wait until the cluster is up
       cluster.waitActive();

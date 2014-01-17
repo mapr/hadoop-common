@@ -19,9 +19,9 @@ package org.apache.hadoop.hdfs;
 
 import static org.apache.hadoop.hdfs.server.common.HdfsServerConstants.NodeType.DATA_NODE;
 import static org.apache.hadoop.hdfs.server.common.HdfsServerConstants.NodeType.NAME_NODE;
-import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.File;
@@ -55,7 +55,7 @@ public class TestDFSRollback {
                                                    "org.apache.hadoop.hdfs.TestDFSRollback");
   private Configuration conf;
   private int testCounter = 0;
-  private MiniDFSCluster cluster = null;
+  private MiniHDFSCluster cluster = null;
   
   /**
    * Writes an INFO log message containing the parameters.
@@ -107,7 +107,7 @@ public class TestDFSRollback {
                                                 .format(false)
                                                 .manageDataDfsDirs(false)
                                                 .manageNameDfsDirs(false)
-                                                .build(); // should fail
+                                                .buildHDFS(); // should fail
       throw new AssertionError("NameNode should have failed to start");
     } catch (Exception expected) {
       if (!expected.getMessage().contains(searchString)) {
@@ -157,7 +157,7 @@ public class TestDFSRollback {
                                                 .manageDataDfsDirs(false)
                                                 .manageNameDfsDirs(false)
                                                 .startupOption(StartupOption.ROLLBACK)
-                                                .build();
+                                                .buildHDFS();
       checkResult(NAME_NODE, nameNodeDirs);
       cluster.shutdown();
       UpgradeUtilities.createEmptyDirs(nameNodeDirs);
@@ -170,7 +170,7 @@ public class TestDFSRollback {
                                                 .manageDataDfsDirs(false)
                                                 .manageNameDfsDirs(false)
                                                 .startupOption(StartupOption.ROLLBACK)
-                                                .build();
+                                                .buildHDFS();
       UpgradeUtilities.createDataNodeStorageDirs(dataNodeDirs, "current");
       UpgradeUtilities.createDataNodeStorageDirs(dataNodeDirs, "previous");
       cluster.startDataNodes(conf, 1, false, StartupOption.ROLLBACK, null);
@@ -187,7 +187,7 @@ public class TestDFSRollback {
                                                 .manageDataDfsDirs(false)
                                                 .manageNameDfsDirs(false)
                                                 .startupOption(StartupOption.ROLLBACK)
-                                                .build();
+                                                .buildHDFS();
       UpgradeUtilities.createDataNodeStorageDirs(dataNodeDirs, "current");
       UpgradeUtilities.createBlockPoolStorageDirs(dataNodeDirs, "current",
           UpgradeUtilities.getCurrentBlockPoolID(cluster));
@@ -230,7 +230,7 @@ public class TestDFSRollback {
                                                 .manageDataDfsDirs(false)
                                                 .manageNameDfsDirs(false)
                                                 .startupOption(StartupOption.UPGRADE)
-                                                .build();
+                                                .buildHDFS();
       UpgradeUtilities.createDataNodeStorageDirs(dataNodeDirs, "current");
       cluster.startDataNodes(conf, 1, false, StartupOption.ROLLBACK, null);
       cluster.shutdown();
@@ -245,7 +245,7 @@ public class TestDFSRollback {
                                                 .manageDataDfsDirs(false)
                                                 .manageNameDfsDirs(false)
                                                 .startupOption(StartupOption.ROLLBACK)
-                                                .build();
+                                                .buildHDFS();
       UpgradeUtilities.createDataNodeStorageDirs(dataNodeDirs, "current");
       baseDirs = UpgradeUtilities.createDataNodeStorageDirs(dataNodeDirs, "previous");
       storageInfo = new StorageInfo(Integer.MIN_VALUE, 
@@ -270,7 +270,7 @@ public class TestDFSRollback {
                                                 .manageDataDfsDirs(false)
                                                 .manageNameDfsDirs(false)
                                                 .startupOption(StartupOption.ROLLBACK)
-                                                .build();
+                                                .buildHDFS();
       
       UpgradeUtilities.createDataNodeStorageDirs(dataNodeDirs, "current");
       baseDirs = UpgradeUtilities.createDataNodeStorageDirs(dataNodeDirs, "previous");

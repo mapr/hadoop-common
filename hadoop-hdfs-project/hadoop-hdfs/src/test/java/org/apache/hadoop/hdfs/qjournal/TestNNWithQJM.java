@@ -33,6 +33,7 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.server.namenode.NameNode;
 import org.apache.hadoop.ipc.RemoteException;
 import org.apache.hadoop.test.GenericTestUtils;
@@ -68,14 +69,14 @@ public class TestNNWithQJM {
   @Test (timeout = 30000)
   public void testLogAndRestart() throws IOException {
     conf.set(DFSConfigKeys.DFS_NAMENODE_NAME_DIR_KEY,
-        MiniDFSCluster.getBaseDirectory() + "/TestNNWithQJM/image");
+        MiniHDFSCluster.getBaseDirectory() + "/TestNNWithQJM/image");
     conf.set(DFSConfigKeys.DFS_NAMENODE_EDITS_DIR_KEY,
         mjc.getQuorumJournalURI("myjournal").toString());
     
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
       .numDataNodes(0)
       .manageNameDfsDirs(false)
-      .build();
+      .buildHDFS();
     try {
       cluster.getFileSystem().mkdirs(TEST_PATH);
       
@@ -98,9 +99,9 @@ public class TestNNWithQJM {
   @Test (timeout = 30000)
   public void testNewNamenodeTakesOverWriter() throws Exception {
     File nn1Dir = new File(
-        MiniDFSCluster.getBaseDirectory() + "/TestNNWithQJM/image-nn1");
+        MiniHDFSCluster.getBaseDirectory() + "/TestNNWithQJM/image-nn1");
     File nn2Dir = new File(
-        MiniDFSCluster.getBaseDirectory() + "/TestNNWithQJM/image-nn2");
+        MiniHDFSCluster.getBaseDirectory() + "/TestNNWithQJM/image-nn2");
     
     conf.set(DFSConfigKeys.DFS_NAMENODE_NAME_DIR_KEY,
         nn1Dir.getAbsolutePath());
@@ -108,11 +109,11 @@ public class TestNNWithQJM {
         mjc.getQuorumJournalURI("myjournal").toString());
 
     // Start the cluster once to generate the dfs dirs
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
       .numDataNodes(0)
       .manageNameDfsDirs(false)
       .checkExitOnShutdown(false)
-      .build();
+      .buildHDFS();
 
     // Shutdown the cluster before making a copy of the namenode dir
     // to release all file locks, otherwise, the copy will fail on
@@ -133,7 +134,7 @@ public class TestNNWithQJM {
         .format(false)
         .manageNameDfsDirs(false)
         .checkExitOnShutdown(false)
-        .build();
+        .buildHDFS();
 
       cluster.getFileSystem().mkdirs(TEST_PATH);
 
@@ -142,11 +143,11 @@ public class TestNNWithQJM {
           nn2Dir.getAbsolutePath());
       conf2.set(DFSConfigKeys.DFS_NAMENODE_EDITS_DIR_KEY,
           mjc.getQuorumJournalURI("myjournal").toString());
-      MiniDFSCluster cluster2 = new MiniDFSCluster.Builder(conf2)
+      MiniHDFSCluster cluster2 = new MiniDFSCluster.Builder(conf2)
         .numDataNodes(0)
         .format(false)
         .manageNameDfsDirs(false)
-        .build();
+        .buildHDFS();
       
       // Check that the new cluster sees the edits made on the old cluster
       try {
@@ -172,16 +173,16 @@ public class TestNNWithQJM {
   @Test (timeout = 30000)
   public void testMismatchedNNIsRejected() throws Exception {
     conf.set(DFSConfigKeys.DFS_NAMENODE_NAME_DIR_KEY,
-        MiniDFSCluster.getBaseDirectory() + "/TestNNWithQJM/image");
+        MiniHDFSCluster.getBaseDirectory() + "/TestNNWithQJM/image");
     conf.set(DFSConfigKeys.DFS_NAMENODE_EDITS_DIR_KEY,
         mjc.getQuorumJournalURI("myjournal").toString());
     
     // Start a NN, so the storage is formatted -- both on-disk
     // and QJM.
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
       .numDataNodes(0)
       .manageNameDfsDirs(false)
-      .build();
+      .buildHDFS();
     cluster.shutdown();
     
     // Reformat just the on-disk portion
@@ -196,7 +197,7 @@ public class TestNNWithQJM {
         .numDataNodes(0)
         .manageNameDfsDirs(false)
         .format(false)
-        .build();
+        .buildHDFS();
       fail("New NN with different namespace should have been rejected");
     } catch (IOException ioe) {
       GenericTestUtils.assertExceptionContains(
@@ -207,17 +208,17 @@ public class TestNNWithQJM {
   @Test (timeout = 30000)
   public void testWebPageHasQjmInfo() throws Exception {
     conf.set(DFSConfigKeys.DFS_NAMENODE_NAME_DIR_KEY,
-        MiniDFSCluster.getBaseDirectory() + "/TestNNWithQJM/image");
+        MiniHDFSCluster.getBaseDirectory() + "/TestNNWithQJM/image");
     conf.set(DFSConfigKeys.DFS_NAMENODE_EDITS_DIR_KEY,
         mjc.getQuorumJournalURI("myjournal").toString());
     // Speed up the test
     conf.setInt(
         CommonConfigurationKeysPublic.IPC_CLIENT_CONNECT_MAX_RETRIES_KEY, 1);
     
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
       .numDataNodes(0)
       .manageNameDfsDirs(false)
-      .build();
+      .buildHDFS();
     try {
       URL url = new URL("http://localhost:"
           + NameNode.getHttpAddress(cluster.getConfiguration(0)).getPort()

@@ -137,7 +137,7 @@ public class TestDatanodeBlockScanner {
     long startTime = Time.now();
     
     Configuration conf = new HdfsConfiguration();
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
     cluster.waitActive();
     
     FileSystem fs = cluster.getFileSystem();
@@ -152,7 +152,7 @@ public class TestDatanodeBlockScanner {
 
     cluster = new MiniDFSCluster.Builder(conf)
                                 .numDataNodes(1)
-                                .format(false).build();
+                                .format(false).buildHDFS();
     cluster.waitActive();
     
     DFSClient dfsClient =  new DFSClient(new InetSocketAddress("localhost", 
@@ -180,7 +180,7 @@ public class TestDatanodeBlockScanner {
   }
 
   public static boolean corruptReplica(ExtendedBlock blk, int replica) throws IOException {
-    return MiniDFSCluster.corruptReplica(replica, blk);
+    return MiniHDFSCluster.corruptReplica(replica, blk);
   }
 
   @Test
@@ -191,7 +191,8 @@ public class TestDatanodeBlockScanner {
     FileSystem fs = null;
     int rand = random.nextInt(3);
 
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3)
+        .buildHDFS();
     cluster.waitActive();
     fs = cluster.getFileSystem();
     Path file1 = new Path("/tmp/testBlockVerification/file1");
@@ -202,7 +203,7 @@ public class TestDatanodeBlockScanner {
     assertFalse(DFSTestUtil.allBlockReplicasCorrupt(cluster, file1, 0));
 
     // Corrupt random replica of block 
-    assertTrue(MiniDFSCluster.corruptReplica(rand, block));
+    assertTrue(MiniHDFSCluster.corruptReplica(rand, block));
 
     // Restart the datanode hoping the corrupt block to be reported
     cluster.restartDataNode(rand);
@@ -213,9 +214,9 @@ public class TestDatanodeBlockScanner {
   
     // Corrupt all replicas. Now, block should be marked as corrupt
     // and we should get all the replicas 
-    assertTrue(MiniDFSCluster.corruptReplica(0, block));
-    assertTrue(MiniDFSCluster.corruptReplica(1, block));
-    assertTrue(MiniDFSCluster.corruptReplica(2, block));
+    assertTrue(MiniHDFSCluster.corruptReplica(0, block));
+    assertTrue(MiniHDFSCluster.corruptReplica(1, block));
+    assertTrue(MiniHDFSCluster.corruptReplica(2, block));
 
     // Trigger each of the DNs to scan this block immediately.
     // The block pool scanner doesn't run frequently enough on its own
@@ -273,7 +274,8 @@ public class TestDatanodeBlockScanner {
     conf.setBoolean(DFSConfigKeys.DFS_NAMENODE_REPLICATION_CONSIDERLOAD_KEY, false);
     conf.setLong(DFSConfigKeys.DFS_NAMENODE_REPLICATION_PENDING_TIMEOUT_SEC_KEY, 5L);
 
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(numDataNodes).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+        .numDataNodes(numDataNodes).buildHDFS();
     cluster.waitActive();
     FileSystem fs = cluster.getFileSystem();
     Path file1 = new Path("/tmp/testBlockCorruptRecovery/file");
@@ -345,9 +347,9 @@ public class TestDatanodeBlockScanner {
     conf.setBoolean(DFSConfigKeys.DFS_NAMENODE_REPLICATION_CONSIDERLOAD_KEY, false);
 
     long startTime = Time.now();
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
                                                .numDataNodes(REPLICATION_FACTOR)
-                                               .build();
+                                               .buildHDFS();
     cluster.waitActive();
     
     ExtendedBlock block;
@@ -365,7 +367,7 @@ public class TestDatanodeBlockScanner {
     cluster = new MiniDFSCluster.Builder(conf)
                                 .numDataNodes(REPLICATION_FACTOR)
                                 .format(false)
-                                .build();
+                                .buildHDFS();
     cluster.waitActive();
     try {
       FileSystem fs = cluster.getFileSystem();
@@ -387,7 +389,7 @@ public class TestDatanodeBlockScanner {
     cluster = new MiniDFSCluster.Builder(conf)
                                 .numDataNodes(REPLICATION_FACTOR)
                                 .format(false)
-                                .build();
+                                .buildHDFS();
     cluster.startDataNodes(conf, 1, true, null, null);
     cluster.waitActive();  // now we have 3 datanodes
 
@@ -414,7 +416,7 @@ public class TestDatanodeBlockScanner {
    */
   static boolean changeReplicaLength(ExtendedBlock blk, int dnIndex,
       int lenDelta) throws IOException {
-    File blockFile = MiniDFSCluster.getBlockFile(dnIndex, blk);
+    File blockFile = MiniHDFSCluster.getBlockFile(dnIndex, blk);
     if (blockFile != null && blockFile.exists()) {
       RandomAccessFile raFile = new RandomAccessFile(blockFile, "rw");
       raFile.setLength(raFile.length()+lenDelta);
@@ -427,7 +429,7 @@ public class TestDatanodeBlockScanner {
   
   private static void waitForBlockDeleted(ExtendedBlock blk, int dnIndex,
       long timeout) throws TimeoutException, InterruptedException {
-    File blockFile = MiniDFSCluster.getBlockFile(dnIndex, blk);
+    File blockFile = MiniHDFSCluster.getBlockFile(dnIndex, blk);
     long failtime = Time.now() 
                     + ((timeout > 0) ? timeout : Long.MAX_VALUE);
     while (blockFile != null && blockFile.exists()) {
@@ -436,7 +438,7 @@ public class TestDatanodeBlockScanner {
             + blockFile.getPath() + (blockFile.exists() ? " still exists; " : " is absent; "));
       }
       Thread.sleep(100);
-      blockFile = MiniDFSCluster.getBlockFile(dnIndex, blk);
+      blockFile = MiniHDFSCluster.getBlockFile(dnIndex, blk);
     }
   }
   
@@ -463,8 +465,8 @@ public class TestDatanodeBlockScanner {
   @Test
   public void testDuplicateScans() throws Exception {
     long startTime = Time.now();
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(new Configuration())
-        .numDataNodes(1).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(new Configuration())
+        .numDataNodes(1).buildHDFS();
     FileSystem fs = null;
     try {
       fs = cluster.getFileSystem();

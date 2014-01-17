@@ -30,7 +30,8 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.apache.hadoop.hdfs.MiniDFSCluster.DataNodeProperties;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster.DataNodeProperties;
 import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
 import org.apache.hadoop.hdfs.server.blockmanagement.NumberReplicas;
 import org.junit.Test;
@@ -57,7 +58,8 @@ public class TestProcessCorruptBlocks {
     Configuration conf = new HdfsConfiguration();
     conf.setLong(DFSConfigKeys.DFS_BLOCKREPORT_INTERVAL_MSEC_KEY, 1000L);
     conf.set(DFSConfigKeys.DFS_NAMENODE_REPLICATION_PENDING_TIMEOUT_SEC_KEY, Integer.toString(2));
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3)
+                             .buildHDFS();
     FileSystem fs = cluster.getFileSystem();
     final FSNamesystem namesystem = cluster.getNamesystem();
 
@@ -112,7 +114,8 @@ public class TestProcessCorruptBlocks {
     Configuration conf = new HdfsConfiguration();
     conf.setLong(DFSConfigKeys.DFS_BLOCKREPORT_INTERVAL_MSEC_KEY, 1000L);
     conf.set(DFSConfigKeys.DFS_NAMENODE_REPLICATION_PENDING_TIMEOUT_SEC_KEY, Integer.toString(2));
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(4).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(4)
+                             .buildHDFS();
     FileSystem fs = cluster.getFileSystem();
     final FSNamesystem namesystem = cluster.getNamesystem();
     DataNodeProperties dnPropsFourth = cluster.stopDataNode(3);
@@ -163,7 +166,8 @@ public class TestProcessCorruptBlocks {
     Configuration conf = new HdfsConfiguration();
     conf.setLong(DFSConfigKeys.DFS_BLOCKREPORT_INTERVAL_MSEC_KEY, 1000L);
     conf.set(DFSConfigKeys.DFS_NAMENODE_REPLICATION_PENDING_TIMEOUT_SEC_KEY, Integer.toString(2));
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2)
+                              .buildHDFS();
     FileSystem fs = cluster.getFileSystem();
     final FSNamesystem namesystem = cluster.getNamesystem();
 
@@ -217,7 +221,8 @@ public class TestProcessCorruptBlocks {
     Configuration conf = new HdfsConfiguration();
     conf.setLong(DFSConfigKeys.DFS_BLOCKREPORT_INTERVAL_MSEC_KEY, 1000L);
     conf.set(DFSConfigKeys.DFS_NAMENODE_REPLICATION_PENDING_TIMEOUT_SEC_KEY, Integer.toString(2));
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3)
+                              .buildHDFS();
     FileSystem fs = cluster.getFileSystem();
     final FSNamesystem namesystem = cluster.getNamesystem();
 
@@ -262,20 +267,20 @@ public class TestProcessCorruptBlocks {
     return namesystem.getBlockManager().countNodes(block.getLocalBlock());
   }
 
-  private void corruptBlock(MiniDFSCluster cluster, FileSystem fs, final Path fileName,
+  private void corruptBlock(MiniHDFSCluster cluster, FileSystem fs, final Path fileName,
       int dnIndex, ExtendedBlock block) throws IOException {
     // corrupt the block on datanode dnIndex
     // the indexes change once the nodes are restarted.
     // But the datadirectory will not change
-    assertTrue(MiniDFSCluster.corruptReplica(dnIndex, block));
+    assertTrue(MiniHDFSCluster.corruptReplica(dnIndex, block));
 
     DataNodeProperties dnProps = cluster.stopDataNode(0);
 
     // Each datanode has multiple data dirs, check each
     for (int dirIndex = 0; dirIndex < 2; dirIndex++) {
       final String bpid = cluster.getNamesystem().getBlockPoolId();
-      File storageDir = MiniDFSCluster.getStorageDir(dnIndex, dirIndex);
-      File dataDir = MiniDFSCluster.getFinalizedDir(storageDir, bpid);
+      File storageDir = MiniHDFSCluster.getStorageDir(dnIndex, dirIndex);
+      File dataDir = MiniHDFSCluster.getFinalizedDir(storageDir, bpid);
       File scanLogFile = new File(dataDir, "dncp_block_verification.log.curr");
       if (scanLogFile.exists()) {
         // wait for one minute for deletion to succeed;

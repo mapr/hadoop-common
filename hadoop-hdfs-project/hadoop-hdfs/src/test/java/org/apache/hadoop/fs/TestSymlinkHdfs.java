@@ -30,6 +30,7 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 import org.apache.hadoop.hdfs.protocol.QuotaExceededException;
 import org.apache.hadoop.hdfs.server.namenode.NameNode;
@@ -51,7 +52,7 @@ abstract public class TestSymlinkHdfs extends SymlinkBaseTest {
     ((Log4JLogger)NameNode.stateChangeLog).getLogger().setLevel(Level.ALL);
   }
 
-  protected static MiniDFSCluster cluster;
+  protected static MiniHDFSCluster cluster;
   protected static WebHdfsFileSystem webhdfs;
   protected static DistributedFileSystem dfs;
 
@@ -88,7 +89,7 @@ abstract public class TestSymlinkHdfs extends SymlinkBaseTest {
     Configuration conf = new HdfsConfiguration();
     conf.setBoolean(DFSConfigKeys.DFS_WEBHDFS_ENABLED_KEY, true);
     conf.set(FsPermission.UMASK_LABEL, "000");
-    cluster = new MiniDFSCluster.Builder(conf).build();
+    cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
     webhdfs = WebHdfsTestUtil.getWebHdfsFileSystem(conf);
     dfs = cluster.getFileSystem();
   }

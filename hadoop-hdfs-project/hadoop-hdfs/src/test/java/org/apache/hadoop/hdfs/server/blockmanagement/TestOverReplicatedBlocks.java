@@ -22,7 +22,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
 
 import org.apache.hadoop.conf.Configuration;
@@ -34,7 +33,8 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.apache.hadoop.hdfs.MiniDFSCluster.DataNodeProperties;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster.DataNodeProperties;
 import org.apache.hadoop.hdfs.TestDatanodeBlockScanner;
 import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.protocol.DatanodeID;
@@ -59,7 +59,8 @@ public class TestOverReplicatedBlocks {
     conf.set(
         DFSConfigKeys.DFS_NAMENODE_REPLICATION_PENDING_TIMEOUT_SEC_KEY,
         Integer.toString(2));
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3)
+        .buildHDFS();
     FileSystem fs = cluster.getFileSystem();
 
     try {
@@ -72,7 +73,7 @@ public class TestOverReplicatedBlocks {
       assertTrue(TestDatanodeBlockScanner.corruptReplica(block, 0));
       DataNodeProperties dnProps = cluster.stopDataNode(0);
       // remove block scanner log to trigger block scanning
-      File scanLog = new File(MiniDFSCluster.getFinalizedDir(
+      File scanLog = new File(MiniHDFSCluster.getFinalizedDir(
           cluster.getInstanceStorageDir(0, 0),
           cluster.getNamesystem().getBlockPoolId()).getParent().toString()
           + "/../dncp_block_verification.log.prev");
@@ -142,12 +143,12 @@ public class TestOverReplicatedBlocks {
    */
   @Test
   public void testChooseReplicaToDelete() throws Exception {
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     FileSystem fs = null;
     try {
       Configuration conf = new HdfsConfiguration();
       conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, SMALL_BLOCK_SIZE);
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).buildHDFS();
       fs = cluster.getFileSystem();
       final FSNamesystem namesystem = cluster.getNamesystem();
 
@@ -201,13 +202,13 @@ public class TestOverReplicatedBlocks {
   @Test
   public void testInvalidateOverReplicatedBlock() throws Exception {
     Configuration conf = new HdfsConfiguration();
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3)
-        .build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3)
+        .buildHDFS();
     try {
       final FSNamesystem namesystem = cluster.getNamesystem();
       final BlockManager bm = namesystem.getBlockManager();
       FileSystem fs = cluster.getFileSystem();
-      Path p = new Path(MiniDFSCluster.getBaseDirectory(), "/foo1");
+      Path p = new Path(MiniHDFSCluster.getBaseDirectory(), "/foo1");
       FSDataOutputStream out = fs.create(p, (short) 2);
       out.writeBytes("HDFS-3119: " + p);
       out.hsync();

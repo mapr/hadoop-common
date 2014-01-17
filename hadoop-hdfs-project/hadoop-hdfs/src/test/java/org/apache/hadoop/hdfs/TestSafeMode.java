@@ -32,7 +32,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.hadoop.hdfs.MiniDFSCluster.DataNodeProperties;
+import org.apache.hadoop.hdfs.MiniHDFSCluster.DataNodeProperties;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants.SafeModeAction;
 import org.apache.hadoop.hdfs.server.blockmanagement.BlockManagerTestUtil;
 import org.apache.hadoop.hdfs.server.common.HdfsServerConstants.StartupOption;
@@ -57,7 +57,7 @@ public class TestSafeMode {
   private static final Path TEST_PATH = new Path("/test");
   private static final int BLOCK_SIZE = 1024;
   Configuration conf; 
-  MiniDFSCluster cluster;
+  MiniHDFSCluster cluster;
   FileSystem fs;
   DistributedFileSystem dfs;
 
@@ -65,7 +65,7 @@ public class TestSafeMode {
   public void startUp() throws IOException {
     conf = new HdfsConfiguration();
     conf.setInt(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, BLOCK_SIZE);
-    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1).build();
+    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1).buildHDFS();
     cluster.waitActive();      
     fs = cluster.getFileSystem();
     dfs = (DistributedFileSystem)fs;
@@ -110,7 +110,8 @@ public class TestSafeMode {
     cluster.shutdown();
     
     // now bring up just the NameNode.
-    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(0).format(false).build();
+    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(0).format(false)
+        .buildHDFS();
     cluster.waitActive();
     dfs = cluster.getFileSystem();
     

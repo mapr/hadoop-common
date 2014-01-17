@@ -36,6 +36,7 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.client.HdfsDataOutputStream;
 import org.apache.hadoop.hdfs.client.HdfsDataOutputStream.SyncFlag;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants.SafeModeAction;
@@ -70,7 +71,7 @@ public class TestFSImageWithSnapshot {
       System.getProperty("test.build.data", "build/test/data");
   
   Configuration conf;
-  MiniDFSCluster cluster;
+  MiniHDFSCluster cluster;
   FSNamesystem fsn;
   DistributedFileSystem hdfs;
   
@@ -78,7 +79,7 @@ public class TestFSImageWithSnapshot {
   public void setUp() throws Exception {
     conf = new Configuration();
     cluster = new MiniDFSCluster.Builder(conf).numDataNodes(REPLICATION)
-        .build();
+        .buildHDFS();
     cluster.waitActive();
     fsn = cluster.getNamesystem();
     hdfs = cluster.getFileSystem();
@@ -176,7 +177,7 @@ public class TestFSImageWithSnapshot {
     
     cluster.shutdown();
     cluster = new MiniDFSCluster.Builder(conf).format(false)
-        .numDataNodes(REPLICATION).build();
+        .numDataNodes(REPLICATION).buildHDFS();
     cluster.waitActive();
     fsn = cluster.getNamesystem();
     hdfs = cluster.getFileSystem();
@@ -187,7 +188,7 @@ public class TestFSImageWithSnapshot {
     hdfs.setSafeMode(SafeModeAction.SAFEMODE_LEAVE);
     cluster.shutdown();
     cluster = new MiniDFSCluster.Builder(conf).format(false)
-        .numDataNodes(REPLICATION).build();
+        .numDataNodes(REPLICATION).buildHDFS();
     cluster.waitActive();
     fsn = cluster.getNamesystem();
     hdfs = cluster.getFileSystem();
@@ -213,7 +214,7 @@ public class TestFSImageWithSnapshot {
     hdfs.setSafeMode(SafeModeAction.SAFEMODE_LEAVE);
     cluster.shutdown();
     cluster = new MiniDFSCluster.Builder(conf).format(false)
-        .numDataNodes(REPLICATION).build();
+        .numDataNodes(REPLICATION).buildHDFS();
     cluster.waitActive();
     fsn = cluster.getNamesystem();
     hdfs = cluster.getFileSystem();
@@ -298,7 +299,7 @@ public class TestFSImageWithSnapshot {
 
     // restart the cluster, and format the cluster
     cluster = new MiniDFSCluster.Builder(conf).format(true)
-        .numDataNodes(REPLICATION).build();
+        .numDataNodes(REPLICATION).buildHDFS();
     cluster.waitActive();
     fsn = cluster.getNamesystem();
     hdfs = cluster.getFileSystem();
@@ -370,7 +371,7 @@ public class TestFSImageWithSnapshot {
     out.close();
     cluster.shutdown();
     cluster = new MiniDFSCluster.Builder(conf).format(true)
-        .numDataNodes(REPLICATION).build();
+        .numDataNodes(REPLICATION).buildHDFS();
     cluster.waitActive();
     fsn = cluster.getNamesystem();
     hdfs = cluster.getFileSystem();
@@ -408,7 +409,7 @@ public class TestFSImageWithSnapshot {
     
     cluster.shutdown();
     cluster = new MiniDFSCluster.Builder(conf).format(false)
-        .numDataNodes(REPLICATION).build();
+        .numDataNodes(REPLICATION).buildHDFS();
     cluster.waitActive();
     fsn = cluster.getNamesystem();
     hdfs = cluster.getFileSystem();
@@ -438,7 +439,7 @@ public class TestFSImageWithSnapshot {
     // restart cluster
     cluster.shutdown();
     cluster = new MiniDFSCluster.Builder(conf).format(false)
-        .numDataNodes(REPLICATION).build();
+        .numDataNodes(REPLICATION).buildHDFS();
     cluster.waitActive();
     hdfs = cluster.getFileSystem();
     
@@ -490,7 +491,7 @@ public class TestFSImageWithSnapshot {
     // restart cluster
     cluster.shutdown();
     cluster = new MiniDFSCluster.Builder(conf).numDataNodes(REPLICATION)
-        .format(false).build();
+        .format(false).buildHDFS();
     cluster.waitActive();
     fsn = cluster.getNamesystem();
     hdfs = cluster.getFileSystem();
@@ -502,7 +503,7 @@ public class TestFSImageWithSnapshot {
     
     cluster.shutdown();
     cluster = new MiniDFSCluster.Builder(conf).format(false)
-        .numDataNodes(REPLICATION).build();
+        .numDataNodes(REPLICATION).buildHDFS();
     cluster.waitActive();
     fsn = cluster.getNamesystem();
     hdfs = cluster.getFileSystem();

@@ -35,6 +35,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.io.Text;
 
 @SuppressWarnings("deprecation")
@@ -44,11 +45,11 @@ public class TestFileInputFormat extends TestCase {
   MiniDFSCluster dfs = null;
 
   private MiniDFSCluster newDFSCluster(JobConf conf) throws Exception {
-    return new MiniDFSCluster(conf, 4, true,
-                         new String[]{"/rack0", "/rack0",
-                                      "/rack1", "/rack1"},
-                         new String[]{"host0", "host1",
-                                      "host2", "host3"});
+    return new MiniDFSCluster.Builder(conf)
+      .numDataNodes(4).format(true)
+      .racks(new String[] { "/rack0", "/rack0", "/rack1", "/rack1"})
+      .hosts(new String[] { "host0", "host1", "host2", "host3"} )
+      .buildHDFS();
   }
 
   public void testLocality() throws Exception {
@@ -162,7 +163,9 @@ public class TestFileInputFormat extends TestCase {
     JobConf job = new JobConf(conf);
 
     job.setBoolean("dfs.replication.considerLoad", false);
-    dfs = new MiniDFSCluster(job, 1, true, rack1, hosts1);
+    dfs = new MiniDFSCluster.Builder(job)
+      .numDataNodes(1).format(true)
+      .racks(rack1).hosts(hosts1).buildHDFS();
     dfs.waitActive();
 
     String namenode = (dfs.getFileSystem()).getUri().getHost() + ":" +

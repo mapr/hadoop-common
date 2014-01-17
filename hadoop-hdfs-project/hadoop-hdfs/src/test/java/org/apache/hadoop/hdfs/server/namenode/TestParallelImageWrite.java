@@ -34,6 +34,7 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants.SafeModeAction;
 import org.apache.hadoop.hdfs.server.common.Storage.StorageDirectory;
 import org.apache.hadoop.hdfs.server.namenode.NNStorage.NameNodeDirType;
@@ -49,7 +50,7 @@ public class TestParallelImageWrite {
   @Test
   public void testRestartDFS() throws Exception {
     final Configuration conf = new HdfsConfiguration();
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     FSNamesystem fsn = null;
     int numNamenodeDirs;
     DFSTestUtil files = new DFSTestUtil.Builder().setName("TestRestartDFS").
@@ -65,7 +66,7 @@ public class TestParallelImageWrite {
 
     try {
       cluster = new MiniDFSCluster.Builder(conf).format(true)
-          .numDataNodes(NUM_DATANODES).build();
+          .numDataNodes(NUM_DATANODES).buildHDFS();
       String[] nameNodeDirs = conf.getStrings(
           DFSConfigKeys.DFS_NAMENODE_NAME_DIR_KEY, new String[] {});
       numNamenodeDirs = nameNodeDirs.length;
@@ -90,7 +91,7 @@ public class TestParallelImageWrite {
 
       // Here we restart the MiniDFScluster without formatting namenode
       cluster = new MiniDFSCluster.Builder(conf).format(false)
-          .numDataNodes(NUM_DATANODES).build();
+          .numDataNodes(NUM_DATANODES).buildHDFS();
       fsn = cluster.getNamesystem();
       FileSystem fs = cluster.getFileSystem();
       assertTrue("Filesystem corrupted after restart.",
@@ -141,7 +142,7 @@ public class TestParallelImageWrite {
     //any failed StorageDirectory is removed from the storageDirs list
     assertEquals("Some StorageDirectories failed Upgrade",
         numImageDirs, stg.getNumStorageDirs(NameNodeDirType.IMAGE));
-    assertTrue("Not enough fsimage copies in MiniDFSCluster " + 
+    assertTrue("Not enough fsimage copies in MiniHDFSCluster " + 
         "to test parallel write", numImageDirs > 1);
 
     // List of "current/" directory from each SD

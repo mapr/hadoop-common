@@ -62,7 +62,7 @@ public class TestClientReportBadBlock {
 
   static final long BLOCK_SIZE = 64 * 1024;
   private static int buffersize;
-  private static MiniDFSCluster cluster;
+  private static MiniHDFSCluster cluster;
   private static DistributedFileSystem dfs;
   private static int numDataNodes = 3;
   private static final Configuration conf = new HdfsConfiguration();
@@ -79,7 +79,7 @@ public class TestClientReportBadBlock {
     conf.setInt(DFSConfigKeys.DFS_DATANODE_SCAN_PERIOD_HOURS_KEY, -1); 
     
     cluster = new MiniDFSCluster.Builder(conf).numDataNodes(numDataNodes)
-        .build();
+        .buildHDFS();
     cluster.waitActive();
     dfs = (DistributedFileSystem) cluster.getFileSystem();
     buffersize = conf.getInt(CommonConfigurationKeys.IO_FILE_BUFFER_SIZE_KEY, 4096);

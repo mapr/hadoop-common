@@ -33,10 +33,11 @@ import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
+import org.apache.hadoop.io.IOUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -48,7 +49,7 @@ public class TestMetaSave {
   static final int NUM_DATA_NODES = 2;
   static final long seed = 0xDEADBEEFL;
   static final int blockSize = 8192;
-  private static MiniDFSCluster cluster = null;
+  private static MiniHDFSCluster cluster = null;
   private static FileSystem fileSys = null;
   private static FSNamesystem namesystem = null;
 
@@ -73,7 +74,7 @@ public class TestMetaSave {
     conf.setInt(DFSConfigKeys.DFS_NAMENODE_REPLICATION_INTERVAL_KEY, 1000);
     conf.setLong(DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_KEY, 1L);
     conf.setLong(DFSConfigKeys.DFS_NAMENODE_HEARTBEAT_RECHECK_INTERVAL_KEY, 1L);
-    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(NUM_DATA_NODES).build();
+    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(NUM_DATA_NODES).buildHDFS();
     cluster.waitActive();
     fileSys = cluster.getFileSystem();
     namesystem = cluster.getNamesystem();

@@ -42,6 +42,7 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants.DatanodeReportType;
@@ -63,7 +64,7 @@ public class TestBlockReplacement {
   private static final Log LOG = LogFactory.getLog(
   "org.apache.hadoop.hdfs.TestBlockReplacement");
 
-  MiniDFSCluster cluster;
+  MiniHDFSCluster cluster;
   @Test
   public void testThrottler() throws IOException {
     Configuration conf = new HdfsConfiguration();
@@ -102,7 +103,7 @@ public class TestBlockReplacement {
     CONF.setInt(DFSConfigKeys.DFS_BYTES_PER_CHECKSUM_KEY, DEFAULT_BLOCK_SIZE/2);
     CONF.setLong(DFSConfigKeys.DFS_BLOCKREPORT_INTERVAL_MSEC_KEY,500);
     cluster = new MiniDFSCluster.Builder(CONF).numDataNodes(REPLICATION_FACTOR)
-                                              .racks(INITIAL_RACKS).build();
+                                              .racks(INITIAL_RACKS).buildHDFS();
 
     try {
       cluster.waitActive();

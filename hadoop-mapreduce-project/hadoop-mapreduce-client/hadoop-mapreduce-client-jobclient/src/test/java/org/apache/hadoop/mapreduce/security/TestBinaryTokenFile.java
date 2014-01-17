@@ -32,6 +32,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.server.namenode.NameNodeAdapter;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
@@ -178,7 +179,7 @@ public class TestBinaryTokenFile {
   }
   
   private static MiniMRYarnCluster mrCluster;
-  private static MiniDFSCluster dfsCluster;
+  private static MiniHDFSCluster dfsCluster;
   
   private static final Path TEST_DIR = 
     new Path(System.getProperty("test.build.data","/tmp"));
@@ -201,7 +202,7 @@ public class TestBinaryTokenFile {
     builder.numDataNodes(numSlaves);
     builder.format(true);
     builder.racks(null);
-    dfsCluster = builder.build();
+    dfsCluster = builder.buildHDFS();
     
     mrCluster = new MiniMRYarnCluster(TestBinaryTokenFile.class.getName(), noOfNMs);
     mrCluster.init(conf);

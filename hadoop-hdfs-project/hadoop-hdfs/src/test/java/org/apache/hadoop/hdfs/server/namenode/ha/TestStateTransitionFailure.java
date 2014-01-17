@@ -26,6 +26,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.util.ExitUtil.ExitException;
 import org.junit.Test;
 
@@ -40,7 +41,7 @@ public class TestStateTransitionFailure {
    */
   @Test
   public void testFailureToTransitionCausesShutdown() throws IOException {
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
       Configuration conf = new Configuration();
       // Set an illegal value for the trash emptier interval. This will cause
@@ -50,7 +51,7 @@ public class TestStateTransitionFailure {
           .nnTopology(MiniDFSNNTopology.simpleHATopology())
           .numDataNodes(0)
           .checkExitOnShutdown(false)
-          .build();
+          .buildHDFS();
       cluster.waitActive();
       try {
         cluster.transitionToActive(0);

@@ -67,13 +67,13 @@ public class TestDFSClientFailover {
   private static final int FILE_LENGTH_TO_VERIFY = 100;
   
   private Configuration conf = new Configuration();
-  private MiniDFSCluster cluster;
+  private MiniHDFSCluster cluster;
   
   @Before
   public void setUpCluster() throws IOException {
     cluster = new MiniDFSCluster.Builder(conf)
       .nnTopology(MiniDFSNNTopology.simpleHATopology())
-      .build();
+      .buildHDFS();
     cluster.transitionToActive(0);
     cluster.waitActive();
   }

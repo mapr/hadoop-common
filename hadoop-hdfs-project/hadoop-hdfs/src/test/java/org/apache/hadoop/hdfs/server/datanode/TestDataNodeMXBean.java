@@ -25,6 +25,7 @@ import javax.management.ObjectName;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -35,7 +36,7 @@ public class TestDataNodeMXBean {
   @Test
   public void testDataNodeMXBean() throws Exception {
     Configuration conf = new Configuration();
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
 
     try {
       List<DataNode> datanodes = cluster.getDataNodes();

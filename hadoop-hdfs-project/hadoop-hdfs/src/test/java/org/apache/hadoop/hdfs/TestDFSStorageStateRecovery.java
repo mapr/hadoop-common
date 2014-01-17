@@ -48,7 +48,7 @@ public class TestDFSStorageStateRecovery {
                                                    "org.apache.hadoop.hdfs.TestDFSStorageStateRecovery");
   private Configuration conf = null;
   private int testCounter = 0;
-  private MiniDFSCluster cluster = null;
+  private MiniHDFSCluster cluster = null;
   
   // Constants for indexes into test case table below.
   private static final int CURRENT_EXISTS = 0;
@@ -305,14 +305,14 @@ public class TestDFSStorageStateRecovery {
     }
   }
   
-  private MiniDFSCluster createCluster(Configuration c) throws IOException {
+  private MiniHDFSCluster createCluster(Configuration c) throws IOException {
     return new MiniDFSCluster.Builder(c)
                              .numDataNodes(0)
                              .startupOption(StartupOption.REGULAR)
                              .format(false)
                              .manageDataDfsDirs(false)
                              .manageNameDfsDirs(false)
-                             .build();
+                             .buildHDFS();
   }
   /**
    * This test iterates over the testCases table and attempts

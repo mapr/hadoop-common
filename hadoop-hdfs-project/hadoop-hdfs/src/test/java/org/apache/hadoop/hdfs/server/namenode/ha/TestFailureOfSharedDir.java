@@ -38,6 +38,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.server.namenode.FSNamesystem;
 import org.apache.hadoop.hdfs.server.namenode.NNStorage;
 import org.apache.hadoop.hdfs.server.namenode.NameNode;
@@ -131,14 +132,14 @@ public class TestFailureOfSharedDir {
     conf.setLong(DFS_NAMENODE_RESOURCE_CHECK_INTERVAL_KEY, 2000);
     
     // The shared edits dir will automatically be marked required.
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     File sharedEditsDir = null;
     try {
       cluster = new MiniDFSCluster.Builder(conf)
         .nnTopology(MiniDFSNNTopology.simpleHATopology())
         .numDataNodes(0)
         .checkExitOnShutdown(false)
-        .build();
+        .buildHDFS();
       
       cluster.waitActive();
       cluster.transitionToActive(0);

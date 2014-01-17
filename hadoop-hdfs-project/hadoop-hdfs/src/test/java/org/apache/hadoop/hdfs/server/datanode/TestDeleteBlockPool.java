@@ -33,6 +33,7 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.tools.DFSAdmin;
 import org.junit.Test;
 
@@ -45,13 +46,13 @@ public class TestDeleteBlockPool {
   public void testDeleteBlockPool() throws Exception {
     // Start cluster with a 2 NN and 2 DN
     Configuration conf = new Configuration();
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
       conf.set(DFSConfigKeys.DFS_NAMESERVICES,
           "namesServerId1,namesServerId2");
       cluster = new MiniDFSCluster.Builder(conf)
         .nnTopology(MiniDFSNNTopology.simpleFederatedTopology(2))
-        .numDataNodes(2).build();
+        .numDataNodes(2).buildHDFS();
 
       cluster.waitActive();
 
@@ -102,8 +103,8 @@ public class TestDeleteBlockPool {
       fs1.delete(new Path("/alpha"), true);
       
       // Wait till all blocks are deleted from the dn2 for bpid1.
-      while ((MiniDFSCluster.getFinalizedDir(dn2StorageDir1, 
-          bpid1).list().length != 0) || (MiniDFSCluster.getFinalizedDir(
+      while ((MiniHDFSCluster.getFinalizedDir(dn2StorageDir1, 
+          bpid1).list().length != 0) || (MiniHDFSCluster.getFinalizedDir(
               dn2StorageDir2, bpid1).list().length != 0)) {
         try {
           Thread.sleep(3000);
@@ -154,13 +155,13 @@ public class TestDeleteBlockPool {
   @Test
   public void testDfsAdminDeleteBlockPool() throws Exception {
     Configuration conf = new Configuration();
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
       conf.set(DFSConfigKeys.DFS_NAMESERVICES,
           "namesServerId1,namesServerId2");
       cluster = new MiniDFSCluster.Builder(conf)
         .nnTopology(MiniDFSNNTopology.simpleFederatedTopology(2))
-        .numDataNodes(1).build();
+        .numDataNodes(1).buildHDFS();
 
       cluster.waitActive();
 

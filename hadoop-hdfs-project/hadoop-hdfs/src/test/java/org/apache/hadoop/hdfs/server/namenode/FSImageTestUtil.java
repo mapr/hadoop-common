@@ -48,7 +48,7 @@ import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.fs.permission.PermissionStatus;
 import org.apache.hadoop.hdfs.DFSUtil;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.server.common.Storage.StorageDirType;
 import org.apache.hadoop.hdfs.server.common.Storage.StorageDirectory;
 import org.apache.hadoop.hdfs.server.namenode.FSImageStorageInspector.FSImageFile;
@@ -450,12 +450,12 @@ public abstract class FSImageTestUtil {
    * Assert that the NameNode has checkpoints at the expected
    * transaction IDs.
    */
-  public static void assertNNHasCheckpoints(MiniDFSCluster cluster,
+  public static void assertNNHasCheckpoints(MiniHDFSCluster cluster,
       List<Integer> txids) {
     assertNNHasCheckpoints(cluster, 0, txids);
   }
   
-  public static void assertNNHasCheckpoints(MiniDFSCluster cluster,
+  public static void assertNNHasCheckpoints(MiniHDFSCluster cluster,
       int nnIdx, List<Integer> txids) {
 
     for (File nameDir : getNameNodeCurrentDirs(cluster, nnIdx)) {
@@ -472,7 +472,7 @@ public abstract class FSImageTestUtil {
     }
   }
 
-  public static List<File> getNameNodeCurrentDirs(MiniDFSCluster cluster, int nnIdx) {
+  public static List<File> getNameNodeCurrentDirs(MiniHDFSCluster cluster, int nnIdx) {
     List<File> nameDirs = Lists.newArrayList();
     for (URI u : cluster.getNameDirs(nnIdx)) {
       nameDirs.add(new File(u.getPath(), "current"));
@@ -550,7 +550,7 @@ public abstract class FSImageTestUtil {
     return node.getFSImage();
   }
   
-  public static void assertNNFilesMatch(MiniDFSCluster cluster) throws Exception {
+  public static void assertNNFilesMatch(MiniHDFSCluster cluster) throws Exception {
     List<File> curDirs = Lists.newArrayList();
     curDirs.addAll(FSImageTestUtil.getNameNodeCurrentDirs(cluster, 0));
     curDirs.addAll(FSImageTestUtil.getNameNodeCurrentDirs(cluster, 1));

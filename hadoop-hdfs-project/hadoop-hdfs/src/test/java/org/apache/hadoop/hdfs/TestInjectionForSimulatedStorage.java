@@ -126,7 +126,7 @@ public class TestInjectionForSimulatedStorage {
   @Test
   public void testInjection() throws IOException {
     
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
 
     String testFile = "/replication-test-file";
     Path testPath = new Path(testFile);
@@ -142,7 +142,8 @@ public class TestInjectionForSimulatedStorage {
       conf.setInt(DFSConfigKeys.DFS_BYTES_PER_CHECKSUM_KEY, checksumSize);
       SimulatedFSDataset.setFactory(conf);
       //first time format
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(numDataNodes).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(numDataNodes)
+        .buildHDFS();
       cluster.waitActive();
       String bpid = cluster.getNamesystem().getBlockPoolId();
       DFSClient dfsClient = new DFSClient(new InetSocketAddress("localhost",
@@ -169,7 +170,7 @@ public class TestInjectionForSimulatedStorage {
       cluster = new MiniDFSCluster.Builder(conf)
                                   .numDataNodes(numDataNodes * 2)
                                   .format(false)
-                                  .build();
+                                  .buildHDFS();
       cluster.waitActive();
       Set<Block> uniqueBlocks = new HashSet<Block>();
       for (int i=0; i<blocksList.length; ++i) {

@@ -88,7 +88,7 @@ public class TestRefreshUserMappings {
     Groups.getUserToGroupsMappingService(config);
     
     FileSystem.setDefaultUri(config, "hdfs://localhost:" + "0");
-    cluster = new MiniDFSCluster.Builder(config).build();
+    cluster = new MiniDFSCluster.Builder(config).buildHDFS();
     cluster.waitActive();
   }
 

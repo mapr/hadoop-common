@@ -18,6 +18,8 @@
 
 package org.apache.hadoop.hdfs.server.blockmanagement;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -31,8 +33,6 @@ import org.apache.hadoop.hdfs.server.protocol.DatanodeRegistration;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mortbay.log.Log;
-
-import static org.junit.Assert.*;
 
 public class TestDatanodeManager {
 

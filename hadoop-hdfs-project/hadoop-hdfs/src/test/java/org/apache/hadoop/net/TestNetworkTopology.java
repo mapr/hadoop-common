@@ -34,6 +34,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants.DatanodeReportType;
 import org.apache.hadoop.hdfs.server.blockmanagement.DatanodeDescriptor;
@@ -230,13 +231,13 @@ public class TestNetworkTopology {
   public void testInvalidNetworkTopologiesNotCachedInHdfs() throws Exception {
     // start a cluster
     Configuration conf = new HdfsConfiguration();
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
       // bad rack topology
       String racks[] = { "/a/b", "/c" };
       String hosts[] = { "foo1.example.com", "foo2.example.com" };
       cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2).
-          racks(racks).hosts(hosts).build();
+          racks(racks).hosts(hosts).buildHDFS();
       cluster.waitActive();
       
       NamenodeProtocols nn = cluster.getNameNodeRpc();

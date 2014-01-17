@@ -21,7 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Random;
 
-import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,7 +30,7 @@ import static org.junit.Assert.*;
 
 public class TestBestEffortLongFile {
 
-  private static final File FILE = new File(MiniDFSCluster.getBaseDirectory() +
+  private static final File FILE = new File(MiniHDFSCluster.getBaseDirectory() +
       File.separatorChar + "TestBestEffortLongFile");
 
   @Before

@@ -18,33 +18,33 @@
  */
 package org.apache.hadoop.hdfs.server.namenode;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
-import java.util.ArrayList;
-import java.util.Random;
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Random;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
-import org.apache.hadoop.hdfs.client.HdfsDataOutputStream;
+import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.server.datanode.DataNode;
-import org.junit.Test;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Test;
 
 
 public class TestFavoredNodesEndToEnd {
-  private static MiniDFSCluster cluster;
+  private static MiniHDFSCluster cluster;
   private static Configuration conf;
   private final static int NUM_DATA_NODES = 10;
   private final static int NUM_FILES = 10;
@@ -56,7 +56,7 @@ public class TestFavoredNodesEndToEnd {
   public static void setUpBeforeClass() throws Exception {
     conf = new Configuration();
     cluster = new MiniDFSCluster.Builder(conf).numDataNodes(NUM_DATA_NODES)
-        .build();
+        .buildHDFS();
     cluster.waitClusterUp();
     dfs = cluster.getFileSystem();
     datanodes = cluster.getDataNodes();

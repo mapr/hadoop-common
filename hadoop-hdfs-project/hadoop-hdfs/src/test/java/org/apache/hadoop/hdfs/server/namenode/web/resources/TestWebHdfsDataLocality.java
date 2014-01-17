@@ -29,6 +29,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.apache.hadoop.hdfs.protocol.LocatedBlocks;
@@ -68,10 +69,10 @@ public class TestWebHdfsDataLocality {
     final int nDataNodes = racks.length;
     LOG.info("nDataNodes=" + nDataNodes + ", racks=" + Arrays.asList(racks));
 
-    final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+    final MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
         .numDataNodes(nDataNodes)
         .racks(racks)
-        .build();
+        .buildHDFS();
     try {
       cluster.waitActive();
 

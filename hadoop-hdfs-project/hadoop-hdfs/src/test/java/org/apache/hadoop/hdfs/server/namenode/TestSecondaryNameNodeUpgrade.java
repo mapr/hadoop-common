@@ -17,26 +17,25 @@
  */
 package org.apache.hadoop.hdfs.server.namenode;
 
-import com.google.common.collect.ImmutableMap;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Test;
-import org.junit.Before;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.FileUtil;
-
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
-
-import org.junit.Assert;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.test.GenericTestUtils;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Regression test for HDFS-3597, SecondaryNameNode upgrade -- when a 2NN
@@ -47,7 +46,7 @@ public class TestSecondaryNameNodeUpgrade {
 
   @Before
   public void cleanupCluster() throws IOException {
-    File hdfsDir = new File(MiniDFSCluster.getBaseDirectory()).getCanonicalFile();
+    File hdfsDir = new File(MiniHDFSCluster.getBaseDirectory()).getCanonicalFile();
     System.out.println("cleanupCluster deleting " + hdfsDir);
     if (hdfsDir.exists() && !FileUtil.fullyDelete(hdfsDir)) {
       throw new IOException("Could not delete hdfs directory '" + hdfsDir + "'");
@@ -55,14 +54,14 @@ public class TestSecondaryNameNodeUpgrade {
   }
 
   private void doIt(Map<String, String> paramsToCorrupt) throws IOException {
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     FileSystem fs = null;
     SecondaryNameNode snn = null;
 
     try {
       Configuration conf = new HdfsConfiguration();
 
-      cluster = new MiniDFSCluster.Builder(conf).build();
+      cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
       cluster.waitActive();
 
       conf.set(DFSConfigKeys.DFS_NAMENODE_SECONDARY_HTTP_ADDRESS_KEY, "0.0.0.0:0");

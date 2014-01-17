@@ -50,7 +50,7 @@ import org.junit.Test;
  * isMethodSupported method in ProtocolMetaInterface.
  */
 public class TestIsMethodSupported {
-  private static MiniDFSCluster cluster = null;
+  private static MiniHDFSCluster cluster = null;
   private static HdfsConfiguration conf = new HdfsConfiguration();
   private static InetSocketAddress nnAddress = null;
   private static InetSocketAddress dnAddress = null;
@@ -58,7 +58,7 @@ public class TestIsMethodSupported {
   @BeforeClass
   public static void setUp() throws Exception {
     cluster = (new MiniDFSCluster.Builder(conf))
-        .numDataNodes(1).build();
+        .numDataNodes(1).buildHDFS();
     nnAddress = cluster.getNameNode().getNameNodeAddress();
     DataNode dn = cluster.getDataNodes().get(0);
     dnAddress = new InetSocketAddress(dn.getDatanodeId().getIpAddr(),

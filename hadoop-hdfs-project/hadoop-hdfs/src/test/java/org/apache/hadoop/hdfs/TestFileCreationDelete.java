@@ -48,7 +48,7 @@ public class TestFileCreationDelete {
     conf.setInt(DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_KEY, 1);
 
     // create cluster
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
     FileSystem fs = null;
     try {
       cluster.waitActive();
@@ -81,7 +81,7 @@ public class TestFileCreationDelete {
       try {Thread.sleep(2*MAX_IDLE_TIME);} catch (InterruptedException e) {}
       cluster = new MiniDFSCluster.Builder(conf).nameNodePort(nnport)
                                                 .format(false)
-                                                .build();
+                                                .buildHDFS();
       cluster.waitActive();
 
       // restart cluster yet again. This triggers the code to read in
@@ -90,7 +90,7 @@ public class TestFileCreationDelete {
       try {Thread.sleep(5000);} catch (InterruptedException e) {}
       cluster = new MiniDFSCluster.Builder(conf).nameNodePort(nnport)
                                                 .format(false)
-                                                .build();
+                                                .buildHDFS();
       cluster.waitActive();
       fs = cluster.getFileSystem();
 

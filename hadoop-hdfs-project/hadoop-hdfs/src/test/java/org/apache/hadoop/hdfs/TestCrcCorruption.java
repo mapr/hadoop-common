@@ -41,7 +41,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.mockito.Mockito;
-import org.mockito.stubbing.Answer;
 
 /**
  * A JUnit test for corrupted file handling.
@@ -148,13 +147,13 @@ public class TestCrcCorruption {
    * check if DFS can handle corrupted CRC blocks
    */
   private void thistest(Configuration conf, DFSTestUtil util) throws Exception {
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     int numDataNodes = 2;
     short replFactor = 2;
     Random random = new Random();
 
     try {
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(numDataNodes).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(numDataNodes).buildHDFS();
       cluster.waitActive();
       FileSystem fs = cluster.getFileSystem();
       util.createFiles(fs, "/srcdat", replFactor);
@@ -167,7 +166,7 @@ public class TestCrcCorruption {
       //
       File storageDir = cluster.getInstanceStorageDir(0, 1);
       String bpid = cluster.getNamesystem().getBlockPoolId();
-      File data_dir = MiniDFSCluster.getFinalizedDir(storageDir, bpid);
+      File data_dir = MiniHDFSCluster.getFinalizedDir(storageDir, bpid);
       assertTrue("data directory does not exist", data_dir.exists());
       File[] blocks = data_dir.listFiles();
       assertTrue("Blocks do not exist in data-dir", (blocks != null) && (blocks.length > 0));
@@ -225,7 +224,7 @@ public class TestCrcCorruption {
       // directory of the first datanode
       //
       storageDir = cluster.getInstanceStorageDir(0, 1);
-      data_dir = MiniDFSCluster.getFinalizedDir(storageDir, bpid);
+      data_dir = MiniHDFSCluster.getFinalizedDir(storageDir, bpid);
       assertTrue("data directory does not exist", data_dir.exists());
       blocks = data_dir.listFiles();
       assertTrue("Blocks do not exist in data-dir", (blocks != null) && (blocks.length > 0));
@@ -334,7 +333,8 @@ public class TestCrcCorruption {
     short replFactor = (short)numDataNodes;
     Configuration conf = new Configuration();
     conf.setInt(DFSConfigKeys.DFS_REPLICATION_KEY, numDataNodes);
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(numDataNodes).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+      .numDataNodes(numDataNodes).buildHDFS();
 
     try {
       cluster.waitActive();

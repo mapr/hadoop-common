@@ -30,6 +30,7 @@ import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology.NNConf;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology.NSConf;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.junit.Test;
 
 import com.google.common.base.Joiner;
@@ -48,7 +49,7 @@ public class TestRefreshNamenodes {
   public void testRefreshNamenodes() throws IOException {
     // Start cluster with a single NN and DN
     Configuration conf = new Configuration();
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
       MiniDFSNNTopology topology = new MiniDFSNNTopology()
         .addNameservice(new NSConf("ns1").addNN(
@@ -56,7 +57,7 @@ public class TestRefreshNamenodes {
         .setFederation(true);
       cluster = new MiniDFSCluster.Builder(conf)
         .nnTopology(topology)
-        .build();
+        .buildHDFS();
 
       DataNode dn = cluster.getDataNodes().get(0);
       assertEquals(1, dn.getAllBpOs().length);

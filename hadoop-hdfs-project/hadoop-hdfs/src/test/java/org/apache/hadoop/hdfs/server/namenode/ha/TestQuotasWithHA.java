@@ -32,6 +32,7 @@ import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.HAUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.server.namenode.NameNode;
 import org.apache.hadoop.io.IOUtils;
 import org.junit.After;
@@ -47,7 +48,7 @@ public class TestQuotasWithHA {
   private static final long DS_QUOTA = 10000;
   private static final long BLOCK_SIZE = 1024; // 1KB blocks
   
-  private MiniDFSCluster cluster;
+  private MiniHDFSCluster cluster;
   private NameNode nn0;
   private NameNode nn1;
   private FileSystem fs;
@@ -64,7 +65,7 @@ public class TestQuotasWithHA {
       .nnTopology(MiniDFSNNTopology.simpleHATopology())
       .numDataNodes(1)
       .waitSafeMode(false)
-      .build();
+      .buildHDFS();
     cluster.waitActive();
     
     nn0 = cluster.getNameNode(0);

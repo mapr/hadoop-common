@@ -31,7 +31,7 @@ import org.apache.hadoop.hdfs.server.namenode.NameNodeAdapter;
 import org.junit.Test;
 
 public class TestDFSRename {
-  static int countLease(MiniDFSCluster cluster) {
+  static int countLease(MiniHDFSCluster cluster) {
     return NameNodeAdapter.getLeaseManager(cluster.getNamesystem()).countLease();
   }
   
@@ -53,7 +53,8 @@ public class TestDFSRename {
   @Test
   public void testRename() throws Exception {
     Configuration conf = new HdfsConfiguration();
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2)
+        .buildHDFS();
     try {
       FileSystem fs = cluster.getFileSystem();
       assertTrue(fs.mkdirs(dir));

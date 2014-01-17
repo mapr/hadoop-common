@@ -27,13 +27,14 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class TestSecondaryWebUi {
   
-  private static MiniDFSCluster cluster;
+  private static MiniHDFSCluster cluster;
   private static SecondaryNameNode snn;
   private static Configuration conf = new Configuration();
   
@@ -42,7 +43,7 @@ public class TestSecondaryWebUi {
     conf.set(DFSConfigKeys.DFS_NAMENODE_SECONDARY_HTTP_ADDRESS_KEY,
         "0.0.0.0:0");
     cluster = new MiniDFSCluster.Builder(conf).numDataNodes(0)
-        .build();
+        .buildHDFS();
     cluster.waitActive();
     
     snn = new SecondaryNameNode(conf);

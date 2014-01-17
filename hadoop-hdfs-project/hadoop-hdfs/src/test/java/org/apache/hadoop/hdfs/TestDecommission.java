@@ -67,7 +67,7 @@ public class TestDecommission {
   Path excludeFile;
   FileSystem localFileSys;
   Configuration conf;
-  MiniDFSCluster cluster = null;
+  MiniHDFSCluster cluster = null;
 
   @Before
   public void setup() throws IOException {
@@ -288,7 +288,7 @@ public class TestDecommission {
       Configuration conf) throws IOException {
     cluster = new MiniDFSCluster.Builder(conf)
       .nnTopology(MiniDFSNNTopology.simpleFederatedTopology(numNameNodes))
-        .numDataNodes(numDatanodes).build();
+        .numDataNodes(numDatanodes).buildHDFS();
     cluster.waitActive();
     for (int i = 0; i < numNameNodes; i++) {
       DFSClient client = getDfsClient(cluster.getNameNode(i), conf);
@@ -587,7 +587,7 @@ public class TestDecommission {
     int numDatanodes = 1;
     cluster = new MiniDFSCluster.Builder(conf)
         .nnTopology(MiniDFSNNTopology.simpleFederatedTopology(numNameNodes))
-        .numDataNodes(numDatanodes).setupHostsFile(true).build();
+        .numDataNodes(numDatanodes).setupHostsFile(true).buildHDFS();
     cluster.waitActive();
     
     // Now empty hosts file and ensure the datanode is disallowed
@@ -627,7 +627,7 @@ public class TestDecommission {
       InterruptedException {
     Configuration hdfsConf = new Configuration(conf);
     cluster = new MiniDFSCluster.Builder(hdfsConf)
-        .numDataNodes(1).setupHostsFile(true).build();
+        .numDataNodes(1).setupHostsFile(true).buildHDFS();
     cluster.waitActive();
     int dnPort = cluster.getDataNodes().get(0).getXferPort();
 
@@ -722,7 +722,7 @@ public class TestDecommission {
     hdfsConf.set(DFSConfigKeys.DFS_DATANODE_HOST_NAME_KEY, registrationName);
     cluster = new MiniDFSCluster.Builder(hdfsConf)
         .numDataNodes(1).checkDataNodeHostConfig(true)
-        .setupHostsFile(true).build();
+        .setupHostsFile(true).buildHDFS();
     cluster.waitActive();
 
     // Set up an includes file that doesn't have our datanode.

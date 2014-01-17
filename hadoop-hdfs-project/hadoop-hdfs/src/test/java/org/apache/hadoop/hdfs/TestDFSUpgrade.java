@@ -59,7 +59,7 @@ public class TestDFSUpgrade {
   private static final Log LOG = LogFactory.getLog(TestDFSUpgrade.class.getName());
   private Configuration conf;
   private int testCounter = 0;
-  private MiniDFSCluster cluster = null;
+  private MiniHDFSCluster cluster = null;
     
   /**
    * Writes an INFO log message containing the parameters.
@@ -113,7 +113,7 @@ public class TestDFSUpgrade {
       
       // block files are placed under <sd>/current/<bpid>/current/finalized
       File currentFinalized = 
-        MiniDFSCluster.getFinalizedDir(new File(baseDirs[i]), bpid);
+        MiniHDFSCluster.getFinalizedDir(new File(baseDirs[i]), bpid);
       assertEquals(UpgradeUtilities.checksumContents(DATA_NODE, currentFinalized),
           UpgradeUtilities.checksumMasterBlockPoolFinalizedContents());
       
@@ -156,7 +156,7 @@ public class TestDFSUpgrade {
                                                 .format(false)
                                                 .manageDataDfsDirs(false)
                                                 .manageNameDfsDirs(false)
-                                                .build(); // should fail
+                                                .buildHDFS(); // should fail
       fail("NameNode should have failed to start");
       
     } catch (Exception e) {
@@ -194,13 +194,13 @@ public class TestDFSUpgrade {
    * Create an instance of a newly configured cluster for testing that does
    * not manage its own directories or files
    */
-  private MiniDFSCluster createCluster() throws IOException {
+  private MiniHDFSCluster createCluster() throws IOException {
     return new MiniDFSCluster.Builder(conf).numDataNodes(0)
                                            .format(false)
                                            .manageDataDfsDirs(false)
                                            .manageNameDfsDirs(false)
                                            .startupOption(StartupOption.UPGRADE)
-                                           .build();
+                                           .buildHDFS();
   }
   
   @BeforeClass

@@ -18,9 +18,9 @@
 
 package org.apache.hadoop.mapred;
 
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeoutException;
 
+import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -40,22 +41,18 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.apache.hadoop.hdfs.server.namenode.NameNode;
 import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.SequenceFile.CompressionType;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.WritableComparable;
-import org.apache.hadoop.io.SequenceFile.CompressionType;
 import org.apache.hadoop.mapred.SortValidator.RecordStatsChecker.NonSplitableSequenceFileInputFormat;
 import org.apache.hadoop.mapred.lib.IdentityMapper;
 import org.apache.hadoop.mapred.lib.IdentityReducer;
 import org.apache.hadoop.mapreduce.Cluster.JobTrackerStatus;
-import org.apache.hadoop.mapreduce.server.jobtracker.JTConfig;
 import org.apache.hadoop.util.StringUtils;
-
-import org.apache.commons.logging.Log;
 
 /** 
  * Utilities used in unit test.
@@ -452,9 +449,9 @@ public class UtilsForTests {
                           String reduceSignalFile, int replication) 
       throws IOException, TimeoutException {
     try {
-      writeFile(dfs.getNameNode(), fileSys.getConf(), new Path(mapSignalFile), 
+      writeFile(fileSys.getConf(), new Path(mapSignalFile), 
                 (short)replication);
-      writeFile(dfs.getNameNode(), fileSys.getConf(), new Path(reduceSignalFile), (short)replication);
+      writeFile(fileSys.getConf(), new Path(reduceSignalFile), (short)replication);
     } catch (InterruptedException ie) {
       // Ignore
     }
@@ -469,7 +466,7 @@ public class UtilsForTests {
       throws IOException, TimeoutException {
     try {
       //  signal the maps to complete
-      writeFile(dfs.getNameNode(), fileSys.getConf(),
+      writeFile(fileSys.getConf(),
                 isMap 
                 ? new Path(mapSignalFile)
                 : new Path(reduceSignalFile), (short)1);
@@ -490,7 +487,7 @@ public class UtilsForTests {
     return (new Path(dir, "reduce-signal")).toString();
   }
   
-  static void writeFile(NameNode namenode, Configuration conf, Path name, 
+  static void writeFile(Configuration conf, Path name, 
                         short replication)
       throws IOException, TimeoutException, InterruptedException {
     FileSystem fileSys = FileSystem.get(conf);

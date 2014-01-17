@@ -41,6 +41,7 @@ import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.HAUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.server.namenode.NameNode;
 import org.apache.hadoop.hdfs.server.namenode.NameNodeAdapter;
 import org.apache.hadoop.test.GenericTestUtils;
@@ -54,7 +55,7 @@ public class TestInitializeSharedEdits {
   
   private static final Path TEST_PATH = new Path("/test");
   private Configuration conf;
-  private MiniDFSCluster cluster;
+  private MiniHDFSCluster cluster;
   
   @Before
   public void setupCluster() throws IOException {
@@ -68,7 +69,7 @@ public class TestInitializeSharedEdits {
     cluster = new MiniDFSCluster.Builder(conf)
       .nnTopology(topology)
       .numDataNodes(0)
-      .build();
+      .buildHDFS();
     cluster.waitActive();
 
     shutdownClusterAndRemoveSharedEditsDir();

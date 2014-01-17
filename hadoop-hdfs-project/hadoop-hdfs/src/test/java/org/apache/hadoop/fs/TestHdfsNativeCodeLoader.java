@@ -17,13 +17,13 @@
  */
 package org.apache.hadoop.fs;
 
-import org.junit.Ignore;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.util.NativeCodeLoader;
+import org.junit.Ignore;
+import org.junit.Test;
 
 public class TestHdfsNativeCodeLoader {
   static final Log LOG = LogFactory.getLog(TestHdfsNativeCodeLoader.class);

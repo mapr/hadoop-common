@@ -25,6 +25,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.junit.Test;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
@@ -62,7 +63,7 @@ public class TestHdfsHelper extends TestDirHelper {
 
     @Override
     public void evaluate() throws Throwable {
-      MiniDFSCluster miniHdfs = null;
+      MiniHDFSCluster miniHdfs = null;
       Configuration conf = HadoopUsersConfTestHelper.getBaseConf();
       if (Boolean.parseBoolean(System.getProperty(HADOOP_MINI_HDFS, "true"))) {
         miniHdfs = startMiniHdfs(conf);
@@ -128,9 +129,9 @@ public class TestHdfsHelper extends TestDirHelper {
     return new Configuration(conf);
   }
 
-  private static MiniDFSCluster MINI_DFS = null;
+  private static MiniHDFSCluster MINI_DFS = null;
 
-  private static synchronized MiniDFSCluster startMiniHdfs(Configuration conf) throws Exception {
+  private static synchronized MiniHDFSCluster startMiniHdfs(Configuration conf) throws Exception {
     if (MINI_DFS == null) {
       if (System.getProperty("hadoop.log.dir") == null) {
         System.setProperty("hadoop.log.dir", new File(TEST_DIR_ROOT, "hadoop-log").getAbsolutePath());
@@ -147,7 +148,7 @@ public class TestHdfsHelper extends TestDirHelper {
       conf.set("hadoop.security.authentication", "simple");
       MiniDFSCluster.Builder builder = new MiniDFSCluster.Builder(conf);
       builder.numDataNodes(2);
-      MiniDFSCluster miniHdfs = builder.build();
+      MiniHDFSCluster miniHdfs = builder.buildHDFS();
       FileSystem fileSystem = miniHdfs.getFileSystem();
       fileSystem.mkdirs(new Path("/tmp"));
       fileSystem.mkdirs(new Path("/user"));

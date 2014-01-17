@@ -32,6 +32,7 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.server.blockmanagement.DatanodeDescriptor;
 import org.apache.hadoop.hdfs.server.blockmanagement.DatanodeManager;
 import org.junit.Test;
@@ -52,14 +53,14 @@ public class TestNamenodeCapacityReport {
   @Test
   public void testVolumeSize() throws Exception {
     Configuration conf = new HdfsConfiguration();
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
 
     // Set aside fifth of the total capacity as reserved
     long reserved = 10000;
     conf.setLong(DFSConfigKeys.DFS_DATANODE_DU_RESERVED_KEY, reserved);
     
     try {
-      cluster = new MiniDFSCluster.Builder(conf).build();
+      cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
       cluster.waitActive();
       
       final FSNamesystem namesystem = cluster.getNamesystem();

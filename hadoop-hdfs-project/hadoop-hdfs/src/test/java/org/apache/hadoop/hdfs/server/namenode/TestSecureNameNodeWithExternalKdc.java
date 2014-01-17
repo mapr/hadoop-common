@@ -17,9 +17,9 @@
 
 package org.apache.hadoop.hdfs.server.namenode;
 
+import static org.apache.hadoop.security.SecurityUtilTestHelper.isExternalKdcRunning;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
@@ -33,15 +33,15 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod;
-import static org.apache.hadoop.security.SecurityUtilTestHelper.isExternalKdcRunning;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
 /**
- * This test brings up a MiniDFSCluster with 1 NameNode and 0
+ * This test brings up a MiniHDFSCluster with 1 NameNode and 0
  * DataNodes with kerberos authentication enabled using user-specified
  * KDC, principals, and keytabs.
  *
@@ -65,7 +65,7 @@ public class TestSecureNameNodeWithExternalKdc {
 
   @Test
   public void testSecureNameNode() throws IOException, InterruptedException {
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
       String nnPrincipal =
         System.getProperty("dfs.namenode.kerberos.principal");
@@ -86,8 +86,8 @@ public class TestSecureNameNodeWithExternalKdc {
       conf.set(DFSConfigKeys.DFS_NAMENODE_KEYTAB_FILE_KEY, nnKeyTab);
 
       cluster = new MiniDFSCluster.Builder(conf).numDataNodes(NUM_OF_DATANODES)
-          .build();
-      final MiniDFSCluster clusterRef = cluster;
+          .buildHDFS();
+      final MiniHDFSCluster clusterRef = cluster;
       cluster.waitActive();
       FileSystem fsForCurrentUser = cluster.getFileSystem();
       fsForCurrentUser.mkdirs(new Path("/tmp"));

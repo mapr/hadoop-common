@@ -29,6 +29,7 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,7 +40,7 @@ import org.junit.Test;
 public class TestDataNodeExit {
   private static long WAIT_TIME_IN_MILLIS = 10;
   Configuration conf;
-  MiniDFSCluster cluster = null;
+  MiniHDFSCluster cluster = null;
   
   @Before
   public void setUp() throws IOException {
@@ -48,7 +49,7 @@ public class TestDataNodeExit {
     conf.setInt(DFSConfigKeys.DFS_BYTES_PER_CHECKSUM_KEY, 100);
     cluster = new MiniDFSCluster.Builder(conf)
       .nnTopology(MiniDFSNNTopology.simpleFederatedTopology(3))
-      .build();
+      .buildHDFS();
     for (int i = 0; i < 3; i++) {
       cluster.waitActive(i);
     }

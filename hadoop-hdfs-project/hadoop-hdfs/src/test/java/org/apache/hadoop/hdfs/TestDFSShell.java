@@ -112,11 +112,12 @@ public class TestDFSShell {
   @Test (timeout = 30000)
   public void testZeroSizeFile() throws IOException {
     Configuration conf = new HdfsConfiguration();
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2).build();
+    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2)
+        .build();
     FileSystem fs = cluster.getFileSystem();
-    assertTrue("Not a HDFS: "+fs.getUri(),
-               fs instanceof DistributedFileSystem);
-    final DistributedFileSystem dfs = (DistributedFileSystem)fs;
+    //assertTrue("Not a HDFS: "+fs.getUri(),
+    //           fs instanceof DistributedFileSystem);
+    final FileSystem dfs = fs;
 
     try {
       //create a zero size file
@@ -155,10 +156,11 @@ public class TestDFSShell {
   @Test (timeout = 30000)
   public void testRecrusiveRm() throws IOException {
 	  Configuration conf = new HdfsConfiguration();
-	  MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2).build();
+	  MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2)
+        .build();
 	  FileSystem fs = cluster.getFileSystem();
-	  assertTrue("Not a HDFS: " + fs.getUri(), 
-			  fs instanceof DistributedFileSystem);
+	  //assertTrue("Not a HDFS: " + fs.getUri(), 
+		//	  fs instanceof DistributedFileSystem);
 	  try {
       fs.mkdirs(new Path(new Path("parent"), "child"));
       try {
@@ -183,9 +185,9 @@ public class TestDFSShell {
     Configuration conf = new HdfsConfiguration();
     MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2).build();
     FileSystem fs = cluster.getFileSystem();
-    assertTrue("Not a HDFS: "+fs.getUri(),
-                fs instanceof DistributedFileSystem);
-    final DistributedFileSystem dfs = (DistributedFileSystem)fs;
+    //assertTrue("Not a HDFS: "+fs.getUri(),
+    //            fs instanceof DistributedFileSystem);
+    final FileSystem dfs = fs;
     PrintStream psBackup = System.out;
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     PrintStream psOut = new PrintStream(out);
@@ -234,9 +236,9 @@ public class TestDFSShell {
     Configuration conf = new HdfsConfiguration();
     MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2).build();
     FileSystem fs = cluster.getFileSystem();
-    assertTrue("Not a HDFS: "+fs.getUri(),
-               fs instanceof DistributedFileSystem);
-    final DistributedFileSystem dfs = (DistributedFileSystem)fs;
+    //assertTrue("Not a HDFS: "+fs.getUri(),
+    //           fs instanceof DistributedFileSystem);
+    final FileSystem dfs = fs;
 
     try {
       // remove left over crc files:
@@ -692,9 +694,9 @@ public class TestDFSShell {
     Configuration conf = new HdfsConfiguration();
     MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2).build();
     FileSystem fs = cluster.getFileSystem();
-    assertTrue("Not a HDFS: "+fs.getUri(),
-               fs instanceof DistributedFileSystem);
-    DistributedFileSystem dfs = (DistributedFileSystem)fs;
+    //assertTrue("Not a HDFS: "+fs.getUri(),
+    //           fs instanceof DistributedFileSystem);
+    FileSystem dfs = fs;
     FsShell shell = new FsShell();
     shell.setConf(conf);
 
@@ -789,7 +791,7 @@ public class TestDFSShell {
   public void testCount() throws Exception {
     Configuration conf = new HdfsConfiguration();
     MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2).build();
-    DistributedFileSystem dfs = (DistributedFileSystem)cluster.getFileSystem();
+    FileSystem dfs = cluster.getFileSystem();
     FsShell shell = new FsShell();
     shell.setConf(conf);
 
@@ -1032,9 +1034,9 @@ public class TestDFSShell {
      * Make sure that we create ChecksumDFS */
     MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2).build();
     FileSystem fs = cluster.getFileSystem();
-    assertTrue("Not a HDFS: "+fs.getUri(),
-            fs instanceof DistributedFileSystem);
-    DistributedFileSystem fileSys = (DistributedFileSystem)fs;
+    //assertTrue("Not a HDFS: "+fs.getUri(),
+    //        fs instanceof DistributedFileSystem);
+    FileSystem fileSys = fs;
     FsShell shell = new FsShell();
     shell.setConf(conf);
 
@@ -1375,7 +1377,7 @@ public class TestDFSShell {
     }
   }
 
-  static List<File> getBlockFiles(MiniDFSCluster cluster) throws IOException {
+  static List<File> getBlockFiles(MiniHDFSCluster cluster) throws IOException {
     List<File> files = new ArrayList<File>();
     List<DataNode> datanodes = cluster.getDataNodes();
     String poolId = cluster.getNamesystem().getBlockPoolId();
@@ -1483,12 +1485,12 @@ public class TestDFSShell {
     };
 
     File localf = createLocalFile(new File(TEST_ROOT_DIR, fname));
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     DistributedFileSystem dfs = null;
 
     try {
       cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2).format(true)
-        .build();
+        .buildHDFS();
       dfs = (DistributedFileSystem)cluster.getFileSystem();
 
       mkdir(dfs, root);
@@ -1517,7 +1519,7 @@ public class TestDFSShell {
 
       // Start the cluster again, but do not reformat, so prior files remain.
       cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2).format(false)
-        .build();
+        .buildHDFS();
       dfs = (DistributedFileSystem)cluster.getFileSystem();
 
       assertEquals(null, runner.run(1));
@@ -1542,7 +1544,7 @@ public class TestDFSShell {
   public void testLsr() throws Exception {
     final Configuration conf = new HdfsConfiguration();
     MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2).build();
-    DistributedFileSystem dfs = (DistributedFileSystem)cluster.getFileSystem();
+    FileSystem dfs = cluster.getFileSystem();
 
     try {
       final String root = createTree(dfs, "lsr");
@@ -1799,8 +1801,8 @@ public class TestDFSShell {
 
     try {
       FileSystem dfs = cluster.getFileSystem();
-      assertTrue("Not a HDFS: " + dfs.getUri(),
-                 dfs instanceof DistributedFileSystem);
+      //assertTrue("Not a HDFS: " + dfs.getUri(),
+      //          dfs instanceof DistributedFileSystem);
 
       // Run appendToFile once, make sure that the target file is
       // created and is of the right size.
@@ -1837,9 +1839,9 @@ public class TestDFSShell {
     cluster.waitActive();
 
     try {
-      FileSystem dfs = cluster.getFileSystem();
-      assertTrue("Not a HDFS: " + dfs.getUri(),
-                 dfs instanceof DistributedFileSystem);
+      //FileSystem dfs = cluster.getFileSystem();
+      //assertTrue("Not a HDFS: " + dfs.getUri(),
+      //           dfs instanceof DistributedFileSystem);
 
       // Run appendToFile with insufficient arguments.
       FsShell shell = new FsShell();

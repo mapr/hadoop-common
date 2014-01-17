@@ -30,6 +30,7 @@ import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.server.namenode.snapshot.INodeDirectorySnapshottable;
 import org.apache.hadoop.hdfs.server.namenode.snapshot.INodeDirectoryWithSnapshot;
 import org.apache.hadoop.hdfs.server.namenode.snapshot.INodeFileWithSnapshot;
@@ -51,7 +52,7 @@ public class TestSnapshotPathINodes {
   static private final Path file2 = new Path(sub1, "file2");
 
   static private Configuration conf;
-  static private MiniDFSCluster cluster;
+  static private MiniHDFSCluster cluster;
   static private FSNamesystem fsn;
   static private FSDirectory fsdir;
 
@@ -62,7 +63,7 @@ public class TestSnapshotPathINodes {
     conf = new Configuration();
     cluster = new MiniDFSCluster.Builder(conf)
       .numDataNodes(REPLICATION)
-      .build();
+      .buildHDFS();
     cluster.waitActive();
     
     fsn = cluster.getNamesystem();

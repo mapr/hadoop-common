@@ -18,13 +18,18 @@
 
 package org.apache.hadoop.hdfs.server.namenode.snapshot;
 
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+
 import java.util.ArrayList;
 
 import org.apache.hadoop.hdfs.protocol.SnapshotException;
 import org.apache.hadoop.hdfs.server.namenode.FSDirectory;
 import org.apache.hadoop.hdfs.server.namenode.INode;
-import org.junit.*;
-import static org.mockito.Mockito.*;
+import org.junit.Assert;
+import org.junit.Test;
 
 
 /**

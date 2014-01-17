@@ -43,6 +43,7 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.client.HdfsDataOutputStream;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants.SafeModeAction;
@@ -91,7 +92,7 @@ public class TestSnapshot {
   public static final int DIRECTORY_TREE_LEVEL = 5;
   
   protected Configuration conf;
-  protected static MiniDFSCluster cluster;
+  protected static MiniHDFSCluster cluster;
   protected static FSNamesystem fsn;
   protected static FSDirectory fsdir;
   protected DistributedFileSystem hdfs;
@@ -117,7 +118,7 @@ public class TestSnapshot {
     conf = new Configuration();
     conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, BLOCKSIZE);
     cluster = new MiniDFSCluster.Builder(conf).numDataNodes(REPLICATION)
-        .build();
+        .buildHDFS();
     cluster.waitActive();
 
     fsn = cluster.getNamesystem();
@@ -197,7 +198,7 @@ public class TestSnapshot {
     
     cluster.shutdown();
     cluster = new MiniDFSCluster.Builder(conf).format(false)
-        .numDataNodes(REPLICATION).build();
+        .numDataNodes(REPLICATION).buildHDFS();
     cluster.waitActive();
     fsn = cluster.getNamesystem();
     hdfs = cluster.getFileSystem();
@@ -210,7 +211,7 @@ public class TestSnapshot {
     hdfs.setSafeMode(SafeModeAction.SAFEMODE_LEAVE);
     cluster.shutdown();
     cluster = new MiniDFSCluster.Builder(conf).format(false)
-        .numDataNodes(REPLICATION).build();
+        .numDataNodes(REPLICATION).buildHDFS();
     cluster.waitActive();
     fsn = cluster.getNamesystem();
     hdfs = cluster.getFileSystem();

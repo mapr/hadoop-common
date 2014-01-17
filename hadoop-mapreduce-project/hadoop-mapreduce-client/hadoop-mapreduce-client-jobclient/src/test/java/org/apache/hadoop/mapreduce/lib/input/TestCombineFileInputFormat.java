@@ -44,6 +44,8 @@ import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.InputSplit;
@@ -313,7 +315,9 @@ public class TestCombineFileInputFormat extends TestCase {
        */
       Configuration conf = new Configuration();
       conf.setBoolean("dfs.replication.considerLoad", false);
-      dfs = new MiniDFSCluster(conf, 1, true, rack1, hosts1);
+      dfs = new MiniDFSCluster.Builder(conf)
+        .numDataNodes(1).format(true)
+        .racks(rack1).hosts(hosts1).buildHDFS();
       dfs.waitActive();
 
       fileSys = dfs.getFileSystem();
@@ -855,7 +859,9 @@ public class TestCombineFileInputFormat extends TestCase {
        */
       Configuration conf = new Configuration();
       conf.setBoolean("dfs.replication.considerLoad", false);
-      dfs = new MiniDFSCluster(conf, 1, true, rack1, hosts1);
+      dfs = new MiniDFSCluster.Builder(conf)
+        .numDataNodes(1).format(true)
+        .racks(rack1).hosts(hosts1).buildHDFS();
       dfs.waitActive();
 
       fileSys = dfs.getFileSystem();
@@ -1197,7 +1203,9 @@ public class TestCombineFileInputFormat extends TestCase {
       Configuration conf = new Configuration();
       conf.set("fs.hdfs.impl", MissingBlockFileSystem.class.getName());
       conf.setBoolean("dfs.replication.considerLoad", false);
-      dfs = new MiniDFSCluster(conf, 1, true, rack1, hosts1);
+      dfs = new MiniDFSCluster.Builder(conf)
+        .numDataNodes(1).format(true)
+        .racks(rack1).hosts(hosts1).buildHDFS();
       dfs.waitActive();
 
       namenode = (dfs.getFileSystem()).getUri().getHost() + ":" +

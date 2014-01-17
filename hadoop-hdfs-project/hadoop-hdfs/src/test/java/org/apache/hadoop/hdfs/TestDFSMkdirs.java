@@ -91,7 +91,7 @@ public class TestDFSMkdirs {
   @Test
   public void testMkdir() throws IOException {
     Configuration conf = new HdfsConfiguration();
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2).build();
+    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(2).buildHDFS();
     DistributedFileSystem dfs = (DistributedFileSystem) cluster.getFileSystem();
     try {
       // Create a dir in root dir, should succeed
@@ -135,7 +135,7 @@ public class TestDFSMkdirs {
    */
   @Test
   public void testMkdirRpcNonCanonicalPath() throws IOException {
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(0).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(0).buildHDFS();
     try {
       NamenodeProtocols nnrpc = cluster.getNameNodeRpc();
       

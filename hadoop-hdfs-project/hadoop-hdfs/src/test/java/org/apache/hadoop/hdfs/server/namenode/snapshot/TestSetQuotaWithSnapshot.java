@@ -30,6 +30,7 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 import org.apache.hadoop.hdfs.protocol.SnapshottableDirectoryStatus;
 import org.apache.hadoop.hdfs.server.namenode.FSDirectory;
@@ -50,7 +51,7 @@ public class TestSetQuotaWithSnapshot {
   protected static final long BLOCKSIZE = 1024;
   
   protected Configuration conf;
-  protected MiniDFSCluster cluster;
+  protected MiniHDFSCluster cluster;
   protected FSNamesystem fsn;
   protected FSDirectory fsdir;
   protected DistributedFileSystem hdfs;
@@ -63,7 +64,7 @@ public class TestSetQuotaWithSnapshot {
     conf = new Configuration();
     conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, BLOCKSIZE);
     cluster = new MiniDFSCluster.Builder(conf).numDataNodes(REPLICATION)
-        .format(true).build();
+        .format(true).buildHDFS();
     cluster.waitActive();
 
     fsn = cluster.getNamesystem();

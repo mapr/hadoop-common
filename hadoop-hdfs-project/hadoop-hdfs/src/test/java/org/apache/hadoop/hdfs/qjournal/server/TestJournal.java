@@ -24,7 +24,7 @@ import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileUtil;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.qjournal.QJMTestUtil;
 import org.apache.hadoop.hdfs.qjournal.protocol.RequestInfo;
 import org.apache.hadoop.hdfs.qjournal.protocol.JournalOutOfSyncException;
@@ -49,7 +49,7 @@ public class TestJournal {
   private static final String JID = "test-journal";
 
   private static final File TEST_LOG_DIR = new File(
-      new File(MiniDFSCluster.getBaseDirectory()), "TestJournal");
+      new File(MiniHDFSCluster.getBaseDirectory()), "TestJournal");
 
   private StorageErrorReporter mockErrorReporter = Mockito.mock(
       StorageErrorReporter.class);

@@ -25,6 +25,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ha.HealthCheckFailedException;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.server.namenode.NameNodeResourceChecker;
 import org.apache.hadoop.hdfs.server.protocol.NamenodeProtocols;
 import org.apache.hadoop.test.GenericTestUtils;
@@ -35,13 +36,13 @@ public class TestNNHealthCheck {
 
   @Test
   public void testNNHealthCheck() throws IOException {
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
       Configuration conf = new Configuration();
       cluster = new MiniDFSCluster.Builder(conf)
           .numDataNodes(0)
           .nnTopology(MiniDFSNNTopology.simpleHATopology())
-          .build();
+          .buildHDFS();
 
       NameNodeResourceChecker mockResourceChecker = Mockito.mock(
           NameNodeResourceChecker.class);

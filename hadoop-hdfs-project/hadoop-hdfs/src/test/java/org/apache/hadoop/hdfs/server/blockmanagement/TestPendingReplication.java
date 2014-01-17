@@ -29,6 +29,7 @@ import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
@@ -168,10 +169,10 @@ public class TestPendingReplication {
   public void testBlockReceived() throws Exception {
     final Configuration conf = new HdfsConfiguration();
     conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, 1024);
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
       cluster = new MiniDFSCluster.Builder(conf).numDataNodes(
-          DATANODE_COUNT).build();
+          DATANODE_COUNT).buildHDFS();
       cluster.waitActive();
 
       DistributedFileSystem hdfs = cluster.getFileSystem();
@@ -268,8 +269,8 @@ public class TestPendingReplication {
         DFS_REPLICATION_INTERVAL);
     CONF.setInt(DFSConfigKeys.DFS_NAMENODE_REPLICATION_INTERVAL_KEY, 
         DFS_REPLICATION_INTERVAL);
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(CONF).numDataNodes(
-        DATANODE_COUNT).build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(CONF).numDataNodes(
+        DATANODE_COUNT).buildHDFS();
     cluster.waitActive();
     
     FSNamesystem namesystem = cluster.getNamesystem();

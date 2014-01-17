@@ -75,7 +75,10 @@ public class TestMiniMRWithDFSWithDistinctUsers {
 
   @Before
   public void setUp() throws Exception {
-    dfs = new MiniDFSCluster(conf, 4, true, null);
+    dfs = new MiniDFSCluster.Builder(conf)
+                     .numDataNodes(4)
+                     .format(true)
+                     .build();
 
     fs = DFS_UGI.doAs(new PrivilegedExceptionAction<FileSystem>() {
         public FileSystem run() throws IOException {

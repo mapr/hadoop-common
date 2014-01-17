@@ -30,7 +30,6 @@ import java.net.URI;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.apache.hadoop.hdfs.server.namenode.NameNode;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRClientCluster;
 import org.apache.hadoop.mapred.MiniMRClientClusterFactory;
@@ -58,7 +57,8 @@ public class TestMRCredentials {
   public static void setUp() throws Exception {
     System.setProperty("hadoop.log.dir", "logs");
     Configuration conf = new Configuration();
-    dfsCluster = new MiniDFSCluster(conf, numSlaves, true, null);  
+    dfsCluster = new MiniDFSCluster.Builder(conf).numDataNodes(numSlaves)
+      .build();
     jConf = new JobConf(conf);
     FileSystem.setDefaultUri(conf, dfsCluster.getFileSystem().getUri().toString());
     mrCluster = MiniMRClientClusterFactory.create(TestMRCredentials.class, 1, jConf);
@@ -111,8 +111,7 @@ public class TestMRCredentials {
 
     // provide namenodes names for the job to get the delegation tokens for
     //String nnUri = dfsCluster.getNameNode().getUri(namenode).toString();
-    NameNode nn = dfsCluster.getNameNode();
-    URI nnUri = NameNode.getUri(nn.getNameNodeAddress());
+    URI nnUri = dfsCluster.getURI();
     jobConf.set(JobContext.JOB_NAMENODES, nnUri + "," + nnUri.toString());
 
 

@@ -42,6 +42,7 @@ import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.net.TcpPeerServer;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
@@ -195,12 +196,13 @@ public class TestBlockTokenWithDFS {
    */
   @Test
   public void testAppend() throws Exception {
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     int numDataNodes = 2;
     Configuration conf = getConf(numDataNodes);
 
     try {
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(numDataNodes).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(numDataNodes)
+          .buildHDFS();
       cluster.waitActive();
       assertEquals(numDataNodes, cluster.getDataNodes().size());
 
@@ -256,12 +258,13 @@ public class TestBlockTokenWithDFS {
    */
   @Test
   public void testWrite() throws Exception {
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     int numDataNodes = 2;
     Configuration conf = getConf(numDataNodes);
 
     try {
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(numDataNodes).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(numDataNodes)
+          .buildHDFS();
       cluster.waitActive();
       assertEquals(numDataNodes, cluster.getDataNodes().size());
 
@@ -309,12 +312,13 @@ public class TestBlockTokenWithDFS {
 
   @Test
   public void testRead() throws Exception {
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     int numDataNodes = 2;
     Configuration conf = getConf(numDataNodes);
 
     try {
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(numDataNodes).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(numDataNodes)
+          .buildHDFS();
       cluster.waitActive();
       assertEquals(numDataNodes, cluster.getDataNodes().size());
 

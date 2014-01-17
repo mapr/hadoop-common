@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.server.common.GenerationStamp;
 import org.apache.hadoop.hdfs.server.namenode.FSNamesystem;
@@ -39,7 +40,7 @@ public class TestComputeInvalidateWork {
   public void testCompInvalidate() throws Exception {
     final Configuration conf = new HdfsConfiguration();
     final int NUM_OF_DATANODES = 3;
-    final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(NUM_OF_DATANODES).build();
+    final MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(NUM_OF_DATANODES).buildHDFS();
     try {
       cluster.waitActive();
       final FSNamesystem namesystem = cluster.getNamesystem();

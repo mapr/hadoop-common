@@ -81,12 +81,12 @@ public class TestPersistBlocks {
     conf.setInt(
         CommonConfigurationKeysPublic.IPC_CLIENT_CONNECTION_MAXIDLETIME_KEY,
         0);
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
 
     long len = 0;
     FSDataOutputStream stream;
     try {
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).buildHDFS();
       FileSystem fs = cluster.getFileSystem();
       // Creating a file with 4096 blockSize to write multiple blocks
       stream = fs.create(FILE_PATH, true, BLOCK_SIZE, (short) 1, BLOCK_SIZE);
@@ -137,12 +137,12 @@ public class TestPersistBlocks {
     conf.setInt(
         CommonConfigurationKeysPublic.IPC_CLIENT_CONNECTION_MAXIDLETIME_KEY,
         0);
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
 
     long len = 0;
     FSDataOutputStream stream;
     try {
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).buildHDFS();
       FileSystem fs = cluster.getFileSystem();
       // Creating a file with 4096 blockSize to write multiple blocks
       stream = fs.create(FILE_PATH, true, BLOCK_SIZE, (short) 1, BLOCK_SIZE);
@@ -198,11 +198,11 @@ public class TestPersistBlocks {
     conf.setInt(
         CommonConfigurationKeysPublic.IPC_CLIENT_CONNECTION_MAXIDLETIME_KEY,
         0);
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
 
     FSDataOutputStream stream;
     try {
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).buildHDFS();
       FileSystem fs = cluster.getFileSystem();
       NameNode.getAddress(conf).getPort();
       // Creating a file with 4096 blockSize to write multiple blocks
@@ -247,11 +247,11 @@ public class TestPersistBlocks {
     conf.setInt(
         CommonConfigurationKeysPublic.IPC_CLIENT_CONNECTION_MAXIDLETIME_KEY,
         0);
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
 
     FSDataOutputStream stream;
     try {
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).buildHDFS();
       FileSystem fs = cluster.getFileSystem();
       NameNode.getAddress(conf).getPort();
       // Creating a file with 4096 blockSize to write multiple blocks
