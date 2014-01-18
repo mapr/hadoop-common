@@ -31,12 +31,12 @@ import org.junit.Test;
 import org.mockito.internal.util.reflection.Whitebox;
 
 public class TestDFSOutputStream {
-  static MiniDFSCluster cluster;
+  static MiniHDFSCluster cluster;
 
   @BeforeClass
   public static void setup() throws IOException {
     Configuration conf = new Configuration();
-    cluster = new MiniDFSCluster.Builder(conf).build();
+    cluster = new MiniHDFSCluster.Builder(conf).buildHDFS();
   }
 
   /**

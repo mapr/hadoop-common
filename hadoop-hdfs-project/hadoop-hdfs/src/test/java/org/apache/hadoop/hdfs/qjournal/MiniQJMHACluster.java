@@ -28,12 +28,13 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
 import org.apache.hadoop.hdfs.server.namenode.NameNode;
 import org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider;
 
 public class MiniQJMHACluster {
-  private MiniDFSCluster cluster;
+  private MiniHDFSCluster cluster;
   private MiniJournalCluster journalCluster;
   private final Configuration conf;
   
@@ -87,7 +88,7 @@ public class MiniQJMHACluster {
     // First start up the NNs just to format the namespace. The MinIDFSCluster
     // has no way to just format the NameNodes without also starting them.
     cluster = builder.dfsBuilder.nnTopology(topology)
-        .manageNameDfsSharedDirs(false).build();
+        .manageNameDfsSharedDirs(false).buildHDFS();
     cluster.waitActive();
     cluster.shutdown();
     
@@ -119,7 +120,7 @@ public class MiniQJMHACluster {
     return conf;
   }
 
-  public MiniDFSCluster getDfsCluster() {
+  public MiniHDFSCluster getDfsCluster() {
     return cluster;
   }
   

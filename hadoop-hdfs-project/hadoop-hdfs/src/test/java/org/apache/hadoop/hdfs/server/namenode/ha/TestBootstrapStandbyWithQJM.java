@@ -26,6 +26,7 @@ import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.qjournal.MiniJournalCluster;
 import org.apache.hadoop.hdfs.qjournal.MiniQJMHACluster;
 import org.apache.hadoop.hdfs.server.namenode.FSImageTestUtil;
@@ -40,7 +41,7 @@ import com.google.common.collect.ImmutableList;
  */
 public class TestBootstrapStandbyWithQJM {  
   private MiniQJMHACluster miniQjmHaCluster;
-  private MiniDFSCluster cluster;
+  private MiniHDFSCluster cluster;
   private MiniJournalCluster jCluster;
   
   @Before

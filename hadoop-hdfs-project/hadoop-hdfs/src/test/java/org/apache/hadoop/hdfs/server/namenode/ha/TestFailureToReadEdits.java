@@ -38,6 +38,7 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.HAUtil;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.qjournal.MiniQJMHACluster;
 import org.apache.hadoop.hdfs.qjournal.MiniQJMHACluster.Builder;
 import org.apache.hadoop.hdfs.server.namenode.EditLogInputStream;
@@ -68,7 +69,7 @@ public class TestFailureToReadEdits {
   
   private final TestType clusterType;
   private Configuration conf;
-  private MiniDFSCluster cluster;
+  private MiniHDFSCluster cluster;
   private MiniQJMHACluster miniQjmHaCluster; // for QJM case only
   private NameNode nn0;
   private NameNode nn1;
@@ -112,7 +113,7 @@ public class TestFailureToReadEdits {
         .nnTopology(topology)
         .numDataNodes(0)
         .checkExitOnShutdown(false)
-        .build();
+      .buildHDFS();
     } else {
       Builder builder = new MiniQJMHACluster.Builder(conf);
       builder.getDfsBuilder().numDataNodes(0).checkExitOnShutdown(false);

@@ -61,7 +61,7 @@ public class TestDFSClientExcludedNodes {
 
   @Test(timeout=60000)
   public void testExcludedNodes() throws IOException {
-    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).buildHDFS();;
+    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).buildHDFS();
     FileSystem fs = cluster.getFileSystem();
     Path filePath = new Path("/testExcludedNodes");
 
@@ -93,7 +93,8 @@ public class TestDFSClientExcludedNodes {
     // We'll be using a 512 bytes block size just for tests
     // so making sure the checksum bytes too match it.
     conf.setInt("io.bytes.per.checksum", 512);
-    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).buildHDFS();
+    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3)
+      .buildHDFS();
     List<DataNodeProperties> props = cluster.dataNodes;
     FileSystem fs = cluster.getFileSystem();
     Path filePath = new Path("/testForgivingExcludedNodes");
