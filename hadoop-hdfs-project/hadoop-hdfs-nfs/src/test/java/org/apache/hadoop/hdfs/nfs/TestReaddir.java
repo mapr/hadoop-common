@@ -29,6 +29,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.nfs.nfs3.Nfs3;
 import org.apache.hadoop.hdfs.nfs.nfs3.RpcProgramNfs3;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
@@ -52,7 +53,7 @@ import org.mockito.Mockito;
 public class TestReaddir {
 
   static Configuration config = new Configuration();
-  static MiniDFSCluster cluster = null;
+  static MiniHDFSCluster cluster = null;
   static DistributedFileSystem hdfs;
   static NameNode nn;
   static RpcProgramNfs3 nfsd;
@@ -61,7 +62,7 @@ public class TestReaddir {
   
   @BeforeClass
   public static void setup() throws Exception {
-    cluster = new MiniDFSCluster.Builder(config).numDataNodes(1).build();
+    cluster = new MiniDFSCluster.Builder(config).numDataNodes(1).buildHDFS();
     cluster.waitActive();
     hdfs = cluster.getFileSystem();
     nn = cluster.getNameNode();

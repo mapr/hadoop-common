@@ -479,7 +479,6 @@ public abstract class MiniDFSCluster {
     LOG.info("Shutting down MiniDFSCluster");
     doShutdown();
     runningInstance = null;
-    waitActive();
   }
 
   /**

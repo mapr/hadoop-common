@@ -966,7 +966,7 @@ public class TestSnapshotDeletion {
     conf = new Configuration();
     cluster = new MiniDFSCluster.Builder(conf)
         .nnTopology(MiniDFSNNTopology.simpleHATopology()).numDataNodes(1)
-        .build();
+        .buildHDFS();
     cluster.transitionToActive(0);
     // stop the standby namenode
     NameNode snn = cluster.getNameNode(1);

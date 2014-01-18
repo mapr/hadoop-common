@@ -29,6 +29,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.client.HdfsAdmin;
 import org.apache.hadoop.hdfs.server.namenode.NameNodeAdapter;
 import org.apache.hadoop.hdfs.server.namenode.SecondaryNameNode;
@@ -45,7 +46,7 @@ public class TestCheckpointsWithSnapshots {
   
   @Before
   public void setUp() {
-    FileUtil.fullyDeleteContents(new File(MiniDFSCluster.getBaseDirectory()));
+    FileUtil.fullyDeleteContents(new File(MiniHDFSCluster.getBaseDirectory()));
   }
 
   /**
@@ -54,10 +55,10 @@ public class TestCheckpointsWithSnapshots {
    */
   @Test
   public void testCheckpoint() throws IOException {
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     SecondaryNameNode secondary = null;
     try {
-      cluster = new MiniDFSCluster.Builder(conf).build();
+      cluster = new MiniDFSCluster.Builder(conf).buildHDFS();
       cluster.waitActive();
       secondary = new SecondaryNameNode(conf);
       SnapshotManager nnSnapshotManager = cluster.getNamesystem().getSnapshotManager();

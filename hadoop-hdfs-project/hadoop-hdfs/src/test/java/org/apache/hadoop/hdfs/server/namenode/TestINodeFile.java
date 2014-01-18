@@ -932,9 +932,9 @@ public class TestINodeFile {
   @Test
   public void testFilesInGetListingOps() throws Exception {
     final Configuration conf = new Configuration();
-    MiniDFSCluster cluster = null;
+    MiniHDFSCluster cluster = null;
     try {
-      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1).build();
+      cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1).buildHDFS();
       cluster.waitActive();
       final DistributedFileSystem hdfs = cluster.getFileSystem();
       final FSDirectory fsdir = cluster.getNamesystem().getFSDirectory();

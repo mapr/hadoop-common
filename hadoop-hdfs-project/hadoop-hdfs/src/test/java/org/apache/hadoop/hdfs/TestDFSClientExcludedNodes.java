@@ -43,7 +43,7 @@ import org.junit.Test;
  */
 public class TestDFSClientExcludedNodes {
 
-  private MiniDFSCluster cluster;
+  private MiniHDFSCluster cluster;
   private Configuration conf;
 
   @Before

@@ -27,6 +27,7 @@ import org.apache.hadoop.hdfs.DFSOutputStream;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.MiniHDFSCluster;
 import org.apache.hadoop.hdfs.client.HdfsDataOutputStream.SyncFlag;
 import org.apache.hadoop.hdfs.server.namenode.INodeId;
 import org.apache.hadoop.hdfs.server.namenode.NameNode;
@@ -39,12 +40,12 @@ import org.junit.Test;
 
 public class TestOpenFilesWithSnapshot {
   private Configuration conf = new Configuration();
-  MiniDFSCluster cluster = null;
+  MiniHDFSCluster cluster = null;
   DistributedFileSystem fs = null;
 
   @Before
   public void setup() throws IOException {
-    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).build();
+    cluster = new MiniDFSCluster.Builder(conf).numDataNodes(3).buildHDFS();
     conf.set("dfs.blocksize", "1048576");
     fs = cluster.getFileSystem();
   }

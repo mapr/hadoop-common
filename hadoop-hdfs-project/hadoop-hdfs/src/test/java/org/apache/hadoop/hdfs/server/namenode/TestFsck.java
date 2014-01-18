@@ -995,8 +995,8 @@ public class TestFsck {
   @Test
   public void testFsckForSnapshotFiles() throws Exception {
     final Configuration conf = new HdfsConfiguration();
-    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1)
-        .build();
+    MiniHDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1)
+        .buildHDFS();
     try {
       String runFsck = runFsck(conf, 0, true, "/", "-includeSnapshots",
           "-files");
