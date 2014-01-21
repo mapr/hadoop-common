@@ -65,8 +65,6 @@ Release 2.3.0 - UNRELEASED
     created by CombineFileInputFormat to fail (Robert Parker and Jason Lowe
     via jlowe)
 
-    MAPREDUCE-5514. Fix TestRMContainerAllocator. (Zhijie Shen via acmurthy) 
-
     MAPREDUCE-5656. bzip2 codec can drop records when reading data in splits
     (jlowe)
 
