@@ -6,6 +6,8 @@ Release 2.3.0 - UNRELEASED
 
   NEW FEATURES
 
+    MAPREDUCE-5481. Enable uber jobs to have multiple reducers (Sandy Ryza)
+
   IMPROVEMENTS
   
     MAPREDUCE-5329. Allow MR applications to use additional AuxServices,
@@ -64,8 +66,6 @@ Release 2.3.0 - UNRELEASED
     MAPREDUCE-5186. mapreduce.job.max.split.locations causes some splits
     created by CombineFileInputFormat to fail (Robert Parker and Jason Lowe
     via jlowe)
-
-    MAPREDUCE-5481. Enable uber jobs to have multiple reducers (Sandy Ryza)
 
 
 Release 2.2.0 - 2013-10-13
