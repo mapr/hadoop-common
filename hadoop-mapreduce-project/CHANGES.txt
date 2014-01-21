@@ -1,7 +1,5 @@
 Hadoop MapReduce Change Log
 
-    MAPREDUCE-5729. mapred job -list throws NPE (kasha)
-
 Release 2.3.0 - UNRELEASED
 
   INCOMPATIBLE CHANGES
@@ -75,6 +73,8 @@ Release 2.3.0 - UNRELEASED
 
     MAPREDUCE-5689. MRAppMaster does not preempt reducers when scheduled maps 
     cannot be fulfilled. (lohit via kasha)
+
+    MAPREDUCE-5729. mapred job -list throws NPE (kasha)
 
 
 Release 2.2.0 - 2013-10-13
