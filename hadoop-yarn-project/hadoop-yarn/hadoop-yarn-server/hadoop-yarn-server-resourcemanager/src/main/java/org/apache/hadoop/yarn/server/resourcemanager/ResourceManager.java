@@ -388,6 +388,7 @@ public class ResourceManager extends CompositeService implements Recoverable {
           + ", " + YarnConfiguration.RM_NM_HEARTBEAT_INTERVAL_MS + "="
           + heartbeatIntvl);
     }
+  }
 
     protected void createPolicyMonitors() {
       if (scheduler instanceof PreemptableResourceScheduler
@@ -418,7 +419,6 @@ public class ResourceManager extends CompositeService implements Recoverable {
         }
       }
     }
-  }
 
   @Private
   public static class SchedulerEventDispatcher extends AbstractService
