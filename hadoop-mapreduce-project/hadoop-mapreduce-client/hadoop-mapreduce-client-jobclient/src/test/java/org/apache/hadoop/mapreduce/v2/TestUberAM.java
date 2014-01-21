@@ -20,7 +20,6 @@ package org.apache.hadoop.mapreduce.v2;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -40,14 +39,12 @@ import org.junit.Test;
 public class TestUberAM extends TestMRJobs {
 
   private static final Log LOG = LogFactory.getLog(TestUberAM.class);
-  private int numSleepReducers;
-  
+
   @BeforeClass
   public static void setup() throws IOException {
     TestMRJobs.setup();
     if (mrCluster != null) {
     	mrCluster.getConfig().setBoolean(MRJobConfig.JOB_UBERTASK_ENABLE, true);
-    	mrCluster.getConfig().setInt(MRJobConfig.JOB_UBERTASK_MAXREDUCES, 3);
     }
   }
 
@@ -55,19 +52,8 @@ public class TestUberAM extends TestMRJobs {
   @Test
   public void testSleepJob()
   throws IOException, InterruptedException, ClassNotFoundException {
-    numSleepReducers = 1;
     if (mrCluster != null) {
-    	mrCluster.getConfig().setInt("TestMRJobs.testSleepJob.reduces", numSleepReducers);
-    }
-    super.testSleepJob();
-  }
-  
-  @Test
-  public void testSleepJobWithMultipleReducers()
-  throws IOException, InterruptedException, ClassNotFoundException {
-    numSleepReducers = 3;
-    if (mrCluster != null) {
-      mrCluster.getConfig().setInt("TestMRJobs.testSleepJob.reduces", numSleepReducers);
+    	mrCluster.getConfig().setInt("TestMRJobs.testSleepJob.reduces", 1);
     }
     super.testSleepJob();
   }
@@ -81,7 +67,7 @@ public class TestUberAM extends TestMRJobs {
         .getValue());
     Assert.assertEquals(3, counters.findCounter(JobCounter.TOTAL_LAUNCHED_MAPS)
         .getValue());
-    Assert.assertEquals(numSleepReducers,
+    Assert.assertEquals(1,
         counters.findCounter(JobCounter.TOTAL_LAUNCHED_REDUCES).getValue());
     Assert
         .assertTrue(counters.findCounter(JobCounter.SLOTS_MILLIS_MAPS) != null
@@ -90,11 +76,11 @@ public class TestUberAM extends TestMRJobs {
         .assertTrue(counters.findCounter(JobCounter.SLOTS_MILLIS_MAPS) != null
             && counters.findCounter(JobCounter.SLOTS_MILLIS_MAPS).getValue() != 0);
 
-    Assert.assertEquals(3,
-        counters.findCounter(JobCounter.NUM_UBER_SUBMAPS).getValue());
-    Assert.assertEquals(numSleepReducers,
-        counters.findCounter(JobCounter.NUM_UBER_SUBREDUCES).getValue());
-    Assert.assertEquals(3 + numSleepReducers,
+    Assert.assertEquals(3, counters.findCounter(JobCounter.NUM_UBER_SUBMAPS)
+        .getValue());
+    Assert.assertEquals(1, counters.findCounter(JobCounter.NUM_UBER_SUBREDUCES)
+        .getValue());
+    Assert.assertEquals(4,
         counters.findCounter(JobCounter.TOTAL_LAUNCHED_UBERTASKS).getValue());
   }
 
@@ -152,10 +138,8 @@ public class TestUberAM extends TestMRJobs {
 
     TaskCompletionEvent[] events = job.getTaskCompletionEvents(0, 2);
     Assert.assertEquals(1, events.length);
-    // TIPFAILED if it comes from the AM, FAILED if it comes from the JHS
-    TaskCompletionEvent.Status status = events[0].getStatus();
-    Assert.assertTrue(status == TaskCompletionEvent.Status.FAILED ||
-        status == TaskCompletionEvent.Status.TIPFAILED);
+    Assert.assertEquals(TaskCompletionEvent.Status.TIPFAILED,
+        events[0].getStatus());
     Assert.assertEquals(JobStatus.State.FAILED, job.getJobState());
     
     //Disabling till UberAM honors MRJobConfig.MAP_MAX_ATTEMPTS
