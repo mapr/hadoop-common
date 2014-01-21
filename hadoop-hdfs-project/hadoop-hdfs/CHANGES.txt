@@ -207,6 +207,9 @@ Release 2.3.0 - UNRELEASED
 
     HDFS-5526. Datanode cannot roll back to previous layout version (kihwal)
 
+    HDFS-5557. Write pipeline recovery for the last packet in the block may
+    cause rejection of valid replicas. (kihwal)
+
 
 
 Release 2.2.0 - 2013-10-13
@@ -3552,9 +3555,6 @@ Release 0.23.10 - UNRELEASED
     HDFS-4998. TestUnderReplicatedBlocks fails intermittently (kihwal)
 
 Release 0.23.9 - UNRELEASED
-    HDFS-5557. Write pipeline recovery for the last packet in the block may
-    cause rejection of valid replicas. (kihwal)
-
 
   INCOMPATIBLE CHANGES
 
