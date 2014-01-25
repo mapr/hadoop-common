@@ -24,7 +24,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.ipc.VersionedProtocol;
 import org.apache.hadoop.mapreduce.security.token.delegation.DelegationTokenIdentifier;
 import org.apache.hadoop.mapreduce.security.token.delegation.DelegationTokenSelector;
-import org.apache.hadoop.security.authentication.util.KerberosInfo;
+import org.apache.hadoop.security.KerberosInfo;
 import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.security.authorize.AccessControlList;
 import org.apache.hadoop.security.token.Token;

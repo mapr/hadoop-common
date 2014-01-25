@@ -27,30 +27,26 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Vector;
-import java.util.Map.Entry;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.filecache.TaskDistributedCacheManager;
 import org.apache.hadoop.filecache.TrackerDistributedCacheManager;
-import org.apache.hadoop.mapreduce.security.TokenCache;
 import org.apache.hadoop.fs.FSError;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.LocalDirAllocator;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.mapreduce.security.TokenCache;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.util.Shell;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.log4j.Level;
-
 //AH
 //import org.apache.hadoop.mapred.MapReduceLocalData;
-import org.apache.hadoop.mapred.MapRFsOutputFile;
 
 /** Base class that runs a task in a separate process.  Tasks are run in a
  * separate process in order to isolate the map/reduce system code from bugs in
@@ -199,7 +195,7 @@ abstract class TaskRunner extends Thread {
       //before preparing the job localize 
       //all the archives
       TaskAttemptID taskid = t.getTaskID();
-      final LocalDirAllocator lDirAlloc = new LocalDirAllocator();
+      final LocalDirAllocator lDirAlloc = new LocalDirAllocator(JobConf.MAPRED_LOCAL_DIR_PROPERTY);
       //simply get the location of the workDir and pass it to the child. The
       //child will do the actual dir creation
       final File workDir =
@@ -231,7 +227,7 @@ abstract class TaskRunner extends Thread {
 
       // MapR changes
       Map <String, String> mapRSetupCmds = new HashMap<String, String>(3);
-      Shell.getSetupCmds(conf, mapRSetupCmds);
+      MapRShellUtil.getSetupCmds(conf, mapRSetupCmds);
 
       // set memory limit using ulimit if feasible and necessary ...
       String setup = getVMSetupCmd();
@@ -371,7 +367,7 @@ abstract class TaskRunner extends Thread {
     if (!tip.isEphemeral() && ulimit <= 0) {
       return "";
     }
-    String[] setup = Shell.getUlimitMemoryCommand(
+    String[] setup = MapRShellUtil.getUlimitMemoryCommand(
         tip.isEphemeral() ? tracker.getEphemeralSlotUlimit() : ulimit);
     StringBuilder command = new StringBuilder();
     for (String str : setup) {
@@ -710,7 +706,7 @@ abstract class TaskRunner extends Thread {
    * process space.
    */
   static void setupChildMapredLocalDirs(Task t, JobConf conf) {
-    String[] localDirs = conf.getLocalDirs();
+    String[] localDirs = conf.getTrimmedStrings(JobConf.MAPRED_LOCAL_DIR_PROPERTY);
     String jobId = t.getJobID().toString();
     String taskId = t.getTaskID().toString();
     boolean isCleanup = t.isTaskCleanupTask();
@@ -842,7 +838,7 @@ abstract class TaskRunner extends Thread {
           LOG.info(String.format("Creating symlink: %s <- %s", target, link));
         }
         final FileSystem lfs = FileSystem.getLocal(conf);
-        lfs.createSymbolicLink(new Path(target), new Path(link));
+        lfs.createSymlink(new Path(target), new Path(link), true);
       }
     }
   }

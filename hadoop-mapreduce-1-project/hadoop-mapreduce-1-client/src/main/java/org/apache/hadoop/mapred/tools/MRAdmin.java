@@ -18,13 +18,12 @@
 package org.apache.hadoop.mapred.tools;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
-import org.apache.hadoop.hdfs.server.namenode.NameNode;
-import org.apache.hadoop.ipc.RPC;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.ipc.FailoverRPC;
 import org.apache.hadoop.ipc.RemoteException;
 import org.apache.hadoop.mapred.AdminOperationsProtocol;
 import org.apache.hadoop.mapred.JobConf;
@@ -35,7 +34,6 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.RefreshAuthorizationPolicyProtocol;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.hadoop.fs.FileSystem;
 
 
 /**
@@ -154,7 +152,7 @@ public class MRAdmin extends Configured implements Tool {
     RefreshAuthorizationPolicyProtocol refreshProtocol;
     refreshProtocol =
       (RefreshAuthorizationPolicyProtocol)
-      RPC.getProxy(RefreshAuthorizationPolicyProtocol.class,
+      FailoverRPC.getProxy(RefreshAuthorizationPolicyProtocol.class,
                    RefreshAuthorizationPolicyProtocol.versionID, 
                    FileSystem.get(conf), getUGI(conf), conf,
                    NetUtils.getSocketFactory(conf, 
@@ -173,7 +171,7 @@ public class MRAdmin extends Configured implements Tool {
     // Create the client
     AdminOperationsProtocol adminOperationsProtocol = 
       (AdminOperationsProtocol) 
-      RPC.getProxy(AdminOperationsProtocol.class, 
+      FailoverRPC.getProxy(AdminOperationsProtocol.class, 
                    AdminOperationsProtocol.versionID, 
                    FileSystem.get(conf), getUGI(conf), conf,
                    NetUtils.getSocketFactory(conf, 
@@ -198,7 +196,7 @@ public class MRAdmin extends Configured implements Tool {
     // Create the client
     AdminOperationsProtocol adminOperationsProtocol = 
       (AdminOperationsProtocol) 
-      RPC.getProxy(AdminOperationsProtocol.class, 
+      FailoverRPC.getProxy(AdminOperationsProtocol.class, 
                    AdminOperationsProtocol.versionID, 
                    FileSystem.get(conf), getUGI(conf), conf,
                    NetUtils.getSocketFactory(conf, 
@@ -230,7 +228,7 @@ public class MRAdmin extends Configured implements Tool {
     // Create the client
     RefreshUserMappingsProtocol refreshProtocol = 
       (RefreshUserMappingsProtocol) 
-      RPC.getProxy(RefreshUserMappingsProtocol.class, 
+      FailoverRPC.getProxy(RefreshUserMappingsProtocol.class, 
                    RefreshUserMappingsProtocol.versionID, 
                    FileSystem.get(conf), getUGI(conf), conf,
                    NetUtils.getSocketFactory(conf, 
@@ -263,7 +261,7 @@ public class MRAdmin extends Configured implements Tool {
     // Create the client
     RefreshUserMappingsProtocol refreshProtocol =
       (RefreshUserMappingsProtocol)
-      RPC.getProxy(RefreshUserMappingsProtocol.class,
+      FailoverRPC.getProxy(RefreshUserMappingsProtocol.class,
                    RefreshUserMappingsProtocol.versionID,
                    FileSystem.get(conf), getUGI(conf), conf,
                    NetUtils.getSocketFactory(conf,

@@ -25,7 +25,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.Map.Entry;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -76,7 +75,7 @@ public class LinuxTaskController extends TaskController {
   public void setConf(Configuration conf) {
     super.setConf(conf);
     File hadoopbin = new File(System.getenv("HADOOP_HOME"), "bin");
-    File nativebin = new File(hadoopbin, PlatformName.getPlatformName());
+    File nativebin = new File(hadoopbin, PlatformName.PLATFORM_NAME);
     String defaultTaskController = 
         new File(nativebin, "/bin/task-controller").getAbsolutePath();
     taskControllerExe = conf.get(TASK_CONTROLLER_EXEC_KEY, 
@@ -359,7 +358,7 @@ public class LinuxTaskController extends TaskController {
     Task firstTask = allAttempts.get(0);
     String taskid = firstTask.getTaskID().toString();
     
-    LocalDirAllocator ldirAlloc = new LocalDirAllocator();
+    LocalDirAllocator ldirAlloc = new LocalDirAllocator(JobConf.MAPRED_LOCAL_DIR_PROPERTY);
     String taskRanFile = TaskTracker.TT_LOG_TMP_DIR + Path.SEPARATOR + taskid;
     Configuration conf = new Configuration();
     

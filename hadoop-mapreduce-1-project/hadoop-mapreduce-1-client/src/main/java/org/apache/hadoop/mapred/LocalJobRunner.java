@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -34,16 +33,13 @@ import org.apache.hadoop.filecache.TaskDistributedCacheManager;
 import org.apache.hadoop.filecache.TrackerDistributedCacheManager;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapreduce.security.token.delegation.DelegationTokenIdentifier;
-import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.serializer.SerializationFactory;
-import org.apache.hadoop.io.serializer.Serializer;
-import org.apache.hadoop.mapreduce.split.SplitMetaInfoReader;
+import org.apache.hadoop.ipc.ProtocolSignature;
+import org.apache.hadoop.mapreduce.security.token.delegation.DelegationTokenIdentifier;
 import org.apache.hadoop.mapreduce.split.JobSplit.TaskSplitMetaInfo;
-import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.mapreduce.security.TokenCache;
+import org.apache.hadoop.mapreduce.split.SplitMetaInfoReader;
 import org.apache.hadoop.security.Credentials;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.AccessControlList;
 import org.apache.hadoop.security.token.Token;
 
@@ -67,7 +63,15 @@ class LocalJobRunner implements JobSubmissionProtocol {
   public long getProtocolVersion(String protocol, long clientVersion) {
     return JobSubmissionProtocol.versionID;
   }
-  
+
+  @Override
+  public ProtocolSignature getProtocolSignature(String protocol,
+      long clientVersion, int clientMethodsHash) throws IOException {
+
+    return ProtocolSignature.getProtocolSignature(
+        this, protocol, clientVersion, clientMethodsHash);
+  }
+
   private class Job extends Thread
     implements TaskUmbilicalProtocol {
     // The job directory on the system: JobClient places job configurations here.
@@ -101,6 +105,14 @@ class LocalJobRunner implements JobSubmissionProtocol {
 
     public long getProtocolVersion(String protocol, long clientVersion) {
       return TaskUmbilicalProtocol.versionID;
+    }
+
+    //@Override
+    public ProtocolSignature getProtocolSignature(String protocol,
+        long clientVersion, int clientMethodsHash) throws IOException {
+
+      return ProtocolSignature.getProtocolSignature(
+          this, protocol, clientVersion, clientMethodsHash);
     }
     
     public Job(JobID jobid, String jobSubmitDir) throws IOException {
@@ -165,8 +177,7 @@ class LocalJobRunner implements JobSubmissionProtocol {
     JobProfile getProfile() {
       return profile;
     }
-    
-    @SuppressWarnings("unchecked")
+
     @Override
     public void run() {
       JobID jobId = profile.getJobID();

@@ -34,7 +34,6 @@ import org.apache.hadoop.mapreduce.server.tasktracker.JVMInfo;
 import org.apache.hadoop.mapreduce.server.tasktracker.Localizer;
 import org.apache.hadoop.mapreduce.util.ProcessTree.Signal;
 import org.apache.hadoop.mapreduce.util.ProcessTree;
-import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.Shell.ExitCodeException;
 import org.apache.hadoop.util.Shell.ShellCommandExecutor;
 
@@ -90,7 +89,7 @@ public class DefaultTaskController extends TaskController {
       
       //create the attempt dirs
       new Localizer(localFs, 
-          getConf().getLocalDirs()).
+          getConf().getTrimmedStrings(JobConf.MAPRED_LOCAL_DIR_PROPERTY)).
           initializeAttemptDirs(user, jobId, attemptId);
       
       // create the working-directory of the task 

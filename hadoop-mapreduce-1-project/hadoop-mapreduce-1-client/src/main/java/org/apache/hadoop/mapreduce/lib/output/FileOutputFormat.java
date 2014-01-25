@@ -286,12 +286,16 @@ public abstract class FileOutputFormat<K, V> extends OutputFormat<K, V> {
                                         ) throws IOException {
     if (committer == null) {
       Path output = getOutputPath(context);
-		  final FileSystem outputFs = output.getFileSystem(context.getConfiguration());
+      committer = new FileOutputCommitter(output, context);
 
-			committer = (outputFs instanceof NativeS3FileSystem || 
-			             outputFs instanceof S3FileSystem) ? 
-									 new DirectFileOutputCommitter(output, context) : 
-									 new FileOutputCommitter(output, context);
+      /*
+      final FileSystem outputFs = output.getFileSystem(context.getConfiguration());
+
+      committer = (outputFs instanceof NativeS3FileSystem || 
+          outputFs instanceof S3FileSystem) ? 
+        new DirectFileOutputCommitter(output, context) : 
+        new FileOutputCommitter(output, context);
+      */
     }
     return committer;
   }

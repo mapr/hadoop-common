@@ -75,7 +75,10 @@ import org.apache.hadoop.mapreduce.security.token.delegation.DelegationTokenIden
 import org.apache.hadoop.mapreduce.security.token.delegation.DelegationTokenSecretManager;
 import org.apache.hadoop.http.HttpServer;
 import org.apache.hadoop.io.Text;
+
+import org.apache.hadoop.ipc.ProtocolSignature;
 import org.apache.hadoop.ipc.RPC;
+import org.apache.hadoop.ipc.RpcConstants;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.ipc.RPC.VersionMismatch;
 import org.apache.hadoop.mapred.AuditLogger.Constants;
@@ -111,7 +114,6 @@ import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.VersionInfo;
 import org.apache.hadoop.util.Shell.ShellCommandExecutor;
-
 import org.apache.hadoop.mapreduce.ClusterMetrics;
 import org.apache.hadoop.mapreduce.JobSubmissionFiles;
 import org.apache.hadoop.mapreduce.TaskType;
@@ -245,7 +247,9 @@ public class JobTracker implements MRConstants, InterTrackerProtocol,
   private final List<JobInProgressListener> jobInProgressListeners =
     new CopyOnWriteArrayList<JobInProgressListener>();
 
-  private static final LocalDirAllocator lDirAlloc = new LocalDirAllocator();
+  private static final LocalDirAllocator lDirAlloc = new LocalDirAllocator(
+      JobConf.MAPRED_LOCAL_DIR_PROPERTY);
+
   //system directory is completely owned by the JobTracker
   final static FsPermission SYSTEM_DIR_PERMISSION =
     FsPermission.createImmutable((short) 0700); // rwx------
@@ -375,7 +379,15 @@ public class JobTracker implements MRConstants, InterTrackerProtocol,
       throw new IOException("Unknown protocol to job tracker: " + protocol);
     }
   }
-  
+
+  @Override
+  public ProtocolSignature getProtocolSignature(String protocol,
+      long clientVersion, int clientMethodsHash) throws IOException {
+
+    return ProtocolSignature.getProtocolSignature(
+        this, protocol, clientVersion, clientMethodsHash);
+  }
+
   public DelegationTokenSecretManager getDelegationTokenSecretManager() {
     return secretManager;
   }
@@ -1887,10 +1899,14 @@ public class JobTracker implements MRConstants, InterTrackerProtocol,
           in.close();
 
           if (token.getUser() == null) {
-            throw new RuntimeException("Incomplete job " + id + ". Failed to read user");
+            String msg = "Incomplete job " + id + ". Failed to read user";
+            LOG.error(msg);
+            throw new RuntimeException(msg);
           }
           if (token.getJobSubmitDir() == null) {
-            throw new RuntimeException("Incomplete job " + id + ". Failed to get job submission dir");
+            String msg = "Incomplete job " + id + ". Failed to get job submission dir";
+            LOG.error(msg);
+            throw new RuntimeException(msg);
           }
 
           // Create the job
@@ -1905,6 +1921,8 @@ public class JobTracker implements MRConstants, InterTrackerProtocol,
                 new Path(getStagingAreaDirInternal(user), id.toString())),
               */  
               restartCount, new Credentials() /*HACK*/);
+
+          LOG.info("Constructed JobInProgress for " + id);
 
           // 2. Check if the user has appropriate access
           // Get the user group info for the job's owner
@@ -1946,6 +1964,7 @@ public class JobTracker implements MRConstants, InterTrackerProtocol,
           }
 
           // 6. Sumbit the job to the jobtracker
+          LOG.info("Submitting the job " + id);
           addJob(id, job);
         } catch (Throwable t) {
           LOG.warn("Failed to recover job " + id + " Ignoring the job.", t);
@@ -2446,9 +2465,13 @@ public class JobTracker implements MRConstants, InterTrackerProtocol,
     //this.interTrackerServer = 
     //  RPC.getServer(this, addr.getHostName(), addr.getPort(), handlerCount, 
     //      false, conf, secretManager);
-    this.interTrackerServer = RPC.getServer(this, myAddress.getHostName(), 
-                                            myAddress.getPort(), handlerCount, 
-                                            false, conf, secretManager);
+    this.interTrackerServer = new RPC.Builder(conf)
+      .setProtocol(InterTrackerProtocol.class).setInstance(this)
+      .setBindAddress(myAddress.getHostName()).setPort(myAddress.getPort())
+      .setNumHandlers(handlerCount).setVerbose(false)
+      .setSecretManager(secretManager)
+      .build();
+
     // Set service-level authorization security policy
     if (conf.getBoolean(
         CommonConfigurationKeys.HADOOP_SECURITY_AUTHORIZATION, false)) {
@@ -5962,7 +5985,7 @@ public class JobTracker implements MRConstants, InterTrackerProtocol,
       String value = (String)p.get(key);
       b.append("\n" + key + ": " + value);
     }
-    b.append("\nrpc.version: " + Server.CURRENT_VERSION);
+    b.append("\nrpc.version: " + RpcConstants.CURRENT_VERSION);
     b.append("\n------------------------------------------------------------*/");
     LOG.info(b.toString());
     

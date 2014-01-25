@@ -35,7 +35,6 @@ import org.apache.commons.logging.LogFactory;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
-import org.apache.hadoop.filecache.TaskDistributedCacheManager;
 import org.apache.hadoop.filecache.TrackerDistributedCacheManager;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -294,13 +293,7 @@ public class JobLocalizer {
         new File(localJarFile.toString()),
         new File(localJarFile.getParent().toString()),
         localJobConf.getJarUnpackPattern());
-      try {
-        FileUtil.chmod(localJarFile.getParent().toString(), "ugo+rx", true);
-      } catch (InterruptedException ie) {
-        // This exception is never actually thrown, but the signature says
-        // it is, and we can't make the incompatible change with 0.20.2 api
-        throw new IOException("Interrupted while chmodding", ie);
-      }
+      FileUtil.chmod(localJarFile.getParent().toString(), "ugo+rx", true);
     }
   }
 

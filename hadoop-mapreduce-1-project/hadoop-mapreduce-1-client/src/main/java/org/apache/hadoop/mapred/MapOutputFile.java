@@ -42,7 +42,7 @@ class MapOutputFile extends MapReduceLocalData {
   MapOutputFile() {
   }
 
-  private LocalDirAllocator lDirAlloc = new LocalDirAllocator();
+  private LocalDirAllocator lDirAlloc = new LocalDirAllocator(JobConf.MAPRED_LOCAL_DIR_PROPERTY);
   
   /**
    * Return the path to local map output file created earlier

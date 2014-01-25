@@ -21,7 +21,7 @@ package org.apache.hadoop.mapred;
 import java.io.IOException;
 
 import org.apache.hadoop.ipc.VersionedProtocol;
-import org.apache.hadoop.security.authentication.util.KerberosInfo;
+import org.apache.hadoop.security.KerberosInfo;
 
 /**
  * Protocol for admin operations. This is a framework-public interface and is

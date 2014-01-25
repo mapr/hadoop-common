@@ -1319,9 +1319,9 @@ public class JobHistory {
             logFile = recoverJobHistoryFile(jobConf, logFile);
             logFileName = logFile.getName();
           }
-          
+
           int defaultBufferSize = 
-            LOGDIR_FS.getConf().getIoFileBufferSize();
+            LOGDIR_FS.getConf().getInt("io.file.buffer.size", 4096);
           out = LOGDIR_FS.create(logFile, 
                           new FsPermission(HISTORY_FILE_PERMISSION),
                           true, 
@@ -1402,7 +1402,7 @@ public class JobHistory {
       try {
         if (LOG_DIR != null) {
           int defaultBufferSize = 
-              LOGDIR_FS.getConf().getIoFileBufferSize();
+            LOGDIR_FS.getConf().getInt("io.file.buffer.size", 4096);
           if (!LOGDIR_FS.exists(jobFilePath)) {
             jobFileOut = LOGDIR_FS.create(jobFilePath, 
                                    new FsPermission(HISTORY_FILE_PERMISSION),

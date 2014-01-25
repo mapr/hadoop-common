@@ -186,8 +186,7 @@ class Queue {
       LOG.info("Queue " + this.name + " is allowed to be scheduled on all nodes.");  
     } else {
       try {
-        this.queueLabelExpression = new Expression(queueLabelExpressionString,
-                                                   true, new BigDecimal(0));
+        this.queueLabelExpression = new Expression(queueLabelExpressionString);
         // evaluate this expression to make sure format is correct and supported.
         this.queueLabelExpression.eval(new HashMap<String, BigDecimal>());
         LOG.info("Queue " + this.name + 
@@ -217,8 +216,7 @@ class Queue {
     if (QueueLabelPolicy.AND.equals(labelPolicy)) {
       if (queueLabelExpression != null && jobLabel != null) {
         return new Expression("(" + queueLabelExpression.toString() + 
-                              ") && (" + jobLabel.toString() + ")",
-                              true, new BigDecimal(0));
+                              ") && (" + jobLabel.toString() + ")");
       }
       if (queueLabelExpression == null) {
         return jobLabel;
@@ -228,8 +226,7 @@ class Queue {
     } else if (QueueLabelPolicy.OR.equals(labelPolicy)) {
       if (queueLabelExpression != null && jobLabel != null) {
         return new Expression("(" + queueLabelExpression.toString() + 
-                              ") || (" + jobLabel.toString() + ")",
-                              true, new BigDecimal(0));
+                              ") || (" + jobLabel.toString() + ")");
       }
       if (queueLabelExpression == null) {
         return jobLabel;

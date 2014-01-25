@@ -33,7 +33,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.SecureIOUtils;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.PureJavaCrc32;
 
 import static org.apache.hadoop.mapred.MapTask.MAP_OUTPUT_INDEX_RECORD_LENGTH;
@@ -83,7 +82,7 @@ class SpillRecord {
 
     final DataInputStream in = 
       new DataInputStream(SecureIOUtils.openForRead(
-         new File(indexFileName.toUri().getPath()), expectedIndexOwner));
+         new File(indexFileName.toUri().getPath()), expectedIndexOwner, null));
     try {
       final long length = rfs.getFileStatus(indexFileName).getLen();
       final int partitions = (int) length / MAP_OUTPUT_INDEX_RECORD_LENGTH;

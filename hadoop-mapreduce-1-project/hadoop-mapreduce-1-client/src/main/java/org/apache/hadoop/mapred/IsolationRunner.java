@@ -32,6 +32,7 @@ import org.apache.hadoop.util.DiskChecker.DiskErrorException;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocalDirAllocator;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.ipc.ProtocolSignature;
 import org.apache.hadoop.mapred.JvmTask;
 import org.apache.hadoop.mapreduce.split.JobSplit.TaskSplitIndex;
 
@@ -52,7 +53,15 @@ public class IsolationRunner {
     public long getProtocolVersion(String protocol, long clientVersion) {
       return TaskUmbilicalProtocol.versionID;
     }
-    
+
+    @Override
+    public ProtocolSignature getProtocolSignature(String protocol,
+        long clientVersion, int clientMethodsHash) throws IOException {
+
+      return ProtocolSignature.getProtocolSignature(
+          this, protocol, clientVersion, clientMethodsHash);
+    }
+
     public void done(TaskAttemptID taskid, JvmContext jvmContext)
         throws IOException {
       LOG.info("Task " + taskid + " reporting done.");
@@ -190,7 +199,7 @@ public class IsolationRunner {
     
     // setup the local and user working directories
     FileSystem local = FileSystem.getLocal(conf);
-    LocalDirAllocator lDirAlloc = new LocalDirAllocator();
+    LocalDirAllocator lDirAlloc = new LocalDirAllocator(JobConf.MAPRED_LOCAL_DIR_PROPERTY);
     Path workDirName;
     boolean workDirExists = lDirAlloc.ifExists(MRConstants.WORKDIR, conf);
     if (workDirExists) {
@@ -214,7 +223,7 @@ public class IsolationRunner {
     // any of the configured local disks, so use LocalDirAllocator to find out
     // where it is.
     Path localMetaSplit = 
-        new LocalDirAllocator().getLocalPathToRead(
+        new LocalDirAllocator(JobConf.MAPRED_LOCAL_DIR_PROPERTY).getLocalPathToRead(
             TaskTracker.getLocalSplitFile(conf.getUser(), taskId.getJobID()
                 .toString(), taskId.toString()), conf);
     DataInputStream splitFile = FileSystem.getLocal(conf).open(localMetaSplit);

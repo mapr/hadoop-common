@@ -311,7 +311,7 @@ abstract public class Task implements Writable, Configurable {
     try {
       umbilical.fatalError(id, cause, jvmContext);
     } catch (IOException ioe) {
-      LOG.fatal("Failed to contact the tasktracker", ioe);
+      LOG.fatal("Either the task tracker is unreachable or has lost track of this task. Exiting!", ioe);
       System.exit(-1);
     }
   }
@@ -1156,7 +1156,7 @@ abstract public class Task implements Writable, Configurable {
       // AH apache has following
       // (MapOutputFile) new MapOutputFile(taskId.getJobID());
       this.mapOutputFile.setConf(this.conf);
-      this.lDirAlloc = new LocalDirAllocator();
+      this.lDirAlloc = new LocalDirAllocator(JobConf.MAPRED_LOCAL_DIR_PROPERTY);
     }
     // add the static resolutions (this is required for the junit to
     // work on testcases that simulate multiple nodes on a single physical

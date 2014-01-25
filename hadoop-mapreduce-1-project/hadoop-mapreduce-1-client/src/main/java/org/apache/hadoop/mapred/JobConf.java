@@ -503,6 +503,10 @@ public class JobConf extends Configuration {
     }   
   }
 
+  public String[] getLocalDirs() throws IOException {
+    return getTrimmedStrings(MAPRED_LOCAL_DIR_PROPERTY);
+  }
+
   /**
    * Use MRAsyncDiskService.moveAndDeleteAllVolumes instead.
    * @see org.apache.hadoop.util.MRAsyncDiskService#cleanupAllVolumes()

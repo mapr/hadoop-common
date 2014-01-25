@@ -22,7 +22,7 @@ import java.io.IOException;
 
 import org.apache.hadoop.ipc.VersionedProtocol;
 import org.apache.hadoop.mapreduce.JobContext;
-import org.apache.hadoop.security.authentication.util.KerberosInfo;
+import org.apache.hadoop.security.KerberosInfo;
 
 /** 
  * Protocol that a TaskTracker and the central JobTracker use to communicate.

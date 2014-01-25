@@ -149,4 +149,9 @@ public class FSDataOutputStream extends DataOutputStream
           "not support setting the drop-behind caching setting.");
     }
   }
+
+  // mapr_extensibility
+  public long[] getFidServers() throws IOException {
+    throw new UnsupportedOperationException();
+  }
 }

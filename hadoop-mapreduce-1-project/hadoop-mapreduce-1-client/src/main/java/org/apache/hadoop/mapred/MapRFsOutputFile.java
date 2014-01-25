@@ -116,8 +116,9 @@ class MapRFsOutputFile extends MapReduceLocalData {
     // TODO gshegalov: hack to getFidServers
     final FSDataOutputStream fileId =
       maprfs.createFid(shuffleRootFid, "fidservers");
-    shuffleFileId.fid = shuffleRootFid;
-    shuffleFileId.ips = fileId.getFidServers();
+
+    shuffleFileId.setFid(shuffleRootFid);
+    shuffleFileId.setIps(fileId.getFidServers());
     fileId.close();
   }
 

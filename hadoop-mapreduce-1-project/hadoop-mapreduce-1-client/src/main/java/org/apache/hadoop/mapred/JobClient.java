@@ -35,25 +35,19 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.UnknownHostException;
+import java.security.PrivilegedExceptionAction;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import java.security.AccessControlContext;
-import java.security.AccessController;
-import java.security.PrivilegedExceptionAction;
-
-import javax.security.auth.Subject;
+import javax.security.auth.login.LoginException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
-
 import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.filecache.TrackerDistributedCacheManager;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -62,10 +56,10 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.hadoop.mapreduce.security.token.delegation.DelegationTokenIdentifier;
-import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.Text;
+
+import org.apache.hadoop.ipc.FailoverRPC;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.ipc.RemoteException;
 import org.apache.hadoop.mapred.Counters.Counter;
@@ -76,17 +70,15 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.JobSubmissionFiles;
 import org.apache.hadoop.mapreduce.security.TokenCache;
+import org.apache.hadoop.mapreduce.security.token.delegation.DelegationTokenIdentifier;
 import org.apache.hadoop.mapreduce.split.JobSplitWriter;
-import org.apache.hadoop.mapred.JobHistory;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
-import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.hadoop.security.authorize.AccessControlList;
-import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.SecretManager.InvalidToken;
+import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.Tool;
@@ -547,7 +539,7 @@ public class JobClient extends Configured implements MRConstants, Tool  {
   }
   
   private JobSubmissionProtocol createRPCProxy(Configuration conf) throws IOException {
-    return (JobSubmissionProtocol) RPC.getProxy(JobSubmissionProtocol.class,
+    return (JobSubmissionProtocol) FailoverRPC.getProxy(JobSubmissionProtocol.class,
         JobSubmissionProtocol.versionID, FileSystem.get(conf), 
         UserGroupInformation.getCurrentUser(), conf,
         NetUtils.getSocketFactory(conf, JobSubmissionProtocol.class));
@@ -948,7 +940,7 @@ public class JobClient extends Configured implements MRConstants, Tool  {
           String queue = jobCopy.getQueueName();
           AccessControlList acl = jobSubmitClient.getQueueAdmins(queue);
           jobCopy.set(QueueManager.toFullPropertyName(queue,
-                  QueueACL.ADMINISTER_JOBS.getAclName()), acl.getACLString());
+                  QueueACL.ADMINISTER_JOBS.getAclName()), acl.getAclString());
 
           // create job output directory and user log directory
           String outputDirName = jobCopy.get("mapred.output.dir", null);
@@ -1015,6 +1007,7 @@ public class JobClient extends Configured implements MRConstants, Tool  {
                   outTicket.write(inBytes, 0, ticketLen);
                 }
               } finally {
+                fis.close();
                 outTicket.close();
               }
             } else {
@@ -1065,7 +1058,8 @@ public class JobClient extends Configured implements MRConstants, Tool  {
       for(Token<?> token: credentials.getAllTokens()) {
         if (token.getKind().toString().equals("HDFS_DELEGATION_TOKEN")) {
           LOG.debug("Submitting with " +
-              DFSClient.stringifyToken((Token<org.apache.hadoop.hdfs.security.token.delegation.DelegationTokenIdentifier>) token));
+              org.apache.hadoop.hdfs.security.token.delegation.DelegationTokenIdentifier.stringifyToken(
+                (Token<org.apache.hadoop.hdfs.security.token.delegation.DelegationTokenIdentifier>) token));
         }
       }
     }
@@ -1805,7 +1799,7 @@ public class JobClient extends Configured implements MRConstants, Tool  {
       jobid = argv[1];
       newPriority = argv[2];
       try {
-        JobPriority jp = JobPriority.valueOf(newPriority); 
+        JobPriority.valueOf(newPriority); 
       } catch (IllegalArgumentException iae) {
         displayUsage(cmd);
         return exitCode;
@@ -1915,8 +1909,23 @@ public class JobClient extends Configured implements MRConstants, Tool  {
     } else {
       conf = new JobConf(getConf());
     }
-    init(conf);
-        
+
+    try {
+      init(conf);
+    } catch (IOException ioex) {
+      if ( LOG.isDebugEnabled() ) {
+        ioex.printStackTrace();
+        return -1;
+      }
+      Throwable t = ioex.getCause();
+      if ( t != null && t instanceof LoginException ) {
+        System.out.println(ioex.getMessage());
+      } else {
+        ioex.printStackTrace();
+      }
+      return -1;
+    }
+
     // Submit the request
     try {
       if (submitJobFile != null) {
@@ -2307,7 +2316,7 @@ public class JobClient extends Configured implements MRConstants, Tool  {
     // add tokens and secrets coming from a token storage file
     String tokenPath = conf.get("mapreduce.job.credentials.binary");
     if (tokenPath != null) {
-      credentials.addAll(Credentials.readTokenStorageFiles(tokenPath, conf));
+      credentials.addAll(Credentials.readTokenStorageFile(new Path("file:///" + tokenPath), conf));
     }
     // add secret keys coming from a json file
     String tokensFileName = conf.get("mapreduce.job.credentials.json");
@@ -2337,7 +2346,6 @@ public class JobClient extends Configured implements MRConstants, Tool  {
   }
 
   //get secret keys and tokens and store them into TokenCache
-  @SuppressWarnings("unchecked")
   private void populateTokenCache(Configuration conf, Credentials credentials) 
   throws IOException{
     readTokensFromFiles(conf, credentials);

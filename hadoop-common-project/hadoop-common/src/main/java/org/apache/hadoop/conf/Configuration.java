@@ -2167,6 +2167,11 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
       if(getResource("hadoop-site.xml")!=null) {
         loadResource(properties, new Resource("hadoop-site.xml"), quiet);
       }
+
+      // mapr_extensibility
+      Map<String,String> result = new HashMap<String,String>(MapRConf.size());
+      MapRConf.copyTo(result);
+      properties.putAll(result);
     }
     
     for (int i = 0; i < resources.size(); i++) {

@@ -391,7 +391,7 @@ class IFile {
         this.startOffset = input.getPos();
       }
       if (conf != null) {
-        bufferSize = conf.getIoFileBufferSize();
+        bufferSize = conf.getInt("io.file.buffer.size", DEFAULT_BUFFER_SIZE);
       }
     }
     
@@ -415,7 +415,7 @@ class IFile {
     private int readData(byte[] buf, int off, int len) throws IOException {
       int bytesRead = 0;
       while (bytesRead < len) {
-        int n = IOUtils.wrappedReadForCompressedData(LOG, in, buf, off + bytesRead,
+        int n = IOUtils.wrappedReadForCompressedData(in, buf, off + bytesRead,
             len - bytesRead);
         if (n < 0) {
           return bytesRead;

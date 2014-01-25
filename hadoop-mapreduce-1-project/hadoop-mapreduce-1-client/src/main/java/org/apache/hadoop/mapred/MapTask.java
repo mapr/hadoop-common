@@ -134,7 +134,7 @@ class MapTask extends Task {
     if (isMapOrReduce()) {
       // localize the split meta-information
       Path localSplitMeta =
-        new LocalDirAllocator().getLocalPathForWrite(
+        new LocalDirAllocator(JobConf.MAPRED_LOCAL_DIR_PROPERTY).getLocalPathForWrite(
             TaskTracker.getLocalSplitFile(conf.getUser(), getJobID()
                 .toString(), getTaskID().toString()), conf);
       if (LOG.isDebugEnabled()) {

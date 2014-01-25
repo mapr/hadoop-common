@@ -405,8 +405,8 @@ public class JobInProgress {
       jobInProgressUpdater = new JobInProgressUpdater();
       timeVariantContext.registerUpdater(jobInProgressUpdater);
 
-      String url = HttpServer.getUrlScheme() + jobtracker.getJobTrackerMachine() + ":"
-      + jobtracker.getInfoPort() + "/jobdetails.jsp?jobid=" + jobId;
+      String url = Utils.getHttpScheme() + jobtracker.getJobTrackerMachine() + ":"
+        + jobtracker.getInfoPort() + "/jobdetails.jsp?jobid=" + jobId;
       this.jobtracker = jobtracker;
       this.status = new JobStatus(jobId, 0.0f, 0.0f, JobStatus.PREP);
       this.status.setUsername(jobInfo.getUser().toString());
@@ -513,8 +513,7 @@ public class JobInProgress {
       } else {
         try {
           // create an expression, set fillEmptyValues to true and default value 0
-          this.jobLabelExpression = new Expression(jobLabelExpressionString, 
-                                                   true, new BigDecimal(0));
+          this.jobLabelExpression = new Expression(jobLabelExpressionString);
           // evaluate this expression to make sure format is correct and supported.
           this.jobLabelExpression.eval(new HashMap<String, BigDecimal>());
         } catch (Throwable t) {
@@ -1487,8 +1486,7 @@ public class JobInProgress {
         } else {
           host = ttStatus.getHost();
         }
-        httpTaskLogLocation = HttpServer.getUrlScheme() + host + ":" + ttStatus.getHttpPort();
-           //+ "/tasklog?plaintext=true&attemptid=" + status.getTaskID();
+        httpTaskLogLocation = Utils.getHttpScheme() + host + ":" + ttStatus.getHttpPort();
       }
 
       TaskCompletionEvent taskEvent = null;
@@ -3472,6 +3470,14 @@ public class JobInProgress {
    * @param jobTerminationState job termination state
    */
   private synchronized void terminate(int jobTerminationState) {
+
+    // SANTOSH: This code is being added just to track down the root
+    // cause for bug 12437. We've seen that some jobs are killed
+    // right after they've been recovered and re-submitted (during JT restart).
+    // But we don't know which thread/call-sequence is initiating the kill.
+    LOG.info("Stacktrace for the call to terminate " + this.status.getJobID() + "\n" 
+              + StringUtils.getStackTrace(Thread.currentThread()));
+
     if(!tasksInited) {
     	//init could not be done, we just terminate directly.
       terminateJob(jobTerminationState);

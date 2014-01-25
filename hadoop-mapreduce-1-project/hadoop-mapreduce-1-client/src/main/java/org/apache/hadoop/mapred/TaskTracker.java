@@ -17,24 +17,27 @@
  */
 package org.apache.hadoop.mapred;
 
-import java.io.FileReader;
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.math.BigDecimal;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.security.AccessControlContext;
-import java.security.AccessController;
+import java.net.URL;
 import java.security.PrivilegedExceptionAction;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -42,21 +45,15 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.Vector;
-import java.util.Map.Entry;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Pattern;
-import java.util.Properties;
-import java.util.Enumeration;
-import java.lang.ClassLoader;
-import java.net.URL;
-import java.io.DataOutputStream;
-import java.text.ParseException;
-import java.lang.Math;
 
 import javax.crypto.SecretKey;
 import javax.servlet.ServletContext;
@@ -65,16 +62,16 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.java.dev.eval.Expression;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.MapRConf;
 import org.apache.hadoop.filecache.TaskDistributedCacheManager;
 import org.apache.hadoop.filecache.TrackerDistributedCacheManager;
-import org.apache.hadoop.mapreduce.server.tasktracker.*;
-import org.apache.hadoop.mapreduce.server.tasktracker.userlogs.*;
-import org.apache.hadoop.fs.DF;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
+import org.apache.hadoop.fs.DF;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -82,17 +79,18 @@ import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.LocalDirAllocator;
 import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.fs.PathFilter;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.http.HttpServer;
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.nativeio.NativeIO;
 import org.apache.hadoop.io.SecureIOUtils;
+import org.apache.hadoop.io.nativeio.NativeIO;
+import org.apache.hadoop.ipc.FailoverRPC;
+import org.apache.hadoop.ipc.ProtocolSignature;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.ipc.RemoteException;
+import org.apache.hadoop.ipc.RpcConstants;
 import org.apache.hadoop.ipc.Server;
-import org.apache.hadoop.ipc.VersionedProtocol;
-import org.apache.hadoop.mapred.QueueManager.QueueACL;
 import org.apache.hadoop.mapred.CleanupQueue.PathDeletionContext;
 import org.apache.hadoop.mapred.TaskLog.LogFileDetail;
 import org.apache.hadoop.mapred.TaskLog.LogName;
@@ -102,8 +100,19 @@ import org.apache.hadoop.mapred.pipes.Submitter;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.TaskType;
 import org.apache.hadoop.mapreduce.security.SecureShuffleUtils;
+import org.apache.hadoop.mapreduce.security.TokenCache;
 import org.apache.hadoop.mapreduce.security.token.JobTokenIdentifier;
 import org.apache.hadoop.mapreduce.security.token.JobTokenSecretManager;
+import org.apache.hadoop.mapreduce.server.tasktracker.JVMInfo;
+import org.apache.hadoop.mapreduce.server.tasktracker.Localizer;
+import org.apache.hadoop.mapreduce.server.tasktracker.userlogs.JobCompletedEvent;
+import org.apache.hadoop.mapreduce.server.tasktracker.userlogs.JobStartedEvent;
+import org.apache.hadoop.mapreduce.server.tasktracker.userlogs.JvmFinishedEvent;
+import org.apache.hadoop.mapreduce.server.tasktracker.userlogs.UserLogManager;
+import org.apache.hadoop.mapreduce.util.CentralConfigUpdaterThread;
+import org.apache.hadoop.mapreduce.util.MemoryCalculatorPlugin;
+import org.apache.hadoop.mapreduce.util.ProcfsBasedProcessTree;
+import org.apache.hadoop.mapreduce.util.ResourceCalculatorPlugin;
 import org.apache.hadoop.metrics.MetricsContext;
 import org.apache.hadoop.metrics.MetricsException;
 import org.apache.hadoop.metrics.MetricsRecord;
@@ -112,30 +121,19 @@ import org.apache.hadoop.metrics.Updater;
 import org.apache.hadoop.metrics.util.MBeanUtil;
 import org.apache.hadoop.net.DNS;
 import org.apache.hadoop.net.NetUtils;
+import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.PolicyProvider;
-import org.apache.hadoop.util.DiskChecker;
-import org.apache.hadoop.mapreduce.util.MemoryCalculatorPlugin;
-import org.apache.hadoop.mapreduce.util.ResourceCalculatorPlugin;
-import org.apache.hadoop.mapreduce.util.ProcfsBasedProcessTree;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.TokenIdentifier;
+import org.apache.hadoop.util.DiskChecker;
+import org.apache.hadoop.util.DiskChecker.DiskErrorException;
+import org.apache.hadoop.util.MRAsyncDiskService;
 import org.apache.hadoop.util.ReflectionUtils;
+import org.apache.hadoop.util.Shell.ShellCommandExecutor;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.VersionInfo;
-import org.apache.hadoop.util.DiskChecker.DiskErrorException;
-import org.apache.hadoop.util.Shell.ShellCommandExecutor;
-import org.apache.hadoop.util.MRAsyncDiskService;
-import org.apache.hadoop.mapreduce.security.TokenCache;
-import org.apache.hadoop.security.Credentials;
-import org.apache.hadoop.mapreduce.util.CentralConfigUpdaterThread;
-import org.apache.hadoop.conf.MapRConf;
-
-import com.mapr.security.ClusterServerTicketGeneration;
-
-import net.java.dev.eval.Expression;
-import java.math.BigDecimal;
 
 /*******************************************************
  * TaskTracker is a process that starts and tracks MR Tasks
@@ -864,6 +862,13 @@ public class TaskTracker implements MRConstants, TaskUmbilicalProtocol,
     }
   }
 
+  @Override
+  public ProtocolSignature getProtocolSignature(String protocol,
+      long clientVersion, int clientMethodsHash) throws IOException {
+    return ProtocolSignature.getProtocolSignature(
+        this, protocol, clientVersion, clientMethodsHash);
+  }
+
   /**
    * Delete all of the user directories.
    * @param conf the TT configuration
@@ -1045,8 +1050,12 @@ public class TaskTracker implements MRConstants, TaskUmbilicalProtocol,
     int max = maxMapSlots > maxReduceSlots ? maxMapSlots : maxReduceSlots;
     //set the num handlers to max*2 since canCommit may wait for the duration
     //of a heartbeat RPC
-    this.taskReportServer = RPC.getServer(this, bindAddress,
-        tmpPort, 2 * max, false, this.fConf, this.jobTokenSecretManager);
+    this.taskReportServer = new RPC.Builder(this.fConf)
+      .setProtocol(TaskUmbilicalProtocol.class).setInstance(this)
+      .setBindAddress(bindAddress).setPort(tmpPort)
+      .setNumHandlers(2 * max).setVerbose(false)
+      .setSecretManager(this.jobTokenSecretManager)
+      .build();
 
     // Set service-level authorization security policy
     if (this.fConf.getBoolean(
@@ -1108,7 +1117,7 @@ public class TaskTracker implements MRConstants, TaskUmbilicalProtocol,
     ugi.doAs(
         new PrivilegedExceptionAction<Object>() {
       public Object run() throws IOException {
-        return RPC.getProxy(InterTrackerProtocol.class,
+        return FailoverRPC.getProxy(InterTrackerProtocol.class,
             InterTrackerProtocol.versionID,
             FileSystem.get(fConf), fConf);
       }
@@ -1403,7 +1412,7 @@ public class TaskTracker implements MRConstants, TaskUmbilicalProtocol,
   }
 
   private static LocalDirAllocator lDirAlloc = 
-                              new LocalDirAllocator();
+                              new LocalDirAllocator(JobConf.MAPRED_LOCAL_DIR_PROPERTY);
 
   // intialize the job directory
   RunningJob localizeJob(TaskInProgress tip)
@@ -2005,15 +2014,17 @@ public class TaskTracker implements MRConstants, TaskUmbilicalProtocol,
     }
   };
 
-  void startCentralConfigUpdater() {
+  /* Commenting it out for now to take care of compiltation issue.
+   * This method is not used anyway because of bug 1492.
+   */
+  /*void startCentralConfigUpdater() {
     URI centralConfigFileUri = null;
     try {
       centralConfigFileUri = new URI(CENTRAL_CONFIG_URI);
       if ("maprfs".equals(centralConfigFileUri.getScheme())) {
         Path remoteFilePath = new Path(centralConfigFileUri.getPath());
-        /** Since static initialization is already done,
-          * getCachedCentralFilePath will return local file path
-          */
+        // Since static initialization is already done,
+        // getCachedCentralFilePath will return local file path
         centralConfigUpdater = 
           new CentralConfigUpdaterThread(FileSystem.get(originalConf),
               remoteFilePath, 
@@ -2029,7 +2040,7 @@ public class TaskTracker implements MRConstants, TaskUmbilicalProtocol,
                ". Error " + e);
       centralConfigUpdater = null;
     }
-  }
+  }*/
   
   /**
    * Start with the local machine name, and the default JobTracker
@@ -2189,7 +2200,7 @@ public class TaskTracker implements MRConstants, TaskUmbilicalProtocol,
     server.setThreads(1, workerThreads);
     // let the jsp pages get to the task tracker, config, and other relevant
     // objects
-    this.localDirAllocator = new LocalDirAllocator();
+    this.localDirAllocator = new LocalDirAllocator(JobConf.MAPRED_LOCAL_DIR_PROPERTY);
     /* MapR: write to tasktracker.cfg in case LinxuTaskTracker is used */
     if (conf.getBoolean("mapred.tasktracker.task-controller.config.overwrite", 
                         true)) {
@@ -4037,15 +4048,6 @@ public class TaskTracker implements MRConstants, TaskUmbilicalProtocol,
     long startTime = -1;
     
     private int memoryReserved = 0;
-    private boolean jvmValidationFailureLogged = false;
-
-    public boolean isJvmValidationFailureLogged() {
-      return jvmValidationFailureLogged;
-    }
-
-    public void setJvmValidationFailureLogged() {
-      jvmValidationFailureLogged = true;
-    }
 
     // The ugi of the user who is running the job. This contains all the tokens
     // too which will be populated during job-localization
@@ -4805,8 +4807,7 @@ public class TaskTracker implements MRConstants, TaskUmbilicalProtocol,
       LOG.warn("Null jvmContext. Cannot verify Jvm. validateJvm throwing exception");
       throw new IOException("JvmValidate Failed. JvmContext is null - cannot validate JVM");
     }
-    if (!jvmManager.validateTipToJvm(tip, jvmContext.jvmId) && !tip.isJvmValidationFailureLogged()) {
-      tip.setJvmValidationFailureLogged();
+    if (!jvmManager.validateTipToJvm(tip, jvmContext.jvmId)) {
       throw new IOException("JvmValidate Failed. Ignoring request from task: " + taskid + ", with JvmId: " + jvmContext.jvmId);
     }
   }
@@ -4914,7 +4915,9 @@ public class TaskTracker implements MRConstants, TaskUmbilicalProtocol,
       validateJVM(tip, jvmContext, taskid);
       tip.reportDiagnosticInfo(info);
     } else {
-      LOG.warn("Error from unknown child task: "+taskid+". Ignored.");
+      String msg = "Error from unknown child task: " + taskid + ". Ignored.";
+      LOG.warn(msg);
+      throw new IOException(msg);
     }
   }
 
@@ -4928,7 +4931,9 @@ public class TaskTracker implements MRConstants, TaskUmbilicalProtocol,
     if (tip != null) {
       tip.reportDiagnosticInfo(info);
     } else {
-      LOG.warn("Error from unknown child task: "+taskid+". Ignored.");
+      String msg = "Error from unknown child task: " + taskid + ". Ignored.";
+      LOG.warn(msg);
+      throw new IOException(msg);
     }
   }
   
@@ -4940,8 +4945,10 @@ public class TaskTracker implements MRConstants, TaskUmbilicalProtocol,
       validateJVM(tip, jvmContext, taskid);
       tip.reportNextRecordRange(range);
     } else {
-      LOG.warn("reportNextRecordRange from unknown child task: "+taskid+". " +
-      		"Ignored.");
+      String msg = "reportNextRecordRange from unknown child task: " + taskid + ". " +
+          "Ignored.";
+      LOG.warn(msg);
+      throw new IOException(msg);
     }
   }
 
@@ -5000,7 +5007,9 @@ public class TaskTracker implements MRConstants, TaskUmbilicalProtocol,
       commitResponses.remove(taskid);
       tip.reportDone();
     } else {
-      LOG.warn("Unknown child task done: "+taskid+". Ignored.");
+      String msg = "Unknown child task done: " + taskid + ". Ignored.";
+      LOG.warn(msg);
+      throw new IOException(msg);
     }
   }
 
@@ -5019,7 +5028,9 @@ public class TaskTracker implements MRConstants, TaskUmbilicalProtocol,
       tip.reportDiagnosticInfo("Shuffle Error: " + message);
       purgeTask(tip, true, true);
     } else {
-      LOG.warn("Unknown child task shuffleError: " + taskId + ". Ignored.");
+      String msg = "Unknown child task shuffleError: " + taskId + ". Ignored.";
+      LOG.warn(msg);
+      throw new IOException(msg);
     }
   }
 
@@ -5036,7 +5047,9 @@ public class TaskTracker implements MRConstants, TaskUmbilicalProtocol,
       tip.reportDiagnosticInfo("FSError: " + message);
       purgeTask(tip, true, true);
     } else {
-      LOG.warn("Unknown child task fsError: "+taskId+". Ignored.");
+      String msg = "Unknown child task fsError: " + taskId + ". Ignored.";
+      LOG.warn(msg);
+      throw new IOException(msg);
     }
   }
 
@@ -5065,7 +5078,9 @@ public class TaskTracker implements MRConstants, TaskUmbilicalProtocol,
       tip.reportDiagnosticInfo("Error: " + msg);
       purgeTask(tip, true, true);
     } else {
-      LOG.warn("Unknown child task fatalError: "+taskId+". Ignored.");
+      String error = "Unknown child task fatalError: " + taskId + ". Ignored.";
+      LOG.warn(error);
+      throw new IOException(error);
     }
   }
 
@@ -5390,7 +5405,7 @@ public class TaskTracker implements MRConstants, TaskUmbilicalProtocol,
       String value = (String)p.get(key);
       b.append("\n" + key + ": " + value);
     }       
-    b.append("\nrpc.version: " + Server.CURRENT_VERSION);
+    b.append("\nrpc.version: " + RpcConstants.CURRENT_VERSION);
     b.append("\n------------------------------------------------------------*/");
     LOG.info(b.toString());
 
@@ -5564,7 +5579,7 @@ public class TaskTracker implements MRConstants, TaskUmbilicalProtocol,
          */
         //open the map-output file
         mapOutputIn = SecureIOUtils.openForRead(
-            new File(mapOutputFileName.toUri().getPath()), runAsUserName);
+            new File(mapOutputFileName.toUri().getPath()), runAsUserName, null);
 
         //seek to the correct offset for the reduce
         mapOutputIn.skip(info.startOffset);

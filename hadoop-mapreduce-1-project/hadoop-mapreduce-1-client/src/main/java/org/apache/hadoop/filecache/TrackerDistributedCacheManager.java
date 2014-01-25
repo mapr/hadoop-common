@@ -110,7 +110,7 @@ public class TrackerDistributedCacheManager {
       TaskController controller) throws IOException {
     this.localFs = FileSystem.getLocal(conf);
     this.trackerConf = conf;
-    this.lDirAllocator = new LocalDirAllocator();
+    this.lDirAllocator = new LocalDirAllocator(JobConf.MAPRED_LOCAL_DIR_PROPERTY);
 
     // setting the cache size to a default of 10GB
     this.allowedCacheSize = conf.getLong
@@ -590,13 +590,7 @@ public class TrackerDistributedCacheManager {
         // else will not do anyhting
         // and copy the file into the dir as it is
       }
-      try {
-        FileUtil.chmod(destDir.toString(), "ugo+rx", true);
-      } catch (InterruptedException ie) {
-        // This exception is never actually thrown, but the signature says
-        // it is, and we can't make the incompatible change with 0.20.2 api
-        throw new IOException("Interrupted while chmodding", ie);
-      }
+      FileUtil.chmod(destDir.toString(), "ugo+rx", true);
     }
     // promote the output to the final location
     if (!localFs.rename(workDir, finalDir)) {
@@ -698,7 +692,6 @@ public class TrackerDistributedCacheManager {
     }
     boolean createSymlink = DistributedCache.getSymlink(conf);
     if (createSymlink) {
-      final FileSystem lfs = FileSystem.getLocal(conf);
       File[] list = jobCacheDir.listFiles();
       for (int i=0; i < list.length; i++){
         String target = list[i].getAbsolutePath();
@@ -708,8 +701,7 @@ public class TrackerDistributedCacheManager {
             linkFile));
         }
         if (!linkFile.exists()) {
-          lfs.createSymbolicLink(new Path(target),
-            new Path(linkFile.toString()));
+          FileUtil.symLink(target, linkFile.toString());
         }
       }
     }

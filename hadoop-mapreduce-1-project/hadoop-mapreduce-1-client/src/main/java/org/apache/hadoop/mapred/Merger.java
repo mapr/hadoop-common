@@ -45,7 +45,7 @@ class Merger {
 
   // Local directories
   private static LocalDirAllocator lDirAlloc = 
-    new LocalDirAllocator();
+    new LocalDirAllocator(JobConf.MAPRED_LOCAL_DIR_PROPERTY);
 
   public static <K extends Object, V extends Object>
   RawKeyValueIterator merge(Configuration conf, FileSystem fs,

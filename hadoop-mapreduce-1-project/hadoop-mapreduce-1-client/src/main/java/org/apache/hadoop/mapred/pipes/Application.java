@@ -43,6 +43,7 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.MapRShellUtil;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
@@ -129,7 +130,7 @@ class Application<K1 extends WritableComparable, V1 extends Writable,
     long logLength = TaskLog.getTaskLogLength(conf);
     // MapR changes
     Map <String, String> setupCmds = new HashMap<String, String>(3);
-    Shell.getSetupCmds(conf, setupCmds);
+    MapRShellUtil.getSetupCmds(conf, setupCmds);
     cmd = TaskLog.captureOutAndError(null, setupCmds, cmd, stdout, stderr, logLength,
         false);
 

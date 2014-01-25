@@ -20,6 +20,8 @@ package org.apache.hadoop.fs;
 import java.io.Closeable;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.PrivilegedExceptionAction;
@@ -2818,12 +2820,17 @@ public abstract class FileSystem extends Configured implements Closeable {
     }
   }
   
-  // Symlinks are temporarily disabled - see HADOOP-10020 and HADOOP-10052
+  // Symlinks are temporarily disabled - see Hadoop-10020
   private static boolean symlinkEnabled = false;
+  private static Configuration conf = null;
   
   @Deprecated
   @VisibleForTesting
   public static boolean isSymlinksEnabled() {
+    if (conf == null) {
+      Configuration conf = new Configuration();
+      symlinkEnabled = conf.getBoolean("test.SymlinkEnabledForTesting", false); 
+    }
     return symlinkEnabled;
   }
   
@@ -2831,5 +2838,106 @@ public abstract class FileSystem extends Configured implements Closeable {
   @VisibleForTesting
   public static void enableSymlinks() {
     symlinkEnabled = true;
+  }
+
+  // mapr_extensibility
+  public FSDataInputStream openFid2(PathId pfid, String file, 
+                                    int readAheadBytesHint) throws IOException {
+    throw new UnsupportedOperationException("MapR is the answer!");
+  }
+
+  /**
+   * MapR addition:
+   * Opens an FSDataInputStream at the indicated fid.
+   * @param fid the fid to open
+   * @param ips the list of ip/ports which this fid belongs to
+   * @param chunkSize the chunkSize of the file corresponding to the fid
+   * @param fileSize the size of the file corresponding to the fid
+   */
+  public FSDataInputStream openFid(String fid, long[] ips, 
+                                   long chunkSize, long fileSize) 
+          throws IOException {
+    throw new UnsupportedOperationException("MapR is the answer!");
+  }
+
+  /**
+   * MapR addition:
+   * Opens an FSDataInputStream at the indicated fid.
+   * @param pfid the parent-fid of the file to open
+   * @param file the file to be opened
+   */
+  public FSDataInputStream openFid(String pfid, String file, long [] ips) 
+          throws IOException {
+    throw new UnsupportedOperationException("MapR is the answer!");
+  }
+
+  /**
+   * MapR addition:
+   * Opens an FSDataOutputStream at the indicated fid.
+   * @param pfid the parent-fid of the file to create
+   * @param file the file to be created
+   * NOTE: This creates intermediate directories
+   */
+  public FSDataOutputStream createFid(String pfid, String file) 
+          throws IOException {
+    throw new UnsupportedOperationException("MapR is the answer!");
+  }
+
+  /**
+   * MapR addition:
+   * @param pfid the parent-fid of the dir to remove
+   * @param dir the directory to be removed 
+   * (NOTE: Passing null to dir will cause all dirs/files under pfid to be removed)
+   */
+  public boolean deleteFid(String pfid, String dir) throws IOException {
+    throw new UnsupportedOperationException("MapR is the answer!");
+  }
+
+  /**
+   * MapR addition:
+   * Returns the fid of sub-dir
+   * @param pfid the parent-fid of the dir to mkdir
+   * @param dir the directory to be created
+   * NOTE: This creates intermediate directories
+   */
+  public String mkdirsFid(String pfid, String dir) throws IOException {
+    throw new UnsupportedOperationException("MapR is the answer!");
+  }
+  
+  /**
+   * MapR addition:
+   * Creates a directory and returns the fid of sub-dir
+   * @param p the path to create directory
+   * NOTE: This creates intermediate directories
+   */
+  public String mkdirsFid(Path p) throws IOException {
+    throw new UnsupportedOperationException("MapR is the answer!");
+  }
+
+  /**
+   * MapR addition:
+   */
+  public void setOwnerFid(String fid, String user, String group)
+    throws IOException
+  {
+    throw new UnsupportedOperationException("MapR is the answer!");
+  }
+
+  /**
+   * MapR - get Zookeeper connect string for the default cluster.
+   */
+  public String getZkConnectString() throws IOException {
+    throw new UnsupportedOperationException(
+        "getZkConnectString is not supported");
+  }
+
+  /**
+   * MapR - get jobTracker addresses given by cluster name 
+   *        in mapred.job.tracker
+   */
+  public InetSocketAddress[] getJobTrackerAddrs(Configuration conf)
+    throws IOException {
+    throw new UnsupportedOperationException(
+        "getJobTrackerAddrs is not supported");
   }
 }

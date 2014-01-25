@@ -25,8 +25,6 @@ import java.io.PrintStream;
 import java.net.InetSocketAddress;
 import java.security.PrivilegedExceptionAction;
 import java.util.Arrays;
-import java.util.List;
-import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -43,8 +41,6 @@ import org.apache.hadoop.metrics.MetricsContext;
 import org.apache.hadoop.metrics.MetricsUtil;
 import org.apache.hadoop.metrics.jvm.JvmMetrics;
 import org.apache.hadoop.mapreduce.server.tasktracker.JVMInfo;
-import org.apache.hadoop.mapreduce.server.tasktracker.Localizer;
-import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.Token;
@@ -358,7 +354,7 @@ class Child {
     }
     
     //write the localized task jobconf
-    LocalDirAllocator lDirAlloc = new LocalDirAllocator();
+    LocalDirAllocator lDirAlloc = new LocalDirAllocator(JobConf.MAPRED_LOCAL_DIR_PROPERTY);
     Path localTaskFile =
       lDirAlloc.getLocalPathForWrite(TaskTracker.JOBFILE, jobConf);
     JobLocalizer.writeLocalJobFile(localTaskFile, jobConf);

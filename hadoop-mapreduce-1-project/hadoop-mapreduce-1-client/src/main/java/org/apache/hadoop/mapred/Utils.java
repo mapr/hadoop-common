@@ -20,6 +20,7 @@ package org.apache.hadoop.mapred;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
+import org.apache.hadoop.security.UserGroupInformation;
 
 /**
  * A utility class. It provides
@@ -55,5 +56,12 @@ public class Utils {
         return !(path.toString().contains("_logs"));
       }
     }
+  }
+
+  /**
+   * Returns the URL scheme to use depending on the security.
+   */
+  public static String getHttpScheme() {
+    return UserGroupInformation.isSecurityEnabled() ? "https://" : "http://";
   }
 }

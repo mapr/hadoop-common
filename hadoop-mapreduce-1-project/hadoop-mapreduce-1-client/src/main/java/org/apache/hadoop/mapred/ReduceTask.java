@@ -58,18 +58,14 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.ChecksumFileSystem;
-import org.apache.hadoop.fs.FidInfo;
-import org.apache.hadoop.fs.FSError;
-
-// TODO gshegalov replace by FidInfo
-import org.apache.hadoop.fs.PathId; 
-
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataInputStream.FadviseType;
+import org.apache.hadoop.fs.FSError;
 import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.PathId;
 import org.apache.hadoop.io.DataInputBuffer;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.IntWritable;
@@ -932,7 +928,7 @@ class ReduceTask extends Task {
       TaskAttemptID taskAttemptId;
       TaskID taskId;
       String ttHost;
-      FidInfo shuffleRootFid;
+      PathId shuffleRootFid;
 
       public MapOutputLocation(TaskAttemptID taskAttemptId,
         String ttHost, PathId pathId)
@@ -940,7 +936,7 @@ class ReduceTask extends Task {
         this.taskAttemptId = taskAttemptId;
         this.taskId = this.taskAttemptId.getTaskID();
         this.ttHost = ttHost;
-        this.shuffleRootFid = pathId.getFidInfo();
+        this.shuffleRootFid = pathId;
       }
       
       public TaskAttemptID getTaskAttemptId() {
@@ -1455,7 +1451,7 @@ class ReduceTask extends Task {
                         Path filename, int reduce) {
         MapOutput mapOutput = null;
         // rfs has filesystem object     
-        final String inputFile = mapOutputLoc.shuffleRootFid
+        final String inputFile = mapOutputLoc.shuffleRootFid.getFid()
           + Path.SEPARATOR
           + mapOutputFile.getRelOutputFile(mapOutputLoc.getTaskAttemptId(),
               reduce);
@@ -1488,9 +1484,11 @@ class ReduceTask extends Task {
           boolean shuffleInMemory = ramManager.canFitInMemory(mapOutputLength);
           // Shuffle
           if (shuffleInMemory) {
-            LOG.info("Shuffling " + mapOutputLength + " bytes (" +
-                dataLength + " raw bytes) " +
-                "into RAM from " + mapOutputLoc.getTaskAttemptId());
+            if (LOG.isInfoEnabled()) {
+              LOG.info("Shuffling " + mapOutputLength + " bytes (" +
+                       dataLength + " raw bytes) " +
+                       "into RAM from " + mapOutputLoc.getTaskAttemptId());
+            }
             mapOutput = shuffleInMemory(mapOutputLoc, null, (InputStream) input,
                                         (int)mapOutputLength,
                                         (int)dataLength,
@@ -1798,7 +1796,7 @@ class ReduceTask extends Task {
 
         int bytesRead = 0;
         try {
-          int n = IOUtils.wrappedReadForCompressedData(LOG, input, shuffleData, 0,
+          int n = IOUtils.wrappedReadForCompressedData(input, shuffleData, 0,
               shuffleData.length);
           while (n > 0) {
             bytesRead += n;
@@ -1806,7 +1804,7 @@ class ReduceTask extends Task {
 
             // indicate we're making progress
             reporter.progress();
-            n = IOUtils.wrappedReadForCompressedData(LOG, input, shuffleData,
+            n = IOUtils.wrappedReadForCompressedData(input, shuffleData,
                 bytesRead, shuffleData.length - bytesRead);
           }
 
@@ -1864,7 +1862,7 @@ class ReduceTask extends Task {
 
           throw new IOException("Incomplete map output received for " +
                                 mapOutputLoc.getTaskAttemptId() + " from " +
-                                mapOutputLoc.shuffleRootFid + " (" + 
+                                mapOutputLoc.shuffleRootFid.getFid() + " (" + 
                                 bytesRead + " instead of " + 
                                 mapOutputLength + ")"
           );
@@ -1976,7 +1974,7 @@ class ReduceTask extends Task {
 
           throw new IOException("Incomplete map output received for " +
                                 mapOutputLoc.getTaskAttemptId() + " from " +
-                                mapOutputLoc.shuffleRootFid + " (" + 
+                                mapOutputLoc.shuffleRootFid.getFid() + " (" + 
                                 bytesRead + " instead of " + 
                                 mapOutputLength + ")"
           );

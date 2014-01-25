@@ -33,14 +33,12 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.http.HttpServer;
 import org.apache.hadoop.mapred.QueueManager.QueueACL;
 import org.apache.hadoop.mapreduce.JobACL;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.AccessControlList;
 import org.apache.hadoop.http.HtmlQuoting;
-import org.apache.hadoop.util.StringUtils;
 
 /**
  * A servlet that is run by the TaskTrackers to provide the task logs via http.
@@ -72,7 +70,8 @@ public class TaskLogServlet extends HttpServlet {
    */
   public static String getTaskLogUrl(String taskTrackerHostName,
       String httpPort, String taskAttemptID) {
-    return (HttpServer.getUrlScheme() + taskTrackerHostName + ":" + httpPort
+
+    return (Utils.getHttpScheme() + taskTrackerHostName + ":" + httpPort
         + "/tasklog?attemptid=" + taskAttemptID);
   }
 

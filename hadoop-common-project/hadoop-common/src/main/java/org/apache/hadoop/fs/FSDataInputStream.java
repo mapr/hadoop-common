@@ -176,4 +176,27 @@ public class FSDataInputStream extends DataInputStream
           "support setting the drop-behind caching setting.");
     }
   }
+
+  // mapr_extensibility
+  public void adviseFile(FadviseType type, long offset, long count)
+    throws IOException {
+
+    throw new UnsupportedOperationException();
+  }
+
+  public long getFileLength() throws IOException {
+    throw new UnsupportedOperationException();
+  }
+
+  public String getFidStr() {
+    throw new UnsupportedOperationException();
+  }
+
+  public long[] getFidServers() {
+    throw new UnsupportedOperationException();
+  }
+
+  public long getChunkSize() {
+    throw new UnsupportedOperationException();
+  }
 }

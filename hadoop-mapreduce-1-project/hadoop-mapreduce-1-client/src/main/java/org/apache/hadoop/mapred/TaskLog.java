@@ -25,7 +25,6 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.Flushable;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.FileReader;
 import java.io.OutputStream;
 
@@ -47,7 +46,6 @@ import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.Syncable;
 import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.io.SecureIOUtils;
 import org.apache.hadoop.mapreduce.JobID;
 import org.apache.hadoop.mapreduce.util.ProcessTree;
@@ -55,7 +53,6 @@ import org.apache.hadoop.util.Shell;
 import org.apache.log4j.Appender;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
-import org.apache.hadoop.util.Shell;
 
 /**
  * A simple logger to handle the task-specific user logs.
@@ -165,6 +162,7 @@ public class TaskLog {
     //syslog:<start-offset in the syslog file> <length>
     String str = fis.readLine();
     if (str == null) { //the file doesn't have anything
+      fis.close();
       throw new IOException ("Index file for the log of " + taskid+" doesn't exist.");
     }
     String loc = str.substring(str.indexOf(LogFileDetail.LOCATION)+
@@ -494,7 +492,7 @@ public class TaskLog {
       final File fsPath = new File(fileDetail.location, kind.toString());
       file = central ?
                CentralTaskLogUtil.getInputStream(fsPath.toString()):
-               SecureIOUtils.openForRead(fsPath, owner);
+               SecureIOUtils.openForRead(fsPath, owner, null);
 
       // skip upto start
       long pos = 0;
