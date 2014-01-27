@@ -195,5 +195,6 @@
     <module>hadoop-mapreduce-client-jobclient</module>
     <module>hadoop-mapreduce-client-hs</module>
     <module>hadoop-mapreduce-client-hs-plugins</module>
+    <module>hadoop-mapreduce-client-contrib</module>
   </modules>
 </project>
