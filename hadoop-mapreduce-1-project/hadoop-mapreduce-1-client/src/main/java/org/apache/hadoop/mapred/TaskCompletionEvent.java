@@ -22,6 +22,8 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.PathId;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableUtils;
@@ -41,7 +43,7 @@ public class TaskCompletionEvent implements Writable{
   boolean isMap = false;
   private int idWithinJob;
 
-  PathId shuffleRootFid = new PathId();
+  PathId shuffleRootFid;
 
   public static final TaskCompletionEvent[] EMPTY_ARRAY = 
     new TaskCompletionEvent[0];
@@ -51,6 +53,13 @@ public class TaskCompletionEvent implements Writable{
    */
   public TaskCompletionEvent(){
     taskId = new TaskAttemptID();
+    try {
+      // By using a default configuration we should get the distributed
+      // file system that is running on the node.
+      shuffleRootFid = FileSystem.get(new Configuration()).createPathId();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   /**

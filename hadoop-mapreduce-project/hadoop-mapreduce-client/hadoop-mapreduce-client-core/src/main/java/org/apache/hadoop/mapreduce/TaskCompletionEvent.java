@@ -24,6 +24,9 @@ import java.io.IOException;
 
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.PathId;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableUtils;
 
@@ -47,12 +50,15 @@ public class TaskCompletionEvent implements Writable{
   private int idWithinJob;
   public static final TaskCompletionEvent[] EMPTY_ARRAY = 
     new TaskCompletionEvent[0];
+  
+  private PathId pathId;
   /**
    * Default constructor for Writable.
    *
    */
   public TaskCompletionEvent(){
     taskId = new TaskAttemptID();
+    
   }
 
   /**
@@ -78,6 +84,34 @@ public class TaskCompletionEvent implements Writable{
     this.status =status; 
     this.taskTrackerHttp = taskTrackerHttp;
   }
+  
+  /**
+   * 
+   * @param eventId
+   * @param taskId
+   * @param idWithinJob
+   * @param isMap
+   * @param status
+   * @param taskTrackerHttp
+   * @param pathId
+   */
+  public TaskCompletionEvent(int eventId, 
+      TaskAttemptID taskId,
+      int idWithinJob,
+      boolean isMap,
+      Status status, 
+      String taskTrackerHttp,
+      PathId pathId){
+
+  this.taskId = taskId;
+  this.idWithinJob = idWithinJob;
+  this.isMap = isMap;
+  this.eventId = eventId; 
+  this.status =status; 
+  this.taskTrackerHttp = taskTrackerHttp;
+  this.pathId = pathId;
+  }
+
   /**
    * Returns event Id. 
    * @return event id
@@ -156,6 +190,14 @@ public class TaskCompletionEvent implements Writable{
     this.taskTrackerHttp = taskTrackerHttp;
   }
     
+  public PathId getPathId() {
+    return pathId;
+  }
+
+  public void setPathId(PathId pathId) {
+    this.pathId = pathId;
+  }
+
   @Override
   public String toString(){
     StringBuffer buf = new StringBuffer(); 
@@ -178,7 +220,8 @@ public class TaskCompletionEvent implements Writable{
              && this.status.equals(event.getStatus())
              && this.taskId.equals(event.getTaskAttemptId()) 
              && this.taskRunTime == event.getTaskRunTime()
-             && this.taskTrackerHttp.equals(event.getTaskTrackerHttp());
+             && this.taskTrackerHttp.equals(event.getTaskTrackerHttp())
+             && this.pathId.equals(event.getPathId());
     }
     return false;
   }
@@ -206,6 +249,12 @@ public class TaskCompletionEvent implements Writable{
     WritableUtils.writeString(out, taskTrackerHttp);
     WritableUtils.writeVInt(out, taskRunTime);
     WritableUtils.writeVInt(out, eventId);
+    if ( pathId != null ) {
+      out.writeInt(0);
+      pathId.writeFields(out);
+    } else {
+      out.writeInt(-1);
+    }
   }
   
   public void readFields(DataInput in) throws IOException {
@@ -216,5 +265,10 @@ public class TaskCompletionEvent implements Writable{
     taskTrackerHttp = WritableUtils.readString(in);
     taskRunTime = WritableUtils.readVInt(in);
     eventId = WritableUtils.readVInt(in);
+    if ( in.readInt() == 0 ) {
+      FileSystem fs = FileSystem.get(new Configuration());
+      pathId = fs.createPathId();
+      pathId.readFields(in);
+    }
   }
 }

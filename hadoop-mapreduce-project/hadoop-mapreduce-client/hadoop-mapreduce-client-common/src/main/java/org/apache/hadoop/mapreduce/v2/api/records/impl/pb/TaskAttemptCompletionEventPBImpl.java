@@ -19,9 +19,15 @@
 package org.apache.hadoop.mapreduce.v2.api.records.impl.pb;
 
 
+import java.io.IOException;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.PathId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskAttemptCompletionEvent;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskAttemptCompletionEventStatus;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskAttemptId;
+import org.apache.hadoop.mapreduce.v2.proto.MRProtos.PathIdProto;
 import org.apache.hadoop.mapreduce.v2.proto.MRProtos.TaskAttemptCompletionEventProto;
 import org.apache.hadoop.mapreduce.v2.proto.MRProtos.TaskAttemptCompletionEventProtoOrBuilder;
 import org.apache.hadoop.mapreduce.v2.proto.MRProtos.TaskAttemptCompletionEventStatusProto;
@@ -171,7 +177,47 @@ public class TaskAttemptCompletionEventPBImpl extends ProtoBase<TaskAttemptCompl
   private TaskAttemptCompletionEventStatus convertFromProtoFormat(TaskAttemptCompletionEventStatusProto e) {
     return MRProtoUtils.convertFromProtoFormat(e);
   }
+  
+  private PathId convertFromProtoFormat(PathIdProto e) {
+    if ( e.hasFid()) {
+      try {
+        // TODO get correct FileSystem or does it matter?
+        FileSystem fs = FileSystem.get(new Configuration());
+        PathId pId = fs.createPathId();
+        pId.setFid(e.getFid());
+        pId.setIps(e.getIpList());
+        return pId;
+      } catch (IOException e1) {
+        e1.printStackTrace();
+      }
+    }
+    return null;
+    
+  }
 
+  @Override
+  public PathId getPathId() {
+    TaskAttemptCompletionEventProtoOrBuilder p = viaProto ? proto : builder;
+    if ( !p.hasPathId() ) {
+      return null;
+    }
+    return convertFromProtoFormat(p.getPathId());
+  }
 
+  @Override
+  public void setPathId(PathId pathId) {
+    maybeInitBuilder();
+    if ( pathId == null ) {
+      builder.clearPathId();
+    }
+    if ( pathId != null ) {
+      builder.getPathIdBuilder().setFid(pathId.getFid());
+      if (pathId.getIPs() != null) {
+        for ( int i = 0; i < pathId.getIPs().length; i++ ) {
+          builder.getPathIdBuilder().addIp(pathId.getIPs()[i]);
+        }
 
+      }
+    }
+  }
 }  

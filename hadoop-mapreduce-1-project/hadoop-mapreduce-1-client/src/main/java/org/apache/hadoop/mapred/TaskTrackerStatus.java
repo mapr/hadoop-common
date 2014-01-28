@@ -22,6 +22,8 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapred.TaskStatus.State;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.PathId;
 
 import java.io.*;
@@ -57,7 +59,7 @@ public class TaskTrackerStatus implements Writable {
   boolean recoveryHB = false;
   int prefetchMapSlots = 0; 
   int ephemeralSlots = 0;
-  PathId shuffleRootFid = new PathId();
+  PathId shuffleRootFid;
 
   volatile long lastSeen;
   private int maxMapTasks;
@@ -211,6 +213,14 @@ public class TaskTrackerStatus implements Writable {
     this.recoveryHB = false;
     this.prefetchMapSlots = 0;
     this.ephemeralSlots = 0;
+
+    try {
+      // By using a default configuration we should get the distributed
+      // file system that is running on the node.
+      shuffleRootFid = FileSystem.get(new Configuration()).createPathId();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   TaskTrackerStatus(String trackerName, String host) {

@@ -112,7 +112,7 @@ class MapRFsOutputFile extends MapReduceLocalData {
         + MAPR_UNCOMPR_SUFFIX)
     };
 
-    shuffleFileId = new PathId();
+    shuffleFileId = FileSystem.get(conf).createPathId();
     // TODO gshegalov: hack to getFidServers
     final FSDataOutputStream fileId =
       maprfs.createFid(shuffleRootFid, "fidservers");
