@@ -2169,9 +2169,9 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
       }
 
       // mapr_extensibility
-      Map<String,String> result = new HashMap<String,String>(MapRConf.size());
+      /*Map<String,String> result = new HashMap<String,String>(MapRConf.size());
       MapRConf.copyTo(result);
-      properties.putAll(result);
+      properties.putAll(result);*/
     }
     
     for (int i = 0; i < resources.size(); i++) {
