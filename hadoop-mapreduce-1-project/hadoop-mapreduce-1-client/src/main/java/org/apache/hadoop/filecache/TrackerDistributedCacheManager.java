@@ -701,7 +701,8 @@ public class TrackerDistributedCacheManager {
             linkFile));
         }
         if (!linkFile.exists()) {
-          FileUtil.symLink(target, linkFile.toString());
+          final FileSystem lfs = FileSystem.getLocal(conf);
+          lfs.createSymlink(new Path(target), new Path(linkFile.toString()), true);
         }
       }
     }
