@@ -54,6 +54,7 @@ function print_usage(){
   echo "Usage: hadoop [--config confdir] COMMAND"
   echo "       where COMMAND is one of:"
   echo "  fs                   run a generic filesystem user client"
+  echo "  mfs                  run MapR-FS commands"
   echo "  version              print the version"
   echo "  jar <jar>            run a jar file"
   echo "  checknative [-a|-h]  check native hadoop and compression libraries availability"
@@ -61,6 +62,9 @@ function print_usage(){
   echo "  archive -archiveName NAME -p <parent path> <src>* <dest> create a hadoop archive"
   echo "  classpath            prints the class path needed to get the"
   echo "                       Hadoop jar and the required libraries"
+  echo "  jnipath              prints the path to the native libraries "
+  echo "                       for the JVM java.library.path"
+  echo "  conf                 print Hadoop configuration keys"
   echo "  daemonlog            get/set the log level for each daemon"
   echo " or"
   echo "  CLASSNAME            run the class named CLASSNAME"
@@ -120,6 +124,13 @@ case $COMMAND in
     exit
     ;;
 
+  # Begin: MapR specific section
+  jnipath)
+    echo $JAVA_LIBRARY_PATH
+    exit
+    ;;
+  # End: MapR specific section
+
   #core commands  
   *)
     # the core commands
@@ -139,6 +150,15 @@ case $COMMAND in
     elif [ "$COMMAND" = "archive" ] ; then
       CLASS=org.apache.hadoop.tools.HadoopArchives
       CLASSPATH=${CLASSPATH}:${TOOL_PATH}
+
+    # Begin: MapR specific section
+    elif [ "$COMMAND" = "mfs" ] ; then
+      CLASS=com.mapr.fs.clicommands.MapRCliCommands
+      HADOOP_OPTS="-Dmapr.library.flatclass"
+    elif [ "$COMMAND" = "conf" ] ; then
+      CLASS=org.apache.hadoop.conf.MapRConf
+    # End: MapR specific section
+
     elif [[ "$COMMAND" = -*  ]] ; then
         # class and package names cannot begin with a -
         echo "Error: No command named \`$COMMAND' was found. Perhaps you meant \`hadoop ${COMMAND#-}'"
@@ -153,6 +173,44 @@ case $COMMAND in
 
     #make sure security appender is turned off
     HADOOP_OPTS="$HADOOP_OPTS -Dhadoop.security.logger=${HADOOP_SECURITY_LOGGER:-INFO,NullAppender}"
+
+    # If we are running on a Mac, avoid scary, but inconsequential warning msgs
+    osname=`uname -s`
+    if [ "$osname" = "Darwin" ]; then
+      HADOOP_OPTS="$HADOOP_OPTS -Djava.security.krb5.realm= -Djava.security.krb5.kdc="
+    fi
+
+    # Begin: MapR specific section
+    MAPR_HOME=${MAPR_HOME:=/opt/mapr}
+    MAPR_HBASE_DIR=${MAPR_HOME}/hbase
+    MAPR_HBASE_VERSION_FILE=${MAPR_HBASE_DIR}/hbaseversion
+
+    if [ "$COMMAND" == "jar" ] && [ -f ${MAPR_HBASE_VERSION_FILE} ]; then
+      # add HBASE CLASSPATH to the CLASSPATH MapR Bug:5294
+      jarfilename=$1 #the script does a shift after getting the command
+
+      HBASE_VERSION=`cat ${MAPR_HBASE_VERSION_FILE}`
+      if [[ $jarfilename == *hbase-${HBASE_VERSION}*jar ]]; then
+        HBASE_SRC=${MAPR_HBASE_DIR}/hbase-${HBASE_VERSION}/bin/hbase
+        if [ -x ${HBASE_SRC} ]; then
+          HBASE_CLASSPATH=`${HBASE_SRC} classpath`
+          CLASSPATH=${CLASSPATH}:${HBASE_CLASSPATH}
+        fi
+      fi
+    fi
+
+    if [ -d "$MAPR_HOME/lib" ]; then
+      CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/kvstore-0.1.jar
+      CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/protobuf-java-2.4.1-lite.jar
+      CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/libprotodefs.jar
+      CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/baseutils-0.1.jar
+      CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/json-20080701.jar
+      CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/flexjson-2.1.jar
+    fi
+
+    #MapR add standard library locations in java.library.path
+    JAVA_LIBRARY_PATH="$JAVA_LIBRARY_PATH:$LD_LIBRARY_PATH"
+    # End: MapR specific section
 
     export CLASSPATH=$CLASSPATH
     exec "$JAVA" $JAVA_HEAP_MAX $HADOOP_OPTS $CLASS "$@"

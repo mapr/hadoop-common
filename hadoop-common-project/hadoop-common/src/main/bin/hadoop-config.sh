@@ -132,14 +132,29 @@ export MALLOC_ARENA_MAX=${MALLOC_ARENA_MAX:-4}
 
 # Attempt to set JAVA_HOME if it is not set
 if [[ -z $JAVA_HOME ]]; then
-  # On OSX use java_home (or /Library for older versions)
-  if [ "Darwin" == "$(uname -s)" ]; then
-    if [ -x /usr/libexec/java_home ]; then
-      export JAVA_HOME=($(/usr/libexec/java_home))
-    else
-      export JAVA_HOME=(/Library/Java/Home)
+  for candidate in \
+    /usr/lib/jvm/java-7-openjdk* \
+    /usr/lib/jvm/java-7-oracle* \
+    /usr/lib/jvm/java-7-sun* \
+    /usr/lib/jvm/java-6-openjdk* \
+    /usr/lib/jvm/java-6-oracle* \
+    /usr/lib/jvm/java-6-sun* \
+    /usr/lib/jvm/java-1.6.0-sun-1.6.0.*/jre/ \
+    /usr/lib/jvm/java-1.6.0-sun-1.6.0.* \
+    /usr/lib/jvm/j2sdk1.6-oracle \
+    /usr/lib/jvm/j2sdk1.6-oracle/jre \
+    /usr/lib/j2sdk1.6-sun \
+    /usr/java/jdk1.6* \
+    /usr/java/jre1.6* \
+    /usr/libexec/java_home \
+    /Library/Java/Home \
+    /usr/java/default \
+    /usr/lib/jvm/default-java ; do
+    if [ -e $candidate/bin/java ]; then
+      export JAVA_HOME=$candidate
+      break
     fi
-  fi
+  done
 
   # Bail if we did not detect it
   if [[ -z $JAVA_HOME ]]; then

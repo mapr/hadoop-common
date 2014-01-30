@@ -45,6 +45,25 @@
 @rem   HADOOP_ROOT_LOGGER The root appender. Default is INFO,console
 @rem
 
+@rem Begin: MapR specific section
+if not defined MAPR_HOME (
+  echo MAPR_HOME is not set. Set MAPR_HOME to the installation folder and run this command.
+  goto end
+)
+
+@rem bug 6908 : Source env variables
+set MY_MAPR_HOME=%MAPR_HOME%
+set FC=%MY_MAPR_HOME:~0,1%
+
+if [!FC!]==[^"] (
+  set MY_MAPR_HOME=%MAPR_HOME:~1,-1%
+)
+
+if exist "%MY_MAPR_HOME%\conf\env.bat" (
+  call "%MY_MAPR_HOME%\conf\env.bat"
+)
+@rem End: MapR specific section
+
 if not defined HADOOP_BIN_PATH ( 
   set HADOOP_BIN_PATH=%~dp0
 )
@@ -54,6 +73,23 @@ if "%HADOOP_BIN_PATH:~-1%" == "\" (
 )
 
 call :updatepath %HADOOP_BIN_PATH%
+
+@rem Begin: MapR specific section
+if exist %MAPR_HOME%\lib (
+  set CLASSPATH=!CLASSPATH!;%MAPR_HOME%\lib\kvstore-0.1.jar
+  set CLASSPATH=!CLASSPATH!;%MAPR_HOME%\lib\protobuf-java-2.4.1-lite.jar
+  set CLASSPATH=!CLASSPATH!;%MAPR_HOME%\lib\libprotodefs.jar
+  set CLASSPATH=!CLASSPATH!;%MAPR_HOME%\lib\baseutils-0.1.jar
+  set CLASSPATH=!CLASSPATH!;%MAPR_HOME%\lib\maprsecurity-0.1.jar
+  set CLASSPATH=!CLASSPATH!;%MAPR_HOME%\lib\json-20080701.jar
+  set CLASSPATH=!CLASSPATH!;%MAPR_HOME%\lib\flexjson-2.1.jar
+)
+
+@rem Bug 10369 - Fix to run HBase shell, etc in windows
+if not "%HADOOP_CLASSPATH%" == "" (
+  set CLASSPATH=%CLASSPATH%;%HADOOP_CLASSPATH%
+)
+@rem End: MapR specific section
 
 :main
   setlocal enabledelayedexpansion
@@ -118,6 +154,13 @@ call :updatepath %HADOOP_BIN_PATH%
     @echo %CLASSPATH%
     goto :eof
   )
+
+  @rem Begin: MapR specific section
+  if %hadoop-command% == jnipath(
+    @echo %JAVA_LIBRARY_PATH%
+    goto :eof
+  )
+  @rem End: MapR specific section
   
   set corecommands=fs version jar checknative distcp daemonlog archive
   for %%i in ( %corecommands% ) do (
@@ -175,6 +218,18 @@ call :updatepath %HADOOP_BIN_PATH%
   set CLASSPATH=%CLASSPATH%;%TOOL_PATH%
   goto :eof
 
+@rem Begin: MapR specific section
+
+:mfs
+  set CLASS=com.mapr.fs.clicommands.MapRCliCommands
+  goto :eof
+
+:conf
+  set CLASS=org.apache.hadoop.conf.MapRConf
+  goto :eof
+
+@rem End: MapR specific section
+
 :updatepath
   set path_to_add=%*
   set current_path_comparable=%path%
@@ -224,6 +279,7 @@ call :updatepath %HADOOP_BIN_PATH%
   @echo Usage: hadoop [--config confdir] COMMAND
   @echo where COMMAND is one of:
   @echo   fs                   run a generic filesystem user client
+  @echo   mfs                  run MapR-FS commands
   @echo   version              print the version
   @echo   jar ^<jar^>            run a jar file
   @echo   checknative [-a^|-h]  check native hadoop and compression libraries availability
@@ -231,6 +287,8 @@ call :updatepath %HADOOP_BIN_PATH%
   @echo   archive -archiveName NAME -p ^<parent path^> ^<src^>* ^<dest^> create a hadoop archive
   @echo   classpath            prints the class path needed to get the
   @echo                        Hadoop jar and the required libraries
+  @echo   jnipath              prints the path to the native libraries
+  @echo   conf                 print Hadoop configuration keys
   @echo   daemonlog            get/set the log level for each daemon
   @echo  or
   @echo   CLASSNAME            run the class named CLASSNAME
