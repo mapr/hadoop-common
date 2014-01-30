@@ -22,6 +22,7 @@ import java.nio.ByteBuffer;
 
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
+import org.apache.hadoop.classification.MapRModified;
 
 /** Utility that wraps a {@link FSInputStream} in a {@link DataInputStream}
  * and buffers input through a {@link BufferedInputStream}. */
@@ -32,8 +33,11 @@ public class FSDataInputStream extends DataInputStream
     ByteBufferReadable, HasFileDescriptor, CanSetDropBehind, CanSetReadahead {
 
   /**
-   * Used by MapR Client for Random and Sequential File Access.
+   * Type of file advise to be passed on to the underlying file system. This
+   * information can be used to make optimizations such as reclaiming buffers
+   * for files that are no longer needed by the application, etc.
    */
+  @MapRModified
   public static enum FadviseType {
     FILE_DONTNEED,
     FILE_RANDOM,
@@ -177,25 +181,59 @@ public class FSDataInputStream extends DataInputStream
     }
   }
 
-  // mapr_extensibility
+  /**
+   * Specifies the kind of advise to provide for this stream and the file
+   * offsets to which they apply.
+   *
+   * @param type advise type
+   * @param offset starting file offset
+   * @param count number of bytes starting from the offset
+   */
+  @MapRModified
   public void adviseFile(FadviseType type, long offset, long count)
     throws IOException {
 
     throw new UnsupportedOperationException();
   }
 
+  /**
+   * Returns the file length.
+   *
+   * @return file length
+   */
+  @MapRModified
   public long getFileLength() throws IOException {
     throw new UnsupportedOperationException();
   }
 
+  /**
+   * Returns the file id as string.
+   *
+   * @return file id as string
+   */
+  @MapRModified
   public String getFidStr() {
     throw new UnsupportedOperationException();
   }
 
+  /**
+   * Returns the server IPs in which the file is stored. Each IP is stored in a
+   * long. For e.g., the first 4 bytes can be used to store the IP in
+   * hexadecimal format and the last 4 bytes to store the port number.
+   *
+   * @return array of server IPs in which the file is stored
+   */
+  @MapRModified
   public long[] getFidServers() {
     throw new UnsupportedOperationException();
   }
 
+  /**
+   * Returns the file chunk size.
+   *
+   * @return file chunk size
+   */
+  @MapRModified
   public long getChunkSize() {
     throw new UnsupportedOperationException();
   }

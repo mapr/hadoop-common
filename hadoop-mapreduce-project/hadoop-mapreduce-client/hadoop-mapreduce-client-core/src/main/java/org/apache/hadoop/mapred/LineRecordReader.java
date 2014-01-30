@@ -25,6 +25,7 @@ import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataInputStream.FadviseType;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.Seekable;
@@ -240,6 +241,16 @@ public class LineRecordReader implements RecordReader<LongWritable, Text> {
 
   public synchronized void close() throws IOException {
     try {
+      try {
+        if (fileIn != null) {
+          fileIn.adviseFile(FadviseType.FILE_DONTNEED, start, end);
+        }
+      } catch (IOException ioe) {
+        if (LOG.isInfoEnabled()) {
+          LOG.info("Error in fadvise. Ignoring it.", ioe);
+        }
+      }
+
       if (in != null) {
         in.close();
       }

@@ -23,6 +23,7 @@ import java.io.*;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
+import org.apache.hadoop.fs.FSDataInputStream.FadviseType;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -73,6 +74,14 @@ public abstract class StreamBaseRecordReader implements RecordReader<Text, Text>
 
   /** Close this to future operations.*/
   public synchronized void close() throws IOException {
+    try {
+      in_.adviseFile(FadviseType.FILE_DONTNEED, start_, end_);
+    } catch (IOException ioe) {
+      if (LOG.isInfoEnabled()) {
+        LOG.info("Error in fadvise. Ignoring it.", ioe);
+      }
+    }
+
     in_.close();
   }
 
