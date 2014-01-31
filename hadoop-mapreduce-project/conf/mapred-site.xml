@@ -28,4 +28,31 @@
     <value>${fs.defaultFS}/tmp/staging</value>
   </property>
 
+  <property>
+    <name>mapreduce.task.local.output.class</name>
+    <value>org.apache.hadoop.mapred.MapRFsOutputFile</value>
+  </property>
+
+  <property>
+    <name>mapreduce.job.map.output.collector.class</name>
+    <value>org.apache.hadoop.mapred.MapRFsOutputBuffer</value>
+  </property>
+
+  <property>
+    <name>mapreduce.job.reduce.shuffle.consumer.plugin.class</name>
+    <value>org.apache.hadoop.mapreduce.task.reduce.DirectShuffle</value>
+  </property>
+  <property>
+    <name>mapred.ifile.outputstream</name>
+    <value>org.apache.hadoop.mapred.MapRIFileOutputStream</value>
+  </property>
+  <property>
+    <name>mapred.ifile.inputstream</name>
+    <value>org.apache.hadoop.mapred.MapRIFileInputStream</value>
+  </property>
+  <property>
+    <name>mapred.local.mapoutput</name>
+    <value>false</value>
+  </property>
+
 </configuration>

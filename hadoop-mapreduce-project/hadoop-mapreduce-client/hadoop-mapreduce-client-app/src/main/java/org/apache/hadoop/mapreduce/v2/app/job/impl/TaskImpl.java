@@ -671,21 +671,13 @@ public abstract class TaskImpl implements Task, EventHandler<TaskEvent> {
       tce.setMapOutputServerAddress(StringInterner.weakIntern(scheme
          + attempt.getNodeHttpAddress().split(":")[0] + ":"
          + attempt.getShufflePort()));
+      tce.setServicesMetaData(((TaskAttemptImpl) attempt).getServicesMetaData());
       tce.setStatus(status);
       tce.setAttemptId(attempt.getID());
       int runTime = 0;
       if (attempt.getFinishTime() != 0 && attempt.getLaunchTime() !=0)
         runTime = (int)(attempt.getFinishTime() - attempt.getLaunchTime());
       tce.setAttemptRunTime(runTime);
-      try {
-        // TODO get pathId from LocalVolumeService
-        FileSystem fs = FileSystem.get(conf);
-        PathId pathId = fs.createPathId();
-        tce.setPathId(pathId);      
-      } catch (IOException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-      }
 
       //raise the event to job so that it adds the completion event to its
       //data structures
