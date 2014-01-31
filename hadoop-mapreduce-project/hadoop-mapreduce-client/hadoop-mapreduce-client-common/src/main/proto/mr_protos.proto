@@ -157,9 +157,9 @@ message AMInfoProto {
   optional int32 node_manager_http_port = 6;
 }
 
-message PathIdProto {
-  optional string fid = 1;
-  repeated int64 ip = 2;
+message ServiceMetaDataProto {
+  optional string service_name = 1;
+  optional bytes service_data = 2;
 }
 
 enum TaskAttemptCompletionEventStatusProto {
@@ -176,7 +176,7 @@ message TaskAttemptCompletionEventProto {
   optional string map_output_server_address = 3;
   optional int32 attempt_run_time = 4;
   optional int32 event_id = 5;
-  optional PathIdProto path_id = 6;
+  repeated ServiceMetaDataProto service_meta_data = 6;
 }
 
 message StringCounterMapProto {

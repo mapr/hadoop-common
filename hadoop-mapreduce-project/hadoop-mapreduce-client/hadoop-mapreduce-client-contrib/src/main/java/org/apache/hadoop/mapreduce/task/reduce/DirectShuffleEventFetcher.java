@@ -13,7 +13,7 @@ public class DirectShuffleEventFetcher<K,V> extends Thread {
   private static final long SLEEP_TIME = 1000;
   private static final int MAX_RETRIES = 10;
   private static final int RETRY_PERIOD = 5000;
-  private static final Log LOG = LogFactory.getLog(EventFetcher.class);
+  private static final Log LOG = LogFactory.getLog(DirectShuffleEventFetcher.class);
 
   private final TaskAttemptID reduce;
   private final TaskUmbilicalProtocol umbilical;

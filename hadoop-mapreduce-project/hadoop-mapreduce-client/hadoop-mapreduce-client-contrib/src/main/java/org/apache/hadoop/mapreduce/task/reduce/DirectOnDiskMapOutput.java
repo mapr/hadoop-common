@@ -22,13 +22,13 @@ public class DirectOnDiskMapOutput<K,V> extends MapOutput<K, V> {
   private final FileSystem fs;
   private final Path tmpOutputPath;
   private final Path outputPath;
-  private final MergeManagerImpl<K, V> merger;
+  private final DirectShuffleMergeManagerImpl<K, V> merger;
   private final OutputStream disk; 
   private long compressedSize;
   private boolean shouldCloseInput; // in case of MapR it is always false
 
   public DirectOnDiskMapOutput(TaskAttemptID mapId, TaskAttemptID reduceId,
-      MergeManagerImpl<K,V> merger, long size,
+      DirectShuffleMergeManagerImpl<K,V> merger, long size,
       JobConf conf,
       MapOutputFile mapOutputFile, // MapRFSOutputFile
       int fetcher, boolean primaryMapOutput) throws IOException {
@@ -39,7 +39,7 @@ public class DirectOnDiskMapOutput<K,V> extends MapOutput<K, V> {
 
   @VisibleForTesting
   DirectOnDiskMapOutput(TaskAttemptID mapId, TaskAttemptID reduceId,
-                         MergeManagerImpl<K,V> merger, long size,
+                         DirectShuffleMergeManagerImpl<K,V> merger, long size,
                          JobConf conf,
                          MapOutputFile mapOutputFile,
                          int fetcher, boolean primaryMapOutput,
@@ -49,20 +49,18 @@ public class DirectOnDiskMapOutput<K,V> extends MapOutput<K, V> {
     this.merger = merger;
     this.outputPath = outputPath;
     tmpOutputPath = getTempPath(outputPath, fetcher);
-    disk = fs.create(outputPath);
+    disk = fs.create(tmpOutputPath);
   }
 
   @VisibleForTesting
   static Path getTempPath(Path outPath, int fetcher) {
-    //TODO ???
     return outPath.suffix(String.valueOf(fetcher));
   }
 
   @Override
-  public void shuffle(MapHost host, InputStream input, long compressedLength,
+  public void shuffle(MapHost host, InputStream input, long mapOutputLength,
       long decompressedLength, ShuffleClientMetrics metrics, Reporter reporter)
       throws IOException {
-    // TODO we will use decompressed length - but need to double check
     long bytesRead = 0;
     try {
     
@@ -104,14 +102,6 @@ public class DirectOnDiskMapOutput<K,V> extends MapOutput<K, V> {
              ioe);
 
     // Discard the map-output - caller will need to invoke "abort()" in case of IOException
-  /*  try {
-      mapOutput.discard();
-    } catch (IOException ignored) {
-      LOG.info("Failed to discard map-output from " +
-          mapOutputLoc.getTaskAttemptId(), ignored);
-    }
-    mapOutput = null;
-*/
     if (shouldCloseInput) {
       // Close the streams
       IOUtils.cleanup(LOG, input, disk);
@@ -123,26 +113,13 @@ public class DirectOnDiskMapOutput<K,V> extends MapOutput<K, V> {
   }
 
   // Sanity check
-  if (bytesRead != decompressedLength) {
+  if (bytesRead != mapOutputLength) {
     // TODO - caller will need to catch IOException and invoke "abort()" to cleanup
- /*   try {
-      mapOutput.discard();
-    } catch (Exception ioe) {
-      // IGNORED because we are cleaning up
-      LOG.info("Failed to discard map-output from " +
-          mapOutputLoc.getTaskAttemptId(), ioe);
-    } catch (Throwable t) {
-      String msg = getTaskID() + " : Failed in shuffle to disk :"
-                   + StringUtils.stringifyException(t);
-      reportFatalError(getTaskID(), t, msg);
-    }
-    mapOutput = null;
-*/
     throw new IOException("Incomplete map output received for " +
                           getMapId() + " from " +
-                          //mapOutputLoc.shuffleRootFid + " (" +
+                          host.getHostName() + " (" +
                           bytesRead + " instead of " +
-                          decompressedLength + ")"
+                          mapOutputLength + ")"
     );
   }
 
@@ -150,16 +127,20 @@ public class DirectOnDiskMapOutput<K,V> extends MapOutput<K, V> {
 
   @Override
   public void commit() throws IOException {
-    // TODO
-    // merger.closeOnDiskFile(compressAwarePath);  ???
+    if (!fs.rename(tmpOutputPath, outputPath)) {
+      fs.delete(tmpOutputPath, true);
+      throw new IOException("Failed to rename map output " +
+      		tmpOutputPath + " to " + outputPath);
+    }
+    merger.closeOnDiskFile(fs.getFileStatus(outputPath)); 
   }
 
   @Override
   public void abort() {
     try {
-      fs.delete(outputPath, true);
+      fs.delete(tmpOutputPath, true);
     } catch (IOException e) {
-      LOG.info("failure to clean up " + outputPath, e);
+      LOG.info("failure to clean up " + tmpOutputPath, e);
     }
     
   }

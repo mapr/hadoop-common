@@ -23,6 +23,10 @@ import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.lang.reflect.Constructor;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
@@ -43,6 +47,8 @@ import org.apache.hadoop.io.compress.Compressor;
 import org.apache.hadoop.io.compress.Decompressor;
 import org.apache.hadoop.io.serializer.SerializationFactory;
 import org.apache.hadoop.io.serializer.Serializer;
+import org.apache.hadoop.mapreduce.MRConfig;
+import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -57,7 +63,33 @@ import org.apache.commons.logging.LogFactory;
 @InterfaceStability.Unstable
 public class IFile {
   private static final Log LOG = LogFactory.getLog(IFile.class);
+  private static final Map<Class<?>, Constructor<?>> CONSTRUCTOR_CACHE = 
+      new ConcurrentHashMap<Class<?>, Constructor<?>>();
   public static final int EOF_MARKER = -1; // End of File Marker
+  
+  private static <T> Constructor<T> constructor(Class<T> theClass, Class<?>... parameterTypes) {    
+    try {
+      Constructor<T> meth = (Constructor<T>) CONSTRUCTOR_CACHE.get(theClass);
+      if (meth == null) {
+        meth = theClass.getDeclaredConstructor(parameterTypes);
+        meth.setAccessible(true);
+        CONSTRUCTOR_CACHE.put(theClass, meth);
+      }
+      return meth;      
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+  
+  private static <T> T newInstance(Constructor<T> meth, Object ...params) {
+    T result;
+    try {
+      result = meth.newInstance(params);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+    return result;
+  }
   
   /**
    * <code>IFile.Writer</code> to write out intermediate map-outputs. 
@@ -80,8 +112,9 @@ public class IFile {
     // Count records written to disk
     private long numRecordsWritten = 0;
     private final Counters.Counter writtenRecordsCounter;
-
+    private final boolean flushOnClose;
     IFileOutputStream checksumOut;
+    
 
     Class<K> keyClass;
     Class<V> valueClass;
@@ -101,14 +134,19 @@ public class IFile {
     
     protected Writer(Counters.Counter writesCounter) {
       writtenRecordsCounter = writesCounter;
+      this.flushOnClose = true;
     }
 
     public Writer(Configuration conf, FSDataOutputStream out, 
         Class<K> keyClass, Class<V> valueClass,
         CompressionCodec codec, Counters.Counter writesCounter)
         throws IOException {
+      this.checksumOut = newInstance(constructor(
+          conf.getClass("mapred.ifile.outputstream",
+              IFileOutputStream.class, IFileOutputStream.class), OutputStream.class), out);
+      this.flushOnClose = conf.getBoolean("mapred.flushonclose", false);
       this.writtenRecordsCounter = writesCounter;
-      this.checksumOut = new IFileOutputStream(out);
+     // this.checksumOut = new IFileOutputStream(out);
       this.rawOut = out;
       this.start = this.rawOut.getPos();
       if (codec != null) {
@@ -160,7 +198,9 @@ public class IFile {
       decompressedBytesWritten += 2 * WritableUtils.getVIntSize(EOF_MARKER);
       
       //Flush the stream
-      out.flush();
+      if ( this.flushOnClose ) {
+        out.flush();
+      }
   
       if (compressOutput) {
         // Flush
@@ -168,15 +208,18 @@ public class IFile {
         compressedOut.resetState();
       }
       
+      if ( checksumOut != null ) {
+        checksumOut.finish(decompressedBytesWritten, (rawOut.getPos() - start));
+      }
       // Close the underlying stream iff we own it...
       if (ownOutputStream) {
         out.close();
       }
       else {
         // Write the checksum
-        checksumOut.finish();
+       // checksumOut.finish();
       }
-
+      
       compressedBytesWritten = rawOut.getPos() - start;
 
       if (compressOutput) {
@@ -342,7 +385,12 @@ public class IFile {
                   CompressionCodec codec,
                   Counters.Counter readsCounter) throws IOException {
       readRecordsCounter = readsCounter;
-      checksumIn = new IFileInputStream(in,length, conf);
+      this.checksumIn = newInstance(constructor(
+          conf.getClass("mapred.ifile.inputstream",
+              IFileInputStream.class, IFileInputStream.class), 
+              InputStream.class, long.class, Configuration.class), in, length, conf);
+
+      //checksumIn = new IFileInputStream(in,length, conf);
       if (codec != null) {
         decompressor = CodecPool.getDecompressor(codec);
         if (decompressor != null) {

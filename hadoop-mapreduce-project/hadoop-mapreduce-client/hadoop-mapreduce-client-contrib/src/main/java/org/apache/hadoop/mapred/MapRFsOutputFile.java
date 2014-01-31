@@ -1,9 +1,11 @@
 package org.apache.hadoop.mapred;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.text.NumberFormat;
 import java.util.Arrays;
-import java.util.regex.Pattern;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -11,24 +13,25 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathId;
+import org.apache.hadoop.io.DataInputByteBuffer;
+import org.apache.hadoop.io.WritableUtils;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.TaskID;
+import org.apache.hadoop.yarn.util.AuxiliaryServiceHelper;
 
 public class MapRFsOutputFile extends MapOutputFile {
 
   enum FidId {
-    ROOT,                                   /* taskTracker                   */
-    OUTPUT,                                 /* taskTracker/outputs/<jobid>   */
-    OUTPUT_U,                               /* taskTracker/outputs.U/<jobid> */
-    SPILL,                                  /* taskTracker/spills/<jobid>    */
-    SPILL_U                                 /* taskTracker/spills.U/<jobid>  */
+    ROOT,                                   /* nodeManager                   */
+    OUTPUT,                                 /* nodeManager/output/<jobid>   */
+    OUTPUT_U,                               /* nodeManager/output.U/<jobid> */
+    SPILL,                                  /* nodeManager/spill/<jobid>    */
+    SPILL_U;                                /* nodeManager/spill.U/<jobid>  */
   }
 
   private static final String MAPR_LOCAL_OUT = "mapr.localoutput.dir";
   private static final String MAPR_LOCAL_SPILL = "mapr.localspill.dir";
   private static final String MAPR_UNCOMPR_SUFFIX = ".U";
-
-  private static final Pattern FID_ARR_SPLITTER = Pattern.compile(",");
 
   private static final String MAPR_COMPRESS =
     "mapreduce.maprfs.use.compression";
@@ -38,15 +41,10 @@ public class MapRFsOutputFile extends MapOutputFile {
   private String localSpillDir = "";
   private String localUncompressedOutputDir = "";
   private String localUncompressedSpillDir = "";
+  private String hostname;
   private JobConf conf;
-  private JobID jobId;
-
-  private String[] fidRoots;
-  private String[] jobFidRoots;
+  private Map<String, String> jobFidRoots;
   
-  
-  private PathId shuffleFileId;
-
   boolean useCompression = true;
   String taskUser;
   String taskUserGroup;
@@ -57,14 +55,6 @@ public class MapRFsOutputFile extends MapOutputFile {
   MapRFsOutputFile() {
   }
 
-  MapRFsOutputFile(JobID id) {
-    this.jobId = id;
-  }
-
-  public void setJobId(JobID id) {
-    this.jobId = id;
-  }
-
   @Override
   public void setConf(Configuration conf) {
     if (conf instanceof JobConf) {
@@ -72,17 +62,25 @@ public class MapRFsOutputFile extends MapOutputFile {
     } else {
       this.conf = new JobConf(conf);
     }
-    // TODO: get fidStrs from LocalVolumeHandlingService on map side at least
-//    final String fidStrs = conf.get(TaskTracker.TT_FID_PROPERTY);
-    final String fidStrs = "";
-    if (fidStrs != null) {
-      jobFidRoots = FID_ARR_SPLITTER.split(fidStrs);
-      if (jobFidRoots.length != FidId.values().length) {
-        throw new RuntimeException("Fid arr length mismatch "
-          + jobFidRoots.length + " " + FidId.values().length + fidStrs);
+    ByteBuffer serviceData = AuxiliaryServiceHelper.getServiceDataFromEnv(
+        "mapr_direct_shuffle", System.getenv());
+    if ( serviceData != null ) {
+      DataInputByteBuffer in = new DataInputByteBuffer();
+      in.reset(serviceData);
+      try {
+      hostname = WritableUtils.readString(in);
+      int size = WritableUtils.readVInt(in);
+      jobFidRoots = new HashMap<String,String>(size);
+      for (int i = 0; i < size; i++) {
+        String dirName = WritableUtils.readString(in);
+        PathId pathId = FileSystem.get(conf).createPathId();
+        pathId.readFields(in);
+        jobFidRoots.put(dirName, pathId.getFid());
+      }
+      } catch (IOException e) {
+        LOG.error("Could not parse servicedata", e);
       }
     }
-
     setLocalDirs();
     useCompression = useMapRCompression();
   }
@@ -122,17 +120,18 @@ public class MapRFsOutputFile extends MapOutputFile {
       :   conf.get(MAPR_LOCAL_OUT)
         + MAPR_UNCOMPR_SUFFIX;
     return prefix
-         + Path.SEPARATOR + jobId.toString()
+         + Path.SEPARATOR + mapTaskId.getJobID().toString()
          + Path.SEPARATOR + mapTaskId.toString();
   }
 
   private String getRelOutputDir(String mapTaskId) {
+    TaskAttemptID taId = TaskAttemptID.forName(mapTaskId);
     final String prefix = useCompression
       ? conf.get(MAPR_LOCAL_OUT)
       :   conf.get(MAPR_LOCAL_OUT)
         + MAPR_UNCOMPR_SUFFIX;
     return prefix
-         + Path.SEPARATOR + jobId.toString()
+         + Path.SEPARATOR + taId.getJobID().toString()
          + Path.SEPARATOR + mapTaskId;
   }
 
@@ -142,17 +141,18 @@ public class MapRFsOutputFile extends MapOutputFile {
       :   conf.get(MAPR_LOCAL_SPILL)
         + MAPR_UNCOMPR_SUFFIX;
     return prefix
-         + Path.SEPARATOR + jobId.toString()
+         + Path.SEPARATOR + mapTaskId.getJobID().toString()
          + Path.SEPARATOR + mapTaskId.toString();
   }
 
   private String getRelSpillDir(String mapTaskId) {
+    TaskAttemptID taId = TaskAttemptID.forName(mapTaskId);
     final String prefix = useCompression
       ? conf.get(MAPR_LOCAL_SPILL)
       :   conf.get(MAPR_LOCAL_SPILL)
         + MAPR_UNCOMPR_SUFFIX;
     return prefix
-         + Path.SEPARATOR + jobId.toString()
+         + Path.SEPARATOR + taId.getJobID().toString()
          + Path.SEPARATOR + mapTaskId;
   }
   
@@ -171,7 +171,8 @@ public class MapRFsOutputFile extends MapOutputFile {
   @Override
   public Path getOutputFileForWrite(long size) throws IOException {
     // TODO need to get partition number
-    return new Path(getMapRTaskOutputDir(this.jobId, conf.get(JobContext.TASK_ATTEMPT_ID)),
+    TaskAttemptID taId = TaskAttemptID.forName(conf.get(JobContext.TASK_ATTEMPT_ID));
+    return new Path(getMapRTaskOutputDir(taId.getJobID(), conf.get(JobContext.TASK_ATTEMPT_ID)),
         getPartitionFilename(-1));
   }
 
@@ -179,7 +180,7 @@ public class MapRFsOutputFile extends MapOutputFile {
  // @Override TODO overwriting part
   public Path getOutputFileForWrite(TaskAttemptID mapTaskId, long size,
          int partition) throws IOException {
-    return new Path(getMapRTaskOutputDir(this.jobId, mapTaskId),
+    return new Path(getMapRTaskOutputDir(mapTaskId.getJobID(), mapTaskId),
                     getPartitionFilename(partition));
   }
 
@@ -209,7 +210,8 @@ public class MapRFsOutputFile extends MapOutputFile {
 
   @Override
   public Path getSpillFile(int spillNumber) throws IOException {
-    return new Path(getMapRTaskSpillDir(this.jobId, conf.get(JobContext.TASK_ATTEMPT_ID)),
+    TaskAttemptID taId = TaskAttemptID.forName(conf.get(JobContext.TASK_ATTEMPT_ID));
+    return new Path(getMapRTaskSpillDir(taId.getJobID(), conf.get(JobContext.TASK_ATTEMPT_ID)),
         "spill" + spillNumber + ".out");
   }
 
@@ -222,12 +224,14 @@ public class MapRFsOutputFile extends MapOutputFile {
   // ignore size
   //@Override TODO check
   public Path getLocalPathForWrite(String pathStr, long size) {
-    return new Path(selectMapRJobSpillDir(this.jobId), pathStr);
+    TaskAttemptID taId = TaskAttemptID.forName(conf.get(JobContext.TASK_ATTEMPT_ID));
+    return new Path(selectMapRJobSpillDir(taId.getJobID()), pathStr);
   }
 
   @Override
   public Path getSpillIndexFile(int spillNumber) throws IOException {
-    return new Path(getMapRTaskSpillDir(this.jobId, conf.get(JobContext.TASK_ATTEMPT_ID)),
+    TaskAttemptID taId = TaskAttemptID.forName(conf.get(JobContext.TASK_ATTEMPT_ID));
+    return new Path(getMapRTaskSpillDir(taId.getJobID(), conf.get(JobContext.TASK_ATTEMPT_ID)),
         "spill" + spillNumber + ".out.index");
   }
 
@@ -239,7 +243,8 @@ public class MapRFsOutputFile extends MapOutputFile {
 
   @Override
   public Path getInputFile(int mapId) throws IOException {
-    return new Path(getMapRTaskSpillDir(this.jobId, conf.get(JobContext.TASK_ATTEMPT_ID)),
+    TaskAttemptID taId = TaskAttemptID.forName(conf.get(JobContext.TASK_ATTEMPT_ID));
+    return new Path(getMapRTaskSpillDir(taId.getJobID(), conf.get(JobContext.TASK_ATTEMPT_ID)),
         "map_" + mapId + ".out");
   }
 
@@ -257,7 +262,7 @@ public class MapRFsOutputFile extends MapOutputFile {
  // @Override TODO specific to Mapr
   public Path getInputFile(int mapId, TaskAttemptID reduceTaskId)
          throws IOException {
-      return new Path(getMapRTaskSpillDir(this.jobId, reduceTaskId),
+      return new Path(getMapRTaskSpillDir(reduceTaskId.getJobID(), reduceTaskId),
                       "map_" + mapId + ".out");
   }
 
@@ -290,7 +295,7 @@ public class MapRFsOutputFile extends MapOutputFile {
         /* Empty directories by removing them and creating them again */
         if (LOG.isDebugEnabled()) {
           LOG.debug("Cleaning up dirs " + Arrays.toString(fidRelDirs)
-                  + " for " + jobId.toString() + " " + conf.get(JobContext.TASK_ATTEMPT_ID));
+                  + " for " + conf.get(JobContext.TASK_ATTEMPT_ID));
         }
         for (String[] fidDir : fidRelDirs) {
           fs.deleteFid(fidDir[0], fidDir[1]);
@@ -302,8 +307,8 @@ public class MapRFsOutputFile extends MapOutputFile {
       } catch (IOException ioe) {
         if (LOG.isWarnEnabled()) {
           LOG.warn("Failed to remove directories "
-                 + Arrays.toString(fidRelDirs) + " for " +
-                   jobId.toString() + " " + conf.get(JobContext.TASK_ATTEMPT_ID), ioe);
+                 + Arrays.toString(fidRelDirs) + " for "
+              + conf.get(JobContext.TASK_ATTEMPT_ID), ioe);
         }
         throw ioe;
       }
@@ -320,13 +325,12 @@ public class MapRFsOutputFile extends MapOutputFile {
          + Path.SEPARATOR
          + hostname
          + Path.SEPARATOR + "mapred" + Path.SEPARATOR
-         + "taskTracker" + Path.SEPARATOR;
+         + "nodeManager" + Path.SEPARATOR;
   }
 
   private String getMapRLocalOutputDir() {
- // TODO: get localhostname from LocalVolumeHandlingService on map side at least
-    return getMapRFsPath("")
-         + conf.get(MAPR_LOCAL_OUT);
+    return getMapRFsPath(hostname)
+           + conf.get(MAPR_LOCAL_OUT);
   }
 
   /* for uncompressed intermediate output use output.U and spill.U */
@@ -335,9 +339,8 @@ public class MapRFsOutputFile extends MapOutputFile {
   }
 
   private String getMapRLocalSpillDir() {
-    // TODO: get localhostname from LocalVolumeHandlingService on map side at least
-    return getMapRFsPath("")
-         + conf.get(MAPR_LOCAL_SPILL);
+    return getMapRFsPath(hostname)
+           + conf.get(MAPR_LOCAL_SPILL);
   }
 
   private String getMapRLocalUncompressedSpillDir() {
@@ -391,24 +394,16 @@ public class MapRFsOutputFile extends MapOutputFile {
   }
 
 
-  //@Override TODO: Will need to deal with Override
   public String getOutputFid() {
-    return jobFidRoots[
-      useCompression ? FidId.OUTPUT.ordinal() : FidId.OUTPUT_U.ordinal()];
+    return useCompression ? jobFidRoots.get(conf.get(MAPR_LOCAL_OUT)) : 
+      jobFidRoots.get(conf.get(MAPR_LOCAL_OUT) + MAPR_UNCOMPR_SUFFIX);
   }
 
-  //@Override TODO: Will need to deal with Override
   public String getSpillFid() {
-    return jobFidRoots[
-      useCompression ? FidId.SPILL.ordinal() : FidId.SPILL_U.ordinal()];
+    return useCompression ? jobFidRoots.get(conf.get(MAPR_LOCAL_SPILL)) : 
+      jobFidRoots.get(conf.get(MAPR_LOCAL_SPILL) + MAPR_UNCOMPR_SUFFIX);
   }
 
-  // TODO - this should be taken care by NodeManager Volume service
-  PathId getShuffleRootFid() {
-    return shuffleFileId;
-  }
-
-  //@Override TODO: Will need to deal with Override
   public String getSpillFileForWriteFid(
     TaskAttemptID mapTaskId,
     int spillNumber,
@@ -430,34 +425,6 @@ public class MapRFsOutputFile extends MapOutputFile {
          + getPartitionFilename(partition);
   }
 
-  /**
-   * Needed in MR AM? while initializing the job
-   * @param jobId
-   * @param jobUser
-   * @param jobGroup
-   * @return
-   * @throws IOException
-   */
-  public String[] createJobDirFids(JobID jobId, String jobUser, String jobGroup)
-      throws IOException
-    {
-      final FileSystem fs = FileSystem.get(conf);
-      final String jobIdStr = jobId.toString();
-      final String[] jobFids = new String[fidRoots.length];
-
-      // TODO gshegalov
-      // use only this after FileClient gets fid,relpath->fid lookup cache
-      //
-      jobFids[FidId.ROOT.ordinal()] = fidRoots[FidId.ROOT.ordinal()];
-
-      for (int i = FidId.ROOT.ordinal() + 1; i < fidRoots.length; i++) {
-        jobFids[i] = fs.mkdirsFid(fidRoots[i], jobIdStr);
-        if (jobUser != null) {
-          fs.setOwnerFid(jobFids[i], jobUser, jobGroup);
-        }
-      }
-      return jobFids;
-    }
 
   public void setUser(String userName, String groupName) {
     taskUser = userName;
