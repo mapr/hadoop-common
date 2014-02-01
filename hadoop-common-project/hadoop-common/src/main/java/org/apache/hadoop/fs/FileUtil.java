@@ -18,7 +18,14 @@
 
 package org.apache.hadoop.fs;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -34,18 +41,19 @@ import java.util.zip.ZipFile;
 import org.apache.commons.collections.map.CaseInsensitiveMap;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.permission.ChmodParser;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.nativeio.NativeIO;
-import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.Shell;
 import org.apache.hadoop.util.Shell.ShellCommandExecutor;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.util.StringUtils;
 
 /**
  * A collection of file-processing util methods
@@ -864,20 +872,53 @@ public class FileUtil {
    */
   public static int chmod(String filename, String perm, boolean recursive)
                             throws IOException {
-    String [] cmd = Shell.getSetPermissionCommand(perm, recursive);
-    String[] args = new String[cmd.length + 1];
-    System.arraycopy(cmd, 0, args, 0, cmd.length);
-    args[cmd.length] = new File(filename).getPath();
-    ShellCommandExecutor shExec = new ShellCommandExecutor(args);
-    try {
-      shExec.execute();
-    }catch(IOException e) {
-      if(LOG.isDebugEnabled()) {
-        LOG.debug("Error while changing permission : " + filename 
-                  +" Exception: " + StringUtils.stringifyException(e));
+
+    if (NativeIO.isAvailable()) {
+      final Configuration conf = new Configuration();
+      final FileSystem lfs = FileSystem.getLocal(conf);
+      final ChmodParser pp;
+      try {
+        pp = new ChmodParser(perm);
+      } catch (IllegalArgumentException e) {
+        throw new IOException("Invalid arg: " + perm, e);
+      }
+      final FileStatus fstat = lfs.getFileStatus(new Path(filename));
+
+      chmod(lfs, fstat, pp, recursive);
+      return 0;
+    } else {
+      String [] cmd = Shell.getSetPermissionCommand(perm, recursive);
+      String[] args = new String[cmd.length + 1];
+      System.arraycopy(cmd, 0, args, 0, cmd.length);
+      args[cmd.length] = new File(filename).getPath();
+      ShellCommandExecutor shExec = new ShellCommandExecutor(args);
+      try {
+        shExec.execute();
+      }catch(IOException e) {
+        if(LOG.isDebugEnabled()) {
+          LOG.debug("Error while changing permission : " + filename 
+              +" Exception: " + StringUtils.stringifyException(e));
+        }
+      }
+      return shExec.getExitCode();
+    }
+  }
+
+  public static void chmod(FileSystem fs, FileStatus fstat, ChmodParser pp,
+      boolean recursive) throws IOException {
+
+    final short newMode = pp.applyNewPermission(fstat);
+    final short oldMode = fstat.getPermission().toShort();
+    if (newMode != oldMode) {
+      fs.setPermission(fstat.getPath(), new FsPermission(newMode));
+    }
+
+    if (recursive && fstat.isDir()) {
+      final FileStatus[] kids = fs.listStatus(fstat.getPath());
+      for (FileStatus kidStatus : kids) {
+        chmod(fs, kidStatus, pp, recursive);
       }
     }
-    return shExec.getExitCode();
   }
 
   /**
@@ -893,10 +934,15 @@ public class FileUtil {
     if (username == null && groupname == null) {
       throw new IOException("username == null && groupname == null");
     }
-    String arg = (username == null ? "" : username)
+
+    if (NativeIO.isAvailable()) {
+      NativeIO.POSIX.chown(file.getCanonicalPath(), username, groupname);
+    } else {
+      String arg = (username == null ? "" : username)
         + (groupname == null ? "" : ":" + groupname);
-    String [] cmd = Shell.getSetOwnerCommand(arg);
-    execCommand(file, cmd);
+      String [] cmd = Shell.getSetOwnerCommand(arg);
+      execCommand(file, cmd);
+    }
   }
 
   /**
