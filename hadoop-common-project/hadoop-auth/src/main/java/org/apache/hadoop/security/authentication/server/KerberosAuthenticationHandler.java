@@ -200,6 +200,7 @@ public class KerberosAuthenticationHandler implements AuthenticationHandler {
       }
       LOG.info("Initialized, principal [{}] from keytab [{}]", principal, keytab);
     } catch (Exception ex) {
+      KerberosUtil.checkJCEKeyStrength();
       throw new ServletException(ex);
     }
   }
