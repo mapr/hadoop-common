@@ -464,7 +464,7 @@ public class MiniMapRFSCluster extends MiniDFSCluster {
     int replication = conf.getInt("dfs.replication", 3);
     conf.setInt("dfs.replication", Math.min(replication, builder.numDataNodes));
     conf.set("fs.maprfs.impl", "com.mapr.fs.MapRFileSystem");
-    conf.set("fs.AbstractFileSystem.maprfs.impl", "com.mapr.fs.MapRYarnFileSystem");
+    conf.set("fs.AbstractFileSystem.maprfs.impl", "com.mapr.fs.MFS");
     conf.set("io.file.buffer.size", "65536");  //TODO: other sizes?
 
     conf.set("dfs.http.address", "127.0.0.1:0");
