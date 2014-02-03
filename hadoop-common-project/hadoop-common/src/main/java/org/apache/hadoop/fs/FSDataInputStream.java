@@ -185,6 +185,9 @@ public class FSDataInputStream extends DataInputStream
    * Specifies the kind of advise to provide for this stream and the file
    * offsets to which they apply.
    *
+   * The default implementation does nothing. Sub classes can override this
+   * behavior.
+   *
    * @param type advise type
    * @param offset starting file offset
    * @param count number of bytes starting from the offset
@@ -192,8 +195,6 @@ public class FSDataInputStream extends DataInputStream
   @MapRModified
   public void adviseFile(FadviseType type, long offset, long count)
     throws IOException {
-
-    throw new UnsupportedOperationException();
   }
 
   /**
