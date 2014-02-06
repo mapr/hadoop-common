@@ -38,6 +38,7 @@ import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.io.nativeio.NativeIO;
+import org.apache.hadoop.io.nativeio.NativeIO.POSIX.Stat;
 import org.apache.hadoop.util.Progressable;
 import org.apache.hadoop.util.Shell;
 import org.apache.hadoop.util.StringUtils;
@@ -535,47 +536,90 @@ public class RawLocalFileSystem extends FileSystem {
 
     /// loads permissions, owner, and group from `ls -ld`
     private void loadPermissionInfo() {
-      IOException e = null;
-      try {
-        String output = FileUtil.execCommand(new File(getPath().toUri()), 
-            Shell.getGetPermissionCommand());
-        StringTokenizer t =
+      if (NativeIO.isAvailable()) {
+        loadNativePermissionInfo();
+      } else {
+        IOException e = null;
+        try {
+          String output = FileUtil.execCommand(new File(getPath().toUri()), 
+              Shell.getGetPermissionCommand());
+          StringTokenizer t =
             new StringTokenizer(output, Shell.TOKEN_SEPARATOR_REGEX);
-        //expected format
-        //-rw-------    1 username groupname ...
-        String permission = t.nextToken();
-        if (permission.length() > 10) { //files with ACLs might have a '+'
-          permission = permission.substring(0, 10);
-        }
-        setPermission(FsPermission.valueOf(permission));
-        t.nextToken();
+          //expected format
+          //-rw-------    1 username groupname ...
+          String permission = t.nextToken();
+          if (permission.length() > 10) { //files with ACLs might have a '+'
+            permission = permission.substring(0, 10);
+          }
+          setPermission(FsPermission.valueOf(permission));
+          t.nextToken();
 
-        String owner = t.nextToken();
-        // If on windows domain, token format is DOMAIN\\user and we want to
-        // extract only the user name
-        if (Shell.WINDOWS) {
-          int i = owner.indexOf('\\');
-          if (i != -1)
-            owner = owner.substring(i + 1);
-        }
-        setOwner(owner);
+          String owner = t.nextToken();
+          // If on windows domain, token format is DOMAIN\\user and we want to
+          // extract only the user name
+          if (Shell.WINDOWS) {
+            int i = owner.indexOf('\\');
+            if (i != -1)
+              owner = owner.substring(i + 1);
+          }
+          setOwner(owner);
 
-        setGroup(t.nextToken());
-      } catch (Shell.ExitCodeException ioe) {
-        if (ioe.getExitCode() != 1) {
+          setGroup(t.nextToken());
+        } catch (Shell.ExitCodeException ioe) {
+          if (ioe.getExitCode() != 1) {
+            e = ioe;
+          } else {
+            setPermission(null);
+            setOwner(null);
+            setGroup(null);
+          }
+        } catch (IOException ioe) {
           e = ioe;
-        } else {
-          setPermission(null);
-          setOwner(null);
-          setGroup(null);
+        } finally {
+          if (e != null) {
+            throw new RuntimeException("Error while running command to get " +
+                "file permissions : " + 
+                StringUtils.stringifyException(e));
+          }
         }
-      } catch (IOException ioe) {
-        e = ioe;
-      } finally {
-        if (e != null) {
-          throw new RuntimeException("Error while running command to get " +
-                                     "file permissions : " + 
-                                     StringUtils.stringifyException(e));
+      }
+    }
+
+    private void loadNativePermissionInfo() {
+      if (NativeIO.isAvailable()) {
+        final String pstr = getPath().toUri().getPath();
+        FileDescriptor fd;
+        try {
+          fd = NativeIO.POSIX.open(pstr, NativeIO.POSIX.O_RDONLY, 0);
+        } catch (IOException maybeDir) {
+          try {
+            fd = NativeIO.POSIX.open(pstr, NativeIO.POSIX.O_DIRECTORY, 0);
+          } catch (IOException e) {
+            if (LOG.isErrorEnabled()) {
+              LOG.error("Failed to fstat on: " + pstr, e);
+            }
+            throw new RuntimeException(pstr, e);
+          }
+        }
+
+        final FileInputStream dummy = new FileInputStream(fd);
+        try {
+          final Stat st = NativeIO.POSIX.getFstat(fd);
+          setPermission(new FsPermission((short)st.getMode()));
+          setOwner(st.getOwner());
+          setGroup(st.getGroup());
+        } catch (IOException e) {
+          if (LOG.isInfoEnabled()) {
+            LOG.info("Native fstat failed.", e);
+          }
+        } finally {
+          try {
+            dummy.close();
+          } catch (IOException e) {
+            if (LOG.isInfoEnabled()) {
+              LOG.info("Failed to close dummy descriptor.", e);
+            }
+          }
         }
       }
     }
@@ -608,7 +652,7 @@ public class RawLocalFileSystem extends FileSystem {
       NativeIO.POSIX.chmod(pathToFile(p).getCanonicalPath(),
                      permission.toShort());
     } else {
-      String perm = String.format("%04o", permission.toShort());
+      String perm = String.format("%05o", permission.toShort());
       Shell.execCommand(Shell.getSetPermissionCommand(perm, false,
         FileUtil.makeShellPath(pathToFile(p), true)));
     }
@@ -633,6 +677,26 @@ public class RawLocalFileSystem extends FileSystem {
           " for " +
           f.getAbsolutePath());
       }
+    }
+  }
+
+  @Override
+  public void createSymlink(Path oldPath, Path newPath, boolean createParent)
+    throws IOException
+  {
+    final String target =
+      (oldPath == null ? null : pathToFile(oldPath).toString());
+
+    final String link =
+      (newPath == null ? null : pathToFile(newPath).toString());
+
+    if (NativeIO.isAvailable()) {
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("NativeIO.symlink: " + target + " <- " + link);
+      }
+      NativeIO.POSIX.symlink(target, link, createParent);
+    } else {
+      FileUtil.symLink(target, link);
     }
   }
 

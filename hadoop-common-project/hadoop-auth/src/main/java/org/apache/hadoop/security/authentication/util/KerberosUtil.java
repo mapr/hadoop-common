@@ -17,19 +17,24 @@
  */
 package org.apache.hadoop.security.authentication.util;
 
+import static org.apache.hadoop.util.PlatformName.IBM_JAVA;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Locale;
 
+import javax.crypto.Cipher;
+
+import org.apache.log4j.Logger;
 import org.ietf.jgss.GSSException;
 import org.ietf.jgss.Oid;
 
-import static org.apache.hadoop.util.PlatformName.IBM_JAVA;
-
 public class KerberosUtil {
+  private static final Logger LOG = Logger.getLogger(KerberosUtil.class);
 
   /* Return the Kerberos login module name */
   public static String getKrb5LoginModuleName() {
@@ -102,5 +107,20 @@ public class KerberosUtil {
     // convert hostname to lowercase as kerberos does not work with hostnames
     // with uppercase characters.
     return service + "/" + fqdn.toLowerCase(Locale.US);
+  }
+
+  /**
+   * Validate if JCE Unlimited Strength Jurisdiction Policy Files are installed,
+   * logs a warning otherwise.
+   */
+  public static void checkJCEKeyStrength() {
+    try {
+      if (Cipher.getMaxAllowedKeyLength("AES") != Integer.MAX_VALUE) {
+        LOG.warn("JCE Unlimited Strength Jurisdiction Policy Files are not "
+            + "installed. This could cause authentication failures.");
+      }
+    } catch (NoSuchAlgorithmException e) {
+      LOG.warn(e.getMessage());
+    }
   }
 }

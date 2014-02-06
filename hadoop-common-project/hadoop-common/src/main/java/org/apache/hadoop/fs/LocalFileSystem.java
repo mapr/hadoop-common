@@ -142,4 +142,11 @@ public class LocalFileSystem extends ChecksumFileSystem {
     }
     return false;
   }
+
+  @Override
+  public void createSymlink(Path targetPath, Path linkPath, boolean createParent)
+    throws IOException {
+
+    getRaw().createSymlink(targetPath, linkPath, createParent);
+  }
 }

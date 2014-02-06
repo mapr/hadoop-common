@@ -364,6 +364,12 @@
           <!-- mapr_fix -->
           <excludes>
             <exclude>**/TestMetricsSystemImpl.java</exclude>
+            <exclude>**/TestLocalDirAllocator.java</exclude>
+            <exclude>**/TestFileUtil.java</exclude>
+            <exclude>**/TestLocalFileSystem.java</exclude>
+            <exclude>**/TestDiskChecker.java</exclude>
+            <exclude>**/TestFSMainOperationsLocalFileSystem.java</exclude>
+            <exclude>**/TestHarFileSystem.java</exclude>
           </excludes>
         </configuration>
       </plugin>

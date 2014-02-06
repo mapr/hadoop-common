@@ -19,8 +19,8 @@
 <configuration>
   <property>
     <name>fs.AbstractFileSystem.maprfs.impl</name>
-    <value>com.mapr.fs.MapRYarnFileSystem</value>
-    <description> MapR Yarn FileSystem </description>
+    <value>com.mapr.fs.MFS</value>
+    <description> MapR's implementation of AbstractFileSystem </description>
   </property>
 
   <property>

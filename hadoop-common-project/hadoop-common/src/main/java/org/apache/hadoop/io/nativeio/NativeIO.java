@@ -62,6 +62,7 @@ public class NativeIO {
     public static final int O_ASYNC  =  020000;
     public static final int O_FSYNC = O_SYNC;
     public static final int O_NDELAY = O_NONBLOCK;
+    public static final int O_DIRECTORY = 00200000;
 
     // Flags for posix_fadvise() from bits/fcntl.h
     /* No further special treatment.  */
@@ -152,6 +153,12 @@ public class NativeIO {
 
     /** Native chmod implementation. On UNIX, it is a wrapper around chmod(2) */
     private static native void chmodImpl(String path, int mode) throws IOException;
+
+    /** Wrapper around chown(2) */
+    public static native void chown(String path, String user, String group) throws IOException;
+
+    /** Wrapper around symlink(2) */
+    public static native void symlink(String oldPath, String newPath, boolean createParent) throws IOException;
 
     public static void chmod(String path, int mode) throws IOException {
       if (!Shell.WINDOWS) {

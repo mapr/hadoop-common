@@ -71,6 +71,7 @@ import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableUtils;
+
 import static org.apache.hadoop.ipc.RpcConstants.*;
 
 import org.apache.hadoop.ipc.ProtobufRpcEngine.RpcResponseMessageWrapper;
@@ -95,6 +96,7 @@ import org.apache.hadoop.security.SaslRpcServer.AuthMethod;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod;
+import org.apache.hadoop.security.authentication.util.KerberosUtil;
 import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.apache.hadoop.security.authorize.PolicyProvider;
 import org.apache.hadoop.security.authorize.ProxyUsers;
@@ -1328,6 +1330,7 @@ public abstract class Server {
         try {
           saslResponse = processSaslMessage(saslMessage);
         } catch (IOException e) {
+          KerberosUtil.checkJCEKeyStrength();
           rpcMetrics.incrAuthenticationFailures();
           // attempting user could be null
           AUDITLOG.warn(AUTH_FAILED_FOR + this.toString() + ":"
