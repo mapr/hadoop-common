@@ -397,6 +397,7 @@
             <startKdc>${startKdc}</startKdc>
             <kdc.resource.dir>${kdc.resource.dir}</kdc.resource.dir>
             <runningWithNative>${runningWithNative}</runningWithNative>
+            <java.security.auth.login.config>target/test-classes/test.login.conf</java.security.auth.login.config>
           </systemPropertyVariables>
         </configuration>
       </plugin>
@@ -790,6 +791,9 @@
             <excludes>
               <exclude>**/Test*.java</exclude>
             </excludes>
+            <systemPropertyVariables>
+              <java.security.auth.login.config>target/test-classes/test.login.conf</java.security.auth.login.config>
+            </systemPropertyVariables>
           </configuration>
         </plugin>
         </plugins>

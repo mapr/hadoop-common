@@ -225,12 +225,18 @@ public class MultiMechsAuthenticationHandler implements AuthenticationHandler {
   public String getType() {
     return MTYPE;
   }
- 
+
+  /**
+   * Returns true by default.
+   * Sub classes can override this method if they need to do any operations
+   * such as get/renew/cancel delegation tokens.
+   */
   @Override
   public boolean managementOperation(AuthenticationToken token,
                                      HttpServletRequest request,
                                      HttpServletResponse response)
     throws IOException, AuthenticationException {
-	throw new UnsupportedOperationException("Introduced in Hadoop2. Need to find out what to implement here first!");
+
+    return true;
   }
 }

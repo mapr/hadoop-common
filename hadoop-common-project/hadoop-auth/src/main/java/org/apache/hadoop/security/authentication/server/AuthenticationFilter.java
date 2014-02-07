@@ -35,6 +35,8 @@ import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.security.Principal;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -134,6 +136,11 @@ public class AuthenticationFilter implements Filter {
   public static final String CONFIG_PREFIX = "config.prefix";
 
   /**
+   * Default configuration prefix value to use if its not specified.
+   */
+  public static final String DEFAULT_CONFIG_PREFIX_VALUE = "hadoop.http.authentication.";
+
+  /**
    * Constant for the property that specifies the authentication handler to use.
    */
   public static final String AUTH_TYPE = "type";
@@ -189,7 +196,12 @@ public class AuthenticationFilter implements Filter {
   private String cookiePath;
 
   /**
-   * <p>Initializes the authentication filter and signer secret provider.</p>
+   * Configuration prefix value for properties.
+   */
+  protected String configPrefix;
+
+  /**
+   * <p>Initializes the authentication filter and signer secret provider.<p/>
    * It instantiates and initializes the specified {@link
    * AuthenticationHandler}.
    *
@@ -199,8 +211,10 @@ public class AuthenticationFilter implements Filter {
    */
   @Override
   public void init(FilterConfig filterConfig) throws ServletException {
-    String configPrefix = filterConfig.getInitParameter(CONFIG_PREFIX);
-    configPrefix = (configPrefix != null) ? configPrefix + "." : "";
+    configPrefix = filterConfig.getInitParameter(CONFIG_PREFIX);
+    configPrefix = (configPrefix != null) ? configPrefix + "."
+                                          : DEFAULT_CONFIG_PREFIX_VALUE;
+
     config = getConfiguration(configPrefix, filterConfig);
     String authHandlerName = config.getProperty(AUTH_TYPE, null);
     String authHandlerClassName;
@@ -225,7 +239,17 @@ public class AuthenticationFilter implements Filter {
 
     initializeAuthHandler(authHandlerClassName, filterConfig);
 
-    cookieDomain = config.getProperty(COOKIE_DOMAIN, null);
+    String domainName = null;
+    try {
+      InetAddress localHost = InetAddress.getLocalHost();
+      String fqdn = localHost.getCanonicalHostName();
+      if (fqdn != null && !fqdn.isEmpty() && fqdn.contains(".")) {
+        domainName = fqdn.substring(fqdn.indexOf("."));
+      }
+    } catch (UnknownHostException e) {
+    }
+
+    cookieDomain = config.getProperty(COOKIE_DOMAIN, domainName);
     cookiePath = config.getProperty(COOKIE_PATH, null);
   }
 
@@ -256,6 +280,7 @@ public class AuthenticationFilter implements Filter {
         throw new ServletException(ex);
       }
     }
+
     signer = new Signer(secretProvider);
   }
 

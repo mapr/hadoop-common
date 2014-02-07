@@ -6746,14 +6746,8 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
    * @return true if delegation token operation is allowed
    */
   private boolean isAllowedDelegationTokenOp() throws IOException {
-    AuthenticationMethod authMethod = getConnectionAuthenticationMethod();
-    if (UserGroupInformation.isSecurityEnabled()
-        && (authMethod != AuthenticationMethod.KERBEROS)
-        && (authMethod != AuthenticationMethod.KERBEROS_SSL)
-        && (authMethod != AuthenticationMethod.CERTIFICATE)) {
-      return false;
-    }
-    return true;
+    return !UserGroupInformation.isSecurityEnabled()
+        || getConnectionAuthenticationMethod().allowsDelegation();
   }
   
   /**

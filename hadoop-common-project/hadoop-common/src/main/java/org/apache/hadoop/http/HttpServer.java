@@ -272,6 +272,11 @@ public class HttpServer implements FilterContainer {
     addDefaultApps(contexts, appDir, conf);
         
     addGlobalFilter("safety", QuotingInputFilter.class.getName(), null);
+
+    if (UserGroupInformation.isSecurityEnabled()) {
+      addGlobalFilter("Authentication", HadoopCoreAuthenticationFilter.class.getName(), null);
+    }
+
     final FilterInitializer[] initializers = getFilterInitializers(conf); 
     if (initializers != null) {
       conf = new Configuration(conf);

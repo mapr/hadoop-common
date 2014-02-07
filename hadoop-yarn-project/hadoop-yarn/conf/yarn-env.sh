@@ -104,7 +104,6 @@ fi
 # restore ordinary behaviour
 unset IFS
 
-
 YARN_OPTS="$YARN_OPTS -Dhadoop.log.dir=$YARN_LOG_DIR"
 YARN_OPTS="$YARN_OPTS -Dyarn.log.dir=$YARN_LOG_DIR"
 YARN_OPTS="$YARN_OPTS -Dhadoop.log.file=$YARN_LOGFILE"
@@ -118,4 +117,11 @@ if [ "x$JAVA_LIBRARY_PATH" != "x" ]; then
 fi  
 YARN_OPTS="$YARN_OPTS -Dyarn.policy.file=$YARN_POLICYFILE"
 
+# MapR settings
+BASEMAPR=${MAPR_HOME:-/opt/mapr}
+env=${BASEMAPR}/conf/env.sh
+[ -f $env ] && . $env
 
+export YARN_RESOURCEMANAGER_OPTS="${YARN_RESOURCEMANAGER_OPTS} ${MAPR_LOGIN_OPTS}"
+export YARN_NODEMANAGER_OPTS="${YARN_NODEMANAGER_OPTS} ${MAPR_LOGIN_OPTS}"
+export YARN_HISTORYSERVER_OPTS="${YARN_HISTORYSERVER_OPTS} ${MAPR_LOGIN_OPTS}"
