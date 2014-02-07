@@ -15,6 +15,7 @@ package org.apache.hadoop.security.authentication.client;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.hadoop.security.authentication.util.KerberosUtil;
+import org.apache.hadoop.security.login.GenericOSLoginModule;
 import org.ietf.jgss.GSSContext;
 import org.ietf.jgss.GSSManager;
 import org.ietf.jgss.GSSName;
@@ -27,6 +28,7 @@ import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
+
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -75,35 +77,8 @@ public class KerberosAuthenticator implements Authenticator {
   */
   private static class KerberosConfiguration extends Configuration {
 
-    private static final String OS_LOGIN_MODULE_NAME;
-    private static final boolean windows = System.getProperty("os.name").startsWith("Windows");
-    private static final boolean is64Bit = System.getProperty("os.arch").contains("64");
-    private static final boolean aix = System.getProperty("os.name").equals("AIX");
-
-    /* Return the OS login module class name */
-    private static String getOSLoginModuleName() {
-      if (IBM_JAVA) {
-        if (windows) {
-          return is64Bit ? "com.ibm.security.auth.module.Win64LoginModule"
-              : "com.ibm.security.auth.module.NTLoginModule";
-        } else if (aix) {
-          return is64Bit ? "com.ibm.security.auth.module.AIX64LoginModule"
-              : "com.ibm.security.auth.module.AIXLoginModule";
-        } else {
-          return "com.ibm.security.auth.module.LinuxLoginModule";
-        }
-      } else {
-        return windows ? "com.sun.security.auth.module.NTLoginModule"
-            : "com.sun.security.auth.module.UnixLoginModule";
-      }
-    }
-
-    static {
-      OS_LOGIN_MODULE_NAME = getOSLoginModuleName();
-    }
-
     private static final AppConfigurationEntry OS_SPECIFIC_LOGIN =
-      new AppConfigurationEntry(OS_LOGIN_MODULE_NAME,
+      new AppConfigurationEntry(GenericOSLoginModule.OS_LOGIN_MODULE_NAME,
                                 AppConfigurationEntry.LoginModuleControlFlag.REQUIRED,
                                 new HashMap<String, String>());
 

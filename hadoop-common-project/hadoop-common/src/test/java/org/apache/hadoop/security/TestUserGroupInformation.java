@@ -630,18 +630,6 @@ public class TestUserGroupInformation {
   }
 
   @Test (timeout = 30000)
-  public void testTestAuthMethod() throws Exception {
-    UserGroupInformation ugi = UserGroupInformation.getCurrentUser();
-    // verify the reverse mappings works
-    for (AuthenticationMethod am : AuthenticationMethod.values()) {
-      if (am.getAuthMethod() != null) {
-        ugi.setAuthenticationMethod(am.getAuthMethod());
-        assertEquals(am, ugi.getAuthenticationMethod());
-      }
-    }
-  }
-  
-  @Test (timeout = 30000)
   public void testUGIAuthMethod() throws Exception {
     final UserGroupInformation ugi = UserGroupInformation.getCurrentUser();
     final AuthenticationMethod am = AuthenticationMethod.KERBEROS;

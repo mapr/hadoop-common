@@ -49,6 +49,12 @@ public class PlatformName {
    */
   public static final boolean IBM_JAVA = JAVA_VENDOR_NAME.contains("IBM");
 
+  public static final boolean IS_WINDOWS = System.getProperty("os.name").startsWith("Windows");
+
+  public static final boolean IS_64BIT = System.getProperty("os.arch").contains("64");
+
+  public static final boolean IS_AIX = System.getProperty("os.name").equals("AIX");
+
   public static void main(String[] args) {
     System.out.println(PLATFORM_NAME);
   }

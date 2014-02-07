@@ -65,8 +65,10 @@ import org.apache.hadoop.ipc.protobuf.RpcHeaderProtos.RpcResponseHeaderProto;
 import org.apache.hadoop.ipc.protobuf.RpcHeaderProtos.RpcSaslProto;
 import org.apache.hadoop.ipc.protobuf.RpcHeaderProtos.RpcSaslProto.SaslAuth;
 import org.apache.hadoop.ipc.protobuf.RpcHeaderProtos.RpcSaslProto.SaslState;
-import org.apache.hadoop.security.SaslRpcServer.AuthMethod;
+import org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod;
 import org.apache.hadoop.security.authentication.util.KerberosName;
+import org.apache.hadoop.security.rpcauth.RpcAuthMethod;
+import org.apache.hadoop.security.rpcauth.RpcAuthRegistry;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.TokenIdentifier;
 import org.apache.hadoop.security.token.TokenInfo;
@@ -90,7 +92,7 @@ public class SaslRpcClient {
 
   private SaslClient saslClient;
   private SaslPropertiesResolver saslPropsResolver;
-  private AuthMethod authMethod;
+  private RpcAuthMethod authMethod;
   
   private static final RpcRequestHeaderProto saslHeader = ProtoUtil
       .makeRpcRequestHeader(RpcKind.RPC_PROTOCOL_BUFFER,
@@ -130,7 +132,7 @@ public class SaslRpcClient {
   // ideally relogin if necessary instead of exposing this detail to the
   // Client
   @InterfaceAudience.Private
-  public AuthMethod getAuthMethod() {
+  public RpcAuthMethod getAuthMethod() {
     return authMethod;
   }
   
@@ -152,8 +154,8 @@ public class SaslRpcClient {
       if (!isValidAuthType(authType)) {
         continue; // don't know what it is, try next
       }
-      AuthMethod authMethod = AuthMethod.valueOf(authType.getMethod());
-      if (authMethod == AuthMethod.SIMPLE) {
+      RpcAuthMethod authMethod = RpcAuthRegistry.getAuthMethod(authType.getMethod());
+      if (authMethod.equals(RpcAuthRegistry.SIMPLE)) {
         switchToSimple = true;
       } else {
         saslClient = createSaslClient(authType);
@@ -181,12 +183,7 @@ public class SaslRpcClient {
   
 
   private boolean isValidAuthType(SaslAuth authType) {
-    AuthMethod authMethod;
-    try {
-      authMethod = AuthMethod.valueOf(authType.getMethod());
-    } catch (IllegalArgumentException iae) { // unknown auth
-      authMethod = null;
-    }
+    RpcAuthMethod authMethod = RpcAuthRegistry.getAuthMethod(authType.getMethod());
     // do we know what it is?  is it using our mechanism?
     return authMethod != null &&
            authMethod.getMechanismName().equals(authType.getMechanism());
@@ -204,28 +201,23 @@ public class SaslRpcClient {
    */
   private SaslClient createSaslClient(SaslAuth authType)
       throws SaslException, IOException {
-    String saslUser = null;
     // SASL requires the client and server to use the same proto and serverId
     // if necessary, auth types below will verify they are valid
-    final String saslProtocol = authType.getProtocol();
-    final String saslServerName = authType.getServerId();
-    Map<String, String> saslProperties =
-      saslPropsResolver.getClientProperties(serverAddr.getAddress());  
-    CallbackHandler saslCallback = null;
-    
-    final AuthMethod method = AuthMethod.valueOf(authType.getMethod());
-    switch (method) {
+    Map<String, Object> saslProperties =
+      saslPropsResolver.getClientProperties(serverAddr.getAddress());
+
+    final RpcAuthMethod method = RpcAuthRegistry.getAuthMethod(authType.getMethod());
+    switch (method.getAuthenticationMethod()) {
       case TOKEN: {
         Token<?> token = getServerToken(authType);
         if (token == null) {
           return null; // tokens aren't supported or user doesn't have one
         }
-        saslCallback = new SaslClientCallbackHandler(token);
+        saslProperties.put(SaslRpcServer.SASL_AUTH_TOKEN, token);
         break;
       }
       case KERBEROS: {
-        if (ugi.getRealAuthenticationMethod().getAuthMethod() !=
-            AuthMethod.KERBEROS) {
+        if (ugi.getRealAuthenticationMethod() != AuthenticationMethod.KERBEROS) {
           return null; // client isn't using kerberos
         }
         String serverPrincipal = getServerPrincipal(authType);
@@ -236,20 +228,17 @@ public class SaslRpcClient {
           LOG.debug("RPC Server's Kerberos principal name for protocol="
               + protocol.getCanonicalName() + " is " + serverPrincipal);
         }
+        saslProperties.put(SaslRpcServer.SASL_KERBEROS_PRINCIPAL, serverPrincipal);
         break;
       }
-      default:
-        throw new IOException("Unknown authentication method " + method);
     }
     
     String mechanism = method.getMechanismName();
     if (LOG.isDebugEnabled()) {
       LOG.debug("Creating SASL " + mechanism + "(" + method + ") "
-          + " client to authenticate to service at " + saslServerName);
+          + " client to authenticate to service at " + authType.getServerId());
     }
-    return Sasl.createSaslClient(
-        new String[] { mechanism }, saslUser, saslProtocol, saslServerName,
-        saslProperties, saslCallback);
+    return method.createSaslClient(saslProperties);
   }
   
   /**
@@ -347,7 +336,7 @@ public class SaslRpcClient {
    * @return AuthMethod used to negotiate the connection
    * @throws IOException
    */
-  public AuthMethod saslConnect(InputStream inS, OutputStream outS)
+  public RpcAuthMethod saslConnect(InputStream inS, OutputStream outS)
       throws IOException {
     DataInputStream inStream = new DataInputStream(new BufferedInputStream(inS));
     DataOutputStream outStream = new DataOutputStream(new BufferedOutputStream(
@@ -355,7 +344,7 @@ public class SaslRpcClient {
     
     // redefined if/when a SASL negotiation starts, can be queried if the
     // negotiation fails
-    authMethod = AuthMethod.SIMPLE;
+    authMethod = RpcAuthRegistry.SIMPLE;
     
     sendSaslMessage(outStream, negotiateRequest);
     
@@ -393,10 +382,10 @@ public class SaslRpcClient {
           // create a compatible SASL client, throws if no supported auths
           SaslAuth saslAuthType = selectSaslClient(saslMessage.getAuthsList());
           // define auth being attempted, caller can query if connect fails
-          authMethod = AuthMethod.valueOf(saslAuthType.getMethod());
+          authMethod = RpcAuthRegistry.getAuthMethod(saslAuthType.getMethod());
           
           byte[] responseToken = null;
-          if (authMethod == AuthMethod.SIMPLE) { // switching to SIMPLE
+          if (authMethod.equals(RpcAuthRegistry.SIMPLE)) { // switching to SIMPLE
             done = true; // not going to wait for success ack
           } else {
             byte[] challengeToken = null;
@@ -430,7 +419,7 @@ public class SaslRpcClient {
           // simple server sends immediate success to a SASL client for
           // switch to simple
           if (saslClient == null) {
-            authMethod = AuthMethod.SIMPLE;
+            authMethod = RpcAuthRegistry.SIMPLE;
           } else {
             saslEvaluateToken(saslMessage, true);
           }
@@ -511,6 +500,10 @@ public class SaslRpcClient {
     String qop = (String) saslClient.getNegotiatedProperty(Sasl.QOP);
     // SASL wrapping is only used if the connection has a QOP, and
     // the value is not auth.  ex. auth-int & auth-priv
+
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("QOP supported by " + saslClient + ": " + qop);
+    }
     return qop != null && !"auth".equalsIgnoreCase(qop);
   }
   
@@ -649,51 +642,4 @@ public class SaslRpcClient {
     }
   }
 
-  private static class SaslClientCallbackHandler implements CallbackHandler {
-    private final String userName;
-    private final char[] userPassword;
-
-    public SaslClientCallbackHandler(Token<? extends TokenIdentifier> token) {
-      this.userName = SaslRpcServer.encodeIdentifier(token.getIdentifier());
-      this.userPassword = SaslRpcServer.encodePassword(token.getPassword());
-    }
-
-    @Override
-    public void handle(Callback[] callbacks)
-        throws UnsupportedCallbackException {
-      NameCallback nc = null;
-      PasswordCallback pc = null;
-      RealmCallback rc = null;
-      for (Callback callback : callbacks) {
-        if (callback instanceof RealmChoiceCallback) {
-          continue;
-        } else if (callback instanceof NameCallback) {
-          nc = (NameCallback) callback;
-        } else if (callback instanceof PasswordCallback) {
-          pc = (PasswordCallback) callback;
-        } else if (callback instanceof RealmCallback) {
-          rc = (RealmCallback) callback;
-        } else {
-          throw new UnsupportedCallbackException(callback,
-              "Unrecognized SASL client callback");
-        }
-      }
-      if (nc != null) {
-        if (LOG.isDebugEnabled())
-          LOG.debug("SASL client callback: setting username: " + userName);
-        nc.setName(userName);
-      }
-      if (pc != null) {
-        if (LOG.isDebugEnabled())
-          LOG.debug("SASL client callback: setting userPassword");
-        pc.setPassword(userPassword);
-      }
-      if (rc != null) {
-        if (LOG.isDebugEnabled())
-          LOG.debug("SASL client callback: setting realm: "
-              + rc.getDefaultText());
-        rc.setText(rc.getDefaultText());
-      }
-    }
-  }
 }

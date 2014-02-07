@@ -20,9 +20,9 @@ package org.apache.hadoop.ipc;
 
 import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION;
 import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.HADOOP_RPC_PROTECTION;
-import static org.apache.hadoop.security.SaslRpcServer.AuthMethod.KERBEROS;
-import static org.apache.hadoop.security.SaslRpcServer.AuthMethod.SIMPLE;
-import static org.apache.hadoop.security.SaslRpcServer.AuthMethod.TOKEN;
+import static org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod.KERBEROS;
+import static org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod.SIMPLE;
+import static org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod.TOKEN;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -78,6 +78,7 @@ import org.apache.hadoop.security.SecurityInfo;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.TestUserGroupInformation;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod;
 import org.apache.hadoop.security.token.SecretManager;
 import org.apache.hadoop.security.token.SecretManager.InvalidToken;
 import org.apache.hadoop.security.token.Token;
@@ -292,16 +293,16 @@ public class TestSaslRPC {
       serverPrincipal = SERVER_PRINCIPAL_KEY)
   @TokenInfo(TestTokenSelector.class)
   public interface TestSaslProtocol extends TestRPC.TestProtocol {
-    public AuthMethod getAuthMethod() throws IOException;
+    public AuthenticationMethod getAuthMethod() throws IOException;
     public String getAuthUser() throws IOException;
   }
   
   public static class TestSaslImpl extends TestRPC.TestImpl implements
       TestSaslProtocol {
     @Override
-    public AuthMethod getAuthMethod() throws IOException {
+    public AuthenticationMethod getAuthMethod() throws IOException {
       return UserGroupInformation.getCurrentUser()
-          .getAuthenticationMethod().getAuthMethod();
+          .getAuthenticationMethod();
     }
     @Override
     public String getAuthUser() throws IOException {
@@ -408,7 +409,7 @@ public class TestSaslRPC {
     try {
       proxy = RPC.getProxy(TestSaslProtocol.class,
           TestSaslProtocol.versionID, addr, conf);
-      AuthMethod authMethod = proxy.getAuthMethod();
+      AuthenticationMethod authMethod = proxy.getAuthMethod();
       assertEquals(TOKEN, authMethod);
       //QOP must be auth
       assertEquals(expectedQop.saslQop,
@@ -659,11 +660,11 @@ public class TestSaslRPC {
   private static Pattern KrbFailed =
       Pattern.compile(".*Failed on local exception:.* " +
                       "Failed to specify server's Kerberos principal name.*");
-  private static Pattern Denied(AuthMethod method) {
+  private static Pattern Denied(AuthenticationMethod method) {
       return Pattern.compile(".*RemoteException.*AccessControlException.*: "
           + method + " authentication is not enabled.*");
   }
-  private static Pattern No(AuthMethod ... method) {
+  private static Pattern No(AuthenticationMethod... method) {
     String methods = StringUtils.join(method, ",\\s*");
     return Pattern.compile(".*Failed on local exception:.* " +
         "Client cannot authenticate via:\\[" + methods + "\\].*");
@@ -717,14 +718,14 @@ public class TestSaslRPC {
     assertAuthEquals(NoFallback, getAuthMethod(KERBEROS, SIMPLE, UseToken.OTHER));
     assertAuthEquals(TOKEN,      getAuthMethod(KERBEROS, SIMPLE, UseToken.VALID));
     assertAuthEquals(BadToken,   getAuthMethod(KERBEROS, SIMPLE, UseToken.INVALID));
-    
+
     // doesn't try SASL
     assertAuthEquals(Denied(SIMPLE), getAuthMethod(SIMPLE, TOKEN));
     // does try SASL
     assertAuthEquals(No(TOKEN),      getAuthMethod(SIMPLE, TOKEN, UseToken.OTHER));
     assertAuthEquals(TOKEN,          getAuthMethod(SIMPLE, TOKEN, UseToken.VALID));
     assertAuthEquals(BadToken,       getAuthMethod(SIMPLE, TOKEN, UseToken.INVALID));
-    
+
     assertAuthEquals(No(TOKEN),      getAuthMethod(KERBEROS, TOKEN));
     assertAuthEquals(No(TOKEN),      getAuthMethod(KERBEROS, TOKEN, UseToken.OTHER));
     assertAuthEquals(TOKEN,          getAuthMethod(KERBEROS, TOKEN, UseToken.VALID));
@@ -841,8 +842,8 @@ public class TestSaslRPC {
   // test helpers
 
   private String getAuthMethod(
-      final AuthMethod clientAuth,
-      final AuthMethod serverAuth) throws Exception {
+      final AuthenticationMethod clientAuth,
+      final AuthenticationMethod serverAuth) throws Exception {
     try {
       return internalGetAuthMethod(clientAuth, serverAuth, UseToken.NONE);
     } catch (Exception e) {
@@ -852,8 +853,8 @@ public class TestSaslRPC {
   }
 
   private String getAuthMethod(
-      final AuthMethod clientAuth,
-      final AuthMethod serverAuth,
+      final AuthenticationMethod clientAuth,
+      final AuthenticationMethod serverAuth,
       final UseToken tokenType) throws Exception {
     try {
       return internalGetAuthMethod(clientAuth, serverAuth, tokenType);
@@ -864,8 +865,8 @@ public class TestSaslRPC {
   }
   
   private String internalGetAuthMethod(
-      final AuthMethod clientAuth,
-      final AuthMethod serverAuth,
+      final AuthenticationMethod clientAuth,
+      final AuthenticationMethod serverAuth,
       final UseToken tokenType) throws Exception {
     
     final Configuration serverConf = new Configuration(conf);
@@ -949,9 +950,9 @@ public class TestSaslRPC {
             proxy.ping();
             // make sure the other side thinks we are who we said we are!!!
             assertEquals(clientUgi.getUserName(), proxy.getAuthUser());
-            AuthMethod authMethod = proxy.getAuthMethod();
+            AuthenticationMethod authMethod = proxy.getAuthMethod();
             // verify sasl completed with correct QOP
-            assertEquals((authMethod != SIMPLE) ? expectedQop.saslQop : null,
+            assertEquals((authMethod != AuthenticationMethod.SIMPLE) ? expectedQop.saslQop : null,
                          RPC.getConnectionIdForProxy(proxy).getSaslQop());            
             return authMethod.toString();
           } finally {
@@ -966,7 +967,7 @@ public class TestSaslRPC {
     }
   }
 
-  private static void assertAuthEquals(AuthMethod expect,
+  private static void assertAuthEquals(AuthenticationMethod expect,
       String actual) {
     assertEquals(expect.toString(), actual);
   }
@@ -987,8 +988,8 @@ public class TestSaslRPC {
   static class AuthSaslPropertiesResolver extends SaslPropertiesResolver{
 
     @Override
-    public Map<String, String> getServerProperties(InetAddress address) {
-      Map<String, String> newPropertes = new HashMap<String, String>(getDefaultProperties());
+    public Map<String, Object> getServerProperties(InetAddress address) {
+      Map<String, Object> newPropertes = new HashMap<String, Object>(getDefaultProperties());
       newPropertes.put(Sasl.QOP, QualityOfProtection.AUTHENTICATION.getSaslQop());
       return newPropertes;
     }

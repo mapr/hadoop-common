@@ -40,7 +40,7 @@ public class KerberosUtil {
   public static String getKrb5LoginModuleName() {
     return System.getProperty("java.vendor").contains("IBM")
       ? "com.ibm.security.auth.module.Krb5LoginModule"
-      : "com.sun.security.auth.module.Krb5LoginModule";
+      : "org.apache.hadoop.security.login.KerberosBugWorkAroundLoginModule";
   }
   
   public static Oid getOidInstance(String oidName) 
