@@ -46,7 +46,33 @@
 #   YARN_ROOT_LOGGER The root appender. Default is INFO,console
 #
 
-bin=`dirname "${BASH_SOURCE-$0}"`
+function get_canonical_dir() {
+  target="$1"
+
+  canonical_name=`readlink -f ${target} 2>/dev/null`
+  if [[ $? -eq 0 ]]; then
+    canonical_dir=`dirname $canonical_name`
+    echo ${canonical_dir}
+    return
+  fi
+
+  # Mac has no readlink -f
+  cd `dirname ${target}`
+  target=`basename ${target}`
+
+  # chase down the symlinks
+  while [ -L ${target} ]; do
+    target=`readlink ${target}`
+    cd `dirname ${target}`
+    target=`basename ${target}`
+  done
+
+  canonical_dir=`pwd -P`
+  ret=${canonical_dir}
+  echo $ret
+}
+
+bin=$(get_canonical_dir "${BASH_SOURCE-$0}")
 bin=`cd "$bin"; pwd`
 
 DEFAULT_LIBEXEC_DIR="$bin"/../libexec
