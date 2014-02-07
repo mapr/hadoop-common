@@ -38,7 +38,7 @@ import org.apache.hadoop.util.StringUtils;
  *
  */
 public class SaslPropertiesResolver implements Configurable{
-  private Map<String,String> properties;
+  private Map<String,Object> properties;
   Configuration conf;
 
   /**
@@ -60,7 +60,7 @@ public class SaslPropertiesResolver implements Configurable{
   @Override
   public void setConf(Configuration conf) {
     this.conf = conf;
-    properties = new TreeMap<String,String>();
+    properties = new TreeMap<String,Object>();
     String[] qop = conf.getTrimmedStrings(
         CommonConfigurationKeysPublic.HADOOP_RPC_PROTECTION,
         QualityOfProtection.AUTHENTICATION.toString());
@@ -80,7 +80,7 @@ public class SaslPropertiesResolver implements Configurable{
    * The default Sasl Properties read from the configuration
    * @return sasl Properties
    */
-  public Map<String,String> getDefaultProperties() {
+  public Map<String,Object> getDefaultProperties() {
     return properties;
   }
 
@@ -89,7 +89,7 @@ public class SaslPropertiesResolver implements Configurable{
    * @param clientAddress client's address
    * @return the sasl properties to be used for the connection.
    */
-  public Map<String, String> getServerProperties(InetAddress clientAddress){
+  public Map<String, Object> getServerProperties(InetAddress clientAddress){
     return properties;
   }
 
@@ -98,7 +98,7 @@ public class SaslPropertiesResolver implements Configurable{
    * @param serverAddress server's address
    * @return the sasl properties to be used for the connection.
    */
-  public Map<String, String> getClientProperties(InetAddress serverAddress){
+  public Map<String, Object> getClientProperties(InetAddress serverAddress){
     return properties;
   }
 }

@@ -23,6 +23,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
+import java.security.Principal;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedExceptionAction;
 import java.util.Arrays;
@@ -42,6 +43,7 @@ import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod;
+import org.apache.hadoop.security.rpcauth.RpcAuthMethod;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.TokenInfo;
 
@@ -231,14 +233,8 @@ public class SecurityUtil {
       return;
     
     String keytabFilename = conf.get(keytabFileKey);
-    if (keytabFilename == null || keytabFilename.length() == 0) {
-      throw new IOException("Running in secure mode, but config doesn't have a keytab");
-    }
-
-    String principalConfig = conf.get(userNameKey, System
-        .getProperty("user.name"));
-    String principalName = SecurityUtil.getServerPrincipal(principalConfig,
-        hostname);
+    String principalName = SecurityUtil.getServerPrincipal(
+        conf.get(userNameKey, System.getProperty("user.name")), hostname);
     UserGroupInformation.loginUserFromKeytab(principalName, keytabFilename);
   }
 
@@ -617,5 +613,35 @@ public class SecurityUtil {
     }
     conf.set(HADOOP_SECURITY_AUTHENTICATION,
              authenticationMethod.toString().toLowerCase(Locale.ENGLISH));
+  }
+
+  public static Class<? extends Principal> getCustomAuthPrincipal(Configuration conf) {
+    String principalClassName = conf.get(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY);
+    try {
+      Class<?> principalClass = conf.getClassByName(principalClassName);
+      return principalClass.asSubclass(Principal.class);
+    } catch (ClassNotFoundException cnfe) {
+      LOG.error("The value '" + principalClassName + "' provided for "
+          + CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY + " is not a valid class name.", cnfe);
+    } catch (ClassCastException cce) {
+      LOG.error("The value provided for " + CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY
+          + " does not extend " + Principal.class.getName(), cce);
+    }
+    return null;
+  }
+
+  public static Class<? extends RpcAuthMethod> getCustomRpcAuthMethod(Configuration conf) {
+    String rpcAuthMethodClassName = conf.get(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY);
+    try {
+      Class<?> rpcAuthMethodClass = conf.getClassByName(rpcAuthMethodClassName);
+      return rpcAuthMethodClass.asSubclass(RpcAuthMethod.class);
+    } catch (ClassNotFoundException cnfe) {
+      LOG.error("The value '" + rpcAuthMethodClassName + "' provided for "
+          + CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY + " is not a valid class name.", cnfe);
+    } catch (ClassCastException cce) {
+      LOG.error("The value provided for " + CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY
+          + " does not extend " + Principal.class.getName(), cce);
+    }
+    return null;
   }
 }

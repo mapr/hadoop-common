@@ -23,36 +23,26 @@ import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.security.PrivilegedExceptionAction;
 import java.security.Security;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
-import javax.security.auth.callback.NameCallback;
-import javax.security.auth.callback.PasswordCallback;
-import javax.security.auth.callback.UnsupportedCallbackException;
-import javax.security.sasl.AuthorizeCallback;
-import javax.security.sasl.RealmCallback;
 import javax.security.sasl.Sasl;
 import javax.security.sasl.SaslException;
 import javax.security.sasl.SaslServer;
 import javax.security.sasl.SaslServerFactory;
-
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.ipc.RetriableException;
-import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.ipc.Server.Connection;
-import org.apache.hadoop.ipc.StandbyException;
+import org.apache.hadoop.security.rpcauth.RpcAuthMethod;
+import org.apache.hadoop.security.rpcauth.RpcAuthRegistry;
 import org.apache.hadoop.security.token.SecretManager;
 import org.apache.hadoop.security.token.SecretManager.InvalidToken;
 import org.apache.hadoop.security.token.TokenIdentifier;
@@ -65,7 +55,9 @@ import org.apache.hadoop.security.token.TokenIdentifier;
 public class SaslRpcServer {
   public static final Log LOG = LogFactory.getLog(SaslRpcServer.class);
   public static final String SASL_DEFAULT_REALM = "default";
-  private static SaslServerFactory saslFactory;
+  public static final String SASL_AUTH_SECRET_MANAGER = "org.apache.hadoop.auth.secret.manager";
+  public static final String SASL_KERBEROS_PRINCIPAL = "org.apache.hadoop.auth.kerberos.principal";
+  public static final String SASL_AUTH_TOKEN = "org.apache.hadoop.auth.token";
 
   public static enum QualityOfProtection {
     AUTHENTICATION("auth"),
@@ -83,108 +75,40 @@ public class SaslRpcServer {
     }
   }
 
-  @InterfaceAudience.Private
-  @InterfaceStability.Unstable
-  public AuthMethod authMethod;
+  public RpcAuthMethod authMethod;
   public String mechanism;
   public String protocol;
   public String serverId;
-  
+
   @InterfaceAudience.Private
   @InterfaceStability.Unstable
-  public SaslRpcServer(AuthMethod authMethod) throws IOException {
+  public SaslRpcServer(RpcAuthMethod authMethod) throws IOException {
     this.authMethod = authMethod;
-    mechanism = authMethod.getMechanismName();    
-    switch (authMethod) {
-      case SIMPLE: {
-        return; // no sasl for simple
-      }
-      case TOKEN: {
-        protocol = "";
-        serverId = SaslRpcServer.SASL_DEFAULT_REALM;
-        break;
-      }
-      case KERBEROS: {
-        String fullName = UserGroupInformation.getCurrentUser().getUserName();
-        if (LOG.isDebugEnabled())
-          LOG.debug("Kerberos principal name is " + fullName);
-        // don't use KerberosName because we don't want auth_to_local
-        String[] parts = fullName.split("[/@]", 3);
-        protocol = parts[0];
-        // should verify service host is present here rather than in create()
-        // but lazy tests are using a UGI that isn't a SPN...
-        serverId = (parts.length < 2) ? "" : parts[1];
-        break;
-      }
-      default:
-        // we should never be able to get here
-        throw new AccessControlException(
-            "Server does not support SASL " + authMethod);
+    mechanism = authMethod.getMechanismName();
+    if (authMethod.equals(RpcAuthRegistry.SIMPLE)) {
+      return; // no sasl for simple
     }
+    protocol = authMethod.getProtocol();
+    serverId = authMethod.getServerId();
   }
   
   @InterfaceAudience.Private
   @InterfaceStability.Unstable
   public SaslServer create(final Connection connection,
-                           final Map<String,?> saslProperties,
+                           Map<String,Object> saslProperties,
                            SecretManager<TokenIdentifier> secretManager
       ) throws IOException, InterruptedException {
-    UserGroupInformation ugi = null;
-    final CallbackHandler callback;
-    switch (authMethod) {
-      case TOKEN: {
-        callback = new SaslDigestCallbackHandler(secretManager, connection);
-        break;
-      }
-      case KERBEROS: {
-        ugi = UserGroupInformation.getCurrentUser();
-        if (serverId.isEmpty()) {
-          throw new AccessControlException(
-              "Kerberos principal name does NOT have the expected "
-                  + "hostname part: " + ugi.getUserName());
-        }
-        callback = new SaslGssCallbackHandler();
-        break;
-      }
-      default:
-        // we should never be able to get here
-        throw new AccessControlException(
-            "Server does not support SASL " + authMethod);
-    }
-    
-    final SaslServer saslServer;
-    if (ugi != null) {
-      saslServer = ugi.doAs(
-        new PrivilegedExceptionAction<SaslServer>() {
-          @Override
-          public SaslServer run() throws SaslException  {
-            return saslFactory.createSaslServer(mechanism, protocol, serverId,
-                saslProperties, callback);
-          }
-        });
-    } else {
-      saslServer = saslFactory.createSaslServer(mechanism, protocol, serverId,
-          saslProperties, callback);
-    }
-    if (saslServer == null) {
-      throw new AccessControlException(
-          "Unable to find SASL server implementation for " + mechanism);
+    if (secretManager != null) {
+      saslProperties.put(SaslRpcServer.SASL_AUTH_SECRET_MANAGER, secretManager);
     }
     if (LOG.isDebugEnabled()) {
-      LOG.debug("Created SASL server with mechanism = " + mechanism);
+      LOG.debug("creating SaslServer for authMethod: " + authMethod);
     }
-    return saslServer;
+    return authMethod.createSaslServer(connection, saslProperties);
   }
 
   public static void init(Configuration conf) {
     Security.addProvider(new SaslPlainServer.SecurityProvider());
-    // passing null so factory is populated with all possibilities.  the
-    // properties passed when instantiating a server are what really matter
-    saslFactory = new FastSaslServerFactory(null);
-  }
-  
-  static String encodeIdentifier(byte[] identifier) {
-    return new String(Base64.encodeBase64(identifier));
   }
 
   static byte[] decodeIdentifier(String identifier) {
@@ -205,16 +129,8 @@ public class SaslRpcServer {
     return tokenIdentifier;
   }
 
-  static char[] encodePassword(byte[] password) {
-    return new String(Base64.encodeBase64(password)).toCharArray();
-  }
-
-  /** Splitting fully qualified Kerberos name into parts */
-  public static String[] splitKerberosName(String fullName) {
-    return fullName.split("[/@]");
-  }
-
   /** Authentication method */
+  //TODO : Deprecate this after moving all the tests to use UGI.AuthenticationMethod
   @InterfaceStability.Evolving
   public static enum AuthMethod {
     SIMPLE((byte) 80, ""),
@@ -257,114 +173,7 @@ public class SaslRpcServer {
     }
   };
 
-  /** CallbackHandler for SASL DIGEST-MD5 mechanism */
-  @InterfaceStability.Evolving
-  public static class SaslDigestCallbackHandler implements CallbackHandler {
-    private SecretManager<TokenIdentifier> secretManager;
-    private Server.Connection connection; 
-    
-    public SaslDigestCallbackHandler(
-        SecretManager<TokenIdentifier> secretManager,
-        Server.Connection connection) {
-      this.secretManager = secretManager;
-      this.connection = connection;
-    }
-
-    private char[] getPassword(TokenIdentifier tokenid) throws InvalidToken,
-        StandbyException, RetriableException, IOException {
-      return encodePassword(secretManager.retriableRetrievePassword(tokenid));
-    }
-
-    @Override
-    public void handle(Callback[] callbacks) throws InvalidToken,
-        UnsupportedCallbackException, StandbyException, RetriableException,
-        IOException {
-      NameCallback nc = null;
-      PasswordCallback pc = null;
-      AuthorizeCallback ac = null;
-      for (Callback callback : callbacks) {
-        if (callback instanceof AuthorizeCallback) {
-          ac = (AuthorizeCallback) callback;
-        } else if (callback instanceof NameCallback) {
-          nc = (NameCallback) callback;
-        } else if (callback instanceof PasswordCallback) {
-          pc = (PasswordCallback) callback;
-        } else if (callback instanceof RealmCallback) {
-          continue; // realm is ignored
-        } else {
-          throw new UnsupportedCallbackException(callback,
-              "Unrecognized SASL DIGEST-MD5 Callback");
-        }
-      }
-      if (pc != null) {
-        TokenIdentifier tokenIdentifier = getIdentifier(nc.getDefaultName(),
-            secretManager);
-        char[] password = getPassword(tokenIdentifier);
-        UserGroupInformation user = null;
-        user = tokenIdentifier.getUser(); // may throw exception
-        connection.attemptingUser = user;
-        
-        if (LOG.isDebugEnabled()) {
-          LOG.debug("SASL server DIGEST-MD5 callback: setting password "
-              + "for client: " + tokenIdentifier.getUser());
-        }
-        pc.setPassword(password);
-      }
-      if (ac != null) {
-        String authid = ac.getAuthenticationID();
-        String authzid = ac.getAuthorizationID();
-        if (authid.equals(authzid)) {
-          ac.setAuthorized(true);
-        } else {
-          ac.setAuthorized(false);
-        }
-        if (ac.isAuthorized()) {
-          if (LOG.isDebugEnabled()) {
-            String username =
-              getIdentifier(authzid, secretManager).getUser().getUserName();
-            LOG.debug("SASL server DIGEST-MD5 callback: setting "
-                + "canonicalized client ID: " + username);
-          }
-          ac.setAuthorizedID(authzid);
-        }
-      }
-    }
-  }
-
-  /** CallbackHandler for SASL GSSAPI Kerberos mechanism */
-  @InterfaceStability.Evolving
-  public static class SaslGssCallbackHandler implements CallbackHandler {
-
-    @Override
-    public void handle(Callback[] callbacks) throws
-        UnsupportedCallbackException {
-      AuthorizeCallback ac = null;
-      for (Callback callback : callbacks) {
-        if (callback instanceof AuthorizeCallback) {
-          ac = (AuthorizeCallback) callback;
-        } else {
-          throw new UnsupportedCallbackException(callback,
-              "Unrecognized SASL GSSAPI Callback");
-        }
-      }
-      if (ac != null) {
-        String authid = ac.getAuthenticationID();
-        String authzid = ac.getAuthorizationID();
-        if (authid.equals(authzid)) {
-          ac.setAuthorized(true);
-        } else {
-          ac.setAuthorized(false);
-        }
-        if (ac.isAuthorized()) {
-          if (LOG.isDebugEnabled())
-            LOG.debug("SASL server GSSAPI callback: setting "
-                + "canonicalized client ID: " + authzid);
-          ac.setAuthorizedID(authzid);
-        }
-      }
-    }
-  }
-  
+  // TODO: Consider using this inside RpcAuthMethod implementations.
   // Sasl.createSaslServer is 100-200X slower than caching the factories!
   private static class FastSaslServerFactory implements SaslServerFactory {
     private final Map<String,List<SaslServerFactory>> factoryCache =

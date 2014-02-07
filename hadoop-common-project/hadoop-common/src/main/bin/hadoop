@@ -210,6 +210,15 @@ case $COMMAND in
       HADOOP_OPTS="$HADOOP_OPTS -Djava.security.krb5.realm= -Djava.security.krb5.kdc="
     fi
 
+    echo "$HADOOP_OPTS" | grep "\-Dhadoop.login=" > /dev/null 2>&1
+    if [ "$?" -ne 0 ]; then
+      # not included - include
+      HADOOP_OPTS="$HADOOP_OPTS ${MAPR_AUTH_CLIENT_OPTS}"
+    else
+      # do not include mechanism, as it is defined outside
+      HADOOP_OPTS="$HADOOP_OPTS ${MAPR_JAAS_CONFIG_OPTS} ${MAPR_ZOOKEEPER_OPTS} ${MAPR_SSL_OPTS}"
+    fi
+
     export CLASSPATH=$CLASSPATH
     exec "$JAVA" $JAVA_HEAP_MAX $HADOOP_OPTS $CLASS "$@"
     ;;

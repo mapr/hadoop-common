@@ -86,6 +86,8 @@ import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 
 import org.apache.hadoop.security.authentication.util.KerberosUtil;
+import org.apache.hadoop.security.rpcauth.RpcAuthMethod;
+import org.apache.hadoop.security.rpcauth.RpcAuthRegistry;
 import org.apache.hadoop.util.ProtoUtil;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.StringUtils;
@@ -369,7 +371,7 @@ public class Client {
   private class Connection extends Thread {
     private InetSocketAddress server;             // server ip:port
     private final ConnectionId remoteId;                // connection id
-    private AuthMethod authMethod; // authentication method
+    private RpcAuthMethod authMethod; // authentication method
     private AuthProtocol authProtocol;
     private int serviceClass;
     private SaslRpcClient saslRpcClient;
@@ -434,6 +436,7 @@ public class Client {
       boolean trySasl = UserGroupInformation.isSecurityEnabled() ||
                         (ticket != null && !ticket.getTokens().isEmpty());
       this.authProtocol = trySasl ? AuthProtocol.SASL : AuthProtocol.NONE;
+      this.authMethod = RpcAuthRegistry.SIMPLE; // start with SIMPLE even if security is enabled.
       
       this.setName("IPC Client (" + socketFactory.hashCode() +") connection to " +
           server.toString() +
@@ -533,7 +536,7 @@ public class Client {
       UserGroupInformation loginUser = UserGroupInformation.getLoginUser();
       UserGroupInformation currentUser = UserGroupInformation.getCurrentUser();
       UserGroupInformation realUser = currentUser.getRealUser();
-      if (authMethod == AuthMethod.KERBEROS && loginUser != null &&
+      if (authMethod.shouldReLogin() && loginUser != null &&
       // Make sure user logged in using Kerberos either keytab or TGT
           loginUser.hasKerberosCredentials() &&
           // relogin only in case it is the login user (e.g. JT)
@@ -544,7 +547,7 @@ public class Client {
       return false;
     }
     
-    private synchronized AuthMethod setupSaslConnection(final InputStream in2, 
+    private synchronized RpcAuthMethod setupSaslConnection(final InputStream in2,
         final OutputStream out2) throws IOException {
       // Do not use Client.conf here! We must use ConnectionId.conf, since the
       // Client object is cached and shared between all RPC clients, even those
@@ -654,11 +657,7 @@ public class Client {
                     + "the server : " + ex);
               }
               // try re-login
-              if (UserGroupInformation.isLoginKeytabBased()) {
-                UserGroupInformation.getLoginUser().reloginFromKeytab();
-              } else if (UserGroupInformation.isLoginTicketBased()) {
-                UserGroupInformation.getLoginUser().reloginFromTicketCache();
-              }
+              authMethod.reLogin();
               // have granularity of milliseconds
               //we are sleeping with the Connection lock held but since this
               //connection instance is being used for connecting to the server
@@ -712,9 +711,9 @@ public class Client {
             }
             try {
               authMethod = ticket
-                  .doAs(new PrivilegedExceptionAction<AuthMethod>() {
+                  .doAs(new PrivilegedExceptionAction<RpcAuthMethod>() {
                     @Override
-                    public AuthMethod run()
+                    public RpcAuthMethod run()
                         throws IOException, InterruptedException {
                       return setupSaslConnection(in2, out2);
                     }
@@ -729,7 +728,7 @@ public class Client {
                   rand, ticket);
               continue;
             }
-            if (authMethod != AuthMethod.SIMPLE) {
+            if (!authMethod.equals(RpcAuthRegistry.SIMPLE)) {
               // Sasl connect is successful. Let's set up Sasl i/o streams.
               inStream = saslRpcClient.getInputStream(inStream);
               outStream = saslRpcClient.getOutputStream(outStream);
@@ -873,7 +872,7 @@ public class Client {
      * Out is not synchronized because only the first thread does this.
      */
     private void writeConnectionContext(ConnectionId remoteId,
-                                        AuthMethod authMethod)
+                                        RpcAuthMethod authMethod)
                                             throws IOException {
       // Write out the ConnectionHeader
       IpcConnectionContextProto message = ProtoUtil.makeIpcConnectionContext(

@@ -1013,15 +1013,9 @@ public class ClientRMService extends AbstractService implements
   }
 
   private boolean isAllowedDelegationTokenOp() throws IOException {
-    if (UserGroupInformation.isSecurityEnabled()) {
-      return EnumSet.of(AuthenticationMethod.KERBEROS,
-                        AuthenticationMethod.KERBEROS_SSL,
-                        AuthenticationMethod.CERTIFICATE)
-          .contains(UserGroupInformation.getCurrentUser()
-                  .getRealAuthenticationMethod());
-    } else {
-      return true;
-    }
+    return !UserGroupInformation.isSecurityEnabled()
+        || UserGroupInformation.getCurrentUser()
+            .getRealAuthenticationMethod().allowsDelegation();
   }
 
   @VisibleForTesting

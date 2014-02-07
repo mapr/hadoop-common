@@ -250,6 +250,18 @@ public class CommonConfigurationKeys extends CommonConfigurationKeysPublic {
   public static final String HADOOP_SECURITY_UID_NAME_CACHE_TIMEOUT_KEY =
     "hadoop.security.uid.cache.secs";
 
+  /**
+   * A class that extends {@link org.apache.hadoop.security.rpcauth.RpcAuthMethod}
+   */
+  public static final String CUSTOM_RPC_AUTH_METHOD_CLASS_KEY =
+      "hadoop.security.custom.rpc.auth.method.class";
+
+  /**
+   * A class that extends {@link java.security.Principal}
+   */
+  public static final String CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY =
+      "hadoop.security.custom.auth.principal.class";
+
   public static final long HADOOP_SECURITY_UID_NAME_CACHE_TIMEOUT_DEFAULT =
     4*60*60; // 4 hours
   

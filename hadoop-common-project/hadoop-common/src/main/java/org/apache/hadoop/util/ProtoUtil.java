@@ -25,10 +25,10 @@ import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.ipc.protobuf.IpcConnectionContextProtos.IpcConnectionContextProto;
 import org.apache.hadoop.ipc.protobuf.IpcConnectionContextProtos.UserInformationProto;
 import org.apache.hadoop.ipc.protobuf.RpcHeaderProtos.*;
-import org.apache.hadoop.security.SaslRpcServer.AuthMethod;
 import org.apache.hadoop.security.UserGroupInformation;
 
 import com.google.protobuf.ByteString;
+import org.apache.hadoop.security.rpcauth.RpcAuthMethod;
 
 public abstract class ProtoUtil {
 
@@ -81,7 +81,7 @@ public abstract class ProtoUtil {
    */
   public static IpcConnectionContextProto makeIpcConnectionContext(
       final String protocol,
-      final UserGroupInformation ugi, final AuthMethod authMethod) {
+      final UserGroupInformation ugi, final RpcAuthMethod authMethod) {
     IpcConnectionContextProto.Builder result = IpcConnectionContextProto.newBuilder();
     if (protocol != null) {
       result.setProtocol(protocol);
@@ -92,22 +92,8 @@ public abstract class ProtoUtil {
        * In the connection context we send only additional user info that
        * is not derived from the authentication done during connection setup.
        */
-      if (authMethod == AuthMethod.KERBEROS) {
-        // Real user was established as part of the connection.
-        // Send effective user only.
-        ugiProto.setEffectiveUser(ugi.getUserName());
-      } else if (authMethod == AuthMethod.TOKEN) {
-        // With token, the connection itself establishes 
-        // both real and effective user. Hence send none in header.
-      } else {  // Simple authentication
-        // No user info is established as part of the connection.
-        // Send both effective user and real user
-        ugiProto.setEffectiveUser(ugi.getUserName());
-        if (ugi.getRealUser() != null) {
-          ugiProto.setRealUser(ugi.getRealUser().getUserName());
-        }
-      }
-    }   
+      authMethod.writeUGI(ugi, ugiProto);
+    }
     result.setUserInfo(ugiProto);
     return result.build();
   }

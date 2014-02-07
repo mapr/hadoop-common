@@ -84,6 +84,10 @@ case $COMMAND in
     ;;
 esac
 
+if [ -f "${HADOOP_CONF_DIR}/mapred-env.sh" ]; then
+  . "${HADOOP_CONF_DIR}/mapred-env.sh"
+fi
+
 if [ "$COMMAND" = "job" ] ; then
   CLASS=org.apache.hadoop.mapred.JobClient
   HADOOP_OPTS="$HADOOP_OPTS $HADOOP_CLIENT_OPTS"
