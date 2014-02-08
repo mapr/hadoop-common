@@ -2771,11 +2771,14 @@ public abstract class FileSystem extends Configured implements Closeable {
     }
     
     /**
-     * Reset the counts of bytes to 0.
+     * Reset the counts to 0.
      */
     public void reset() {
       bytesWritten.set(0);
       bytesRead.set(0);
+      readOps.set(0);
+      largeReadOps.set(0);
+      writeOps.set(0);
     }
     
     /**
