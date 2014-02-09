@@ -72,6 +72,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
+import org.apache.hadoop.classification.MapRModified;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
@@ -164,6 +165,7 @@ import com.google.common.base.Preconditions;
  */
 @InterfaceAudience.Public
 @InterfaceStability.Stable
+@MapRModified
 public class Configuration implements Iterable<Map.Entry<String,String>>,
                                       Writable {
   private static final Log LOG =
@@ -199,6 +201,26 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
     public String toString() {
       return name;
     }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      Resource resource1 = (Resource) o;
+
+      if (name != null ? !name.equals(resource1.name) : resource1.name != null) return false;
+      if (resource != null ? !resource.equals(resource1.resource) : resource1.resource != null) return false;
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      int result = resource != null ? resource.hashCode() : 0;
+      result = 31 * result + (name != null ? name.hashCode() : 0);
+      return result;
+    }
   }
   
   /**
@@ -230,8 +252,9 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
    * List of default Resources. Resources are loaded in the order of the list 
    * entries
    */
-  private static final CopyOnWriteArrayList<String> defaultResources =
-    new CopyOnWriteArrayList<String>();
+  @MapRModified(summary = "modified to allow adding java.util.Properties into defaultResources")
+  private static final CopyOnWriteArrayList<Resource> defaultResources =
+    new CopyOnWriteArrayList<Resource>();
 
   private static final Map<ClassLoader, Map<String, WeakReference<Class<?>>>>
     CACHE_CLASSES = new WeakHashMap<ClassLoader, Map<String, WeakReference<Class<?>>>>();
@@ -615,9 +638,10 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
           "respectively");
     }
     addDefaultResource("core-default.xml");
+    addDefaultPropertiesResourceFromClass("org.apache.hadoop.conf.CoreDefaultProperties");
     addDefaultResource("core-site.xml");
   }
-  
+
   private Properties properties;
   private Properties overlay;
   private ClassLoader classLoader;
@@ -627,17 +651,17 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
       classLoader = Configuration.class.getClassLoader();
     }
   }
-  
+
   /** A new configuration. */
   public Configuration() {
     this(true);
   }
 
-  /** A new configuration where the behavior of reading from the default 
+  /** A new configuration where the behavior of reading from the default
    * resources can be turned off.
-   * 
+   *
    * If the parameter {@code loadDefaults} is false, the new instance
-   * will not load resources from the default files. 
+   * will not load resources from the default files.
    * @param loadDefaults specifies whether to load from the default files
    */
   public Configuration(boolean loadDefaults) {
@@ -647,10 +671,10 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
       REGISTRY.put(this, null);
     }
   }
-  
-  /** 
+
+  /**
    * A new configuration with the same settings cloned from another.
-   * 
+   *
    * @param other the configuration from which to clone settings.
    */
   @SuppressWarnings("unchecked")
@@ -667,7 +691,7 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
 
      this.updatingResource = new HashMap<String, String[]>(other.updatingResource);
    }
-   
+
     this.finalParameters = new HashSet<String>(other.finalParameters);
     synchronized(Configuration.class) {
       REGISTRY.put(this, null);
@@ -676,17 +700,63 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
     this.loadDefaults = other.loadDefaults;
     setQuietMode(other.getQuietMode());
   }
-  
+
+  /**
+   * If there is a class specified by @param className
+   * on the class path and if it extends java.util.Properties, then
+   * create an instance of the class and add it to the defaultResources list.
+   *
+   * This allows an application/process to define default configuration
+   * in a java file as opposed to an xml file and thus can avoid the
+   * overhead of xml parsing to load the configuration.
+   */
+  @MapRModified
+  public static void addDefaultPropertiesResourceFromClass(String className) {
+    try {
+      ClassLoader cL = Thread.currentThread().getContextClassLoader();
+      if (cL == null) {
+        cL = Configuration.class.getClassLoader();
+      }
+      Class<?> defaultConfigPropsClass = cL.loadClass(className);
+      Object defaultConfigProps = defaultConfigPropsClass.newInstance();
+      if (defaultConfigProps instanceof Properties) {
+        addDefaultResource((Properties) defaultConfigProps);
+        if (LOG.isDebugEnabled()) {
+          LOG.debug("Added " + defaultConfigPropsClass.getName() +
+              " as a default resource.");
+        }
+      }
+    } catch (ClassNotFoundException e) { // ignore if the class is not found or can't be instantiated
+    } catch (InstantiationException e) {
+    } catch (IllegalAccessException e) {
+    }
+  }
+
   /**
    * Add a default resource. Resources are loaded in the order of the resources 
    * added.
    * @param name file name. File should be present in the classpath.
    */
+  @MapRModified(summary = "refactored to use defaultResources as a Resource list")
   public static synchronized void addDefaultResource(String name) {
-    if(!defaultResources.contains(name)) {
-      defaultResources.add(name);
-      for(Configuration conf : REGISTRY.keySet()) {
-        if(conf.loadDefaults) {
+    addDefaultResource(new Resource(name));
+  }
+
+  /**
+   * Add a default resource. Resources are loaded in the order of the resources
+   * added.
+   * @param properties resource to be added.
+   */
+  @MapRModified(summary = "New API to add java.util.Properties into configuration")
+  public static synchronized void addDefaultResource(Properties properties) {
+    addDefaultResource(new Resource(properties));
+  }
+
+  private static void addDefaultResource(Resource resource) {
+    if (!defaultResources.contains(resource)) {
+      defaultResources.add(resource);
+      for (Configuration conf : REGISTRY.keySet()) {
+        if (conf.loadDefaults) {
           conf.reloadConfiguration();
         }
       }
@@ -2155,23 +2225,19 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
     }
   }
 
+  @MapRModified
   private void loadResources(Properties properties,
                              ArrayList<Resource> resources,
                              boolean quiet) {
     if(loadDefaults) {
-      for (String resource : defaultResources) {
-        loadResource(properties, new Resource(resource), quiet);
+      for (Resource resource : defaultResources) {
+        loadResource(properties, resource, quiet);
       }
     
       //support the hadoop-site.xml as a deprecated case
       if(getResource("hadoop-site.xml")!=null) {
         loadResource(properties, new Resource("hadoop-site.xml"), quiet);
       }
-
-      // mapr_extensibility
-      /*Map<String,String> result = new HashMap<String,String>(MapRConf.size());
-      MapRConf.copyTo(result);
-      properties.putAll(result);*/
     }
     
     for (int i = 0; i < resources.size(); i++) {
