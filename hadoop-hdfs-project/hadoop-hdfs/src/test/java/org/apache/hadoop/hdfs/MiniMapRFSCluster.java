@@ -427,7 +427,7 @@ public class MiniMapRFSCluster extends MiniDFSCluster {
   static String installDir="/opt/mapr";
   static String tmpPath="/tmp/mapr-scratch/";
   static String mfsExe=installDir+"/server/mfs";
-  static String hadoopExe=installDir+"/hadoop/hadoop-2.2.0/bin/hadoop";
+  static String hadoopExe=installDir+"/hadoop/hadoop-common-2.3.0/bin/hadoop";
   static String testConfigPy=installDir + "/server/testconfig.py";
   static String cldbInitScript="/opt/mapr/cldb/cldb ";
   static String mruuidgen=installDir + "/server/mruuidgen";
