@@ -20,13 +20,18 @@
 
 package org.apache.hadoop.metrics.spi;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.Map.Entry;
 
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.metrics.MetricsException;
 import org.apache.hadoop.metrics.MetricsRecord;
+import org.apache.hadoop.metrics.spi.AbstractMetricsContext.MetricMap;
 import org.apache.hadoop.metrics.spi.AbstractMetricsContext.TagMap;
 
 /**
@@ -277,5 +282,53 @@ public class MetricsRecordImpl implements MetricsRecord {
 
   Map<String, MetricValue> getMetricTable() {
     return metricTable;
+  }
+
+  public Set<String> getTagNames() {
+    return Collections.unmodifiableSet(tagTable.keySet());
+  }
+
+  public OutputRecord createOutputRecord() {
+    Set<Entry<String, MetricValue>> entrySet = new HashSet<Entry<String, MetricValue>>(metricTable.entrySet());
+    TagMap copyTagMap = new TagMap(tagTable);
+    MetricMap metricMap = new MetricMap();
+    for (Entry<String, MetricValue> entry : entrySet) {
+      String metricName = entry.getKey ();
+      MetricValue updateValue = entry.getValue ();
+      Number updateNumber = updateValue.getNumber();
+      Number currentNumber = metricMap.get(metricName);
+      if (currentNumber == null || updateValue.isAbsolute()) {
+        metricMap.put(metricName, updateNumber);
+      }
+      else {
+        Number newNumber = sum(updateNumber, currentNumber);
+        metricMap.put(metricName, newNumber);
+      }
+    }
+
+    OutputRecord retRecord = new OutputRecord(copyTagMap, metricMap);
+    return retRecord;
+  }
+  
+  private Number sum(Number a, Number b) {
+    if (a instanceof Integer) {
+      return Integer.valueOf(a.intValue() + b.intValue());
+    }
+    else if (a instanceof Float) {
+      return new Float(a.floatValue() + b.floatValue());
+    }
+    else if (a instanceof Short) {
+      return Short.valueOf((short)(a.shortValue() + b.shortValue()));
+    }
+    else if (a instanceof Byte) {
+      return Byte.valueOf((byte)(a.byteValue() + b.byteValue()));
+    }
+    else if (a instanceof Long) {
+      return Long.valueOf((a.longValue() + b.longValue()));
+    }
+    else {
+      // should never happen
+      throw new MetricsException("Invalid number type");
+    }
   }
 }
