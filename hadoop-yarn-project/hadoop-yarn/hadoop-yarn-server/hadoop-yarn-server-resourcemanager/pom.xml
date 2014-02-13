@@ -73,7 +73,6 @@
           <!-- mapr_fix -->
           <excludes>
             <exclude>**/TestApplicationCleanup.java</exclude>
-            <exclude>**/TestRMStateStore.java</exclude>
             <exclude>**/TestAMAuthorization.java</exclude>
             <exclude>**/TestClientRMTokens.java</exclude>
             <exclude>**/TestResourceTrackerService.java</exclude>
@@ -131,5 +130,28 @@
         </plugins>
       </build>
     </profile>
+
+    <profile>
+      <id>checkin-tests</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <excludes>
+                <exclude>**/Test*.java</exclude>
+              </excludes>
+<!--          mapr_fix
+              <includes>
+                <include>**/TestRMStateStore.java</include>
+              </includes>
+-->
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
+
 </project>

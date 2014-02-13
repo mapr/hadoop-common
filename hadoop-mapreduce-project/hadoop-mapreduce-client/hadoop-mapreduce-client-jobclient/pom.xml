@@ -114,7 +114,26 @@
       </dependency>
     </dependencies>
   </profile>
-</profiles>
+    <profile>
+      <id>checkin-tests</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <includes>
+                <include>**/TestDFSIO.java</include>
+                <include>**/TestLazyOutput.java</include>
+                <include>**/TestMiniMRBringup.java</include>
+                <include>**/TestRMNMInfo.java</include>
+              </includes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
   <build>
     <plugins>
       <plugin>
@@ -165,7 +184,6 @@
           <!-- mapr_fix -->
           <excludes>
             <!-- Add default surefire exclude rule since we are specifying an explicit exclude -->
-            <exclude>**/Test*$*</exclude>
 
 	    <!-- to investigate -->
             <exclude>**/TestMerge.java</exclude>
