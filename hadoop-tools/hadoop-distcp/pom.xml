@@ -146,6 +146,7 @@
             <exclude>**/TestUniformSizeInputFormat.java</exclude>
             <exclude>**/TestDynamicInputFormat.java</exclude>
             <exclude>**/TestGlobbedCopyListing.java</exclude>
+            <exclude>**/TestIntegration.java</exclude>
           </excludes>
         </configuration>
       </plugin>
@@ -212,4 +213,22 @@
       </plugin-->
     </plugins>
   </build>
+  <profiles>
+    <profile>
+      <id>checkin-tests</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <excludes>
+                <exclude>**/Test*.java</exclude>
+              </excludes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
