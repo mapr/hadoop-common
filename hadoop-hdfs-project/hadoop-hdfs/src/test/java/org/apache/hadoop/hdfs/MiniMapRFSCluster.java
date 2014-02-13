@@ -36,6 +36,7 @@ enum NodeState {
 
 class MapRNode {
   public static final String ZOOKEEPER_HOME="/opt/mapr/zookeeper/zookeeper-3.4.5";
+  public static final String ZOOKEEPER_DATA="/opt/mapr/zkdata";
 
   boolean isCldb;
   boolean isFileServer;
@@ -120,7 +121,8 @@ class MapRNode {
     String commands[] = {
       "rm "+ this.diskName,
       "rm " + this.hostnameFile,
-      "rm " + this.hostIdFile
+      "rm " + this.hostIdFile,
+      "rm -rf " + ZOOKEEPER_DATA
     };
     RunCommand rc = new RunCommand();
     for (int i = 0; i < commands.length; ++i) {
@@ -383,7 +385,7 @@ class RunCommand {
       if (singleCommand == null) {
         System.out.print("Command ran: ");
         for (int i = 0; i < command.length; ++i) {
-          System.out.print(command[i]);
+          System.out.print(command[i] + " ");
         }
         System.out.println("");
         pr = rt.exec(command);
