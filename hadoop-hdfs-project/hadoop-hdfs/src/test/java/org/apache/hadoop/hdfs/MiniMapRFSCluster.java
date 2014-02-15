@@ -18,15 +18,22 @@
 package org.apache.hadoop.hdfs;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Random;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.server.common.HdfsServerConstants.StartupOption;
 import org.apache.hadoop.security.authorize.ProxyUsers;
 
@@ -35,6 +42,7 @@ enum NodeState {
 }
 
 class MapRNode {
+  private static final Log LOG = LogFactory.getLog(MapRNode.class);
   public static final String ZOOKEEPER_HOME="/opt/mapr/zookeeper/zookeeper-3.4.5";
   public static final String ZOOKEEPER_DATA="/opt/mapr/zkdata";
 
@@ -205,9 +213,9 @@ class MapRNode {
     rc.Run();
     mfsPr = rc.BGProcess();
     if (mfsPr != null) {
-      System.out.println("mfsPr is non null");
+      LOG.info("mfsPr is non null");
     } else {
-      System.out.println("mfsPr is null");
+      LOG.info("mfsPr is null");
     }
     return 0;
   }
@@ -219,7 +227,7 @@ class MapRNode {
   int KillFileServer() {
     if (mfsPr != null) {
 
-      System.out.println("Killing mfs");
+      LOG.info("Killing mfs");
       mfsPr.destroy();
       mfsPr = null;
     }
@@ -340,6 +348,7 @@ class MapRNode {
 }
 
 class RunCommand {
+  private static final Log LOG = LogFactory.getLog(RunCommand.class);
 
   String[] command;
   String singleCommand;
@@ -347,7 +356,7 @@ class RunCommand {
   boolean isBG;
   Process prCreated;
   boolean reqOutput;
-  String outputStr;
+  String outputStr = null;
 
   public void init(String command, String args, boolean isBG,
     boolean reqOutput) {
@@ -381,49 +390,61 @@ class RunCommand {
     try {
       Runtime rt = Runtime.getRuntime();
       Process pr;
-
       if (singleCommand == null) {
-        System.out.print("Command ran: ");
+        StringBuilder cmdline = new StringBuilder("Command ran: ");
         for (int i = 0; i < command.length; ++i) {
-          System.out.print(command[i] + " ");
+          cmdline.append(command[i] + " ");
         }
-        System.out.println("");
+        LOG.info(cmdline);
         pr = rt.exec(command);
       } else {
-        System.out.println("Command ran: " + singleCommand);
+        LOG.info("Command ran: " + singleCommand);
         pr = rt.exec(singleCommand);
       }
 
-      if (! isBG) {
-        BufferedReader input = new BufferedReader(new InputStreamReader(pr.getInputStream()));
-
-        String line=null;
-
-        while((line=input.readLine()) != null) {
-          System.out.println(line);
-          if (reqOutput) {
-            //Saves only last line of the output
-            outputStr = line;
-          }
-        }
+      if (!isBG) {
         retval = pr.waitFor();
+        String stdout = readStreamFully(pr.getInputStream());
+        if (stdout.length() > 0) {
+          LOG.info("Stdout:" + stdout);
+        }
+        String stderr = readStreamFully(pr.getErrorStream());
+        if (stderr.length() > 0) {
+          LOG.info("Stderr:" + stderr.toString());
+        }
       } else {
         prCreated = pr;
-        System.out.println("created BG process: " + prCreated);
+        LOG.info("created BG process: " + prCreated);
       }
 
-      System.out.println("Exited with error code "+retval);
+      LOG.info("Exited with error code " + retval);
     } catch (Exception e) {
-      System.out.println(e.toString());
+      LOG.info(e.toString());
       e.printStackTrace();
       retval = -1;
     }
 
     return retval;
   }
+
+  private String readStreamFully(InputStream is) throws IOException {
+    BufferedReader input = new BufferedReader(new InputStreamReader(is));
+    StringBuilder text = new StringBuilder();
+    String line = null;
+    while((line = input.readLine()) != null) {
+      text.append("\n\t").append(line);
+      if (reqOutput && outputStr != null) {
+        //Saves only last line of the output
+        outputStr = line;
+      }
+    }
+    input.close();
+    return text.toString();
+  }
 }
 
 public class MiniMapRFSCluster extends MiniDFSCluster {
+  private static final Log LOG = LogFactory.getLog(MiniMapRFSCluster.class);
   public static final String MAPRFS_SCHEME = "maprfs:///";
 
   static String installDir="/opt/mapr";
@@ -499,15 +520,43 @@ public class MiniMapRFSCluster extends MiniDFSCluster {
     String commands[] = {
       "/opt/mapr/cldb/cldb stop",
       MapRNode.ZOOKEEPER_HOME + "/bin/zkServer.sh stop",
-      "pkill -9 mfs",
-      "ps -ef | grep QuorumPeerMain | grep -v grep | awk '{print $2}' | xargs --no-run-if-empty kill -9",
-      "ps -ef | grep FsShell | grep -v grep | awk '{print $2}' | xargs --no-run-if-empty kill -9"
+      "pkill -9 mfs"
     };
 
     RunCommand rc = new RunCommand();
     for (int i = 0; i < commands.length; ++i) {
       rc.init(commands[i], "", false, false);
       rc.Run();
+    }
+
+    String javaProcs[] = { "QuorumPeerMain", "FsShell" };
+    for (String javaProc : javaProcs) {
+      killJavaProcess(javaProc);
+    }
+  }
+
+  private static final String SIGTERM_CMD = "$JAVA_HOME/bin/jps | grep %s"
+      + " | grep -v grep | awk '{print $1}' | xargs --no-run-if-empty kill";
+  private static final String SIGKILL_CMD  = SIGTERM_CMD + " -9";
+  private static final File TEMP_DIR = new File(System.getProperty("java.io.tmpdir"));
+  private void killJavaProcess(String javaProcName) {
+    File script = null;
+    try {
+      script = File.createTempFile("kill_"+javaProcName, ".sh", TEMP_DIR);
+      PrintWriter pw = new PrintWriter(new FileWriter(script));
+      pw.println(String.format(SIGTERM_CMD, javaProcName));
+      pw.println("sleep 2");
+      pw.println(String.format(SIGKILL_CMD, javaProcName));
+      pw.close();
+      Runtime.getRuntime().exec("chmod +x " + script.getAbsolutePath()).waitFor();
+      LOG.info("Terminating Java process: " + javaProcName);
+      Runtime.getRuntime().exec(script.getAbsolutePath()).waitFor();
+    } catch (Throwable e) {
+      LOG.error(e.getMessage(), e);
+    } finally {
+      if (script != null) {
+        script.delete();
+      }
     }
   }
 
@@ -531,23 +580,25 @@ public class MiniMapRFSCluster extends MiniDFSCluster {
 
   /**
    * wait for the cluster to get out of
-   * safemode. max wait 30 mins
+   * safemode. max wait 55 seconds
    */
   public void waitClusterUp() {
-    RunCommand rc = new RunCommand();
-    rc.init(hadoopExe+" fs -lsr /", "", false, false);
-    for(int i=0; i < 6; ++i) {
-      if (rc.Run() == 0) {
-        isClusterUp = true;
-        break;
-      }
-
+    for(int i=1; i <= 10; ++i) {
       try {
-        System.out.println("Waiting for cluster to come up");
-        Thread.sleep(5*1000);
+        LOG.info("Waiting for cluster to come up");
+        Thread.sleep(i*1000);
       } catch (InterruptedException e) {
-        System.out.println("Got interrupted while wating for cluster to come up");
+        LOG.info("Got interrupted while wating for cluster to come up");
         return;
+      }
+      FileSystem fs;
+      try {
+        fs = FileSystem.get(conf);
+        fs.listStatus(new Path("maprfs:///"));
+        isClusterUp = true;
+        return;
+      } catch (IOException e) {
+        LOG.warn(e.getMessage());
       }
     }
   }
