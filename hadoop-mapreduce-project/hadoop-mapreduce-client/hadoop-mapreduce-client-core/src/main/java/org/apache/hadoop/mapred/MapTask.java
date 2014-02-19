@@ -81,9 +81,9 @@ public class MapTask extends Task {
    * The size of each record in the index file for the map-outputs.
    */
   public static final int MAP_OUTPUT_INDEX_RECORD_LENGTH = 24;
+  public static final int APPROX_HEADER_LENGTH = 150;
 
   private TaskSplitIndex splitMetaInfo = new TaskSplitIndex();
-  private final static int APPROX_HEADER_LENGTH = 150;
 
   private static final Log LOG = LogFactory.getLog(MapTask.class.getName());
 
@@ -121,7 +121,11 @@ public class MapTask extends Task {
   public void write(DataOutput out) throws IOException {
     super.write(out);
     if (isMapOrReduce()) {
-      splitMetaInfo.write(out);
+      if (splitMetaInfo != null) {
+        splitMetaInfo.write(out);
+      } else {
+        new TaskSplitIndex().write(out);
+      }
       splitMetaInfo = null;
     }
   }
@@ -316,6 +320,7 @@ public class MapTask extends Task {
         sortPhase  = getProgress().addPhase("sort", 0.333f);
       }
     }
+    
     TaskReporter reporter = startReporter(umbilical);
  
     boolean useNewApi = job.getUseNewMapper();
@@ -457,8 +462,12 @@ public class MapTask extends Task {
       job.set(JobContext.MAP_INPUT_FILE, fileSplit.getPath().toString());
       job.setLong(JobContext.MAP_INPUT_START, fileSplit.getStart());
       job.setLong(JobContext.MAP_INPUT_PATH, fileSplit.getLength());
+      
+      if (LOG.isInfoEnabled())
+        LOG.info("Processing Split: File = " + fileSplit.getPath().toString() +
+                 ", Start Offset = " + fileSplit.getStart() +
+                 ", Length = " + fileSplit.getLength());
     }
-    LOG.info("Processing split: " + inputSplit);
   }
 
   static class NewTrackingRecordReader<K,V> 
@@ -927,7 +936,7 @@ public class MapTask extends Task {
 
     public MapOutputBuffer() {
     }
-
+    
     @SuppressWarnings("unchecked")
     public void init(MapOutputCollector.Context context
                     ) throws IOException, ClassNotFoundException {
@@ -1021,6 +1030,8 @@ public class MapTask extends Task {
       spillThread.setName("SpillThread");
       spillLock.lock();
       try {
+        if (LOG.isDebugEnabled())
+          LOG.debug("Starting spill thread");
         spillThread.start();
         while (!spillThreadRunning) {
           spillDone.await();
@@ -1035,7 +1046,7 @@ public class MapTask extends Task {
             sortSpillException);
       }
     }
-
+    
     /**
      * Serialize the key, value to intermediate storage.
      * When this method returns, kvindex must refer to sufficient unused
@@ -1046,9 +1057,9 @@ public class MapTask extends Task {
       reporter.progress();
       if (key.getClass() != keyClass) {
         throw new IOException("Type mismatch in key from map: expected "
-                              + keyClass.getName() + ", received "
-                              + key.getClass().getName());
-      }
+                               + keyClass.getName() + ", received "
+                               + key.getClass().getName());
+       }
       if (value.getClass() != valClass) {
         throw new IOException("Type mismatch in value from map: expected "
                               + valClass.getName() + ", received "
@@ -1449,7 +1460,7 @@ public class MapTask extends Task {
         if (kvindex != kvend) {
           kvend = (kvindex + NMETA) % kvmeta.capacity();
           bufend = bufmark;
-          LOG.info("Spilling map output");
+          LOG.info("flush: Spilling map output");
           LOG.info("bufstart = " + bufstart + "; bufend = " + bufmark +
                    "; bufvoid = " + bufvoid);
           LOG.info("kvstart = " + kvstart + "(" + (kvstart * 4) +
@@ -1549,7 +1560,7 @@ public class MapTask extends Task {
     }
 
     private void sortAndSpill() throws IOException, ClassNotFoundException,
-                                       InterruptedException {
+                                         InterruptedException {
       //approximate the length of the output file to be the length of the
       //buffer + header lengths for the partitions
       final long size = (bufend >= bufstart
@@ -1748,6 +1759,7 @@ public class MapTask extends Task {
       private final InMemValBytes vbytes = new InMemValBytes();
       private final int end;
       private int current;
+      
       public MRResultIterator(int start, int end) {
         this.end = end;
         current = start - 1;
@@ -1928,13 +1940,13 @@ public class MapTask extends Task {
       }
     }
   } // MapOutputBuffer
-  
+    
   /**
    * Exception indicating that the allocated sort buffer is insufficient
    * to hold the current record.
    */
   @SuppressWarnings("serial")
-  private static class MapBufferTooSmallException extends IOException {
+  public static class MapBufferTooSmallException extends IOException {
     public MapBufferTooSmallException(String s) {
       super(s);
     }

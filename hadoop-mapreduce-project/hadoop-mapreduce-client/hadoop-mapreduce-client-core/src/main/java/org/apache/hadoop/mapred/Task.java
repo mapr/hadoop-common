@@ -68,6 +68,7 @@ import org.apache.hadoop.util.Progressable;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.StringInterner;
 import org.apache.hadoop.util.StringUtils;
+import org.apache.hadoop.classification.MapRModified;
 
 /**
  * Base class for tasks.
@@ -187,6 +188,8 @@ abstract public class Task implements Writable, Configurable {
   protected SecretKey tokenSecret;
   protected SecretKey shuffleSecret;
   protected GcTimeUpdater gcUpdater;
+
+  private boolean reportOutputSize = true;
 
   ////////////////////////////////////////////
   // Constructors
@@ -1072,12 +1075,23 @@ abstract public class Task implements Writable, Configurable {
     }
   }
   
+  @MapRModified
+  public boolean getReportOutputSize() {
+    return this.reportOutputSize;
+  }
+
+  public void setReportOutputSize(boolean reportOutputSize) {
+    this.reportOutputSize = reportOutputSize;
+  }
+
   /**
    * Sends last status update before sending umbilical.done(); 
    */
   private void sendLastUpdate(TaskUmbilicalProtocol umbilical) 
   throws IOException {
-    taskStatus.setOutputSize(calculateOutputSize());
+    if (reportOutputSize)
+      taskStatus.setOutputSize(calculateOutputSize());
+
     // send a final status report
     taskStatus.statusUpdate(taskProgress.get(),
                             taskProgress.toString(), 
@@ -1254,9 +1268,13 @@ abstract public class Task implements Writable, Configurable {
     } else {
       this.conf = new JobConf(conf);
     }
+    
     this.mapOutputFile = ReflectionUtils.newInstance(
         conf.getClass(MRConfig.TASK_LOCAL_OUTPUT_CLASS,
           MROutputFiles.class, MapOutputFile.class), conf);
+    if (LOG.isInfoEnabled())
+      LOG.info("mapOutputFile class: " + mapOutputFile.getClass().getName());
+
     this.lDirAlloc = new LocalDirAllocator(MRConfig.LOCAL_DIR);
     // add the static resolutions (this is required for the junit to
     // work on testcases that simulate multiple nodes on a single physical
