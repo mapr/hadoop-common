@@ -365,6 +365,8 @@ public class FileUtil {
              new Path(dst, contents[i].getPath().getName()),
              deleteSource, overwrite, conf);
       }
+    } else if (srcStatus.isTable()) {
+	throw new IOException("Cannot copy MDP Tables");
     } else {
       InputStream in=null;
       OutputStream out = null;
