@@ -65,7 +65,7 @@ import com.google.common.annotations.VisibleForTesting;
 @InterfaceStability.Unstable
 public class DirectShuffleMergeManagerImpl<K, V> implements MergeManager<K, V> {
   
-  private static final Log LOG = LogFactory.getLog(MergeManagerImpl.class);
+  private static final Log LOG = LogFactory.getLog(DirectShuffleMergeManagerImpl.class);
   
   /* Maximum percentage of the in-memory limit that a single shuffle can 
    * consume*/ 
@@ -273,8 +273,12 @@ public class DirectShuffleMergeManagerImpl<K, V> implements MergeManager<K, V> {
     if (usedMemory > memoryLimit) {
       LOG.debug(mapId + ": Stalling shuffle since usedMemory (" + usedMemory
           + ") is greater than memoryLimit (" + memoryLimit + ")." + 
-          " CommitMemory is (" + commitMemory + ")"); 
-      return null;
+          " CommitMemory is (" + commitMemory + ")");
+      try {
+        this.wait(); // block until memory is available
+      } catch (InterruptedException e) {
+        throw new IOException(e);
+      }
     }
     
     // Allow the in-memory shuffle to progress
@@ -297,6 +301,7 @@ public class DirectShuffleMergeManagerImpl<K, V> implements MergeManager<K, V> {
   
   synchronized void unreserve(long size) {
     usedMemory -= size;
+    this.notifyAll();// notify the waiting fetchers
   }
 
   public synchronized void closeInMemoryFile(DirectInMemoryOutput<K,V> mapOutput) { 
@@ -520,14 +525,16 @@ public class DirectShuffleMergeManagerImpl<K, V> implements MergeManager<K, V> {
                " map outputs on disk. Triggering merge...");
       
       // 1. Prepare the list of files to be merged. 
-      for (FileStatus file : inputs) {
-        approxOutputSize += file.getLen();
+      Path[] paths = new Path[inputs.size()];
+      for (int i = 0; i < inputs.size(); i++) {
+        approxOutputSize += inputs.get(i).getLen();
+        paths[i++] = inputs.get(i).getPath();
       }
 
       // for MapR do not add Checksum len
       // 2. Start the on-disk merge process
       Path outputPath = ((MapRFsOutputFile) mapOutputFile).getLocalPathForWrite(
-          inputs.get(0).toString(),
+          paths[0].toString(),
           approxOutputSize).suffix(Task.MERGED_OUTPUT_PREFIX);
       
       Writer<K,V> writer = 
@@ -543,7 +550,7 @@ public class DirectShuffleMergeManagerImpl<K, V> implements MergeManager<K, V> {
         iter = Merger.merge(jobConf, rfs,
                             (Class<K>) jobConf.getMapOutputKeyClass(),
                             (Class<V>) jobConf.getMapOutputValueClass(),
-                            codec, inputs.toArray(new Path[inputs.size()]), 
+                            codec, paths,
                             true, ioSortFactor, tmpDir, 
                             (RawComparator<K>) jobConf.getOutputKeyComparator(), 
                             reporter, spilledRecordsCounter, null, 
