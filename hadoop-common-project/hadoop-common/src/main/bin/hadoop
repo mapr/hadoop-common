@@ -201,7 +201,6 @@ case $COMMAND in
 
     if [ -d "$MAPR_HOME/lib" ]; then
       CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/kvstore-0.1.jar
-      CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/protobuf-java-2.4.1-lite.jar
       CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/libprotodefs.jar
       CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/baseutils-0.1.jar
       CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/json-20080701.jar
