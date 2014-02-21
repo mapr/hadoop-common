@@ -1080,4 +1080,9 @@ public class TestIPC {
       Ints.toByteArray(HADOOP0_21_ERROR_MSG.length()),
       HADOOP0_21_ERROR_MSG.getBytes());
   }
+
+  public static void main(String[] args) throws Exception {
+
+  }
+
 }
