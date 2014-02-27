@@ -55,4 +55,24 @@
     <value>false</value>
   </property>
 
+  <property>
+    <name>mapreduce.map.memory.mb</name>
+    <value>1224</value> <!-- -Xmx1024m + 200m (for any native code) -->
+  </property>
+
+  <property>
+    <name>mapreduce.reduce.memory.mb</name>
+    <value>3272</value> <!-- -Xmx3072m + 200m (for any native code) -->
+  </property>
+
+  <property>
+    <name>mapreduce.map.java.opts</name>
+    <value>-Xmx1024m</value>
+  </property>
+
+  <property>
+    <name>mapreduce.reduce.java.opts</name>
+    <value>-Xmx3072m</value>
+  </property>
+
 </configuration>
