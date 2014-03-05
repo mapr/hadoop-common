@@ -682,19 +682,34 @@ public class RawLocalFileSystem extends FileSystem {
 
   @Override
   public void createSymlink(Path oldPath, Path newPath, boolean createParent)
-    throws IOException
-  {
-    final String target =
-      (oldPath == null ? null : pathToFile(oldPath).toString());
+    throws IOException {
 
-    final String link =
-      (newPath == null ? null : pathToFile(newPath).toString());
+    if (oldPath == null) {
+      throw new RuntimeException("Target cannot be null");
+    }
+
+    if (newPath == null) {
+      throw new RuntimeException("Link cannot be null");
+    }
+
+    final String target = pathToFile(oldPath).toString();
+    final String link = pathToFile(newPath).toString();
 
     if (NativeIO.isAvailable()) {
+      if (createParent) {
+        // Create any missing ancestors
+        Path parentOfNewPath = newPath.getParent();
+        if (parentOfNewPath != null) {
+          if (!mkdirs(parentOfNewPath)) {
+            throw new IOException("Mkdirs failed " + parentOfNewPath.toString());
+          }
+        }
+      }
+
       if (LOG.isDebugEnabled()) {
         LOG.debug("NativeIO.symlink: " + target + " <- " + link);
       }
-      NativeIO.POSIX.symlink(target, link, createParent);
+      NativeIO.POSIX.symlink(target, link);
     } else {
       FileUtil.symLink(target, link);
     }
