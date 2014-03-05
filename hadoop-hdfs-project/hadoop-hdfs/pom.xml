@@ -243,6 +243,20 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
           </excludes>
         </configuration>
       </plugin>
+
+      <!-- MAPR : Exclude hdfs-default.xml to be packaged into the jar -->
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <goals>
+          <goal>jar</goal>
+        </goals>
+            <configuration>
+              <excludes>
+                <exclude>hdfs-default.xml</exclude>
+              </excludes>
+            </configuration>
+      </plugin>
+
       <plugin>
         <groupId>org.codehaus.mojo.jspc</groupId>
         <artifactId>jspc-maven-plugin</artifactId>
