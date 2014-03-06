@@ -24,6 +24,15 @@
   </property>
 
   <property>
+    <name>mapreduce.jobhistory.address</name>
+    <value>__HS_IP__:10020</value>
+  </property>
+  <property>
+    <name>mapreduce.jobhistory.webapp.address</name>
+    <value>__HS_IP__:19888</value>
+  </property>
+
+  <property>
     <name>yarn.app.mapreduce.am.staging-dir</name>
     <value>${fs.defaultFS}/tmp/staging</value>
   </property>
