@@ -30,4 +30,8 @@ public class MapOutputLocation {
   public String getHost() {
     return ttHost;
   }
+
+  public PathId getShuffleRootFid() {
+    return shuffleRootFid;
+  }
 }

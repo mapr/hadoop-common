@@ -2,7 +2,6 @@ package org.apache.hadoop.mapreduce.task.reduce;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.LinkedList;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -15,13 +14,13 @@ import org.apache.hadoop.io.compress.CodecPool;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.Decompressor;
 import org.apache.hadoop.io.compress.DefaultCodec;
+import org.apache.hadoop.mapred.Counters;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MapOutputFile;
 import org.apache.hadoop.mapred.MapRFsOutputFile;
 import org.apache.hadoop.mapred.MapRIFileInputStream;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
-import org.apache.hadoop.mapreduce.TaskID;
 import org.apache.hadoop.util.ReflectionUtils;
 
 import static org.apache.hadoop.mapred.TaskAttemptID.*;
@@ -30,7 +29,13 @@ public class DirectShuffleFetcher<K, V> extends Thread {
 
   private static final Log LOG = LogFactory.getLog(DirectShuffleFetcher.class);
 
-  private final int reduce;
+  private static enum ShuffleErrors{IO_ERROR, WRONG_LENGTH, BAD_ID, WRONG_MAP,
+    CONNECTION, WRONG_REDUCE}
+
+  private final static String SHUFFLE_ERR_GRP_NAME = "Shuffle Errors";
+
+  private final Counters.Counter ioErrs;
+
   private final TaskAttemptID reduceId;
   private MapOutputLocation currentLocation = null;
   private MapRFsOutputFile mapOutputFile;
@@ -52,6 +57,8 @@ public class DirectShuffleFetcher<K, V> extends Thread {
   private final ShuffleClientMetrics metrics;
 
   private DirectShuffleSchedulerImpl<K, V> scheduler;
+  
+  
 
   private static enum CopyOutputErrorType {
     NO_ERROR,
@@ -59,12 +66,12 @@ public class DirectShuffleFetcher<K, V> extends Thread {
     OTHER_ERROR
   }
 
-  ;
+  private static final int OBSOLETE = -2;
 
   /**
    * Represents the result of an attempt to copy a map output
    */
-  private class CopyResult {
+/*  private class CopyResult {
 
     // the map output location against which a copy attempt was made
     private final MapOutputLocation loc;
@@ -112,7 +119,7 @@ public class DirectShuffleFetcher<K, V> extends Thread {
       return error;
     }
   }
-
+*/
 
   public DirectShuffleFetcher(int id, JobConf jobConf, TaskAttemptID reduceId,
                               DirectShuffleSchedulerImpl<K, V> scheduler, MergeManager<K, V> merger,
@@ -122,8 +129,10 @@ public class DirectShuffleFetcher<K, V> extends Thread {
     setName("MapOutputCopier " + reduceId.getTaskID() + "." + id);
     LOG.debug(getName() + " created");
     this.reporter = reporter;
+    ioErrs = reporter.getCounter(SHUFFLE_ERR_GRP_NAME,
+        ShuffleErrors.IO_ERROR.toString());
+
     this.exceptionReporter = exceptionReporter;
-    this.reduce = reduceId.getTaskID().getId();
     this.reduceId = reduceId;
     this.mapOutputFile = (MapRFsOutputFile) mapOutputFile;
     this.metrics = metrics;
@@ -133,8 +142,7 @@ public class DirectShuffleFetcher<K, V> extends Thread {
     try {
       this.rfs = FileSystem.get(jobConf);
     } catch (IOException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      LOG.error("Unable to init filesystem", e);
     }
     this.scheduler = scheduler;
 
@@ -166,10 +174,6 @@ public class DirectShuffleFetcher<K, V> extends Thread {
    */
   public synchronized MapOutputLocation getLocation() {
     return currentLocation;
-  }
-
-  private synchronized void start(MapOutputLocation loc) {
-    currentLocation = loc;
   }
 
   private synchronized void finish(long size, CopyOutputErrorType error) {
@@ -233,7 +237,6 @@ public class DirectShuffleFetcher<K, V> extends Thread {
           }
         } finally {
           if (loc != null) {
-            //scheduler.freeHost(loc);
             metrics.threadFree();
           }
         }
@@ -242,22 +245,6 @@ public class DirectShuffleFetcher<K, V> extends Thread {
       exceptionReporter.reportException(t);
     }
 
-    // TODO Figure out what to do with those exceptions
-       /*catch (FSError e) {
-         LOG.error("Task: " + reduceId.getTaskID() + " - FSError: " +
-                   StringUtils.stringifyException(e));
-         try {
-           umbilical.fsError(reduceId.getTaskID(), e.getMessage(), jvmContext);
-         } catch (IOException io) {
-           LOG.error("Could not notify TT of FSError: " +
-                   StringUtils.stringifyException(io));
-         }
-       } catch (Throwable th) {
-         String msg = reduceId.getTaskID() + " : Map output copy failure : "
-                      + StringUtils.stringifyException(th);
-         //reportFatalError(reduceId.getTaskID(), th, msg);
-       }
-     }*/
 
     if (decompressor != null) {
       CodecPool.returnDecompressor(decompressor);
@@ -273,13 +260,8 @@ public class DirectShuffleFetcher<K, V> extends Thread {
    */
   private long copyOutput(MapOutputLocation loc) throws IOException, InterruptedException {
     if (loc == null) {
-      return CopyResult.OBSOLETE;
+      return OBSOLETE;
     }
-    // check if we still need to copy the output from this location
-    if (scheduler.getMap(loc) == null) {
-      return CopyResult.OBSOLETE;
-    }
-
 
     // a temp filename. If this file gets created in ramfs, we're fine,
     // else, we will check the localFS to find a suitable final location
@@ -309,9 +291,12 @@ public class DirectShuffleFetcher<K, V> extends Thread {
     }
 
     if (mapOutput == null) {
-      throw new IOException("Failed to fetch map-output for " +
-        loc.getTaskAttemptId() + " from " +
-        loc.getHost());
+      scheduler.copyFailed(loc.getTaskAttemptId(), loc);
+      scheduler.addKnownMapOutput(loc.getHost(), loc.getTaskAttemptId(), loc.getShuffleRootFid());
+      return -1;
+     // throw new IOException("Failed to fetch map-output for " +
+     //   loc.getTaskAttemptId() + " from " +
+      //  loc.getHost());
     }
     // The size of the map-output
     long bytes = mapOutput.getSize();
@@ -324,28 +309,9 @@ public class DirectShuffleFetcher<K, V> extends Thread {
     // Special case: discard empty map-outputs
     if (bytes == 0) {
       mapOutput.abort();
-
-      // Note that we successfully copied the map-output
-      noteCopiedMapOutput(loc.getTaskId());
-
-      return bytes;
     }
 
-    // Note that we successfully copied the map-output
-    noteCopiedMapOutput(loc.getTaskId());
-
     return bytes;
-  }
-
-  /**
-   * Save the map taskid whose output we just copied.
-   * This function assumes that it has been synchronized on ReduceTask.this.
-   *
-   * @param taskId map taskid
-   */
-  private void noteCopiedMapOutput(TaskID taskId) {
-    //copiedMapOutputs.put(taskId, DUMMY_STRING);
-    //ramManager.setNumCopiedMapOutputs(numMaps - copiedMapOutputs.size());
   }
 
   /* Read map output from a file.
@@ -395,11 +361,18 @@ public class DirectShuffleFetcher<K, V> extends Thread {
           mapOutputLength, id);
       } catch (IOException ioe) {
         // kill this reduce attempt
-        //ioErrs.increment(1);
+        ioErrs.increment(1);
+        // This will abort reducer
         scheduler.reportLocalError(ioe);
-        // TODO fix it
         return null;
       }
+      
+   // Check if we can shuffle *now* ...
+      if (mapOutput == null) {
+        LOG.info("fetcher#" + id + " - MergeManager returned status WAIT ...");
+        //Not an error but wait to process data.
+        return null;
+      } 
 
       // The codec for lz0,lz4,snappy,bz2,etc. throw java.lang.InternalError
       // on decompression failures. Catching and re-throwing as IOException
@@ -426,7 +399,6 @@ public class DirectShuffleFetcher<K, V> extends Thread {
       scheduler.copySucceeded(mapOutput.getMapId(), mapOutputLoc, mapOutput.getSize(),
         endTime - startTime, mapOutput);
       // Note successful shuffle
-      //remaining.remove(mapId);
       metrics.successFetch();
 
       {
@@ -449,6 +421,7 @@ public class DirectShuffleFetcher<K, V> extends Thread {
         " file path " + inputFile,
         fnfe);
       readError = true;
+      return null;
     } // TODO Deal with MapR specific Exception 
    /* catch (IOExceptionWithErrorCode ioe) {
       int errCode = ioe.getErrorCode();
@@ -468,15 +441,20 @@ public class DirectShuffleFetcher<K, V> extends Thread {
         " for reduce " + reduce +
         " file path " + inputFile,
         ioe);
-      return null;
-    } catch (Exception e) {
+      ioErrs.increment(1);
+      mapOutput.abort();
+      metrics.failedFetch();
+       return null;
+    } /*catch (Exception e) {
       LOG.error("Exception reading map output of task " +
         mapOutputLoc.getTaskAttemptId() +
         " for reduce " + reduce +
         " file path " + inputFile,
         e);
+      mapOutput.abort();
+      metrics.failedFetch();
       return null;
-    } finally {
+    } */finally {
       // close input 
       if (input != null) {
         IOUtils.cleanup(LOG, input);
