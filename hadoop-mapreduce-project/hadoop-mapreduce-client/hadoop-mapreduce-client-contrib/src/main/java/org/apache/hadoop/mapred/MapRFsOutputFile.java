@@ -52,7 +52,7 @@ public class MapRFsOutputFile extends MapOutputFile {
   private static final Log LOG =
     LogFactory.getLog(MapRFsOutputFile.class.getName());
 
-  MapRFsOutputFile() {
+  public MapRFsOutputFile() {
   }
 
   @Override
