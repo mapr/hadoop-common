@@ -224,7 +224,7 @@ if not "%HADOOP_CLASSPATH%" == "" (
   goto :eof
 
 :conf
-  set CLASS=org.apache.hadoop.conf.MapRConf
+  set CLASS=org.apache.hadoop.mapreduce.util.ConfigUtil
   goto :eof
 
 @rem End: MapR specific section

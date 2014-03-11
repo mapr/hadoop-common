@@ -18,12 +18,6 @@
 
 <configuration>
   <property>
-    <name>mapreduce.framework.name</name>
-    <value>yarn</value>
-    <final>true</final>
-  </property>
-
-  <property>
     <name>mapreduce.jobhistory.address</name>
     <value>__HS_IP__:10020</value>
   </property>
@@ -31,57 +25,4 @@
     <name>mapreduce.jobhistory.webapp.address</name>
     <value>__HS_IP__:19888</value>
   </property>
-
-  <property>
-    <name>yarn.app.mapreduce.am.staging-dir</name>
-    <value>${fs.defaultFS}/tmp/staging</value>
-  </property>
-
-  <property>
-    <name>mapreduce.task.local.output.class</name>
-    <value>org.apache.hadoop.mapred.MapRFsOutputFile</value>
-  </property>
-
-  <property>
-    <name>mapreduce.job.map.output.collector.class</name>
-    <value>org.apache.hadoop.mapred.MapRFsOutputBuffer</value>
-  </property>
-
-  <property>
-    <name>mapreduce.job.reduce.shuffle.consumer.plugin.class</name>
-    <value>org.apache.hadoop.mapreduce.task.reduce.DirectShuffle</value>
-  </property>
-  <property>
-    <name>mapred.ifile.outputstream</name>
-    <value>org.apache.hadoop.mapred.MapRIFileOutputStream</value>
-  </property>
-  <property>
-    <name>mapred.ifile.inputstream</name>
-    <value>org.apache.hadoop.mapred.MapRIFileInputStream</value>
-  </property>
-  <property>
-    <name>mapred.local.mapoutput</name>
-    <value>false</value>
-  </property>
-
-  <property>
-    <name>mapreduce.map.memory.mb</name>
-    <value>1224</value> <!-- -Xmx1024m + 200m (for any native code) -->
-  </property>
-
-  <property>
-    <name>mapreduce.reduce.memory.mb</name>
-    <value>3272</value> <!-- -Xmx3072m + 200m (for any native code) -->
-  </property>
-
-  <property>
-    <name>mapreduce.map.java.opts</name>
-    <value>-Xmx1024m</value>
-  </property>
-
-  <property>
-    <name>mapreduce.reduce.java.opts</name>
-    <value>-Xmx3072m</value>
-  </property>
-
 </configuration>
