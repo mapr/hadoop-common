@@ -36,6 +36,14 @@
   </properties>
 
   <dependencies>
+    <!-- MapR dependencies -->
+    <!--dependency>
+      <groupId>com.mapr.hadoop</groupId>
+      <artifactId>maprfs</artifactId>
+      <version>${mapr.version}</version>
+      <scope>runtime</scope>
+    </dependency-->
+
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-annotations</artifactId>
