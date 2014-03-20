@@ -28,6 +28,8 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 
+import org.apache.hadoop.classification.MapRModified;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -48,7 +50,10 @@ public class VersionInfo {
     try {
       InputStream is = Thread.currentThread().getContextClassLoader()
         .getResourceAsStream(versionInfoFile);
-      info.load(is);
+
+      if (is != null) {
+        info.load(is);
+      }
     } catch (IOException ex) {
       LogFactory.getLog(getClass()).warn("Could not read '" + 
         versionInfoFile + "', " + ex.toString(), ex);
@@ -94,7 +99,21 @@ public class VersionInfo {
     return info.getProperty("protocVersion", "Unknown");
   }
 
-  private static VersionInfo COMMON_VERSION_INFO = new VersionInfo("common");
+  //private static VersionInfo COMMON_VERSION_INFO = new VersionInfo("common");
+  // Use mapreduce version instead of common version in order to distinguish
+  // between MR1 and MR2. This is because ecosystem components like Pig. Hive
+  // rely on it to load the approriate Hadoop Shim.
+  @MapRModified
+  private static VersionInfo COMMON_VERSION_INFO = new VersionInfo("mapreduce");
+  static {
+    // Fall back to common version if the mapreduce version file is not
+    // available. This can happen if an application did not include map reduce
+    // jar. Right now, we don't even have this file for MR2.
+    if (COMMON_VERSION_INFO.info.isEmpty()) {
+      COMMON_VERSION_INFO = new VersionInfo("common");
+    }
+  }
+
   /**
    * Get the Hadoop version.
    * @return the Hadoop version string, eg. "0.6.3-dev"
