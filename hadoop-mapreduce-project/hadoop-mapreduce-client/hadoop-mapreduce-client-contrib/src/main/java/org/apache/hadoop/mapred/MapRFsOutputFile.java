@@ -320,17 +320,12 @@ public class MapRFsOutputFile extends MapOutputFile {
 
   }
 
-  private String getMapRFsPath(String hostname) {
-    return conf.get(MAPR_LOCAL_VOLS)
-         + Path.SEPARATOR
-         + hostname
-         + Path.SEPARATOR + "mapred" + Path.SEPARATOR
-         + "nodeManager" + Path.SEPARATOR;
+  private String getMapRFsPath() {
+    return this.conf.get("mapr.mapred.localvolume.root.dir.path", getMapRVolumeMountPoint() + "/nodeManager");
   }
 
   private String getMapRLocalOutputDir() {
-    return getMapRFsPath(hostname)
-           + conf.get(MAPR_LOCAL_OUT);
+    return getMapRFsPath() + Path.SEPARATOR + conf.get(MAPR_LOCAL_OUT);
   }
 
   /* for uncompressed intermediate output use output.U and spill.U */
@@ -339,8 +334,7 @@ public class MapRFsOutputFile extends MapOutputFile {
   }
 
   private String getMapRLocalSpillDir() {
-    return getMapRFsPath(hostname)
-           + conf.get(MAPR_LOCAL_SPILL);
+    return getMapRFsPath() + Path.SEPARATOR + conf.get(MAPR_LOCAL_SPILL);
   }
 
   private String getMapRLocalUncompressedSpillDir() {
@@ -433,9 +427,7 @@ public class MapRFsOutputFile extends MapOutputFile {
     taskUserGroup = groupName;
   }
 
-  String getMapRVolumeMountPoint(String hostname) {
-    return conf.get(MAPR_LOCAL_VOLS)
-         + Path.SEPARATOR + hostname
-         + Path.SEPARATOR + "mapred" + Path.SEPARATOR;
+  String getMapRVolumeMountPoint() {
+    return this.conf.get("mapr.mapred.localvolume.mount.path", "/var/mapr/local/" + hostname + "/mapred");
   }
 }
