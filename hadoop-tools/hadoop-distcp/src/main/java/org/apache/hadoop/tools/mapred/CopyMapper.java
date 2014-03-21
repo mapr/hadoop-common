@@ -214,6 +214,21 @@ public class CopyMapper extends Mapper<Text, FileStatus, Text, Text> {
             getFileType(targetStatus) + ", Source is " + getFileType(sourceCurrStatus));
       }
 
+      // Check if the parent of target path exists
+      Path targetParent = target.getParent();
+      if ((targetParent != null) && (!targetFS.exists(targetParent))) {
+
+        // If not, we create the target parent
+        targetFS.mkdirs(targetParent);
+
+        // set the parent's permissions same as source parent.
+        if (fileAttributes.contains(FileAttribute.PERMISSION)) {
+          Path sourceParent = sourcePath.getParent();
+          FileStatus sourceParentStatus = sourceFS.getFileStatus(sourceParent);
+          targetFS.setPermission(targetParent, sourceParentStatus.getPermission());
+        }
+      }
+
       if (sourceCurrStatus.isDirectory()) {
         createTargetDirsWithRetry(description, target, context);
         return;
