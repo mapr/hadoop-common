@@ -517,11 +517,14 @@ int is_whitelisted(const char *user) {
  * Returns NULL on failure
  */
 struct passwd* check_user(const char *user) {
+  /** MapR: commented out the root check
   if (strcmp(user, "root") == 0) {
     fprintf(LOGFILE, "Running as root is not allowed\n");
     fflush(LOGFILE);
     return NULL;
   }
+  */
+
   char *min_uid_str = get_value(MIN_USERID_KEY);
   int min_uid = DEFAULT_MIN_USERID;
   if (min_uid_str != NULL) {
