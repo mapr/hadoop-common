@@ -426,10 +426,16 @@ public class FailoverRPC {
           // no need to lock anything here
           firstAttempt = false;
         } catch (IOException exception) {
+          Throwable cause = exception.getCause();
           if (exception instanceof SocketTimeoutException ||
               exception instanceof EOFException ||
               exception instanceof SocketException ||
-              exception instanceof ConnectException) {
+              exception instanceof ConnectException ||
+              cause instanceof SocketTimeoutException ||
+              cause instanceof EOFException ||
+              cause instanceof SocketException ||
+              cause instanceof ConnectException ||
+              cause.getMessage().equals("Connection reset by peer") ) {
 
             // JT Fail Over
             if (logInfo)
