@@ -526,6 +526,7 @@ JNIEXPORT void JNICALL Java_org_apache_hadoop_io_nativeio_NativeIO_00024POSIX_ch
 #endif
 }
 
+#ifdef UNIX
 /**
  * public static native void chown(String path, String user, String group) throws IOException;
  */
@@ -598,6 +599,7 @@ cleanup:
   if (newpath) (*env)->ReleaseStringUTFChars(env, j_newpath, newpath);
   return rc;
 }
+#endif
 
 /*
  * static native String getUserName(int uid);
