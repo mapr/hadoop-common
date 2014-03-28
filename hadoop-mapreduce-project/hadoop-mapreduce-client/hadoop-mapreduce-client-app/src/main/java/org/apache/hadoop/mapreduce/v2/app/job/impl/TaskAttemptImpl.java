@@ -44,7 +44,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.DataInputByteBuffer;
 import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.JobContext;
@@ -1126,6 +1125,7 @@ public abstract class TaskAttemptImpl implements
     shufflePort = taInfo.getShufflePort();
     trackerName = taInfo.getHostname();
     httpPort = taInfo.getHttpPort();
+    servicesMetaData = taInfo.getServicesMetaData();
     sendLaunchedEvents();
 
     reportedStatus.id = attemptId;
@@ -1379,7 +1379,7 @@ public abstract class TaskAttemptImpl implements
       new TaskAttemptStartedEvent(TypeConverter.fromYarn(attemptId),
           TypeConverter.fromYarn(attemptId.getTaskId().getTaskType()),
           launchTime, trackerName, httpPort, shufflePort, container.getId(),
-          locality.toString(), avataar.toString());
+          locality.toString(), avataar.toString(), servicesMetaData);
     eventHandler.handle(
         new JobHistoryEvent(attemptId.getTaskId().getJobId(), tase));
   }
