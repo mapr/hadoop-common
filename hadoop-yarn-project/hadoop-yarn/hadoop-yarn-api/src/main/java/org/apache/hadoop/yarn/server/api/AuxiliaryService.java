@@ -92,6 +92,17 @@ public abstract class AuxiliaryService extends AbstractService {
   public void initializeContainer(ContainerInitializationContext
       initContainerContext) {
   }
+  
+  /**
+   * Return Metadata based on the context provided
+   * if not overwrite is provided returns service MetaData
+   * @param initContainerContext
+   * @return metadata
+   */
+  public ByteBuffer getMetaData(ContainerInitializationContext
+      initContainerContext) {
+    return getMetaData();
+  }
 
   /**
    * A container is finishing on this NodeManager. This is a signal to this
