@@ -37,12 +37,11 @@
 
   <dependencies>
     <!-- MapR dependencies -->
-    <!--dependency>
+    <dependency>
       <groupId>com.mapr.hadoop</groupId>
       <artifactId>maprfs</artifactId>
       <version>${mapr.version}</version>
-      <scope>runtime</scope>
-    </dependency-->
+    </dependency>
 
     <dependency>
       <groupId>org.apache.hadoop</groupId>
