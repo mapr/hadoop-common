@@ -65,7 +65,6 @@ import org.apache.hadoop.hdfs.MiniDFSCluster.DataNodeProperties;
 import org.apache.hadoop.hdfs.net.Peer;
 import org.apache.hadoop.hdfs.server.datanode.DataNodeFaultInjector;
 import org.apache.hadoop.hdfs.server.namenode.ha.HATestUtil;
-import org.apache.hadoop.hdfs.web.HftpFileSystem;
 import org.apache.hadoop.hdfs.web.WebHdfsFileSystem;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -405,7 +404,7 @@ public class TestDistributedFileSystem {
       
       int readOps = DFSTestUtil.getStatistics(fs).getReadOps();
       long numReadOps = DFSTestUtil.getStatistics(fs).getNumReadOps();
-      
+
       int writeOps = DFSTestUtil.getStatistics(fs).getWriteOps();
       long numWriteOps = DFSTestUtil.getStatistics(fs).getNumWriteOps();
 
@@ -416,23 +415,23 @@ public class TestDistributedFileSystem {
       checkStatistics(fs, readOps, ++writeOps, largeReadOps);
 
       checkStatistics(fs, numReadOps, ++numWriteOps, numLargeReadOps);
-      
+
       FSDataOutputStream out = fs.create(file, (short)1);
       out.close();
       checkStatistics(fs, readOps, ++writeOps, largeReadOps);
 
       checkStatistics(fs, numReadOps, ++numWriteOps, numLargeReadOps);
-      
+
       FileStatus status = fs.getFileStatus(file);
       checkStatistics(fs, ++readOps, writeOps, largeReadOps);
 
       checkStatistics(fs, ++numReadOps, numWriteOps, numLargeReadOps);
-      
+
       fs.getFileBlockLocations(file, 0, 0);
       checkStatistics(fs, ++readOps, writeOps, largeReadOps);
 
       checkStatistics(fs, ++numReadOps, numWriteOps, numLargeReadOps);
-      
+
       fs.getFileBlockLocations(status, 0, 0);
       checkStatistics(fs, ++readOps, writeOps, largeReadOps);
 
@@ -443,18 +442,18 @@ public class TestDistributedFileSystem {
       checkStatistics(fs, ++readOps, writeOps, largeReadOps);
 
       checkStatistics(fs, ++numReadOps, numWriteOps, numLargeReadOps);
-      
+
       fs.setReplication(file, (short)2);
       checkStatistics(fs, readOps, ++writeOps, largeReadOps);
 
       checkStatistics(fs, numReadOps, ++numWriteOps, numLargeReadOps);
-      
+
       Path file1 = new Path(dir, "file1");
       fs.rename(file, file1);
       checkStatistics(fs, readOps, ++writeOps, largeReadOps);
 
       checkStatistics(fs, numReadOps, ++numWriteOps, numLargeReadOps);
-      
+
       fs.getContentSummary(file1);
       checkStatistics(fs, ++readOps, writeOps, largeReadOps);
 
@@ -491,18 +490,18 @@ public class TestDistributedFileSystem {
       checkStatistics(fs, ++readOps, writeOps, largeReadOps);
 
       checkStatistics(fs, ++numReadOps, numWriteOps, numLargeReadOps);
-      
+
       fs.getFileChecksum(file1);
       checkStatistics(fs, ++readOps, writeOps, largeReadOps);
 
       checkStatistics(fs, ++numReadOps, numWriteOps, numLargeReadOps);
-      
-      
+
+
       fs.setPermission(file1, new FsPermission((short)0777));
       checkStatistics(fs, readOps, ++writeOps, largeReadOps);
 
       checkStatistics(fs, numReadOps, ++numWriteOps, numLargeReadOps);
-      
+
       fs.setTimes(file1, 0L, 0L);
       checkStatistics(fs, readOps, ++writeOps, largeReadOps);
 
@@ -513,12 +512,12 @@ public class TestDistributedFileSystem {
       checkStatistics(fs, readOps, ++writeOps, largeReadOps);
 
       checkStatistics(fs, numReadOps, ++numWriteOps, numLargeReadOps);
-      
+
       fs.delete(dir, true);
       checkStatistics(fs, readOps, ++writeOps, largeReadOps);
 
       checkStatistics(fs, numReadOps, ++numWriteOps, numLargeReadOps);
-      
+
     } finally {
       if (cluster != null) cluster.shutdown();
     }
@@ -542,8 +541,6 @@ public class TestDistributedFileSystem {
 
   @Test
   public void testFileChecksum() throws Exception {
-    GenericTestUtils.setLogLevel(HftpFileSystem.LOG, Level.TRACE);
-
     final long seed = RAN.nextLong();
     System.out.println("seed=" + seed);
     RAN.setSeed(seed);
@@ -577,17 +574,6 @@ public class TestDistributedFileSystem {
       assertTrue("Not throwing the intended exception message", e.getMessage()
           .contains("Path is not a file: /test/TestExistingDir"));
     }
-    
-    //hftp
-    final String hftpuri = "hftp://" + nnAddr;
-    System.out.println("hftpuri=" + hftpuri);
-    final FileSystem hftp = ugi.doAs(
-        new PrivilegedExceptionAction<FileSystem>() {
-      @Override
-      public FileSystem run() throws Exception {
-        return new Path(hftpuri).getFileSystem(conf);
-      }
-    });
 
     //webhdfs
     final String webhdfsuri = WebHdfsFileSystem.SCHEME  + "://" + nnAddr;
@@ -624,14 +610,6 @@ public class TestDistributedFileSystem {
       //compute checksum
       final FileChecksum hdfsfoocs = hdfs.getFileChecksum(foo);
       System.out.println("hdfsfoocs=" + hdfsfoocs);
-
-      //hftp
-      final FileChecksum hftpfoocs = hftp.getFileChecksum(foo);
-      System.out.println("hftpfoocs=" + hftpfoocs);
-
-      final Path qualified = new Path(hftpuri + dir, "foo" + n);
-      final FileChecksum qfoocs = hftp.getFileChecksum(qualified);
-      System.out.println("qfoocs=" + qfoocs);
 
       //webhdfs
       final FileChecksum webhdfsfoocs = webhdfs.getFileChecksum(foo);
@@ -671,13 +649,6 @@ public class TestDistributedFileSystem {
         assertEquals(hdfsfoocs.hashCode(), barhashcode);
         assertEquals(hdfsfoocs, barcs);
 
-        //hftp
-        assertEquals(hftpfoocs.hashCode(), barhashcode);
-        assertEquals(hftpfoocs, barcs);
-
-        assertEquals(qfoocs.hashCode(), barhashcode);
-        assertEquals(qfoocs, barcs);
-
         //webhdfs
         assertEquals(webhdfsfoocs.hashCode(), barhashcode);
         assertEquals(webhdfsfoocs, barcs);
@@ -687,14 +658,6 @@ public class TestDistributedFileSystem {
       }
 
       hdfs.setPermission(dir, new FsPermission((short)0));
-      { //test permission error on hftp 
-        try {
-          hftp.getFileChecksum(qualified);
-          fail();
-        } catch(IOException ioe) {
-          FileSystem.LOG.info("GOOD: getting an exception", ioe);
-        }
-      }
 
       { //test permission error on webhdfs 
         try {
@@ -1046,18 +1009,18 @@ public class TestDistributedFileSystem {
       cluster.shutdown();
     }
   }
-  
-  
+
+
   @Test(timeout=10000)
   public void testDFSClientPeerTimeout() throws IOException {
     final int timeout = 1000;
     final Configuration conf = new HdfsConfiguration();
     conf.setInt(DFSConfigKeys.DFS_CLIENT_SOCKET_TIMEOUT_KEY, timeout);
-    
+
     // only need cluster to create a dfs client to get a peer
     final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).build();
     try {
-      cluster.waitActive();     
+      cluster.waitActive();
       DistributedFileSystem dfs = cluster.getFileSystem();
       // use a dummy socket to ensure the read timesout
       ServerSocket socket = new ServerSocket(0);

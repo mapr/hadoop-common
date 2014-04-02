@@ -39,7 +39,6 @@ import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.server.namenode.FSNamesystem;
 import org.apache.hadoop.hdfs.server.namenode.NameNode;
-import org.apache.hadoop.hdfs.web.HftpFileSystem;
 import org.apache.hadoop.ipc.RemoteException;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.test.GenericTestUtils;
@@ -65,7 +64,6 @@ public class TestFileStatus {
   private static MiniDFSCluster cluster;
   private static FileSystem fs;
   private static FileContext fc;
-  private static HftpFileSystem hftpfs;
   private static DFSClient dfsClient;
   private static Path file1;
   
@@ -76,7 +74,6 @@ public class TestFileStatus {
     cluster = new MiniDFSCluster.Builder(conf).build();
     fs = cluster.getFileSystem();
     fc = FileContext.getFileContext(cluster.getURI(0), conf);
-    hftpfs = cluster.getHftpFileSystem(0);
     dfsClient = new DFSClient(NameNode.getAddress(conf), conf);
     file1 = new Path("filestatus.dat");
     writeFile(fs, file1, 1, fileSize, blockSize);
@@ -99,7 +96,7 @@ public class TestFileStatus {
     stm.write(buffer);
     stm.close();
   }
-  
+
   private void checkFile(FileSystem fileSys, Path name, int repl)
       throws IOException, InterruptedException, TimeoutException {
     DFSTestUtil.waitReplication(fileSys, name, (short) repl);
@@ -220,8 +217,6 @@ public class TestFileStatus {
     assertEquals(dir + " should be empty", 0, stats.length);
     assertEquals(dir + " should be zero size ",
         0, fs.getContentSummary(dir).getLength());
-    assertEquals(dir + " should be zero size using hftp",
-        0, hftpfs.getContentSummary(dir).getLength());
 
     RemoteIterator<FileStatus> itor = fc.listStatus(dir);
     assertFalse(dir + " should be empty", itor.hasNext());
@@ -252,8 +247,6 @@ public class TestFileStatus {
     final int expected = blockSize/2;  
     assertEquals(dir + " size should be " + expected, 
         expected, fs.getContentSummary(dir).getLength());
-    assertEquals(dir + " size should be " + expected + " using hftp",
-        expected, hftpfs.getContentSummary(dir).getLength());
 
     // Test listStatus on a non-empty directory
     stats = fs.listStatus(dir);
@@ -323,19 +316,9 @@ public class TestFileStatus {
     assertEquals(dir5.toString(), itor.next().getPath().toString());
     assertEquals(file2.toString(), itor.next().getPath().toString());
     assertEquals(file3.toString(), itor.next().getPath().toString());
+
     assertFalse(itor.hasNext());
 
-    { //test permission error on hftp
-      fs.setPermission(dir, new FsPermission((short)0));
-      try {
-        final String username = UserGroupInformation.getCurrentUser().getShortUserName() + "1";
-        final HftpFileSystem hftp2 = cluster.getHftpFileSystemAs(username, conf, 0, "somegroup");
-        hftp2.getContentSummary(dir);
-        fail();
-      } catch(IOException ioe) {
-        FileSystem.LOG.info("GOOD: getting an exception", ioe);
-      }
-    }
     fs.delete(dir, true);
   }
 }

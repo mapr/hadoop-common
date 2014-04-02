@@ -161,8 +161,6 @@ import org.apache.hadoop.hdfs.server.datanode.SecureDataNodeStarter.SecureResour
 import org.apache.hadoop.hdfs.server.datanode.fsdataset.FsDatasetSpi;
 import org.apache.hadoop.hdfs.server.datanode.fsdataset.FsVolumeSpi;
 import org.apache.hadoop.hdfs.server.datanode.metrics.DataNodeMetrics;
-import org.apache.hadoop.hdfs.server.namenode.FileChecksumServlets;
-import org.apache.hadoop.hdfs.server.namenode.StreamFile;
 import org.apache.hadoop.hdfs.server.datanode.web.DatanodeHttpServer;
 import org.apache.hadoop.hdfs.server.protocol.BlockRecoveryCommand.RecoveringBlock;
 import org.apache.hadoop.hdfs.server.protocol.DatanodeProtocol;
@@ -789,10 +787,6 @@ public class DataNode extends ReconfigurableBase
 
     this.infoServer = builder.build();
 
-    this.infoServer.addInternalServlet(null, "/streamFile/*", StreamFile.class);
-    this.infoServer.addInternalServlet(null, "/getFileChecksum/*",
-        FileChecksumServlets.GetServlet.class);
-
     this.infoServer.setAttribute("datanode", this);
     this.infoServer.setAttribute(JspHelper.CURRENT_CONF, conf);
     this.infoServer.addServlet(null, "/blockScannerReport",
@@ -1173,14 +1167,14 @@ public class DataNode extends ReconfigurableBase
 
     metrics = DataNodeMetrics.create(conf, getDisplayName());
     metrics.getJvmMetrics().setPauseMonitor(pauseMonitor);
-    
+
     blockPoolManager = new BlockPoolManager(this);
     blockPoolManager.refreshNamenodes(conf);
 
     // Create the ReadaheadPool from the DataNode context so we can
     // exit without having to explicitly shutdown its thread pool.
     readaheadPool = ReadaheadPool.getInstance();
-    saslClient = new SaslDataTransferClient(dnConf.conf, 
+    saslClient = new SaslDataTransferClient(dnConf.conf,
         dnConf.saslPropsResolver, dnConf.trustedChannelResolver);
     saslServer = new SaslDataTransferServer(dnConf, blockPoolTokenSecretManager);
   }
@@ -1443,9 +1437,9 @@ public class DataNode extends ReconfigurableBase
   
   @VisibleForTesting
   public DataXceiverServer getXferServer() {
-    return xserver;  
+    return xserver;
   }
-  
+
   @VisibleForTesting
   public int getXferPort() {
     return streamingAddr.getPort();
@@ -1717,7 +1711,7 @@ public class DataNode extends ReconfigurableBase
     if(this.checkDiskErrorThread != null) {
       this.checkDiskErrorThread.interrupt();
     }
-    
+
     // Record the time of initial notification
     long timeNotified = Time.monotonicNow();
 
@@ -1837,7 +1831,7 @@ public class DataNode extends ReconfigurableBase
     }
     tracer.close();
   }
-  
+
   
   /**
    * Check if there is a disk failure asynchronously and if so, handle the error
@@ -1942,9 +1936,9 @@ public class DataNode extends ReconfigurableBase
       lengthTooShort = true;
     } catch (IOException e) {
       // The IOException indicates not being able to access block file,
-      // treat it the same here as blockFileNotExist, to trigger 
+      // treat it the same here as blockFileNotExist, to trigger
       // reporting it as a bad block
-      blockFileNotExist = true;      
+      blockFileNotExist = true;
     }
 
     if (replicaNotExist || replicaStateNotFinalized) {
@@ -1960,10 +1954,10 @@ public class DataNode extends ReconfigurableBase
       return;
     }
     if (lengthTooShort) {
-      // Check if NN recorded length matches on-disk length 
+      // Check if NN recorded length matches on-disk length
       // Shorter on-disk len indicates corruption so report NN the corrupt block
       reportBadBlock(bpos, block, "Can't replicate block " + block
-          + " because on-disk length " + data.getLength(block) 
+          + " because on-disk length " + data.getLength(block)
           + " is shorter than NameNode recorded length " + block.getNumBytes());
       return;
     }
@@ -2152,11 +2146,11 @@ public class DataNode extends ReconfigurableBase
         //
         Token<BlockTokenIdentifier> accessToken = BlockTokenSecretManager.DUMMY_TOKEN;
         if (isBlockTokenEnabled) {
-          accessToken = blockPoolTokenSecretManager.generateToken(b, 
+          accessToken = blockPoolTokenSecretManager.generateToken(b,
               EnumSet.of(BlockTokenSecretManager.AccessMode.WRITE));
         }
 
-        long writeTimeout = dnConf.socketWriteTimeout + 
+        long writeTimeout = dnConf.socketWriteTimeout +
                             HdfsServerConstants.WRITE_TIMEOUT_EXTENSION * (targets.length-1);
         OutputStream unbufOut = NetUtils.getOutputStream(sock, writeTimeout);
         InputStream unbufIn = NetUtils.getInputStream(sock);
@@ -3181,7 +3175,7 @@ public class DataNode extends ReconfigurableBase
   public ShortCircuitRegistry getShortCircuitRegistry() {
     return shortCircuitRegistry;
   }
-  
+
   /**
    * Check the disk error
    */
@@ -3204,7 +3198,7 @@ public class DataNode extends ReconfigurableBase
   }
 
   /**
-   * Starts a new thread which will check for disk error check request 
+   * Starts a new thread which will check for disk error check request
    * every 5 sec
    */
   private void startCheckDiskErrorThread() {
@@ -3240,7 +3234,7 @@ public class DataNode extends ReconfigurableBase
           }
     });
   }
-  
+
   public long getLastDiskErrorCheck() {
     synchronized(checkDiskErrorMutex) {
       return lastDiskErrorCheck;

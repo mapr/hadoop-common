@@ -4,6 +4,9 @@ Release 2.7.6 - UNRELEASED
 
   INCOMPATIBLE CHANGES
 
+    HDFS-5570. Deprecate hftp / hsftp and replace them with webhdfs / swebhdfs.
+    (wheat9)
+
   NEW FEATURES
 
   IMPROVEMENTS
@@ -57,7 +60,7 @@ Release 2.7.5 - 2017-12-14
 
     HDFS-12131. Add some of the FSNamesystem JMX values as metrics.
     (Erik Krogen via wang, shv)
-    
+
     HDFS-12420. Add an option to disallow 'namenode format -force'.
     (Ajay Kumar via Arpit Agarwal, zhz)
 
@@ -103,7 +106,7 @@ Release 2.7.0 - 2015-04-20
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
-    
+
     HDFS-7278. Add a command that allows sysadmins to manually trigger full
     block reports from a DN (cmccabe)
 
@@ -114,7 +117,7 @@ Release 2.7.0 - 2015-04-20
     (Maysam Yabandeh via wang)
 
     HDFS-7424. Add web UI for NFS gateway (brandonli)
-    
+
     HDFS-7449. Add metrics to NFS gateway (brandonli)
 
     HDFS-3107. Introduce truncate. (Plamen Jeliazkov via shv)
@@ -276,10 +279,10 @@ Release 2.7.0 - 2015-04-20
     HDFS-6803 Document DFSClient#DFSInputStream expectations reading and preading
     in concurrent context. (stack via stevel)
 
-    HDFS-7310. Mover can give first priority to local DN if it has target storage type 
+    HDFS-7310. Mover can give first priority to local DN if it has target storage type
     available in local DN. (Vinayakumar B via umamahesh)
 
-    HDFS-7210. Avoid two separate RPC's namenode.append() and namenode.getFileInfo() 
+    HDFS-7210. Avoid two separate RPC's namenode.append() and namenode.getFileInfo()
     for an append call from DFSClient. (Vinayakumar B via umamahesh)
 
     HDFS-7450. Consolidate the implementation of GetFileInfo(), GetListings() and
@@ -296,7 +299,7 @@ Release 2.7.0 - 2015-04-20
 
     HDFS-6735. A minor optimization to avoid pread() be blocked by read()
     inside the same DFSInputStream (Lars Hofhansl via stack)
-    
+
     HDFS-7458. Add description to the nfs ports in core-site.xml used by nfs
     test to avoid confusion (Yongjun Zhang via brandonli)
 
@@ -369,7 +372,7 @@ Release 2.7.0 - 2015-04-20
 
     HDFS-7600. Refine hdfs admin classes to reuse common code. (jing9)
 
-    HDFS-2219. Change fsck to support fully qualified paths so that a 
+    HDFS-2219. Change fsck to support fully qualified paths so that a
     particular namenode in a federated cluster with multiple namenodes
     can be specified in the path parameter.  (szetszwo)
 
@@ -704,7 +707,7 @@ Release 2.7.0 - 2015-04-20
 
     HDFS-7506. Consolidate implementation of setting inode attributes into a
     single class. (wheat9)
-    
+
     HDFS-7516. Fix findbugs warnings in hdfs-nfs project. (brandonli)
 
     HDFS-6425. Large postponedMisreplicatedBlocks has impact on blockReport
@@ -728,7 +731,7 @@ Release 2.7.0 - 2015-04-20
     HDFS-7456. De-duplicate AclFeature instances with same AclEntries do reduce
     memory footprint of NameNode (vinayakumarb)
 
-    HDFS-7563. NFS gateway parseStaticMap NumberFormatException 
+    HDFS-7563. NFS gateway parseStaticMap NumberFormatException
     (Yongjun Zhang via brandonli)
 
     HDFS-7572. TestLazyPersistFiles#testDnRestartWithSavedReplicas is flaky on
@@ -964,7 +967,7 @@ Release 2.7.0 - 2015-04-20
     HDFS-6833.  DirectoryScanner should not register a deleting block with
     memory of DataNode.  (Shinichi Yamashita via szetszwo)
 
-    HDFS-7926. NameNode implementation of ClientProtocol.truncate(..) is not 
+    HDFS-7926. NameNode implementation of ClientProtocol.truncate(..) is not
     idempotent (Tsz Wo Nicholas Sze via brandonli)
 
     HDFS-7903. Cannot recover block after truncate and delete snapshot.
@@ -1287,7 +1290,7 @@ Release 2.6.0 - 2014-11-18
     HDFS-6567. Normalize the order of public final in HdfsFileStatus.
     (Tassapol Athiapinya via wheat9)
 
-    HDFS-6849. Replace HttpFS custom proxyuser handling with common 
+    HDFS-6849. Replace HttpFS custom proxyuser handling with common
     implementation. (tucu)
 
     HDFS-6850. Move NFS out of order write unit tests into TestWrites class.
@@ -1431,7 +1434,7 @@ Release 2.6.0 - 2014-11-18
     HDFS-7228. Add an SSD policy into the default BlockStoragePolicySuite.
     (jing9)
 
-    HDFS-6904. YARN unable to renew delegation token fetched via webhdfs 
+    HDFS-6904. YARN unable to renew delegation token fetched via webhdfs
     due to incorrect service port. (jitendra)
 
     HDFS-6988. Improve HDFS-6581 eviction configuration (Xiaoyu Yao via Colin
@@ -1473,10 +1476,10 @@ Release 2.6.0 - 2014-11-18
     HDFS-7309. XMLUtils.mangleXmlString doesn't seem to handle less than sign
     (Colin Patrick McCabe via raviprak)
 
-    HDFS-6823. dfs.web.authentication.kerberos.principal shows up in logs for 
+    HDFS-6823. dfs.web.authentication.kerberos.principal shows up in logs for
     insecure HDFS (Allen Wittenauer via raviprak)
 
-    HDFS-6517. Remove hadoop-metrics2.properties from hdfs project (Akira 
+    HDFS-6517. Remove hadoop-metrics2.properties from hdfs project (Akira
     AJISAKA via aw)
 
     HDFS-6617. Flake TestDFSZKFailoverController.testManualFailoverWithDFSHAAdmin
@@ -1497,7 +1500,7 @@ Release 2.6.0 - 2014-11-18
     HDFS-5809. BlockPoolSliceScanner and high speed hdfs appending make
     datanode to drop into infinite loop (cmccabe)
 
-    HDFS-6456. NFS should throw error for invalid entry in 
+    HDFS-6456. NFS should throw error for invalid entry in
     dfs.nfs.exports.allowed.hosts (Abhiraj Butala via brandonli)
 
     HDFS-6689. NFS doesn't return correct lookup access for direcories (brandonli)
@@ -1539,8 +1542,8 @@ Release 2.6.0 - 2014-11-18
     XmlEditsVisitor.java is JVM vendor specific. Breaks IBM JAVA.
     (Amir Sanjar via stevel)
 
-    HDFS-3482. hdfs balancer throws ArrayIndexOutOfBoundsException 
-    if option is specified without values. ( Madhukara Phatak via umamahesh) 
+    HDFS-3482. hdfs balancer throws ArrayIndexOutOfBoundsException
+    if option is specified without values. ( Madhukara Phatak via umamahesh)
 
     HDFS-6797. DataNode logs wrong layoutversion during upgrade. (Benoy Antony
     via Arpit Agarwal)
@@ -1553,7 +1556,7 @@ Release 2.6.0 - 2014-11-18
 
     HDFS-5185. DN fails to startup if one of the data dir is full. (vinayakumarb)
 
-    HDFS-6451. NFS should not return NFS3ERR_IO for AccessControlException 
+    HDFS-6451. NFS should not return NFS3ERR_IO for AccessControlException
     (Abhiraj Butala via brandonli)
 
     HDFS-6717. JIRA HDFS-5804 breaks default nfs-gateway behavior for unsecured config
@@ -1789,99 +1792,99 @@ Release 2.6.0 - 2014-11-18
     incorrectly. (Xiaoyu Yao via wheat9)
 
     BREAKDOWN OF HDFS-6134 AND HADOOP-10150 SUBTASKS AND RELATED JIRAS
-  
+
       HDFS-6387. HDFS CLI admin tool for creating & deleting an
       encryption zone. (clamb)
-  
+
       HDFS-6386. HDFS Encryption Zones (clamb)
-  
+
       HDFS-6388. HDFS integration with KeyProvider. (clamb)
-  
+
       HDFS-6473. Protocol and API for Encryption Zones (clamb)
-  
+
       HDFS-6392. Wire crypto streams for encrypted files in
       DFSClient. (clamb and yliu)
-  
+
       HDFS-6476. Print out the KeyProvider after finding KP successfully on
       startup. (Juan Yu via wang)
-  
+
       HDFS-6391. Get the Key/IV from the NameNode for encrypted files in
       DFSClient. (Charles Lamb and wang)
-  
+
       HDFS-6389. Rename restrictions for encryption zones. (clamb)
-  
+
       HDFS-6605. Client server negotiation of cipher suite. (wang)
-  
+
       HDFS-6625. Remove the Delete Encryption Zone function (clamb)
-  
+
       HDFS-6516. List of Encryption Zones should be based on inodes (clamb)
-  
+
       HDFS-6629. Not able to create symlinks after HDFS-6516 (umamaheswararao)
-  
+
       HDFS-6635. Refactor encryption zone functionality into new
       EncryptionZoneManager class. (wang)
-  
+
       HDFS-6474. Namenode needs to get the actual keys and iv from the
       KeyProvider. (wang)
-  
+
       HDFS-6619. Clean up encryption-related tests. (wang)
-  
+
       HDFS-6405. Test Crypto streams in HDFS. (yliu via wang)
-  
+
       HDFS-6490. Fix the keyid format for generated keys in
       FSNamesystem.createEncryptionZone (clamb)
-  
+
       HDFS-6716. Update usage of KeyProviderCryptoExtension APIs on NameNode.
       (wang)
-  
+
       HDFS-6718. Remove EncryptionZoneManager lock. (wang)
-  
+
       HDFS-6720. Remove KeyProvider in EncryptionZoneManager. (wang)
-  
+
       HDFS-6738. Remove unnecessary getEncryptionZoneForPath call in
       EZManager#createEncryptionZone. (clamb)
-  
+
       HDFS-6724. Decrypt EDEK before creating
       CryptoInputStream/CryptoOutputStream. (wang)
-  
+
       HDFS-6509. Create a special /.reserved/raw directory for raw access to
       encrypted data. (clamb via wang)
-  
+
       HDFS-6771. Require specification of an encryption key when creating
       an encryption zone. (wang)
-  
+
       HDFS-6730. Create a .RAW extended attribute namespace. (clamb)
-  
+
       HDFS-6692. Add more HDFS encryption tests. (wang)
-  
+
       HDFS-6780. Batch the encryption zones listing API. (wang)
-  
+
       HDFS-6394. HDFS encryption documentation. (wang)
-  
-      HDFS-6834. Improve the configuration guidance in DFSClient when there 
+
+      HDFS-6834. Improve the configuration guidance in DFSClient when there
       are no Codec classes found in configs. (umamahesh)
-  
+
       HDFS-6546. Add non-superuser capability to get the encryption zone
       for a specific path. (clamb)
-  
+
       HDFS-6733. Creating encryption zone results in NPE when
       KeyProvider is null. (clamb)
-  
+
       HDFS-6785. Should not be able to create encryption zone using path
       to a non-directory file. (clamb)
-  
+
       HDFS-6807. Fix TestReservedRawPaths. (clamb)
-  
+
       HDFS-6814. Mistakenly dfs.namenode.list.encryption.zones.num.responses configured
       as boolean. (umamahesh)
-  
+
       HDFS-6817. Fix findbugs and other warnings. (yliu)
-  
+
       HDFS-6839. Fix TestCLI to expect new output. (clamb)
 
       HDFS-6954. With crypto, no native lib systems are too verbose. (clamb via wang)
 
-      HDFS-2975. Rename with overwrite flag true can make NameNode to stuck in safemode 
+      HDFS-2975. Rename with overwrite flag true can make NameNode to stuck in safemode
       on NN (crash + restart). (Yi Liu via umamahesh)
 
       HDFS-6905. fs-encryption merge triggered release audit failures. (clamb via tucu)
@@ -1889,10 +1892,10 @@ Release 2.6.0 - 2014-11-18
       HDFS-6714. TestBlocksScheduledCounter#testBlocksScheduledCounter should
       shutdown cluster (vinayakumarb)
 
-      HDFS-6986. DistributedFileSystem must get delegation tokens from configured 
+      HDFS-6986. DistributedFileSystem must get delegation tokens from configured
       KeyProvider. (zhz via tucu)
 
-    HDFS-6776. Using distcp to copy data between insecure and secure cluster via webdhfs 
+    HDFS-6776. Using distcp to copy data between insecure and secure cluster via webdhfs
     doesn't work. (yzhangal via tucu)
 
     HDFS-7042. Upgrade fails for Windows HA cluster due to file locks held during
@@ -1969,9 +1972,9 @@ Release 2.6.0 - 2014-11-18
     HDFS-6686. Change BlockPlacementPolicy to use fallback when some storage
     types are unavailable.  (szetszwo)
 
-    HDFS-6835. Add a new API to set storage policy.  (jing9) 
+    HDFS-6835. Add a new API to set storage policy.  (jing9)
 
-    HDFS-6847. Support storage policy on directories and include storage policy 
+    HDFS-6847. Support storage policy on directories and include storage policy
     in HdfsFileStatus.  (Jing Zhao via szetszwo)
 
     HDFS-6801. Add a new data migration tool, Mover, for archiving data.
@@ -1981,7 +1984,7 @@ Release 2.6.0 - 2014-11-18
 
     HDFS-6906. Add more tests for BlockStoragePolicy.  (szetszwo via jing9)
 
-    HDFS-6911. check if a block is already scheduled in Mover. 
+    HDFS-6911. check if a block is already scheduled in Mover.
     (szetszwo via jing9)
 
     HDFS-6920. Check the storage type of delNodeHintStorage when deleting
@@ -2254,7 +2257,7 @@ Release 2.5.0 - 2014-08-11
 
     HDFS-6225. Remove the o.a.h.hdfs.server.common.UpgradeStatusReport.
     (wheat9)
-    
+
     HDFS-6224. Add a unit test to TestAuditLogger for file permissions
     passed to logAuditEvent. (Charles Lamb via wang)
 
@@ -2442,7 +2445,7 @@ Release 2.5.0 - 2014-08-11
     instead of millisecond. (Juan Yu via wang)
 
     HDFS-6680. BlockPlacementPolicyDefault does not choose favored nodes
-    correctly.  (szetszwo) 
+    correctly.  (szetszwo)
 
     HDFS-6712. Document HDFS Multihoming Settings. (Arpit Agarwal)
 
@@ -2457,7 +2460,7 @@ Release 2.5.0 - 2014-08-11
 
     HDFS-6599. 2.4 addBlock is 10 to 20 times slower compared to 0.23 (daryn)
 
-  BUG FIXES 
+  BUG FIXES
 
     HDFS-6112. NFS Gateway docs are incorrect for allowed hosts configuration.
     (atm)
@@ -2479,7 +2482,7 @@ Release 2.5.0 - 2014-08-11
 
     HDFS-6190. Minor textual fixes in DFSClient. (Charles Lamb via wheat9)
 
-    HDFS-6159. TestBalancerWithNodeGroup.testBalancerWithNodeGroup fails if 
+    HDFS-6159. TestBalancerWithNodeGroup.testBalancerWithNodeGroup fails if
     there is block missing after balancer success (Chen He via kihwal)
 
     HDFS-6181. Fix the wrong property names in NFS user guide (brandonli)
@@ -2618,7 +2621,7 @@ Release 2.5.0 - 2014-08-11
 
     HDFS-6462. NFS: fsstat request fails with the secure hdfs (brandonli)
 
-    HDFS-6404. HttpFS should use a 000 umask for mkdir and create 
+    HDFS-6404. HttpFS should use a 000 umask for mkdir and create
     operations. (yoderme via tucu)
 
     HDFS-6424. blockReport doesn't need to invalidate blocks on SBN. (Ming Ma
@@ -2627,7 +2630,7 @@ Release 2.5.0 - 2014-08-11
     HDFS-6497. Make TestAvailableSpaceVolumeChoosingPolicy deterministic
     (cmccabe)
 
-    HDFS-6500. Snapshot shouldn't be removed silently after renaming to an 
+    HDFS-6500. Snapshot shouldn't be removed silently after renaming to an
     existing snapshot. (Nicholas SZE via junping_du)
 
     HDFS-6257. TestCacheDirectives#testExceedsCapacity fails occasionally
@@ -2695,7 +2698,7 @@ Release 2.5.0 - 2014-08-11
 
     HDFS-6556. Refine XAttr permissions (umamahesh)
 
-    HDFS-6601. Issues in finalizing rolling upgrade when there is a layout 
+    HDFS-6601. Issues in finalizing rolling upgrade when there is a layout
     version change (kihwal)
 
     HDFS-6418. Regression: DFS_NAMENODE_USER_NAME_KEY missing
@@ -2710,7 +2713,7 @@ Release 2.5.0 - 2014-08-11
     HDFS-6604. The short-circuit cache doesn't correctly time out replicas that
     haven't been used in a while (cmccabe)
 
-    HDFS-4286. Changes from BOOKKEEPER-203 broken capability of including 
+    HDFS-4286. Changes from BOOKKEEPER-203 broken capability of including
     bookkeeper-server jar in hidden package of BKJM (Rakesh R via umamahesh)
 
     HDFS-4221. Remove the format limitation point from BKJM documentation as HDFS-3810
@@ -2721,7 +2724,7 @@ Release 2.5.0 - 2014-08-11
     HDFS-6631. TestPread#testHedgedReadLoopTooManyTimes fails intermittently.
     (Liang Xie via cnauroth)
 
-    HDFS-6647. Edit log corruption when pipeline recovery occurs for deleted 
+    HDFS-6647. Edit log corruption when pipeline recovery occurs for deleted
     file present in snapshot (kihwal)
 
     HDFS-6378. NFS registration should timeout instead of hanging when
@@ -2733,13 +2736,13 @@ Release 2.5.0 - 2014-08-11
     HDFS-6703. NFS: Files can be deleted from a read-only mount
     (Srikanth Upputuri via brandonli)
 
-    HDFS-6422. getfattr in CLI doesn't throw exception or return non-0 return code 
+    HDFS-6422. getfattr in CLI doesn't throw exception or return non-0 return code
     when xattr doesn't exist. (Charles Lamb via umamahesh)
 
     HDFS-6696. Name node cannot start if the path of a file under
     construction contains ".snapshot". (wang)
 
-    HDFS-6312. WebHdfs HA failover is broken on secure clusters. 
+    HDFS-6312. WebHdfs HA failover is broken on secure clusters.
     (daryn via tucu)
 
     HDFS-6618. FSNamesystem#delete drops the FSN lock between removing INodes
@@ -2823,7 +2826,7 @@ Release 2.5.0 - 2014-08-11
     HDFS-6492. Support create-time xattrs and atomically setting multiple
     xattrs. (wang)
 
-Release 2.4.1 - 2014-06-23 
+Release 2.4.1 - 2014-06-23
 
   INCOMPATIBLE CHANGES
 
@@ -2838,7 +2841,7 @@ Release 2.4.1 - 2014-06-23
   BUG FIXES 
 
     HDFS-6189. Multiple HDFS tests fail on Windows attempting to use a test
-    root path containing a colon.  (cnauroth via szetszwo) 
+    root path containing a colon.  (cnauroth via szetszwo)
 
     HDFS-6197. Rolling upgrade rollback on Windows can fail attempting to rename
     edit log segment files to a destination that already exists. (cnauroth)
@@ -2847,13 +2850,13 @@ Release 2.4.1 - 2014-06-23
     block pool directory and replace with trash on Windows. (cnauroth)
 
     HDFS-6206. Fix NullPointerException in DFSUtil.substituteForWildcardAddress.
-    (szetszwo) 
+    (szetszwo)
 
     HDFS-6204. Fix TestRBWBlockInvalidation: change the last sleep to a loop.
-    (szetszwo) 
+    (szetszwo)
 
     HDFS-6209. TestValidateConfigurationSettings should use random ports.
-    (Arpit Agarwal via szetszwo) 
+    (Arpit Agarwal via szetszwo)
 
     HDFS-6208. DataNode caching can leak file descriptors. (cnauroth)
 
@@ -2909,10 +2912,10 @@ Release 2.4.1 - 2014-06-23
     HDFS-6397. NN shows inconsistent value in deadnode count.
     (Mohammad Kamrul Islam via kihwal)
 
-    HDFS-6411. nfs-hdfs-gateway mount raises I/O error and hangs when a 
+    HDFS-6411. nfs-hdfs-gateway mount raises I/O error and hangs when a
     unauthorized user attempts to access it (brandonli)
 
-Release 2.4.0 - 2014-04-07 
+Release 2.4.0 - 2014-04-07
 
   INCOMPATIBLE CHANGES
 
