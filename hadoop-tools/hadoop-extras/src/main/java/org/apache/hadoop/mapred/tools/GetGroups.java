@@ -33,6 +33,7 @@ public class GetGroups extends GetGroupsBase {
 
   static {
     Configuration.addDefaultResource("mapred-default.xml");
+    Configuration.addDefaultResource("org.apache.hadoop.mapreduce.conf.MapReduceDefaultProperties");
     Configuration.addDefaultResource("mapred-site.xml");
   }
   

@@ -90,6 +90,15 @@ public interface MRConfig {
   public static final String SHUFFLE_CONSUMER_PLUGIN =
     "mapreduce.job.reduce.shuffle.consumer.plugin.class";
 
+  public static final String MAPRED_LOCAL_MAP_OUTPUT =
+     "mapred.local.mapoutput";
+
+  public static final String MAPRED_IFILE_OUTPUTSTREAM =
+    "mapred.ifile.outputstream";
+
+  public static final String MAPRED_IFILE_INPUTSTREAM =
+      "mapred.ifile.inputstream";
+
   /**
    * Configuration key to enable/disable IFile readahead.
    */
