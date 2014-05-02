@@ -804,7 +804,7 @@ public class RawLocalFileSystem extends FileSystem {
 
   @SuppressWarnings("deprecation")
   @Override
-  public void createSymlink(Path oldpath, Path newPath, boolean createParent)
+  public void createSymlink(Path oldPath, Path newPath, boolean createParent)
       throws IOException {
     if (!FileSystem.areSymlinksEnabled()) {
       throw new UnsupportedOperationException("Symlinks not supported");
