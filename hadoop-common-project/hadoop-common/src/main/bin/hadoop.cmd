@@ -155,7 +155,7 @@ if not "%HADOOP_CLASSPATH%" == "" (
   )
 
   @rem Begin: MapR specific section
-  if %hadoop-command% == jnipath(
+  if %hadoop-command% == jnipath (
     @echo %JAVA_LIBRARY_PATH%
     goto :eof
   )
