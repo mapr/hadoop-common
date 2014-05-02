@@ -19,6 +19,8 @@ package org.apache.hadoop.fs;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem.Statistics;
+import org.apache.hadoop.io.nativeio.NativeIOException;
+import org.apache.hadoop.util.NativeCodeLoader;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.Shell;
 
@@ -402,6 +404,9 @@ public class TestLocalFileSystem {
     Configuration conf = new Configuration();
     conf.setClass("fs.file.impl", RawLocalFileSystem.class, FileSystem.class);
     conf.setInt(CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_KEY, 4096);
+    // Set the scheme explicitly since it may have been set to some distributed
+    // file system scheme as part of default configuration.
+    conf.set("fs.default.name", "file:///");
     FileSystem fs = FileSystem.newInstance(conf);
     
     byte[] buf = new byte[10*1024];
@@ -556,4 +561,31 @@ public class TestLocalFileSystem {
     assertEquals("resolvePath did not strip fragment from Path", pathQualified,
         resolved);
   }
+   /**
+   * Tests if missing parent directory is created when symlink is called with
+   * createParent set to true. When set to false, it shoulf fail.
+   * This test case should be run with -Pnative flag so that the native code path
+   * is exercised. The non native code path creates the intermediate directories
+   * if the createParent flag is set to false.
+   */
+  @Test
+  public void testSymlinkCreateParent() throws Exception {
+    Path target = new Path(TEST_ROOT_DIR, "mylink_target");
+    fileSys.create(target);
+
+    // This dir should be created when createParent is set to true
+    Path subDir = new Path(TEST_ROOT_DIR, "sub_dir");
+    Path link= new Path(subDir, "mylink");
+
+    if (NativeCodeLoader.isNativeCodeLoaded()) {
+      try {
+        fileSys.createSymlink(target, link, false);
+        fail("Should have failed since parent dir is not existing");
+      } catch (NativeIOException e) {
+      }
+    }
+
+    fileSys.createSymlink(target, link, true);
+  }
+
 }
