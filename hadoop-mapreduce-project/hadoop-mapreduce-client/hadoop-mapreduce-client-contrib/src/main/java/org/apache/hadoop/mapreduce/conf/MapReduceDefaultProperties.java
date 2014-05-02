@@ -31,6 +31,7 @@ public class MapReduceDefaultProperties extends Properties {
     props.put(MRConfig.MAPRED_LOCAL_MAP_OUTPUT, "false");
     props.put(MRJobConfig.MAPREDUCE_JOB_SHUFFLE_PROVIDER_SERVICES, "mapr_direct_shuffle");
 
+    props.put("mapr.localvolumes.path", "/var/mapr/local");
     props.put("mapr.localoutput.dir", "output");
     props.put("mapr.localspill.dir", "spill");
 
