@@ -88,7 +88,17 @@ public class DirectShuffleMergeManagerImpl<K, V> implements MergeManager<K, V> {
     new TreeSet<DirectInMemoryOutput<K,V>>(new MapOutputComparator<K, V>());
   private final MergeThread<DirectInMemoryOutput<K,V>, K,V> inMemoryMerger;
   
-  Set<FileStatus> onDiskMapOutputs = new TreeSet<FileStatus>();
+  Set<FileStatus> onDiskMapOutputs = new TreeSet<FileStatus>(new Comparator<FileStatus>(){
+
+    @Override
+    public int compare(FileStatus o1, FileStatus o2) {
+      int diff = Long.signum(o1.getLen() - o2.getLen());
+      if ( diff != 0 ) {
+        return diff;
+      }
+      return o1.compareTo(o2);
+    }});
+  
   private final OnDiskMerger onDiskMerger;
   
   private final long memoryLimit;
@@ -238,7 +248,8 @@ public class DirectShuffleMergeManagerImpl<K, V> implements MergeManager<K, V> {
     inMemoryMerger.waitForMerge();
   }
   
-  private boolean canShuffleToMemory(long requestedSize) {
+  @VisibleForTesting
+  protected boolean canShuffleToMemory(long requestedSize) {
     return (requestedSize < maxSingleShuffleLimit); 
   }
   
@@ -270,11 +281,12 @@ public class DirectShuffleMergeManagerImpl<K, V> implements MergeManager<K, V> {
     // fetching, this will automatically trigger a merge thereby unlocking
     // all the stalled threads
     
-    if (usedMemory > memoryLimit) {
+    while (usedMemory > memoryLimit) {
       LOG.debug(mapId + ": Stalling shuffle since usedMemory (" + usedMemory
           + ") is greater than memoryLimit (" + memoryLimit + ")." + 
           " CommitMemory is (" + commitMemory + ")");
       try {
+        LOG.info("fetcher#" + fetcher + " - MergeManager returned status WAIT ...");
         this.wait(); // block until memory is available
       } catch (InterruptedException e) {
         throw new IOException(e);
@@ -292,7 +304,8 @@ public class DirectShuffleMergeManagerImpl<K, V> implements MergeManager<K, V> {
    * Unconditional Reserve is used by the Memory-to-Memory thread
    * @return
    */
-  private synchronized DirectInMemoryOutput<K, V> unconditionalReserve(
+  @VisibleForTesting
+  protected synchronized DirectInMemoryOutput<K, V> unconditionalReserve(
       TaskAttemptID mapId, long requestedSize, boolean primaryMapOutput) {
     usedMemory += requestedSize;
     return new DirectInMemoryOutput<K,V>(jobConf, mapId, this, (int)requestedSize,

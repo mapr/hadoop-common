@@ -127,7 +127,7 @@ public class DirectOnDiskMapOutput<K,V> extends MapOutput<K, V> {
   @Override
   public void commit() throws IOException {
     if (!fs.rename(tmpOutputPath, outputPath)) {
-      fs.delete(tmpOutputPath, true);
+      fs.delete(tmpOutputPath, false);
       throw new IOException("Failed to rename map output " +
       		tmpOutputPath + " to " + outputPath);
     }
@@ -137,7 +137,7 @@ public class DirectOnDiskMapOutput<K,V> extends MapOutput<K, V> {
   @Override
   public void abort() {
     try {
-      fs.delete(tmpOutputPath, true);
+      fs.delete(tmpOutputPath, false);
     } catch (IOException e) {
       LOG.info("failure to clean up " + tmpOutputPath, e);
     }
