@@ -28,6 +28,10 @@ import org.apache.hadoop.yarn.util.ConverterUtils;
 
 import org.apache.avro.util.Utf8;
 
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Event to record start of a task attempt
  *
@@ -48,11 +52,12 @@ public class TaskAttemptStartedEvent implements HistoryEvent {
    * @param containerId The containerId for the task attempt.
    * @param locality The locality of the task attempt
    * @param avataar The avataar of the task attempt
+   * @param serviceMetaData metadata of the shuffle services
    */
-  public TaskAttemptStartedEvent( TaskAttemptID attemptId,  
-      TaskType taskType, long startTime, String trackerName,
-      int httpPort, int shufflePort, ContainerId containerId,
-      String locality, String avataar) {
+  public TaskAttemptStartedEvent(TaskAttemptID attemptId,
+                                 TaskType taskType, long startTime, String trackerName,
+                                 int httpPort, int shufflePort, ContainerId containerId,
+                                 String locality, String avataar, Map<String, ByteBuffer> serviceMetaData) {
     datum.attemptId = new Utf8(attemptId.toString());
     datum.taskid = new Utf8(attemptId.getTaskID().toString());
     datum.startTime = startTime;
@@ -67,6 +72,13 @@ public class TaskAttemptStartedEvent implements HistoryEvent {
     if (avataar != null) {
       datum.avataar = new Utf8(avataar);
     }
+    if (serviceMetaData != null) {
+      Map<CharSequence, ByteBuffer> metaData = new HashMap<CharSequence, ByteBuffer>();
+      for (String service : serviceMetaData.keySet()) {
+        metaData.put(new Utf8(service), serviceMetaData.get(service));
+      }
+      datum.servicesMetaData = metaData;
+    }
   }
 
   // TODO Remove after MrV1 is removed.
@@ -75,7 +87,7 @@ public class TaskAttemptStartedEvent implements HistoryEvent {
       long startTime, String trackerName, int httpPort, int shufflePort,
       String locality, String avataar) {
     this(attemptId, taskType, startTime, trackerName, httpPort, shufflePort,
-        ConverterUtils.toContainerId("container_-1_-1_-1_-1"), locality, avataar);
+        ConverterUtils.toContainerId("container_-1_-1_-1_-1"), locality, avataar, null);
   }
 
   TaskAttemptStartedEvent() {}
@@ -126,6 +138,17 @@ public class TaskAttemptStartedEvent implements HistoryEvent {
   public String getAvataar() {
     if (datum.avataar != null) {
       return datum.avataar.toString();
+    }
+    return null;
+  }
+
+  public Map<String, ByteBuffer> getServicesMetaData() {
+    if (datum.servicesMetaData != null) {
+      Map<String, ByteBuffer> metaData = new HashMap<String, ByteBuffer>();
+      for (CharSequence service : datum.servicesMetaData.keySet()) {
+        metaData.put(service.toString(), datum.servicesMetaData.get(service));
+      }
+      return metaData;
     }
     return null;
   }
