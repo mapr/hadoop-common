@@ -566,8 +566,10 @@ public class RawLocalFileSystem extends FileSystem {
           //expected format
           //-rw-------    1 username groupname ...
           String permission = t.nextToken();
-          if (permission.length() > 10) { //files with ACLs might have a '+'
-            permission = permission.substring(0, 10);
+          if (permission.length() > FsPermission.MAX_PERMISSION_LENGTH) {
+          //files with ACLs might have a '+'
+          permission = permission.substring(0,
+            FsPermission.MAX_PERMISSION_LENGTH);
           }
           setPermission(FsPermission.valueOf(permission));
           t.nextToken();
@@ -705,7 +707,7 @@ public class RawLocalFileSystem extends FileSystem {
 
   @SuppressWarnings("deprecation")
   @Override
-  public void createSymlink(Path target, Path link, boolean createParent)
+  public void createSymlink(Path oldpath, Path newPath, boolean createParent)
       throws IOException {
     if (!FileSystem.areSymlinksEnabled()) {
       throw new UnsupportedOperationException("Symlinks not supported");

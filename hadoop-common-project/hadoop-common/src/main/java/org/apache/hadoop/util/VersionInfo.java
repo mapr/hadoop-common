@@ -27,6 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.io.IOUtils;
+import org.apache.hadoop.classification.MapRModified;
 
 /**
  * This class returns build information about Hadoop components.

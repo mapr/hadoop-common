@@ -7,8 +7,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.hadoop.fs.PathId;
-
 
 public interface PathId {
 
@@ -17,7 +15,9 @@ public interface PathId {
   public long[] getIPs();
   
   public void setFid(String fid);
-  
+ 
+  public void setIps(long[] ips);
+ 
   public void setIps(List<Long> ips);
 
   public void writeFields(DataOutput out) throws IOException;
