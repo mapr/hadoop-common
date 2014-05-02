@@ -31,13 +31,15 @@
   <property>
     <name>yarn.resourcemanager.address</name>
     <value>__RM_IP__:8032</value>
-    <description>the host is the hostname of the ResourceManager and the port is the port on which the clients can talk to the Resource Manager. </description>
+    <description>the host is the hostname of the ResourceManager and the port is the port on which the clients can talk
+      to the Resource Manager.
+    </description>
   </property>
 
   <property>
     <name>yarn.nodemanager.aux-services</name>
-    <value>mapreduce_shuffle</value>
-    <description>shuffle service that needs to be set for Map Reduce to run </description>
+    <value>mapreduce_shuffle,mapr_direct_shuffle</value>
+    <description>shuffle service that needs to be set for Map Reduce to run</description>
   </property>
 
   <property>
@@ -45,5 +47,14 @@
     <value>org.apache.hadoop.mapred.ShuffleHandler</value>
   </property>
 
+  <property>
+    <name>yarn.nodemanager.aux-services.mapr_direct_shuffle.class</name>
+    <value>com.mapr.hadoop.mapred.LocalVolumeAuxService</value>
+  </property>
+
+  <property>
+    <name>mapreduce.job.shuffle.provider.services</name>
+    <value>mapr_direct_shuffle</value>
+  </property>
 
 </configuration>
