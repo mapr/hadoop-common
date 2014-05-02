@@ -528,7 +528,7 @@ public class DirectShuffleMergeManagerImpl<K, V> implements MergeManager<K, V> {
       Path[] paths = new Path[inputs.size()];
       for (int i = 0; i < inputs.size(); i++) {
         approxOutputSize += inputs.get(i).getLen();
-        paths[i++] = inputs.get(i).getPath();
+        paths[i] = inputs.get(i).getPath();
       }
 
       // for MapR do not add Checksum len
