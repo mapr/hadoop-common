@@ -96,7 +96,21 @@ public class VersionInfo {
     return info.getProperty("protocVersion", "Unknown");
   }
 
-  private static VersionInfo COMMON_VERSION_INFO = new VersionInfo("common");
+  //private static VersionInfo COMMON_VERSION_INFO = new VersionInfo("common");
+  // Use mapreduce version instead of common version in order to distinguish
+  // between MR1 and MR2. This is because ecosystem components like Pig. Hive
+  // rely on it to load the approriate Hadoop Shim.
+  @MapRModified
+  private static VersionInfo COMMON_VERSION_INFO = new VersionInfo("mapreduce");
+  static {
+    // Fall back to common version if the mapreduce version file is not
+    // available. This can happen if an application did not include map reduce
+    // jar. Right now, we don't even have this file for MR2.
+    if (COMMON_VERSION_INFO.info.isEmpty()) {
+      COMMON_VERSION_INFO = new VersionInfo("common");
+    }
+  }
+
   /**
    * Get the Hadoop version.
    * @return the Hadoop version string, eg. "0.6.3-dev"
