@@ -114,7 +114,6 @@ public class DirectOnDiskMapOutput<K,V> extends MapOutput<K, V> {
 
   // Sanity check
   if (bytesRead != mapOutputLength) {
-    // TODO - caller will need to catch IOException and invoke "abort()" to cleanup
     throw new IOException("Incomplete map output received for " +
                           getMapId() + " from " +
                           host.getHostName() + " (" +
