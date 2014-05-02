@@ -27,6 +27,7 @@ import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,6 +75,7 @@ import org.apache.hadoop.yarn.api.records.ContainerState;
 import org.apache.hadoop.yarn.api.records.ContainerStatus;
 import org.apache.hadoop.yarn.api.records.LogAggregationContext;
 import org.apache.hadoop.yarn.api.records.NodeId;
+import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.api.records.SerializedException;
 import org.apache.hadoop.yarn.api.records.impl.pb.ApplicationIdPBImpl;
 import org.apache.hadoop.yarn.api.records.impl.pb.LogAggregationContextPBImpl;
@@ -92,6 +94,8 @@ import org.apache.hadoop.yarn.proto.YarnProtos.ApplicationACLMapProto;
 import org.apache.hadoop.yarn.proto.YarnServerNodemanagerRecoveryProtos.ContainerManagerApplicationProto;
 import org.apache.hadoop.yarn.security.ContainerTokenIdentifier;
 import org.apache.hadoop.yarn.security.NMTokenIdentifier;
+import org.apache.hadoop.yarn.server.api.AuxiliaryService;
+import org.apache.hadoop.yarn.server.api.ContainerInitializationContext;
 import org.apache.hadoop.yarn.server.nodemanager.CMgrCompletedAppsEvent;
 import org.apache.hadoop.yarn.server.nodemanager.CMgrCompletedContainersEvent;
 import org.apache.hadoop.yarn.server.nodemanager.ContainerExecutor;
@@ -714,6 +718,7 @@ public class ContainerManagerImpl extends CompositeService implements
     List<ContainerId> succeededContainers = new ArrayList<ContainerId>();
     Map<ContainerId, SerializedException> failedContainers =
         new HashMap<ContainerId, SerializedException>();
+    ContainerId anyContainerid = null;
     for (StartContainerRequest request : requests.getStartContainerRequests()) {
       ContainerId containerId = null;
       try {
@@ -722,6 +727,9 @@ public class ContainerManagerImpl extends CompositeService implements
         verifyAndGetContainerTokenIdentifier(request.getContainerToken(),
           containerTokenIdentifier);
         containerId = containerTokenIdentifier.getContainerID();
+        if ( anyContainerid == null ) {
+          anyContainerid = containerId;
+        }
         startContainerInternal(nmTokenIdentifier, containerTokenIdentifier,
           request);
         succeededContainers.add(containerId);
@@ -734,8 +742,8 @@ public class ContainerManagerImpl extends CompositeService implements
         throw RPCUtil.getRemoteException(e);
       }
     }
-
-    return StartContainersResponse.newInstance(getAuxServiceMetaData(),
+    
+    return StartContainersResponse.newInstance(getAuxServiceMetaData(anyContainerid),
       succeededContainers, failedContainers);
   }
 
@@ -817,7 +825,7 @@ public class ContainerManagerImpl extends CompositeService implements
 
     ContainerLaunchContext launchContext = request.getContainerLaunchContext();
 
-    Map<String, ByteBuffer> serviceData = getAuxServiceMetaData();
+    Map<String, ByteBuffer> serviceData = getAuxServiceMetaData(containerId);
     if (launchContext.getServiceData()!=null && 
         !launchContext.getServiceData().isEmpty()) {
       for (Map.Entry<String, ByteBuffer> meta : launchContext.getServiceData()
@@ -1161,5 +1169,10 @@ public class ContainerManagerImpl extends CompositeService implements
 
   public Map<String, ByteBuffer> getAuxServiceMetaData() {
     return this.auxiliaryServices.getMetaData();
+  }
+  
+  public Map<String, ByteBuffer> getAuxServiceMetaData(ContainerId cId) {
+    return this.auxiliaryServices.getMetaData(
+        new ContainerInitializationContext(null, cId, null));
   }
 }

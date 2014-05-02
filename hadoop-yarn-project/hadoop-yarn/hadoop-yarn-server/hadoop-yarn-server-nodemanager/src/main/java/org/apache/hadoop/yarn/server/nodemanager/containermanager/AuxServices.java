@@ -94,6 +94,20 @@ public class AuxServices extends AbstractService
     return metaClone;
   }
 
+  public Map<String, ByteBuffer> getMetaData(ContainerInitializationContext ctx) {
+    Map<String, ByteBuffer> metaClone = new HashMap<String, ByteBuffer>(
+        serviceMap.size());
+    synchronized (serviceMap) {
+      for (Entry<String, AuxiliaryService> entry : serviceMap.entrySet()) {
+        ByteBuffer data = entry.getValue().getMetaData(ctx);
+        if ( data != null ) {
+          metaClone.put(entry.getKey(), data);
+        }
+      }
+    }
+    return metaClone;
+  }
+
   @Override
   public void serviceInit(Configuration conf) throws Exception {
     final FsPermission storeDirPerms = new FsPermission((short)0700);
