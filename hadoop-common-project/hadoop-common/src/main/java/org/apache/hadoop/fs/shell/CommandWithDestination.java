@@ -33,7 +33,6 @@ import org.apache.hadoop.fs.PathIOException;
 import org.apache.hadoop.fs.PathIsDirectoryException;
 import org.apache.hadoop.fs.PathIsNotDirectoryException;
 import org.apache.hadoop.fs.PathNotFoundException;
-import org.apache.hadoop.fs.PathOperationException;
 import org.apache.hadoop.io.IOUtils;
 
 /**
@@ -180,11 +179,7 @@ abstract class CommandWithDestination extends FsCommand {
    * @throws IOException if anything goes wrong
    */
   protected void processPath(PathData src, PathData dst) throws IOException {
-    if (src.stat.isSymlink()) {
-      // TODO: remove when FileContext is supported, this needs to either
-      // copy the symlink or deref the symlink
-      throw new PathOperationException(src.toString());        
-    } else if (src.stat.isFile()) {
+    if (src.stat.isFile() || src.stat.isSymlink()) {
       copyFileToTarget(src, dst);
     } else if (src.stat.isDirectory() && !isRecursive()) {
       throw new PathIsDirectoryException(src.toString());
