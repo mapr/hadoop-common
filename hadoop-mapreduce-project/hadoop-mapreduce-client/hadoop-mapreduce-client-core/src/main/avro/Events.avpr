@@ -206,7 +206,11 @@
           {"name": "shufflePort", "type": "int"},
           {"name": "containerId", "type": "string"},
           {"name": "locality", "type": "string"},
-          {"name": "avataar", "type": "string"}
+          {"name": "avataar", "type": "string"},
+          {"name": "servicesMetaData", "type": { "type": "map",
+                                                "values": "bytes"
+                                              }
+          }
       ]
      },
 
