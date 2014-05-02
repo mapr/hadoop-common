@@ -502,5 +502,28 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xs
         </plugins>
       </build>
     </profile>
+    <profile>
+     <id>maprfs</id>
+     <activation>
+      <activeByDefault>true</activeByDefault>
+     </activation>
+     <dependencies>
+    <!-- MapR dependencies defined at top level to avoid adding them in multiple pom files -->
+    <!-- mapr_fix -->
+    <dependency>
+      <groupId>com.mapr.hadoop</groupId>
+      <artifactId>maprfs</artifactId>
+      <version>${mapr.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.json</groupId>
+      <artifactId>json</artifactId>
+      <version>20080701</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+    </profile>
   </profiles>
 </project>
