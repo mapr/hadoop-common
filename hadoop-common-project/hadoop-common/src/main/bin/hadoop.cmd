@@ -77,7 +77,6 @@ call :updatepath %HADOOP_BIN_PATH%
 @rem Begin: MapR specific section
 if exist %MAPR_HOME%\lib (
   set CLASSPATH=!CLASSPATH!;%MAPR_HOME%\lib\kvstore-0.1.jar
-  set CLASSPATH=!CLASSPATH!;%MAPR_HOME%\lib\protobuf-java-2.4.1-lite.jar
   set CLASSPATH=!CLASSPATH!;%MAPR_HOME%\lib\libprotodefs.jar
   set CLASSPATH=!CLASSPATH!;%MAPR_HOME%\lib\baseutils-0.1.jar
   set CLASSPATH=!CLASSPATH!;%MAPR_HOME%\lib\maprsecurity-0.1.jar
