@@ -620,7 +620,9 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
           "respectively");
     }
     addDefaultResource("core-default.xml");
+    addDefaultResource("org.apache.hadoop.conf.CoreDefaultProperties");
     addDefaultResource("core-site.xml");
+
   }
   
   private Properties properties;
@@ -2046,7 +2048,33 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
   public URL getResource(String name) {
     return classLoader.getResource(name);
   }
-  
+
+  /**
+   * Checks if the class specified by propertiesClassName is found on the classLoader.
+   * If yes, creates an instance of the class and checks if the instance is of type {@link java.util.Properties}.
+   *
+   * @param propertiesClassName class name.
+   * @return instance of {@link Properties} if successful. Returns null otherwise.
+   */
+  public Properties getProperties(String propertiesClassName) {
+    try {
+      Class<?> propertiesClass = getClassByNameOrNull(propertiesClassName);
+      if (propertiesClass != null) {
+        Object propertiesObj = propertiesClass.newInstance();
+        if (propertiesObj instanceof Properties) {
+          if (LOG.isDebugEnabled()) {
+            LOG.debug("Loaded " + propertiesClass.getName());
+          }
+          return (Properties) propertiesObj;
+        }
+      }
+    } catch (InstantiationException e) {
+    } catch (IllegalAccessException e) {
+    }
+
+    return null;
+  }
+
   /** 
    * Get an input stream attached to the configuration resource with the
    * given <code>name</code>.
@@ -2238,8 +2266,14 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
       if (resource instanceof URL) {                  // an URL resource
         doc = parse(builder, (URL)resource);
       } else if (resource instanceof String) {        // a CLASSPATH resource
-        URL url = getResource((String)resource);
-        doc = parse(builder, url);
+        String resourceStr = (String) resource;
+        Properties props = null;
+        if (!resourceStr.endsWith(".xml") && (props = getProperties(resourceStr)) != null) {
+          overlay(properties, props);
+        } else {
+          URL url = getResource(resourceStr);
+          doc = parse(builder, url);
+        }
       } else if (resource instanceof Path) {          // a file resource
         // Can't use FileSystem API or we get an infinite loop
         // since FileSystem uses Configuration API.  Use java.io.File instead.
