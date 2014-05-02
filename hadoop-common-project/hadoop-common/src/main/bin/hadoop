@@ -187,7 +187,7 @@ case $COMMAND in
       CLASS=com.mapr.fs.clicommands.MapRCliCommands
       HADOOP_OPTS="-Dmapr.library.flatclass"
     elif [ "$COMMAND" = "conf" ] ; then
-      CLASS=org.apache.hadoop.conf.MapRConf
+      CLASS=org.apache.hadoop.mapreduce.util.ConfigUtil
     # End: MapR specific section
 
     elif [[ "$COMMAND" = -*  ]] ; then

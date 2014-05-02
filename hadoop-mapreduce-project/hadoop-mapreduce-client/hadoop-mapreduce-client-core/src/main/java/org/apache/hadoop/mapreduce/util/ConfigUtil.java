@@ -41,6 +41,7 @@ public class ConfigUtil {
   public static void loadResources() {
     addDeprecatedKeys();
     Configuration.addDefaultResource("mapred-default.xml");
+    Configuration.addDefaultResource("org.apache.hadoop.mapreduce.conf.MapReduceDefaultProperties");
     Configuration.addDefaultResource("mapred-site.xml");
     Configuration.addDefaultResource("yarn-default.xml");
     Configuration.addDefaultResource("yarn-site.xml");
@@ -532,7 +533,20 @@ public class ConfigUtil {
 
   public static void main(String[] args) {
     loadResources();
-    Configuration.dumpDeprecatedKeys();
+    if (args.length > 0) {
+      if (args[0].contains("help"))  {
+        System.out.println("Args: [-deprecated] [-help]");
+      } else if (args[0].contains("deprecated")) {
+        Configuration.dumpDeprecatedKeys();
+      }
+    } else {
+      try {
+        Configuration.main(args);
+        System.out.println();
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
   }
 }
 
