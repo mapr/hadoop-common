@@ -20,7 +20,7 @@ public class DirectInMemoryOutput<K,V> extends MapOutput<K, V> {
 
   private static final Log LOG = LogFactory.getLog(DirectInMemoryOutput.class);
   private Configuration conf;
-  private final MergeManagerImpl<K, V> merger;
+  private final DirectShuffleMergeManagerImpl<K, V> merger;
   private final byte[] memory;
   private BoundedByteArrayOutputStream byteStream;
   // Decompression of map-outputs
@@ -30,7 +30,7 @@ public class DirectInMemoryOutput<K,V> extends MapOutput<K, V> {
   private boolean shouldCloseInput; // always false for MapR
   
   public DirectInMemoryOutput(Configuration conf, TaskAttemptID mapId,
-      MergeManagerImpl<K, V> merger,
+      DirectShuffleMergeManagerImpl<K, V> merger,
       int size, CompressionCodec codec,
       boolean primaryMapOutput) {
     super(mapId, (long)size, primaryMapOutput);
@@ -48,14 +48,10 @@ public class DirectInMemoryOutput<K,V> extends MapOutput<K, V> {
   }
 
   @Override
-  public void shuffle(MapHost host, InputStream input, long compressedLength,
+  public void shuffle(MapHost host, InputStream input, long mapOutputLength,
       long decompressedLength, ShuffleClientMetrics metrics, Reporter reporter)
       throws IOException {
     
-      // Reserve ram for the map-output
-    // TODO looks like we don't need to reserve anymore 
-      //ramManager.reserve(decompressedLength, null);
-
   // Are map-outputs compressed?
   if (codec != null) {
     decompressor.reset();
@@ -87,9 +83,6 @@ public class DirectInMemoryOutput<K,V> extends MapOutput<K, V> {
   } catch (IOException ioe) {
     LOG.info("Failed to shuffle from " + getMapId(),
              ioe);
-    // Inform the ram-manager
-    //ramManager.closeInMemoryFile(decompressedLength);
-    //ramManager.unreserve(decompressedLength);
 
     // Close the streams
     if (shouldCloseInput) {
@@ -104,25 +97,19 @@ public class DirectInMemoryOutput<K,V> extends MapOutput<K, V> {
     CodecPool.returnDecompressor(decompressor);
   }
 
-  // Close the in-memory file
-  //ramManager.closeInMemoryFile(decompressedLength);
 
   // Sanity check
-  if (bytesRead != decompressedLength) {
-    // Inform the ram-manager
-    //ramManager.unreserve(decompressedLength);
-
-   
+  if (bytesRead != mapOutputLength) {
     throw new IOException("Incomplete map output received for " +
         getMapId() + " from " +
         //mapOutputLoc.shuffleRootFid.fid + " (" +
         bytesRead + " instead of " +
-        decompressedLength + ")");
+        mapOutputLength + ")");
   }
 
   // TODO: Remove this after a 'fix' for HADOOP-3647
   if (LOG.isDebugEnabled()) {
-    if (decompressedLength > 0) {
+    if (mapOutputLength > 0) {
       DataInputBuffer dib = new DataInputBuffer();
       dib.reset(memory, 0, memory.length);
       LOG.debug("Rec #1 from " + getMapId() +
@@ -135,8 +122,7 @@ public class DirectInMemoryOutput<K,V> extends MapOutput<K, V> {
 
   @Override
   public void commit() throws IOException {
-    // TODO ???
-    //merger.closeInMemoryFile(this);
+    merger.closeInMemoryFile(this);
   }
 
   @Override
@@ -147,6 +133,14 @@ public class DirectInMemoryOutput<K,V> extends MapOutput<K, V> {
   @Override
   public String getDescription() {
     return "MEMORY";
+  }
+
+  public byte[] getMemory() {
+    return memory;
+  }
+
+  public BoundedByteArrayOutputStream getArrayStream() {
+    return byteStream;
   }
 
 }

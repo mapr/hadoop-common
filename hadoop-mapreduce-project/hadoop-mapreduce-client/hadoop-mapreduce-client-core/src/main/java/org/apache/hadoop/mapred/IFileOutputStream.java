@@ -37,10 +37,10 @@ public class IFileOutputStream extends FilterOutputStream {
   /**
    * The output stream to be checksummed. 
    */
-  private final DataChecksum sum;
-  private byte[] barray;
+  protected final DataChecksum sum;
+  protected byte[] barray;
   private boolean closed = false;
-  private boolean finished = false;
+  protected boolean finished = false;
 
   /**
    * Create a checksum output stream that writes
@@ -78,6 +78,12 @@ public class IFileOutputStream extends FilterOutputStream {
     out.write (barray, 0, sum.getChecksumSize());
     out.flush();
   }
+  
+  public void finish(long decompBytes, long compBytes) throws IOException {
+    finish();
+    return;
+  }
+
 
   /**
    * Write bytes to the stream.

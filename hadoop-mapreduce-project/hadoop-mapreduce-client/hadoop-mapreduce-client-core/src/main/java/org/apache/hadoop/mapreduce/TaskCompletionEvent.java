@@ -21,12 +21,12 @@ package org.apache.hadoop.mapreduce;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.PathId;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableUtils;
 
@@ -51,7 +51,7 @@ public class TaskCompletionEvent implements Writable{
   public static final TaskCompletionEvent[] EMPTY_ARRAY = 
     new TaskCompletionEvent[0];
   
-  private PathId pathId;
+  private Map<String, ByteBuffer> serviceMetaData = new HashMap<String, ByteBuffer>();
   /**
    * Default constructor for Writable.
    *
@@ -85,31 +85,21 @@ public class TaskCompletionEvent implements Writable{
     this.taskTrackerHttp = taskTrackerHttp;
   }
   
-  /**
-   * 
-   * @param eventId
-   * @param taskId
-   * @param idWithinJob
-   * @param isMap
-   * @param status
-   * @param taskTrackerHttp
-   * @param pathId
-   */
+
   public TaskCompletionEvent(int eventId, 
       TaskAttemptID taskId,
       int idWithinJob,
       boolean isMap,
       Status status, 
       String taskTrackerHttp,
-      PathId pathId){
-
-  this.taskId = taskId;
-  this.idWithinJob = idWithinJob;
-  this.isMap = isMap;
-  this.eventId = eventId; 
-  this.status =status; 
-  this.taskTrackerHttp = taskTrackerHttp;
-  this.pathId = pathId;
+      Map<String, ByteBuffer> servicesMetaData) {
+    this.taskId = taskId;
+    this.idWithinJob = idWithinJob;
+    this.isMap = isMap;
+    this.eventId = eventId; 
+    this.status =status; 
+    this.taskTrackerHttp = taskTrackerHttp;
+    this.serviceMetaData = servicesMetaData;
   }
 
   /**
@@ -190,12 +180,12 @@ public class TaskCompletionEvent implements Writable{
     this.taskTrackerHttp = taskTrackerHttp;
   }
     
-  public PathId getPathId() {
-    return pathId;
+  public Map<String, ByteBuffer> getServiceMetaData() {
+    return serviceMetaData;
   }
 
-  public void setPathId(PathId pathId) {
-    this.pathId = pathId;
+  public void setServiceMetaData(Map<String, ByteBuffer> serviceMetaData) {
+    this.serviceMetaData = serviceMetaData;
   }
 
   @Override
@@ -220,8 +210,7 @@ public class TaskCompletionEvent implements Writable{
              && this.status.equals(event.getStatus())
              && this.taskId.equals(event.getTaskAttemptId()) 
              && this.taskRunTime == event.getTaskRunTime()
-             && this.taskTrackerHttp.equals(event.getTaskTrackerHttp())
-             && this.pathId.equals(event.getPathId());
+             && this.taskTrackerHttp.equals(event.getTaskTrackerHttp());
     }
     return false;
   }
@@ -249,12 +238,20 @@ public class TaskCompletionEvent implements Writable{
     WritableUtils.writeString(out, taskTrackerHttp);
     WritableUtils.writeVInt(out, taskRunTime);
     WritableUtils.writeVInt(out, eventId);
-    if ( pathId != null ) {
-      out.writeInt(0);
-      pathId.writeFields(out);
-    } else {
-      out.writeInt(-1);
+    WritableUtils.writeVInt(out, serviceMetaData.size());
+    for ( Map.Entry<String, ByteBuffer> entry: serviceMetaData.entrySet()) {
+      WritableUtils.writeString(out, entry.getKey());
+      ByteBuffer value = entry.getValue();
+      // get clone of the value
+      ByteBuffer dup = value.duplicate();
+      dup.rewind();
+      int count = dup.remaining();
+      final byte[] copy = new byte[count];
+      dup.get(copy);
+      WritableUtils.writeVInt(out,count);
+      out.write(copy, 0, count);
     }
+
   }
   
   public void readFields(DataInput in) throws IOException {
@@ -265,10 +262,14 @@ public class TaskCompletionEvent implements Writable{
     taskTrackerHttp = WritableUtils.readString(in);
     taskRunTime = WritableUtils.readVInt(in);
     eventId = WritableUtils.readVInt(in);
-    if ( in.readInt() == 0 ) {
-      FileSystem fs = FileSystem.get(new Configuration());
-      pathId = fs.createPathId();
-      pathId.readFields(in);
+    int mapSize = WritableUtils.readVInt(in);
+    for ( int i = 0; i < mapSize; i++ ) {
+      String sName = WritableUtils.readString(in);
+      int count = WritableUtils.readVInt(in);
+      byte [] array = new byte[count];
+      in.readFully(array);
+      ByteBuffer bb = ByteBuffer.wrap(array);
+      serviceMetaData.put(sName, bb);
     }
   }
 }
