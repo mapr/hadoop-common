@@ -321,6 +321,7 @@ public class MapRFsOutputFile extends MapOutputFile {
   }
 
   private String getMapRFsPath() {
+    conf.set("mapr.host", hostname);
     return this.conf.get("mapr.mapred.localvolume.root.dir.path", getMapRVolumeMountPoint() + "/nodeManager");
   }
 
