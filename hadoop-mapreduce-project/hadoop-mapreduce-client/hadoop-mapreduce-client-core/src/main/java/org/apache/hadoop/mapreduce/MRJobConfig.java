@@ -745,7 +745,7 @@ public interface MRJobConfig {
    */
   public static final String MR_AM_MAX_ATTEMPTS = "mapreduce.am.max-attempts";
 
-  public static final int DEFAULT_MR_AM_MAX_ATTEMPTS = 2;
+  public static final int DEFAULT_MR_AM_MAX_ATTEMPTS = 3;
   
   public static final String MR_APPLICATION_TYPE = "MAPREDUCE";
   
