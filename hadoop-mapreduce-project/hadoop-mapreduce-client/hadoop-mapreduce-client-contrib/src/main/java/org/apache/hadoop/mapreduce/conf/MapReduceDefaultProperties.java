@@ -14,7 +14,7 @@ import java.util.Properties;
 
 public class MapReduceDefaultProperties extends Properties {
   private static final Map<String, String> props =
-      new HashMap<String, String>();
+    new HashMap<String, String>();
 
   static { // MapReduce framework related defaults
     props.put(MRConfig.FRAMEWORK_NAME, MRConfig.YARN_FRAMEWORK_NAME);
@@ -30,6 +30,14 @@ public class MapReduceDefaultProperties extends Properties {
     props.put(MRConfig.MAPRED_IFILE_INPUTSTREAM, MapRIFileInputStream.class.getName());
     props.put(MRConfig.MAPRED_LOCAL_MAP_OUTPUT, "false");
     props.put(MRJobConfig.MAPREDUCE_JOB_SHUFFLE_PROVIDER_SERVICES, "mapr_direct_shuffle");
+
+    props.put("mapr.localoutput.dir", "output");
+    props.put("mapr.localspill.dir", "spill");
+
+    // Configurations for MapRFSOutputBuffer
+    props.put("mapred.maxthreads.generate.mapoutput", "1");
+    props.put("mapred.maxthreads.partition.closer", "1");
+    props.put("mapr.map.keyprefix.ints", "1");
   }
 
   static { // Map side defaults
@@ -44,9 +52,12 @@ public class MapReduceDefaultProperties extends Properties {
   static { // Map side performance tuning defaults
     props.put(MRJobConfig.MAP_MEMORY_MB, "1024");
     props.put(MRJobConfig.MAP_JAVA_OPTS, "-Xmx900m");
-    props.put(MRJobConfig.IO_SORT_MB, "480");
+    props.put(MRJobConfig.IO_SORT_MB, getIoSortMb());
     props.put(MRJobConfig.IO_SORT_FACTOR, "256");
     props.put(MRJobConfig.MAP_SORT_SPILL_PERCENT, "0.99");
+
+    // TODO: We should remove this as this is removed in MR2 as part of MAPREDUCE-64.
+    props.put("io.sort.record.percent", "0.17");
   }
 
   static { // Reduce side performance tuning defaults
@@ -54,6 +65,14 @@ public class MapReduceDefaultProperties extends Properties {
     props.put(MRJobConfig.REDUCE_JAVA_OPTS, "-Xmx1500m");
     props.put(MRJobConfig.COMPLETED_MAPS_FOR_REDUCE_SLOWSTART, "0.95");
     props.put(MRJobConfig.SHUFFLE_PARALLEL_COPIES, "12");
+  }
+
+  private static final long IO_SORT_XMX_THRESHOLD = 800 << 20;
+  private static final String IO_SORT_MB_MIN = "100";
+  private static final String IO_SORT_MB_MAX = "480";
+
+  private static String getIoSortMb() {
+    return Runtime.getRuntime().maxMemory() >= IO_SORT_XMX_THRESHOLD ? IO_SORT_MB_MAX : IO_SORT_MB_MIN;
   }
 
   public MapReduceDefaultProperties() {
