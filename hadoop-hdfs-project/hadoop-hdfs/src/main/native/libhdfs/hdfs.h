@@ -688,6 +688,59 @@ extern  "C" {
      */
     int hdfsUtime(hdfsFS fs, const char* path, tTime mtime, tTime atime);
 
+   /** MapR Additions: 
+     * The following APIs are specific to MapR-Fs and are available ONLY 
+     * when linked with libMapRClient, and NOT with libhdfs
+     */
+
+    /**
+     * hdfsSetRpcTimeout
+     * Set the Rpc time out to CLDB and fileservers, 
+     * hdfsSetRpcTimeout
+     * before calling one of the hdfsConnect() APIs.
+     * 'seconds' should be either 0 (no Timeout) OR >= 30 seconds
+     * Default value: 300 seconds
+     * Return 0 on success else -1
+     */
+    int hdfsSetRpcTimeout(int seconds);
+
+    /**
+     * hdfsGetNameContainerSizeBytes
+     * @param fs The configured filesystem handle.
+     * @param path the path to the file or directory
+     * Returns the size of Name Container in bytes on success, else 0
+     */    
+    tSize hdfsGetNameContainerSizeBytes(hdfsFS fs, const char *path);
+
+    /** 
+     * hdfsOpenFile2
+     * Same as hdfsOpenFile. In addition, it can fetch the size of the 
+     * name container for the volume to which 'path' belongs.
+     * The fetched size is set in the 'nameSizeInBytes' parameter
+     */
+    hdfsFile hdfsOpenFile2(hdfsFS fs, const char* path, int flags,
+                          int bufferSize, short replication, tSize blocksize,
+                          tSize *nameSizeInBytes);
+
+    /** 
+     * hdfsCreateDirectory2
+     * Same as hdfsOpenFile. In addition, it can fetch the size of the 
+     * name container for the volume to which 'path' belongs.
+     * The fetched size is set in the 'nameSizeInBytes' parameter
+     */
+    int hdfsCreateDirectory2(hdfsFS fs, const char* path, tSize *nameSizeInBytes);
+
+    /** 
+     * hdfsSetThreads
+     */
+    int hdfsSetThreads(int threads);
+
+    /*
+     * Internal Note: If more APIs are exported using this file, modify the
+     * src/fs/client/fileclient/cc/MapRClient.def to export
+     * the APIs in Windows.
+     */
+   
     /**
      * Allocate a zero-copy options structure.
      *
