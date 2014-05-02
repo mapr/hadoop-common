@@ -52,6 +52,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
+
+import org.apache.hadoop.classification.MapRModified;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.metrics2.annotation.Metric;
@@ -66,6 +68,7 @@ import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.TokenIdentifier;
 import org.apache.hadoop.util.Shell;
 import org.apache.hadoop.util.Time;
+
 import static org.apache.hadoop.util.PlatformName.IBM_JAVA;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -78,6 +81,7 @@ import com.google.common.annotations.VisibleForTesting;
  */
 @InterfaceAudience.LimitedPrivate({"HDFS", "MapReduce", "HBase", "Hive", "Oozie"})
 @InterfaceStability.Evolving
+@MapRModified
 public class UserGroupInformation {
   private static final Log LOG =  LogFactory.getLog(UserGroupInformation.class);
   /**
@@ -86,7 +90,26 @@ public class UserGroupInformation {
   private static final float TICKET_RENEW_WINDOW = 0.80f;
   static final String HADOOP_USER_NAME = "HADOOP_USER_NAME";
   static final String HADOOP_PROXY_USER = "HADOOP_PROXY_USER";
-  
+
+  // Begin MapR section
+  private static final String HADOOP_SECURITY_SPOOF_USER = "hadoop.spoof.user";
+  private static final String HADOOP_SECURITY_SPOOFED_USER = "hadoop.spoofed.user.username";
+  private static boolean spoofUser = false;
+  private static String spoofedUser;
+
+  private static void checkSpoofing(Configuration conf) {
+    // spoof users by default on Windows
+    spoofUser = conf.getBoolean(HADOOP_SECURITY_SPOOF_USER,
+        windows ? true : false);
+
+    if (!spoofUser) {
+      return;
+    }
+
+    spoofedUser = conf.get(HADOOP_SECURITY_SPOOFED_USER, "root");
+  }
+  // End MapR section
+
   /** 
    * UgiMetrics maintains UGI activity statistics
    * and publishes them through the metrics interfaces.
@@ -245,6 +268,12 @@ public class UserGroupInformation {
   private static synchronized void initialize(Configuration conf,
                                               boolean overrideNameRules) {
     authenticationMethod = SecurityUtil.getAuthenticationMethod(conf);
+
+    // spoofing is only allowed when insecure
+    if (authenticationMethod == null || authenticationMethod.equals(AuthenticationMethod.SIMPLE)) {
+      checkSpoofing(conf);
+    }
+
     if (overrideNameRules || !HadoopKerberosName.hasRulesBeenSet()) {
       try {
         HadoopKerberosName.setConfiguration(conf);
@@ -1294,6 +1323,10 @@ public class UserGroupInformation {
    * @return the user's name up to the first '/' or '@'.
    */
   public String getShortUserName() {
+    if (windows && spoofUser) {
+      return spoofedUser;
+    }
+
     for (User p: subject.getPrincipals(User.class)) {
       return p.getShortName();
     }
@@ -1315,6 +1348,10 @@ public class UserGroupInformation {
   @InterfaceAudience.Public
   @InterfaceStability.Evolving
   public String getUserName() {
+    if (windows && spoofUser) {
+      return spoofedUser;
+    }
+
     return user.getName();
   }
 
