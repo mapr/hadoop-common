@@ -18,12 +18,17 @@
 
 package org.apache.hadoop.examples;
 
+import org.apache.hadoop.examples.blocklocality.BlockLocality;
 import org.apache.hadoop.examples.dancing.DistributedPentomino;
 import org.apache.hadoop.examples.dancing.Sudoku;
 import org.apache.hadoop.examples.pi.DistBbp;
+import org.apache.hadoop.examples.terasort.TeraChecksum;
 import org.apache.hadoop.examples.terasort.TeraGen;
+import org.apache.hadoop.examples.terasort.TeraGenWithCRC;
 import org.apache.hadoop.examples.terasort.TeraSort;
 import org.apache.hadoop.examples.terasort.TeraValidate;
+import org.apache.hadoop.examples.terasort.TeraValidateRecords;
+import org.apache.hadoop.examples.terasort.TeraValidateWithCRC;
 import org.apache.hadoop.util.ProgramDriver;
 
 /**
@@ -71,6 +76,15 @@ public class ExampleDriver {
       pgd.addClass("teragen", TeraGen.class, "Generate data for the terasort");
       pgd.addClass("terasort", TeraSort.class, "Run the terasort");
       pgd.addClass("teravalidate", TeraValidate.class, "Checking results of terasort");
+
+      // Ported from MR1 example set
+      pgd.addClass("blocklocality", BlockLocality.class, "Checking Map job locality");
+      pgd.addClass("sleep", SleepJob.class, "A job that sleeps at each map and reduce task.");
+      pgd.addClass("terachecksum", TeraChecksum.class, "Compute checksum of terasort output to compare with teragen checksum.");
+      pgd.addClass("teragenwithcrc", TeraGenWithCRC.class, "Generate data for the terasort with CRC checksum");
+      pgd.addClass("teravalidaterecords", TeraValidateRecords.class, "Checking results of terasort in terms of missing/duplicate records");
+      pgd.addClass("teravalidatewithcrc", TeraValidateWithCRC.class, "Checking results of terasort along with crc verification");
+
       exitCode = pgd.run(argv);
     }
     catch(Throwable e){
