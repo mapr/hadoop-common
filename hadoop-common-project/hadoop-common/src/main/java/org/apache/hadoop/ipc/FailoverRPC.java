@@ -17,6 +17,7 @@
  */
 package org.apache.hadoop.ipc;
 
+import java.io.Closeable;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.EOFException;
@@ -187,7 +188,7 @@ public class FailoverRPC {
 
   }
 
-  private static class Invoker implements RpcInvocationHandler {
+  private static class Invoker implements RpcInvocationHandler, Closeable {
     private Client.ConnectionId remoteId;
     private Client client;
     private boolean isClosed = false;
@@ -233,7 +234,7 @@ public class FailoverRPC {
     }
   }
 
-  private static class FailoverInvoker implements InvocationHandler {
+  private static class FailoverInvoker implements InvocationHandler, Closeable {
     private InetSocketAddress[] addresses;
     private UserGroupInformation ticket;
     private Client client;
@@ -451,7 +452,7 @@ public class FailoverRPC {
     }
 
     /* close the IPC client that's responsible for this invoker's RPCs */
-    synchronized private void close() {
+    synchronized public void close() {
       if (!isClosed) {
         isClosed = true;
         CLIENTS.stopClient(client);
