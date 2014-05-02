@@ -13,11 +13,15 @@
   limitations under the License. See accompanying LICENSE file.
 -->
 <configuration>
-
   <!-- Site specific YARN configuration properties -->
   <property>
+      <name>yarn.resourcemanager.hostname</name>
+      <value>__RM_IP__</value>
+      <description>host is the hostname of the resourcemanager</description>
+  </property>
+  <property>
     <name>yarn.resourcemanager.scheduler.address</name>
-    <value>__RM_IP__:8030</value>
+    <value>${yarn.resourcemanager.hostname}:8030</value>
     <description>host is the hostname of the resourcemanager and port is the port
       on which the Applications in the cluster talk to the Resource Manager.
     </description>
@@ -25,12 +29,12 @@
 
   <property>
     <name>yarn.resourcemanager.resource-tracker.address</name>
-    <value>__RM_IP__:8031</value>
+    <value>${yarn.resourcemanager.hostname}:8031</value>
   </property>
 
   <property>
     <name>yarn.resourcemanager.address</name>
-    <value>__RM_IP__:8032</value>
+    <value>${yarn.resourcemanager.hostname}:8032</value>
     <description>the host is the hostname of the ResourceManager and the port is the port on which the clients can talk
       to the Resource Manager.
     </description>
