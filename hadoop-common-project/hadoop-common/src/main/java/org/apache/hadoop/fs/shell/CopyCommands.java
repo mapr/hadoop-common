@@ -32,6 +32,7 @@ import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathIsDirectoryException;
 import org.apache.hadoop.io.IOUtils;
@@ -132,6 +133,7 @@ class CopyCommands {
     
     @Override
     protected void processPath(PathData src) throws IOException {
+      src = FileUtil.checkItemForSymlink(src);
       // for directories, recurse one level to get its files, else skip it
       if (src.stat.isDirectory()) {
         if (getDepth() == 0) {
@@ -306,6 +308,7 @@ class CopyCommands {
     @Override
     protected void processArguments(LinkedList<PathData> args)
     throws IOException {
+      this.dst = FileUtil.checkItemForSymlink(this.dst);
       // NOTE: this logic should be better, mimics previous implementation
       if (args.size() == 1 && args.get(0).toString().equals("-")) {
         copyStreamToTarget(System.in, getTargetPath(args.get(0)));
@@ -399,7 +402,8 @@ class CopyCommands {
 
       InputStream is = null;
       try (FSDataOutputStream fos = appendToNewBlock ?
-          dst.fs.append(dst.path, true) : dst.fs.append(dst.path)) {
+          dst.fs.append(FileUtil.checkItemForSymlink(dst).path, true) :
+          dst.fs.append(FileUtil.checkItemForSymlink(dst).path)) {
         if (readStdin) {
           if (args.size() == 0) {
             IOUtils.copyBytes(System.in, fos, DEFAULT_IO_LENGTH);

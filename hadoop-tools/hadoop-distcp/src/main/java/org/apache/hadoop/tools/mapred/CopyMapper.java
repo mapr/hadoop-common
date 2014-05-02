@@ -179,6 +179,9 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
         sourceStatus = sourceFS.getFileStatus(sourcePath);
         final boolean preserveXAttrs =
             fileAttributes.contains(FileAttribute.XATTR);
+        if(sourceFileStatus.getSymlink() != null){
+          sourcePath = sourceFileStatus.getSymlink();
+        }
         sourceCurrStatus = DistCpUtils.toCopyListingFileStatusHelper(sourceFS,
             sourceStatus,
             fileAttributes.contains(FileAttribute.ACL),

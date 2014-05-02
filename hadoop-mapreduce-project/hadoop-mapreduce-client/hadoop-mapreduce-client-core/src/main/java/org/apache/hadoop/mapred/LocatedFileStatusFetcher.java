@@ -35,10 +35,12 @@ import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.fs.RemoteIterator;
+import org.apache.hadoop.fs.shell.PathData;
 import org.apache.hadoop.fs.statistics.IOStatistics;
 import org.apache.hadoop.fs.statistics.IOStatisticsSnapshot;
 import org.apache.hadoop.fs.statistics.IOStatisticsSource;
@@ -52,6 +54,7 @@ import org.apache.hadoop.thirdparty.com.google.common.util.concurrent.Listenable
 import org.apache.hadoop.thirdparty.com.google.common.util.concurrent.ListeningExecutorService;
 import org.apache.hadoop.thirdparty.com.google.common.util.concurrent.MoreExecutors;
 import org.apache.hadoop.thirdparty.com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.apache.hadoop.maprfs.AbstractMapRFileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -151,6 +154,10 @@ public class LocatedFileStatusFetcher implements IOStatisticsSource {
     for (Path p : inputDirs) {
       LOG.debug("Queuing scan of directory {}", p);
       runningTasks.incrementAndGet();
+      FileSystem fs = p.getFileSystem(conf);
+      if (fs instanceof AbstractMapRFileSystem) {
+        p = FileUtil.checkPathForSymlink(p, fs.getConf()).path;
+      }
       ListenableFuture<ProcessInitialInputPathCallable.Result> future = exec
           .submit(new ProcessInitialInputPathCallable(p, conf, inputFilter));
       Futures.addCallback(future, processInitialInputPathCallback,

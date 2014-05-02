@@ -26,6 +26,7 @@ import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.mapred.FileAlreadyExistsException;
@@ -176,7 +177,7 @@ public abstract class FileOutputFormat<K, V> extends OutputFormat<K, V> {
   public static void setOutputPath(Job job, Path outputDir) {
     try {
       outputDir = outputDir.getFileSystem(job.getConfiguration()).makeQualified(
-          outputDir);
+          FileUtil.checkPathForSymlink(outputDir, job.getConfiguration()).path);
     } catch (IOException e) {
         // Throw the IOException as a RuntimeException to be compatible with MR1
         throw new RuntimeException(e);

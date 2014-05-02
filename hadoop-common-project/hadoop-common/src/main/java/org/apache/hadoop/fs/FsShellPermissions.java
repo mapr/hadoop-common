@@ -97,6 +97,7 @@ public class FsShellPermissions extends FsCommand {
     
     @Override
     protected void processPath(PathData item) throws IOException {
+      item = FileUtil.checkItemForSymlink(item);
       short newperms = pp.applyNewPermission(item.stat);
       if (item.stat.getPermission().toShort() != newperms) {
         try {
@@ -172,6 +173,7 @@ public class FsShellPermissions extends FsCommand {
     
     @Override
     protected void processPath(PathData item) throws IOException {
+      item = FileUtil.checkItemForSymlink(item);
       //Should we do case insensitive match?
       String newOwner = (owner == null || owner.equals(item.stat.getOwner())) ?
                         null : owner;

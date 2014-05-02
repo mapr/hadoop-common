@@ -27,6 +27,7 @@ import java.util.LinkedList;
 
 import org.apache.hadoop.classification.VisibleForTesting;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.util.StringUtils;
 
 import org.apache.hadoop.classification.InterfaceAudience;
@@ -238,7 +239,7 @@ class Ls extends FsCommand {
     }
 
     // implicitly recurse once for cmdline directories
-    if (dirRecurse && item.stat.isDirectory()) {
+    if (dirRecurse && (item.stat.isDirectory() || FileUtil.checkExistItem(item).stat.isDirectory())) {
       recursePath(item);
     } else {
       super.processPathArgument(item);
@@ -292,7 +293,7 @@ class Ls extends FsCommand {
     if (displayECPolicy) {
       ContentSummary contentSummary = item.fs.getContentSummary(item.path);
       String line = String.format(lineFormat,
-          (stat.isDirectory() ? "d" : "-"),
+          (stat.isDirectory() ? "d" : (stat.isTable() ? "t" : "-")),
           stat.getPermission() + (stat.hasAcl() ? "+" : " "),
           (stat.isFile() ? stat.getReplication() : "-"),
           stat.getOwner(),
@@ -302,6 +303,7 @@ class Ls extends FsCommand {
           dateFormat.format(new Date(isUseAtime()
               ? stat.getAccessTime()
               : stat.getModificationTime())),
+          stat.isSymlink() ? item + " -> " + stat.getSymlink() : item,
           isHideNonPrintable() ? new PrintableString(item.toString()) : item);
       out.println(line);
     } else {
@@ -315,6 +317,7 @@ class Ls extends FsCommand {
           dateFormat.format(new Date(isUseAtime()
               ? stat.getAccessTime()
               : stat.getModificationTime())),
+          stat.isSymlink() ? item + " -> " + stat.getSymlink() : item,
           isHideNonPrintable() ? new PrintableString(item.toString()) : item);
       out.println(line);
     }
