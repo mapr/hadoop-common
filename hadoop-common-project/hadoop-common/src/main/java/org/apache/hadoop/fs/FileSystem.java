@@ -2313,7 +2313,7 @@ public abstract class FileSystem extends Configured
        * @throws IOException if any IO error occurs
        */
       private void handleFileStat(LocatedFileStatus stat) throws IOException {
-        if (stat.isFile()) { // file
+        if (stat.isFile() || stat.isSymlink()) { // file
           curFile = stat;
         } else if (recursive) { // directory
           itors.push(curItor);
@@ -4458,9 +4458,10 @@ public abstract class FileSystem extends Configured
                          ": " + pair.getValue());
     }
   }
-
-  // Symlinks are temporarily disabled - see HADOOP-10020 and HADOOP-10052
-  private static boolean symlinksEnabled = false;
+  
+  // But this causes issues for existing MR1 class TaskRunner which needs to
+  // create symlink using local file system. So enabling symlinks.
+  private static boolean symlinksEnabled = true;
 
   @VisibleForTesting
   public static boolean areSymlinksEnabled() {

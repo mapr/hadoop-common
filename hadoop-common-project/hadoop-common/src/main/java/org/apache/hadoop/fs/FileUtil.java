@@ -39,6 +39,7 @@ import java.nio.file.AccessDeniedException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -64,6 +65,7 @@ import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.fs.shell.PathData;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.nativeio.NativeIO;
 import org.apache.hadoop.maprfs.AbstractMapRFileSystem;
@@ -215,6 +217,33 @@ public class FileUtil {
     } catch (IOException x) {
       return "";
     }
+  }
+
+  public static Path fixSymlinkPath(PathData path) throws IOException {
+    return path.stat.getSymlink().toString().startsWith("/") ? path.stat.getSymlink() :
+        new Path(path.stat.getPath().getParent(), path.stat.getSymlink());
+  }
+
+  public static Path fixSymlinkFileStatus(FileStatus stat) throws IOException {
+    return stat.getSymlink().toString().startsWith("/") ? stat.getSymlink() :
+        new Path(stat.getPath().getParent(), stat.getSymlink());
+  }
+
+  public static PathData checkItemForSymlink(PathData item) throws IOException {
+    return item.stat != null &&
+        item.stat.isSymlink() ? new PathData(FileUtil.fixSymlinkPath(item).toString(), item.fs.getConf()) : item;
+  }
+
+  public static PathData checkExistItem(PathData item) throws IOException {
+    PathData checkedItem = checkItemForSymlink(item);
+    if(!checkedItem.exists) {
+      throw new PathNotFoundException(item.toString());
+    }
+    return checkedItem;
+  }
+
+  public static PathData checkPathForSymlink(Path path, Configuration conf) throws IOException {
+    return checkItemForSymlink(new PathData(path.toString(), conf));
   }
 
   /*
@@ -398,6 +427,9 @@ public class FileUtil {
                              boolean deleteSource,
                              boolean overwrite,
                              Configuration conf) throws IOException {
+    if(srcStatus.isSymlink()){
+      srcStatus = srcFS.getFileStatus(srcStatus.getSymlink());
+    }
     Path src = srcStatus.getPath();
     dst = checkDest(src.getName(), dstFS, dst, overwrite);
     if (srcStatus.isDirectory()) {
@@ -411,6 +443,8 @@ public class FileUtil {
              new Path(dst, contents[i].getPath().getName()),
              deleteSource, overwrite, conf);
       }
+    } else if (srcStatus.isTable()) {
+	throw new IOException("Cannot copy MDP Tables");
     } else {
       InputStream in=null;
       OutputStream out = null;
@@ -435,6 +469,132 @@ public class FileUtil {
       return true;
     }
 
+  }
+
+  /** Copy files between FileSystems with preserved permissions, ownership, links and ACEs. */
+  public static boolean copyAsMove(FileSystem srcFS, FileStatus srcStatus,
+                             FileSystem dstFS, Path dst,
+                             boolean deleteSource,
+                             boolean overwrite,
+                             Configuration conf) throws IOException {
+    Path src = srcStatus.getPath();
+    dst = checkDest(src.getName(), dstFS, dst, overwrite);
+
+    if (srcStatus.isSymlink()) {
+      if (srcFS instanceof AbstractMapRFileSystem && dstFS instanceof AbstractMapRFileSystem) {
+        AbstractMapRFileSystem mapRFileSystem = (AbstractMapRFileSystem) srcFS;
+        if (dstFS.exists(dst) && overwrite) {
+          dstFS.delete(dst, true);
+        }
+        mapRFileSystem.createSymlink(srcStatus.getSymlink(), dst, false);
+        copyOwner(srcStatus, dst, mapRFileSystem);
+        copyPermissions(srcStatus, dst, mapRFileSystem);
+        mapRFileSystem.copyAce(srcStatus.getPath(), dst);
+        if (deleteSource) {
+          return srcFS.delete(src, true);
+        } else {
+          return true;
+        }
+      } else {
+        srcStatus = srcFS.getFileStatus(srcStatus.getSymlink());
+      }
+    }
+
+    src = srcStatus.getPath();
+    if (srcStatus.isDirectory()) {
+      checkDependencies(srcFS, src, dstFS, dst);
+      if (!dstFS.mkdirs(dst)) {
+        return false;
+      }
+      FileStatus contents[] = srcFS.listStatus(src);
+      for (int i = 0; i < contents.length; i++) {
+        copyAsMove(srcFS, contents[i], dstFS,
+                new Path(dst, contents[i].getPath().getName()), deleteSource, overwrite, conf);
+      }
+    } else if (srcStatus.isTable()) {
+      throw new IOException("Cannot copy MDP Tables");
+    } else {
+      InputStream in=null;
+      OutputStream out = null;
+      try {
+        in = srcFS.open(src);
+        out = dstFS.create(dst, overwrite);
+        IOUtils.copyBytes(in, out, conf, true);
+      } catch (IOException e) {
+        IOUtils.closeStream(out);
+        IOUtils.closeStream(in);
+        throw e;
+      }
+    }
+    copyOwner(srcStatus, dst, dstFS);
+    copyPermissions(srcStatus, dst, dstFS);
+    if (srcFS instanceof AbstractMapRFileSystem &&
+            dstFS instanceof AbstractMapRFileSystem) {
+      AbstractMapRFileSystem mapRFileSystem = (AbstractMapRFileSystem) srcFS;
+      mapRFileSystem.copyAce(src, dst);
+    }
+    if (deleteSource) {
+      return srcFS.delete(src, true);
+    } else {
+      return true;
+    }
+  }
+
+  private static void copyOwner(FileStatus srcStatus, Path dst, FileSystem fs) throws IOException {
+    FileStatus dstFileStatus = fs.getFileStatus(dst);
+    String srcFileOwner = srcStatus.getOwner();
+    String srcFileGroup = srcStatus.getGroup();
+    if(!dstFileStatus.getOwner().equals(srcFileOwner) || !dstFileStatus.getGroup().equals(srcFileGroup)) {
+      fs.setOwner(dst, srcFileOwner, srcFileGroup);
+    }
+  }
+
+  private static void copyPermissions(FileStatus srcStatus, Path dst, FileSystem fs) throws IOException {
+    FileStatus dstFileStatus = fs.getFileStatus(dst);
+    FsPermission srcFilePermission = srcStatus.getPermission();
+    if(!dstFileStatus.getPermission().equals(srcFilePermission)) {
+      fs.setPermission(dst, srcFilePermission);
+    }
+  }
+
+  /** Copy all files in a directory to one output file (merge). */
+  public static boolean copyMerge(FileSystem srcFS, Path srcDir,
+                                  FileSystem dstFS, Path dstFile,
+                                  boolean deleteSource,
+                                  Configuration conf, String addString) throws IOException {
+    dstFile = checkDest(srcDir.getName(), dstFS, dstFile, false);
+
+    if (!srcFS.getFileStatus(srcDir).isDirectory())
+      return false;
+
+    OutputStream out = dstFS.create(dstFile);
+
+    try {
+      FileStatus contents[] = srcFS.listStatus(srcDir);
+      Arrays.sort(contents);
+      for (int i = 0; i < contents.length; i++) {
+        if (contents[i].isFile()) {
+          InputStream in = srcFS.open(contents[i].getPath());
+          try {
+            IOUtils.copyBytes(in, out, conf, false);
+            if (addString!=null)
+              out.write(addString.getBytes("UTF-8"));
+
+          } finally {
+            in.close();
+          }
+        }
+      }
+    } finally {
+      out.close();
+    }
+
+
+    if (deleteSource) {
+      return srcFS.delete(srcDir, true);
+    } else {
+      return true;
+    }
   }
 
   /** Copy local files to a FileSystem. */

@@ -390,6 +390,19 @@ public class DistCpUtils {
     return copyListingFileStatus;
   }
 
+  public static FileStatus getOriginalFileStatus(FileStatus sourceStatus, Configuration conf){
+    try {
+      if(sourceStatus.isSymlink()){
+        final FileSystem symlinkSourceFS = sourceStatus.getSymlink().getFileSystem(conf);
+        return symlinkSourceFS.getFileStatus(sourceStatus.getSymlink());
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return sourceStatus;
+  }
+
+
   /**
    * Converts a FileStatus to a CopyListingFileStatus.  If preserving ACLs,
    * populates the CopyListingFileStatus with the ACLs. If preserving XAttrs,

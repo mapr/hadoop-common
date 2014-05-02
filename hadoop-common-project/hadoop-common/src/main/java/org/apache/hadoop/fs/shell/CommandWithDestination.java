@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fs.CreateFlag;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.FilterFileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathExistsException;
@@ -229,7 +230,11 @@ abstract class CommandWithDestination extends FsCommand {
         throw new PathIsNotDirectoryException(dst.toString());
       }
     } else if (dst.exists) {
-      if (!dst.stat.isDirectory() && !overwrite) {
+      if (dst.stat.isSymlink()) {
+        if (!FileUtil.checkItemForSymlink(dst).stat.isDirectory() && !overwrite)
+          LOG.debug("Destination file exists: {}", dst.stat);
+          throw new PathExistsException(dst.toString());
+      } else if (!dst.stat.isDirectory() && !overwrite) {
         LOG.debug("Destination file exists: {}", dst.stat);
         throw new PathExistsException(dst.toString());
       }
@@ -281,11 +286,8 @@ abstract class CommandWithDestination extends FsCommand {
    * @throws IOException if anything goes wrong
    */
   protected void processPath(PathData src, PathData dst) throws IOException {
-    if (src.stat.isSymlink()) {
-      // TODO: remove when FileContext is supported, this needs to either
-      // copy the symlink or deref the symlink
-      throw new PathOperationException(src.toString());        
-    } else if (src.stat.isFile()) {
+    if (src.stat.isFile() ||
+        (src.stat.isSymlink() && !src.fs.getFileStatus(FileUtil.fixSymlinkPath(src)).isDirectory())) {
       copyFileToTarget(src, dst);
     } else if (src.stat.isDirectory() && !isRecursive()) {
       throw new PathIsDirectoryException(src.toString());
@@ -327,6 +329,9 @@ abstract class CommandWithDestination extends FsCommand {
     PathData target;
     // on the first loop, the dst may be directory or a file, so only create
     // a child path if dst is a dir; after recursion, it's always a dir
+    if(dst.exists && dst.stat.isSymlink()){
+      dst = new PathData(FileUtil.fixSymlinkPath(dst).toString(), dst.fs.getConf());
+    }
     if ((getDepth() > 0) || (dst.exists && dst.stat.isDirectory())) {
       target = dst.getPathDataForChild(src);
     } else if (dst.representsDirectory()) { // see if path looks like a dir
@@ -345,14 +350,17 @@ abstract class CommandWithDestination extends FsCommand {
    */ 
   protected void copyFileToTarget(PathData src, PathData target)
       throws IOException {
+    Path srcPath = src.stat.isSymlink() ? FileUtil.fixSymlinkPath(src) : src.path;
     final boolean preserveRawXattrs =
-        checkPathsForReservedRaw(src.path, target.path);
+        checkPathsForReservedRaw(srcPath, target.path);
     src.fs.setVerifyChecksum(verifyChecksum);
     InputStream in = null;
     try {
-      in = src.fs.open(src.path);
+      in = src.fs.open(srcPath);
       copyStreamToTarget(in, target);
-      preserveAttributes(src, target, preserveRawXattrs);
+      preserveAttributes(src.stat.isSymlink() ?
+          new PathData(srcPath.toString(), src.fs.getConf()) : src,
+          target, preserveRawXattrs);
     } finally {
       IOUtils.closeStream(in);
     }

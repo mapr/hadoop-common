@@ -31,6 +31,7 @@ import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathNotFoundException;
 import org.apache.hadoop.fs.RemoteIterator;
@@ -403,7 +404,8 @@ abstract public class Command extends Configured {
    *           if anything goes wrong in the user-implementation
    */
   protected boolean isPathRecursable(PathData item) throws IOException {
-    return item.stat.isDirectory();
+    return item.stat.isDirectory() ||
+        (item.stat.isSymlink() && item.fs.getFileStatus(FileUtil.fixSymlinkPath(item)).isDirectory());
   }
 
   /**
@@ -436,6 +438,9 @@ abstract public class Command extends Configured {
   protected void recursePath(PathData item) throws IOException {
     try {
       depth++;
+      if(item.stat.isSymlink()){
+        item = new PathData(FileUtil.fixSymlinkPath(item).toString(), item.fs.getConf());
+      }
       if (isSorted()) {
         // use the non-iterative method for listing because explicit sorting is
         // required. Iterators not guaranteed to return sorted elements
@@ -457,7 +462,7 @@ abstract public class Command extends Configured {
   public void displayError(Exception e) {
     // build up a list of exceptions that occurred
     exceptions.add(e);
-    // use runtime so it rips up through the stack and exits out 
+    // use runtime so it rips up through the stack and exits out
     if (e instanceof InterruptedIOException) {
       throw new CommandInterruptException();
     }
@@ -566,7 +571,7 @@ abstract public class Command extends Configured {
     }
     return value;
   }
-  
+
   @SuppressWarnings("serial")
   static class CommandInterruptException extends RuntimeException {}
 }

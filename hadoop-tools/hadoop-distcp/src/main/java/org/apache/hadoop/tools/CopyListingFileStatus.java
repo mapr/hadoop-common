@@ -93,6 +93,8 @@ public final class CopyListingFileStatus implements Writable {
   private long chunkOffset = 0;
   private long chunkLength = Long.MAX_VALUE;
 
+  private Path symlink = null;
+
   /**
    * Default constructor.
    */
@@ -272,6 +274,16 @@ public final class CopyListingFileStatus implements Writable {
   public void setChunkLength(long chunkLength) {
     this.chunkLength = chunkLength;
   }
+  public void setSymlink(Path p) {
+    this.symlink = p;
+  }
+  public Path getSymlink() {
+    return symlink;
+  }
+
+  public void setPath(Path path) {
+    this.path = path;
+  }
 
   public boolean isSplit() {
     return getChunkLength() != Long.MAX_VALUE &&
@@ -329,6 +341,10 @@ public final class CopyListingFileStatus implements Writable {
 
     out.writeLong(chunkOffset);
     out.writeLong(chunkLength);
+    out.writeBoolean(getSymlink() != null);
+    if (getSymlink() != null) {
+      Text.writeString(out, getSymlink().toString(), Text.DEFAULT_MAX_LEN);
+    }
   }
 
   @Override
@@ -380,6 +396,11 @@ public final class CopyListingFileStatus implements Writable {
 
     chunkOffset = in.readLong();
     chunkLength = in.readLong();
+    if (in.readBoolean()) {
+      this.symlink = new Path(Text.readString(in, Text.DEFAULT_MAX_LEN));
+    } else {
+      this.symlink = null;
+    }
   }
 
   @Override
@@ -413,6 +434,9 @@ public final class CopyListingFileStatus implements Writable {
     if (isSplit()) {
       sb.append(", chunkOffset = ").append(this.getChunkOffset())
           .append(", chunkLength = ").append(this.getChunkLength());
+    }
+    if(getSymlink() != null) {
+      sb.append(", symlink = ").append(this.getSymlink());
     }
     sb.append('}');
     return sb.toString();

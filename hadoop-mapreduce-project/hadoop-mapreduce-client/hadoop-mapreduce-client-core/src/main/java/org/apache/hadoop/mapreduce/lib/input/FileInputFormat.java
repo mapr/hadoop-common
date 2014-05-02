@@ -29,11 +29,13 @@ import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.RemoteIterator;
+import org.apache.hadoop.fs.shell.PathData;
 import org.apache.hadoop.mapred.LocatedFileStatusFetcher;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.InputSplit;
@@ -41,6 +43,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.security.TokenCache;
+import org.apache.hadoop.maprfs.AbstractMapRFileSystem;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.StopWatch;
 import org.apache.hadoop.util.StringUtils;
@@ -307,7 +310,10 @@ public abstract class FileInputFormat<K, V> extends InputFormat<K, V> {
     List<IOException> errors = new ArrayList<IOException>();
     for (int i=0; i < dirs.length; ++i) {
       Path p = dirs[i];
-      FileSystem fs = p.getFileSystem(job.getConfiguration()); 
+      FileSystem fs = p.getFileSystem(job.getConfiguration());
+      if (fs instanceof AbstractMapRFileSystem) {
+        p = FileUtil.checkPathForSymlink(p, fs.getConf()).path;
+      }
       FileStatus[] matches = fs.globStatus(p, inputFilter);
       if (matches == null) {
         errors.add(new IOException("Input path does not exist: " + p));
@@ -406,6 +412,9 @@ public abstract class FileInputFormat<K, V> extends InputFormat<K, V> {
     boolean ignoreDirs = !getInputDirRecursive(job)
       && job.getConfiguration().getBoolean(INPUT_DIR_NONRECURSIVE_IGNORE_SUBDIRS, false);
     for (FileStatus file: files) {
+      if (file.isSymlink()) {
+        file = new PathData(FileUtil.fixSymlinkFileStatus(file).toString(), job.getConfiguration()).stat;
+      }
       if (ignoreDirs && file.isDirectory()) {
         continue;
       }

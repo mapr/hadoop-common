@@ -26,6 +26,7 @@ import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FutureDataInputStreamBuilder;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.Seekable;
 import org.apache.hadoop.fs.impl.FutureIOSupport;
@@ -102,10 +103,10 @@ public class LineRecordReader implements RecordReader<LongWritable, Text> {
       LineRecordReader.MAX_LINE_LENGTH, Integer.MAX_VALUE);
     start = split.getStart();
     end = start + split.getLength();
-    final Path file = split.getPath();
+    Path file = split.getPath();
     compressionCodecs = new CompressionCodecFactory(job);
+    file = FileUtil.checkPathForSymlink(file, job).path;
     codec = compressionCodecs.getCodec(file);
-
     // open the file and seek to the start of the split
     final FutureDataInputStreamBuilder builder =
         file.getFileSystem(job).openFile(file);

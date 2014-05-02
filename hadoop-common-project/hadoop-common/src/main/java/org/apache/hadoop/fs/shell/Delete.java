@@ -28,6 +28,8 @@ import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.fs.ContentSummary;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathIOException;
 import org.apache.hadoop.fs.PathIsDirectoryException;
 import org.apache.hadoop.fs.PathIsNotDirectoryException;
@@ -111,7 +113,11 @@ class Delete {
       if (item.stat.isDirectory() && !deleteDirs) {
         throw new PathIsDirectoryException(item.toString());
       }
-
+      // if parent isSymlink, need to change it to real path
+      PathData parent = new PathData(item.stat.getPath().getParent().toString(), item.fs.getConf());
+      if(parent.stat.isSymlink()){
+        item = new PathData(new Path(FileUtil.fixSymlinkPath(parent), item.path.getName()).toString(), item.fs.getConf());
+      }
       // TODO: if the user wants the trash to be used but there is any
       // problem (ie. creating the trash dir, moving the item to be deleted,
       // etc), then the path will just be deleted because moveToTrash returns

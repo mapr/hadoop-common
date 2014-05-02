@@ -36,11 +36,14 @@ import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.fs.RemoteIterator;
+import org.apache.hadoop.fs.shell.PathData;
 import org.apache.hadoop.mapreduce.security.TokenCache;
+import org.apache.hadoop.maprfs.AbstractMapRFileSystem;
 import org.apache.hadoop.net.NetworkTopology;
 import org.apache.hadoop.net.Node;
 import org.apache.hadoop.net.NodeBase;
@@ -272,7 +275,10 @@ public abstract class FileInputFormat<K, V> implements InputFormat<K, V> {
     List<FileStatus> result = new ArrayList<FileStatus>();
     List<IOException> errors = new ArrayList<IOException>();
     for (Path p: dirs) {
-      FileSystem fs = p.getFileSystem(job); 
+      FileSystem fs = p.getFileSystem(job);
+      if (fs instanceof AbstractMapRFileSystem) {
+        p = FileUtil.checkPathForSymlink(p, fs.getConf()).path;
+      }
       FileStatus[] matches = fs.globStatus(p, inputFilter);
       if (matches == null) {
         errors.add(new IOException("Input path does not exist: " + p));
@@ -339,6 +345,9 @@ public abstract class FileInputFormat<K, V> implements InputFormat<K, V> {
 
     List<FileStatus> files = new ArrayList<>(stats.length);
     for (FileStatus file: stats) {                // check we have valid files
+      if (file.isSymlink()) {
+        file = new PathData(FileUtil.fixSymlinkFileStatus(file).toString(), job).stat;
+      }
       if (file.isDirectory()) {
         if (!ignoreDirs) {
           throw new IOException("Not a file: "+ file.getPath());
@@ -357,6 +366,9 @@ public abstract class FileInputFormat<K, V> implements InputFormat<K, V> {
     ArrayList<FileSplit> splits = new ArrayList<FileSplit>(numSplits);
     NetworkTopology clusterMap = new NetworkTopology();
     for (FileStatus file: files) {
+      if (file.isSymlink()) {
+        file = new PathData(FileUtil.fixSymlinkFileStatus(file).toString(), job).stat;
+      }
       Path path = file.getPath();
       long length = file.getLen();
       if (length != 0) {
