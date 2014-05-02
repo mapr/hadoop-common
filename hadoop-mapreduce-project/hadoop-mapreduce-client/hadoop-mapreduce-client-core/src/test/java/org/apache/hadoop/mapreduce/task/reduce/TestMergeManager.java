@@ -179,7 +179,7 @@ public class TestMergeManager {
       synchronized (this) {
         numMerges.incrementAndGet();
         for (InMemoryMapOutput<Text, Text> input : inputs) {
-          manager.unreserve(input.getSize());
+          ((MergeManagerImpl<Text, Text>) manager).unreserve(input.getSize());
         }
       }
 

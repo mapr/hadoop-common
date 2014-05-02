@@ -29,7 +29,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.hadoop.mapred.JobID;
 import org.apache.hadoop.mapred.MapTaskCompletionEventsUpdate;
@@ -89,12 +92,20 @@ public class TestEventFetcher {
       int startIdx, int numEvents) {
     ArrayList<TaskCompletionEvent> tceList =
         new ArrayList<TaskCompletionEvent>(numEvents);
+    byte [] array = new byte[10];
+    for ( int i = 0; i < 10; i++) {
+      array[i] = (byte) i;
+    }
+    ByteBuffer bb = ByteBuffer.wrap(array);
+    Map<String, ByteBuffer> serviceMap = new HashMap<String, ByteBuffer>();
+    serviceMap.put("test_service", bb);
+    
     for (int i = 0; i < numEvents; ++i) {
       int eventIdx = startIdx + i;
       TaskCompletionEvent tce = new TaskCompletionEvent(eventIdx,
           new TaskAttemptID("12345", 1, TaskType.MAP, eventIdx, 0),
           eventIdx, true, TaskCompletionEvent.Status.SUCCEEDED,
-          "http://somehost:8888");
+          "http://somehost:8888", serviceMap);
       tceList.add(tce);
     }
     TaskCompletionEvent[] events = {};

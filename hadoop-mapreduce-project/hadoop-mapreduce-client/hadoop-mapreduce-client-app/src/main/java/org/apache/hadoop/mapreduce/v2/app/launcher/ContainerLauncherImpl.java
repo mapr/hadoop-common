@@ -154,26 +154,12 @@ public class ContainerLauncherImpl extends AbstractService implements
             && response.getFailedRequests().containsKey(containerID)) {
           throw response.getFailedRequests().get(containerID).deSerialize();
         }
-        ByteBuffer portInfo =
-            response.getAllServicesMetaData().get(
-                ShuffleHandler.MAPREDUCE_SHUFFLE_SERVICEID);
-        int port = -1;
-        if(portInfo != null) {
-          port = ShuffleHandler.deserializeMetaData(portInfo);
-        }
-        LOG.info("Shuffle port returned by ContainerManager for "
-            + taskAttemptID + " : " + port);
-
-        if(port < 0) {
-          this.state = ContainerState.FAILED;
-          throw new IllegalStateException("Invalid shuffle port number "
-              + port + " returned for " + taskAttemptID);
-        }
-
+        // Pass all servicedata, versus just shuffle port
         // after launching, send launched event to task attempt to move
         // it from ASSIGNED to RUNNING state
+        // try to get servicedata, as it may not be just shuffleport that needs to be passed in
         context.getEventHandler().handle(
-            new TaskAttemptContainerLaunchedEvent(taskAttemptID, port));
+            new TaskAttemptContainerLaunchedEvent(taskAttemptID, response.getAllServicesMetaData()));
         this.state = ContainerState.RUNNING;
       } catch (Throwable t) {
         String message = "Container launch failed for " + containerID + " : "

@@ -23,10 +23,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.hadoop.mapred.TaskCompletionEvent.Status;
 import org.apache.hadoop.mapreduce.TaskType;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 /**
@@ -86,9 +90,10 @@ public class TestOldMethodsJobID {
   @SuppressWarnings("deprecation")
   @Test (timeout=5000)
   public void testTaskCompletionEvent() {
+    Map<String, ByteBuffer> serviceMap = new HashMap<String, ByteBuffer>();
     TaskAttemptID taid = new TaskAttemptID("001", 1, TaskType.REDUCE, 2, 3);
     TaskCompletionEvent template = new TaskCompletionEvent(12, taid, 13, true,
-        Status.SUCCEEDED, "httptracker");
+        Status.SUCCEEDED, "httptracker", serviceMap);
     TaskCompletionEvent testEl = TaskCompletionEvent.downgrade(template);
     testEl.setTaskAttemptId(taid);
     testEl.setTaskTrackerHttp("httpTracker");
@@ -104,6 +109,25 @@ public class TestOldMethodsJobID {
     testEl.setEventId(16);
     assertEquals(testEl.getEventId(), 16);
 
+    byte [] array = new byte[10];
+    for ( int i = 0; i < 10; i++) {
+      array[i] = (byte) i;
+    }
+    ByteBuffer bb = ByteBuffer.wrap(array);
+    Map<String, ByteBuffer> serviceMap1 = new HashMap<String, ByteBuffer>();
+    serviceMap1.put("test_service", bb);
+
+    testEl.setServiceMetaData(serviceMap1);
+    Map<String, ByteBuffer> resultMap = testEl.getServiceMetaData();
+    assertEquals(resultMap.size(), 1);
+    ByteBuffer resBB = resultMap.get("test_service");
+    assertNotNull(resBB);
+    assertTrue(resBB.hasArray());
+    byte [] resArray = resBB.array();
+    assertEquals(resArray.length, 10);
+    for ( int i = 0; i < 10; i++) {
+      assertEquals(array[i], resArray[i]);
+    }
   }
 
   /**

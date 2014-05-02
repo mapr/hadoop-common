@@ -722,12 +722,17 @@ public class Merger {
                                 ChecksumFileSystem.getApproxChkSumLength(
                                 s.getLength());
           }
+          
           Path tmpFilename = 
-            new Path(tmpDir, "intermediate").suffix("." + passNo);
+              new Path(tmpDir, "intermediate").suffix("." + passNo);
+          Path outputFile = tmpFilename;
+          
+          if ( conf.getBoolean("mapred.local.mapoutput", true)) {
 
-          Path outputFile =  lDirAlloc.getLocalPathForWrite(
+            outputFile =  lDirAlloc.getLocalPathForWrite(
                                               tmpFilename.toString(),
                                               approxOutputSize, conf);
+          }
 
           FSDataOutputStream out = fs.create(outputFile);
           out = CryptoUtils.wrapIfNecessary(conf, out);

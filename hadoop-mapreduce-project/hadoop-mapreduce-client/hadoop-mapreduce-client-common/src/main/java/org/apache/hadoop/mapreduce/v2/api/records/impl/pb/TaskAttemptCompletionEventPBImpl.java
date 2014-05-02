@@ -19,21 +19,23 @@
 package org.apache.hadoop.mapreduce.v2.api.records.impl.pb;
 
 
-import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.PathId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskAttemptCompletionEvent;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskAttemptCompletionEventStatus;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskAttemptId;
-import org.apache.hadoop.mapreduce.v2.proto.MRProtos.PathIdProto;
+import org.apache.hadoop.mapreduce.v2.proto.MRProtos.ServiceMetaDataProto;
 import org.apache.hadoop.mapreduce.v2.proto.MRProtos.TaskAttemptCompletionEventProto;
 import org.apache.hadoop.mapreduce.v2.proto.MRProtos.TaskAttemptCompletionEventProtoOrBuilder;
 import org.apache.hadoop.mapreduce.v2.proto.MRProtos.TaskAttemptCompletionEventStatusProto;
 import org.apache.hadoop.mapreduce.v2.proto.MRProtos.TaskAttemptIdProto;
 import org.apache.hadoop.mapreduce.v2.util.MRProtoUtils;
 import org.apache.hadoop.yarn.api.records.impl.pb.ProtoBase;
+
+import com.google.protobuf.ByteString;
 
 
     
@@ -178,45 +180,52 @@ public class TaskAttemptCompletionEventPBImpl extends ProtoBase<TaskAttemptCompl
     return MRProtoUtils.convertFromProtoFormat(e);
   }
   
-  private PathId convertFromProtoFormat(PathIdProto e) {
-    if ( e.hasFid()) {
-      try {
-        // TODO get correct FileSystem or does it matter?
-        FileSystem fs = FileSystem.get(new Configuration());
-        PathId pId = fs.createPathId();
-        pId.setFid(e.getFid());
-        pId.setIps(e.getIpList());
-        return pId;
-      } catch (IOException e1) {
-        e1.printStackTrace();
-      }
-    }
-    return null;
-    
+  
+  /*
+   * ByteBuffer
+   */
+  public static ByteBuffer convertGeneralFromProtoFormat(ByteString byteString) {
+    int capacity = byteString.asReadOnlyByteBuffer().rewind().remaining();
+    byte[] b = new byte[capacity];
+    byteString.asReadOnlyByteBuffer().get(b, 0, capacity);
+    return ByteBuffer.wrap(b);
   }
 
+  public static ByteString convertGeneralToProtoFormat(ByteBuffer byteBuffer) {
+    int oldPos = byteBuffer.position();
+    byteBuffer.rewind();
+    ByteString bs = ByteString.copyFrom(byteBuffer);
+    byteBuffer.position(oldPos);
+    return bs;
+  }
+
+
   @Override
-  public PathId getPathId() {
+  public Map<String, ByteBuffer> getServicesMetaData() {
     TaskAttemptCompletionEventProtoOrBuilder p = viaProto ? proto : builder;
-    if ( !p.hasPathId() ) {
-      return null;
+    
+    List<ServiceMetaDataProto> servicesList = p.getServiceMetaDataList();
+    Map<String, ByteBuffer> result = new HashMap<String, ByteBuffer>(servicesList.size());
+    for ( ServiceMetaDataProto proto : servicesList) {
+      String name = proto.getServiceName();
+      ByteBuffer data = convertGeneralFromProtoFormat(proto.getServiceData());
+      result.put(name, data);
     }
-    return convertFromProtoFormat(p.getPathId());
+    return result;
   }
 
   @Override
-  public void setPathId(PathId pathId) {
+  public void setServicesMetaData(Map<String, ByteBuffer> meta) {
     maybeInitBuilder();
-    if ( pathId == null ) {
-      builder.clearPathId();
-    }
-    if ( pathId != null ) {
-      builder.getPathIdBuilder().setFid(pathId.getFid());
-      if (pathId.getIPs() != null) {
-        for ( int i = 0; i < pathId.getIPs().length; i++ ) {
-          builder.getPathIdBuilder().addIp(pathId.getIPs()[i]);
-        }
-
+    if ( meta == null || meta.isEmpty() ) {
+      builder.clearServiceMetaData();
+    } 
+    if ( meta != null && !meta.isEmpty() ) {
+      for ( Map.Entry<String, ByteBuffer> entry: meta.entrySet()) {
+        ServiceMetaDataProto.Builder serviceBuilder = ServiceMetaDataProto.newBuilder();
+        serviceBuilder.setServiceName(entry.getKey()).
+        setServiceData(convertGeneralToProtoFormat(entry.getValue())).build();
+        builder.addServiceMetaData(serviceBuilder);
       }
     }
   }

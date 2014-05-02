@@ -187,7 +187,8 @@ public class TypeConverter {
               fromYarn(newEvent.getAttemptId()), newEvent.getAttemptId().getId(),
               newEvent.getAttemptId().getTaskId().getTaskType().equals(TaskType.MAP),
               fromYarn(newEvent.getStatus()),
-              newEvent.getMapOutputServerAddress(), newEvent.getPathId());
+              newEvent.getMapOutputServerAddress(),
+              newEvent.getServicesMetaData());
   }
 
   public static TaskCompletionEvent.Status fromYarn(
