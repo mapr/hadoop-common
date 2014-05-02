@@ -410,8 +410,9 @@ public class MapRFsOutputFile extends MapOutputFile {
     long size)
   throws IOException
   {
-    return mapTaskId + Path.SEPARATOR
-         + "spill" + spillNumber + ".out";
+    return mapTaskId.getJobID().toString() + Path.SEPARATOR 
+           + mapTaskId + Path.SEPARATOR
+           + "spill" + spillNumber + ".out";
   }
 
   //@Override TODO: Will need to deal with Override
@@ -421,7 +422,8 @@ public class MapRFsOutputFile extends MapOutputFile {
     int partition)
   throws IOException
   {
-    return mapTaskId + Path.SEPARATOR
+    return mapTaskId.getJobID().toString() + Path.SEPARATOR
+         + mapTaskId + Path.SEPARATOR
          + getPartitionFilename(partition);
   }
 
