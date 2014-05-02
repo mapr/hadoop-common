@@ -134,6 +134,12 @@ public class DistributedFSCheck extends TestCase {
         writer.append(new Text(rootFile.toString()), new LongWritable(offset));
       return;
     }
+
+    if (rootStatus.isSymlink()) {
+      Path symlink = rootStatus.getSymlink();
+      listSubtree(symlink, writer);
+      return;
+    }
     
     FileStatus [] children = null;
     try {
