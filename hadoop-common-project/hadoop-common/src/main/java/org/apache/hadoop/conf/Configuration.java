@@ -2567,6 +2567,7 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
         Properties props = null;
         if (!resourceStr.endsWith(".xml") && (props = getProperties(resourceStr)) != null) {
           overlay(properties, props);
+          return null;
         } else {
           URL url = getResource(resourceStr);
           doc = parse(builder, url);
