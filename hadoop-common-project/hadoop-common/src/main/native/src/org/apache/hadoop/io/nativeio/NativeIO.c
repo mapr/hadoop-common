@@ -643,12 +643,11 @@ cleanup:
 }
 
 /**
- * public static native void symlink(String oldPath, String newPath, boolean
- * createParent) throws IOException;
+ * public static native void symlink(String oldPath, String newPath, boolean)
+ * throws IOException;
  */
 JNIEXPORT void JNICALL Java_org_apache_hadoop_io_nativeio_NativeIO_00024POSIX_symlink
-  (JNIEnv *env, jclass j_clazz, jstring j_oldpath, jstring j_newpath,
-  jstring createParent)
+  (JNIEnv *env, jclass j_clazz, jstring j_oldpath, jstring j_newpath)
 {
   int rc = JNI_TRUE;
   const char *oldpath = (*env)->GetStringUTFChars(env, j_oldpath, NULL);
@@ -657,7 +656,6 @@ JNIEXPORT void JNICALL Java_org_apache_hadoop_io_nativeio_NativeIO_00024POSIX_sy
     throw_ioe(env, errno);
     goto cleanup;
   }
-  // The createParent flag is ignored
   rc = symlink(oldpath, newpath);
   if (rc
    && rc != ENOENT) /* POSIX rc for notexistant newpath which is normal */
