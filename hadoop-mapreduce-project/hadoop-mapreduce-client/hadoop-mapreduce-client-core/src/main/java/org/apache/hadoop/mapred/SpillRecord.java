@@ -43,9 +43,9 @@ import org.apache.hadoop.util.PureJavaCrc32;
 public class SpillRecord {
 
   /** Backing store */
-  private final ByteBuffer buf;
+  protected ByteBuffer buf;
   /** View of backing storage as longs */
-  private final LongBuffer entries;
+  protected LongBuffer entries;
 
   public SpillRecord(int numPartitions) {
     buf = ByteBuffer.allocate(
@@ -65,8 +65,12 @@ public class SpillRecord {
   public SpillRecord(Path indexFileName, JobConf job, Checksum crc,
                      String expectedIndexOwner)
       throws IOException {
+    this(indexFileName, job, crc, expectedIndexOwner, FileSystem.getLocal(job).getRaw());
+  }
 
-    final FileSystem rfs = FileSystem.getLocal(job).getRaw();
+  public SpillRecord(Path indexFileName, JobConf job, Checksum crc,
+                     String expectedIndexOwner, FileSystem rfs)
+      throws IOException {
     final FSDataInputStream in =
         SecureIOUtils.openFSDataInputStream(new File(indexFileName.toUri()
             .getRawPath()), expectedIndexOwner, null);
@@ -124,12 +128,12 @@ public class SpillRecord {
    */
   public void writeToFile(Path loc, JobConf job)
       throws IOException {
-    writeToFile(loc, job, new PureJavaCrc32());
+    FileSystem rfs = FileSystem.getLocal(job).getRaw();
+    writeToFile(loc, job, new PureJavaCrc32(), rfs);
   }
 
-  public void writeToFile(Path loc, JobConf job, Checksum crc)
+  public void writeToFile(Path loc, JobConf job, Checksum crc, FileSystem rfs)
       throws IOException {
-    final FileSystem rfs = FileSystem.getLocal(job).getRaw();
     CheckedOutputStream chk = null;
     final FSDataOutputStream out = rfs.create(loc);
     try {
