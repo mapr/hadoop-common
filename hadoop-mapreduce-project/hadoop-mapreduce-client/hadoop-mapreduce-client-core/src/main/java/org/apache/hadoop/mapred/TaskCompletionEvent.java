@@ -18,10 +18,12 @@
 
 package org.apache.hadoop.mapred;
 
+import java.nio.ByteBuffer;
+import java.util.Map;
+
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability;
-import org.apache.hadoop.fs.PathId;
 
 /**
  * This is used to track task completion events on 
@@ -63,25 +65,18 @@ public class TaskCompletionEvent
     this(eventId, taskId, idWithinJob, isMap, status, taskTrackerHttp, null);
   }
 
-  /**
-   * 
-   * @param eventId
-   * @param taskId
-   * @param idWithinJob
-   * @param isMap
-   * @param status
-   * @param taskTrackerHttp
-   * @param pathId
-   */
+  
+
   public TaskCompletionEvent(int eventId, 
       TaskAttemptID taskId,
       int idWithinJob,
       boolean isMap,
       Status status, 
       String taskTrackerHttp,
-      PathId pathId){
-  super(eventId, taskId, idWithinJob, isMap, org.apache.hadoop.mapreduce.
-  TaskCompletionEvent.Status.valueOf(status.name()), taskTrackerHttp, pathId);
+      Map<String, ByteBuffer> servicesMetaData) {
+    super(eventId, taskId, idWithinJob, isMap, org.apache.hadoop.mapreduce.
+        TaskCompletionEvent.Status.valueOf(status.name()), taskTrackerHttp, 
+        servicesMetaData);
   }
 
   @Private
@@ -90,7 +85,7 @@ public class TaskCompletionEvent
     return new TaskCompletionEvent(event.getEventId(),
       TaskAttemptID.downgrade(event.getTaskAttemptId()),event.idWithinJob(),
       event.isMapTask(), Status.valueOf(event.getStatus().name()),
-      event.getTaskTrackerHttp(), event.getPathId());
+      event.getTaskTrackerHttp(), event.getServiceMetaData());
   }
   /**
    * Returns task id. 

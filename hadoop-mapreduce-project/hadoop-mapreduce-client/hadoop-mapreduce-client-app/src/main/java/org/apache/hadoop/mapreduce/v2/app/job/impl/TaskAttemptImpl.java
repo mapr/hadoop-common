@@ -44,6 +44,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.DataInputByteBuffer;
 import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.JobContext;
@@ -179,6 +180,7 @@ public abstract class TaskAttemptImpl implements
   private long finishTime;
   private WrappedProgressSplitsBlock progressSplitBlock;
   private int shufflePort = -1;
+  private Map<String, ByteBuffer> servicesMetaData = new HashMap<String, ByteBuffer>();
   private String trackerName;
   private int httpPort;
   private Locality locality;
@@ -1607,6 +1609,7 @@ public abstract class TaskAttemptImpl implements
       //set the launch time
       taskAttempt.launchTime = taskAttempt.clock.getTime();
       taskAttempt.shufflePort = event.getShufflePort();
+      taskAttempt.servicesMetaData = event.getServicesMetaInfo();
 
       // register it to TaskAttemptListener so that it can start monitoring it.
       taskAttempt.taskAttemptListener
@@ -1949,4 +1952,21 @@ public abstract class TaskAttemptImpl implements
     result.counters = counters;
   }
 
+  /**
+   * Get ServiceMetadata - not sure if we need to duplicate here
+   * the only concern is if data was already partially read
+   * but so far we read data only while converting to proto and back 
+   * or while doing read/write for TaskCompletionEvent
+   * @return
+   */
+  public Map<String, ByteBuffer> getServicesMetaData() {
+    Map<String, ByteBuffer> metaClone = new HashMap<String, ByteBuffer>(
+        servicesMetaData.size());
+    synchronized (servicesMetaData) {
+      for (Entry<String, ByteBuffer> entry : servicesMetaData.entrySet()) {
+        metaClone.put(entry.getKey(), entry.getValue().duplicate());
+      }
+    }
+    return metaClone;
+  }
 }
