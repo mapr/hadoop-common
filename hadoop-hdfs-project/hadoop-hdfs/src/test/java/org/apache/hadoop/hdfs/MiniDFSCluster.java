@@ -139,6 +139,19 @@ public class MiniDFSCluster {
   public static final String  DFS_NAMENODE_SAFEMODE_EXTENSION_TESTING_KEY
       = DFS_NAMENODE_SAFEMODE_EXTENSION_KEY + ".testing";
 
+  /**
+   * System property to be set while running the tests. The value of this
+   * property should be a fully qualified class name that extends
+   * MiniDFSCluster. An instance of this class will be used as the actual
+   * cluster. If this property is not set, then it will default to HDFS
+   * implementation - @see MiniDFSCluster.
+   */
+  private static final String CLUSTER_IMPL = "cluster";
+  // Setting following property to true creates an HDFS cluster regardless of the cluster property.
+  private static boolean buildHDFS = false;
+
+  private static MiniDFSCluster runningInstance = null;
+
   // Changing this default may break some tests that assume it is 2.
   private static final int DEFAULT_STORAGES_PER_DATANODE = 2;
 
@@ -152,34 +165,34 @@ public class MiniDFSCluster {
    * Class to construct instances of MiniDFSClusters with specific options.
    */
   public static class Builder {
-    private int nameNodePort = 0;
-    private int nameNodeHttpPort = 0;
-    private final Configuration conf;
-    private int numDataNodes = 1;
-    private StorageType[][] storageTypes = null;
-    private StorageType[] storageTypes1D = null;
-    private int storagesPerDatanode = DEFAULT_STORAGES_PER_DATANODE;
-    private boolean format = true;
-    private boolean manageNameDfsDirs = true;
-    private boolean manageNameDfsSharedDirs = true;
-    private boolean enableManagedDfsDirsRedundancy = true;
-    private boolean manageDataDfsDirs = true;
-    private StartupOption option = null;
-    private StartupOption dnOption = null;
-    private String[] racks = null; 
-    private String [] hosts = null;
-    private long [] simulatedCapacities = null;
-    private long [][] storageCapacities = null;
-    private long [] storageCapacities1D = null;
-    private String clusterId = null;
-    private boolean waitSafeMode = true;
-    private boolean setupHostsFile = false;
-    private MiniDFSNNTopology nnTopology = null;
-    private boolean checkExitOnShutdown = true;
-    private boolean checkDataNodeAddrConfig = false;
-    private boolean checkDataNodeHostConfig = false;
-    private Configuration[] dnConfOverlays;
-    private boolean skipFsyncForTesting = true;
+    protected int nameNodePort = 0;
+    protected int nameNodeHttpPort = 0;
+    protected final Configuration conf;
+    protected int numDataNodes = 1;
+    protected StorageType[][] storageTypes = null;
+    protected StorageType[] storageTypes1D = null;
+    protected int storagesPerDatanode = DEFAULT_STORAGES_PER_DATANODE;
+    protected boolean format = true;
+    protected boolean manageNameDfsDirs = true;
+    protected boolean manageNameDfsSharedDirs = true;
+    protected boolean enableManagedDfsDirsRedundancy = true;
+    protected boolean manageDataDfsDirs = true;
+    protected StartupOption option = null;
+    protected StartupOption dnOption = null;
+    protected String[] racks = null; 
+    protected String [] hosts = null;
+    protected long [] simulatedCapacities = null;
+    protected long [][] storageCapacities = null;
+    protected long [] storageCapacities1D = null;
+    protected String clusterId = null;
+    protected boolean waitSafeMode = true;
+    protected boolean setupHostsFile = false;
+    protected MiniDFSNNTopology nnTopology = null;
+    protected boolean checkExitOnShutdown = true;
+    protected boolean checkDataNodeAddrConfig = false;
+    protected boolean checkDataNodeHostConfig = false;
+    protected Configuration[] dnConfOverlays;
+    protected boolean skipFsyncForTesting = true;
     
     public Builder(Configuration conf) {
       this.conf = conf;
@@ -424,13 +437,64 @@ public class MiniDFSCluster {
     }
     
     /**
-     * Construct the actual MiniDFSCluster
+     * Constructs the actual MiniDFSCluster instance by looking at the system
+     * property <code>CLUSTER_IMPL</code>.
+     *
+     * Assumption: Only one cluster can be existing at any point of time. So the
+     * test is not expected to make concurrent calls to this method.
+     *
+     * @return instance of MiniDFSCluster subclass
      */
     public MiniDFSCluster build() throws IOException {
-      return new MiniDFSCluster(this);
+      Class<? extends MiniDFSCluster> clazz = MiniDFSCluster.class;
+      if(buildHDFS) { // Ignore the Cluster Impl if asked to build HDFS specifically.
+        clazz = MiniDFSCluster.class;
+      } else {
+        String implClassName = System.getProperty(CLUSTER_IMPL);
+
+        if (implClassName != null && !implClassName.isEmpty()) {
+          try {
+            clazz = this.getClass().getClassLoader()
+                    .loadClass(implClassName)
+                    .asSubclass(MiniDFSCluster.class);
+
+          } catch (Exception e) {
+            throw new RuntimeException(e);
+          }
+        }
+      }
+      return build(clazz);
+    }
+
+    /**
+     * Instantiates a mini DFS cluster specified by given <code>clazz</code>.
+     * If there is a cluster already running, then it will be shutdown before
+     * creating a new cluster instance. This is useful when test cases fail to
+     * shutdown the cluster.
+     *
+     * @param clazz class to instantiate
+     */
+    public <T extends MiniDFSCluster> T build(Class<T> clazz) throws IOException {
+      if (runningInstance != null) {
+        LOG.info("Old cluster instance found ... terminating it");
+        runningInstance.shutdown();
+      }
+
+      try {
+        T t = clazz.getDeclaredConstructor(Builder.class)
+              .newInstance(this);
+
+        LOG.info("Created cluster: " + t.getClass().getName());
+
+        runningInstance = t;
+
+        return t;
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
     }
   }
-  
+
   /**
    * Used by builder to create and return an instance of MiniDFSCluster
    */
@@ -2524,7 +2588,7 @@ public class MiniDFSCluster {
 
   /**
    * Get current directory corresponding to the datanode as defined in
-   * (@link Storage#STORAGE_DIR_CURRENT}
+   * (@link Storage#STORAGE_DIR_CURRENT)
    * @param storageDir the storage directory of a datanode.
    * @return the datanode current directory
    */
@@ -2769,5 +2833,13 @@ public class MiniDFSCluster {
     } finally {
       writer.close();
     }
+  }
+
+  public static MiniDFSCluster getRunningInstance() {
+    return runningInstance;
+  }
+
+  public static void setBuildHDFS() {
+    buildHDFS = true;
   }
 }
