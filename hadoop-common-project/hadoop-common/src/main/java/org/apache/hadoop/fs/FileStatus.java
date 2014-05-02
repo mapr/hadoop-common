@@ -152,6 +152,14 @@ public class FileStatus implements Writable, Comparable {
   }
   
   /**
+   * Is this a table type
+   * @return true if this is a table object, it cannot be a diretory.
+   */
+  public boolean isTable() {
+    return false;
+  }
+
+  /**
    * Is this a symbolic link?
    * @return true if this is a symbolic link
    */

@@ -107,7 +107,7 @@ class Ls extends FsCommand {
   protected void processPath(PathData item) throws IOException {
     FileStatus stat = item.stat;
     String line = String.format(lineFormat,
-        (stat.isDirectory() ? "d" : "-"),
+        (stat.isDirectory() ? "d" : (stat.isTable() ? "t" : "-")),
         stat.getPermission() + (stat.getPermission().getAclBit() ? "+" : " "),
         (stat.isFile() ? stat.getReplication() : "-"),
         stat.getOwner(),
