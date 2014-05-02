@@ -78,6 +78,39 @@ if [ $# = 0 ]; then
 fi
 
 COMMAND=$1
+shift
+
+# Begin: MapR specific section
+MAPR_HOME=${MAPR_HOME:=/opt/mapr}
+MAPR_HBASE_DIR=${MAPR_HOME}/hbase
+MAPR_HBASE_VERSION_FILE=${MAPR_HBASE_DIR}/hbaseversion
+
+if [ "$COMMAND" == "jar" ] && [ -f ${MAPR_HBASE_VERSION_FILE} ]; then
+  # add HBASE CLASSPATH to the CLASSPATH MapR Bug:5294
+  jarfilename=$1 #the script does a shift after getting the command
+
+  HBASE_VERSION=`cat ${MAPR_HBASE_VERSION_FILE}`
+  if [[ $jarfilename == *hbase-${HBASE_VERSION}*jar ]]; then
+    HBASE_SRC=${MAPR_HBASE_DIR}/hbase-${HBASE_VERSION}/bin/hbase
+    if [ -x ${HBASE_SRC} ]; then
+      HBASE_CLASSPATH=`${HBASE_SRC} classpath`
+      CLASSPATH=${CLASSPATH}:${HBASE_CLASSPATH}
+    fi
+  fi
+fi
+
+if [ -d "$MAPR_HOME/lib" ]; then
+  CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/kvstore-0.1.jar
+  CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/libprotodefs.jar
+  CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/baseutils-0.1.jar
+  CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/json-20080701.jar
+  CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/flexjson-2.1.jar
+fi
+
+#MapR add standard library locations in java.library.path
+JAVA_LIBRARY_PATH="$JAVA_LIBRARY_PATH:$LD_LIBRARY_PATH"
+# End: MapR specific section
+
 case $COMMAND in
   # usage flags
   --help|-help|-h)
@@ -91,7 +124,6 @@ case $COMMAND in
     echo "Instead use the hdfs command for it." 1>&2
     echo "" 1>&2
     #try to locate hdfs and if present, delegate to it.  
-    shift
     if [ -f "${HADOOP_HDFS_HOME}"/bin/hdfs ]; then
       exec "${HADOOP_HDFS_HOME}"/bin/hdfs ${COMMAND/dfsgroups/groups}  "$@"
     elif [ -f "${HADOOP_PREFIX}"/bin/hdfs ]; then
@@ -108,7 +140,6 @@ case $COMMAND in
     echo "Instead use the mapred command for it." 1>&2
     echo "" 1>&2
     #try to locate mapred and if present, delegate to it.
-    shift
     if [ -f "${HADOOP_MAPRED_HOME}"/bin/mapred ]; then
       exec "${HADOOP_MAPRED_HOME}"/bin/mapred ${COMMAND/mrgroups/groups} "$@"
     elif [ -f "${HADOOP_PREFIX}"/bin/mapred ]; then
@@ -166,7 +197,6 @@ case $COMMAND in
     else
       CLASS=$COMMAND
     fi
-    shift
     
     # Always respect HADOOP_OPTS and HADOOP_CLIENT_OPTS
     HADOOP_OPTS="$HADOOP_OPTS $HADOOP_CLIENT_OPTS"
@@ -179,37 +209,6 @@ case $COMMAND in
     if [ "$osname" = "Darwin" ]; then
       HADOOP_OPTS="$HADOOP_OPTS -Djava.security.krb5.realm= -Djava.security.krb5.kdc="
     fi
-
-    # Begin: MapR specific section
-    MAPR_HOME=${MAPR_HOME:=/opt/mapr}
-    MAPR_HBASE_DIR=${MAPR_HOME}/hbase
-    MAPR_HBASE_VERSION_FILE=${MAPR_HBASE_DIR}/hbaseversion
-
-    if [ "$COMMAND" == "jar" ] && [ -f ${MAPR_HBASE_VERSION_FILE} ]; then
-      # add HBASE CLASSPATH to the CLASSPATH MapR Bug:5294
-      jarfilename=$1 #the script does a shift after getting the command
-
-      HBASE_VERSION=`cat ${MAPR_HBASE_VERSION_FILE}`
-      if [[ $jarfilename == *hbase-${HBASE_VERSION}*jar ]]; then
-        HBASE_SRC=${MAPR_HBASE_DIR}/hbase-${HBASE_VERSION}/bin/hbase
-        if [ -x ${HBASE_SRC} ]; then
-          HBASE_CLASSPATH=`${HBASE_SRC} classpath`
-          CLASSPATH=${CLASSPATH}:${HBASE_CLASSPATH}
-        fi
-      fi
-    fi
-
-    if [ -d "$MAPR_HOME/lib" ]; then
-      CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/kvstore-0.1.jar
-      CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/libprotodefs.jar
-      CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/baseutils-0.1.jar
-      CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/json-20080701.jar
-      CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/flexjson-2.1.jar
-    fi
-
-    #MapR add standard library locations in java.library.path
-    JAVA_LIBRARY_PATH="$JAVA_LIBRARY_PATH:$LD_LIBRARY_PATH"
-    # End: MapR specific section
 
     export CLASSPATH=$CLASSPATH
     exec "$JAVA" $JAVA_HEAP_MAX $HADOOP_OPTS $CLASS "$@"
