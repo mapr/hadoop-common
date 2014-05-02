@@ -23,6 +23,8 @@ import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.util.ReflectionUtils;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import static org.apache.hadoop.mapred.TaskAttemptID.*;
 
 public class DirectShuffleFetcher<K, V> extends Thread {
@@ -41,7 +43,6 @@ public class DirectShuffleFetcher<K, V> extends Thread {
   private MapRFsOutputFile mapOutputFile;
   private int id;
   private Reporter reporter;
-  private boolean readError = false;
   private volatile boolean shouldExit = false;
   private boolean useDirectReduce = false;
   private int prefetchBytesHint;
@@ -51,7 +52,7 @@ public class DirectShuffleFetcher<K, V> extends Thread {
   private Decompressor decompressor = null;
   private Configuration jobConf;
   private final MergeManager<K, V> merger;
-  private FileSystem rfs;
+  protected FileSystem rfs;
   private final ExceptionReporter exceptionReporter;
 
   private final ShuffleClientMetrics metrics;
@@ -71,55 +72,6 @@ public class DirectShuffleFetcher<K, V> extends Thread {
   /**
    * Represents the result of an attempt to copy a map output
    */
-/*  private class CopyResult {
-
-    // the map output location against which a copy attempt was made
-    private final MapOutputLocation loc;
-
-    // the size of the file copied, -1 if the transfer failed
-    private final long size;
-
-    //a flag signifying whether a copy result is obsolete
-    private static final int OBSOLETE = -2;
-
-    private CopyOutputErrorType error = CopyOutputErrorType.NO_ERROR;
-
-    CopyResult(MapOutputLocation loc, long size) {
-      this.loc = loc;
-      this.size = size;
-    }
-
-    CopyResult(MapOutputLocation loc, long size, CopyOutputErrorType error) {
-      this.loc = loc;
-      this.size = size;
-      this.error = error;
-    }
-
-    public boolean getSuccess() {
-      return size >= 0;
-    }
-
-    public boolean isObsolete() {
-      return size == OBSOLETE;
-    }
-
-    public long getSize() {
-      return size;
-    }
-
-    public String getHost() {
-      return loc.getHost();
-    }
-
-    public MapOutputLocation getLocation() {
-      return loc;
-    }
-
-    public CopyOutputErrorType getError() {
-      return error;
-    }
-  }
-*/
 
   public DirectShuffleFetcher(int id, JobConf jobConf, TaskAttemptID reduceId,
                               DirectShuffleSchedulerImpl<K, V> scheduler, MergeManager<K, V> merger,
@@ -199,12 +151,8 @@ public class DirectShuffleFetcher<K, V> extends Thread {
   @Override
   public void run() {
     try {
-      while (!shouldExit /*&& !Thread.currentThread().isInterrupted()*/) {
+      while (!shouldExit ) {
         MapOutputLocation loc = null;
-        long size = -1;
-        CopyOutputErrorType error = CopyOutputErrorType.OTHER_ERROR;
-        readError = false;
-
         try {
           // If merge is on, block
           merger.waitForResource();
@@ -214,21 +162,12 @@ public class DirectShuffleFetcher<K, V> extends Thread {
           metrics.threadBusy();
 
           // Shuffle
-          size = copyOutput(loc);
-          metrics.successFetch();
-          error = CopyOutputErrorType.NO_ERROR;
+          copyOutput(loc);
         } catch (IOException ioe) {
           LOG.warn(reduceId.getTaskID() + " copy failed: " +
             loc.getTaskAttemptId() + " from " + loc.getHost(),
             ioe);
           metrics.failedFetch();
-          if (readError) {
-            if (/*reportReadErrorImmediately == true && */LOG.isInfoEnabled()) {
-              LOG.info(reduceId.getTaskID() + " read error from " +
-                loc.getTaskAttemptId() + ". Reporting immediately.");
-            }
-            error = CopyOutputErrorType.READ_ERROR;
-          }
         } catch (InterruptedException ie) {
           if (shouldExit) {
             break; // ALL DONE
@@ -258,7 +197,8 @@ public class DirectShuffleFetcher<K, V> extends Thread {
    * @throws IOException          if there is an error copying the file
    * @throws InterruptedException if the copier should give up
    */
-  private long copyOutput(MapOutputLocation loc) throws IOException, InterruptedException {
+  @VisibleForTesting
+  protected long copyOutput(MapOutputLocation loc) throws IOException, InterruptedException {
     if (loc == null) {
       return OBSOLETE;
     }
@@ -301,11 +241,6 @@ public class DirectShuffleFetcher<K, V> extends Thread {
     // The size of the map-output
     long bytes = mapOutput.getSize();
 
- /*   if ( scheduler.getMap(loc) == null ) {
-      mapOutput.abort();
-      return CopyResult.OBSOLETE;
-    }
-*/
     // Special case: discard empty map-outputs
     if (bytes == 0) {
       mapOutput.abort();
@@ -369,8 +304,7 @@ public class DirectShuffleFetcher<K, V> extends Thread {
       
    // Check if we can shuffle *now* ...
       if (mapOutput == null) {
-        LOG.info("fetcher#" + id + " - MergeManager returned status WAIT ...");
-        //Not an error but wait to process data.
+        LOG.error("mapOutput can not be returned as null from reserve");
         return null;
       } 
 
@@ -420,7 +354,6 @@ public class DirectShuffleFetcher<K, V> extends Thread {
         " for reduce " + reduce +
         " file path " + inputFile,
         fnfe);
-      readError = true;
       return null;
     } // TODO Deal with MapR specific Exception 
    /* catch (IOExceptionWithErrorCode ioe) {
@@ -442,6 +375,10 @@ public class DirectShuffleFetcher<K, V> extends Thread {
         " file path " + inputFile,
         ioe);
       ioErrs.increment(1);
+      if ( mapOutput == null ) {
+        // most likely error is during read operation
+        return null;
+      }
       mapOutput.abort();
       metrics.failedFetch();
        return null;

@@ -34,18 +34,17 @@ public class DirectShuffleSchedulerImpl<K,V> implements ShuffleScheduler<K, V> {
 
   private static final Log LOG = LogFactory.getLog(DirectShuffleSchedulerImpl.class);
   
-  private static final int MAX_MAPS_AT_ONCE = 20;
   private static final long INITIAL_PENALTY = 10000;
   private static final float PENALTY_GROWTH_RATE = 1.3f;
   private final static int REPORT_FAILURE_LIMIT = 10;
   /**
    * Minimum number of map fetch retries.
    */
-  private static final int MIN_FETCH_RETRIES_PER_MAP = 2;
+  //private static final int MIN_FETCH_RETRIES_PER_MAP = 2;
   /**
    * Initial backoff interval (milliseconds)
    */
-  private static final int BACKOFF_INIT = 4000;
+  //private static final int BACKOFF_INIT = 4000;
 
 
   private final LinkedList<MapOutputLocation> newMapOutputs =
@@ -77,7 +76,6 @@ public class DirectShuffleSchedulerImpl<K,V> implements ShuffleScheduler<K, V> {
   /**
    * Maximum number of fetch-retries per-map.
    */
-  private volatile int maxFetchRetriesPerMap;
   private final int maxFailedUniqueFetches;
   private final int maxFetchFailuresBeforeReporting;
   private final Random random = new Random();
@@ -192,8 +190,8 @@ public class DirectShuffleSchedulerImpl<K,V> implements ShuffleScheduler<K, V> {
         if (duration > maxMapRuntime) {
           maxMapRuntime = duration;
           // adjust max-fetch-retries based on max-map-run-time
-          maxFetchRetriesPerMap = Math.max(MIN_FETCH_RETRIES_PER_MAP,
-            getClosestPowerOf2((maxMapRuntime / BACKOFF_INIT) + 1));
+          //maxFetchRetriesPerMap = Math.max(MIN_FETCH_RETRIES_PER_MAP,
+          //  getClosestPowerOf2((maxMapRuntime / BACKOFF_INIT) + 1));
         }
       }
       break;
@@ -327,7 +325,6 @@ public class DirectShuffleSchedulerImpl<K,V> implements ShuffleScheduler<K, V> {
   
   @Override
   public void close() throws InterruptedException {
-    // TODO Auto-generated method stub
     
   }
 
@@ -348,7 +345,7 @@ public class DirectShuffleSchedulerImpl<K,V> implements ShuffleScheduler<K, V> {
       int failures, TaskAttemptID mapId) {
     if ((reportReadErrorImmediately)
         || ((failures % maxFetchFailuresBeforeReporting) == 0)) {
-      LOG.info("Reporting fetch failure for " + mapId + " to jobtracker.");
+      LOG.info("Reporting fetch failure for " + mapId + " to the caller: MR AppMaster.");
       status.addFetchFailedMap((org.apache.hadoop.mapred.TaskAttemptID) mapId);
     }
   }
