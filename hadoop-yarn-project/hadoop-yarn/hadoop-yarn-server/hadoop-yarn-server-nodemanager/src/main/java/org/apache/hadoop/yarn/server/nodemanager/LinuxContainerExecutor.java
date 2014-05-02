@@ -90,7 +90,13 @@ public class LinuxContainerExecutor extends ContainerExecutor {
   }
 
   String getRunAsUser(String user) {
-    return UserGroupInformation.isSecurityEnabled() ? user : nonsecureLocalUser;
+    // Workaround to handle YARN-1253. When running in unsecured mode, map
+    // reduce job fails because it uses "nobody" user to access the staging dir
+    // and it does not have permission for that. Until we figure out the actual
+    // solution, we return the actual user instead of unsecure user - nobody.
+
+    //return UserGroupInformation.isSecurityEnabled() ? user : nonsecureLocalUser;
+    return user;
   }
 
 
