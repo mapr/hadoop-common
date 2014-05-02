@@ -87,11 +87,8 @@ import org.apache.hadoop.io.HasRawComparablePrefix;
 import org.apache.hadoop.mapred.IFile.Writer;
 import org.apache.hadoop.mapred.Merger.Segment;
 import org.apache.hadoop.mapred.SortedRanges.SkipRangeIterator;
-import org.apache.hadoop.mapreduce.JobContext;
-import org.apache.hadoop.mapreduce.MRConfig;
-import org.apache.hadoop.mapreduce.MRJobConfig;
+import org.apache.hadoop.mapreduce.*;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.apache.hadoop.mapreduce.TaskCounter;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormatCounter;
 import org.apache.hadoop.mapreduce.lib.map.WrappedMapper;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormatCounter;
@@ -1421,7 +1418,7 @@ public class MapRFsOutputBuffer<K extends Object, V extends Object>
         tmpDir,
         job.getOutputKeyComparator(), reporter, false,
         null, spilledRecordsCounter,
-        sortPhase.phase());
+        sortPhase.phase(), TaskType.MAP);
       // write merged output to disk
       Writer<K, V> writer =
         new Writer<K, V>(job, finalOut, keyClass, valClass, codec, 
