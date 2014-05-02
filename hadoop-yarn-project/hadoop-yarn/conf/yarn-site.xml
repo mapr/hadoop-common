@@ -41,6 +41,12 @@
   </property>
 
   <property>
+    <description>who will execute(launch) the containers.</description>
+    <name>yarn.nodemanager.container-executor.class</name>
+    <value>org.apache.hadoop.yarn.server.nodemanager.LinuxContainerExecutor</value>
+  </property>
+
+  <property>
     <name>yarn.nodemanager.aux-services</name>
     <value>mapreduce_shuffle,mapr_direct_shuffle</value>
     <description>shuffle service that needs to be set for Map Reduce to run</description>
