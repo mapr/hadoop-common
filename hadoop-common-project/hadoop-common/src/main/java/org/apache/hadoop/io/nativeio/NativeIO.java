@@ -226,7 +226,7 @@ public class NativeIO {
     public static native void chown(String path, String user, String group) throws IOException;
 
     /** Wrapper around symlink(2) */
-    public static native void symlink(String oldPath, String newPath, boolean createParent) throws IOException;
+    public static native void symlink(String oldPath, String newPath) throws IOException;
 
     public static void chmod(String path, int mode) throws IOException {
       if (!Shell.WINDOWS) {
