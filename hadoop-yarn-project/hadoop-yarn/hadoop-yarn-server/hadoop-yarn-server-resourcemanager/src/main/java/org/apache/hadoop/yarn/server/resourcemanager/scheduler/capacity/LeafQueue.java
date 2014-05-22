@@ -57,6 +57,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerEven
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerState;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ActiveUsersManager;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.NodeType;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.QueueMetrics;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerAppUtils;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicationAttempt;
@@ -104,6 +105,9 @@ public class LeafQueue implements CSQueue {
       new HashMap<ApplicationAttemptId, FiCaSchedulerApp>();
   
   Set<FiCaSchedulerApp> pendingApplications;
+  
+  private String label;
+  private Queue.QueueLabelPolicy labelPolicy;
   
   private final Resource minimumAllocation;
   private final Resource maximumAllocation;
@@ -263,6 +267,9 @@ public class LeafQueue implements CSQueue {
       aclsString.append(e.getKey() + ":" + e.getValue().getAclString());
     }
     
+    this.label = refreshLabel();
+    this.labelPolicy = refreshLabelPolicy();
+
     // Update metrics
     CSQueueUtils.updateQueueStatistics(
         resourceCalculator, this, getParent(), clusterResource, 
@@ -1619,4 +1626,42 @@ public class LeafQueue implements CSQueue {
       apps.add(app.getApplicationAttemptId());
     }
   }
+  private QueueLabelPolicy refreshLabelPolicy() {
+    String labelPolicyStr = this.scheduler.getConfiguration().get(CapacitySchedulerConfiguration.PREFIX + 
+        getQueuePath() + 
+        CapacitySchedulerConfiguration.DOT + 
+        CapacitySchedulerConfiguration.LABEL_POLICY);
+    if ( labelPolicyStr == null ) {
+      return ((ParentQueue) getParent()).getLabelPolicy();
+    }
+    try {
+      return QueueLabelPolicy.valueOf(labelPolicyStr);
+    } catch (IllegalArgumentException ie) {
+      LOG.warn("Unknown label policy: " + labelPolicyStr);
+      return QueueLabelPolicy.AND;
+    }
+  }
+  
+  @Override
+  public QueueLabelPolicy getLabelPolicy() {
+    return this.labelPolicy;
+  }
+
+  private String refreshLabel() {
+    String labelStr = this.scheduler.getConfiguration().get(CapacitySchedulerConfiguration.PREFIX + 
+        getQueuePath() + 
+        CapacitySchedulerConfiguration.DOT + 
+        CapacitySchedulerConfiguration.LABEL);
+    
+    if (labelStr == null ) {
+      return ((ParentQueue) getParent()).getLabel();
+    }
+    return labelStr;
+  }
+  
+  @Override
+  public String getLabel() {
+    return this.label;
+  }
+
 }

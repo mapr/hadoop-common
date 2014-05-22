@@ -45,6 +45,10 @@ public abstract class FSQueue extends Schedulable implements Queue {
   private final FSQueueMetrics metrics;
   
   protected final FSParentQueue parent;
+  
+  protected String label;
+  protected QueueLabelPolicy labelPolicy;
+  
   protected final RecordFactory recordFactory =
       RecordFactoryProvider.getRecordFactory(null);
   
@@ -150,6 +154,41 @@ public abstract class FSQueue extends Schedulable implements Queue {
     return scheduler.getAllocationConfiguration().hasAccess(name, acl, user);
   }
   
+  protected String refreshLabel() {
+    String labelStr = scheduler.getAllocationConfiguration().getLabels().get(getName());
+    if ( labelStr == null && parent != null ) {
+      labelStr = parent.refreshLabel();
+    }
+    return (labelStr != null) ? labelStr : "all";
+  }
+  
+  protected QueueLabelPolicy refreshLabelPolicy() {
+    QueueLabelPolicy labelPolicy = 
+        scheduler.getAllocationConfiguration().getLabelPolicies().get(getName());
+    if ( labelPolicy == null &&  parent != null ) {
+      labelPolicy = parent.refreshLabelPolicy();
+    }
+    return ( labelPolicy != null ) ? labelPolicy : QueueLabelPolicy.AND;
+  }
+  
+  @Override
+  public QueueLabelPolicy getLabelPolicy() {
+    return labelPolicy;
+  }
+
+  @Override
+  public String getLabel() {
+    return label;
+  }
+
+  public void setLabel(String label) {
+    this.label = label;
+  }
+
+  public void setLabelPolicy(QueueLabelPolicy labelPolicy) {
+    this.labelPolicy = labelPolicy;
+  }
+
   /**
    * Recomputes the shares for all child queues and applications based on this
    * queue's current share

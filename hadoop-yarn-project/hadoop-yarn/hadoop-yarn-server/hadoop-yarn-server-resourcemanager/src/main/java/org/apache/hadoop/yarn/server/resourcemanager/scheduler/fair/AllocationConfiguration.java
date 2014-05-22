@@ -28,6 +28,7 @@ import org.apache.hadoop.security.authorize.AccessControlList;
 import org.apache.hadoop.yarn.api.records.QueueACL;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.server.resourcemanager.resource.ResourceWeights;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
 import org.apache.hadoop.yarn.util.resource.Resources;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -75,6 +76,9 @@ public class AllocationConfiguration {
 
   private final Map<String, SchedulingPolicy> schedulingPolicies;
   
+  private final Map<String, String> labels;
+  private final Map<String, Queue.QueueLabelPolicy> labelPolicies;
+  
   private final SchedulingPolicy defaultSchedulingPolicy;
   
   // Policy for mapping apps to queues
@@ -97,7 +101,9 @@ public class AllocationConfiguration {
       Map<String, Map<QueueACL, AccessControlList>> queueAcls,
       long fairSharePreemptionTimeout, long defaultMinSharePreemptionTimeout,
       QueuePlacementPolicy placementPolicy,
-      Map<FSQueueType, Set<String>> configuredQueues) {
+      Map<FSQueueType, Set<String>> configuredQueues,
+      Map<String, String> queueLabels, 
+      Map<String, Queue.QueueLabelPolicy> queueLabelPolicies) {
     this.minQueueResources = minQueueResources;
     this.maxQueueResources = maxQueueResources;
     this.queueMaxApps = queueMaxApps;
@@ -115,6 +121,8 @@ public class AllocationConfiguration {
     this.defaultMinSharePreemptionTimeout = defaultMinSharePreemptionTimeout;
     this.placementPolicy = placementPolicy;
     this.configuredQueues = configuredQueues;
+    this.labels = queueLabels;
+    this.labelPolicies = queueLabelPolicies;
   }
   
   public AllocationConfiguration(Configuration conf) {
@@ -139,6 +147,9 @@ public class AllocationConfiguration {
     }
     placementPolicy = QueuePlacementPolicy.fromConfiguration(conf,
         configuredQueues);
+    this.labels = new HashMap<String, String>();
+    this.labelPolicies = new HashMap<String, Queue.QueueLabelPolicy>();
+
   }
   
   /**
@@ -247,5 +258,13 @@ public class AllocationConfiguration {
   
   public QueuePlacementPolicy getPlacementPolicy() {
     return placementPolicy;
+  }
+
+  public Map<String, String> getLabels() {
+    return labels;
+  }
+
+  public Map<String, Queue.QueueLabelPolicy> getLabelPolicies() {
+    return labelPolicies;
   }
 }

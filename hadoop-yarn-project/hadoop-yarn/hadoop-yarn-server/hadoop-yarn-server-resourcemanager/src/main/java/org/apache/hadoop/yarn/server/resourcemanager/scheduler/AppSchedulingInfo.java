@@ -18,6 +18,7 @@
 
 package org.apache.hadoop.yarn.server.resourcemanager.scheduler;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -27,6 +28,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import net.java.dev.eval.Expression;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -38,6 +41,7 @@ import org.apache.hadoop.yarn.api.records.Container;
 import org.apache.hadoop.yarn.api.records.Priority;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.api.records.ResourceRequest;
+import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManager;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttemptState;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainer;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerState;
@@ -242,7 +246,39 @@ public class AppSchedulingInfo {
   }
 
   public synchronized boolean isBlacklisted(String resourceName) {
-    return blacklist.contains(resourceName);
+    if (blacklist.contains(resourceName)) {
+      return true;
+    }
+    // TODO Not sure if at the end can add blacklisted here resource to list of blacklisted
+    // since situation can change on the fly.
+    LabelManager lb = LabelManager.getInstance();
+    // By a co-accident if resourcerequest for AppMaster will have a label
+    // it will be used here for all of the requests, since it will be looping over 
+    // requests by priority where at least one will be for AppMaster
+    for ( Priority priority : priorities) {
+      ResourceRequest req = getResourceRequest(priority, resourceName);
+      if ( req == null ) {
+        req = getResourceRequest(priority, ResourceRequest.ANY);
+      }
+      if ( req != null ) {
+        try {
+          Expression appExp = lb.constructAppLabel(req.getLabel());
+          Expression qExp = lb.constructAppLabel(queue.getLabel());
+          Expression finalExp = lb.constructAppLabel(queue.getLabelPolicy(), appExp, qExp);
+          boolean canBeEvaluated = lb.canNodeBeEvaluated(resourceName, finalExp);
+          if ( canBeEvaluated ) {
+            boolean isNotBlackListed = lb.evaluateAppLabelAgainstNode(resourceName, finalExp); 
+            return !isNotBlackListed;
+          }
+       } catch (IOException e) {
+         if ( LOG.isDebugEnabled() ) {
+           LOG.debug("Exception while trying to evaluate label expressions", e);
+           return false;
+         }
+        }
+       }
+    }
+    return false;
   }
   
   /**

@@ -71,4 +71,26 @@ public interface Queue {
    */
   public void recoverContainer(Resource clusterResource,
       SchedulerApplicationAttempt schedulerAttempt, RMContainer rmContainer);
+
+  static enum QueueLabelPolicy {
+    PREFER_QUEUE("PREFER_QUEUE"), // Queue label always wins
+    PREFER_APP("PREFER_APP"), // App label always wins
+    AND("AND"),  // Use && on Queue and App labels
+    OR("OR");  // Use || on Queue and App labels
+
+    private final String policyName;
+
+    QueueLabelPolicy(String policyName) {
+      this.policyName = policyName;
+    }
+
+    public String getLabelPolicyName() {
+      return policyName;
+    }
+  }
+
+  public QueueLabelPolicy getLabelPolicy();
+
+  public String getLabel();
+
 }

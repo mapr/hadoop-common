@@ -41,6 +41,7 @@ import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.yarn.api.records.QueueACL;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.server.resourcemanager.resource.ResourceWeights;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
 import org.apache.hadoop.yarn.util.Clock;
 import org.apache.hadoop.yarn.util.SystemClock;
 import org.apache.hadoop.yarn.util.resource.Resources;
@@ -217,6 +218,8 @@ public class AllocationFileLoaderService extends AbstractService {
     Map<String, ResourceWeights> queueWeights = new HashMap<String, ResourceWeights>();
     Map<String, SchedulingPolicy> queuePolicies = new HashMap<String, SchedulingPolicy>();
     Map<String, Long> minSharePreemptionTimeouts = new HashMap<String, Long>();
+    Map<String, String> queueLabels = new HashMap<String, String>();
+    Map<String, Queue.QueueLabelPolicy> queueLabelPolicies = new HashMap<String, Queue.QueueLabelPolicy>();
     Map<String, Map<QueueACL, AccessControlList>> queueAcls =
         new HashMap<String, Map<QueueACL, AccessControlList>>();
     int userMaxAppsDefault = Integer.MAX_VALUE;
@@ -319,7 +322,7 @@ public class AllocationFileLoaderService extends AbstractService {
       loadQueue(parent, element, minQueueResources, maxQueueResources,
           queueMaxApps, userMaxApps, queueMaxAMShares, queueWeights,
           queuePolicies, minSharePreemptionTimeouts, queueAcls,
-          configuredQueues);
+          configuredQueues, queueLabels, queueLabelPolicies);
     }
     
     // Load placement policy and pass it configured queues
@@ -336,7 +339,7 @@ public class AllocationFileLoaderService extends AbstractService {
         queueMaxApps, userMaxApps, queueWeights, queueMaxAMShares, userMaxAppsDefault,
         queueMaxAppsDefault, queueMaxAMShareDefault, queuePolicies, defaultSchedPolicy, minSharePreemptionTimeouts,
         queueAcls, fairSharePreemptionTimeout, defaultMinSharePreemptionTimeout,
-        newPlacementPolicy, configuredQueues);
+        newPlacementPolicy, configuredQueues, queueLabels, queueLabelPolicies);
     
     lastSuccessfulReload = clock.getTime();
     lastReloadAttemptFailed = false;
@@ -354,7 +357,9 @@ public class AllocationFileLoaderService extends AbstractService {
       Map<String, SchedulingPolicy> queuePolicies,
       Map<String, Long> minSharePreemptionTimeouts,
       Map<String, Map<QueueACL, AccessControlList>> queueAcls, 
-      Map<FSQueueType, Set<String>> configuredQueues) 
+      Map<FSQueueType, Set<String>> configuredQueues, 
+      Map<String, String> queueLabels,
+      Map<String,Queue.QueueLabelPolicy> queueLabelPolicies) 
       throws AllocationConfigurationException {
     String queueName = element.getAttribute("name");
     if (parentName != null) {
@@ -406,12 +411,23 @@ public class AllocationFileLoaderService extends AbstractService {
       } else if ("aclAdministerApps".equals(field.getTagName())) {
         String text = ((Text)field.getFirstChild()).getData();
         acls.put(QueueACL.ADMINISTER_QUEUE, new AccessControlList(text));
+      } else if ("label".equals(field.getTagName())) {
+        String text = ((Text)field.getFirstChild()).getData().trim();
+        queueLabels.put(queueName, text);
+      } else if ("labelPolicy".equals(field.getTagName())) {
+        String text = ((Text)field.getFirstChild()).getData().trim();
+        try {
+          Queue.QueueLabelPolicy policy = Queue.QueueLabelPolicy.valueOf(text);
+          queueLabelPolicies.put(queueName, policy);
+        } catch( IllegalArgumentException ie)  {
+          LOG.warn("Unknown Label Policy: " + text);
+        }
       } else if ("queue".endsWith(field.getTagName()) || 
           "pool".equals(field.getTagName())) {
         loadQueue(queueName, field, minQueueResources, maxQueueResources,
             queueMaxApps, userMaxApps, queueMaxAMShares, queueWeights,
             queuePolicies, minSharePreemptionTimeouts, queueAcls,
-            configuredQueues);
+            configuredQueues, queueLabels, queueLabelPolicies);
         configuredQueues.get(FSQueueType.PARENT).add(queueName);
         isLeaf = false;
       }
