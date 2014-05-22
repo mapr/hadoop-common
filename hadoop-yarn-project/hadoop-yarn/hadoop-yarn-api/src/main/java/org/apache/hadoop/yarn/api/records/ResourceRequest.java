@@ -285,11 +285,13 @@ public abstract class ResourceRequest implements Comparable<ResourceRequest> {
     Resource capability = getCapability();
     String hostName = getResourceName();
     Priority priority = getPriority();
+    String label = getLabel();
     result =
         prime * result + ((capability == null) ? 0 : capability.hashCode());
     result = prime * result + ((hostName == null) ? 0 : hostName.hashCode());
     result = prime * result + getNumContainers();
     result = prime * result + ((priority == null) ? 0 : priority.hashCode());
+    result = prime * result + ((label == null) ? 0 : priority.hashCode());
     return result;
   }
 

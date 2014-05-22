@@ -489,7 +489,10 @@ public class ResourceManager extends CompositeService implements Recoverable {
       scheduler.setRMContext(rmContext);
       addIfService(scheduler);
       rmContext.setScheduler(scheduler);
-
+      
+      LabelManager lb = LabelManager.getInstance();
+      addService(lb);
+      
       schedulerDispatcher = createSchedulerEventDispatcher();
       addIfService(schedulerDispatcher);
       rmDispatcher.register(SchedulerEventType.class, schedulerDispatcher);
@@ -603,7 +606,6 @@ public class ResourceManager extends CompositeService implements Recoverable {
           LOG.error("Error closing store.", e);
         }
       }
-
       super.serviceStop();
     }
 

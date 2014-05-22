@@ -60,6 +60,8 @@ public class FairSchedulerQueueInfo {
   
   private String queueName;
   private String schedulingPolicy;
+  private String label;
+  private String labelPolicy;
   
   private Collection<FairSchedulerQueueInfo> childQueues;
   
@@ -71,6 +73,8 @@ public class FairSchedulerQueueInfo {
     
     queueName = queue.getName();
     schedulingPolicy = queue.getPolicy().getName();
+    label = queue.getLabel();
+    labelPolicy = queue.getLabelPolicy().name();
     
     clusterResources = new ResourceInfo(scheduler.getClusterResource());
     
@@ -190,6 +194,14 @@ public class FairSchedulerQueueInfo {
     return schedulingPolicy;
   }
   
+  public String getLabel() {
+    return label;
+  }
+
+  public String getLabelPolicy() {
+    return labelPolicy;
+  }
+
   public Collection<FairSchedulerQueueInfo> getChildQueues() {
     return childQueues;
   }

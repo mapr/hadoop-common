@@ -47,6 +47,8 @@ public class FifoSchedulerInfo extends SchedulerInfo {
   protected int availNodeCapacity;
   protected int totalNodeCapacity;
   protected int numContainers;
+  protected String label;
+  protected String labelPolicy;
 
   @XmlTransient
   protected String qstateFormatted;
@@ -70,6 +72,8 @@ public class FifoSchedulerInfo extends SchedulerInfo {
     this.minQueueMemoryCapacity = fs.getMinimumResourceCapability().getMemory();
     this.maxQueueMemoryCapacity = fs.getMaximumResourceCapability().getMemory();
     this.qstate = qInfo.getQueueState();
+    this.label = qInfo.getQueueLabel();
+    this.labelPolicy = qInfo.getQueueLabelPolicy();
 
     this.numNodes = rmContext.getRMNodes().size();
     this.usedNodeCapacity = 0;
@@ -128,6 +132,14 @@ public class FifoSchedulerInfo extends SchedulerInfo {
 
   public float getUsedCapacity() {
     return this.usedCapacity;
+  }
+
+  public String getLabel() {
+    return label;
+  }
+
+  public String getLabelPolicy() {
+    return labelPolicy;
   }
 
 }

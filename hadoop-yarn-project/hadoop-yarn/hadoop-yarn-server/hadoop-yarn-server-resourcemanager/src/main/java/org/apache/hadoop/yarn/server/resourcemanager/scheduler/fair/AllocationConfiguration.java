@@ -29,6 +29,7 @@ import org.apache.hadoop.yarn.api.records.QueueACL;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.server.resourcemanager.reservation.ReservationSchedulerConfiguration;
 import org.apache.hadoop.yarn.server.resourcemanager.resource.ResourceWeights;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
 import org.apache.hadoop.yarn.util.resource.Resources;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -80,6 +81,9 @@ public class AllocationConfiguration extends ReservationSchedulerConfiguration {
   private final Set<String> reservableQueues;
 
   private final Map<String, SchedulingPolicy> schedulingPolicies;
+  
+  private final Map<String, String> labels;
+  private final Map<String, Queue.QueueLabelPolicy> labelPolicies;
   
   private final SchedulingPolicy defaultSchedulingPolicy;
   
@@ -154,6 +158,9 @@ public class AllocationConfiguration extends ReservationSchedulerConfiguration {
     }
     placementPolicy = QueuePlacementPolicy.fromConfiguration(conf,
         configuredQueues);
+    this.labels = new HashMap<String, String>();
+    this.labelPolicies = new HashMap<String, Queue.QueueLabelPolicy>();
+
   }
   
   /**
@@ -336,5 +343,13 @@ public class AllocationConfiguration extends ReservationSchedulerConfiguration {
   @VisibleForTesting
   public void setAverageCapacity(int avgCapacity) {
     globalReservationQueueConfig.setAverageCapacity(avgCapacity);
+  }
+
+  public Map<String, String> getLabels() {
+    return labels;
+  }
+
+  public Map<String, Queue.QueueLabelPolicy> getLabelPolicies() {
+    return labelPolicies;
   }
 }

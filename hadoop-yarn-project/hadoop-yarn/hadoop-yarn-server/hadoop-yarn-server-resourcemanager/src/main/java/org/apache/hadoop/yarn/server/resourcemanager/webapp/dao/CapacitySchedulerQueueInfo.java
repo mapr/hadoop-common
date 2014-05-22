@@ -50,6 +50,8 @@ public class CapacitySchedulerQueueInfo {
   protected float absoluteUsedCapacity;
   protected int numApplications;
   protected String queueName;
+  protected String label;
+  protected String labelPolicy;
   protected QueueState state;
   protected CapacitySchedulerQueueInfoList queues;
   protected ResourceInfo resourcesUsed;
@@ -138,6 +140,14 @@ public class CapacitySchedulerQueueInfo {
 
   public ResourceInfo getResourcesUsed() {
     return resourcesUsed;
+  }
+
+  public String getLabel() {
+    return label;
+  }
+
+  public String getLabelPolicy() {
+    return labelPolicy;
   }
 
   /**

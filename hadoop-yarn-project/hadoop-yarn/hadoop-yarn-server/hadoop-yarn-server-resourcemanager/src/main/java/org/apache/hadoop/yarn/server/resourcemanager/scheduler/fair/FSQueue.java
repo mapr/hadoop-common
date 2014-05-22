@@ -48,6 +48,10 @@ public abstract class FSQueue implements Queue, Schedulable {
   private final FSQueueMetrics metrics;
   
   protected final FSParentQueue parent;
+  
+  protected String label;
+  protected QueueLabelPolicy labelPolicy;
+  
   protected final RecordFactory recordFactory =
       RecordFactoryProvider.getRecordFactory(null);
   
