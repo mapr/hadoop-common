@@ -112,6 +112,8 @@ class CapacitySchedulerPage extends RmView {
           _("Num Schedulable Applications:", Integer.toString(lqinfo.getNumActiveApplications())).
           _("Num Non-Schedulable Applications:", Integer.toString(lqinfo.getNumPendingApplications())).
           _("Num Containers:", Integer.toString(lqinfo.getNumContainers())).
+          _("Queue Label:", lqinfo.getLabel()).
+          _("Queue Label Policy:", lqinfo.getLabelPolicy()).
           _("Max Applications:", Integer.toString(lqinfo.getMaxApplications())).
           _("Max Applications Per User:", Integer.toString(lqinfo.getMaxApplicationsPerUser())).
           _("Max Schedulable Applications:", Integer.toString(lqinfo.getMaxActiveApplications())).

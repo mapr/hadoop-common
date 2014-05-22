@@ -380,7 +380,7 @@ public class RMAppManager implements EventHandler<RMAppManagerEvent>,
     if (!submissionContext.getUnmanagedAM()) {
       ResourceRequest amReq = BuilderUtils.newResourceRequest(
           RMAppAttemptImpl.AM_CONTAINER_PRIORITY, ResourceRequest.ANY,
-          submissionContext.getResource(), 1);
+          submissionContext.getResource(), 1, submissionContext.getLabel());
       try {
         SchedulerUtils.validateResourceRequest(amReq,
             scheduler.getMaximumResourceCapability());

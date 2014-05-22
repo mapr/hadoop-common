@@ -791,7 +791,8 @@ public class RMAppAttemptImpl implements RMAppAttempt, Recoverable {
         ResourceRequest request =
             BuilderUtils.newResourceRequest(
                 AM_CONTAINER_PRIORITY, ResourceRequest.ANY, appAttempt
-                    .getSubmissionContext().getResource(), 1);
+                    .getSubmissionContext().getResource(), 1, appAttempt
+                    .getSubmissionContext().getLabel());
 
         // SchedulerUtils.validateResourceRequests is not necessary because
         // AM resource has been checked when submission

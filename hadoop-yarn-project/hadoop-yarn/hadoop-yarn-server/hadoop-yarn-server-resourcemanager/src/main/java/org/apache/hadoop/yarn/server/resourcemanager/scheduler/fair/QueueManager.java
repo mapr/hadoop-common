@@ -329,6 +329,8 @@ public class QueueManager {
         SchedulingPolicy policy = queueConf.getSchedulingPolicy(queue.getName());
         policy.initialize(scheduler.getClusterCapacity());
         queue.setPolicy(policy);
+        queue.setLabel(queue.refreshLabel());
+        queue.setLabelPolicy(queue.refreshLabelPolicy());
       } catch (AllocationConfigurationException ex) {
         LOG.warn("Cannot apply configured scheduling policy to queue "
             + queue.getName(), ex);

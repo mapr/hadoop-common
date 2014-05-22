@@ -55,6 +55,19 @@ public abstract class QueueInfo {
       float maximumCapacity, float currentCapacity,
       List<QueueInfo> childQueues, List<ApplicationReport> applications,
       QueueState queueState) {
+    
+    return newInstance(queueName, capacity,
+        maximumCapacity, currentCapacity,
+        childQueues, applications,
+        queueState, null, null);    
+  }
+
+  @Private
+  @Unstable
+  public static QueueInfo newInstance(String queueName, float capacity,
+      float maximumCapacity, float currentCapacity,
+      List<QueueInfo> childQueues, List<ApplicationReport> applications,
+      QueueState queueState, String label, String labelPolicy) {
     QueueInfo queueInfo = Records.newRecord(QueueInfo.class);
     queueInfo.setQueueName(queueName);
     queueInfo.setCapacity(capacity);
@@ -63,9 +76,10 @@ public abstract class QueueInfo {
     queueInfo.setChildQueues(childQueues);
     queueInfo.setApplications(applications);
     queueInfo.setQueueState(queueState);
+    queueInfo.setQueueLabel(label);
+    queueInfo.setQueueLabelPolicy(labelPolicy);
     return queueInfo;
   }
-
   /**
    * Get the <em>name</em> of the queue.
    * @return <em>name</em> of the queue
@@ -149,4 +163,22 @@ public abstract class QueueInfo {
   @Private
   @Unstable
   public abstract void setQueueState(QueueState queueState);
+  
+  @Public
+  @Unstable
+  public abstract String getQueueLabel();
+  
+  @Private
+  @Unstable
+  public abstract void setQueueLabel(String queueLabel);
+  
+  @Public
+  @Unstable
+  public abstract String getQueueLabelPolicy();
+  
+  @Private
+  @Unstable
+  public abstract void setQueueLabelPolicy(String queueLabelPolicy);
+  
+  
 }

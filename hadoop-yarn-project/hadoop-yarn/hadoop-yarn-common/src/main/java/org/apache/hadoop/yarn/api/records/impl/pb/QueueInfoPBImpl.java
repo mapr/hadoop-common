@@ -323,4 +323,36 @@ public class QueueInfoPBImpl extends QueueInfo {
     return ProtoUtils.convertToProtoFormat(queueState);
   }
 
+  @Override
+  public String getQueueLabel() {
+    QueueInfoProtoOrBuilder p = viaProto ? proto : builder;
+    return (p.hasLabel()) ? p.getLabel() : null;
+  }
+
+  @Override
+  public void setQueueLabel(String queueLabel) {
+    maybeInitBuilder();
+    if (queueLabel == null) {
+      builder.clearLabel();
+      return;
+    }
+    builder.setLabel(queueLabel);
+  }
+
+  @Override
+  public String getQueueLabelPolicy() {
+    QueueInfoProtoOrBuilder p = viaProto ? proto : builder;
+    return (p.hasLabelPolicy()) ? p.getLabelPolicy() : null;
+  }
+
+  @Override
+  public void setQueueLabelPolicy(String queueLabelPolicy) {
+    maybeInitBuilder();
+    if (queueLabelPolicy == null) {
+      builder.clearLabelPolicy();
+      return;
+    }
+    builder.setLabelPolicy(queueLabelPolicy);
+  }
+
 }

@@ -124,6 +124,9 @@ public class FifoScheduler extends AbstractYarnScheduler implements
   private ActiveUsersManager activeUsersManager;
 
   private static final String DEFAULT_QUEUE_NAME = "default";
+  private static final String DEFAULT_QUEUE_LABEL_TAG = "label";
+  private static final String DEFAULT_QUEUE_LABEL_POLICY_TAG = "labelPolicy";
+  private static final String DOT = ".";
   private QueueMetrics metrics;
   
   private final ResourceCalculator resourceCalculator = new DefaultResourceCalculator();
@@ -154,6 +157,8 @@ public class FifoScheduler extends AbstractYarnScheduler implements
       queueInfo.setMaximumCapacity(1.0f);
       queueInfo.setChildQueues(new ArrayList<QueueInfo>());
       queueInfo.setQueueState(QueueState.RUNNING);
+      queueInfo.setQueueLabel(getLabel());
+      queueInfo.setQueueLabelPolicy(getLabelPolicy().name());
       return queueInfo;
     }
 
@@ -184,6 +189,25 @@ public class FifoScheduler extends AbstractYarnScheduler implements
     @Override
     public ActiveUsersManager getActiveUsersManager() {
       return activeUsersManager;
+    }
+
+    @Override
+    public QueueLabelPolicy getLabelPolicy() {
+      String labelPolicy = getConf().get(getQueueName() +
+          DOT + 
+          DEFAULT_QUEUE_LABEL_POLICY_TAG, "AND");
+      try {
+        return QueueLabelPolicy.valueOf(labelPolicy);
+      } catch (IllegalArgumentException ie) {
+        LOG.warn("Unknown label policy: " + labelPolicy);
+        return QueueLabelPolicy.AND;
+      }
+    }
+
+    @Override
+    public String getLabel() {
+      return getConf().get(getQueueName() + DOT +
+          DEFAULT_QUEUE_LABEL_TAG, "all");
     }
   };
 

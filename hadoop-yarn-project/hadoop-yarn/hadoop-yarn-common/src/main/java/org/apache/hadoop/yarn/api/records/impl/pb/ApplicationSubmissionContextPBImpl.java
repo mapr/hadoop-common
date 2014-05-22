@@ -19,6 +19,7 @@
 package org.apache.hadoop.yarn.api.records.impl.pb;
 
 import com.google.common.base.CharMatcher;
+
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -400,5 +401,24 @@ extends ApplicationSubmissionContext {
 
   private ResourceProto convertToProtoFormat(Resource t) {
     return ((ResourcePBImpl)t).getProto();
+  }
+
+  @Override
+  public String getLabel() {
+    ApplicationSubmissionContextProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasLabel()) {
+      return null;
+    }
+    return (p.getLabel());
+  }
+
+  @Override
+  public void setLabel(String label) {
+    maybeInitBuilder();
+    if (label == null) {
+      builder.clearLabel();
+      return;
+    }
+    builder.setLabel((label));
   }
 }  

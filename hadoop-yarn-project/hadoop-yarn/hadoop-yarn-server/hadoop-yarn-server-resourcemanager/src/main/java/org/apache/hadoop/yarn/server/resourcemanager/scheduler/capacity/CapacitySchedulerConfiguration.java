@@ -82,6 +82,12 @@ public class CapacitySchedulerConfiguration extends Configuration {
 
   @Private
   public static final String STATE = "state";
+  
+  @Private
+  public static final String LABEL_POLICY = "label-policy";
+
+  @Private
+  public static final String LABEL = "label";
 
   @Private
   public static final int DEFAULT_MAXIMUM_SYSTEM_APPLICATIIONS = 10000;

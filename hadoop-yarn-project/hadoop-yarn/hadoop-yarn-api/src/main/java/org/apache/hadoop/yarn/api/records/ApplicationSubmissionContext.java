@@ -151,7 +151,23 @@ public abstract class ApplicationSubmissionContext {
   @Public
   @Stable
   public abstract void setQueue(String queue);
-  
+
+  /**
+   * Get the <em>label expression</em> for the application
+   * @return <em>label expression</em> for the application 
+   */
+  @Public
+  @Stable
+  public abstract String getLabel();
+
+  /**
+   * Set the <em>label expression</em> for the application
+   * @param label <em>label expression</em> for the application
+   */
+  @Public
+  @Stable
+  public abstract void setLabel(String label);
+
   /**
    * Get the <code>Priority</code> of the application.
    * @return <code>Priority</code> of the application

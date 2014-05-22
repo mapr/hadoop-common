@@ -20,6 +20,7 @@ package org.apache.hadoop.yarn.server.resourcemanager.webapp;
 
 import static org.apache.hadoop.yarn.util.StringHelper.join;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.hadoop.yarn.server.resourcemanager.RMContext;
 import org.apache.hadoop.yarn.server.resourcemanager.ResourceManager;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fifo.FifoScheduler;
@@ -58,7 +59,10 @@ class DefaultSchedulerPage extends RmView {
         _("Used Node Capacity:" , Integer.toString(sinfo.getUsedNodeCapacity())).
         _("Available Node Capacity:" , Integer.toString(sinfo.getAvailNodeCapacity())).
         _("Total Node Capacity:" , Integer.toString(sinfo.getTotalNodeCapacity())).
-        _("Number of Node Containers:" , Integer.toString(sinfo.getNumContainers()));
+        _("Number of Node Containers:" , Integer.toString(sinfo.getNumContainers())).
+        _("Queue Label:", StringEscapeUtils.escapeHtml(sinfo.getLabel())).
+        _("Queue Label Policy:", StringEscapeUtils.escapeHtml(sinfo.getLabelPolicy()));
+
 
       html._(InfoBlock.class);
     }
