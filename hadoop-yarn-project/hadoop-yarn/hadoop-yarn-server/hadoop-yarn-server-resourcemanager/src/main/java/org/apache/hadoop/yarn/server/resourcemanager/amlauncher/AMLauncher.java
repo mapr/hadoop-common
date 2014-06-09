@@ -54,6 +54,8 @@ import org.apache.hadoop.yarn.event.EventHandler;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
 import org.apache.hadoop.yarn.security.AMRMTokenIdentifier;
+import org.apache.hadoop.yarn.security.ExternalTokenManager;
+import org.apache.hadoop.yarn.security.ExternalTokenManagerFactory;
 import org.apache.hadoop.yarn.server.resourcemanager.RMContext;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttempt;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttemptEvent;
@@ -80,6 +82,8 @@ public class AMLauncher implements Runnable {
   
   @SuppressWarnings("rawtypes")
   private final EventHandler handler;
+
+  private ExternalTokenManager extTokenMgr = ExternalTokenManagerFactory.get();
   
   public AMLauncher(RMContext rmContext, RMAppAttempt application,
       AMLauncherEventType eventType, Configuration conf) {
@@ -129,6 +133,11 @@ public class AMLauncher implements Runnable {
   }
   
   private void cleanup() throws IOException, YarnException {
+    // Cleanup any external tokens
+    if (extTokenMgr != null) {
+      extTokenMgr.removeToken(application.getAppAttemptId().getApplicationId(), conf);
+    }
+
     connect();
     ContainerId containerId = masterContainer.getId();
     List<ContainerId> containerIds = new ArrayList<ContainerId>();
@@ -195,7 +204,15 @@ public class AMLauncher implements Runnable {
     
     // Finalize the container
     setupTokens(container, containerID);
-    
+
+    // Setup any external tokens
+    if (extTokenMgr != null) {
+      String username = rmContext.getRMApps()
+        .get(containerID.getApplicationAttemptId().getApplicationId())
+        .getUser();
+      extTokenMgr.generateToken(applicationMasterContext, username, conf);
+    }
+
     return container;
   }
 

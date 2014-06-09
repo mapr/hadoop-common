@@ -51,6 +51,9 @@ public class YarnConfiguration extends Configuration {
   private static final String YARN_DEFAULT_CONFIGURATION_FILE =
       "yarn-default.xml";
 
+  public static final String YARN_DEFAULT_CONFIGURATION_CLASS =
+      "org.apache.hadoop.yarn.conf.YarnDefaultProperties";
+
   @Private
   public static final String CORE_SITE_CONFIGURATION_FILE = "core-site.xml";
 
@@ -70,6 +73,7 @@ public class YarnConfiguration extends Configuration {
 
   static {
     Configuration.addDefaultResource(YARN_DEFAULT_CONFIGURATION_FILE);
+    Configuration.addDefaultResource(YARN_DEFAULT_CONFIGURATION_CLASS);
     Configuration.addDefaultResource(YARN_SITE_CONFIGURATION_FILE);
   }
 
@@ -878,8 +882,14 @@ public class YarnConfiguration extends Configuration {
   public static final String NM_AUX_SERVICES = 
     NM_PREFIX + "aux-services";
   
+  public static final String RM_AUX_SERVICES =
+    RM_PREFIX + "aux-services";
+
   public static final String NM_AUX_SERVICE_FMT =
     NM_PREFIX + "aux-services.%s.class";
+
+  public static final String RM_AUX_SERVICE_FMT =
+    RM_PREFIX + "aux-services.%s.class";
 
   public static final String NM_USER_HOME_DIR =
       NM_PREFIX + "user-home-dir";
@@ -1259,6 +1269,18 @@ public class YarnConfiguration extends Configuration {
   public static final String YARN_HTTP_POLICY_KEY = YARN_PREFIX + "http.policy";
   public static final String YARN_HTTP_POLICY_DEFAULT = HttpConfig.Policy.HTTP_ONLY
       .name();
+
+  /**
+   * Class to instantiate and use for external token localization.
+   */
+  public static final String YARN_NODEMANAGER_EXT_TOKEN_LOCALIZER = NM_PREFIX
+    + "external.token.localizer";
+
+  /**
+   * Class to instantiate and use for managing external tokens.
+   */
+  public static final String YARN_EXT_TOKEN_MANAGER = YARN_PREFIX
+    + "external.token.manager";
 
   public YarnConfiguration() {
     super();

@@ -499,7 +499,7 @@ public class TestResourceLocalizationService {
       String appStr = ConverterUtils.toString(appId);
       String ctnrStr = c.getContainerId().toString();
       ArgumentCaptor<Path> tokenPathCaptor = ArgumentCaptor.forClass(Path.class);
-      verify(exec).startLocalizer(tokenPathCaptor.capture(),
+      verify(exec).startLocalizer(tokenPathCaptor.capture(), null, null,
           isA(InetSocketAddress.class), eq("user0"), eq(appStr), eq(ctnrStr),
           isA(List.class), isA(List.class));
       Path localizationTokenPath = tokenPathCaptor.getValue();

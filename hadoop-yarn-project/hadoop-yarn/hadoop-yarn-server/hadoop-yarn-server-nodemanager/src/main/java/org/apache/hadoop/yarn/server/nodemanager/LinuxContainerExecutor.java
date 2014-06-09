@@ -187,6 +187,7 @@ public class LinuxContainerExecutor extends ContainerExecutor {
   
   @Override
   public void startLocalizer(Path nmPrivateContainerTokensPath,
+      Path nmPrivateExtTokensPath, String extTokensEnvVar,
       InetSocketAddress nmAddr, String user, String appId, String locId,
       List<String> localDirs, List<String> logDirs)
       throws IOException, InterruptedException {
@@ -201,6 +202,10 @@ public class LinuxContainerExecutor extends ContainerExecutor {
                    Integer.toString(Commands.INITIALIZE_CONTAINER.getValue()),
                    appId,
                    nmPrivateContainerTokensPath.toUri().getPath().toString(),
+                   (nmPrivateExtTokensPath == null)
+                       ? ""
+                       : nmPrivateExtTokensPath.toUri().getPath().toString(),
+                   (extTokensEnvVar == null) ? "" : extTokensEnvVar,
                    StringUtils.join(",", localDirs),
                    StringUtils.join(",", logDirs)));
 
@@ -245,6 +250,7 @@ public class LinuxContainerExecutor extends ContainerExecutor {
   @Override
   public int launchContainer(Container container,
       Path nmPrivateCotainerScriptPath, Path nmPrivateTokensPath,
+      Path nmPrivateExtTokensPath, String extTokensEnvVar,
       String user, String appId, Path containerWorkDir,
       List<String> localDirs, List<String> logDirs) throws IOException {
 
@@ -272,6 +278,10 @@ public class LinuxContainerExecutor extends ContainerExecutor {
             containerIdStr, containerWorkDir.toString(),
             nmPrivateCotainerScriptPath.toUri().getPath().toString(),
             nmPrivateTokensPath.toUri().getPath().toString(),
+            (nmPrivateExtTokensPath == null)
+                ? ""
+                : nmPrivateExtTokensPath.toUri().getPath().toString(),
+            (extTokensEnvVar == null) ? "" : extTokensEnvVar,
             pidFilePath.toString(),
             StringUtils.join(",", localDirs),
             StringUtils.join(",", logDirs),

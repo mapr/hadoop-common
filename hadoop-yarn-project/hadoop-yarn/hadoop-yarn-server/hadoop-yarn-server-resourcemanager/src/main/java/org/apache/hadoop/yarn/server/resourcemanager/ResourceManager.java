@@ -157,9 +157,15 @@ public class ResourceManager extends CompositeService implements Recoverable {
   private Configuration conf;
 
   private UserGroupInformation rmLoginUGI;
+
+  private final RMAuxServices auxiliaryServices;
   
   public ResourceManager() {
     super("ResourceManager");
+
+    // Setup configurable services
+    auxiliaryServices = new RMAuxServices();
+    addService(auxiliaryServices);
   }
 
   public RMContext getRMContext() {

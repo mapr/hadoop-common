@@ -71,6 +71,8 @@ import org.apache.hadoop.yarn.server.nodemanager.containermanager.container.Cont
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.container.ContainerState;
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.ContainerLocalizer;
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.ResourceLocalizationService;
+import org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.security.ExternalTokenLocalizer;
+import org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.security.ExternalTokenLocalizerFactory;
 import org.apache.hadoop.yarn.server.nodemanager.util.ProcessIdFileReader;
 import org.apache.hadoop.yarn.util.Apps;
 import org.apache.hadoop.yarn.util.AuxiliaryServiceHelper;
@@ -263,6 +265,8 @@ public class ContainerLaunch implements Callable<Integer> {
             ApplicationConstants.CONTAINER_TOKEN_FILE_ENV_NAME, 
             new Path(containerWorkDir, 
                 FINAL_CONTAINER_TOKENS_FILE).toUri().getPath());
+
+
         // Sanitize the container's environment
         sanitizeEnv(environment, containerWorkDir, appDirs, containerLogDirs,
           localResources);
@@ -297,9 +301,19 @@ public class ContainerLaunch implements Callable<Integer> {
       }
       else {
         exec.activateContainer(containerID, pidFilePath);
+
+        Path extTokenPath = null;
+        String extTokenEnvVar = null;
+
+        ExternalTokenLocalizer extTokenLocalizer = ExternalTokenLocalizerFactory.get();
+        if (extTokenLocalizer != null) {
+          extTokenPath = extTokenLocalizer.getTokenPath(appIdStr, conf);
+          extTokenEnvVar = extTokenLocalizer.getTokenEnvVar();
+        }
+
         ret = exec.launchContainer(container, nmPrivateContainerScriptPath,
-                nmPrivateTokensPath, user, appIdStr, containerWorkDir,
-                localDirs, logDirs);
+                nmPrivateTokensPath, extTokenPath, extTokenEnvVar, user,
+                appIdStr, containerWorkDir, localDirs, logDirs);
       }
     } catch (Throwable e) {
       LOG.warn("Failed to launch container.", e);
