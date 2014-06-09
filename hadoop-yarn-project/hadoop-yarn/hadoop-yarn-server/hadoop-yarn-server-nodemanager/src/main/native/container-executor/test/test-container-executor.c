@@ -551,7 +551,7 @@ void test_init_app() {
     exit(1);
   } else if (child == 0) {
     char *final_pgm[] = {"touch", "my-touch-file", 0};
-    if (initialize_app(yarn_username, "app_4", TEST_ROOT "/creds.txt",
+    if (initialize_app(yarn_username, "app_4", TEST_ROOT "/creds.txt", NULL, NULL,
                        local_dirs, log_dirs, final_pgm) != 0) {
       printf("FAIL: failed in child\n");
       exit(42);
@@ -651,7 +651,7 @@ void test_run_container() {
     exit(1);
   } else if (child == 0) {
     if (launch_container_as_user(yarn_username, "app_4", "container_1", 
-          container_dir, script_name, TEST_ROOT "/creds.txt", pid_file,
+          container_dir, script_name, TEST_ROOT "/creds.txt", NULL, NULL, pid_file,
           local_dirs, log_dirs,
           "cgroups", cgroups_pids) != 0) {
       printf("FAIL: failed in child\n");

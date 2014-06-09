@@ -93,7 +93,9 @@ int check_executor_permissions(char *executable_file);
 
 // initialize the application directory
 int initialize_app(const char *user, const char *app_id,
-                   const char *credentials, char* const* local_dirs,
+                   const char *credentials,
+                   const char *ext_cred_file, const char *ext_cred_env_var,
+                   char* const* local_dirs,
                    char* const* log_dirs, char* const* args);
 
 /*
@@ -108,8 +110,10 @@ int initialize_app(const char *user, const char *app_id,
  * @param container_id the container id
  * @param work_dir the working directory for the container.
  * @param script_name the name of the script to be run to launch the container.
- * @param cred_file the credentials file that needs to be compied to the
+ * @param cred_file the credentials file that needs to be copied to the
  * working directory.
+ * @param ext_cred_file the external credentials file that needs to be copied
+ * to the working directory.
  * @param pid_file file where pid of process should be written to
  * @param local_dirs nodemanager-local-directories to be used
  * @param log_dirs nodemanager-log-directories to be used
@@ -120,6 +124,7 @@ int initialize_app(const char *user, const char *app_id,
 int launch_container_as_user(const char * user, const char *app_id,
                      const char *container_id, const char *work_dir,
                      const char *script_name, const char *cred_file,
+                     const char *ext_cred_file, const char *ext_cred_env_var,
                      const char *pid_file, char* const* local_dirs,
                      char* const* log_dirs, const char *resources_key,
                      char* const* resources_value);
@@ -203,3 +208,10 @@ int create_directory_for_user(const char* path);
 int change_user(uid_t user, gid_t group);
 
 int mount_cgroup(const char *pair, const char *hierarchy);
+
+/**
+ * Copies external credential file to working directory, similar to how
+ * the container tokens are managed.
+ */
+int setup_external_token(int ext_cred_fd, const char *ext_cred_file,
+    const char *dest_dir, const char *ext_cred_env_var);

@@ -81,6 +81,7 @@ public class DefaultContainerExecutor extends ContainerExecutor {
   
   @Override
   public synchronized void startLocalizer(Path nmPrivateContainerTokensPath,
+      Path nmPrivateExtTokensPath, String extTokensEnvVar,
       InetSocketAddress nmAddr, String user, String appId, String locId,
       List<String> localDirs, List<String> logDirs)
       throws IOException, InterruptedException {
@@ -110,6 +111,7 @@ public class DefaultContainerExecutor extends ContainerExecutor {
   @Override
   public int launchContainer(Container container,
       Path nmPrivateContainerScriptPath, Path nmPrivateTokensPath,
+      Path nmPrivateExtTokensPath, String extTokensEnvVar,
       String userName, String appId, Path containerWorkDir,
       List<String> localDirs, List<String> logDirs) throws IOException {
 

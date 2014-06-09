@@ -202,6 +202,7 @@ public class TestLinuxContainerExecutor {
 
     exec.activateContainer(cId, pidFile);
     return exec.launchContainer(container, scriptPath, tokensPath,
+        null, null,
         appSubmitter, appId, workDir, dirsHandler.getLocalDirs(),
         dirsHandler.getLogDirs());
   }

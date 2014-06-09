@@ -125,6 +125,7 @@ public class TestLinuxContainerExecutorWithMocks {
 
     mockExec.activateContainer(cId, pidFile);
     int ret = mockExec.launchContainer(container, scriptPath, tokensPath,
+        null, null,
         appSubmitter, appId, workDir, dirsHandler.getLocalDirs(),
         dirsHandler.getLogDirs());
     assertEquals(0, ret);
@@ -178,7 +179,7 @@ public class TestLinuxContainerExecutorWithMocks {
     Path nmPrivateCTokensPath= new Path("file:///bin/nmPrivateCTokensPath");
  
     try {
-      mockExec.startLocalizer(nmPrivateCTokensPath, address, "test", "application_0", "12345", dirsHandler.getLocalDirs(), dirsHandler.getLogDirs());
+      mockExec.startLocalizer(nmPrivateCTokensPath, null, null, address, "test", "application_0", "12345", dirsHandler.getLocalDirs(), dirsHandler.getLogDirs());
       List<String> result=readMockParams();
       Assert.assertEquals(result.size(), 17);
       Assert.assertEquals(result.get(0), YarnConfiguration.DEFAULT_NM_NONSECURE_MODE_LOCAL_USER);
@@ -244,7 +245,7 @@ public class TestLinuxContainerExecutorWithMocks {
 
     mockExec.activateContainer(cId, pidFile);
     int ret = mockExec.launchContainer(container, scriptPath, tokensPath,
-        appSubmitter, appId, workDir, dirsHandler.getLocalDirs(),
+        null, null, appSubmitter, appId, workDir, dirsHandler.getLocalDirs(),
         dirsHandler.getLogDirs());
     Assert.assertNotSame(0, ret);
     assertEquals(Arrays.asList(YarnConfiguration.DEFAULT_NM_NONSECURE_MODE_LOCAL_USER,
