@@ -114,12 +114,15 @@ public abstract class ContainerExecutor implements Configurable {
    * @param user user name of application owner
    * @param appId id of the application
    * @param nmPrivateContainerTokens path to localized credentials, rsrc by NM
+   * @param nmPrivateExtTokensPath the path for any external tokens for the container - nullable
+   * @param extTokensEnvVar the name of the environment variable that points to external token path - nullable
    * @param nmAddr RPC address to contact NM
    * @param dirsHandler NM local dirs service, for nm-local-dirs and nm-log-dirs
    * @throws IOException For most application init failures
    * @throws InterruptedException If application init thread is halted by NM
    */
   public abstract void startLocalizer(Path nmPrivateContainerTokens,
+      Path nmPrivateExtTokensPath, String extTokensEnvVar,
       InetSocketAddress nmAddr, String user, String appId, String locId,
       LocalDirsHandlerService dirsHandler)
     throws IOException, InterruptedException;
@@ -131,6 +134,8 @@ public abstract class ContainerExecutor implements Configurable {
    * @param container the container to be launched
    * @param nmPrivateContainerScriptPath the path for launch script
    * @param nmPrivateTokensPath the path for tokens for the container
+   * @param nmPrivateExtTokensPath the path for any external tokens for the container - nullable
+   * @param extTokensEnvVar the name of the environment variable that points to external token path - nullable
    * @param user the user of the container
    * @param appId the appId of the container
    * @param containerWorkDir the work dir for the container
@@ -141,8 +146,9 @@ public abstract class ContainerExecutor implements Configurable {
    */
   public abstract int launchContainer(Container container,
       Path nmPrivateContainerScriptPath, Path nmPrivateTokensPath,
-      String user, String appId, Path containerWorkDir, 
-      List<String> localDirs, List<String> logDirs) throws IOException;
+      Path nmPrivateExtTokensPath, String extTokensEnvVar,
+      String user, String appId, Path containerWorkDir, List<String> localDirs,
+      List<String> logDirs) throws IOException;
 
   public abstract boolean signalContainer(String user, String pid,
       Signal signal)

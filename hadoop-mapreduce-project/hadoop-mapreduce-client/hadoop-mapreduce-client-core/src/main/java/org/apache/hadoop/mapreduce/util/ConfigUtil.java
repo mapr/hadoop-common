@@ -27,6 +27,7 @@ import org.apache.hadoop.mapreduce.MRJobConfig;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.server.jobtracker.JTConfig;
 import org.apache.hadoop.mapreduce.server.tasktracker.TTConfig;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
 
 /**
  * Place holder for deprecated keys in the framework 
@@ -44,6 +45,7 @@ public class ConfigUtil {
     Configuration.addDefaultResource("org.apache.hadoop.mapreduce.conf.MapReduceDefaultProperties");
     Configuration.addDefaultResource("mapred-site.xml");
     Configuration.addDefaultResource("yarn-default.xml");
+    Configuration.addDefaultResource(YarnConfiguration.YARN_DEFAULT_CONFIGURATION_CLASS);
     Configuration.addDefaultResource("yarn-site.xml");
   }
   

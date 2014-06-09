@@ -144,6 +144,12 @@ import org.apache.hadoop.yarn.proto.YarnServiceProtos.ReservationDeleteRequestPr
 import org.apache.hadoop.yarn.proto.YarnServiceProtos.ReservationSubmissionRequestProto;
 import org.apache.hadoop.yarn.proto.YarnServiceProtos.ReservationUpdateRequestProto;
 import org.apache.hadoop.yarn.proto.YarnServiceProtos.SubmitApplicationRequestProto;
+import org.apache.hadoop.yarn.proto.YarnServiceProtos.GetApplicationAttemptsRequestProto;
+import org.apache.hadoop.yarn.proto.YarnServiceProtos.GetApplicationAttemptReportRequestProto;
+import org.apache.hadoop.yarn.proto.YarnServiceProtos.GetContainerReportRequestProto;
+import org.apache.hadoop.yarn.proto.YarnServiceProtos.GetContainersRequestProto;
+import org.apache.hadoop.yarn.security.ExternalTokenManager;
+import org.apache.hadoop.yarn.security.ExternalTokenManagerFactory;
 
 import com.google.protobuf.ServiceException;
 
@@ -233,6 +239,14 @@ public class ApplicationClientProtocolPBClientImpl implements ApplicationClientP
     SubmitApplicationRequestProto requestProto =
         ((SubmitApplicationRequestPBImpl) request).getProto();
     try {
+      // Upload any external tokens to distributed cache before submitting the
+      // application.
+      ExternalTokenManager extTokenMgr = ExternalTokenManagerFactory.get();
+      if (extTokenMgr != null) {
+        extTokenMgr.uploadTokenToDistributedCache(
+            request.getApplicationSubmissionContext().getApplicationId());
+      }
+
       return new SubmitApplicationResponsePBImpl(proxy.submitApplication(null,
         requestProto));
     } catch (ServiceException e) {
