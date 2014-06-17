@@ -51,7 +51,8 @@ public class DefaultResourceCalculator extends ResourceCalculator {
   @Override
   public Resource divideAndCeil(Resource numerator, int denominator) {
     return Resources.createResource(
-        divideAndCeil(numerator.getMemory(), denominator));
+        divideAndCeil(numerator.getMemory(), denominator), numerator.getVirtualCores(),
+          numerator.getDisks()); //Only memory is divided
   }
 
   @Override
@@ -62,7 +63,7 @@ public class DefaultResourceCalculator extends ResourceCalculator {
             Math.max(r.getMemory(), minimumResource.getMemory()),
             stepFactor.getMemory()),
             maximumResource.getMemory());
-    return Resources.createResource(normalizedMemory);
+    return Resources.createResource(normalizedMemory, r.getVirtualCores(), r.getDisks());
   }
 
   @Override
@@ -74,21 +75,21 @@ public class DefaultResourceCalculator extends ResourceCalculator {
   @Override
   public Resource roundUp(Resource r, Resource stepFactor) {
     return Resources.createResource(
-        roundUp(r.getMemory(), stepFactor.getMemory())
+        roundUp(r.getMemory(), stepFactor.getMemory()), r.getVirtualCores(), r.getDisks()
         );
   }
 
   @Override
   public Resource roundDown(Resource r, Resource stepFactor) {
     return Resources.createResource(
-        roundDown(r.getMemory(), stepFactor.getMemory()));
+        roundDown(r.getMemory(), stepFactor.getMemory()), r.getVirtualCores(), r.getDisks());
   }
 
   @Override
   public Resource multiplyAndNormalizeUp(Resource r, double by,
       Resource stepFactor) {
     return Resources.createResource(
-        roundUp((int)(r.getMemory() * by + 0.5), stepFactor.getMemory())
+        roundUp((int)(r.getMemory() * by + 0.5), stepFactor.getMemory()), r.getVirtualCores(), r.getDisks()
         );
   }
 
@@ -99,7 +100,7 @@ public class DefaultResourceCalculator extends ResourceCalculator {
         roundDown(
             (int)(r.getMemory() * by), 
             stepFactor.getMemory()
-            )
+            ), r.getVirtualCores(), r.getDisks()
         );
   }
 

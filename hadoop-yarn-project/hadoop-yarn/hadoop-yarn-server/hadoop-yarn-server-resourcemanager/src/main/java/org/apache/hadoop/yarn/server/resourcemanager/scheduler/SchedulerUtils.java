@@ -173,8 +173,8 @@ public class SchedulerUtils {
       
       // Log resource change
       log.info("Resource change on node: " + rmNode.getNodeAddress() 
-          + " with delta: CPU: " + deltaResource.getMemory() + "core, Memory: "
-          + deltaResource.getMemory() +"MB");
+          + " with delta: CPU: " + deltaResource.getVirtualCores() + "core, Memory: "
+          + deltaResource.getMemory() +"MB, Disk: " + deltaResource.getDisks());
     }
   }
 
@@ -216,7 +216,7 @@ public class SchedulerUtils {
 
   /**
    * Utility method to validate a resource request, by insuring that the
-   * requested memory/vcore is non-negative and not greater than max
+   * requested memory/vcore/disk is non-negative and not greater than max
    * 
    * @throws <code>InvalidResourceRequestException</code> when there is invalid
    *         request
@@ -240,6 +240,16 @@ public class SchedulerUtils {
           + ", requestedVirtualCores="
           + resReq.getCapability().getVirtualCores()
           + ", maxVirtualCores=" + maximumResource.getVirtualCores());
+    }
+    if (resReq.getCapability().getDisks() < 0 ||
+         resReq.getCapability().getDisks() >
+         maximumResource.getDisks()) {
+          throw new InvalidResourceRequestException("Invalid resource request"
+              + ", requested disks < 0"
+              + ", or requested disks > max configured"
+              + ", requestedDisks="
+              + resReq.getCapability().getDisks()
+              + ", maxDisks=" + maximumResource.getDisks());
     }
   }
 }

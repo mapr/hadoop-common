@@ -48,6 +48,9 @@ public class FairSchedulerConfiguration extends Configuration {
   public static final String RM_SCHEDULER_INCREMENT_ALLOCATION_VCORES =
     YarnConfiguration.YARN_PREFIX + "scheduler.increment-allocation-vcores";
   public static final int DEFAULT_RM_SCHEDULER_INCREMENT_ALLOCATION_VCORES = 1;
+  public static final String RM_SCHEDULER_INCREMENT_ALLOCATION_DISKS =
+    YarnConfiguration.YARN_PREFIX + "scheduler.increment-allocation-disk";
+  public static final double DEFAULT_RM_SCHEDULER_INCREMENT_ALLOCATION_DISKS = 0.0;
   
   private static final String CONF_PREFIX =  "yarn.scheduler.fair.";
 
@@ -138,7 +141,10 @@ public class FairSchedulerConfiguration extends Configuration {
     int cpu = getInt(
         YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_VCORES,
         YarnConfiguration.DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_VCORES);
-    return Resources.createResource(mem, cpu);
+    double disk = getDouble(
+            YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_DISKS,
+            YarnConfiguration.DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_DISKS);
+    return Resources.createResource(mem, cpu, disk);
   }
 
   public Resource getMaximumAllocation() {
@@ -148,7 +154,10 @@ public class FairSchedulerConfiguration extends Configuration {
     int cpu = getInt(
         YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES,
         YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES);
-    return Resources.createResource(mem, cpu);
+    double disk = getDouble(
+            YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS,
+            YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS);
+    return Resources.createResource(mem, cpu, disk);
   }
 
   public Resource getIncrementAllocation() {
@@ -158,9 +167,12 @@ public class FairSchedulerConfiguration extends Configuration {
     int incrementCores = getInt(
       RM_SCHEDULER_INCREMENT_ALLOCATION_VCORES,
       DEFAULT_RM_SCHEDULER_INCREMENT_ALLOCATION_VCORES);
-    return Resources.createResource(incrementMemory, incrementCores);
+    double incrementDisk = getDouble(
+      RM_SCHEDULER_INCREMENT_ALLOCATION_DISKS,
+      DEFAULT_RM_SCHEDULER_INCREMENT_ALLOCATION_DISKS);
+    return Resources.createResource(incrementMemory, incrementCores, incrementDisk);
   }
-  
+
   public float getLocalityThresholdNode() {
     return getFloat(LOCALITY_THRESHOLD_NODE, DEFAULT_LOCALITY_THRESHOLD_NODE);
   }
@@ -237,7 +249,7 @@ public class FairSchedulerConfiguration extends Configuration {
       throws AllocationConfigurationException {
     try {
       int memory = findResource(val, "mb");
-      int vcores = findResource(val, "vcores");
+      int vcores = findResource(val, "vcores");//TODO Add disk
       return BuilderUtils.newResource(memory, vcores);
     } catch (AllocationConfigurationException ex) {
       throw ex;

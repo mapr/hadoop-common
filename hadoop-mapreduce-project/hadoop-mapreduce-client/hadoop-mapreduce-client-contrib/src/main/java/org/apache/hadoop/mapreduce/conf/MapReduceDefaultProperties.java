@@ -44,6 +44,7 @@ public class MapReduceDefaultProperties extends Properties {
   static { // Map side defaults
     props.put(MRJobConfig.MAP_OUTPUT_COMPRESS, "false");
     props.put(MRJobConfig.MAP_SPECULATIVE, "true");
+
   }
 
   static { // Reduce side defaults
@@ -52,6 +53,8 @@ public class MapReduceDefaultProperties extends Properties {
 
   static { // Map side performance tuning defaults
     props.put(MRJobConfig.MAP_MEMORY_MB, "1024");
+    props.put(MRJobConfig.MAP_CPU_VCORES, "1");
+    props.put(MRJobConfig.MAP_DISK, "0.5");
     props.put(MRJobConfig.MAP_JAVA_OPTS, "-Xmx900m");
     props.put(MRJobConfig.IO_SORT_MB, getIoSortMb());
     props.put(MRJobConfig.IO_SORT_FACTOR, "256");
@@ -63,6 +66,8 @@ public class MapReduceDefaultProperties extends Properties {
 
   static { // Reduce side performance tuning defaults
     props.put(MRJobConfig.REDUCE_MEMORY_MB, "2048");
+    props.put(MRJobConfig.REDUCE_CPU_VCORES, "1");
+    props.put(MRJobConfig.REDUCE_DISK, "1.33");
     props.put(MRJobConfig.REDUCE_JAVA_OPTS, "-Xmx1500m");
     props.put(MRJobConfig.COMPLETED_MAPS_FOR_REDUCE_SLOWSTART, "0.95");
     props.put(MRJobConfig.SHUFFLE_PARALLEL_COPIES, "12");

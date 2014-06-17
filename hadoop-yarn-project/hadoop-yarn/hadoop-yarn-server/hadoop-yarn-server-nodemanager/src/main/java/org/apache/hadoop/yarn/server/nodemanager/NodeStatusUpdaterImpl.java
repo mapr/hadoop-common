@@ -143,7 +143,11 @@ public class NodeStatusUpdaterImpl extends AbstractService implements
         conf.getInt(
             YarnConfiguration.NM_VCORES, YarnConfiguration.DEFAULT_NM_VCORES);
 
-    this.totalResource = Resource.newInstance(memoryMb, virtualCores);
+    double disks =
+        conf.getDouble(
+            YarnConfiguration.NM_DISKS, YarnConfiguration.DEFAULT_NM_DISKS);
+
+    this.totalResource = Resource.newInstance(memoryMb, virtualCores, disks);
     metrics.addResource(totalResource);
     this.tokenKeepAliveEnabled = isTokenKeepAliveEnabled(conf);
     this.tokenRemovalDelayMs =
@@ -174,7 +178,7 @@ public class NodeStatusUpdaterImpl extends AbstractService implements
     super.serviceInit(conf);
     LOG.info("Initialized nodemanager for " + nodeId + ":" +
         " physical-memory=" + memoryMb + " virtual-memory=" + virtualMemoryMb +
-        " virtual-cores=" + virtualCores);
+        " virtual-cores=" + virtualCores + " disks=" + disks);
   }
 
   @Override

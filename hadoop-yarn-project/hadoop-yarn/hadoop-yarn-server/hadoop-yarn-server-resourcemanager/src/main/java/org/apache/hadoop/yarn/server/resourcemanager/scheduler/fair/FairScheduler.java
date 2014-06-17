@@ -230,7 +230,26 @@ public class FairScheduler extends
         + "=" + maxVcores + ", min should equal greater than 0"
         + ", max should be no smaller than min.");
     }
+
+    // validate scheduler disk allocation setting
+    double minDisk = conf.getDouble(
+      YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_DISKS,
+      YarnConfiguration.DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_DISKS);
+    double maxDisk = conf.getDouble(
+      YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS,
+      YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS);
+
+    if (minDisk < 0 || minDisk > maxDisk) {
+      throw new YarnRuntimeException("Invalid resource scheduler disk"
+        + " allocation configuration"
+        + ", " + YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_DISKS
+        + "=" + minDisk
+        + ", " + YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS
+        + "=" + maxDisk + ", min should equal greater than 0"
+        + ", max should be no smaller than min.");
+    }
   }
+  
 
   public FairSchedulerConfiguration getConf() {
     return conf;
@@ -842,7 +861,7 @@ public class FairScheduler extends
     }
 
     // Sanity check
-    SchedulerUtils.normalizeRequests(ask, new DominantResourceCalculator(),
+    SchedulerUtils.normalizeRequests(ask, /*new DominantResourceCalculator(),*/ new DefaultResourceCalculator(),
         clusterResource, minimumAllocation, maximumAllocation, incrAllocation);
 
     // Set amResource for this app

@@ -649,33 +649,25 @@ public class FifoScheduler extends
         " request=" + request + " type=" + type);
     Resource capability = request.getCapability();
 
-    int availableContainers = 
-      node.getAvailableResource().getMemory() / capability.getMemory(); // TODO: A buggy
-                                                                        // application
-                                                                        // with this
-                                                                        // zero would
-                                                                        // crash the
-                                                                        // scheduler.
-    int assignedContainers = 
-      Math.min(assignableContainers, availableContainers);
+    for (int i=0; i < assignableContainers; ++i) {
+      if (!Resources.fitsIn(capability, node.getAvailableResource())) {
+        return i;
+      }
 
-    if (assignedContainers > 0) {
-      for (int i=0; i < assignedContainers; ++i) {
+      NodeId nodeId = node.getRMNode().getNodeID();
+      ContainerId containerId = BuilderUtils.newContainerId(application
+          .getApplicationAttemptId(), application.getNewContainerId());
 
-        NodeId nodeId = node.getRMNode().getNodeID();
-        ContainerId containerId = BuilderUtils.newContainerId(application
-            .getApplicationAttemptId(), application.getNewContainerId());
-
-        // Create the container
-        Container container =
-            BuilderUtils.newContainer(containerId, nodeId, node.getRMNode()
-              .getHttpAddress(), capability, priority, null);
+      // Create the container
+      Container container =
+          BuilderUtils.newContainer(containerId, nodeId, node.getRMNode()
+            .getHttpAddress(), capability, priority, null);
         
-        // Allocate!
+      // Allocate!
         
-        // Inform the application
-        RMContainer rmContainer =
-            application.allocate(type, node, priority, request, container);
+      // Inform the application
+      RMContainer rmContainer =
+          application.allocate(type, node, priority, request, container);
         
         // Inform the node
         node.allocateContainer(rmContainer);
@@ -684,9 +676,7 @@ public class FifoScheduler extends
         increaseUsedResources(rmContainer);
       }
 
-    }
-    
-    return assignedContainers;
+    return assignableContainers;
   }
 
   private synchronized void nodeUpdate(RMNode rmNode) {

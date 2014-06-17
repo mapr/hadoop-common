@@ -156,6 +156,8 @@ public class ComputeFairShares {
       return resource.getMemory();
     case CPU:
       return resource.getVirtualCores();
+    case DISK:
+        return (int)Math.round(resource.getDisks());
     default:
       throw new IllegalArgumentException("Invalid resource");
     }
@@ -168,6 +170,9 @@ public class ComputeFairShares {
       break;
     case CPU:
       resource.setVirtualCores(val);
+      break;
+    case DISK:
+      resource.setDisks(val);
       break;
     default:
       throw new IllegalArgumentException("Invalid resource");

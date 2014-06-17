@@ -170,6 +170,25 @@ public class CapacityScheduler extends
         + "=" + maxVcores + ", min and max should be greater than 0"
         + ", max should be no smaller than min.");
     }
+
+    // validate scheduler disk allocation setting
+    double minDisks = conf.getDouble(
+      YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_DISKS,
+      YarnConfiguration.DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_DISKS);
+    double maxDisks = conf.getDouble(
+      YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS,
+      YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS);
+
+    if (minDisks < 0 || minDisks > maxDisks) {
+      throw new YarnRuntimeException("Invalid resource scheduler disk"
+        + " allocation configuration"
+        + ", " + YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_DISKS
+        + "=" + minDisks
+        + ", " + YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS
+        + "=" + maxDisks + ", min and max should be greater than 0"
+        + ", max should be no smaller than min.");
+    }
+
   }
 
   @Override
