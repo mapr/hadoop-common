@@ -66,9 +66,10 @@ public class FiCaSchedulerNode extends SchedulerNode {
     this.rmNode = node;
     this.availableResource.setMemory(node.getTotalCapability().getMemory());
     this.availableResource.setVirtualCores(node.getTotalCapability().getVirtualCores());
+    this.availableResource.setDisks(node.getTotalCapability().getDisks());
     totalResourceCapability =
         Resource.newInstance(node.getTotalCapability().getMemory(), node
-            .getTotalCapability().getVirtualCores());
+            .getTotalCapability().getVirtualCores(), node.getTotalCapability().getDisks());
     if (usePortForNodeName) {
       nodeName = rmNode.getHostName() + ":" + node.getNodeID().getPort();
     } else {

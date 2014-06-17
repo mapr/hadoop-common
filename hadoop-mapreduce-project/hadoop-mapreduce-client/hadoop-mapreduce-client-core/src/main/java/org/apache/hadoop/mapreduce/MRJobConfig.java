@@ -209,6 +209,9 @@ public interface MRJobConfig {
   public static final String MAP_CPU_VCORES = "mapreduce.map.cpu.vcores";
   public static final int DEFAULT_MAP_CPU_VCORES = 1;
 
+  public static final String MAP_DISK = "mapreduce.map.disk";
+  public static final double DEFAULT_MAP_DISK = 0.5;
+
   public static final String MAP_ENV = "mapreduce.map.env";
 
   public static final String MAP_JAVA_OPTS = "mapreduce.map.java.opts";
@@ -256,6 +259,9 @@ public interface MRJobConfig {
 
   public static final String REDUCE_CPU_VCORES = "mapreduce.reduce.cpu.vcores";
   public static final int DEFAULT_REDUCE_CPU_VCORES = 1;
+
+  public static final String REDUCE_DISK = "mapreduce.reduce.disk";
+  public static final double DEFAULT_REDUCE_DISK = 1.33;
 
   public static final String REDUCE_MEMORY_TOTAL_BYTES = "mapreduce.reduce.memory.totalbytes";
 

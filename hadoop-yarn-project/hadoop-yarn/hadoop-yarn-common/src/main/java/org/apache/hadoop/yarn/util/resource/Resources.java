@@ -51,10 +51,23 @@ public class Resources {
     }
 
     @Override
+    public double getDisks() {
+      return 0;
+    }
+
+    @Override
+    public void setDisks(double disks) {
+      throw new RuntimeException("NONE cannot be modified!");
+    }
+
+    @Override
     public int compareTo(Resource o) {
       int diff = 0 - o.getMemory();
       if (diff == 0) {
         diff = 0 - o.getVirtualCores();
+        if (diff == 0) {
+          diff = Resource.getAbsIntValue(0 - o.getDisks());
+        }
       }
       return diff;
     }
@@ -84,14 +97,27 @@ public class Resources {
     }
 
     @Override
+    public double getDisks() {
+      return Integer.MAX_VALUE;
+    }
+
+    @Override
+    public void setDisks(double disks) {
+      throw new RuntimeException("NONE cannot be modified!");
+    }
+
+    @Override
     public int compareTo(Resource o) {
       int diff = 0 - o.getMemory();
       if (diff == 0) {
         diff = 0 - o.getVirtualCores();
+        if (diff == 0) {
+          diff = Resource.getAbsIntValue(0 - o.getVirtualCores());
+        }
       }
       return diff;
     }
-    
+
   };
 
   public static Resource createResource(int memory) {
@@ -99,9 +125,14 @@ public class Resources {
   }
 
   public static Resource createResource(int memory, int cores) {
+    return createResource(memory, cores, 0);
+  }
+
+  public static Resource createResource(int memory, int cores, double disks) {
     Resource resource = Records.newRecord(Resource.class);
     resource.setMemory(memory);
     resource.setVirtualCores(cores);
+    resource.setDisks(disks);
     return resource;
   }
 
@@ -114,12 +145,13 @@ public class Resources {
   }
 
   public static Resource clone(Resource res) {
-    return createResource(res.getMemory(), res.getVirtualCores());
+    return createResource(res.getMemory(), res.getVirtualCores(), res.getDisks());
   }
 
   public static Resource addTo(Resource lhs, Resource rhs) {
     lhs.setMemory(lhs.getMemory() + rhs.getMemory());
     lhs.setVirtualCores(lhs.getVirtualCores() + rhs.getVirtualCores());
+    lhs.setDisks(lhs.getDisks() + rhs.getDisks());
     return lhs;
   }
 
@@ -130,6 +162,7 @@ public class Resources {
   public static Resource subtractFrom(Resource lhs, Resource rhs) {
     lhs.setMemory(lhs.getMemory() - rhs.getMemory());
     lhs.setVirtualCores(lhs.getVirtualCores() - rhs.getVirtualCores());
+    lhs.setDisks(lhs.getDisks() - rhs.getDisks());
     return lhs;
   }
 
@@ -144,6 +177,7 @@ public class Resources {
   public static Resource multiplyTo(Resource lhs, double by) {
     lhs.setMemory((int)(lhs.getMemory() * by));
     lhs.setVirtualCores((int)(lhs.getVirtualCores() * by));
+    lhs.setDisks((int)(lhs.getDisks() * by));
     return lhs;
   }
 
@@ -165,6 +199,7 @@ public class Resources {
     Resource out = clone(lhs);
     out.setMemory((int)(lhs.getMemory() * by));
     out.setVirtualCores((int)(lhs.getVirtualCores() * by));
+    out.setDisks(lhs.getDisks() * by);
     return out;
   }
   
@@ -248,11 +283,13 @@ public class Resources {
   
   public static boolean fitsIn(Resource smaller, Resource bigger) {
     return smaller.getMemory() <= bigger.getMemory() &&
-        smaller.getVirtualCores() <= bigger.getVirtualCores();
+        smaller.getVirtualCores() <= bigger.getVirtualCores() &&
+        smaller.getDisks() <= bigger.getDisks();
   }
   
   public static Resource componentwiseMin(Resource lhs, Resource rhs) {
     return createResource(Math.min(lhs.getMemory(), rhs.getMemory()),
-        Math.min(lhs.getVirtualCores(), rhs.getVirtualCores()));
+        Math.min(lhs.getVirtualCores(), rhs.getVirtualCores()),
+        Math.min(lhs.getDisks(), rhs.getDisks()));
   }
 }

@@ -121,6 +121,7 @@ public class ContainerTokenIdentifier extends TokenIdentifier {
     out.writeUTF(this.appSubmitter);
     out.writeInt(this.resource.getMemory());
     out.writeInt(this.resource.getVirtualCores());
+    out.writeDouble(this.resource.getDisks());
     out.writeLong(this.expiryTimeStamp);
     out.writeInt(this.masterKeyId);
     out.writeLong(this.rmIdentifier);
@@ -138,7 +139,8 @@ public class ContainerTokenIdentifier extends TokenIdentifier {
     this.appSubmitter = in.readUTF();
     int memory = in.readInt();
     int vCores = in.readInt();
-    this.resource = Resource.newInstance(memory, vCores);
+    double disks = in.readDouble();
+    this.resource = Resource.newInstance(memory, vCores, disks);
     this.expiryTimeStamp = in.readLong();
     this.masterKeyId = in.readInt();
     this.rmIdentifier = in.readLong();

@@ -246,11 +246,19 @@ public class FifoScheduler extends AbstractYarnScheduler implements
       this.minimumAllocation = 
         Resources.createResource(conf.getInt(
             YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_MB,
-            YarnConfiguration.DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_MB));
+            YarnConfiguration.DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_MB),
+          conf.getInt(YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_VCORES,
+            YarnConfiguration.DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_VCORES),
+          conf.getDouble(YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_DISKS,
+            YarnConfiguration.DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_DISKS));
       this.maximumAllocation = 
         Resources.createResource(conf.getInt(
             YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_MB,
-            YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_MB));
+            YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_MB),
+          conf.getInt(YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES,
+            YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES),
+          conf.getDouble(YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS,
+            YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS));
       this.usePortForNodeName = conf.getBoolean(
           YarnConfiguration.RM_SCHEDULER_INCLUDE_PORT_IN_NODE_NAME, 
           YarnConfiguration.DEFAULT_RM_SCHEDULER_USE_PORT_FOR_NODE_NAME);
@@ -647,45 +655,35 @@ public class FifoScheduler extends AbstractYarnScheduler implements
         " request=" + request + " type=" + type);
     Resource capability = request.getCapability();
 
-    int availableContainers = 
-      node.getAvailableResource().getMemory() / capability.getMemory(); // TODO: A buggy
-                                                                        // application
-                                                                        // with this
-                                                                        // zero would
-                                                                        // crash the
-                                                                        // scheduler.
-    int assignedContainers = 
-      Math.min(assignableContainers, availableContainers);
-
-    if (assignedContainers > 0) {
-      for (int i=0; i < assignedContainers; ++i) {
-
-        NodeId nodeId = node.getRMNode().getNodeID();
-        ContainerId containerId = BuilderUtils.newContainerId(application
-            .getApplicationAttemptId(), application.getNewContainerId());
-
-        // Create the container
-        Container container =
-            BuilderUtils.newContainer(containerId, nodeId, node.getRMNode()
-              .getHttpAddress(), capability, priority, null);
-        
-        // Allocate!
-        
-        // Inform the application
-        RMContainer rmContainer =
-            application.allocate(type, node, priority, request, container);
-        
-        // Inform the node
-        node.allocateContainer(application.getApplicationId(), 
-            rmContainer);
-
-        // Update usage for this container
-        Resources.addTo(usedResource, capability);
+    for (int i=0; i < assignableContainers; ++i) {
+      if (!Resources.fitsIn(capability, node.getAvailableResource())) {
+        return i;
       }
 
+      NodeId nodeId = node.getRMNode().getNodeID();
+      ContainerId containerId = BuilderUtils.newContainerId(application
+          .getApplicationAttemptId(), application.getNewContainerId());
+
+      // Create the container
+      Container container =
+          BuilderUtils.newContainer(containerId, nodeId, node.getRMNode()
+            .getHttpAddress(), capability, priority, null);
+        
+      // Allocate!
+        
+      // Inform the application
+      RMContainer rmContainer =
+          application.allocate(type, node, priority, request, container);
+        
+      // Inform the node
+      node.allocateContainer(application.getApplicationId(), 
+          rmContainer);
+
+      // Update usage for this container
+      Resources.addTo(usedResource, capability);
     }
-    
-    return assignedContainers;
+
+    return assignableContainers;
   }
 
   private synchronized void nodeUpdate(RMNode rmNode) {

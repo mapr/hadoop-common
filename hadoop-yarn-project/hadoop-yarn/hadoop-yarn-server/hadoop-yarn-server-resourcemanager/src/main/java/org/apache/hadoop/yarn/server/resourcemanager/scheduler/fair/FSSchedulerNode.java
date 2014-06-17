@@ -71,7 +71,7 @@ public class FSSchedulerNode extends SchedulerNode {
     this.availableResource = Resources.clone(node.getTotalCapability());
     totalResourceCapability =
         Resource.newInstance(node.getTotalCapability().getMemory(), node
-            .getTotalCapability().getVirtualCores());
+            .getTotalCapability().getVirtualCores(), node.getTotalCapability().getDisks());
     if (usePortForNodeName) {
       nodeName = rmNode.getHostName() + ":" + node.getNodeID().getPort();
     } else {

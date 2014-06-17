@@ -148,7 +148,10 @@ public class YarnConfiguration extends Configuration {
   public static final int DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_MB = 1024;
   public static final String RM_SCHEDULER_MINIMUM_ALLOCATION_VCORES =
       YARN_PREFIX + "scheduler.minimum-allocation-vcores";
-    public static final int DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_VCORES = 1;
+  public static final int DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_VCORES = 1;
+  public static final String RM_SCHEDULER_MINIMUM_ALLOCATION_DISKS =
+        YARN_PREFIX + "scheduler.minimum-allocation-disks";
+  public static final double DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_DISKS = 0.0;
 
   /** Maximum request grant-able by the RM scheduler. */
   public static final String RM_SCHEDULER_MAXIMUM_ALLOCATION_MB =
@@ -157,6 +160,9 @@ public class YarnConfiguration extends Configuration {
   public static final String RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES =
       YARN_PREFIX + "scheduler.maximum-allocation-vcores";
   public static final int DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES = 4;
+  public static final String RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS =
+      YARN_PREFIX + "scheduler.maximum-allocation-disks";
+  public static final double DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS = 4.0;
 
   /** Number of threads to handle scheduler interface.*/
   public static final String RM_SCHEDULER_CLIENT_THREAD_COUNT =
@@ -693,7 +699,11 @@ public class YarnConfiguration extends Configuration {
   /** Number of Virtual CPU Cores which can be allocated for containers.*/
   public static final String NM_VCORES = NM_PREFIX + "resource.cpu-vcores";
   public static final int DEFAULT_NM_VCORES = 8;
-  
+
+  /** Number of disks which can be allocated for containers.*/
+  public static final String NM_DISKS = NM_PREFIX + "resource.io-spindles";
+  public static final double DEFAULT_NM_DISKS = 0;
+
   /** NM Webapp address.**/
   public static final String NM_WEBAPP_ADDRESS = NM_PREFIX + "webapp.address";
   public static final int DEFAULT_NM_WEBAPP_PORT = 8042;
