@@ -57,6 +57,15 @@ public abstract class Resource implements Comparable<Resource> {
     Resource resource = Records.newRecord(Resource.class);
     resource.setMemory(memory);
     resource.setVirtualCores(vCores);
+    resource.setDisks(0);
+    return resource;
+  }
+
+  @Public
+  @Stable
+  public static Resource newInstance(int memory, int vCores, double disks) {
+    Resource resource = Resource.newInstance(memory, vCores);
+    resource.setDisks(disks);
     return resource;
   }
 
@@ -90,7 +99,7 @@ public abstract class Resource implements Comparable<Resource> {
   @Public
   @Evolving
   public abstract int getVirtualCores();
-  
+
   /**
    * Set <em>number of virtual cpu cores</em> of the resource.
    * 
@@ -105,12 +114,29 @@ public abstract class Resource implements Comparable<Resource> {
   @Evolving
   public abstract void setVirtualCores(int vCores);
 
+  /**
+   * Get <em>number of disks</em> of the resource.
+   * @return <em>number of disks</em> of the resource
+   */
+  @Public
+  @Stable
+  public abstract double getDisks();
+
+  /**
+   * Set <em>number of disks</em> of the resource.
+   * @param memory <em>number of disks</em> of the resource
+   */
+  @Public
+  @Stable
+  public abstract void setDisks(double disks);
+
   @Override
   public int hashCode() {
     final int prime = 263167;
     int result = 3571;
     result = 939769357 + getMemory(); // prime * result = 939769357 initially
     result = prime * result + getVirtualCores();
+    result = prime * result + getAbsIntValue(getDisks());
     return result;
   }
 
@@ -123,8 +149,9 @@ public abstract class Resource implements Comparable<Resource> {
     if (!(obj instanceof Resource))
       return false;
     Resource other = (Resource) obj;
-    if (getMemory() != other.getMemory() || 
-        getVirtualCores() != other.getVirtualCores()) {
+    if (getMemory() != other.getMemory() ||
+        getVirtualCores() != other.getVirtualCores() ||
+        getDisks() != other.getDisks()) {
       return false;
     }
     return true;
@@ -132,6 +159,23 @@ public abstract class Resource implements Comparable<Resource> {
 
   @Override
   public String toString() {
-    return "<memory:" + getMemory() + ", vCores:" + getVirtualCores() + ">";
+    return "<memory:" + getMemory() + ", vCores:" + getVirtualCores() + ", disks:" + getDisks() + ">";
+  }
+
+  public static int getAbsIntValue(double dValue) {
+    double absValue = dValue;
+    if (dValue > Integer.MAX_VALUE) {
+      return Integer.MAX_VALUE;
+    } else if (dValue < Integer.MIN_VALUE) {
+      return Integer.MIN_VALUE;
+    }
+
+    if (Math.abs(dValue) < 1) {
+      absValue = Math.ceil(Math.abs(dValue));
+      if (dValue < 0) {
+        absValue *= (-1);
+      }
+    }
+    return (int) absValue;
   }
 }

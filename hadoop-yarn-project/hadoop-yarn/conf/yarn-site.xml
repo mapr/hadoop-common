@@ -41,6 +41,27 @@
   </property>
 
   <property>
+    <description>Amount of physical memory, in MB, that can be allocated
+    for containers.</description>
+    <name>yarn.nodemanager.resource.memory-mb</name>
+    <value>${nodemanager.resource.memory-mb}</value>
+  </property>
+
+  <property>
+    <description>Number of CPU cores that can be allocated
+    for containers.</description>
+    <name>yarn.nodemanager.resource.cpu-vcores</name>
+    <value>${nodemanager.resource.cpu-vcores}</value>
+  </property>
+
+  <property>
+    <description>Number of spindles that can be allocated
+    for containers.</description>
+    <name>yarn.nodemanager.resource.io-spindles</name>
+    <value>${nodemanager.resource.io-spindles}</value>
+  </property>
+
+  <property>
     <description>who will execute(launch) the containers.</description>
     <name>yarn.nodemanager.container-executor.class</name>
     <value>org.apache.hadoop.yarn.server.nodemanager.LinuxContainerExecutor</value>

@@ -155,6 +155,37 @@ public class SchedulerUtils {
   }
   
   /**
+   * Update resource in SchedulerNode if any resource change in RMNode.
+   * @param node SchedulerNode with old resource view
+   * @param rmNode RMNode with new resource view
+   * @param clusterResource the cluster's resource that need to update
+   * @param log Scheduler's log for resource change
+   */
+  public static void updateResourceIfChanged(SchedulerNode node, 
+      RMNode rmNode, Resource clusterResource, Log log) {
+    Resource oldAvailableResource = node.getAvailableResource();
+    Resource newAvailableResource = Resources.subtract(
+        rmNode.getTotalCapability(), node.getUsedResource());
+    
+    if (!newAvailableResource.equals(oldAvailableResource)) {
+      Resource deltaResource = Resources.subtract(newAvailableResource,
+          oldAvailableResource);
+      // Reflect resource change to scheduler node.
+      node.applyDeltaOnAvailableResource(deltaResource);
+      // Reflect resource change to clusterResource.
+      Resources.addTo(clusterResource, deltaResource);
+      // TODO process resource over-commitment case (allocated containers
+      // > total capacity) in different option by getting value of
+      // overCommitTimeoutMillis.
+      
+      // Log resource change
+      log.info("Resource change on node: " + rmNode.getNodeAddress() 
+          + " with delta: CPU: " + deltaResource.getVirtualCores() + "core, Memory: "
+          + deltaResource.getMemory() +"MB, Disk: " + deltaResource.getDisks());
+    }
+  }
+
+  /**
    * Utility method to normalize a list of resource requests, by insuring that
    * the memory for each request is a multiple of minMemory and is not zero.
    */
@@ -192,7 +223,7 @@ public class SchedulerUtils {
 
   /**
    * Utility method to validate a resource request, by insuring that the
-   * requested memory/vcore is non-negative and not greater than max
+   * requested memory/vcore/disk is non-negative and not greater than max
    * 
    * @throws InvalidResourceRequestException when there is invalid request
    */
@@ -217,7 +248,16 @@ public class SchedulerUtils {
           + resReq.getCapability().getVirtualCores()
           + ", maxVirtualCores=" + maximumResource.getVirtualCores());
     }
-    
+    if (resReq.getCapability().getDisks() < 0 ||
+         resReq.getCapability().getDisks() >
+         maximumResource.getDisks()) {
+          throw new InvalidResourceRequestException("Invalid resource request"
+              + ", requested disks < 0"
+              + ", or requested disks > max configured"
+              + ", requestedDisks="
+              + resReq.getCapability().getDisks()
+              + ", maxDisks=" + maximumResource.getDisks());
+
     // Get queue from scheduler
     QueueInfo queueInfo = null;
     try {

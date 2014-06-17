@@ -551,7 +551,10 @@ public class CapacitySchedulerConfiguration extends ReservationSchedulerConfigur
     int minimumCores = getInt(
         YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_VCORES,
         YarnConfiguration.DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_VCORES);
-    return Resources.createResource(minimumMemory, minimumCores);
+    double minimumDisks = getDouble(
+            YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_DISKS,
+            YarnConfiguration.DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_DISKS);
+    return Resources.createResource(minimumMemory, minimumCores, minimumDisks);
   }
 
   public Resource getMaximumAllocation() {
@@ -561,7 +564,10 @@ public class CapacitySchedulerConfiguration extends ReservationSchedulerConfigur
     int maximumCores = getInt(
         YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES,
         YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES);
-    return Resources.createResource(maximumMemory, maximumCores);
+    double maximumDisks = getDouble(
+            YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS,
+            YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS);
+    return Resources.createResource(maximumMemory, maximumCores, maximumDisks);
   }
 
   /**
