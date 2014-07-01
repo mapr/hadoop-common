@@ -185,6 +185,30 @@ public abstract class FileSystem extends Configured implements Closeable {
     throw new UnsupportedOperationException();
   }
 
+  public FSDataInputStream openFid2(PathId pfid, String file,  int readAheadBytesHint) 
+      throws IOException {
+    throw new UnsupportedOperationException("See concrete FS for implementation");
+  }
+  public FSDataOutputStream createFid(String pfid, String file) 
+      throws IOException {
+    throw new UnsupportedOperationException("See concrete FS for implementation");
+  }
+  public boolean deleteFid(String pfid, String dir) 
+      throws IOException {
+    throw new UnsupportedOperationException("See concrete FS for implementation");
+  }
+  public String mkdirsFid(Path p) throws IOException {
+    throw new UnsupportedOperationException("See concrete FS for implementation");
+  }
+  public String mkdirsFid(String pfid, String dir) 
+      throws IOException {
+    throw new UnsupportedOperationException("See concrete FS for implementation");
+  }
+  public void setOwnerFid(String fid, String user, String group) {
+    throw new UnsupportedOperationException("See concrete FS for implementation");
+  }
+  
+  
   /** Set the default filesystem URI in a configuration.
    * @param conf the configuration to alter
    * @param uri the new default filesystem uri
