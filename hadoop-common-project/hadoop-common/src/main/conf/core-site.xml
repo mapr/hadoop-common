@@ -17,4 +17,25 @@
 <!-- Put site-specific property overrides in this file. -->
 
 <configuration>
+  <property>
+    <name>fs.AbstractFileSystem.maprfs.impl</name>
+    <value>com.mapr.fs.MapRYarnFileSystem</value>
+    <description> MapR Yarn FileSystem </description>
+  </property>
+
+  <property>
+    <name>fs.maprfs.impl</name>
+    <value>com.mapr.fs.MapRFileSystem</value>
+  </property>
+
+  <property>
+    <name>fs.defaultFS</name>
+    <value>maprfs://localhost:7222</value>
+  </property>
+
+  <property>
+    <name>fs.mapr.working.dir</name>
+    <value>${fs.defaultFS}/tmp/staging</value>
+  </property>
+
 </configuration>
