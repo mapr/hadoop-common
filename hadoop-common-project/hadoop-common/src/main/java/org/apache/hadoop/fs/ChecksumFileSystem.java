@@ -272,7 +272,7 @@ public abstract class ChecksumFileSystem extends FilterFileSystem {
     }
     
     /* Return the file length */
-    private long getFileLength() throws IOException {
+    public long getFileLength() throws IOException {
       if( fileLen==-1L ) {
         fileLen = fs.getContentSummary(file).getLength();
       }
