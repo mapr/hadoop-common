@@ -84,6 +84,8 @@ import org.apache.hadoop.security.SaslRpcClient;
 import org.apache.hadoop.security.SaslRpcServer.AuthMethod;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
+
+import org.apache.hadoop.security.authentication.util.KerberosUtil;
 import org.apache.hadoop.util.ProtoUtil;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.StringUtils;
@@ -717,6 +719,7 @@ public class Client {
                     }
                   });
             } catch (Exception ex) {
+              KerberosUtil.checkJCEKeyStrength();
               authMethod = saslRpcClient.getAuthMethod();
               if (rand == null) {
                 rand = new Random();
