@@ -218,6 +218,7 @@ public class KerberosAuthenticationHandler implements AuthenticationHandler {
         throw ex.getException();
       }
     } catch (Exception ex) {
+      KerberosUtil.checkJCEKeyStrength();
       throw new ServletException(ex);
     }
   }

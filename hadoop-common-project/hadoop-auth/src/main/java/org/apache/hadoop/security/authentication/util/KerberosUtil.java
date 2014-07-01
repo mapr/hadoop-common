@@ -29,16 +29,21 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.security.NoSuchAlgorithmException;
 import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.apache.directory.server.kerberos.shared.keytab.Keytab;
 import org.apache.directory.server.kerberos.shared.keytab.KeytabEntry;
+import javax.crypto.Cipher;
+
+import org.apache.log4j.Logger;
 import org.ietf.jgss.GSSException;
 import org.ietf.jgss.Oid;
 
 public class KerberosUtil {
+  private static final Logger LOG = Logger.getLogger(KerberosUtil.class);
 
   /* Return the Kerberos login module name */
   public static String getKrb5LoginModuleName() {
@@ -155,5 +160,20 @@ public class KerberosUtil {
       principals = matchingPrincipals.toArray(new String[0]);
     }
     return principals;
+  }
+
+  /**
+   * Validate if JCE Unlimited Strength Jurisdiction Policy Files are installed,
+   * logs a warning otherwise.
+   */
+  public static void checkJCEKeyStrength() {
+    try {
+      if (Cipher.getMaxAllowedKeyLength("AES") != Integer.MAX_VALUE) {
+        LOG.warn("JCE Unlimited Strength Jurisdiction Policy Files are not "
+            + "installed. This could cause authentication failures.");
+      }
+    } catch (NoSuchAlgorithmException e) {
+      LOG.warn(e.getMessage());
+    }
   }
 }
