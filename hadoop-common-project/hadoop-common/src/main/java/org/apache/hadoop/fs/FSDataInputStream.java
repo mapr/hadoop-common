@@ -24,6 +24,7 @@ import java.util.EnumSet;
 
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
+import org.apache.hadoop.classification.MapRModified;
 import org.apache.hadoop.io.ByteBufferPool;
 import org.apache.hadoop.fs.ByteBufferUtil;
 import org.apache.hadoop.util.IdentityHashStore;
