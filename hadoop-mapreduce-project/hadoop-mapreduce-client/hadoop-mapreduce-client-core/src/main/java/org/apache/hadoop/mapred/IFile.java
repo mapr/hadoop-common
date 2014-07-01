@@ -357,7 +357,7 @@ public class IFile {
       this.dataIn = new DataInputStream(this.in);
       this.fileLength = length;
       this.rawIn = in;
-      this.startOffset = in.getPos();
+      this.startOffset = (in != null) ? in.getPos() : 0;
       
       if (conf != null) {
         bufferSize = conf.getInt("io.file.buffer.size", DEFAULT_BUFFER_SIZE);
@@ -460,12 +460,14 @@ public class IFile {
     
     public void close() throws IOException {
       if (in != null) {
-        try {
-          rawIn.adviseFile(FadviseType.FILE_DONTNEED, startOffset,
-              (startOffset + fileLength));
-        } catch (IOException ioe) {
-          if (LOG.isInfoEnabled())
-            LOG.info("Error " + ioe + " in fadvise. Ignoring it.");
+        if (rawIn != null) {
+          try {
+            rawIn.adviseFile(FadviseType.FILE_DONTNEED, startOffset,
+                (startOffset + fileLength));
+          } catch (IOException ioe) {
+            if (LOG.isInfoEnabled())
+              LOG.info("Error " + ioe + " in fadvise. Ignoring it.");
+          }
         }
       }
 
