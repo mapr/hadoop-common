@@ -32,6 +32,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
+import org.apache.hadoop.classification.MapRModified;
 import org.apache.hadoop.http.HttpServer2;
 import org.apache.hadoop.metrics.spi.OutputRecord;
 import org.apache.hadoop.metrics.spi.AbstractMetricsContext.MetricMap;
@@ -103,6 +104,7 @@ public class MetricsServlet extends HttpServlet {
   }
   
   @Override
+  @MapRModified(summary = "Retrieve specific class of metrics: bug 13087")
   public void doGet(HttpServletRequest request, HttpServletResponse response)
       throws ServletException, IOException {
 
@@ -112,21 +114,31 @@ public class MetricsServlet extends HttpServlet {
     }
 
     String format = request.getParameter("format");
-    Collection<MetricsContext> allContexts = 
-      ContextFactory.getFactory().getAllContexts();
+    Collection<MetricsContext> contexts = new ArrayList<MetricsContext>();
+
+    // If the context is set, then retrieve just that. If not, retrieve all.
+    String metricsContext = request.getParameter("context");
+    if (metricsContext == null) {
+      contexts.addAll(ContextFactory.getFactory().getAllContexts());
+    } else {
+      try {
+        contexts.add(ContextFactory.getFactory().getContext(metricsContext));
+      } catch (Exception e) {}
+    }
+
     if ("json".equals(format)) {
       response.setContentType("application/json; charset=utf-8");
       PrintWriter out = response.getWriter();
       try {
         // Uses Jetty's built-in JSON support to convert the map into JSON.
-        out.print(new JSON().toJSON(makeMap(allContexts)));
+        out.print(new JSON().toJSON(makeMap(contexts)));
       } finally {
         out.close();
       }
     } else {
       PrintWriter out = response.getWriter();
       try {
-        printMap(out, makeMap(allContexts));
+        printMap(out, makeMap(contexts));
       } finally {
         out.close();
       }
