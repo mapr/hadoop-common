@@ -33,67 +33,134 @@ import javax.net.SocketFactory;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.classification.MapRModified;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.io.ObjectWritable;
 import org.apache.hadoop.io.UTF8;
 import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.ipc.Client.ConnectionId;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.SaslRpcServer;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.util.Time;
 
+@MapRModified(summary = "Used for Job tracker HA")
+/**
+ * All the code except FailoverInvoker and getProxy methods are taken from
+ * {@link WritableRpcEngine}. The FailoverInvoker is used instead of the default
+ * Invoker to figure out the job tracker server that is currently active.
+ *
+ * At the time of writing, this code is only used by MR1. So instead of
+ * changing WritableRpcEngine to make it extensible and take a custom Invoker
+ * as input, we choose to copy over the code as its fairly small.
+ */
 public class FailoverRPC {
   private static final Log LOG = LogFactory.getLog(FailoverRPC.class);
 
   private static ClientCache CLIENTS=new ClientCache();
 
+  // 2L - added declared class to Invocation
+  public static final long writableRpcVersion = 2L;
+
   /** A method invocation, including the method name and its parameters.*/
   private static class Invocation implements Writable, Configurable {
     private String methodName;
-    private Class[] parameterClasses;
+    private Class<?>[] parameterClasses;
     private Object[] parameters;
     private Configuration conf;
+    private long clientVersion;
+    private int clientMethodsHash;
+    private String declaringClassProtocolName;
 
+    //This could be different from static writableRpcVersion when received
+    //at server, if client is using a different version.
+    private long rpcVersion;
+
+    @SuppressWarnings("unused") // called when deserializing an invocation
     public Invocation() {}
 
     public Invocation(Method method, Object[] parameters) {
       this.methodName = method.getName();
       this.parameterClasses = method.getParameterTypes();
       this.parameters = parameters;
+      rpcVersion = writableRpcVersion;
+      if (method.getDeclaringClass().equals(VersionedProtocol.class)) {
+        //VersionedProtocol is exempted from version check.
+        clientVersion = 0;
+        clientMethodsHash = 0;
+      } else {
+        this.clientVersion = RPC.getProtocolVersion(method.getDeclaringClass());
+        this.clientMethodsHash = ProtocolSignature.getFingerprint(method
+            .getDeclaringClass().getMethods());
+      }
+      this.declaringClassProtocolName =
+          RPC.getProtocolName(method.getDeclaringClass());
     }
 
     /** The name of the method invoked. */
     public String getMethodName() { return methodName; }
 
     /** The parameter classes. */
-    public Class[] getParameterClasses() { return parameterClasses; }
+    public Class<?>[] getParameterClasses() { return parameterClasses; }
 
     /** The parameter instances. */
     public Object[] getParameters() { return parameters; }
 
+    private long getProtocolVersion() {
+      return clientVersion;
+    }
+
+    @SuppressWarnings("unused")
+    private int getClientMethodsHash() {
+      return clientMethodsHash;
+    }
+
+    /**
+     * Returns the rpc version used by the client.
+     * @return rpcVersion
+     */
+    public long getRpcVersion() {
+      return rpcVersion;
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
     public void readFields(DataInput in) throws IOException {
+      rpcVersion = in.readLong();
+      declaringClassProtocolName = UTF8.readString(in);
       methodName = UTF8.readString(in);
+      clientVersion = in.readLong();
+      clientMethodsHash = in.readInt();
       parameters = new Object[in.readInt()];
       parameterClasses = new Class[parameters.length];
       ObjectWritable objectWritable = new ObjectWritable();
       for (int i = 0; i < parameters.length; i++) {
-        parameters[i] = ObjectWritable.readObject(in, objectWritable, this.conf);
+        parameters[i] =
+            ObjectWritable.readObject(in, objectWritable, this.conf);
         parameterClasses[i] = objectWritable.getDeclaredClass();
       }
     }
 
+    @Override
+    @SuppressWarnings("deprecation")
     public void write(DataOutput out) throws IOException {
+      out.writeLong(rpcVersion);
+      UTF8.writeString(out, declaringClassProtocolName);
       UTF8.writeString(out, methodName);
+      out.writeLong(clientVersion);
+      out.writeInt(clientMethodsHash);
       out.writeInt(parameterClasses.length);
       for (int i = 0; i < parameterClasses.length; i++) {
         ObjectWritable.writeObject(out, parameters[i], parameterClasses[i],
-                                   conf);
+                                   conf, true);
       }
     }
 
+    @Override
     public String toString() {
-      StringBuffer buffer = new StringBuffer();
+      StringBuilder buffer = new StringBuilder();
       buffer.append(methodName);
       buffer.append("(");
       for (int i = 0; i < parameters.length; i++) {
@@ -102,55 +169,67 @@ public class FailoverRPC {
         buffer.append(parameters[i]);
       }
       buffer.append(")");
+      buffer.append(", rpc version="+rpcVersion);
+      buffer.append(", client version="+clientVersion);
+      buffer.append(", methodsFingerPrint="+clientMethodsHash);
       return buffer.toString();
     }
 
+    @Override
     public void setConf(Configuration conf) {
       this.conf = conf;
     }
 
+    @Override
     public Configuration getConf() {
       return this.conf;
     }
 
   }
 
-  private static class Invoker implements InvocationHandler {
+  private static class Invoker implements RpcInvocationHandler {
     private Client.ConnectionId remoteId;
     private Client client;
     private boolean isClosed = false;
 
     public Invoker(Class<?> protocol,
-        InetSocketAddress address, UserGroupInformation ticket,
-        Configuration conf, SocketFactory factory) throws IOException {
+                   InetSocketAddress address, UserGroupInformation ticket,
+                   Configuration conf, SocketFactory factory,
+                   int rpcTimeout) throws IOException {
       this.remoteId = Client.ConnectionId.getConnectionId(address, protocol,
-          ticket, 0, conf);
+          ticket, rpcTimeout, conf);
       this.client = CLIENTS.getClient(conf, factory);
     }
 
+    @Override
     public Object invoke(Object proxy, Method method, Object[] args)
-    throws Throwable {
-      final boolean logDebug = LOG.isDebugEnabled();
+      throws Throwable {
       long startTime = 0;
-      if (logDebug) {
-        startTime = System.currentTimeMillis();
+      if (LOG.isDebugEnabled()) {
+        startTime = Time.now();
       }
 
       ObjectWritable value = (ObjectWritable)
-        client.call(new Invocation(method, args), remoteId);
-      if (logDebug) {
-        long callTime = System.currentTimeMillis() - startTime;
+        client.call(RPC.RpcKind.RPC_WRITABLE, new Invocation(method, args), remoteId);
+      if (LOG.isDebugEnabled()) {
+        long callTime = Time.now() - startTime;
         LOG.debug("Call: " + method.getName() + " " + callTime);
       }
       return value.get();
     }
 
     /* close the IPC client that's responsible for this invoker's RPCs */
-    synchronized private void close() {
+    @Override
+    synchronized public void close() {
       if (!isClosed) {
         isClosed = true;
         CLIENTS.stopClient(client);
       }
+    }
+
+    @Override
+    public ConnectionId getConnectionId() {
+      return remoteId;
     }
   }
 
@@ -224,7 +303,7 @@ public class FailoverRPC {
         // 1 retry and 10 ms timeout
         conf.setInt("ipc.client.connection.maxidletime", 10);
         conf.setInt("ipc.client.connect.max.retries", 1);
-        quickInvoker = new Invoker(protocol, addresses[activeServer], ticket, conf, factory);
+        quickInvoker = new Invoker(protocol, addresses[activeServer], ticket, conf, factory, 0);
         // set original values
         conf.setInt("ipc.client.connection.maxidletime", maxIdleTime);
         conf.setInt("ipc.client.connect.max.retries", maxRetries);
@@ -340,7 +419,7 @@ public class FailoverRPC {
 
       while(!done) {
         try {
-          value = (ObjectWritable) client.call(new Invocation(method, args),
+          value = (ObjectWritable) client.call(RPC.RpcKind.RPC_WRITABLE, new Invocation(method, args),
               addresses[activeServer], protocol, ticket, 0, conf);
           done = true;
           // no need to lock anything here
