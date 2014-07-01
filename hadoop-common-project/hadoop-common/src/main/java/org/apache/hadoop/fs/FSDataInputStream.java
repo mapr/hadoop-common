@@ -44,6 +44,18 @@ public class FSDataInputStream extends DataInputStream
     extendedReadBuffers
       = new IdentityHashStore<ByteBuffer, ByteBufferPool>(0);
 
+  /**
+   * Type of file advise to be passed on to the underlying file system. This
+   * information can be used to make optimizations such as reclaiming buffers
+   * for files that are no longer needed by the application, etc.
+   */
+  @MapRModified
+  public static enum FadviseType {
+    FILE_DONTNEED,
+    FILE_RANDOM,
+    FILE_SEQUENTIAL;
+  }
+
   public FSDataInputStream(InputStream in) {
     super(in);
     if( !(in instanceof Seekable) || !(in instanceof PositionedReadable) ) {
