@@ -76,6 +76,7 @@ import org.apache.hadoop.yarn.api.records.ContainerLaunchContext;
 import org.apache.hadoop.yarn.api.records.LocalResource;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
+import org.apache.hadoop.yarn.api.records.NodeToLabelsList;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.api.records.URL;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
@@ -164,6 +165,24 @@ public class YARNRunner implements ClientProtocol {
   @Override
   public JobStatus[] getAllJobs() throws IOException, InterruptedException {
     return resMgrDelegate.getAllJobs();
+  }
+
+  @Override
+  public List<NodeToLabelsList> getClusterNodeLabels() throws IOException, InterruptedException {
+    try {
+      return resMgrDelegate.getClusterNodeLabels();
+    } catch (YarnException e) {
+      throw new IOException(e);
+    }
+  }
+
+  @Override
+  public boolean refreshClusterNodeLabels() throws IOException, InterruptedException {
+    try {
+      return resMgrDelegate.refreshClusterNodeLabels();
+    } catch (YarnException e) {
+      throw new IOException(e);
+    }
   }
 
   @Override
