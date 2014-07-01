@@ -21,10 +21,11 @@ package org.apache.hadoop.fs;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.avro.reflect.Stringable;
-import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.HadoopIllegalArgumentException;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
@@ -38,6 +39,9 @@ import org.apache.hadoop.conf.Configuration;
 @InterfaceAudience.Public
 @InterfaceStability.Stable
 public class Path implements Comparable {
+  // Static pattern objects to improve performance of regex matching.
+  private static final Pattern fSlashPattern = Pattern.compile("//");
+  private static final Pattern bSlashPattern = Pattern.compile("\\\\");
 
   /** The directory separator, a slash. */
   public static final String SEPARATOR = "/";
@@ -148,6 +152,14 @@ public class Path implements Comparable {
 
     int start = 0;
 
+    // If there are more than one leading slashes, reduce them to just one
+    // slash. Otherwise, the URI won't be created correctly.
+    // For e.g., //abc will get converted into hdfs://abc while it should be
+    // hdfs:///abc.
+    if (pathString.charAt(0) == '/') {
+      pathString = pathString.replaceFirst("^/+", "/");
+    }
+
     // parse uri scheme, if any
     int colon = pathString.indexOf(':');
     int slash = pathString.indexOf('/');
@@ -237,7 +249,8 @@ public class Path implements Comparable {
    */
   private static String normalizePath(String scheme, String path) {
     // Remove double forward slashes.
-    path = StringUtils.replace(path, "//", "/");
+    final Matcher fMatcher = fSlashPattern.matcher(path);
+    path = fMatcher.replaceAll("/");
 
     // Remove backslashes if this looks like a Windows path. Avoid
     // the substitution if it looks like a non-local URI.
@@ -246,7 +259,8 @@ public class Path implements Comparable {
          (scheme == null) ||
          (scheme.isEmpty()) ||
          (scheme.equals("file")))) {
-      path = StringUtils.replace(path, "\\", "/");
+      final Matcher bMatcher = bSlashPattern.matcher(path);
+      path = bMatcher.replaceAll("/");
     }
     
     // trim trailing slash from non-root path (ignoring windows drive)

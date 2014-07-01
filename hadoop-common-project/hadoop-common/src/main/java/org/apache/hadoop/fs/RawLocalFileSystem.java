@@ -371,7 +371,7 @@ public class RawLocalFileSystem extends FileSystem {
 
     String[] names = localf.list();
     if (names == null) {
-      return null;
+      throw new FileNotFoundException(f + ": null file list");
     }
     results = new FileStatus[names.length];
     int j = 0;

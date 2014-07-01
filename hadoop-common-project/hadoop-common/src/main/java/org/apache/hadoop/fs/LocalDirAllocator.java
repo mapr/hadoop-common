@@ -368,7 +368,8 @@ public class LocalDirAllocator {
 
         // Keep rolling the wheel till we get a valid path
         Random r = new java.util.Random();
-        while (numDirsSearched < numDirs && returnPath == null) {
+        while (numDirsSearched < numDirs && returnPath == null
+            && totalAvailable > 0) {
           long randomPosition = Math.abs(r.nextLong()) % totalAvailable;
           int dir = 0;
           while (randomPosition > availableOnDisk[dir]) {
