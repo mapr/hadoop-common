@@ -18,8 +18,6 @@ public interface PathId {
   
   public void setFid(String fid);
   
-  public void addIp(long ip);
-  
   public void setIps(List<Long> ips);
 
   public void writeFields(DataOutput out) throws IOException;
