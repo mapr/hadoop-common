@@ -713,7 +713,7 @@ Java_org_apache_hadoop_io_nativeio_NativeIO_00024POSIX_chown(
   if (usr) {
     struct passwd *pwdp = getpwnam(usr);
     if (!pwdp) {
-      throw_ioe(env, errno, usr);
+      throw_ioe(env, errno);
       goto cleanup;
     }
     uid = pwdp->pw_uid;
@@ -722,14 +722,14 @@ Java_org_apache_hadoop_io_nativeio_NativeIO_00024POSIX_chown(
   if (grp) {
     struct group *grpp = getgrnam(grp);
     if (!grpp) {
-      throw_ioe(env, errno, grp);
+      throw_ioe(env, errno);
       goto cleanup;
     }
     gid = grpp->gr_gid;
   }
 
   if (chown(path, uid, gid) != 0) {
-    throw_ioe(env, errno, path);
+    throw_ioe(env, errno);
   }
 
 cleanup:
@@ -750,7 +750,7 @@ JNIEXPORT void JNICALL Java_org_apache_hadoop_io_nativeio_NativeIO_00024POSIX_sy
   const char *oldpath = (*env)->GetStringUTFChars(env, j_oldpath, NULL);
   const char *newpath = (*env)->GetStringUTFChars(env, j_newpath, NULL);
   if (!oldpath || !newpath) {
-    throw_ioe(env, errno, "null path");
+    throw_ioe(env, errno);
     goto cleanup;
   }
   // The createParent flag is ignored
@@ -758,7 +758,7 @@ JNIEXPORT void JNICALL Java_org_apache_hadoop_io_nativeio_NativeIO_00024POSIX_sy
   if (rc
    && rc != ENOENT) /* POSIX rc for notexistant newpath which is normal */
   {
-    throw_ioe(env, errno, newpath);
+    throw_ioe(env, errno);
   } else {
     rc = JNI_FALSE;
   }
