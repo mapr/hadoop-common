@@ -33,6 +33,7 @@ import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataInputStream.FadviseType;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -332,9 +333,11 @@ public class IFile {
     private long numRecordsRead = 0;
     private final Counters.Counter readRecordsCounter;
 
+    private FSDataInputStream rawIn;
     final InputStream in;        // Possibly decompressed stream that we read
     Decompressor decompressor;
     public long bytesRead = 0;
+    private final long startOffset;
     protected final long fileLength;
     protected boolean eof = false;
     final IFileInputStream checksumIn;
@@ -402,7 +405,9 @@ public class IFile {
       }
       this.dataIn = new DataInputStream(this.in);
       this.fileLength = length;
-      
+      this.rawIn = in;
+      this.startOffset = in.getPos();
+
       if (conf != null) {
         bufferSize = conf.getInt("io.file.buffer.size", DEFAULT_BUFFER_SIZE);
       }
@@ -505,6 +510,16 @@ public class IFile {
     }
     
     public void close() throws IOException {
+      if (in != null) {
+        try {
+          rawIn.adviseFile(FadviseType.FILE_DONTNEED, startOffset,
+              (startOffset + fileLength));
+        } catch (IOException ioe) {
+          if (LOG.isInfoEnabled())
+            LOG.info("Error " + ioe + " in fadvise. Ignoring it.");
+        }
+      }
+
       // Close the underlying stream
       in.close();
       
