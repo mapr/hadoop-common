@@ -18,6 +18,7 @@
 
 package org.apache.hadoop.mapreduce.v2.app.job.impl;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -34,7 +35,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.PathId;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.Counters;
 import org.apache.hadoop.mapreduce.MRConfig;
@@ -690,7 +693,16 @@ public abstract class TaskImpl implements Task, EventHandler<TaskEvent> {
       if (attempt.getFinishTime() != 0 && attempt.getLaunchTime() !=0)
         runTime = (int)(attempt.getFinishTime() - attempt.getLaunchTime());
       tce.setAttemptRunTime(runTime);
-      
+      try {
+        // TODO get pathId from LocalVolumeService
+        FileSystem fs = FileSystem.get(conf);
+        PathId pathId = fs.createPathId();
+        tce.setPathId(pathId);      
+      } catch (IOException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
+
       //raise the event to job so that it adds the completion event to its
       //data structures
       eventHandler.handle(new JobTaskAttemptCompletedEvent(tce));

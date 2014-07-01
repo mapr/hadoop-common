@@ -1815,7 +1815,7 @@ public class JobImpl implements org.apache.hadoop.mapreduce.v2.app.job.Job,
               new TaskCompletionEvent(mapEvent.getEventId(),
                   mapEvent.getTaskAttemptId(), mapEvent.idWithinJob(),
                   mapEvent.isMapTask(), TaskCompletionEvent.Status.OBSOLETE,
-                  mapEvent.getTaskTrackerHttp()));
+                  mapEvent.getTaskTrackerHttp(), mapEvent.getPathId()));
         }
       }
       
