@@ -22,9 +22,11 @@ import java.io.*;
 import java.util.*;
 import java.rmi.server.UID;
 import java.security.MessageDigest;
+
 import org.apache.commons.logging.*;
 import org.apache.hadoop.util.Options;
 import org.apache.hadoop.fs.*;
+import org.apache.hadoop.fs.FSDataInputStream.FadviseType;
 import org.apache.hadoop.fs.Options.CreateOpts;
 import org.apache.hadoop.io.compress.CodecPool;
 import org.apache.hadoop.io.compress.CompressionCodec;
@@ -1588,6 +1590,7 @@ public class SequenceFile {
     private boolean syncSeen;
 
     private long headerEnd;
+    private long start;
     private long end;
     private int keyLength;
     private int recordLength;
@@ -1800,6 +1803,7 @@ public class SequenceFile {
       this.in = in;
       this.conf = conf;
       boolean succeeded = false;
+      this.start = start;
       try {
         seek(start);
         this.end = this.in.getPos() + length;
@@ -1994,7 +1998,15 @@ public class SequenceFile {
       if (valDeserializer != null) {
         valDeserializer.close();
       }
-      
+
+      try {
+        in.adviseFile(FadviseType.FILE_DONTNEED, start, end);
+      } catch (IOException ioe) {
+        if (LOG.isInfoEnabled()) {
+          LOG.info("Error in fadvise. Ignoring it.", ioe);
+        }
+      }
+
       // Close the input-stream
       in.close();
     }
