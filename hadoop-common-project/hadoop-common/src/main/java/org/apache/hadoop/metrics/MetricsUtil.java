@@ -40,6 +40,12 @@ public class MetricsUtil {
   public static final Log LOG =
     LogFactory.getLog(MetricsUtil.class);
 
+  private static final String hostName;
+
+  static {
+    hostName = getHostName();
+  }
+
   /**
    * Don't allow creation of a new instance of Metrics
    */
@@ -81,7 +87,7 @@ public class MetricsUtil {
                                            String recordName) 
   {
     MetricsRecord metricsRecord = context.createRecord(recordName);
-    metricsRecord.setTag("hostName", getHostName());
+    metricsRecord.setTag("hostName", hostName);
     return metricsRecord;        
   }
     
