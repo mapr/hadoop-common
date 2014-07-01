@@ -61,6 +61,8 @@ public class FsPermission implements Writable {
   private FsAction groupaction = null;
   private FsAction otheraction = null;
   private boolean stickyBit = false;
+  private boolean groupBit = false;
+  private boolean userBit = false;
 
   private FsPermission() {}
 
@@ -122,9 +124,22 @@ public class FsPermission implements Writable {
     stickyBit = sb;
   }
 
+  /**
+   * Setter which includes set gid and set uid bits
+   */
+  private void set(FsAction u, FsAction g, FsAction o, boolean sb, boolean gb, boolean ub) {
+    useraction = u;
+    groupaction = g;
+    otheraction = o;
+    stickyBit = sb;
+    groupBit = gb;
+    userBit = ub;
+  }
+
   public void fromShort(short n) {
     FsAction[] v = FSACTION_VALUES;
-    set(v[(n >>> 6) & 7], v[(n >>> 3) & 7], v[n & 7], (((n >>> 9) & 1) == 1) );
+    int bit = (n >>> 9); // The last bit portion for sticky bits/set gid/uid
+    set(v[(n >>> 6) & 7], v[(n >>> 3) & 7], v[n & 7], (bit & 1) == 1, (bit & 2) == 2, (bit & 4) == 4);
   }
 
   @Override
@@ -147,10 +162,31 @@ public class FsPermission implements Writable {
   }
 
   /**
+   * Method that gets ordinal part of the "sticky" byte
+   * 100 = Set Uid bit, 010 Set Gid bit, 001 sticky bit.
+   * References userBit/groupBit/stickyBit boolean statements
+   * @return Int representation of the bits set depending on which boolean statements are true
+   */
+  private int stickyOrdinal() {
+    int ret = 0;
+
+    if (userBit) {
+      ret |= 4;
+    }
+    if (groupBit) {
+      ret |= 2;
+    }
+    if (stickyBit) {
+      ret |= 1;
+    }
+    return ret;
+  }
+
+  /**
    * Encode the object to a short.
    */
   public short toShort() {
-    int s =  (stickyBit ? 1 << 9 : 0)     |
+    int s =  (stickyOrdinal() << 9)       |
              (useraction.ordinal() << 6)  |
              (groupaction.ordinal() << 3) |
              otheraction.ordinal();
@@ -186,15 +222,32 @@ public class FsPermission implements Writable {
 
   @Override
   public String toString() {
-    String str = useraction.SYMBOL + groupaction.SYMBOL + otheraction.SYMBOL;
-    if(stickyBit) {
-      StringBuilder str2 = new StringBuilder(str);
-      str2.replace(str2.length() - 1, str2.length(),
-           otheraction.implies(FsAction.EXECUTE) ? "t" : "T");
-      str = str2.toString();
+    StringBuilder str = new StringBuilder();
+
+    // Append permission string. Add portions of the string if they use setuid, setgid and sticky bit
+
+    // Set user portion of string from bit
+    str.append(useraction.SYMBOL);
+    // Replace execute if user bit is set
+    if (userBit) {
+      str.replace(str.length() -1, str.length(), useraction.implies(FsAction.EXECUTE) ? "s": "S");
     }
 
-    return str;
+    // Set group portion of string from bit
+    str.append(groupaction.SYMBOL);
+    // Replace execute if group bit is set
+    if (groupBit) {
+      str.replace(str.length() -1, str.length(), groupaction.implies(FsAction.EXECUTE) ? "s": "S");
+    }
+
+    // Set others portion of string from bit
+    str.append(otheraction.SYMBOL);
+    // Replace execute if sticky bit is set
+    if (stickyBit) {
+      str.replace(str.length() -1, str.length(), otheraction.implies(FsAction.EXECUTE) ? "t": "T");
+    }
+
+    return str.toString();
   }
 
   /**
