@@ -232,4 +232,62 @@ public class FSDataInputStream extends DataInputStream
       bufferPool.putBuffer(buffer);
     }
   }
+
+  /**
+   * Specifies the kind of advise to provide for this stream and the file
+   * offsets to which they apply.
+   *
+   * The default implementation does nothing. Sub classes can override this
+   * behavior.
+   *
+   * @param type advise type
+   * @param offset starting file offset
+   * @param count number of bytes starting from the offset
+   */
+  @MapRModified
+  public void adviseFile(FadviseType type, long offset, long count)
+    throws IOException {
+  }
+
+  /**
+   * Returns the file length.
+   *
+   * @return file length
+   */
+  @MapRModified
+  public long getFileLength() throws IOException {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Returns the file id as string.
+   *
+   * @return file id as string
+   */
+  @MapRModified
+  public String getFidStr() {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Returns the server IPs in which the file is stored. Each IP is stored in a
+   * long. For e.g., the first 4 bytes can be used to store the IP in
+   * hexadecimal format and the last 4 bytes to store the port number.
+   *
+   * @return array of server IPs in which the file is stored
+   */
+  @MapRModified
+  public long[] getFidServers() {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Returns the file chunk size.
+   *
+   * @return file chunk size
+   */
+  @MapRModified
+  public long getChunkSize() {
+    throw new UnsupportedOperationException();
+  }
 }

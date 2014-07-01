@@ -222,6 +222,9 @@ public class UserGroupInformation {
   /**Environment variable pointing to the token cache file*/
   public static final String HADOOP_TOKEN_FILE_LOCATION = 
     "HADOOP_TOKEN_FILE_LOCATION";
+
+  // mapr_extensibility
+  public static final String USER_TICKET_FILE_LOCATION = "MAPR_TICKETFILE_LOCATION";
   
   /** 
    * A method to initialize the fields that depend on a configuration.
@@ -1182,7 +1185,9 @@ public class UserGroupInformation {
     TOKEN(AuthMethod.TOKEN),
     CERTIFICATE(null),
     KERBEROS_SSL(null),
-    PROXY(null);
+    PROXY(null),
+    // mapr_extensibility
+    MAPRSEC(null);
     
     private final AuthMethod authMethod;
     private final String loginAppName;
