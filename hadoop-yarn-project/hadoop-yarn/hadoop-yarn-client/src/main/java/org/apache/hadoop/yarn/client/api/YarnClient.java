@@ -41,6 +41,7 @@ import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.api.records.ContainerReport;
 import org.apache.hadoop.yarn.api.records.NodeReport;
 import org.apache.hadoop.yarn.api.records.NodeState;
+import org.apache.hadoop.yarn.api.records.NodeToLabelsList;
 import org.apache.hadoop.yarn.api.records.QueueInfo;
 import org.apache.hadoop.yarn.api.records.QueueUserACLInfo;
 import org.apache.hadoop.yarn.api.records.Token;
@@ -474,4 +475,26 @@ public abstract class YarnClient extends AbstractService {
    */
   public abstract void moveApplicationAcrossQueues(ApplicationId appId,
       String queue) throws YarnException, IOException;
+
+  /**
+   * <p>
+   * Refresh labels for nodes in the cluster
+   * </p>
+   * @return boolean for success/failure
+   * @throws YarnException
+   * @throws IOException
+   */
+  public abstract boolean refreshClusterNodeLabels()
+    throws YarnException, IOException;
+
+  /**
+   * <p>
+   * Get labels for nodes in the cluster
+   * </p>
+   * @return a list of Nodes and their labels
+   * @throws YarnException
+   * @throws IOException
+   */
+  public abstract List<NodeToLabelsList> getClusterNodeLabels()
+    throws YarnException, IOException;
 }

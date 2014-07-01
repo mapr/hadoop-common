@@ -19,6 +19,7 @@
 package org.apache.hadoop.mapreduce.protocol;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
@@ -45,6 +46,7 @@ import org.apache.hadoop.security.KerberosInfo;
 import org.apache.hadoop.security.authorize.AccessControlList;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.TokenInfo;
+import org.apache.hadoop.yarn.api.records.NodeToLabelsList;
 
 /** 
  * Protocol that a JobClient and the central JobTracker use to communicate.  The
@@ -220,6 +222,18 @@ public interface ClientProtocol extends VersionedProtocol {
    * @return array of JobStatus for the submitted jobs
    */
   public JobStatus[] getAllJobs() throws IOException, InterruptedException;
+
+  /**
+   * Get labels for all nodes.
+   * @return list of nodes and their labels
+   */
+  public List<NodeToLabelsList> getClusterNodeLabels() throws IOException, InterruptedException;
+
+  /**
+   * Refresh labels for nodes in the cluster.
+   * @return boolean for success/failure
+   */
+  public boolean refreshClusterNodeLabels() throws IOException, InterruptedException;
   
   /**
    * Get task completion events for the jobid, starting from fromEventId. 
