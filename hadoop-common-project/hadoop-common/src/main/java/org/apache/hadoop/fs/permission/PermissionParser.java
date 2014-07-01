@@ -119,6 +119,8 @@ class PermissionParser {
           mode |= 8;
           break;
         case 't':
+        case 's':
+        case 'S':
           stickyBit = true;
           break;
         default:
@@ -129,11 +131,17 @@ class PermissionParser {
       if (user) {
         userMode = mode;
         userType = type;
+
+        stickyMode = (short) (stickyBit ? 4 : 0);
+        stickyBitType = type;
       }
 
       if (group) {
         groupMode = mode;
         groupType = type;
+
+        stickyMode = (short) (stickyBit ? 2 : 0);
+        stickyBitType = type;
       }
 
       if (others) {
@@ -152,7 +160,6 @@ class PermissionParser {
   private void applyOctalPattern(final Matcher matcher) {
     // Matcher groups: 1: [01]  2: [0-7]{3}
     final char typeApply = '=';
-    stickyBitType = typeApply;
     userType = typeApply;
     groupType = typeApply;
     othersType = typeApply;
