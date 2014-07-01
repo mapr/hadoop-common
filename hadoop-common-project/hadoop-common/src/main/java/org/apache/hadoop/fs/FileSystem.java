@@ -204,7 +204,7 @@ public abstract class FileSystem extends Configured implements Closeable {
       throws IOException {
     throw new UnsupportedOperationException("See concrete FS for implementation");
   }
-  public void setOwnerFid(String fid, String user, String group) {
+  public void setOwnerFid(String fid, String user, String group) throws IOException {
     throw new UnsupportedOperationException("See concrete FS for implementation");
   }
   
