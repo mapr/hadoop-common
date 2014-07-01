@@ -21,6 +21,8 @@ package org.apache.hadoop.yarn.client.cli;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -29,6 +31,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableMap;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.conf.Configuration;
@@ -39,6 +43,11 @@ import org.apache.hadoop.ipc.RemoteException;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.hadoop.yarn.api.records.NodeId;
+import org.apache.hadoop.yarn.api.protocolrecords.GetClusterNodeLabelsRequest;
+import org.apache.hadoop.yarn.api.protocolrecords.GetClusterNodeLabelsResponse;
+import org.apache.hadoop.yarn.api.protocolrecords.RefreshClusterNodeLabelsRequest;
+import org.apache.hadoop.yarn.api.protocolrecords.RefreshClusterNodeLabelsResponse;
+import org.apache.hadoop.yarn.api.records.NodeToLabelsList;
 import org.apache.hadoop.yarn.client.ClientRMProxy;
 import org.apache.hadoop.yarn.client.RMHAServiceTarget;
 import org.apache.hadoop.yarn.conf.HAUtil;
@@ -90,6 +99,10 @@ public class RMAdminCLI extends HAAdmin {
               "Refresh user-to-groups mappings"))
           .put("-refreshAdminAcls", new UsageInfo("",
               "Refresh acls for administration of ResourceManager"))
+          .put("-showLabels", new UsageInfo("",
+              "Show labels for nodes in the cluster"))
+          .put("-refreshLabels", new UsageInfo("",
+              "Refresh labels for nodes in the cluster"))
           .put("-refreshServiceAcl", new UsageInfo("",
               "Reload the service-level authorization policy file. \n\t\t" +
                   "ResoureceManager will reload the authorization policy file."))
@@ -205,6 +218,8 @@ public class RMAdminCLI extends HAAdmin {
       " [-refreshSuperUserGroupsConfiguration]" +
       " [-refreshUserToGroupsMappings]" +
       " [-refreshAdminAcls]" +
+      " [-showLabels]" +
+      " [-refreshLabels]" +
       " [-refreshServiceAcl]" +
       " [-getGroup [username]]" +
       " [[-addToClusterNodeLabels [label1,label2,label3]]" +
@@ -279,7 +294,43 @@ public class RMAdminCLI extends HAAdmin {
     adminProtocol.refreshNodes(request);
     return 0;
   }
-  
+
+  private int showLabels() throws IOException, YarnException {
+    ResourceManagerAdministrationProtocol adminProtocol = createAdminProtocol();
+    GetClusterNodeLabelsRequest request =
+      recordFactory.newRecordInstance(GetClusterNodeLabelsRequest.class);
+    GetClusterNodeLabelsResponse response = adminProtocol.getClusterNodeLabels(request);
+    displayNodeLabelsList(response.getClusterNodeLabels());
+    return 0;
+  }
+
+  private void displayNodeLabelsList(List<NodeToLabelsList> nodeLabels) {
+    String headerPattern = "%23s\t%10s\n";
+    String dataPattern   = "%23s\t%10s\n";
+    PrintWriter writer = new PrintWriter(new OutputStreamWriter(System.out,  Charsets.UTF_8));
+
+    writer.printf(headerPattern, "Nodes", "Labels");
+
+    for (NodeToLabelsList singleNodeLabels : nodeLabels) {
+      writer.printf(dataPattern, singleNodeLabels.getNode(), singleNodeLabels.getNodeLabel().toString());
+    }
+    writer.flush();
+  }
+
+  private int refreshLabels() throws IOException, YarnException {
+    ResourceManagerAdministrationProtocol adminProtocol = createAdminProtocol();
+    RefreshClusterNodeLabelsRequest request =
+      recordFactory.newRecordInstance(RefreshClusterNodeLabelsRequest.class);
+    RefreshClusterNodeLabelsResponse response = adminProtocol.refreshClusterNodeLabels(request);
+
+    if (response.getIsRefreshLabelsComplete()) {
+      System.out.println("Refreshed labels for nodes in the cluster successfully.\n");
+    } else {
+      System.out.println("Failed to refresh labels for nodes in the cluster.\n");
+    }
+    return 0;
+  }
+
   private int refreshUserToGroupsMappings() throws IOException,
       YarnException {
     // Refresh the user-to-groups mappings
@@ -317,7 +368,7 @@ public class RMAdminCLI extends HAAdmin {
     adminProtocol.refreshServiceAcls(request);
     return 0;
   }
-  
+
   private int getGroups(String[] usernames) throws IOException {
     // Get groups users belongs to
     ResourceManagerAdministrationProtocol adminProtocol = createAdminProtocol();
@@ -519,7 +570,9 @@ public class RMAdminCLI extends HAAdmin {
     if ("-refreshAdminAcls".equals(cmd) || "-refreshQueues".equals(cmd) ||
         "-refreshNodes".equals(cmd) || "-refreshServiceAcl".equals(cmd) ||
         "-refreshUserToGroupsMappings".equals(cmd) ||
-        "-refreshSuperUserGroupsConfiguration".equals(cmd)) {
+        "-refreshSuperUserGroupsConfiguration".equals(cmd) ||
+        "-showlabels".equals(cmd) ||
+        "-refreshlabels".equals(cmd)) {
       if (args.length != 1) {
         printUsage(cmd, isHAEnabled);
         return exitCode;
@@ -539,6 +592,10 @@ public class RMAdminCLI extends HAAdmin {
         exitCode = refreshAdminAcls();
       } else if ("-refreshServiceAcl".equals(cmd)) {
         exitCode = refreshServiceAcls();
+      } else if ("-showLabels".equals(cmd)) {
+          exitCode = showLabels();
+      } else if ("-refreshLabels".equals(cmd)) {
+          exitCode = refreshLabels();
       } else if ("-getGroups".equals(cmd)) {
         String[] usernames = Arrays.copyOfRange(args, i, args.length);
         exitCode = getGroups(usernames);

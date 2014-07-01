@@ -67,6 +67,8 @@ import org.apache.hadoop.yarn.api.protocolrecords.GetNewApplicationResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.GetNodesToLabelsRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetQueueInfoRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetQueueUserAclsInfoRequest;
+import org.apache.hadoop.yarn.api.protocolrecords.GetClusterNodeLabelsRequest;
+import org.apache.hadoop.yarn.api.protocolrecords.GetClusterNodeLabelsResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.KillApplicationRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.KillApplicationResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.MoveApplicationAcrossQueuesRequest;
@@ -76,6 +78,8 @@ import org.apache.hadoop.yarn.api.protocolrecords.ReservationSubmissionRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.ReservationSubmissionResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.ReservationUpdateRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.ReservationUpdateResponse;
+import org.apache.hadoop.yarn.api.protocolrecords.RefreshClusterNodeLabelsRequest;
+import org.apache.hadoop.yarn.api.protocolrecords.RefreshClusterNodeLabelsResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.SubmitApplicationRequest;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptReport;
@@ -88,6 +92,7 @@ import org.apache.hadoop.yarn.api.records.ContainerReport;
 import org.apache.hadoop.yarn.api.records.NodeId;
 import org.apache.hadoop.yarn.api.records.NodeReport;
 import org.apache.hadoop.yarn.api.records.NodeState;
+import org.apache.hadoop.yarn.api.records.NodeToLabelsList;
 import org.apache.hadoop.yarn.api.records.QueueInfo;
 import org.apache.hadoop.yarn.api.records.QueueUserACLInfo;
 import org.apache.hadoop.yarn.api.records.Token;
@@ -806,4 +811,21 @@ public class YarnClientImpl extends YarnClient {
     return rmClient.getClusterNodeLabels(
         GetClusterNodeLabelsRequest.newInstance()).getNodeLabels();
   }
+  public List<NodeToLabelsList> getClusterNodeLabels()
+    throws YarnException, IOException {
+    GetClusterNodeLabelsRequest request =
+      GetClusterNodeLabelsRequest.newInstance();
+    GetClusterNodeLabelsResponse response = rmClient.getClusterNodeLabels(request);
+    return response.getClusterNodeLabels();
+  }
+
+  @Override
+  public boolean refreshClusterNodeLabels()
+    throws YarnException, IOException {
+    RefreshClusterNodeLabelsRequest request =
+      RefreshClusterNodeLabelsRequest.newInstance();
+    RefreshClusterNodeLabelsResponse response = rmClient.refreshClusterNodeLabels(request);
+    return response.getIsRefreshLabelsComplete();
+  }
+
 }

@@ -41,6 +41,8 @@ import org.apache.hadoop.yarn.proto.YarnServerResourceManagerServiceProtos.Refre
 import org.apache.hadoop.yarn.proto.YarnServerResourceManagerServiceProtos.RemoveFromClusterNodeLabelsRequestProto;
 import org.apache.hadoop.yarn.proto.YarnServerResourceManagerServiceProtos.ReplaceLabelsOnNodeRequestProto;
 import org.apache.hadoop.yarn.proto.YarnServerResourceManagerServiceProtos.UpdateNodeResourceRequestProto;
+import org.apache.hadoop.yarn.proto.YarnServiceProtos.GetClusterNodeLabelsRequestProto;
+import org.apache.hadoop.yarn.proto.YarnServiceProtos.RefreshClusterNodeLabelsRequestProto;
 import org.apache.hadoop.yarn.server.api.ResourceManagerAdministrationProtocol;
 import org.apache.hadoop.yarn.server.api.ResourceManagerAdministrationProtocolPB;
 import org.apache.hadoop.yarn.server.api.protocolrecords.AddToClusterNodeLabelsRequest;
@@ -65,6 +67,10 @@ import org.apache.hadoop.yarn.server.api.protocolrecords.UpdateNodeResourceReque
 import org.apache.hadoop.yarn.server.api.protocolrecords.UpdateNodeResourceResponse;
 import org.apache.hadoop.yarn.server.api.protocolrecords.impl.pb.AddToClusterNodeLabelsRequestPBImpl;
 import org.apache.hadoop.yarn.server.api.protocolrecords.impl.pb.AddToClusterNodeLabelsResponsePBImpl;
+import org.apache.hadoop.yarn.api.protocolrecords.GetClusterNodeLabelsRequest;
+import org.apache.hadoop.yarn.api.protocolrecords.GetClusterNodeLabelsResponse;
+import org.apache.hadoop.yarn.api.protocolrecords.RefreshClusterNodeLabelsRequest;
+import org.apache.hadoop.yarn.api.protocolrecords.RefreshClusterNodeLabelsResponse;
 import org.apache.hadoop.yarn.server.api.protocolrecords.impl.pb.RefreshAdminAclsRequestPBImpl;
 import org.apache.hadoop.yarn.server.api.protocolrecords.impl.pb.RefreshAdminAclsResponsePBImpl;
 import org.apache.hadoop.yarn.server.api.protocolrecords.impl.pb.RefreshNodesRequestPBImpl;
@@ -83,6 +89,10 @@ import org.apache.hadoop.yarn.server.api.protocolrecords.impl.pb.ReplaceLabelsOn
 import org.apache.hadoop.yarn.server.api.protocolrecords.impl.pb.ReplaceLabelsOnNodeResponsePBImpl;
 import org.apache.hadoop.yarn.server.api.protocolrecords.impl.pb.UpdateNodeResourceRequestPBImpl;
 import org.apache.hadoop.yarn.server.api.protocolrecords.impl.pb.UpdateNodeResourceResponsePBImpl;
+import org.apache.hadoop.yarn.api.protocolrecords.impl.pb.GetClusterNodeLabelsRequestPBImpl;
+import org.apache.hadoop.yarn.api.protocolrecords.impl.pb.GetClusterNodeLabelsResponsePBImpl;
+import org.apache.hadoop.yarn.api.protocolrecords.impl.pb.RefreshClusterNodeLabelsRequestPBImpl;
+import org.apache.hadoop.yarn.api.protocolrecords.impl.pb.RefreshClusterNodeLabelsResponsePBImpl;
 
 import com.google.protobuf.ServiceException;
 
@@ -263,4 +273,32 @@ public class ResourceManagerAdministrationProtocolPBClientImpl implements Resour
       return null;
     }
   }
+
+  public GetClusterNodeLabelsResponse getClusterNodeLabels(
+    GetClusterNodeLabelsRequest request) throws YarnException, IOException {
+    GetClusterNodeLabelsRequestProto requestProto =
+      ((GetClusterNodeLabelsRequestPBImpl)request).getProto();
+    try {
+      return new GetClusterNodeLabelsResponsePBImpl(proxy.getClusterNodeLabels(
+        null, requestProto));
+    } catch (ServiceException e) {
+      RPCUtil.unwrapAndThrowException(e);
+      return null;
+    }
+  }
+
+  @Override
+  public RefreshClusterNodeLabelsResponse refreshClusterNodeLabels(
+    RefreshClusterNodeLabelsRequest request) throws YarnException, IOException {
+    RefreshClusterNodeLabelsRequestProto requestProto =
+      ((RefreshClusterNodeLabelsRequestPBImpl)request).getProto();
+    try {
+      return new RefreshClusterNodeLabelsResponsePBImpl(proxy.refreshClusterNodeLabels(
+        null, requestProto));
+    } catch (ServiceException e) {
+      RPCUtil.unwrapAndThrowException(e);
+      return null;
+    }
+  }
+
 }

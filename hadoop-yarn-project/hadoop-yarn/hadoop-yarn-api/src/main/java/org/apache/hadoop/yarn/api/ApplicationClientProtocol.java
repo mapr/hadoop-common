@@ -41,6 +41,8 @@ import org.apache.hadoop.yarn.api.protocolrecords.GetQueueInfoRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetQueueInfoResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.GetQueueUserAclsInfoRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetQueueUserAclsInfoResponse;
+import org.apache.hadoop.yarn.api.protocolrecords.GetClusterNodeLabelsRequest;
+import org.apache.hadoop.yarn.api.protocolrecords.GetClusterNodeLabelsResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.KillApplicationRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.KillApplicationResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.MoveApplicationAcrossQueuesRequest;
@@ -53,6 +55,10 @@ import org.apache.hadoop.yarn.api.protocolrecords.ReservationUpdateRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.ReservationUpdateResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.SubmitApplicationRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.SubmitApplicationResponse;
+import org.apache.hadoop.yarn.api.protocolrecords.RefreshClusterNodeLabelsRequest;
+import org.apache.hadoop.yarn.api.protocolrecords.RefreshClusterNodeLabelsResponse;
+import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
+import org.apache.hadoop.yarn.api.records.ApplicationAttemptReport;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ApplicationSubmissionContext;
 import org.apache.hadoop.yarn.api.records.ContainerLaunchContext;
@@ -419,4 +425,26 @@ public interface ApplicationClientProtocol extends ApplicationBaseProtocol {
   @Unstable
   public GetClusterNodeLabelsResponse getClusterNodeLabels(
       GetClusterNodeLabelsRequest request) throws YarnException, IOException;
+
+  /**
+   * <p>The interface used by clients to request the 
+   * <code>ResourceManager</code> to refresh labels for nodes
+   *  in the cluster.</p>
+   * 
+   * <p>Currently, the <code>ResourceManager</code> returns a boolean
+   * on success/failure and throws an exception on rejecting the request.</p>
+   * 
+   * @param request request to refresh labels for nodes in cluster
+   * @return <code>ResourceManager</code> returns a boolean
+   *         on success/failure and throws an exception on rejecting the request
+   *
+   * @throws YarnException
+   * @throws IOException
+   */
+  @Public
+  @Stable
+  @Idempotent
+  public RefreshClusterNodeLabelsResponse refreshClusterNodeLabels(
+      RefreshClusterNodeLabelsRequest request) 
+  throws YarnException, IOException;
 }

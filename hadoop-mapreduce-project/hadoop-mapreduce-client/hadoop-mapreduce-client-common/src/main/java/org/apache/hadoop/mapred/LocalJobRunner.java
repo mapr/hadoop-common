@@ -65,6 +65,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.AccessControlList;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.util.ReflectionUtils;
+import org.apache.hadoop.yarn.api.records.NodeToLabelsList;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
@@ -818,7 +819,16 @@ public class LocalJobRunner implements ClientProtocol {
   
   public org.apache.hadoop.mapreduce.JobStatus[] getAllJobs() {return null;}
 
-  
+  @Override
+  public List<NodeToLabelsList> getClusterNodeLabels() throws IOException, InterruptedException {
+    return null;
+  }
+
+  @Override
+  public boolean refreshClusterNodeLabels() throws IOException, InterruptedException {
+    return false;
+  }
+
   /**
    * Returns the diagnostic information for a particular task in the given job.
    * To be implemented

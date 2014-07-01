@@ -18,6 +18,7 @@
 
 package org.apache.hadoop.yarn.api.protocolrecords;
 
+<<<<<<< HEAD
 import java.util.Set;
 
 import org.apache.hadoop.classification.InterfaceAudience.Public;
@@ -41,4 +42,47 @@ public abstract class GetClusterNodeLabelsResponse {
   @Public
   @Evolving
   public abstract Set<String> getNodeLabels();
+=======
+import java.util.List;
+
+import org.apache.hadoop.classification.InterfaceAudience.Public;
+import org.apache.hadoop.classification.InterfaceStability.Unstable;
+import org.apache.hadoop.yarn.api.records.NodeToLabelsList;
+import org.apache.hadoop.yarn.util.Records;
+
+/**
+ * <p>
+ * The response sent by the <code>ResourceManager</code> to a client requesting
+ * labels for nodes in the cluster.
+ * </p>
+ * 
+ * <p>
+ * The response includes a list of {@link NodeToLabelsList} each of which has labels
+ * for a single node.
+ * </p>
+ * 
+ */
+@Public
+@Unstable
+public abstract class GetClusterNodeLabelsResponse {
+
+  @Public
+  @Unstable
+  public static GetClusterNodeLabelsResponse newInstance(
+    List<NodeToLabelsList> clusterNodeLabels) {
+    GetClusterNodeLabelsResponse response =
+        Records.newRecord(GetClusterNodeLabelsResponse.class);
+    response.setClusterNodeLabels(clusterNodeLabels);
+    return response;
+  }
+
+  @Public
+  @Unstable
+  public abstract List<NodeToLabelsList> getClusterNodeLabels();
+
+  @Public
+  @Unstable
+  public abstract void setClusterNodeLabels(List<NodeToLabelsList> clusterNodeLabels);
+
+>>>>>>> MAPR-14424: Implementation for 'mapred job -showlabels' and 'mapred job -refreshlabaels' cli command
 }

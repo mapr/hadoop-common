@@ -34,6 +34,7 @@ import net.java.dev.eval.Expression;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -41,6 +42,9 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.util.StringUtils;
+import org.apache.hadoop.yarn.api.records.NodeToLabelsList;
+import org.apache.hadoop.yarn.api.records.YarnClusterMetrics;
+import org.apache.hadoop.yarn.factory.providers.RecordFactoryProvider;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
 
 public class LabelManager extends AbstractService {
@@ -146,7 +150,8 @@ public class LabelManager extends AbstractService {
   /**
    * Read a line from file and parse node identifier and labels.
    */
-  void loadAndApplyLabels() throws IOException {
+  @Private
+  public void loadAndApplyLabels() throws IOException {
     if (fs.exists(labelFile)) {
       FSDataInputStream input = fs.open(labelFile);
       BufferedReader sin = new BufferedReader(new InputStreamReader(input));
@@ -198,14 +203,17 @@ public class LabelManager extends AbstractService {
         }
         nodeNotifierLabelsTmp.put(nodeIdentifier, nodeLabels);
       }
+
       // swap needs to take place here
+      // No interference between multiple threads trying to modify state
       synchronized ( nodeNotifierLabels ) {
-        nodeNotifierLabels.clear();
-        nodeNotifierLabels.putAll(nodeNotifierLabelsTmp);
-      }
-      synchronized (labelEvalFillers) {
-        labelEvalFillers.clear();
-        labelEvalFillers.putAll(labelEvalFillersTmp);
+        synchronized ( labelEvalFillers ) {
+          nodeNotifierLabels.clear();
+          nodeNotifierLabels.putAll(nodeNotifierLabelsTmp);
+
+          labelEvalFillers.clear();
+          labelEvalFillers.putAll(labelEvalFillersTmp);
+        }
       }
       nodeNotifierLabelsTmp.clear();
       labelEvalFillersTmp.clear();
@@ -238,6 +246,32 @@ public class LabelManager extends AbstractService {
     nodeNotifierLabelsTmp.clear();
     nodeNotifierLabelsTmp = null; // hint for GC
     return nodeLabels;
+  }
+
+  public List<NodeToLabelsList> getLabelsForAllNodes() {
+    Map<String,List<String>> nodeNotifierLabelsTmp = new HashMap<String,List<String>>();
+
+    synchronized (nodeNotifierLabels) {
+      nodeNotifierLabelsTmp.putAll(nodeNotifierLabels);
+    }
+
+    List<NodeToLabelsList> nodeToLabelsList= new ArrayList<NodeToLabelsList>();
+
+    for (Map.Entry<String, List<String>> entry : nodeNotifierLabelsTmp.entrySet()) {
+      NodeToLabelsList singleNodeToLabelsList =
+        RecordFactoryProvider.getRecordFactory(null).newRecordInstance(NodeToLabelsList.class);
+      singleNodeToLabelsList.setNode(entry.getKey());
+      singleNodeToLabelsList.setNodeLabel(entry.getValue());
+
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("Adding labels for node: " + entry.getKey() + ", labels: " + entry.getValue());
+      }
+      nodeToLabelsList.add(singleNodeToLabelsList);
+    }
+
+    nodeNotifierLabelsTmp.clear();
+    nodeNotifierLabelsTmp = null; // hint for GC
+    return nodeToLabelsList;
   }
 
   // TODO should not evaluate > 1 per app - may be move it to AppInfo

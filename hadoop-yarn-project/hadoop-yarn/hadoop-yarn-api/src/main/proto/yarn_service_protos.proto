@@ -373,3 +373,17 @@ message RunSharedCacheCleanerTaskRequestProto {
 message RunSharedCacheCleanerTaskResponseProto {
   optional bool accepted = 1;
 }
+
+message GetClusterNodeLabelsRequestProto {
+}
+
+message GetClusterNodeLabelsResponseProto {
+  repeated NodeToLabelsListProto nodeToLabels = 1;
+}
+
+message RefreshClusterNodeLabelsRequestProto {
+}
+
+message RefreshClusterNodeLabelsResponseProto {
+  optional bool refreshLabelsCompleted = 1 [default = false];
+}

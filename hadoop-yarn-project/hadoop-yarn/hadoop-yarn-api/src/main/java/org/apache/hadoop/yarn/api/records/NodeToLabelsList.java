@@ -16,32 +16,38 @@
  * limitations under the License.
  */
 
-package org.apache.hadoop.yarn.api.protocolrecords;
+package org.apache.hadoop.yarn.api.records;
 
+import java.util.List;
+
+import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceAudience.Public;
-<<<<<<< HEAD
-import org.apache.hadoop.classification.InterfaceStability.Evolving;
-import org.apache.hadoop.yarn.util.Records;
-
-@Public
-@Evolving
-public abstract class GetClusterNodeLabelsRequest {
-  public static GetClusterNodeLabelsRequest newInstance() {
-    return Records.newRecord(GetClusterNodeLabelsRequest.class);
-=======
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.yarn.util.Records;
 
-@Public
-@Unstable
-public abstract class GetClusterNodeLabelsRequest {
+public abstract class NodeToLabelsList {
+  @Private
+  @Unstable
+  public static NodeToLabelsList newInstance(String node, List<String> nodeLabel) {
+    NodeToLabelsList nodeToLabelsList = Records.newRecord(NodeToLabelsList.class);
+    nodeToLabelsList.setNodeLabel(nodeLabel);
+    return nodeToLabelsList;
+  }
 
   @Public
   @Unstable
-  public static GetClusterNodeLabelsRequest newInstance() {
-    GetClusterNodeLabelsRequest request =
-        Records.newRecord(GetClusterNodeLabelsRequest.class);
-    return request;
->>>>>>> MAPR-14424: Implementation for 'mapred job -showlabels' and 'mapred job -refreshlabaels' cli command
-  }
+  public abstract String getNode();
+
+  @Public
+  @Unstable
+  public abstract void setNode(String node);
+
+  @Public
+  @Unstable
+  public abstract List<String> getNodeLabel();
+
+  @Public
+  @Unstable
+  public abstract void setNodeLabel(List<String> nodeLabel);
+
 }

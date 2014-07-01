@@ -50,6 +50,10 @@ import org.apache.hadoop.yarn.server.api.protocolrecords.ReplaceLabelsOnNodeRequ
 import org.apache.hadoop.yarn.server.api.protocolrecords.ReplaceLabelsOnNodeResponse;
 import org.apache.hadoop.yarn.server.api.protocolrecords.UpdateNodeResourceRequest;
 import org.apache.hadoop.yarn.server.api.protocolrecords.UpdateNodeResourceResponse;
+import org.apache.hadoop.yarn.api.protocolrecords.GetClusterNodeLabelsRequest;
+import org.apache.hadoop.yarn.api.protocolrecords.GetClusterNodeLabelsResponse;
+import org.apache.hadoop.yarn.api.protocolrecords.RefreshClusterNodeLabelsRequest;
+import org.apache.hadoop.yarn.api.protocolrecords.RefreshClusterNodeLabelsResponse;
 
 @Private
 @Stable
@@ -134,4 +138,17 @@ public interface ResourceManagerAdministrationProtocol extends GetUserMappingsPr
   @Idempotent
   public ReplaceLabelsOnNodeResponse replaceLabelsOnNode(
       ReplaceLabelsOnNodeRequest request) throws YarnException, IOException;
+
+  @Public
+  @Stable
+  public GetClusterNodeLabelsResponse getClusterNodeLabels(
+    GetClusterNodeLabelsRequest request)
+  throws YarnException, IOException;
+
+ @Public
+ @Stable
+  public RefreshClusterNodeLabelsResponse refreshClusterNodeLabels(
+    RefreshClusterNodeLabelsRequest request)
+ throws YarnException, IOException;
+
 }

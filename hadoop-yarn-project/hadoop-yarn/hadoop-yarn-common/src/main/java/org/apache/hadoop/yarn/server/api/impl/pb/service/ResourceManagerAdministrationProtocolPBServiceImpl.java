@@ -21,6 +21,12 @@ package org.apache.hadoop.yarn.server.api.impl.pb.service;
 import java.io.IOException;
 
 import org.apache.hadoop.classification.InterfaceAudience.Private;
+import org.apache.hadoop.yarn.api.protocolrecords.GetClusterNodeLabelsResponse;
+import org.apache.hadoop.yarn.api.protocolrecords.RefreshClusterNodeLabelsResponse;
+import org.apache.hadoop.yarn.api.protocolrecords.impl.pb.GetClusterNodeLabelsRequestPBImpl;
+import org.apache.hadoop.yarn.api.protocolrecords.impl.pb.GetClusterNodeLabelsResponsePBImpl;
+import org.apache.hadoop.yarn.api.protocolrecords.impl.pb.RefreshClusterNodeLabelsRequestPBImpl;
+import org.apache.hadoop.yarn.api.protocolrecords.impl.pb.RefreshClusterNodeLabelsResponsePBImpl;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.proto.YarnServerResourceManagerServiceProtos.AddToClusterNodeLabelsRequestProto;
 import org.apache.hadoop.yarn.proto.YarnServerResourceManagerServiceProtos.AddToClusterNodeLabelsResponseProto;
@@ -44,6 +50,10 @@ import org.apache.hadoop.yarn.proto.YarnServerResourceManagerServiceProtos.Repla
 import org.apache.hadoop.yarn.proto.YarnServerResourceManagerServiceProtos.ReplaceLabelsOnNodeResponseProto;
 import org.apache.hadoop.yarn.proto.YarnServerResourceManagerServiceProtos.UpdateNodeResourceRequestProto;
 import org.apache.hadoop.yarn.proto.YarnServerResourceManagerServiceProtos.UpdateNodeResourceResponseProto;
+import org.apache.hadoop.yarn.proto.YarnServiceProtos.GetClusterNodeLabelsRequestProto;
+import org.apache.hadoop.yarn.proto.YarnServiceProtos.GetClusterNodeLabelsResponseProto;
+import org.apache.hadoop.yarn.proto.YarnServiceProtos.RefreshClusterNodeLabelsRequestProto;
+import org.apache.hadoop.yarn.proto.YarnServiceProtos.RefreshClusterNodeLabelsResponseProto;
 import org.apache.hadoop.yarn.server.api.ResourceManagerAdministrationProtocol;
 import org.apache.hadoop.yarn.server.api.ResourceManagerAdministrationProtocolPB;
 import org.apache.hadoop.yarn.server.api.protocolrecords.AddToClusterNodeLabelsResponse;
@@ -268,4 +278,35 @@ public class ResourceManagerAdministrationProtocolPBServiceImpl implements Resou
       throw new ServiceException(e);
     }
   }
+  public GetClusterNodeLabelsResponseProto getClusterNodeLabels(
+  RpcController controller, GetClusterNodeLabelsRequestProto proto)
+    throws ServiceException {
+    GetClusterNodeLabelsRequestPBImpl request =
+        new GetClusterNodeLabelsRequestPBImpl(proto);
+    try {
+      GetClusterNodeLabelsResponse response = real.getClusterNodeLabels(request);
+      return ((GetClusterNodeLabelsResponsePBImpl)response).getProto();
+    } catch (YarnException e) {
+      throw new ServiceException(e);
+    } catch (IOException e) {
+      throw new ServiceException(e);
+    }
+  }
+
+  @Override
+  public RefreshClusterNodeLabelsResponseProto refreshClusterNodeLabels(
+    RpcController controller, RefreshClusterNodeLabelsRequestProto proto)
+    throws ServiceException {
+	  RefreshClusterNodeLabelsRequestPBImpl request =
+      new RefreshClusterNodeLabelsRequestPBImpl(proto);
+    try {
+      RefreshClusterNodeLabelsResponse response = real.refreshClusterNodeLabels(request);
+      return ((RefreshClusterNodeLabelsResponsePBImpl)response).getProto();
+    } catch (YarnException e) {
+      throw new ServiceException(e);
+    } catch (IOException e) {
+      throw new ServiceException(e);
+    }
+  }
+
 }

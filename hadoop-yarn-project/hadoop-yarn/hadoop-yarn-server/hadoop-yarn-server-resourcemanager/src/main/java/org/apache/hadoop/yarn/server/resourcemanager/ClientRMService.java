@@ -81,10 +81,14 @@ import org.apache.hadoop.yarn.api.protocolrecords.GetQueueInfoRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetQueueInfoResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.GetQueueUserAclsInfoRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetQueueUserAclsInfoResponse;
+import org.apache.hadoop.yarn.api.protocolrecords.GetClusterNodeLabelsRequest;
+import org.apache.hadoop.yarn.api.protocolrecords.GetClusterNodeLabelsResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.KillApplicationRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.KillApplicationResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.MoveApplicationAcrossQueuesRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.MoveApplicationAcrossQueuesResponse;
+import org.apache.hadoop.yarn.api.protocolrecords.RefreshClusterNodeLabelsRequest;
+import org.apache.hadoop.yarn.api.protocolrecords.RefreshClusterNodeLabelsResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.RenewDelegationTokenRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.RenewDelegationTokenResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.ReservationDeleteRequest;
@@ -105,6 +109,7 @@ import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.api.records.ContainerReport;
 import org.apache.hadoop.yarn.api.records.NodeReport;
 import org.apache.hadoop.yarn.api.records.NodeState;
+import org.apache.hadoop.yarn.api.records.NodeToLabelsList;
 import org.apache.hadoop.yarn.api.records.QueueACL;
 import org.apache.hadoop.yarn.api.records.QueueInfo;
 import org.apache.hadoop.yarn.api.records.ReservationDefinition;
@@ -128,6 +133,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.reservation.Plan;
 import org.apache.hadoop.yarn.server.resourcemanager.reservation.ReservationInputValidator;
 import org.apache.hadoop.yarn.server.resourcemanager.reservation.ReservationSystem;
 import org.apache.hadoop.yarn.server.resourcemanager.reservation.exceptions.PlanningException;
+import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManager;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMApp;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppEventType;
@@ -1067,6 +1073,40 @@ public class ClientRMService extends AbstractService implements
     return loginUser.getUserName().equals(user.getUserName())
         ? token.decodeIdentifier().getRenewer().toString()
         : user.getShortUserName();
+  }
+
+  public GetClusterNodeLabelsResponse getClusterNodeLabels(
+    GetClusterNodeLabelsRequest request) throws YarnException,
+    IOException {
+    GetClusterNodeLabelsResponse response =
+      recordFactory.newRecordInstance(GetClusterNodeLabelsResponse.class);
+
+    LabelManager labelManager = LabelManager.getInstance();
+    List<NodeToLabelsList> clusterNodeLabels = null;
+    clusterNodeLabels = labelManager.getLabelsForAllNodes();
+
+    response.setClusterNodeLabels(clusterNodeLabels);
+    return response;
+  }
+
+  @Override
+  public RefreshClusterNodeLabelsResponse refreshClusterNodeLabels(
+    RefreshClusterNodeLabelsRequest request) throws YarnException,
+    IOException {
+    RefreshClusterNodeLabelsResponse response =
+      recordFactory.newRecordInstance(RefreshClusterNodeLabelsResponse.class);
+
+    boolean isRefreshCompleted = false;
+    try {
+      LabelManager labelManager = LabelManager.getInstance();
+      labelManager.loadAndApplyLabels();
+      isRefreshCompleted = true;
+    } catch (Exception e) {
+        LOG.error("Failed to refresh cluster node labels", e);
+    }
+
+    response.setIsRefreshLabelsComplete(isRefreshCompleted);
+    return response;
   }
 
   void refreshServiceAcls(Configuration configuration, 

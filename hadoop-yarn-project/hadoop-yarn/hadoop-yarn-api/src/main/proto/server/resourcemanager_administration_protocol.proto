@@ -29,6 +29,7 @@ option java_generate_equals_and_hash = true;
 package hadoop.yarn;
 
 import "server/yarn_server_resourcemanager_service_protos.proto";
+import "yarn_service_protos.proto";
 
 service ResourceManagerAdministrationProtocolService {
   rpc refreshQueues(RefreshQueuesRequestProto) returns (RefreshQueuesResponseProto);
@@ -42,4 +43,7 @@ service ResourceManagerAdministrationProtocolService {
   rpc addToClusterNodeLabels(AddToClusterNodeLabelsRequestProto) returns (AddToClusterNodeLabelsResponseProto);
   rpc removeFromClusterNodeLabels(RemoveFromClusterNodeLabelsRequestProto) returns (RemoveFromClusterNodeLabelsResponseProto);
   rpc replaceLabelsOnNodes(ReplaceLabelsOnNodeRequestProto) returns (ReplaceLabelsOnNodeResponseProto);
+  rpc getClusterNodeLabels(GetClusterNodeLabelsRequestProto) returns (GetClusterNodeLabelsResponseProto);
+  rpc refreshClusterNodeLabels(RefreshClusterNodeLabelsRequestProto) returns (RefreshClusterNodeLabelsResponseProto);
+
 }

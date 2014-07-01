@@ -104,6 +104,8 @@ import org.apache.hadoop.yarn.api.protocolrecords.KillApplicationRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.KillApplicationResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.MoveApplicationAcrossQueuesRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.MoveApplicationAcrossQueuesResponse;
+import org.apache.hadoop.yarn.api.protocolrecords.RefreshClusterNodeLabelsRequest;
+import org.apache.hadoop.yarn.api.protocolrecords.RefreshClusterNodeLabelsResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.RenewDelegationTokenRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.RenewDelegationTokenResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.ReservationDeleteRequest;
@@ -442,6 +444,12 @@ public class TestClientRedirect {
     @Override
     public GetLabelsToNodesResponse getLabelsToNodes(
         GetLabelsToNodesRequest request) throws YarnException, IOException {
+      return null;
+    }
+
+    @Override
+    public RefreshClusterNodeLabelsResponse refreshClusterNodeLabels(
+      RefreshClusterNodeLabelsRequest request) throws YarnException, IOException{
       return null;
     }
   }
