@@ -34,9 +34,9 @@ import java.text.StringCharacterIterator;
 import java.util.Arrays;
 
 import org.apache.avro.reflect.Stringable;
-
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
+import org.apache.hadoop.classification.MapRModified;
 
 /** This class stores text using standard UTF8 encoding.  It provides methods
  * to serialize, deserialize, and compare texts at byte level.  The type of
@@ -50,8 +50,9 @@ import org.apache.hadoop.classification.InterfaceStability;
 @Stringable
 @InterfaceAudience.Public
 @InterfaceStability.Stable
+@MapRModified(summary = "Improve map task performance - bug 13086")
 public class Text extends BinaryComparable
-    implements WritableComparable<BinaryComparable> {
+    implements WritableComparable<BinaryComparable>, HasRawComparablePrefix {
   
   private static ThreadLocal<CharsetEncoder> ENCODER_FACTORY =
     new ThreadLocal<CharsetEncoder>() {
@@ -670,5 +671,19 @@ public class Text extends BinaryComparable
       ch = iter.next();
     }
     return size;
+  }
+
+  @Override
+  public void getPrefix(byte[] dst, int off, int prefixLen) {
+    int copyLen = Math.min(prefixLen, length);
+    int i = 0;
+    while (i < copyLen) {
+      dst[off + i] = bytes[i];
+      i++;
+    }
+    while (i < prefixLen) {
+      dst[off + i] = 0;
+      i++;
+    }
   }
 }
