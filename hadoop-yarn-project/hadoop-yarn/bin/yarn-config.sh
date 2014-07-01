@@ -63,3 +63,5 @@ then
         export YARN_SLAVES="${YARN_CONF_DIR}/$slavesfile"
     fi
 fi
+
+export LD_LIBRARY_PATH=/opt/mapr/lib
