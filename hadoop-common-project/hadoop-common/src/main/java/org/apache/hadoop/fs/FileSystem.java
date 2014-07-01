@@ -175,6 +175,16 @@ public abstract class FileSystem extends Configured implements Closeable {
     return URI.create(fixName(conf.get(FS_DEFAULT_NAME_KEY, DEFAULT_FS)));
   }
 
+  /**
+   * create PathId: A Factory method to create PathIds. PathIds are used
+   * by MapRFS in the direct shuffle to get access to the file paths.
+   */
+  public PathId createPathId() {
+    //Base class throws Unsupported Exception
+    //TODO determine if this is the right approach
+    throw new UnsupportedOperationException();
+  }
+
   /** Set the default filesystem URI in a configuration.
    * @param conf the configuration to alter
    * @param uri the new default filesystem uri
