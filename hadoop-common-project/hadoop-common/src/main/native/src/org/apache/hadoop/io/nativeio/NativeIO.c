@@ -598,6 +598,81 @@ JNIEXPORT void JNICALL Java_org_apache_hadoop_io_nativeio_NativeIO_00024POSIX_ch
 #endif
 }
 
+/**
+ * public static native void chown(String path, String user, String group) throws IOException;
+ */
+JNIEXPORT void JNICALL
+Java_org_apache_hadoop_io_nativeio_NativeIO_00024POSIX_chown(
+  JNIEnv *env, jclass clazz, jstring j_path, jstring j_usr, jstring j_grp)
+{
+  uid_t uid = -1;
+  gid_t gid = -1;
+  char *path = j_path ? (*env)->GetStringUTFChars(env, j_path, NULL) : NULL;
+  char *usr =  j_usr ? (*env)->GetStringUTFChars(env, j_usr, NULL) : NULL;
+  char *grp =  j_grp ? (*env)->GetStringUTFChars(env, j_grp, NULL) : NULL;
+
+  if (!path)        goto cleanup;
+  if (!usr && !grp) goto cleanup;
+
+  if (usr) {
+    struct passwd *pwdp = getpwnam(usr);
+    if (!pwdp) {
+      throw_ioe(env, errno, usr);
+      goto cleanup;
+    }
+    uid = pwdp->pw_uid;
+  }
+
+  if (grp) {
+    struct group *grpp = getgrnam(grp);
+    if (!grpp) {
+      throw_ioe(env, errno, grp);
+      goto cleanup;
+    }
+    gid = grpp->gr_gid;
+  }
+
+  if (chown(path, uid, gid) != 0) {
+    throw_ioe(env, errno, path);
+  }
+
+cleanup:
+  if (path) (*env)->ReleaseStringUTFChars(env, j_path, path);
+  if (usr)  (*env)->ReleaseStringUTFChars(env, j_usr, usr);
+  if (grp)  (*env)->ReleaseStringUTFChars(env, j_grp, grp);
+}
+
+/**
+ * public static native void symlink(String oldPath, String newPath, boolean
+ * createParent) throws IOException;
+ */
+JNIEXPORT void JNICALL Java_org_apache_hadoop_io_nativeio_NativeIO_00024POSIX_symlink
+  (JNIEnv *env, jclass j_clazz, jstring j_oldpath, jstring j_newpath,
+  jstring createParent)
+{
+  int rc = JNI_TRUE;
+  const char *oldpath = (*env)->GetStringUTFChars(env, j_oldpath, NULL);
+  const char *newpath = (*env)->GetStringUTFChars(env, j_newpath, NULL);
+  if (!oldpath || !newpath) {
+    throw_ioe(env, errno, "null path");
+    goto cleanup;
+  }
+  // The createParent flag is ignored
+  rc = symlink(oldpath, newpath);
+  if (rc
+   && rc != ENOENT) /* POSIX rc for notexistant newpath which is normal */
+  {
+    throw_ioe(env, errno, newpath);
+  } else {
+    rc = JNI_FALSE;
+  }
+
+cleanup:
+  if (oldpath) (*env)->ReleaseStringUTFChars(env, j_oldpath, oldpath);
+  if (newpath) (*env)->ReleaseStringUTFChars(env, j_newpath, newpath);
+  return rc;
+}
+
 /*
  * static native String getUserName(int uid);
  */
