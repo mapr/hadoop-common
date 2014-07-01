@@ -119,6 +119,8 @@ class PermissionParser {
           mode |= 8;
           break;
         case 't':
+        case 's':
+        case 'S':
           stickyBit = true;
           break;
         default:
@@ -129,11 +131,17 @@ class PermissionParser {
       if (user) {
         userMode = mode;
         userType = type;
+
+        stickyMode = (short) (stickyBit ? 4 : 0);
+        stickyBitType = type;
       }
 
       if (group) {
         groupMode = mode;
         groupType = type;
+
+        stickyMode = (short) (stickyBit ? 2 : 0);
+        stickyBitType = type;
       }
 
       if (others) {
@@ -156,7 +164,6 @@ class PermissionParser {
     String sb = matcher.group(1);
     if (!sb.isEmpty()) {
       stickyMode = Short.valueOf(sb.substring(0, 1));
-      stickyBitType = '=';
     }
 
     String str = matcher.group(2);
