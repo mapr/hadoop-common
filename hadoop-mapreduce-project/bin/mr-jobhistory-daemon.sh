@@ -25,7 +25,7 @@
 #   HADOOP_MAPRED_NICENESS The scheduling priority for daemons. Defaults to 0.
 ##
 
-usage="Usage: mr-jobhistory-daemon.sh [--config <conf-dir>] (start|stop) <mapred-command> "
+usage="Usage: mr-jobhistory-daemon.sh [--config <conf-dir>] (start|stop|status) <mapred-command> "
 
 # if no args specified, show usage
 if [ $# -le 1 ]; then
@@ -135,6 +135,22 @@ case $startStop in
       fi
     else
       echo no $command to stop
+    fi
+    ;;
+
+  (status)
+    if [ -f $pid ]; then
+      TARGET_PID=`cat $pid`
+      if kill -0 $TARGET_PID > /dev/null 2>&1; then
+        echo $command is running.
+        exit 0
+      else
+        echo $pid file is present but $command not running.
+        exit 1
+      fi
+    else
+      echo $command not running.
+      exit 2
     fi
     ;;
 
