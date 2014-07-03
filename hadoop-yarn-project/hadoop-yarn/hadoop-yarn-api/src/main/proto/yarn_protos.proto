@@ -317,6 +317,7 @@ message LogAggregationContextProto {
  optional string exclude_pattern = 2 [default = ""];
  optional string rolled_logs_include_pattern = 3 [default = ""];
  optional string rolled_logs_exclude_pattern = 4 [default = ".*"];
+  optional string label = 13 [default = "all"];
 }
 
 enum ApplicationAccessTypeProto {

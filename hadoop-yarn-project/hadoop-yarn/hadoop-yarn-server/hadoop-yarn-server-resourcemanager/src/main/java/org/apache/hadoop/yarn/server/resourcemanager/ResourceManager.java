@@ -58,6 +58,8 @@ import org.apache.hadoop.yarn.server.resourcemanager.ahs.RMApplicationHistoryWri
 import org.apache.hadoop.yarn.server.resourcemanager.amlauncher.AMLauncherEventType;
 import org.apache.hadoop.yarn.server.resourcemanager.amlauncher.ApplicationMasterLauncher;
 import org.apache.hadoop.yarn.server.resourcemanager.metrics.SystemMetricsPublisher;
+import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManagementService;
+import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManager;
 import org.apache.hadoop.yarn.server.resourcemanager.monitor.SchedulingEditPolicy;
 import org.apache.hadoop.yarn.server.resourcemanager.monitor.SchedulingMonitor;
 import org.apache.hadoop.yarn.server.resourcemanager.nodelabels.RMNodeLabelsManager;
@@ -490,7 +492,7 @@ public class ResourceManager extends CompositeService implements Recoverable {
       addIfService(scheduler);
       rmContext.setScheduler(scheduler);
       
-      LabelManager lb = LabelManager.getInstance();
+      LabelManagementService lb = new LabelManagementService();
       addService(lb);
       
       schedulerDispatcher = createSchedulerEventDispatcher();

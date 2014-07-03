@@ -33,6 +33,7 @@ import java.util.TreeSet;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.mutable.MutableObject;
+import net.java.dev.eval.Expression;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
@@ -58,6 +59,7 @@ import org.apache.hadoop.yarn.factory.providers.RecordFactoryProvider;
 import org.apache.hadoop.yarn.nodelabels.CommonNodeLabelsManager;
 import org.apache.hadoop.yarn.security.AccessType;
 import org.apache.hadoop.yarn.server.resourcemanager.nodelabels.RMNodeLabelsManager;
+import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManager;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainer;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerEventType;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerState;
@@ -100,6 +102,11 @@ public class LeafQueue extends AbstractCSQueue {
   
   Set<FiCaSchedulerApp> pendingApplications;
   
+  private Expression label;
+  private Queue.QueueLabelPolicy labelPolicy;
+  
+  private final Resource minimumAllocation;
+  private final Resource maximumAllocation;
   private float minimumAllocationFactor;
 
   private Map<String, User> users = new HashMap<String, User>();
@@ -1961,6 +1968,8 @@ public class LeafQueue extends AbstractCSQueue {
       // Inform the parent queue
       getParent().attachContainer(clusterResource, application, rmContainer);
     }
+      LOG.warn("Unknown label policy: " + labelPolicyStr + 
+          ". defaulting to: " + QueueLabelPolicy.AND.name());
   }
 
   @Override
@@ -1983,6 +1992,12 @@ public class LeafQueue extends AbstractCSQueue {
   
   public void setCapacity(float capacity) {
     queueCapacities.setCapacity(capacity);
+  }
+
+  @Override
+  public Expression getLabel() {
+
+    return this.label;
   }
 
   public void setAbsoluteCapacity(float absoluteCapacity) {

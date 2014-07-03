@@ -28,6 +28,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListMap;
 
+import net.java.dev.eval.Expression;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience.LimitedPrivate;
@@ -54,6 +56,7 @@ import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 import org.apache.hadoop.yarn.factories.RecordFactory;
 import org.apache.hadoop.yarn.factory.providers.RecordFactoryProvider;
 import org.apache.hadoop.yarn.server.resourcemanager.RMContext;
+import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManager;
 import org.apache.hadoop.yarn.server.resourcemanager.recovery.RMStateStore.RMState;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppEventType;
@@ -149,7 +152,8 @@ public class FifoScheduler extends
       queueInfo.setMaximumCapacity(1.0f);
       queueInfo.setChildQueues(new ArrayList<QueueInfo>());
       queueInfo.setQueueState(QueueState.RUNNING);
-      queueInfo.setQueueLabel(getLabel());
+      Expression label = getLabel();
+      queueInfo.setQueueLabel(( label == null ) ? "NONE" : label.toString());
       queueInfo.setQueueLabelPolicy(getLabelPolicy().name());
       return queueInfo;
     }
@@ -199,11 +203,37 @@ public class FifoScheduler extends
       // TODO add implementation for FIFO scheduler
       return null;
     }
+    public QueueLabelPolicy getLabelPolicy() {
+      String labelPolicy = null;
+      try {
+        labelPolicy = getConf().get(getQueueName() +
+          DOT + 
+          DEFAULT_QUEUE_LABEL_POLICY_TAG, QueueLabelPolicy.AND.name());
+        return QueueLabelPolicy.valueOf(labelPolicy);
+      } catch (IllegalArgumentException ie) {
+        LOG.warn("Unknown label policy: " + labelPolicy +
+            ". defaulting to: " + QueueLabelPolicy.AND.name());
+        return QueueLabelPolicy.AND;
+      } catch (Throwable t) {
+        LOG.warn("Unknown Exception: "+
+            ". defaulting to: " + QueueLabelPolicy.AND.name(), t);
+        return QueueLabelPolicy.AND;
+      }
+    }
 
     @Override
     public String getDefaultNodeLabelExpression() {
       // TODO add implementation for FIFO scheduler
       return null;
+    }
+    public Expression getLabel() {
+      try {
+        String labelStr = getConf().get(getQueueName() + DOT +
+          DEFAULT_QUEUE_LABEL_TAG, "all");
+        return LabelManager.getInstance().getEffectiveLabelExpr(labelStr);
+      } catch (Throwable e) {
+        return null;
+      }
     }
   };
 

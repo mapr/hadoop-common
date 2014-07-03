@@ -27,6 +27,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.bind.annotation.XmlTransient;
 
+import net.java.dev.eval.Expression;
+
 import org.apache.hadoop.yarn.api.records.QueueState;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CSQueue;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.PlanQueue;
@@ -89,6 +91,9 @@ public class CapacitySchedulerQueueInfo {
       nodeLabels.addAll(labelSet);
       Collections.sort(nodeLabels);
     }
+    Expression labelE = q.getLabel();
+    label = ( labelE == null ) ? "NONE" : labelE.toString();
+    labelPolicy = q.getLabelPolicy().name();
   }
 
   public float getCapacity() {

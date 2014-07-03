@@ -31,6 +31,8 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.commons.lang.StringUtils;
+import net.java.dev.eval.Expression;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
@@ -51,6 +53,7 @@ import org.apache.hadoop.yarn.factory.providers.RecordFactoryProvider;
 import org.apache.hadoop.yarn.nodelabels.CommonNodeLabelsManager;
 import org.apache.hadoop.yarn.security.AccessType;
 import org.apache.hadoop.yarn.server.resourcemanager.nodelabels.RMNodeLabelsManager;
+import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManager;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainer;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerEventType;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerState;
@@ -76,6 +79,18 @@ public class ParentQueue extends AbstractCSQueue {
   final Comparator<CSQueue> queueComparator;
   volatile int numApplications;
   private final CapacitySchedulerContext scheduler;
+  
+  private Expression label;
+  private Queue.QueueLabelPolicy labelPolicy;
+  
+  private final Resource minimumAllocation;
+
+  private volatile int numApplications;
+  private volatile int numContainers;
+
+  private QueueState state;
+
+  private final QueueMetrics metrics;
 
   private final RecordFactory recordFactory = 
     RecordFactoryProvider.getRecordFactory(null);
@@ -759,8 +774,25 @@ public class ParentQueue extends AbstractCSQueue {
       }
     }
   }
-  
+
+  private Expression refreshLabel() {
+      try {
+        return LabelManager.getInstance().getEffectiveLabelExpr(labelStr);
+      } catch (IOException e) {
+        return null;
+      }
+      try {
+        return LabelManager.getInstance().getEffectiveLabelExpr("all");
+      } catch (IOException e) {
+        return null;
+      }    
+
   public synchronized int getNumApplications() {
     return numApplications;
   }
+
+  @Override
+  public Expression getLabel() {
+    return label;
+   }
 }

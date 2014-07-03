@@ -18,10 +18,13 @@
 
 package org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+
+import net.java.dev.eval.Expression;
 
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
@@ -34,6 +37,7 @@ import org.apache.hadoop.yarn.api.records.QueueState;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.factories.RecordFactory;
 import org.apache.hadoop.yarn.factory.providers.RecordFactoryProvider;
+import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManager;
 import org.apache.hadoop.yarn.server.resourcemanager.resource.ResourceWeights;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
 import org.apache.hadoop.yarn.util.resource.Resources;
@@ -49,7 +53,7 @@ public abstract class FSQueue implements Queue, Schedulable {
   
   protected final FSParentQueue parent;
   
-  protected String label;
+  protected Expression label;
   protected QueueLabelPolicy labelPolicy;
   
   protected final RecordFactory recordFactory =
@@ -183,6 +187,17 @@ public abstract class FSQueue implements Queue, Schedulable {
   public boolean hasAccess(QueueACL acl, UserGroupInformation user) {
     return scheduler.getAllocationConfiguration().hasAccess(name, acl, user);
   }
+  protected Expression refreshLabel() {
+      return parent.refreshLabel();
+    }
+    try {
+      if ( labelStr != null ) {
+          return LabelManager.getInstance().getEffectiveLabelExpr(labelStr);
+      } else {
+          return LabelManager.getInstance().getEffectiveLabelExpr("all");
+      }
+    } catch (IOException e) {
+      return null;
 
   public long getFairSharePreemptionTimeout() {
     return fairSharePreemptionTimeout;
@@ -200,8 +215,16 @@ public abstract class FSQueue implements Queue, Schedulable {
     this.minSharePreemptionTimeout = minSharePreemptionTimeout;
   }
 
+  @Override
+  public Expression getLabel() {
+    return label;
+  }
+
   public float getFairSharePreemptionThreshold() {
     return fairSharePreemptionThreshold;
+  }
+  public void setLabel(Expression label) {
+    this.label = label;
   }
 
   public void setFairSharePreemptionThreshold(float fairSharePreemptionThreshold) {

@@ -21,6 +21,8 @@ package org.apache.hadoop.yarn.server.resourcemanager.scheduler;
 import java.util.List;
 import java.util.Set;
 
+import net.java.dev.eval.Expression;
+
 import org.apache.hadoop.classification.InterfaceAudience.LimitedPrivate;
 import org.apache.hadoop.classification.InterfaceStability.Evolving;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -90,4 +92,26 @@ public interface Queue {
    * @return default label expression
    */
   public String getDefaultNodeLabelExpression();
+
+  static enum QueueLabelPolicy {
+    PREFER_QUEUE("PREFER_QUEUE"), // Queue label always wins
+    PREFER_APP("PREFER_APP"), // App label always wins
+    AND("AND"),  // Use && on Queue and App labels
+    OR("OR");  // Use || on Queue and App labels
+
+    private final String policyName;
+
+    QueueLabelPolicy(String policyName) {
+      this.policyName = policyName;
+    }
+
+    public String getLabelPolicyName() {
+      return policyName;
+    }
+  }
+
+  public QueueLabelPolicy getLabelPolicy();
+
+  public Expression getLabel();
+
 }
