@@ -20,6 +20,8 @@ package org.apache.hadoop.yarn.server.resourcemanager.scheduler;
 
 import java.util.List;
 
+import net.java.dev.eval.Expression;
+
 import org.apache.hadoop.classification.InterfaceAudience.LimitedPrivate;
 import org.apache.hadoop.classification.InterfaceStability.Evolving;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -80,6 +82,6 @@ public interface Queue {
 
   public QueueLabelPolicy getLabelPolicy();
 
-  public String getLabel();
+  public Expression getLabel();
 
 }

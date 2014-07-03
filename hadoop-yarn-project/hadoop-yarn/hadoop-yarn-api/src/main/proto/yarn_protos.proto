@@ -290,7 +290,7 @@ message ApplicationSubmissionContextProto {
   optional string applicationType = 10 [default = "YARN"];
   optional bool keep_containers_across_application_attempts = 11 [default = false];
   repeated string applicationTags = 12;
-  optional string label = 13 [default = "*"];
+  optional string label = 13 [default = "all"];
 }
 
 enum ApplicationAccessTypeProto {
