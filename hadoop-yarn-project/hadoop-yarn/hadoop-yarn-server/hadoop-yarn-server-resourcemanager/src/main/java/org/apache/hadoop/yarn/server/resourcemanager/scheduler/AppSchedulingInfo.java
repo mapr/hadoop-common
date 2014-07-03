@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import net.java.dev.eval.Expression;
@@ -42,6 +43,8 @@ import org.apache.hadoop.yarn.api.records.Priority;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.api.records.ResourceRequest;
 import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManager;
+import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManager.LabelApplicabilityStatus;
+import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttemptImpl;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttemptState;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainer;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerState;
@@ -60,6 +63,10 @@ public class AppSchedulingInfo {
   final ApplicationId applicationId;
   private final String queueName;
   Queue queue;
+  private Expression appLabelExpression;
+  // since Expression can be evaluated to null
+  // need indicator that will determine whether it was evaluated
+  private final AtomicBoolean isAppLabelExpressionSet = new AtomicBoolean(false);
   final String user;
   // TODO making containerIdCounter long
   private final AtomicInteger containerIdCounter;
@@ -249,34 +256,50 @@ public class AppSchedulingInfo {
     if (blacklist.contains(resourceName)) {
       return true;
     }
+    return isBlackListedBasedOnLabels(resourceName);
+  }
+  
+  private boolean isBlackListedBasedOnLabels(String resourceName) {
     // TODO Not sure if at the end can add blacklisted here resource to list of blacklisted
     // since situation can change on the fly.
     LabelManager lb = LabelManager.getInstance();
-    // By a co-accident if resourcerequest for AppMaster will have a label
-    // it will be used here for all of the requests, since it will be looping over 
-    // requests by priority where at least one will be for AppMaster
-    for ( Priority priority : priorities) {
-      ResourceRequest req = getResourceRequest(priority, resourceName);
-      if ( req == null ) {
-        req = getResourceRequest(priority, ResourceRequest.ANY);
-      }
-      if ( req != null ) {
-        try {
-          Expression appExp = lb.constructAppLabel(req.getLabel());
-          Expression qExp = lb.constructAppLabel(queue.getLabel());
-          Expression finalExp = lb.constructAppLabel(queue.getLabelPolicy(), appExp, qExp);
-          boolean canBeEvaluated = lb.canNodeBeEvaluated(resourceName, finalExp);
-          if ( canBeEvaluated ) {
-            boolean isNotBlackListed = lb.evaluateAppLabelAgainstNode(resourceName, finalExp); 
-            return !isNotBlackListed;
-          }
-       } catch (IOException e) {
-         if ( LOG.isDebugEnabled() ) {
-           LOG.debug("Exception while trying to evaluate label expressions", e);
-           return false;
-         }
+    
+    // if LBS Service is not enabled no need to proceed further
+    if ( !lb.isServiceEnabled() ) {
+      return false;
+    }
+    // Get ResourceRequest for AppMaster as it will determine whole App label
+    ResourceRequest req = getResourceRequest(RMAppAttemptImpl.AM_CONTAINER_PRIORITY, 
+        resourceName);
+    if ( req == null ) {
+      req = getResourceRequest(RMAppAttemptImpl.AM_CONTAINER_PRIORITY, 
+          ResourceRequest.ANY);
+    }
+    if ( req != null ) {
+      try {
+        if (!isAppLabelExpressionSet.get()) {
+          appLabelExpression = lb.getEffectiveLabelExpr(req.getLabel());
+          isAppLabelExpressionSet.set(true);
         }
-       }
+        Expression finalExp = 
+            lb.constructAppLabel(queue.getLabelPolicy(), 
+                appLabelExpression, queue.getLabel());
+        LabelApplicabilityStatus blackListStatus = lb.isNodeApplicableForApp(resourceName, finalExp);
+        switch (blackListStatus) {
+          case NOT_APPLICABLE:
+          case NODE_HAS_LABEL:
+            return false;
+          case NODE_DOES_NOT_HAVE_LABEL:
+            return true;
+          default:
+            return false;
+        }
+      } catch (IOException e) {
+        if ( LOG.isDebugEnabled() ) {
+          LOG.debug("Exception while trying to evaluate label expressions", e);
+        }
+        return false;
+      }
     }
     return false;
   }

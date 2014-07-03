@@ -20,7 +20,7 @@ package org.apache.hadoop.yarn.server.resourcemanager.labelmanager;
 import static org.junit.Assert.*;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.Set;
 
 import net.java.dev.eval.Expression;
 
@@ -29,7 +29,9 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.service.Service;
+import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManagementService;
 import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManager;
+import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManager.LabelApplicabilityStatus;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -41,13 +43,14 @@ public class TestLabelManager {
 
   static Configuration conf;
   static FileSystem fs;
+  static LabelManagementService lbS;
   
   @BeforeClass
   public static void setUpBeforeClass() throws Exception {
     conf = new Configuration();
-    conf.set(LabelManager.JT_NODE_LABELS_FILE, "/tmp/labelFile");
+    conf.set(LabelManager.NODE_LABELS_FILE, "/tmp/labelFile");
     // set label refresh interval to 5 seconds
-    conf.setLong(LabelManager.JT_NODE_LABELS_MONITOR_INTERVAL, 
+    conf.setLong(LabelManager.NODE_LABELS_MONITOR_INTERVAL, 
         5*1000);
     
     conf.set("fs.file.impl","org.apache.hadoop.fs.LocalFileSystem");
@@ -72,17 +75,17 @@ public class TestLabelManager {
     fsout.close();
 
     
-    LabelManager lb = LabelManager.getInstance();
-    lb.init(conf);
-    lb.start();
-    assertTrue(lb.getServiceState() == Service.STATE.STARTED);
+    lbS = new LabelManagementService();
+    lbS.init(conf);
+    lbS.start();
+    assertTrue(lbS.getServiceState() == Service.STATE.STARTED);
   }
 
   @AfterClass
   public static void tearDownAfterClass() throws Exception {
-    LabelManager lb = LabelManager.getInstance();
-    lb.stop();
-    assertFalse(lb.getServiceState() != Service.STATE.STOPPED);
+    //LabelManager lb = LabelManager.getInstance();
+    lbS.stop();
+    assertFalse(lbS.getServiceState() != Service.STATE.STOPPED);
     fs.delete(new Path("/tmp/labelFile"), false);
   }
 
@@ -94,6 +97,8 @@ public class TestLabelManager {
     fsout.writeBytes("/perfnode203.*/ big, 'Development Machines'");
     fsout.writeBytes("\n");
     fsout.writeBytes("perfnode15* good");
+    fsout.writeBytes("\n");
+    fsout.writeBytes("perfnode1* right, good, fantastic");
     fsout.writeBytes("\n");
     fsout.writeBytes("perfnode201* slow");
     fsout.writeBytes("\n");
@@ -117,29 +122,31 @@ public class TestLabelManager {
     Path labelFile = lb.getLabelFile();
     assertNotNull(labelFile);
     assertTrue("/tmp/labelFile".equalsIgnoreCase(labelFile.toString()));
-    assertTrue(lb.getServiceState() == Service.STATE.STARTED);
+    assertTrue(lbS.getServiceState() == Service.STATE.STARTED);
     Thread.sleep(1000l);
-    List<String> labels = lb.getLabelsForNode("perfnode151.perf.lab");
+    Set<String> labels = lb.getLabelsForNode("perfnode151.perf.lab");
     assertNotNull(labels);
-    assertEquals(1, labels.size());
-    assertTrue("good".equalsIgnoreCase(labels.get(0)));
+    assertEquals(3, labels.size());
+    assertTrue(labels.contains("good"));
+    assertTrue(labels.contains("right"));
+    assertTrue(labels.contains("fantastic"));
     
     labels = lb.getLabelsForNode("perfnode200.abc.qa.lab");
     assertNotNull(labels);
     assertEquals(2, labels.size());
-    assertTrue("big".equalsIgnoreCase(labels.get(0)));
-    assertTrue("Production Machines".equalsIgnoreCase(labels.get(1)));
+    assertTrue(labels.contains("big"));
+    assertTrue(labels.contains("Production Machines"));
 
     labels = lb.getLabelsForNode("perfnode203.abc.qa.lab");
     assertNotNull(labels);
     assertEquals(2, labels.size());
-    assertTrue("big".equalsIgnoreCase(labels.get(0)));
-    assertTrue("Development Machines".equalsIgnoreCase(labels.get(1)));
+    assertTrue(labels.contains("big"));
+    assertTrue(labels.contains("Development Machines"));
 
     labels = lb.getLabelsForNode("node-33.lab");
     assertNotNull(labels);
     assertEquals(1, labels.size());
-    assertTrue("Fast".equalsIgnoreCase(labels.get(0)));
+    assertTrue(labels.contains("Fast"));
 
     labels = lb.getLabelsForNode("node-28.lab");
     assertNotNull(labels);
@@ -147,10 +154,32 @@ public class TestLabelManager {
     assertTrue(labels.contains("Slow"));
     assertTrue(labels.contains("Fast"));
 
+    labels = lb.getLabelsForNode("node-28.lab");
+    assertNotNull(labels);
+    assertEquals(2, labels.size());
+    assertTrue(labels.contains("Slow"));
+    assertTrue(labels.contains("Fast"));
+
+    labels = lb.getLabelsForNode("perfnode01.lab");
+    assertNull(labels);
+    
+    labels = lb.getLabelsForNode("perfnode01.lab");
+    assertNull(labels);
+    
     labels = lb.getLabelsForNode("perfnode10.lab");
     assertNotNull(labels);
-    assertEquals(0, labels.size());
-    
+    assertEquals(3, labels.size());
+    assertTrue(labels.contains("good"));
+    assertTrue(labels.contains("right"));
+    assertTrue(labels.contains("fantastic"));
+
+    labels = lb.getLabelsForNode("perfnode10.lab");
+    assertNotNull(labels);
+    assertEquals(3, labels.size());
+    assertTrue(labels.contains("good"));
+    assertTrue(labels.contains("right"));
+    assertTrue(labels.contains("fantastic"));
+
   }
   
   @Test
@@ -159,10 +188,10 @@ public class TestLabelManager {
     Path labelFile = lb.getLabelFile();
     assertNotNull(labelFile);
     assertTrue("/tmp/labelFile".equalsIgnoreCase(labelFile.toString()));
-    assertTrue(lb.getServiceState() == Service.STATE.STARTED);
+    assertTrue(lbS.getServiceState() == Service.STATE.STARTED);
     Thread.sleep(1000l);
 
-    Expression expr = lb.constructAppLabel("good && big");
+    Expression expr = lb.getEffectiveLabelExpr("good && big");
     assertEquals("(good&&big)", expr.toString());
   }
   
@@ -173,12 +202,12 @@ public class TestLabelManager {
     assertNotNull(labelFile);
     assertTrue("/tmp/labelFile".equalsIgnoreCase(labelFile.toString()));
     //lb.start();
-    assertTrue(lb.getServiceState() == Service.STATE.STARTED);
+    assertTrue(lbS.getServiceState() == Service.STATE.STARTED);
     Thread.sleep(1000l);
 
     Queue.QueueLabelPolicy policy = Queue.QueueLabelPolicy.AND;
-    Expression queueLabelExpression = lb.constructAppLabel("good && big");
-    Expression appLabelExpression = lb.constructAppLabel("good");
+    Expression queueLabelExpression = lb.getEffectiveLabelExpr("good && big");
+    Expression appLabelExpression = lb.getEffectiveLabelExpr("good");
     
     Expression finalExpr = lb.constructAppLabel(policy,
         appLabelExpression,
@@ -221,12 +250,12 @@ public class TestLabelManager {
     Path labelFile = lb.getLabelFile();
     assertNotNull(labelFile);
     assertTrue("/tmp/labelFile".equalsIgnoreCase(labelFile.toString()));
-    assertTrue(lb.getServiceState() == Service.STATE.STARTED);
+    assertTrue(lbS.getServiceState() == Service.STATE.STARTED);
     Thread.sleep(1000l);
 
     Queue.QueueLabelPolicy policy = Queue.QueueLabelPolicy.AND;
-    Expression queueLabelExpression = lb.constructAppLabel("good && big");
-    Expression appLabelExpression = lb.constructAppLabel("good");
+    Expression queueLabelExpression = lb.getEffectiveLabelExpr("good && big");
+    Expression appLabelExpression = lb.getEffectiveLabelExpr("good");
     
     Expression finalExpr = lb.constructAppLabel(policy,
         appLabelExpression,
@@ -234,13 +263,13 @@ public class TestLabelManager {
     
     assertEquals("((good&&big)&&good)", finalExpr.toString());
 
-    boolean result = lb.evaluateAppLabelAgainstNode("perfnode204.qa.lab", finalExpr);
+    LabelApplicabilityStatus result = lb.isNodeApplicableForApp("perfnode204.qa.lab", finalExpr);
     
-    assertTrue(result);
+    assertTrue(result == LabelApplicabilityStatus.NODE_HAS_LABEL);
     
-    result = lb.evaluateAppLabelAgainstNode("perfnode203.qa.lab", finalExpr);
+    result = lb.isNodeApplicableForApp("perfnode203.qa.lab", finalExpr);
     
-    assertFalse(result);
+    assertTrue(result == LabelApplicabilityStatus.NODE_DOES_NOT_HAVE_LABEL);
     
     
   }
@@ -251,29 +280,31 @@ public class TestLabelManager {
     Path labelFile = lb.getLabelFile();
     assertNotNull(labelFile);
     assertTrue("/tmp/labelFile".equalsIgnoreCase(labelFile.toString()));
-    assertTrue(lb.getServiceState() == Service.STATE.STARTED);
+    assertTrue(lbS.getServiceState() == Service.STATE.STARTED);
     Thread.sleep(1000l);
-    List<String> labels = lb.getLabelsForNode("perfnode151.perf.lab");
+    Set<String> labels = lb.getLabelsForNode("perfnode151.perf.lab");
     assertNotNull(labels);
-    assertEquals(1, labels.size());
-    assertTrue("good".equalsIgnoreCase(labels.get(0)));
+    assertEquals(3, labels.size());
+    assertTrue(labels.contains("good"));
+    assertTrue(labels.contains("right"));
+    assertTrue(labels.contains("fantastic"));
     
     labels = lb.getLabelsForNode("perfnode200.abc.qa.lab");
     assertNotNull(labels);
     assertEquals(2, labels.size());
-    assertTrue("big".equalsIgnoreCase(labels.get(0)));
-    assertTrue("Production Machines".equalsIgnoreCase(labels.get(1)));
+    assertTrue(labels.contains("big"));
+    assertTrue(labels.contains("Production Machines"));
 
     labels = lb.getLabelsForNode("perfnode203.abc.qa.lab");
     assertNotNull(labels);
     assertEquals(2, labels.size());
-    assertTrue("big".equalsIgnoreCase(labels.get(0)));
-    assertTrue("Development Machines".equalsIgnoreCase(labels.get(1)));
+    assertTrue(labels.contains("big"));
+    assertTrue(labels.contains("Development Machines"));
 
     labels = lb.getLabelsForNode("node-33.lab");
     assertNotNull(labels);
     assertEquals(1, labels.size());
-    assertTrue("Fast".equalsIgnoreCase(labels.get(0)));
+    assertTrue(labels.contains("Fast"));
 
     labels = lb.getLabelsForNode("node-28.lab");
     assertNotNull(labels);
@@ -306,24 +337,24 @@ public class TestLabelManager {
     labels = lb.getLabelsForNode("perfnode200.abc.qa.lab");
     assertNotNull(labels);
     assertEquals(2, labels.size());
-    assertTrue("big".equalsIgnoreCase(labels.get(0)));
-    assertTrue("Prod Machines".equalsIgnoreCase(labels.get(1)));
+    assertTrue(labels.contains("big"));
+    assertTrue(labels.contains("Prod Machines"));
 
     labels = lb.getLabelsForNode("perfnode203.abc.qa.lab");
     assertNotNull(labels);
     assertEquals(2, labels.size());
-    assertTrue("small".equalsIgnoreCase(labels.get(0)));
-    assertTrue("Dev Machines".equalsIgnoreCase(labels.get(1)));
+    assertTrue(labels.contains("small"));
+    assertTrue(labels.contains("Dev Machines"));
 
     labels = lb.getLabelsForNode("perfnode151.perf.lab");
     assertNotNull(labels);
     assertEquals(1, labels.size());
-    assertTrue("good".equalsIgnoreCase(labels.get(0)));
+    assertTrue(labels.contains("good"));
     
     labels = lb.getLabelsForNode("node-33.lab");
     assertNotNull(labels);
     assertEquals(1, labels.size());
-    assertTrue("Fast".equalsIgnoreCase(labels.get(0)));
+    assertTrue(labels.contains("Fast"));
 
     labels = lb.getLabelsForNode("node-28.lab");
     assertNotNull(labels);
@@ -338,8 +369,8 @@ public class TestLabelManager {
     LabelManager lb = LabelManager.getInstance();
     
     Queue.QueueLabelPolicy policy = Queue.QueueLabelPolicy.AND;
-    Expression queueLabelExpression = lb.constructAppLabel("good && big");
-    Expression appLabelExpression = lb.constructAppLabel("badlabel");
+    Expression queueLabelExpression = lb.getEffectiveLabelExpr("good && big");
+    Expression appLabelExpression = lb.getEffectiveLabelExpr("badlabel");
     
     Expression finalExpr = lb.constructAppLabel(policy,
         appLabelExpression,
@@ -348,7 +379,7 @@ public class TestLabelManager {
     assertEquals("((good&&big)&&badlabel)", finalExpr.toString());
 
     try {
-      lb.evaluateAppLabelAgainstNode("perfnode204.qa.lab", finalExpr);
+      lb.isNodeApplicableForApp("perfnode204.qa.lab", finalExpr);
       fail("Evaluation should fail for: " + finalExpr.toString());
     } catch (IOException e) {
       // show go here

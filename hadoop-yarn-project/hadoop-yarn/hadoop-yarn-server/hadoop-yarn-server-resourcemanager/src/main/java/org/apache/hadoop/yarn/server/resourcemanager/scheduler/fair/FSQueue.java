@@ -18,9 +18,12 @@
 
 package org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import net.java.dev.eval.Expression;
 
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
@@ -33,6 +36,7 @@ import org.apache.hadoop.yarn.api.records.QueueState;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.factories.RecordFactory;
 import org.apache.hadoop.yarn.factory.providers.RecordFactoryProvider;
+import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManager;
 import org.apache.hadoop.yarn.server.resourcemanager.resource.ResourceWeights;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
 import org.apache.hadoop.yarn.util.resource.Resources;
@@ -46,7 +50,7 @@ public abstract class FSQueue extends Schedulable implements Queue {
   
   protected final FSParentQueue parent;
   
-  protected String label;
+  protected Expression label;
   protected QueueLabelPolicy labelPolicy;
   
   protected final RecordFactory recordFactory =
@@ -154,12 +158,21 @@ public abstract class FSQueue extends Schedulable implements Queue {
     return scheduler.getAllocationConfiguration().hasAccess(name, acl, user);
   }
   
-  protected String refreshLabel() {
+  protected Expression refreshLabel() {
     String labelStr = scheduler.getAllocationConfiguration().getLabels().get(getName());
     if ( labelStr == null && parent != null ) {
-      labelStr = parent.refreshLabel();
+      return parent.refreshLabel();
     }
-    return (labelStr != null) ? labelStr : "all";
+    try {
+      if ( labelStr != null ) {
+          return LabelManager.getInstance().getEffectiveLabelExpr(labelStr);
+      } else {
+          return LabelManager.getInstance().getEffectiveLabelExpr("all");
+      }
+    } catch (IOException e) {
+      return null;
+    }
+
   }
   
   protected QueueLabelPolicy refreshLabelPolicy() {
@@ -177,11 +190,11 @@ public abstract class FSQueue extends Schedulable implements Queue {
   }
 
   @Override
-  public String getLabel() {
+  public Expression getLabel() {
     return label;
   }
-
-  public void setLabel(String label) {
+  
+  public void setLabel(Expression label) {
     this.label = label;
   }
 

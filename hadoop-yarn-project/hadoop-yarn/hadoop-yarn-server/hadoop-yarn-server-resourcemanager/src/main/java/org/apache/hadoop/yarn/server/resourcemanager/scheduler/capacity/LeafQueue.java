@@ -30,6 +30,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import net.java.dev.eval.Expression;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
@@ -52,6 +54,7 @@ import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.api.records.ResourceRequest;
 import org.apache.hadoop.yarn.factories.RecordFactory;
 import org.apache.hadoop.yarn.factory.providers.RecordFactoryProvider;
+import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManager;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainer;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerEventType;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerState;
@@ -106,7 +109,7 @@ public class LeafQueue implements CSQueue {
   
   Set<FiCaSchedulerApp> pendingApplications;
   
-  private String label;
+  private Expression label;
   private Queue.QueueLabelPolicy labelPolicy;
   
   private final Resource minimumAllocation;
@@ -1637,7 +1640,8 @@ public class LeafQueue implements CSQueue {
     try {
       return QueueLabelPolicy.valueOf(labelPolicyStr);
     } catch (IllegalArgumentException ie) {
-      LOG.warn("Unknown label policy: " + labelPolicyStr);
+      LOG.warn("Unknown label policy: " + labelPolicyStr + 
+          ". defaulting to: " + QueueLabelPolicy.AND.name());
       return QueueLabelPolicy.AND;
     }
   }
@@ -1647,7 +1651,7 @@ public class LeafQueue implements CSQueue {
     return this.labelPolicy;
   }
 
-  private String refreshLabel() {
+  private Expression refreshLabel() {
     String labelStr = this.scheduler.getConfiguration().get(CapacitySchedulerConfiguration.PREFIX + 
         getQueuePath() + 
         CapacitySchedulerConfiguration.DOT + 
@@ -1656,11 +1660,15 @@ public class LeafQueue implements CSQueue {
     if (labelStr == null ) {
       return ((ParentQueue) getParent()).getLabel();
     }
-    return labelStr;
+    try {
+      return LabelManager.getInstance().getEffectiveLabelExpr(labelStr);
+    } catch (IOException e) {
+      return null;
+    }
   }
   
   @Override
-  public String getLabel() {
+  public Expression getLabel() {
     return this.label;
   }
 

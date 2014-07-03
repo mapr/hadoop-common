@@ -275,7 +275,7 @@ public abstract class ResourceRequest implements Comparable<ResourceRequest> {
     result = prime * result + ((hostName == null) ? 0 : hostName.hashCode());
     result = prime * result + getNumContainers();
     result = prime * result + ((priority == null) ? 0 : priority.hashCode());
-    result = prime * result + ((label == null) ? 0 : priority.hashCode());
+    result = prime * result + ((label == null) ? 0 : label.hashCode());
     return result;
   }
 
