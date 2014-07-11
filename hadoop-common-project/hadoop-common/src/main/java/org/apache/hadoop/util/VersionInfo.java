@@ -46,10 +46,11 @@ public class VersionInfo {
     try {
       is = Thread.currentThread().getContextClassLoader()
         .getResourceAsStream(versionInfoFile);
-      if (is == null) {
-        throw new IOException("Resource not found");
+
+      // Expect this to be NULL when instantiated for mapreduce component
+      if (is != null) {
+        info.load(is);
       }
-      info.load(is);
     } catch (IOException ex) {
       LogFactory.getLog(getClass()).warn("Could not read '" +
           versionInfoFile + "', " + ex.toString(), ex);
