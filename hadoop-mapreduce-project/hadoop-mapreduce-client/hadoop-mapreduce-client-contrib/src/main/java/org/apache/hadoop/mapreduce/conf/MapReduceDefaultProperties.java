@@ -18,7 +18,10 @@ public class MapReduceDefaultProperties extends Properties {
 
   static { // MapReduce framework related defaults
     props.put(MRConfig.FRAMEWORK_NAME, MRConfig.YARN_FRAMEWORK_NAME);
-    props.put(MRJobConfig.MR_AM_STAGING_DIR, "${fs.defaultFS}/tmp/staging");
+
+    // TODO Refer to YarnDefaultProperties.DEFAULT_RM_STAGING_DIR once this
+    // file is moved out to MapR code base.
+    props.put(MRJobConfig.MR_AM_STAGING_DIR, "${fs.defaultFS}/var/mapr/cluster/yarn/rm/staging");
   }
 
   static { // Direct shuffle configuration
