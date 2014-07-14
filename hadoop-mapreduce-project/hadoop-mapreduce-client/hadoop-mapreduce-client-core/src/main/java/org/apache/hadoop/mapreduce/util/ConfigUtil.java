@@ -432,6 +432,8 @@ public class ConfigUtil {
         MRJobConfig.MR_AM_SECURITY_SERVICE_AUTHORIZATION_CLIENT),
       new DeprecationDelta("mapreduce.user.classpath.first",
         MRJobConfig.MAPREDUCE_JOB_USER_CLASSPATH_FIRST ),
+      new DeprecationDelta("mapred.multi.split.locations",
+        MRJobConfig.MAPREDUCE_MULTI_SPLIT_LOCATIONS),
       new DeprecationDelta("mapred.input.dir.recursive",
         FileInputFormat.INPUT_DIR_RECURSIVE)
     });
