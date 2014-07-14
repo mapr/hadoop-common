@@ -74,6 +74,12 @@ public interface MRJobConfig {
   public static final String SPLIT_METAINFO_MAXSIZE = "mapreduce.job.split.metainfo.maxsize";
   public static final long DEFAULT_SPLIT_METAINFO_MAXSIZE = 10000000L;
 
+  /**
+   * Maximum number of locations/replicas to pick for each split.
+   */
+  public static final String MAPREDUCE_MULTI_SPLIT_LOCATIONS = "mapreduce.multi.split.locations";
+  public static final int DEFAULT_MAPREDUCE_MULTI_SPLIT_LOCATIONS = 3;
+
   public static final String NUM_MAPS = "mapreduce.job.maps";
 
   public static final String MAX_TASK_FAILURES_PER_TRACKER = "mapreduce.job.maxtaskfailures.per.tracker";

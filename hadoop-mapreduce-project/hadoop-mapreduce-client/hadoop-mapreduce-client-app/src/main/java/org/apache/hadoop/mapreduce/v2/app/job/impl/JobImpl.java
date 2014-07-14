@@ -20,6 +20,7 @@ package org.apache.hadoop.mapreduce.v2.app.job.impl;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -1508,6 +1509,11 @@ public class JobImpl implements org.apache.hadoop.mapreduce.v2.app.job.Job,
                 job.applicationAttemptId.getAttemptId(),
                 job.metrics, job.appContext);
         job.addTask(task);
+
+        if (LOG.isDebugEnabled()) {
+          LOG.debug("Split locations for job: " + job.jobId + " split: " + i
+              + " = " + Arrays.asList(splits[i].getLocations()));
+        }
       }
       LOG.info("Input size for job " + job.jobId + " = " + inputLength
           + ". Number of splits = " + splits.length);
