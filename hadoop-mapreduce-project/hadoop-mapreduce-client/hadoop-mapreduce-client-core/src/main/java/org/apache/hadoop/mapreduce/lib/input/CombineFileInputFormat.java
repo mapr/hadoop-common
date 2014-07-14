@@ -29,7 +29,6 @@ import java.util.HashMap;
 import java.util.Set;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -48,10 +47,12 @@ import org.apache.hadoop.io.compress.SplittableCompressionCodec;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.JobContext;
+import org.apache.hadoop.mapreduce.MRJobConfig;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.net.NodeBase;
 import org.apache.hadoop.net.NetworkTopology;
+import org.apache.hadoop.util.PriorityQueue;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashMultiset;
@@ -286,7 +287,7 @@ public abstract class CombineFileInputFormat<K, V>
       totLength += files[i].getLength();
     }
     createSplits(nodeToBlocks, blockToNodes, rackToBlocks, totLength, 
-                 maxSize, minSizeNode, minSizeRack, splits);
+                 maxSize, minSizeNode, minSizeRack, splits, conf);
   }
 
   @VisibleForTesting
@@ -297,7 +298,8 @@ public abstract class CombineFileInputFormat<K, V>
                      long maxSize,
                      long minSizeNode,
                      long minSizeRack,
-                     List<InputSplit> splits                     
+                     List<InputSplit> splits,
+                     Configuration conf
                     ) {
     ArrayList<OneBlockInfo> validBlocks = new ArrayList<OneBlockInfo>();
     long curSplitSize = 0;
@@ -349,7 +351,7 @@ public abstract class CombineFileInputFormat<K, V>
           // create this split.
           if (maxSize != 0 && curSplitSize >= maxSize) {
             // create an input split and add it to the splits array
-            addCreatedSplit(splits, Collections.singleton(node), validBlocks);
+            addCreatedSplit(splits, Collections.singleton(node), validBlocks, conf);
             totalLength -= curSplitSize;
             curSplitSize = 0;
 
@@ -383,7 +385,7 @@ public abstract class CombineFileInputFormat<K, V>
             // smaller one for parallelism. Otherwise group it in the rack for
             // balanced size create an input split and add it to the splits
             // array
-            addCreatedSplit(splits, Collections.singleton(node), validBlocks);
+            addCreatedSplit(splits, Collections.singleton(node), validBlocks, conf);
             totalLength -= curSplitSize;
             splitsPerNode.add(node);
             // Remove entries from blocksInNode so that we don't walk this again.
@@ -454,7 +456,7 @@ public abstract class CombineFileInputFormat<K, V>
             // create this split.
             if (maxSize != 0 && curSplitSize >= maxSize) {
               // create an input split and add it to the splits array
-              addCreatedSplit(splits, getHosts(racks), validBlocks);
+              addCreatedSplit(splits, getHosts(racks), validBlocks, conf);
               createdSplit = true;
               break;
             }
@@ -473,7 +475,7 @@ public abstract class CombineFileInputFormat<K, V>
           if (minSizeRack != 0 && curSplitSize >= minSizeRack) {
             // if there is a minimum size specified, then create a single split
             // otherwise, store these blocks into overflow data structure
-            addCreatedSplit(splits, getHosts(racks), validBlocks);
+            addCreatedSplit(splits, getHosts(racks), validBlocks, conf);
           } else {
             // There were a few blocks in this rack that 
         	// remained to be processed. Keep them in 'overflow' block list. 
@@ -507,7 +509,7 @@ public abstract class CombineFileInputFormat<K, V>
       // create this split.
       if (maxSize != 0 && curSplitSize >= maxSize) {
         // create an input split and add it to the splits array
-        addCreatedSplit(splits, getHosts(racks), validBlocks);
+        addCreatedSplit(splits, getHosts(racks), validBlocks, conf);
         curSplitSize = 0;
         validBlocks.clear();
         racks.clear();
@@ -516,29 +518,96 @@ public abstract class CombineFileInputFormat<K, V>
 
     // Process any remaining blocks, if any.
     if (!validBlocks.isEmpty()) {
-      addCreatedSplit(splits, getHosts(racks), validBlocks);
+      addCreatedSplit(splits, getHosts(racks), validBlocks, conf);
     }
   }
 
   /**
    * Create a single split from the list of blocks specified in validBlocks
    * Add this new split into splitList.
+   *
+   * Instead of returning a single node for each split, we return top K
+   * replicas where K is configured by mapreduce.multi.split.locations or
+   * defaults to 3). This enables distributing the load across replicas. The
+   * top K nodes are chosen by computing the total bytes contributed by each
+   * each replica and choosing the ones with maximum value.
    */
   private void addCreatedSplit(List<InputSplit> splitList, 
                                Collection<String> locations, 
-                               ArrayList<OneBlockInfo> validBlocks) {
+                               ArrayList<OneBlockInfo> validBlocks,
+                               Configuration conf) {
+
+    // Track total byte contributions for each host
+    final HashMap<String, HostCounter> hostCounterMap = 
+      new HashMap<String, HostCounter>();
+
     // create an input split
     Path[] fl = new Path[validBlocks.size()];
     long[] offset = new long[validBlocks.size()];
     long[] length = new long[validBlocks.size()];
     for (int i = 0; i < validBlocks.size(); i++) {
-      fl[i] = validBlocks.get(i).onepath; 
-      offset[i] = validBlocks.get(i).offset;
-      length[i] = validBlocks.get(i).length;
+      final OneBlockInfo oneblock = validBlocks.get(i);
+      fl[i] = oneblock.onepath;
+      offset[i] = oneblock.offset;
+      length[i] = oneblock.length;
+
+      // Update the block length stats for each host
+      for (String host : oneblock.hosts) {
+        HostCounter hostCounter = hostCounterMap.get(host);
+        if (hostCounter == null) {
+          hostCounter = new HostCounter(host);
+          hostCounterMap.put(host, hostCounter);
+        }
+
+        hostCounter.val += oneblock.length;
+      }
+    }
+
+    // Compute topKArray - the hosts with maximum byte contribution
+    final int k = conf.getInt(MRJobConfig.MAPREDUCE_MULTI_SPLIT_LOCATIONS,
+        MRJobConfig.DEFAULT_MAPREDUCE_MULTI_SPLIT_LOCATIONS);
+
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("Determine top-" + k + " bytes locations for split");
+    }
+    final String[] topKArray;
+    final Set<String> hostKeySet = hostCounterMap.keySet();
+    final int hostKeySetSize = hostKeySet.size();
+    if (k < hostKeySetSize) {
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("k=" + k + " < keySetSize" + hostKeySetSize
+          + ": use PriorityQueue for top-k");
+      }
+      final TopLocations topKHosts = new TopLocations(k);
+      Iterator<HostCounter> it;
+      for (it = hostCounterMap.values().iterator(); it.hasNext(); ) {
+        topKHosts.insert(it.next());
+        it.remove();
+      }
+      topKArray = new String[k];
+      for (int i = topKArray.length - 1; i >= 0; i--) {
+        final HostCounter hc = topKHosts.pop();
+        topKArray[i] = hc.host;
+
+        if (LOG.isDebugEnabled()) {
+          LOG.debug("PQ.pop top location: " + hc);
+        }
+      }
+    } else {
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("k=" + k + " >= keySetSize=" + hostKeySetSize
+          + ": using all locations");
+
+        for (HostCounter hc : hostCounterMap.values()) {
+          LOG.debug("Location: " + hc);
+        }
+      }
+      topKArray = new String[hostCounterMap.size()];
+      hostKeySet.toArray(topKArray);
     }
      // add this split to the list that is returned
     CombineFileSplit thissplit = new CombineFileSplit(fl, offset, 
-                                   length, locations.toArray(new String[0]));
+                                   length, topKArray);
     splitList.add(thissplit); 
   }
 
@@ -794,4 +863,44 @@ public abstract class CombineFileInputFormat<K, V>
       return buf.toString();
     }
   }
+
+  /**
+   * Tracks the total number of bytes contributed by a host towards the split.
+   */
+  private final class HostCounter {
+    final String host;
+
+    /**
+     * Total byte contribution of this host for the set of valid blocks
+     * needed to compute the splits.
+     */
+    long val;
+
+    private HostCounter(String host) {
+      this.host = host;
+    }
+
+    @Override
+    public String toString() {
+      return "HostCounter [ " + host + ", " + val + " ]";
+    }
+  }
+
+  /**
+   * Priority queue that tracks top K hosts with maximum byte contribution.
+   */
+  private final class TopLocations extends PriorityQueue<HostCounter> {
+    private TopLocations(int max) {
+      initialize(max);
+    }
+
+    @Override
+    protected boolean lessThan(Object a, Object b) {
+      final HostCounter ahc = (HostCounter) a;
+      final HostCounter bhc = (HostCounter) b;
+
+      return (ahc.val - bhc.val) < 0;
+    }
+  }
+
 }
