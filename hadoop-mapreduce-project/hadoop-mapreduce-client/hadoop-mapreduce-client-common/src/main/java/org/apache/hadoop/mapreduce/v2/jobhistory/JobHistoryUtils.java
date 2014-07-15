@@ -90,10 +90,10 @@ public class JobHistoryUtils {
    * Permissions for the user directory under the intermediate done directory.
    */
   public static final FsPermission HISTORY_INTERMEDIATE_USER_DIR_PERMISSIONS = 
-    FsPermission.createImmutable((short) 0770);
+    FsPermission.createImmutable((short) 0775);
   
   public static final FsPermission HISTORY_INTERMEDIATE_FILE_PERMISSIONS = 
-    FsPermission.createImmutable((short) 0770); // rwx------
+    FsPermission.createImmutable((short) 0774); // rwxrwxr--
   
   /**
    * Suffix for configuration files.
