@@ -43,6 +43,7 @@ import org.apache.hadoop.mapreduce.v2.LogParams;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.SecretManager.InvalidToken;
 import org.apache.hadoop.security.token.Token;
+import org.apache.hadoop.yarn.api.records.NodeToLabelsList;
 
 /**
  * Provides a way to access information about the map/reduce cluster.
@@ -291,6 +292,26 @@ public class Cluster {
    */
   public JobStatus[] getAllJobStatuses() throws IOException, InterruptedException {
     return client.getAllJobs();
+  }
+
+  /**
+   * Get labels for nodes in the cluster.
+   * @return Labels for all nodes in cluster
+   * @throws IOException
+   * @throws InterruptedException
+   */
+  public List<NodeToLabelsList> getClusterNodeLabels() throws IOException, InterruptedException {
+    return client.getClusterNodeLabels();
+  }
+
+ /**
+   * Refresh labels for nodes in the cluster
+   * @return boolean for success/failure.
+   * @throws IOException
+   * @throws InterruptedException
+   */
+  public boolean refreshClusterNodeLabels() throws IOException, InterruptedException {
+    return client.refreshClusterNodeLabels();
   }
 
   /**

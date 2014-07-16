@@ -201,6 +201,8 @@ public class ConfigUtil {
         MRJobConfig.PRIORITY),
       new DeprecationDelta("mapred.job.queue.name",
         MRJobConfig.QUEUE_NAME),
+      new DeprecationDelta("mapred.job.label",
+        MRJobConfig.LABEL_NAME),
       new DeprecationDelta("mapred.job.reuse.jvm.num.tasks",
         MRJobConfig.JVM_NUMTASKS_TORUN),
       new DeprecationDelta("mapred.map.tasks",

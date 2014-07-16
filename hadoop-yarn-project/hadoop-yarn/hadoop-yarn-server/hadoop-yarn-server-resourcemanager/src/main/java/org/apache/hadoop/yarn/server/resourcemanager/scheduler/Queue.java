@@ -20,6 +20,8 @@ package org.apache.hadoop.yarn.server.resourcemanager.scheduler;
 
 import java.util.List;
 
+import net.java.dev.eval.Expression;
+
 import org.apache.hadoop.classification.InterfaceAudience.LimitedPrivate;
 import org.apache.hadoop.classification.InterfaceStability.Evolving;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -30,6 +32,9 @@ import org.apache.hadoop.yarn.api.records.QueueUserACLInfo;
 @Evolving
 @LimitedPrivate("yarn")
 public interface Queue {
+  
+  public static String LABEL_NONE = "NONE";
+  
   /**
    * Get the queue name
    * @return queue name
@@ -60,4 +65,26 @@ public interface Queue {
   boolean hasAccess(QueueACL acl, UserGroupInformation user);
   
   public ActiveUsersManager getActiveUsersManager();
+  
+  static enum QueueLabelPolicy {
+    PREFER_QUEUE("PREFER_QUEUE"), // Queue label always wins
+    PREFER_APP("PREFER_APP"), // App label always wins
+    AND("AND"),  // Use && on Queue and App labels
+    OR("OR");  // Use || on Queue and App labels
+
+    private final String policyName;
+
+    QueueLabelPolicy(String policyName) {
+      this.policyName = policyName;
+    }
+
+    public String getLabelPolicyName() {
+      return policyName;
+    }
+  }
+
+  public QueueLabelPolicy getLabelPolicy();
+
+  public Expression getLabel();
+
 }

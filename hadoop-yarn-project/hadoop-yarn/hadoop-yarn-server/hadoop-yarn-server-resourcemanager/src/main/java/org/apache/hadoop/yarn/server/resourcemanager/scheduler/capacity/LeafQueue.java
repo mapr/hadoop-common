@@ -30,6 +30,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import net.java.dev.eval.Expression;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
@@ -52,11 +54,13 @@ import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.api.records.ResourceRequest;
 import org.apache.hadoop.yarn.factories.RecordFactory;
 import org.apache.hadoop.yarn.factory.providers.RecordFactoryProvider;
+import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManager;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainer;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerEventType;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerState;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ActiveUsersManager;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.NodeType;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.QueueMetrics;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerAppUtils;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.fica.FiCaSchedulerApp;
@@ -102,6 +106,9 @@ public class LeafQueue implements CSQueue {
       new HashMap<ApplicationAttemptId, FiCaSchedulerApp>();
   
   Set<FiCaSchedulerApp> pendingApplications;
+  
+  private Expression label;
+  private Queue.QueueLabelPolicy labelPolicy;
   
   private final Resource minimumAllocation;
   private final Resource maximumAllocation;
@@ -261,6 +268,9 @@ public class LeafQueue implements CSQueue {
       aclsString.append(e.getKey() + ":" + e.getValue().getAclString());
     }
     
+    this.label = refreshLabel();
+    this.labelPolicy = refreshLabelPolicy();
+
     // Update metrics
     CSQueueUtils.updateQueueStatistics(
         resourceCalculator, this, getParent(), clusterResource, 
@@ -1612,6 +1622,49 @@ public class LeafQueue implements CSQueue {
     for (FiCaSchedulerApp app : activeApplications) {
       apps.add(app.getApplicationAttemptId());
     }
+  }
+
+  private QueueLabelPolicy refreshLabelPolicy() {
+    String labelPolicyStr = this.scheduler.getConfiguration().get(CapacitySchedulerConfiguration.PREFIX + 
+        getQueuePath() + 
+        CapacitySchedulerConfiguration.DOT + 
+        CapacitySchedulerConfiguration.LABEL_POLICY);
+    if ( labelPolicyStr == null ) {
+      return ((ParentQueue) getParent()).getLabelPolicy();
+    }
+    try {
+      return QueueLabelPolicy.valueOf(labelPolicyStr);
+    } catch (IllegalArgumentException ie) {
+      LOG.warn("Unknown label policy: " + labelPolicyStr + 
+          ". defaulting to: " + QueueLabelPolicy.AND.name());
+      return QueueLabelPolicy.AND;
+    }
+  }
+  
+  @Override
+  public QueueLabelPolicy getLabelPolicy() {
+    return this.labelPolicy;
+  }
+
+  private Expression refreshLabel() {
+    String labelStr = this.scheduler.getConfiguration().get(CapacitySchedulerConfiguration.PREFIX + 
+        getQueuePath() + 
+        CapacitySchedulerConfiguration.DOT + 
+        CapacitySchedulerConfiguration.LABEL);
+    
+    if (labelStr == null ) {
+      return ((ParentQueue) getParent()).getLabel();
+    }
+    try {
+      return LabelManager.getInstance().getEffectiveLabelExpr(labelStr);
+    } catch (IOException e) {
+      return null;
+    }
+  }
+  
+  @Override
+  public Expression getLabel() {
+    return this.label;
   }
 
 }

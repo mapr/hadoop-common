@@ -29,6 +29,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import net.java.dev.eval.Expression;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
@@ -47,10 +49,12 @@ import org.apache.hadoop.yarn.api.records.QueueUserACLInfo;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.factories.RecordFactory;
 import org.apache.hadoop.yarn.factory.providers.RecordFactoryProvider;
+import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManager;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainer;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerEventType;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ActiveUsersManager;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.NodeType;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.QueueMetrics;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.fica.FiCaSchedulerApp;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.fica.FiCaSchedulerNode;
@@ -81,6 +85,9 @@ public class ParentQueue implements CSQueue {
   
   private final boolean rootQueue;
   
+  private Expression label;
+  private Queue.QueueLabelPolicy labelPolicy;
+  
   private final Resource minimumAllocation;
 
   private volatile int numApplications;
@@ -100,8 +107,12 @@ public class ParentQueue implements CSQueue {
 
   private final ResourceCalculator resourceCalculator;
   
+  private CapacitySchedulerContext scheduler;
+
+  
   public ParentQueue(CapacitySchedulerContext cs, 
       String queueName, CSQueue parent, CSQueue old) {
+    this.scheduler = cs;
     minimumAllocation = cs.getMinimumResourceCapability();
     
     this.parent = parent;
@@ -184,6 +195,9 @@ public class ParentQueue implements CSQueue {
       aclsString.append(e.getKey() + ":" + e.getValue().getAclString());
     }
 
+    this.label = refreshLabel();
+    this.labelPolicy = refreshLabelPolicy();
+    
     // Update metrics
     CSQueueUtils.updateQueueStatistics(
         resourceCalculator, this, parent, clusterResource, minimumAllocation);
@@ -787,4 +801,59 @@ public class ParentQueue implements CSQueue {
       queue.collectSchedulerApplications(apps);
     }
   }
+  
+  private QueueLabelPolicy refreshLabelPolicy() {
+    String labelPolicyStr = this.scheduler.getConfiguration().get(CapacitySchedulerConfiguration.PREFIX + 
+        getQueuePath() + 
+        CapacitySchedulerConfiguration.DOT + 
+        CapacitySchedulerConfiguration.LABEL_POLICY);
+    if ( labelPolicyStr == null ) {
+      if ( parent != null ) {
+        return ((ParentQueue) parent).getLabelPolicy();
+      } else {
+        return QueueLabelPolicy.AND;
+      }
+    }
+    try {
+      return QueueLabelPolicy.valueOf(labelPolicyStr);
+    } catch (IllegalArgumentException ie) {
+      LOG.warn("Unknown label policy: " + labelPolicyStr);
+      return QueueLabelPolicy.AND;
+    }
+  }
+  
+  @Override
+  public QueueLabelPolicy getLabelPolicy() {
+    return labelPolicy;
+  }
+
+  private Expression refreshLabel() {
+    String labelStr = this.scheduler.getConfiguration().get(CapacitySchedulerConfiguration.PREFIX + 
+        getQueuePath() + 
+        CapacitySchedulerConfiguration.DOT + 
+        CapacitySchedulerConfiguration.LABEL);
+    
+    if ( labelStr != null ) {
+      try {
+        return LabelManager.getInstance().getEffectiveLabelExpr(labelStr);
+      } catch (IOException e) {
+        return null;
+      }
+    }
+    
+    if ( parent != null ) {
+      return ((ParentQueue) parent).refreshLabel();
+    } else {
+      try {
+        return LabelManager.getInstance().getEffectiveLabelExpr("all");
+      } catch (IOException e) {
+        return null;
+      }    
+    }
+  }
+  
+  @Override
+  public Expression getLabel() {
+    return label;
+   }
 }

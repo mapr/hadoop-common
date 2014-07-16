@@ -70,12 +70,27 @@ public abstract class ResourceRequest implements Comparable<ResourceRequest> {
   @Stable
   public static ResourceRequest newInstance(Priority priority, String hostName,
       Resource capability, int numContainers, boolean relaxLocality) {
+    return newInstance(priority, hostName, capability, numContainers, relaxLocality, null);
+  }
+
+  @Public
+  @Stable
+  public static ResourceRequest newInstance(Priority priority, String hostName,
+      Resource capability, int numContainers, String label) {
+    return newInstance(priority, hostName, capability, numContainers, true, label);
+  }
+
+  @Public
+  @Stable
+  public static ResourceRequest newInstance(Priority priority, String hostName,
+      Resource capability, int numContainers, boolean relaxLocality, String label) {
     ResourceRequest request = Records.newRecord(ResourceRequest.class);
     request.setPriority(priority);
     request.setResourceName(hostName);
     request.setCapability(capability);
     request.setNumContainers(numContainers);
     request.setRelaxLocality(relaxLocality);
+    request.setLabel(label);
     return request;
   }
 
@@ -239,6 +254,14 @@ public abstract class ResourceRequest implements Comparable<ResourceRequest> {
   @Stable
   public abstract void setRelaxLocality(boolean relaxLocality);
   
+  @Public
+  @Stable
+  public abstract String getLabel();
+  
+  @Public
+  @Stable
+  public abstract void setLabel(String label);
+  
   @Override
   public int hashCode() {
     final int prime = 2153;
@@ -246,11 +269,13 @@ public abstract class ResourceRequest implements Comparable<ResourceRequest> {
     Resource capability = getCapability();
     String hostName = getResourceName();
     Priority priority = getPriority();
+    String label = getLabel();
     result =
         prime * result + ((capability == null) ? 0 : capability.hashCode());
     result = prime * result + ((hostName == null) ? 0 : hostName.hashCode());
     result = prime * result + getNumContainers();
     result = prime * result + ((priority == null) ? 0 : priority.hashCode());
+    result = prime * result + ((label == null) ? 0 : label.hashCode());
     return result;
   }
 
@@ -281,8 +306,17 @@ public abstract class ResourceRequest implements Comparable<ResourceRequest> {
     if (priority == null) {
       if (other.getPriority() != null)
         return false;
-    } else if (!priority.equals(other.getPriority()))
-      return false;
+    } else if (!priority.equals(other.getPriority())) {
+      return false;       
+    }
+    String label = getLabel();
+    if ( label == null ) {
+      if ( other.getLabel() != null ) {
+        return false;
+      }
+    } else if (!label.equals(other.getLabel())) {
+        return false;
+    }
     return true;
   }
 

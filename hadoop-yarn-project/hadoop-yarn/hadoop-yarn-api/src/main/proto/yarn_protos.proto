@@ -239,6 +239,7 @@ message ResourceRequestProto {
   optional ResourceProto capability = 3;
   optional int32 num_containers = 4;
   optional bool relax_locality = 5 [default = true];
+  optional string label = 6;
 }
 
 enum AMCommandProto {
@@ -289,6 +290,7 @@ message ApplicationSubmissionContextProto {
   optional string applicationType = 10 [default = "YARN"];
   optional bool keep_containers_across_application_attempts = 11 [default = false];
   repeated string applicationTags = 12;
+  optional string label = 13 [default = "all"];
 }
 
 enum ApplicationAccessTypeProto {
@@ -318,6 +320,8 @@ message QueueInfoProto {
   optional QueueStateProto state = 5;
   repeated QueueInfoProto childQueues = 6;
   repeated ApplicationReportProto applications = 7;
+  optional string label = 8;
+  optional string labelPolicy = 9;
 }
 
 enum QueueACLProto {
@@ -328,6 +332,11 @@ enum QueueACLProto {
 message QueueUserACLInfoProto {
   optional string queueName = 1;
   repeated QueueACLProto userAcls = 2;
+}
+
+message NodeToLabelsListProto {
+  optional string node = 1;
+  repeated string nodeLabels = 2;
 }
 
 ////////////////////////////////////////////////////////////////////////

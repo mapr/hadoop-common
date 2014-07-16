@@ -21,6 +21,7 @@ package org.apache.hadoop.yarn.server.resourcemanager;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -47,7 +48,12 @@ import org.apache.hadoop.security.authorize.AccessControlList;
 import org.apache.hadoop.security.authorize.PolicyProvider;
 import org.apache.hadoop.security.authorize.ProxyUsers;
 import org.apache.hadoop.service.CompositeService;
+import org.apache.hadoop.yarn.api.protocolrecords.GetClusterNodeLabelsRequest;
+import org.apache.hadoop.yarn.api.protocolrecords.GetClusterNodeLabelsResponse;
+import org.apache.hadoop.yarn.api.protocolrecords.RefreshClusterNodeLabelsRequest;
+import org.apache.hadoop.yarn.api.protocolrecords.RefreshClusterNodeLabelsResponse;
 import org.apache.hadoop.yarn.api.records.NodeId;
+import org.apache.hadoop.yarn.api.records.NodeToLabelsList;
 import org.apache.hadoop.yarn.api.records.ResourceOption;
 import org.apache.hadoop.yarn.conf.HAUtil;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
@@ -71,9 +77,9 @@ import org.apache.hadoop.yarn.server.api.protocolrecords.RefreshUserToGroupsMapp
 import org.apache.hadoop.yarn.server.api.protocolrecords.RefreshUserToGroupsMappingsResponse;
 import org.apache.hadoop.yarn.server.api.protocolrecords.UpdateNodeResourceRequest;
 import org.apache.hadoop.yarn.server.api.protocolrecords.UpdateNodeResourceResponse;
+import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManager;
 import org.apache.hadoop.yarn.server.resourcemanager.rmnode.RMNode;
 import org.apache.hadoop.yarn.server.resourcemanager.security.authorize.RMPolicyProvider;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.protobuf.BlockingService;
 
@@ -584,4 +590,36 @@ public class AdminService extends CompositeService implements
   public Server getServer() {
     return this.server;
   }
+
+  @Override
+  public GetClusterNodeLabelsResponse getClusterNodeLabels(
+    GetClusterNodeLabelsRequest request) throws YarnException, IOException {
+    GetClusterNodeLabelsResponse response =
+	  recordFactory.newRecordInstance(GetClusterNodeLabelsResponse.class);
+
+    LabelManager labelManager = LabelManager.getInstance();
+    List<NodeToLabelsList> clusterNodeLabels = labelManager.getLabelsForAllNodes();
+
+    response.setClusterNodeLabels(clusterNodeLabels);
+    return response;
+  }
+
+  @Override
+  public RefreshClusterNodeLabelsResponse refreshClusterNodeLabels(
+    RefreshClusterNodeLabelsRequest request) throws YarnException, IOException {
+    RefreshClusterNodeLabelsResponse response =
+      recordFactory.newRecordInstance(RefreshClusterNodeLabelsResponse.class);
+
+    boolean isRefreshCompleted = false;
+    try {
+      LabelManager labelManager = LabelManager.getInstance();
+      labelManager.refreshLabels();
+      isRefreshCompleted = true;
+    } catch (Exception e) {
+      LOG.error("Failed to refresh cluster node labels", e);
+    }
+    response.setIsRefreshLabelsComplete(isRefreshCompleted);
+    return response;
+  }
+
 }

@@ -23,7 +23,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.bind.annotation.XmlTransient;
 
+import net.java.dev.eval.Expression;
+
 import org.apache.hadoop.yarn.api.records.QueueState;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue.QueueLabelPolicy;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CSQueue;
 
 @XmlRootElement
@@ -45,6 +49,8 @@ public class CapacitySchedulerQueueInfo {
   protected float absoluteUsedCapacity;
   protected int numApplications;
   protected String queueName;
+  protected String label;
+  protected String labelPolicy;
   protected QueueState state;
   protected CapacitySchedulerQueueInfoList queues;
   protected ResourceInfo resourcesUsed;
@@ -69,6 +75,10 @@ public class CapacitySchedulerQueueInfo {
     queueName = q.getQueueName();
     state = q.getState();
     resourcesUsed = new ResourceInfo(q.getUsedResources());
+    Expression labelE = q.getLabel();
+    label = ( labelE == null ) ? Queue.LABEL_NONE : labelE.toString();
+    labelPolicy = (q.getLabelPolicy() == null) ? QueueLabelPolicy.AND.name() :
+                  q.getLabelPolicy().name();
   }
 
   public float getCapacity() {
@@ -117,6 +127,14 @@ public class CapacitySchedulerQueueInfo {
 
   public ResourceInfo getResourcesUsed() {
     return resourcesUsed;
+  }
+
+  public String getLabel() {
+    return label;
+  }
+
+  public String getLabelPolicy() {
+    return labelPolicy;
   }
 
   /**

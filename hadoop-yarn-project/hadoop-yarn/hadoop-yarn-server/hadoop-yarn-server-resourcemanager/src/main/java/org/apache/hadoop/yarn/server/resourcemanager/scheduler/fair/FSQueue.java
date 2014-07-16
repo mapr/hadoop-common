@@ -18,9 +18,12 @@
 
 package org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import net.java.dev.eval.Expression;
 
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
@@ -33,6 +36,7 @@ import org.apache.hadoop.yarn.api.records.QueueState;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.factories.RecordFactory;
 import org.apache.hadoop.yarn.factory.providers.RecordFactoryProvider;
+import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManager;
 import org.apache.hadoop.yarn.server.resourcemanager.resource.ResourceWeights;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
 import org.apache.hadoop.yarn.util.resource.Resources;
@@ -45,6 +49,10 @@ public abstract class FSQueue extends Schedulable implements Queue {
   private final FSQueueMetrics metrics;
   
   protected final FSParentQueue parent;
+  
+  protected Expression label;
+  protected QueueLabelPolicy labelPolicy;
+  
   protected final RecordFactory recordFactory =
       RecordFactoryProvider.getRecordFactory(null);
   
@@ -150,6 +158,50 @@ public abstract class FSQueue extends Schedulable implements Queue {
     return scheduler.getAllocationConfiguration().hasAccess(name, acl, user);
   }
   
+  protected Expression refreshLabel() {
+    String labelStr = scheduler.getAllocationConfiguration().getLabels().get(getName());
+    if ( labelStr == null && parent != null ) {
+      return parent.refreshLabel();
+    }
+    try {
+      if ( labelStr != null ) {
+          return LabelManager.getInstance().getEffectiveLabelExpr(labelStr);
+      } else {
+          return LabelManager.getInstance().getEffectiveLabelExpr("all");
+      }
+    } catch (IOException e) {
+      return null;
+    }
+
+  }
+  
+  protected QueueLabelPolicy refreshLabelPolicy() {
+    QueueLabelPolicy labelPolicy = 
+        scheduler.getAllocationConfiguration().getLabelPolicies().get(getName());
+    if ( labelPolicy == null &&  parent != null ) {
+      labelPolicy = parent.refreshLabelPolicy();
+    }
+    return ( labelPolicy != null ) ? labelPolicy : QueueLabelPolicy.AND;
+  }
+  
+  @Override
+  public QueueLabelPolicy getLabelPolicy() {
+    return labelPolicy;
+  }
+
+  @Override
+  public Expression getLabel() {
+    return label;
+  }
+  
+  public void setLabel(Expression label) {
+    this.label = label;
+  }
+
+  public void setLabelPolicy(QueueLabelPolicy labelPolicy) {
+    this.labelPolicy = labelPolicy;
+  }
+
   /**
    * Recomputes the shares for all child queues and applications based on this
    * queue's current share

@@ -54,6 +54,7 @@ import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.util.ExitUtil;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.hadoop.yarn.api.records.NodeToLabelsList;
 import org.apache.hadoop.yarn.logaggregation.LogCLIHelpers;
 
 import com.google.common.base.Charsets;
@@ -112,6 +113,8 @@ public class CLI extends Configured implements Tool {
     boolean failTask = false;
     boolean setJobPriority = false;
     boolean logs = false;
+    boolean showLabels = false;
+    boolean refreshLabels = false;
 
     if ("-submit".equals(cmd)) {
       if (argv.length != 2) {
@@ -187,6 +190,18 @@ public class CLI extends Configured implements Tool {
       } else {
         listJobs = true;
       }
+    } else if("-showlabels".equals(cmd)) {
+      if (argv.length != 1) {
+        displayUsage(cmd);
+        return exitCode;
+      }
+      showLabels = true;
+    } else if("-refreshlabels".equals(cmd)) {
+      if (argv.length != 1) {
+        displayUsage(cmd);
+        return exitCode;
+      }
+      refreshLabels = true;
     } else if("-kill-task".equals(cmd)) {
       if (argv.length != 2) {
         displayUsage(cmd);
@@ -318,6 +333,12 @@ public class CLI extends Configured implements Tool {
       } else if (listJobs) {
         listJobs(cluster);
         exitCode = 0;
+      } else if (showLabels) {
+        showLabels(cluster);
+        exitCode = 0;
+      } else if (refreshLabels) {
+        refreshLabels(cluster);
+        exitCode = 0;
       } else if (listAllJobs) {
         listAllJobs(cluster);
         exitCode = 0;
@@ -432,6 +453,10 @@ public class CLI extends Configured implements Tool {
       System.err.println(prefix + "[" + cmd + "]");
     } else if ("-list-blacklisted-trackers".equals(cmd)) {
       System.err.println(prefix + "[" + cmd + "]");
+    } else if ("-showlabels".equals(cmd)) {
+        System.err.println(prefix + "[" + cmd + "]");
+    } else if ("-refreshlabels".equals(cmd)) {
+        System.err.println(prefix + "[" + cmd + "]");
     } else if ("-list-attempt-ids".equals(cmd)) {
       System.err.println(prefix + "[" + cmd + 
           " <job-id> <task-type> <task-state>]. " +
@@ -501,7 +526,6 @@ public class CLI extends Configured implements Tool {
   protected static String getTaskLogURL(TaskAttemptID taskId, String baseUrl) {
     return (baseUrl + "/tasklog?plaintext=true&attemptid=" + taskId); 
   }
-  
 
   /**
    * Dump a list of currently running jobs
@@ -517,7 +541,34 @@ public class CLI extends Configured implements Tool {
     }
     displayJobList(runningJobs.toArray(new JobStatus[0]));
   }
-    
+
+  /**
+   * Show a list of nodes and their labels
+   * @throws IOException
+   * @throws InterruptedException
+   */
+  private void showLabels(Cluster cluster)
+      throws IOException, InterruptedException {
+    List<NodeToLabelsList> nodeLabels = cluster.getClusterNodeLabels();
+    displayNodeLabelsList(nodeLabels);
+  }
+
+  /**
+   * Refresh labels for nodes in the cluster
+   * @throws IOException
+   * @throws InterruptedException
+   */
+  private void refreshLabels(Cluster cluster)
+      throws IOException, InterruptedException {
+    PrintWriter writer = new PrintWriter(new OutputStreamWriter(System.out, Charsets.UTF_8));
+    if (cluster.refreshClusterNodeLabels()) {
+      writer.println("Refreshed labels for nodes in the cluster successfully.\n");
+    } else {
+      writer.println("Failed to refresh labels for nodes in the cluster.\n");
+    }
+    writer.flush();
+  }
+
   /**
    * Dump a list of all jobs submitted.
    * @throws IOException
@@ -589,9 +640,9 @@ public class CLI extends Configured implements Tool {
   }
 
   public void displayJobList(JobStatus[] jobs) 
-      throws IOException, InterruptedException {
+    throws IOException, InterruptedException {
     displayJobList(jobs, new PrintWriter(new OutputStreamWriter(System.out,
-        Charsets.UTF_8)));
+    Charsets.UTF_8)));
   }
 
   @Private
@@ -626,7 +677,23 @@ public class CLI extends Configured implements Tool {
     }
     writer.flush();
   }
-  
+
+  public void displayNodeLabelsList(List<NodeToLabelsList> nodeLabels)
+    throws IOException, InterruptedException {
+	  displayNodeLabelsList(nodeLabels, new PrintWriter(new OutputStreamWriter(System.out,
+        Charsets.UTF_8)));
+  }
+
+  public void displayNodeLabelsList(List<NodeToLabelsList> nodeLabels, PrintWriter writer) {
+    String headerPattern = "%23s\t%10s\n";
+    String dataPattern   = "%23s\t%10s\n";
+    writer.printf(headerPattern, "Nodes", "Labels");
+    for (NodeToLabelsList singleNodeLabels : nodeLabels) {
+      writer.printf(dataPattern, singleNodeLabels.getNode(), singleNodeLabels.getNodeLabel().toString());
+    }
+    writer.flush();
+  }
+
   public static void main(String[] argv) throws Exception {
     int res = ToolRunner.run(new CLI(), argv);
     ExitUtil.terminate(res);
