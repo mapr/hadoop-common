@@ -155,7 +155,7 @@ public class FifoScheduler extends
       queueInfo.setChildQueues(new ArrayList<QueueInfo>());
       queueInfo.setQueueState(QueueState.RUNNING);
       Expression label = getLabel();
-      queueInfo.setQueueLabel(( label == null ) ? "NONE" : label.toString());
+      queueInfo.setQueueLabel(( label == null ) ? Queue.LABEL_NONE : label.toString());
       queueInfo.setQueueLabelPolicy(getLabelPolicy().name());
       return queueInfo;
     }

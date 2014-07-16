@@ -34,6 +34,9 @@ import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainer;
 @Evolving
 @LimitedPrivate("yarn")
 public interface Queue {
+  
+  public static String LABEL_NONE = "NONE";
+  
   /**
    * Get the queue name
    * @return queue name
