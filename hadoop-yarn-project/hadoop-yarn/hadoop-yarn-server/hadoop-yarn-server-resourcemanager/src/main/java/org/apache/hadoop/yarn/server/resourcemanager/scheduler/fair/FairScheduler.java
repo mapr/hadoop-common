@@ -84,7 +84,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEv
 import org.apache.hadoop.yarn.server.resourcemanager.security.RMContainerTokenSecretManager;
 import org.apache.hadoop.yarn.util.Clock;
 import org.apache.hadoop.yarn.util.SystemClock;
-import org.apache.hadoop.yarn.util.resource.DefaultResourceCalculatorWithDisk;
+import org.apache.hadoop.yarn.util.resource.DiskBasedResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.DominantResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.ResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.Resources;
@@ -911,7 +911,7 @@ public class FairScheduler extends
     }
 
     // Sanity check
-    SchedulerUtils.normalizeRequests(ask, /*new DominantResourceCalculator(),*/ new DefaultResourceCalculatorWithDisk(),
+    SchedulerUtils.normalizeRequests(ask, /*new DominantResourceCalculator(),*/ new DiskBasedResourceCalculator(),
         clusterResource, minimumAllocation, getMaximumResourceCapability(), incrAllocation);
 
     // Set amResource for this app
