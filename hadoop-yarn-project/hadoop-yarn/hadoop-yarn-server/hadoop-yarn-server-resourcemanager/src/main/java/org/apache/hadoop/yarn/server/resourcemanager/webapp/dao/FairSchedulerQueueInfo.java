@@ -31,6 +31,8 @@ import javax.xml.bind.annotation.XmlTransient;
 import net.java.dev.eval.Expression;
 
 import org.apache.hadoop.yarn.api.records.Resource;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue.QueueLabelPolicy;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.AllocationConfiguration;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.FSLeafQueue;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.FSQueue;
@@ -74,8 +76,9 @@ public class FairSchedulerQueueInfo {
     queueName = queue.getName();
     schedulingPolicy = queue.getPolicy().getName();
     Expression labelE = queue.getLabel();
-    label = ( labelE == null ) ? "NONE" : labelE.toString();
-    labelPolicy = queue.getLabelPolicy().name();
+    label = ( labelE == null ) ? Queue.LABEL_NONE : labelE.toString();
+    labelPolicy = (queue.getLabelPolicy() == null) ? QueueLabelPolicy.AND.name() :
+                  queue.getLabelPolicy().name();
     
     clusterResources = new ResourceInfo(scheduler.getClusterCapacity());
     
