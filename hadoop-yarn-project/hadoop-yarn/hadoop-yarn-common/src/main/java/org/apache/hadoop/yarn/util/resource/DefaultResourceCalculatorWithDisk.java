@@ -23,35 +23,13 @@ import org.apache.hadoop.yarn.api.records.Resource;
 
 @Private
 @Unstable
-public class DefaultResourceCalculator extends ResourceCalculator {
-  
-  @Override
-  public int compare(Resource unused, Resource lhs, Resource rhs) {
-    // Only consider memory
-    return lhs.getMemory() - rhs.getMemory();
-  }
-
-  @Override
-  public int computeAvailableContainers(Resource available, Resource required) {
-    // Only consider memory
-    return available.getMemory() / required.getMemory();
-  }
-
-  @Override
-  public float divide(Resource unused, 
-      Resource numerator, Resource denominator) {
-    return ratio(numerator, denominator);
-  }
-
-  @Override
-  public float ratio(Resource a, Resource b) {
-    return (float)a.getMemory() / b.getMemory();
-  }
+public class DefaultResourceCalculatorWithDisk extends DefaultResourceCalculator {
 
   @Override
   public Resource divideAndCeil(Resource numerator, int denominator) {
     return Resources.createResource(
-        divideAndCeil(numerator.getMemory(), denominator));
+        divideAndCeil(numerator.getMemory(), denominator), numerator.getVirtualCores(),
+          numerator.getDisks()); //Only memory is divided
   }
 
   @Override
@@ -62,7 +40,7 @@ public class DefaultResourceCalculator extends ResourceCalculator {
             Math.max(r.getMemory(), minimumResource.getMemory()),
             stepFactor.getMemory()),
             maximumResource.getMemory());
-    return Resources.createResource(normalizedMemory);
+    return Resources.createResource(normalizedMemory, r.getVirtualCores(), r.getDisks());
   }
 
   @Override
@@ -74,21 +52,21 @@ public class DefaultResourceCalculator extends ResourceCalculator {
   @Override
   public Resource roundUp(Resource r, Resource stepFactor) {
     return Resources.createResource(
-        roundUp(r.getMemory(), stepFactor.getMemory())
+        roundUp(r.getMemory(), stepFactor.getMemory()), r.getVirtualCores(), r.getDisks()
         );
   }
 
   @Override
   public Resource roundDown(Resource r, Resource stepFactor) {
     return Resources.createResource(
-        roundDown(r.getMemory(), stepFactor.getMemory()));
+        roundDown(r.getMemory(), stepFactor.getMemory()), r.getVirtualCores(), r.getDisks());
   }
 
   @Override
   public Resource multiplyAndNormalizeUp(Resource r, double by,
       Resource stepFactor) {
     return Resources.createResource(
-        roundUp((int)(r.getMemory() * by + 0.5), stepFactor.getMemory())
+        roundUp((int)(r.getMemory() * by + 0.5), stepFactor.getMemory()), r.getVirtualCores(), r.getDisks()
         );
   }
 
@@ -99,8 +77,7 @@ public class DefaultResourceCalculator extends ResourceCalculator {
         roundDown(
             (int)(r.getMemory() * by), 
             stepFactor.getMemory()
-            )
+            ), r.getVirtualCores(), r.getDisks()
         );
   }
-
 }
