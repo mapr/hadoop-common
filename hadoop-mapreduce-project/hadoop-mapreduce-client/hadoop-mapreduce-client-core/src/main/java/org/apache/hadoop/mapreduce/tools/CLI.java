@@ -460,7 +460,9 @@ public class CLI extends Configured implements Tool {
         "Valid values for <task-state> are " + taskStates);
       System.err.printf("\t[-kill-task <task-attempt-id>]%n");
       System.err.printf("\t[-fail-task <task-attempt-id>]%n");
-      System.err.printf("\t[-logs <job-id> <task-attempt-id>]%n%n");
+      System.err.printf("\t[-logs <job-id> <task-attempt-id>]%n");
+      System.err.printf("\t[-showlabels]%n");
+      System.err.printf("\t[-refreshlabels]%n%n");
       ToolRunner.printGenericCommandUsage(System.out);
     }
   }
