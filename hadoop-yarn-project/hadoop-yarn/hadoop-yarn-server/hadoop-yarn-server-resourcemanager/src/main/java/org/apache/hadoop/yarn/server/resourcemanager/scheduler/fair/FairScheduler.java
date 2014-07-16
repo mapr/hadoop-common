@@ -93,7 +93,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEv
 import org.apache.hadoop.yarn.server.resourcemanager.security.RMContainerTokenSecretManager;
 import org.apache.hadoop.yarn.util.Clock;
 import org.apache.hadoop.yarn.util.SystemClock;
-import org.apache.hadoop.yarn.util.resource.DefaultResourceCalculatorWithDisk;
+import org.apache.hadoop.yarn.util.resource.DiskBasedResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.DominantResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.ResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.Resources;
@@ -135,7 +135,7 @@ public class FairScheduler extends AbstractYarnScheduler {
   private static final Log LOG = LogFactory.getLog(FairScheduler.class);
   
   private static final ResourceCalculator RESOURCE_CALCULATOR =
-      new DefaultResourceCalculatorWithDisk();
+      new DiskBasedResourceCalculator();
   
   // Value that container assignment methods return when a container is
   // reserved
@@ -898,7 +898,7 @@ public class FairScheduler extends AbstractYarnScheduler {
     }
 
     // Sanity check
-    SchedulerUtils.normalizeRequests(ask, /*new DominantResourceCalculator(),*/ new DefaultResourceCalculatorWithDisk(),
+    SchedulerUtils.normalizeRequests(ask, /*new DominantResourceCalculator(),*/ new DiskBasedResourceCalculator(),
         clusterCapacity, minimumAllocation, maximumAllocation, incrAllocation);
 
     // Release containers

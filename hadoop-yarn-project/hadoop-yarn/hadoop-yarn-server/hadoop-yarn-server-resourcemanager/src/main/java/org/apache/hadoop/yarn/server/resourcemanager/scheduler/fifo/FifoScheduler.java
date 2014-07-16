@@ -98,7 +98,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.NodeUpdateS
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEvent;
 import org.apache.hadoop.yarn.server.utils.BuilderUtils;
 import org.apache.hadoop.yarn.server.utils.Lock;
-import org.apache.hadoop.yarn.util.resource.DefaultResourceCalculatorWithDisk;
+import org.apache.hadoop.yarn.util.resource.DiskBasedResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.ResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.Resources;
 
@@ -132,7 +132,7 @@ public class FifoScheduler extends AbstractYarnScheduler implements
   private static final String DOT = ".";
   private QueueMetrics metrics;
   
-  private final ResourceCalculator resourceCalculator = new DefaultResourceCalculatorWithDisk();
+  private final ResourceCalculator resourceCalculator = new DiskBasedResourceCalculator();
 
   private final Queue DEFAULT_QUEUE = new Queue() {
     @Override
