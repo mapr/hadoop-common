@@ -776,7 +776,7 @@ public class TestCombineFileInputFormat {
         nodeToBlocks, rackToNodes);
     
     inFormat.createSplits(nodeToBlocks, blockToNodes, rackToBlocks, totLength,
-        maxSplitSize, minSizeNode, minSizeRack, splits);
+        maxSplitSize, minSizeNode, minSizeRack, splits, new Configuration());
 
     int expectedSplitCount = (int) (totLength / maxSplitSize);
     assertEquals(expectedSplitCount, splits.size());
@@ -829,7 +829,7 @@ public class TestCombineFileInputFormat {
                              nodeToBlocks, rackToNodes);
     
     inFormat.createSplits(nodeToBlocks, blockToNodes, rackToBlocks, totLength,  
-                          maxSize, minSizeNode, minSizeRack, splits);
+                          maxSize, minSizeNode, minSizeRack, splits, new Configuration());
     
     int expectedSplitCount = (int)(totLength/maxSize);
     assertEquals(expectedSplitCount, splits.size());
