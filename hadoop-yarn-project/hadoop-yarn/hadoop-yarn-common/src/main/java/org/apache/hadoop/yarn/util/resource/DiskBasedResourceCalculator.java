@@ -74,4 +74,28 @@ public class DiskBasedResourceCalculator extends DefaultResourceCalculator {
             ), r.getVirtualCores(), r.getDisks()
         );
   }
+
+  @Override
+  public int computeAvailableContainers(Resource available, Resource required) {
+    int availableContainers = 0;
+
+    if (required.getMemory() > 0) {
+      availableContainers = available.getMemory() / required.getMemory();
+    }
+
+    if (required.getVirtualCores() > 0) {
+      int availableContainersCpu = available.getVirtualCores() / required.getVirtualCores();
+      if (availableContainersCpu < availableContainers) {
+        availableContainers = availableContainersCpu;
+      }
+    }
+
+    if (required.getDisks() > 0) {
+        double availableContainersDisk = Math.floor(available.getDisks() / required.getDisks());
+        if (availableContainersDisk < availableContainers) {
+          availableContainers = (int) availableContainersDisk;
+        }
+      }
+    return availableContainers;
+  }
 }
