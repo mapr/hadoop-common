@@ -26,6 +26,7 @@ import org.apache.hadoop.examples.terasort.TeraChecksum;
 import org.apache.hadoop.examples.terasort.TeraGen;
 import org.apache.hadoop.examples.terasort.TeraGenWithCRC;
 import org.apache.hadoop.examples.terasort.TeraSort;
+import org.apache.hadoop.examples.terasort.TeraSortWithCRC;
 import org.apache.hadoop.examples.terasort.TeraValidate;
 import org.apache.hadoop.examples.terasort.TeraValidateRecords;
 import org.apache.hadoop.examples.terasort.TeraValidateWithCRC;
@@ -82,6 +83,7 @@ public class ExampleDriver {
       pgd.addClass("sleep", SleepJob.class, "A job that sleeps at each map and reduce task.");
       pgd.addClass("terachecksum", TeraChecksum.class, "Compute checksum of terasort output to compare with teragen checksum.");
       pgd.addClass("teragenwithcrc", TeraGenWithCRC.class, "Generate data for the terasort with CRC checksum");
+      pgd.addClass("terasortwithcrc", TeraSortWithCRC.class, "Run the terasort with CRC checksum");
       pgd.addClass("teravalidaterecords", TeraValidateRecords.class, "Checking results of terasort in terms of missing/duplicate records");
       pgd.addClass("teravalidatewithcrc", TeraValidateWithCRC.class, "Checking results of terasort along with crc verification");
 
