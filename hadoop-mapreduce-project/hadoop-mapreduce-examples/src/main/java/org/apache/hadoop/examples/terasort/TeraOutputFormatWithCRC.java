@@ -86,7 +86,7 @@ public class TeraOutputFormatWithCRC extends TextOutputFormat<Text,Text> {
     	}
     	//out.write(cksum_bytes);
     	value.append(cksum_bytes, 0, cksum_bytes.length);
-    	out.write(value.getBytes());
+    	out.write(value.getBytes(), 0, value.getLength());
     	out.write(newLine, 0, newLine.length);
     }
     
