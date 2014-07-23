@@ -435,7 +435,8 @@ public class FailoverRPC {
               cause instanceof EOFException ||
               cause instanceof SocketException ||
               cause instanceof ConnectException ||
-              cause.getMessage().equals("Connection reset by peer") ) {
+              (cause != null && cause.getMessage() != null
+                  && cause.getMessage().equals("Connection reset by peer"))) {
 
             // JT Fail Over
             if (logInfo)
