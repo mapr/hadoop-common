@@ -1553,6 +1553,7 @@ public abstract class Server {
             doSaslReply(ioe);
             throw ioe;
           }
+          this.authMethod = RpcAuthRegistry.SIMPLE;
           break;
         }
         default: {
