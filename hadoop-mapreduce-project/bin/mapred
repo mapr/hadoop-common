@@ -103,6 +103,7 @@ elif [ "$COMMAND" = "sampler" ] ; then
 elif [ "$COMMAND" = "classpath" ] ; then
   echo -n 
 elif [ "$COMMAND" = "historyserver" ] ; then
+  CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/JPam-1.1.jar
   CLASS=org.apache.hadoop.mapreduce.v2.hs.JobHistoryServer
   HADOOP_OPTS="$HADOOP_OPTS -Dmapred.jobsummary.logger=${HADOOP_JHS_LOGGER:-INFO,console} $HADOOP_JOB_HISTORYSERVER_OPTS"
   if [ "$HADOOP_JOB_HISTORYSERVER_HEAPSIZE" != "" ]; then

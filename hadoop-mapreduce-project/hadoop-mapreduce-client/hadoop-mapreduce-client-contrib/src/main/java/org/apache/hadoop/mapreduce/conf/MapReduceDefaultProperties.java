@@ -7,6 +7,9 @@ import org.apache.hadoop.mapred.MapRIFileOutputStream;
 import org.apache.hadoop.mapreduce.MRConfig;
 import org.apache.hadoop.mapreduce.MRJobConfig;
 import org.apache.hadoop.mapreduce.task.reduce.DirectShuffle;
+import org.apache.hadoop.http.HttpConfig;
+import org.apache.hadoop.mapreduce.v2.jobhistory.JHAdminConfig;
+import org.apache.hadoop.security.UserGroupInformation;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -72,6 +75,14 @@ public class MapReduceDefaultProperties extends Properties {
     props.put(MRJobConfig.REDUCE_JAVA_OPTS, "-Xmx1500m");
     props.put(MRJobConfig.COMPLETED_MAPS_FOR_REDUCE_SLOWSTART, "0.95");
     props.put(MRJobConfig.SHUFFLE_PARALLEL_COPIES, "12");
+  }
+  
+  static { // Set mapreduce job history http policy
+    String http_scheme = HttpConfig.Policy.HTTP_ONLY.name();
+    if(UserGroupInformation.isSecurityEnabled()==true) {
+      http_scheme = HttpConfig.Policy.HTTPS_ONLY.name();
+    }
+    props.put(JHAdminConfig.MR_HS_HTTP_POLICY, http_scheme);
   }
 
   private static final long IO_SORT_XMX_THRESHOLD = 800 << 20;
