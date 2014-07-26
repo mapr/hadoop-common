@@ -286,11 +286,8 @@ public class TestRMAdminCLI {
           .contains(
               "yarn rmadmin [-refreshQueues] [-refreshNodes] [-refreshSuper" +
               "UserGroupsConfiguration] [-refreshUserToGroupsMappings] " +
-              "[-refreshAdminAcls] [-refreshServiceAcl] [-getGroup" +
-              " [username]] [[-addToClusterNodeLabels [label1,label2,label3]]" +
-              " [-removeFromClusterNodeLabels [label1,label2,label3]] [-replaceLabelsOnNode " +
-              "[node1[:port]=label1,label2 node2[:port]=label1] [-directlyAccessNodeLabelStore]] " +
-              "[-help [cmd]]"));
+              "[-refreshAdminAcls] [-showLabels] [-refreshLabels] " + 
+              "[-refreshServiceAcl] [-getGroup [username]] [-help [cmd]]"));
       assertTrue(dataOut
           .toString()
           .contains(
@@ -366,7 +363,7 @@ public class TestRMAdminCLI {
       String expectedHelpMsg = 
           "yarn rmadmin [-refreshQueues] [-refreshNodes] [-refreshSuper" +
               "UserGroupsConfiguration] [-refreshUserToGroupsMappings] " +
-              "[-refreshAdminAcls] [-refreshServiceAcl] [-getGroup" +
+              "[-refreshAdminAcls] [-showLabels] [-refreshLabels] [-refreshServiceAcl] [-getGroup" +
               " [username]] [[-addToClusterNodeLabels [label1,label2,label3]]" +
               " [-removeFromClusterNodeLabels [label1,label2,label3]] [-replaceLabelsOnNode " +
               "[node1[:port]=label1,label2 node2[:port]=label1] [-directlyAccessNodeLabelStore]] " +
