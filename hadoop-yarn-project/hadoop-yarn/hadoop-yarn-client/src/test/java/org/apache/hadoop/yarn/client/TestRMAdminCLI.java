@@ -232,7 +232,7 @@ public class TestRMAdminCLI {
   /**
    * Test printing of help messages
    */
-  @Test(timeout=500)
+@Test(timeout=500)
   public void testHelp() throws Exception {
     PrintStream oldOutPrintStream = System.out;
     PrintStream oldErrPrintStream = System.err;
@@ -253,8 +253,8 @@ public class TestRMAdminCLI {
           .contains(
               "yarn rmadmin [-refreshQueues] [-refreshNodes] [-refreshSuper" +
               "UserGroupsConfiguration] [-refreshUserToGroupsMappings] " +
-              "[-refreshAdminAcls] [-refreshServiceAcl] [-getGroup" +
-              " [username]] [-help [cmd]]"));
+              "[-refreshAdminAcls] [-showLabels] [-refreshLabels] " + 
+              "[-refreshServiceAcl] [-getGroup [username]] [-help [cmd]]"));
       assertTrue(dataOut
           .toString()
           .contains(
@@ -331,8 +331,8 @@ public class TestRMAdminCLI {
           .contains(
               "yarn rmadmin [-refreshQueues] [-refreshNodes] [-refreshSuper" +
               "UserGroupsConfiguration] [-refreshUserToGroupsMappings] " +
-              "[-refreshAdminAcls] [-refreshServiceAcl] [-getGroup" +
-              " [username]] [-help [cmd]] [-transitionToActive <serviceId>]" +
+              "[-refreshAdminAcls] [-showLabels] [-refreshLabels] [-refreshServiceAcl]" +
+              " [-getGroup [username]] [-help [cmd]] [-transitionToActive <serviceId>]" +
               " [-transitionToStandby <serviceId>] [-failover [--forcefence]" +
               " [--forceactive] <serviceId> <serviceId>] " +
               "[-getServiceState <serviceId>] [-checkHealth <serviceId>]"));
