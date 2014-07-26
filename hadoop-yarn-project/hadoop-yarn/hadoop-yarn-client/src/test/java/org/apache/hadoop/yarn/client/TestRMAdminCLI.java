@@ -253,8 +253,8 @@ public class TestRMAdminCLI {
           .contains(
               "yarn rmadmin [-refreshQueues] [-refreshNodes] [-refreshSuper" +
               "UserGroupsConfiguration] [-refreshUserToGroupsMappings] " +
-              "[-refreshAdminAcls] [-refreshServiceAcl] [-getGroup" +
-              " [username]] [-help [cmd]]"));
+              "[-refreshAdminAcls] [-showLabels] [-refreshLabels] " + 
+              "[-refreshServiceAcl] [-getGroup [username]] [-help [cmd]]"));
       assertTrue(dataOut
           .toString()
           .contains(
@@ -332,7 +332,7 @@ public class TestRMAdminCLI {
           .contains(
               "yarn rmadmin [-refreshQueues] [-refreshNodes] [-refreshSuper" +
               "UserGroupsConfiguration] [-refreshUserToGroupsMappings] " +
-              "[-refreshAdminAcls] [-refreshServiceAcl] [-getGroup" +
+              "[-refreshAdminAcls] [-showLabels] [-refreshLabels] [-refreshServiceAcl] [-getGroup" +
               " [username]] [-help [cmd]] [-transitionToActive <serviceId>" + 
               " [--forceactive]] [-transitionToStandby <serviceId>] [-failover" +
               " [--forcefence] [--forceactive] <serviceId> <serviceId>] " +
