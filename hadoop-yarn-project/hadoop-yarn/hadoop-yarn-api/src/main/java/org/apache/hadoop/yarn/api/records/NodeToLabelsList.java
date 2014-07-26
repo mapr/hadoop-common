@@ -25,6 +25,13 @@ import org.apache.hadoop.classification.InterfaceAudience.Public;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.yarn.util.Records;
 
+/**
+ * <p><code>NodeToLabelsList</code> contains a regular expression that matches
+ * a node or set of nodes and a list of labels associated with them.
+ * </p>
+ */
+@Public
+@Unstable
 public abstract class NodeToLabelsList {
   @Private
   @Unstable
