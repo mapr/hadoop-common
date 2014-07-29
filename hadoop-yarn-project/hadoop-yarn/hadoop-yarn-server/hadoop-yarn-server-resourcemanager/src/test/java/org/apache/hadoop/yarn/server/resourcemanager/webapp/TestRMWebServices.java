@@ -557,7 +557,7 @@ public class TestRMWebServices extends JerseyTest {
     JSONObject info = json.getJSONObject("scheduler");
     assertEquals("incorrect number of elements", 1, info.length());
     info = info.getJSONObject("schedulerInfo");
-    assertEquals("incorrect number of elements", 11, info.length());
+    assertEquals("incorrect number of elements", 13, info.length());
 
     verifyClusterSchedulerFifoGeneric(info.getString("type"),
         info.getString("qstate"), (float) info.getDouble("capacity"),
