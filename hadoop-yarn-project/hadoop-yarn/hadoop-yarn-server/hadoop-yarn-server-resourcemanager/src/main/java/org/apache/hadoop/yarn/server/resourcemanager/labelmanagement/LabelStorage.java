@@ -54,9 +54,9 @@ public final class LabelStorage {
 
   private static final Log LOG = LogFactory.getLog(LabelStorage.class);
   
-  public static Pattern regex = Pattern.compile("[^\\s,\"']+|\"([^\"]*)\"|'([^']*)'");
-  public static Pattern alpha_num = Pattern.compile("^[A-Za-z0-9_ ]+$");
-  public static Pattern keywords = Pattern.compile("^int$|^abs$|^pow$");
+  public static final Pattern regex = Pattern.compile("[^\\s,\"']+|\"([^\"]*)\"|'([^']*)'");
+  public static final Pattern alpha_num = Pattern.compile("^[A-Za-z0-9_ ]+$");
+  public static final Pattern keywords = Pattern.compile("^int$|^abs$|^pow$");
   
   private FileSystem fs;
 
@@ -113,9 +113,14 @@ public final class LabelStorage {
    */
   @Private
   void loadAndApplyLabels() throws IOException {
-    if (fs.exists(labelFile)) {
-      FSDataInputStream input = fs.open(labelFile);
-      BufferedReader sin = new BufferedReader(new InputStreamReader(input));
+    if (!fs.exists(labelFile)) {
+      LOG.error("LabelFile does not exist: " + labelFile + 
+          ". Existing labels configuration will not be updated");
+      return;
+    }
+    FSDataInputStream input = fs.open(labelFile);
+    BufferedReader sin = new BufferedReader(new InputStreamReader(input));
+    try {
       String str = null;
       Map<String,List<String>> nodeNotifierLabelsTmp = new HashMap<String,List<String>>();
       Map<String, BigDecimal> labelEvalFillersTmp = new HashMap<String, BigDecimal>();
@@ -183,6 +188,8 @@ public final class LabelStorage {
       labelEvalFillersTmp.clear();
       nodeNotifierLabelsTmp = null; // hint to GC it
       labelEvalFillersTmp = null;
+    } finally {
+      sin.close();
     }
   }
 
