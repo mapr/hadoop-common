@@ -41,6 +41,7 @@ import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.ipc.RPC.Server;
 import org.apache.hadoop.ipc.StandbyException;
+import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.Groups;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -90,6 +91,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManage
 import org.apache.hadoop.yarn.server.resourcemanager.rmnode.RMNode;
 import org.apache.hadoop.yarn.server.resourcemanager.rmnode.RMNodeResourceUpdateEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.security.authorize.RMPolicyProvider;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.protobuf.BlockingService;
 
@@ -135,14 +137,23 @@ public class AdminService extends CompositeService implements
 
     masterServiceBindAddress = conf.getSocketAddr(
         YarnConfiguration.RM_BIND_HOST,
-        YarnConfiguration.RM_ADMIN_ADDRESS,
-        YarnConfiguration.DEFAULT_RM_ADMIN_ADDRESS,
-        YarnConfiguration.DEFAULT_RM_ADMIN_PORT);
-    authorizer = YarnAuthorizationProvider.getInstance(conf);
-    authorizer.setAdmins(new AccessControlList(conf.get(
-      YarnConfiguration.YARN_ADMIN_ACL,
-        YarnConfiguration.DEFAULT_YARN_ADMIN_ACL)), UserGroupInformation
-        .getCurrentUser());
+       YarnConfiguration.RM_ADMIN_ADDRESS,
+       YarnConfiguration.DEFAULT_RM_ADMIN_ADDRESS,
+       YarnConfiguration.DEFAULT_RM_ADMIN_PORT);
+   
+   if ( conf.getBoolean(YarnConfiguration.RM_IS_ALL_IFACES, 
+       YarnConfiguration.DEFAULT_RM_IS_ALL_IFACES)) {
+     masterServiceAddress = NetUtils.createSocketAddr(
+         YarnConfiguration.ALL_IFACE_LISTEN_ADDRESS, 
+         masterServiceAddress.getPort(), 
+         YarnConfiguration.RM_ADMIN_ADDRESS);
+   }
+    
+   authorizer = YarnAuthorizationProvider.getInstance(conf);
+   authorizer.setAdmins(new AccessControlList(conf.get(
+     YarnConfiguration.YARN_ADMIN_ACL,
+       YarnConfiguration.DEFAULT_YARN_ADMIN_ACL)), UserGroupInformation
+         .getCurrentUser());
     rmId = conf.get(YarnConfiguration.RM_HA_ID);
     super.serviceInit(conf);
   }

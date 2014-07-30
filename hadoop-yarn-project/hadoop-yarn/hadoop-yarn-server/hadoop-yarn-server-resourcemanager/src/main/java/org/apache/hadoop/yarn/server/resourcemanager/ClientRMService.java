@@ -41,6 +41,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.ipc.Server;
+import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod;
 import org.apache.hadoop.security.authorize.PolicyProvider;
@@ -259,11 +260,19 @@ public class ClientRMService extends AbstractService implements
   }
 
   InetSocketAddress getBindAddress(Configuration conf) {
-    return conf.getSocketAddr(
+  InetSocketAddress configuredAddr = conf.getSocketAddr(
             YarnConfiguration.RM_BIND_HOST,
             YarnConfiguration.RM_ADDRESS,
             YarnConfiguration.DEFAULT_RM_ADDRESS,
             YarnConfiguration.DEFAULT_RM_PORT);
+    if ( conf.getBoolean(YarnConfiguration.RM_IS_ALL_IFACES, 
+        YarnConfiguration.DEFAULT_RM_IS_ALL_IFACES)) {
+      configuredAddr = NetUtils.createSocketAddr(
+          YarnConfiguration.ALL_IFACE_LISTEN_ADDRESS, 
+          configuredAddr.getPort(), 
+          YarnConfiguration.RM_ADMIN_ADDRESS);
+    } 
+    return configuredAddr;
   }
 
   @Private
