@@ -26,6 +26,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.ipc.Server;
+import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.net.Node;
 import org.apache.hadoop.security.authorize.PolicyProvider;
 import org.apache.hadoop.service.AbstractService;
@@ -120,11 +121,20 @@ public class ResourceTrackerService extends AbstractService implements
 
   @Override
   protected void serviceInit(Configuration conf) throws Exception {
-    resourceTrackerAddress = conf.getSocketAddr(
-        YarnConfiguration.RM_RESOURCE_TRACKER_ADDRESS,
-        YarnConfiguration.DEFAULT_RM_RESOURCE_TRACKER_ADDRESS,
-        YarnConfiguration.DEFAULT_RM_RESOURCE_TRACKER_PORT);
 
+    resourceTrackerAddress = conf.getSocketAddr(
+       YarnConfiguration.RM_RESOURCE_TRACKER_ADDRESS,
+       YarnConfiguration.DEFAULT_RM_RESOURCE_TRACKER_ADDRESS,
+       YarnConfiguration.DEFAULT_RM_RESOURCE_TRACKER_PORT);
+
+    if ( conf.getBoolean(YarnConfiguration.RM_IS_ALL_IFACES, 
+        YarnConfiguration.DEFAULT_RM_IS_ALL_IFACES)) {
+      resourceTrackerAddress = NetUtils.createSocketAddr(
+        YarnConfiguration.ALL_IFACE_LISTEN_ADDRESS, 
+        resourceTrackerAddress.getPort(), 
+        YarnConfiguration.RM_RESOURCE_TRACKER_ADDRESS);
+    }
+    
     RackResolver.init(conf);
     nextHeartBeatInterval =
         conf.getLong(YarnConfiguration.RM_NM_HEARTBEAT_INTERVAL_MS,

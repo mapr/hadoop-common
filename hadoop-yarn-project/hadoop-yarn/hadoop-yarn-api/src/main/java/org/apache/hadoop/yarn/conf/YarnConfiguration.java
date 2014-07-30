@@ -123,6 +123,10 @@ public class YarnConfiguration extends Configuration {
 
   public static final String RM_HOSTNAME = RM_PREFIX + "hostname";
 
+  public static final String ALL_IFACE_LISTEN_ADDRESS = "0.0.0.0";
+  public static final String RM_IS_ALL_IFACES = RM_PREFIX + "all-ifaces";
+  public static final boolean DEFAULT_RM_IS_ALL_IFACES = true;
+  
   /** The address of the applications manager interface in the RM.*/
   public static final String RM_ADDRESS = 
     RM_PREFIX + "address";

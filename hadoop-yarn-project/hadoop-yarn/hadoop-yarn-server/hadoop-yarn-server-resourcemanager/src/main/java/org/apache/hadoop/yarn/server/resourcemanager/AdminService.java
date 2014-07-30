@@ -41,6 +41,7 @@ import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.ipc.RPC.Server;
 import org.apache.hadoop.ipc.StandbyException;
+import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.Groups;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -80,6 +81,7 @@ import org.apache.hadoop.yarn.server.api.protocolrecords.UpdateNodeResourceRespo
 import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManager;
 import org.apache.hadoop.yarn.server.resourcemanager.rmnode.RMNode;
 import org.apache.hadoop.yarn.server.resourcemanager.security.authorize.RMPolicyProvider;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.protobuf.BlockingService;
 
@@ -121,9 +123,18 @@ public class AdminService extends CompositeService implements
     }
 
     masterServiceAddress = conf.getSocketAddr(
-        YarnConfiguration.RM_ADMIN_ADDRESS,
-        YarnConfiguration.DEFAULT_RM_ADMIN_ADDRESS,
-        YarnConfiguration.DEFAULT_RM_ADMIN_PORT);
+       YarnConfiguration.RM_ADMIN_ADDRESS,
+       YarnConfiguration.DEFAULT_RM_ADMIN_ADDRESS,
+       YarnConfiguration.DEFAULT_RM_ADMIN_PORT);
+   
+   if ( conf.getBoolean(YarnConfiguration.RM_IS_ALL_IFACES, 
+       YarnConfiguration.DEFAULT_RM_IS_ALL_IFACES)) {
+     masterServiceAddress = NetUtils.createSocketAddr(
+         YarnConfiguration.ALL_IFACE_LISTEN_ADDRESS, 
+         masterServiceAddress.getPort(), 
+         YarnConfiguration.RM_ADMIN_ADDRESS);
+   }
+    
     adminAcl = new AccessControlList(conf.get(
         YarnConfiguration.YARN_ADMIN_ACL,
         YarnConfiguration.DEFAULT_YARN_ADMIN_ACL));
