@@ -33,6 +33,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManage
 import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManager;
 import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManager.LabelApplicabilityStatus;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue.QueueLabelPolicy;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -109,6 +110,9 @@ public class TestLabelManager {
     fsout.writeBytes("node-2*      Slow");
     fsout.writeBytes("\n");
     fsout.close();
+    // make sure file is updated
+    Thread.sleep(6000l);
+
   }
 
   @After
@@ -361,8 +365,8 @@ public class TestLabelManager {
     assertEquals(2, labels.size());
     assertTrue(labels.contains("Slow"));
     assertTrue(labels.contains("Fast"));
-
   }
+  
   
   @Test
   public void testBadLabels() throws Exception {
@@ -385,4 +389,82 @@ public class TestLabelManager {
       // show go here
     }
    }
+  
+  //@Test - Use only when testing performance
+  public void testPerformance() throws Exception {
+    
+    fs.delete(new Path("/tmp/labelFile"), false);
+    
+    FSDataOutputStream fsout = fs.create(new Path("/tmp/labelFile"));
+    for ( int i = 0; i < 1000; i++ ) {
+      String node = "node-2."+i+".lab";
+      if ( i % 3  == 0 ) {
+        fsout.writeBytes(node + "      Slow");
+      } else if ( i % 5 == 0 ) {
+        fsout.writeBytes(node + "      good");
+      } else if ( i % 7 == 0 ) {
+        fsout.writeBytes(node + "      Fast");
+      } else {
+        fsout.writeBytes(node + "      Slow, good, small");
+      }
+      fsout.writeBytes("\n");
+    }
+    fsout.close();
+
+    // make sure file refreshed
+    Thread.sleep(6*1000l);
+
+    LabelManager lb = LabelManager.getInstance();
+    
+    Expression finalExp = 
+        lb.constructAppLabel(QueueLabelPolicy.OR, 
+            new Expression("Slow || Fast"), new Expression("Slow"));
+    
+    Expression appExp = new Expression("Slow || Fast");
+    Expression qExp = new Expression("Slow");
+    int i = 0;
+    long startTime = System.currentTimeMillis();
+    while (i < 1000000) {
+      String resourceName = "node-2."+i%1000+".lab";
+      i++;
+  /*    finalExp = 
+          lb.constructAppLabel(QueueLabelPolicy.OR, 
+              appExp, qExp);
+    */  lb.isNodeApplicableForApp(resourceName, finalExp);
+    }
+    long endTime = System.currentTimeMillis();
+    
+    System.out.println("Time taken: " + (endTime - startTime) + " ms");
+
+    i = 0;
+    startTime = System.currentTimeMillis();
+    while (i < 1000000) {
+      String resourceName = "node-2."+i%1000+".lab";
+      i++;
+/*      finalExp = 
+          lb.constructAppLabel(QueueLabelPolicy.OR, 
+              appExp, qExp);
+*/
+      lb.isNodeApplicableForApp(resourceName, finalExp);
+    }
+    endTime = System.currentTimeMillis();
+    
+    System.out.println("Time taken2: " + (endTime - startTime) + " ms");
+
+    i = 0;
+    startTime = System.currentTimeMillis();
+    while (i < 3000000) {
+      String resourceName = "/defaultrack";
+      i++;
+/*      finalExp = 
+          lb.constructAppLabel(QueueLabelPolicy.OR, 
+              appExp, qExp);
+*/
+      lb.isNodeApplicableForApp(resourceName, finalExp);
+    }
+    endTime = System.currentTimeMillis();
+    
+    System.out.println("Time taken3: " + (endTime - startTime) + " ms");
+
+  }
 }
