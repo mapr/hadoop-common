@@ -36,6 +36,7 @@ import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.ipc.Server;
+import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.SaslRpcServer;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.PolicyProvider;
@@ -130,7 +131,15 @@ public class ApplicationMasterService extends AbstractService implements
         YarnConfiguration.RM_SCHEDULER_ADDRESS,
         YarnConfiguration.DEFAULT_RM_SCHEDULER_ADDRESS,
         YarnConfiguration.DEFAULT_RM_SCHEDULER_PORT);
-
+    
+    if ( conf.getBoolean(YarnConfiguration.RM_IS_ALL_IFACES, 
+        YarnConfiguration.DEFAULT_RM_IS_ALL_IFACES)) {
+      masterServiceAddress = NetUtils.createSocketAddr(
+        YarnConfiguration.ALL_IFACE_LISTEN_ADDRESS, 
+        masterServiceAddress.getPort(), 
+        YarnConfiguration.RM_SCHEDULER_ADDRESS);
+    }
+    
     Configuration serverConf = conf;
     // If the auth is not-simple, enforce it to be token-based.
     serverConf = new Configuration(conf);
