@@ -18,9 +18,7 @@
 
 package org.apache.hadoop.security;
 
-import java.io.ByteArrayInputStream;
 import java.io.DataInput;
-import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.security.Security;
@@ -34,13 +32,16 @@ import javax.security.sasl.Sasl;
 import javax.security.sasl.SaslException;
 import javax.security.sasl.SaslServer;
 import javax.security.sasl.SaslServerFactory;
-import org.apache.commons.codec.binary.Base64;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.ipc.Server.Connection;
+import org.apache.hadoop.security.rpcauth.DigestAuthMethod;
+import org.apache.hadoop.security.rpcauth.KerberosAuthMethod;
 import org.apache.hadoop.security.rpcauth.RpcAuthMethod;
 import org.apache.hadoop.security.rpcauth.RpcAuthRegistry;
 import org.apache.hadoop.security.token.SecretManager;
@@ -110,23 +111,27 @@ public class SaslRpcServer {
   public static void init(Configuration conf) {
     Security.addProvider(new SaslPlainServer.SecurityProvider());
   }
+  
+  static String encodeIdentifier(byte[] identifier) {
+    return DigestAuthMethod.encodeIdentifier(identifier);
+  }
 
   static byte[] decodeIdentifier(String identifier) {
-    return Base64.decodeBase64(identifier.getBytes());
+    return DigestAuthMethod.decodeIdentifier(identifier);
   }
 
   public static <T extends TokenIdentifier> T getIdentifier(String id,
       SecretManager<T> secretManager) throws InvalidToken {
-    byte[] tokenId = decodeIdentifier(id);
-    T tokenIdentifier = secretManager.createIdentifier();
-    try {
-      tokenIdentifier.readFields(new DataInputStream(new ByteArrayInputStream(
-          tokenId)));
-    } catch (IOException e) {
-      throw (InvalidToken) new InvalidToken(
-          "Can't de-serialize tokenIdentifier").initCause(e);
-    }
-    return tokenIdentifier;
+    return DigestAuthMethod.getIdentifier(id, secretManager);
+  }
+
+  static char[] encodePassword(byte[] password) {
+    return DigestAuthMethod.encodePassword(password);
+  }
+
+  /** Splitting fully qualified Kerberos name into parts */
+  public static String[] splitKerberosName(String fullName) {
+    return KerberosAuthMethod.splitKerberosName(fullName);
   }
 
   /** Authentication method */
@@ -172,6 +177,23 @@ public class SaslRpcServer {
       out.write(code);
     }
   };
+
+  /** CallbackHandler for SASL DIGEST-MD5 mechanism */
+  @InterfaceStability.Evolving
+  public static class SaslDigestCallbackHandler
+      extends org.apache.hadoop.security.rpcauth.DigestAuthMethod.SaslDigestCallbackHandler {
+    public SaslDigestCallbackHandler(
+        SecretManager<TokenIdentifier> secretManager,
+        Server.Connection connection) {
+      super(secretManager, connection);
+    }
+  }
+
+  /** CallbackHandler for SASL GSSAPI Kerberos mechanism */
+  @InterfaceStability.Evolving
+  public static class SaslGssCallbackHandler
+      extends org.apache.hadoop.security.rpcauth.KerberosAuthMethod.SaslGssCallbackHandler {
+  }
 
   // TODO: Consider using this inside RpcAuthMethod implementations.
   // Sasl.createSaslServer is 100-200X slower than caching the factories!
