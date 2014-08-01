@@ -599,6 +599,9 @@ public class MRAppMaster extends CompositeService {
         @Override
         public void run() {
           shutDownJob();
+          // Force shutdown in case there are misbehaving foreground threads
+          // that cause the JVM to not shutdown gracefully.
+          System.exit(0);
         }
       }.start();
     }
