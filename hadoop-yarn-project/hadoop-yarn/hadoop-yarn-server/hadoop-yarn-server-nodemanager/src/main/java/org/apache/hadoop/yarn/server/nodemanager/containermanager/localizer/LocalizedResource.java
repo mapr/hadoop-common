@@ -82,7 +82,7 @@ public class LocalizedResource implements EventHandler<ResourceEvent> {
 
     // From DOWNLOADING (ref > 0, may be localizing)
     .addTransition(ResourceState.DOWNLOADING, ResourceState.DOWNLOADING,
-        ResourceEventType.REQUEST, new FetchResourceTransition()) // TODO: Duplicate addition!!
+        ResourceEventType.REQUEST, new DuplicateFetchResourceTransition())
     .addTransition(ResourceState.DOWNLOADING, ResourceState.LOCALIZED,
         ResourceEventType.LOCALIZED, new FetchSuccessTransition())
     .addTransition(ResourceState.DOWNLOADING,ResourceState.DOWNLOADING,
@@ -227,9 +227,31 @@ public class LocalizedResource implements EventHandler<ResourceEvent> {
       LocalizerContext ctxt = req.getContext();
       ContainerId container = ctxt.getContainerId();
       rsrc.ref.add(container);
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("Fetch resource transition for : " + rsrc.getRequest()
+            + ". Event: " + event);
+      }
       rsrc.dispatcher.getEventHandler().handle(
           new LocalizerResourceRequestEvent(rsrc, req.getVisibility(), ctxt, 
               req.getLocalResourceRequest().getPattern()));
+    }
+  }
+
+  /**
+   * Same as FetchResourceTransition, but does not generate a new localizer
+   * event to avoid localizing the resource multiple times.
+   */
+  private static class DuplicateFetchResourceTransition extends ResourceTransition {
+    @Override
+    public void transition(LocalizedResource rsrc, ResourceEvent event) {
+      ResourceRequestEvent req = (ResourceRequestEvent) event;
+      LocalizerContext ctxt = req.getContext();
+      ContainerId container = ctxt.getContainerId();
+      rsrc.ref.add(container);
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("Duplicate fetch resource transition for : " + rsrc.getRequest()
+            + ". Event: " + event);
+      }
     }
   }
 
