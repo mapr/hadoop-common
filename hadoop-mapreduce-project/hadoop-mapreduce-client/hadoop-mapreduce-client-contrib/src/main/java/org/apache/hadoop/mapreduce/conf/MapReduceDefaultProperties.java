@@ -69,10 +69,10 @@ public class MapReduceDefaultProperties extends Properties {
   }
 
   static { // Reduce side performance tuning defaults
-    props.put(MRJobConfig.REDUCE_MEMORY_MB, "2048");
+    props.put(MRJobConfig.REDUCE_MEMORY_MB, "3072");
     props.put(MRJobConfig.REDUCE_CPU_VCORES, "1");
     props.put(MRJobConfig.REDUCE_DISK, "1.33");
-    props.put(MRJobConfig.REDUCE_JAVA_OPTS, "-Xmx1500m");
+    props.put(MRJobConfig.REDUCE_JAVA_OPTS, "-Xmx2560m");
     props.put(MRJobConfig.COMPLETED_MAPS_FOR_REDUCE_SLOWSTART, "0.95");
     props.put(MRJobConfig.SHUFFLE_PARALLEL_COPIES, "12");
   }
