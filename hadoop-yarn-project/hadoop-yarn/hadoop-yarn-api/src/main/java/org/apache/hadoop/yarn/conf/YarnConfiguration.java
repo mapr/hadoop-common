@@ -910,7 +910,7 @@ public class YarnConfiguration extends Configuration {
   public static final String NM_AUX_SERVICE_FMT =
     NM_PREFIX + "aux-services.%s.class";
 
-  public static final String RM_AUX_SERVICE_FMT =
+  public static final String AUX_SERVICE_FMT =
     RM_PREFIX + "aux-services.%s.class";
 
   public static final String NM_USER_HOME_DIR =
@@ -1115,6 +1115,12 @@ public class YarnConfiguration extends Configuration {
   @Private
   public static final String APPLICATION_HISTORY_PREFIX =
       TIMELINE_SERVICE_PREFIX + "generic-application-history.";
+
+  /**
+   * Auxiliary services to start as part of Application history server.
+   */
+  public static final String APPLICATION_HISTORY_AUX_SERVICES =
+    APPLICATION_HISTORY_PREFIX + "aux-services";
 
   /**
    *  The setting that controls whether application history service is

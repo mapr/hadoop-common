@@ -30,8 +30,8 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
  */
 @Public
 @Evolving
-public abstract class RMAuxiliaryService extends AbstractService {
-  protected RMAuxiliaryService(String name) {
+public abstract class ConfigurableAuxiliaryService extends AbstractService {
+  protected ConfigurableAuxiliaryService(String name) {
     super(name);
   }
 }

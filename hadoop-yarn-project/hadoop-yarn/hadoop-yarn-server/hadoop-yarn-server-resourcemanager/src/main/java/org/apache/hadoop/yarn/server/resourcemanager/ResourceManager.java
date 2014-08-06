@@ -59,11 +59,11 @@ import org.apache.hadoop.yarn.event.AsyncDispatcher;
 import org.apache.hadoop.yarn.event.Dispatcher;
 import org.apache.hadoop.yarn.event.EventHandler;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
+import org.apache.hadoop.yarn.server.api.ConfigurableAuxServices;
 import org.apache.hadoop.yarn.server.resourcemanager.ahs.RMApplicationHistoryWriter;
 import org.apache.hadoop.yarn.server.resourcemanager.amlauncher.AMLauncherEventType;
 import org.apache.hadoop.yarn.server.resourcemanager.amlauncher.ApplicationMasterLauncher;
 import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManagementService;
-import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManager;
 import org.apache.hadoop.yarn.server.resourcemanager.monitor.SchedulingEditPolicy;
 import org.apache.hadoop.yarn.server.resourcemanager.monitor.SchedulingMonitor;
 import org.apache.hadoop.yarn.server.resourcemanager.recovery.NullRMStateStore;
@@ -165,14 +165,10 @@ public class ResourceManager extends CompositeService implements Recoverable {
 
   private UserGroupInformation rmLoginUGI;
 
-  private final RMAuxServices auxiliaryServices;
+  private ConfigurableAuxServices auxiliaryServices;
   
   public ResourceManager() {
     super("ResourceManager");
-
-    // Setup configurable services
-    auxiliaryServices = new RMAuxServices();
-    addService(auxiliaryServices);
   }
 
   public RMContext getRMContext() {
@@ -222,6 +218,13 @@ public class ResourceManager extends CompositeService implements Recoverable {
     }
 
     validateConfigs(this.conf);
+
+    // Setup configurable services
+    auxiliaryServices = new ConfigurableAuxServices("RMAuxServices",
+        YarnConfiguration.RM_AUX_SERVICES);
+
+    // Add this service first
+    addService(auxiliaryServices);
 
     // register the handlers for all AlwaysOn services using setupDispatcher().
     rmDispatcher = setupDispatcher();
