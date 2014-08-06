@@ -15,7 +15,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.apache.hadoop.yarn.server.resourcemanager;
+package org.apache.hadoop.yarn.server.api;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -31,57 +31,65 @@ import org.apache.hadoop.service.Service;
 import org.apache.hadoop.service.ServiceStateChangeListener;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
-import org.apache.hadoop.yarn.server.api.RMAuxiliaryService;
 
 import com.google.common.base.Preconditions;
 
 /**
- * Manages a set of @link{RMAuxiliaryService} instances by starting and
- * stopping them.
+ * Manages a set of @link{ConfigurableAuxiliaryService} instances by starting
+ * and stopping them. It takes a parameter <code>auxServicesPropName</code> and
+ * uses it to determine the auxiliary service classes to instantiate.
  *
- * Note: The code has been taken from @link{AuxServices}. This could be
- * refactored into base, derived class where the derived class provides the
- * property names such as aux services, format, etc.
+ * Since this is meant to be an extensibility feature, the calling code should
+ * add this instance as the first one to its service list. This will ensure
+ * that the externally plugged in services are initialized first as they may
+ * be setting up critical resources on top of which rest of the stack should
+ * be built. For e.g., an external service might try to create volumes on top
+ * of which directories need to be created.
+ *
+ * Note: The code has been taken from @link{AuxServices}.
  */
-public class RMAuxServices extends AbstractService
+public class ConfigurableAuxServices extends AbstractService
   implements ServiceStateChangeListener {
 
-  private static final Log LOG = LogFactory.getLog(RMAuxServices.class);
+  private static final Log LOG = LogFactory.getLog(ConfigurableAuxServices.class);
 
-  private final Map<String, RMAuxiliaryService> serviceMap;
+  private final Map<String, ConfigurableAuxiliaryService> serviceMap;
 
   private final Pattern p = Pattern.compile("^[A-Za-z_]+[A-Za-z0-9_]*$");
 
-  public RMAuxServices() {
-    super(RMAuxServices.class.getName());
+  private final String auxServicesPropName;
+
+  public ConfigurableAuxServices(String name, String auxServicesPropName) {
+    super(name);
+
+    this.auxServicesPropName = auxServicesPropName;
 
     serviceMap =
-      Collections.synchronizedMap(new HashMap<String, RMAuxiliaryService>());
+      Collections.synchronizedMap(new HashMap<String, ConfigurableAuxiliaryService>());
   }
 
   @Override
   public void serviceInit(Configuration conf) throws Exception {
-    Collection<String> auxNames = conf.getStringCollection(
-        YarnConfiguration.RM_AUX_SERVICES);
+    Collection<String> auxNames = conf.getStringCollection(auxServicesPropName);
     for (final String sName : auxNames) {
       try {
         Preconditions
             .checkArgument(
                 validateAuxServiceName(sName),
                 "The ServiceName: " + sName + " set in " +
-                YarnConfiguration.RM_AUX_SERVICES + " is invalid." +
+                auxServicesPropName + " is invalid." +
                 "The valid service name should only contain a-zA-Z0-9_ " +
                 "and can not start with numbers");
 
-        Class<? extends RMAuxiliaryService> sClass = conf.getClass(
-              String.format(YarnConfiguration.RM_AUX_SERVICE_FMT, sName), null,
-              RMAuxiliaryService.class);
+        Class<? extends ConfigurableAuxiliaryService> sClass = conf.getClass(
+              String.format(YarnConfiguration.AUX_SERVICE_FMT, sName), null,
+              ConfigurableAuxiliaryService.class);
 
         if (null == sClass) {
           throw new RuntimeException("No class defined for " + sName);
         }
 
-        RMAuxiliaryService s = ReflectionUtils.newInstance(sClass, conf);
+        ConfigurableAuxiliaryService s = ReflectionUtils.newInstance(sClass, conf);
         addService(sName, s);
         s.init(conf);
       } catch (RuntimeException e) {
@@ -94,8 +102,8 @@ public class RMAuxServices extends AbstractService
 
   @Override
   public void serviceStart() throws Exception {
-    for (Map.Entry<String, RMAuxiliaryService> entry : serviceMap.entrySet()) {
-      RMAuxiliaryService service = entry.getValue();
+    for (Map.Entry<String, ConfigurableAuxiliaryService> entry : serviceMap.entrySet()) {
+      ConfigurableAuxiliaryService service = entry.getValue();
       service.start();
     }
     super.serviceStart();
@@ -126,10 +134,10 @@ public class RMAuxServices extends AbstractService
   }
 
   private final synchronized void addService(String name,
-      RMAuxiliaryService service) {
+      ConfigurableAuxiliaryService service) {
 
     if (LOG.isInfoEnabled()) {
-      LOG.info("Adding RM auxiliary service " +
+      LOG.info("Adding auxiliary service " +
           service.getName() + ", \"" + name + "\"");
     }
 
