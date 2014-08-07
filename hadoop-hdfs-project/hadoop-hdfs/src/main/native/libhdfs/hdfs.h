@@ -692,6 +692,17 @@ extern  "C" {
      * The following APIs are specific to MapR-Fs and are available ONLY 
      * when linked with libMapRClient, and NOT with libhdfs
      */
+    /** 
+     * hdfsPwrite - Write data into an open file at a given position
+     * @param fs The configured filesystem handle.
+     * @param file The file handle.
+     * @param position The position at which to write data
+     * @param buffer The data.
+     * @param length The no. of bytes to write. 
+     * @return Returns the number of bytes written, -1 on error.
+     */
+    tSize hdfsPwrite(hdfsFS fs, hdfsFile file, tOffset position, 
+                     const void* buffer, tSize length);
 
     /**
      * hdfsSetRpcTimeout
