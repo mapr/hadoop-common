@@ -213,26 +213,31 @@ public class WebHdfsFileSystem extends FileSystem
   // the first getAuthParams() for a non-token op will either get the
   // internal token from the ugi or lazy fetch one
   protected synchronized Token<?> getDelegationToken() throws IOException {
-    if (canRefreshDelegationToken && delegationToken == null) {
-      Token<?> token = tokenSelector.selectToken(
-          new Text(getCanonicalServiceName()), ugi.getTokens());
-      // ugi tokens are usually indicative of a task which can't
-      // refetch tokens.  even if ugi has credentials, don't attempt
-      // to get another token to match hdfs/rpc behavior
-      if (token != null) {
-        LOG.debug("Using UGI token: " + token);
-        canRefreshDelegationToken = false; 
-      } else {
-        token = getDelegationToken(null);
+    try {
+      if (canRefreshDelegationToken && delegationToken == null) {
+         Token<?> token = tokenSelector.selectToken(
+            new Text(getCanonicalServiceName()), ugi.getTokens());
+        // ugi tokens are usually indicative of a task which can't
+        // refetch tokens.  even if ugi has credentials, don't attempt
+        // to get another token to match hdfs/rpc behavior
         if (token != null) {
-          LOG.debug("Fetched new token: " + token);
-        } else { // security is disabled
-          canRefreshDelegationToken = false;
+          LOG.debug("Using UGI token: " + token);
+          canRefreshDelegationToken = false; 
+        } else {
+          token = getDelegationToken(null);
+          if (token != null) {
+            LOG.debug("Fetched new token: " + token);
+          } else { // security is disabled
+            canRefreshDelegationToken = false;
+          }
         }
+        setDelegationToken(token);
       }
-      setDelegationToken(token);
+      return delegationToken;
+    } catch (IOException e) {
+      LOG.warn(e.getMessage());
+      LOG.debug(e.getMessage(), e);
     }
-    return delegationToken;
   }
 
   @VisibleForTesting
@@ -1258,18 +1263,25 @@ public class WebHdfsFileSystem extends FileSystem
   @Override
   public Token<DelegationTokenIdentifier> getDelegationToken(
       final String renewer) throws IOException {
-    final HttpOpParam.Op op = GetOpParam.Op.GETDELEGATIONTOKEN;
-    Token<DelegationTokenIdentifier> token =
-        new FsPathResponseRunner<Token<DelegationTokenIdentifier>>(
-            op, null, new RenewerParam(renewer)) {
-      @Override
-      Token<DelegationTokenIdentifier> decodeResponse(Map<?,?> json)
-          throws IOException {
-        return JsonUtil.toDelegationToken(json);
-      }
-    }.run();
-    token.setService(tokenServiceName);
-    return token;
+    try {
+      final HttpOpParam.Op op = GetOpParam.Op.GETDELEGATIONTOKEN;
+      Token<DelegationTokenIdentifier> token =
+          new FsPathResponseRunner<Token<DelegationTokenIdentifier>>(
+              op, null, new RenewerParam(renewer)) {
+        @Override
+        Token<DelegationTokenIdentifier> decodeResponse(Map<?,?> json)
+            throws IOException {
+          return JsonUtil.toDelegationToken(json);
+        }
+      }.run();
+      token.setService(tokenServiceName);
+      return token;
+    } catch (IOException e) {
+      LOG.warn(e.getMessage());
+      LOG.debug(e.getMessage(), e);
+    }
+
+    return null;
   }
 
   @Override
