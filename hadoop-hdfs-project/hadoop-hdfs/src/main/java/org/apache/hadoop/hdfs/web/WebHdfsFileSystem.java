@@ -232,8 +232,15 @@ public class WebHdfsFileSystem extends FileSystem
   }
 
   protected synchronized Token<?> getDelegationToken() throws IOException {
-    tokenAspect.ensureTokenInitialized();
-    return delegationToken;
+    try {
+      tokenAspect.ensureTokenInitialized();
+      return delegationToken;
+    } catch (IOException e) {
+      LOG.warn(e.getMessage());
+      LOG.debug(e.getMessage(), e);
+    }
+
+    return null;
   }
 
   @Override
@@ -996,11 +1003,18 @@ public class WebHdfsFileSystem extends FileSystem
   @Override
   public Token<DelegationTokenIdentifier> getDelegationToken(
       final String renewer) throws IOException {
-    final HttpOpParam.Op op = GetOpParam.Op.GETDELEGATIONTOKEN;
-    final Map<?, ?> m = run(op, null, new RenewerParam(renewer));
-    final Token<DelegationTokenIdentifier> token = JsonUtil.toDelegationToken(m);
-    token.setService(tokenServiceName);
-    return token;
+    try {
+      final HttpOpParam.Op op = GetOpParam.Op.GETDELEGATIONTOKEN;
+      final Map<?, ?> m = run(op, null, new RenewerParam(renewer));
+      final Token<DelegationTokenIdentifier> token = JsonUtil.toDelegationToken(m);
+      token.setService(tokenServiceName);
+      return token;
+    } catch (IOException e) {
+      LOG.warn(e.getMessage());
+      LOG.debug(e.getMessage(), e);
+    }
+
+    return null;
   }
 
   @Override
