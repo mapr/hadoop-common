@@ -687,15 +687,22 @@ static int open_file_as_nm(const char* filename) {
 
 /**
  * Copy a file from a fd to a given filename.
- * The new file must not exist and it is created with permissions perm.
+ * If truncate is not set, then the new file must not exist and it is created
+ * with permissions perm. If truncate is set, then existing file will be
+ * truncated.
  * The input stream is closed.
  * Return 0 if everything is ok.
  */
-static int copy_file(int input, const char* in_filename, 
-		     const char* out_filename, mode_t perm) {
+static int copy_file_with_truncate(int input, const char* in_filename, 
+		     const char* out_filename, mode_t perm, int truncate) {
   const int buffer_size = 128*1024;
   char buffer[buffer_size];
-  int out_fd = open(out_filename, O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW, perm);
+  int out_fd = -1;
+  if (truncate) {
+    out_fd = open(out_filename, O_WRONLY|O_CREAT|O_TRUNC|O_NOFOLLOW, perm);
+  } else {
+    out_fd = open(out_filename, O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW, perm);
+  }
   if (out_fd == -1) {
     fprintf(LOGFILE, "Can't open %s for output - %s\n", out_filename, 
             strerror(errno));
@@ -729,6 +736,18 @@ static int copy_file(int input, const char* in_filename,
   }
   close(input);
   return 0;
+}
+
+/**
+ * Copy a file from a fd to a given filename.
+ * The new file must not exist and it is created with permissions perm.
+ * The input stream is closed.
+ * Return 0 if everything is ok.
+ */
+static int copy_file(int input, const char* in_filename, 
+		     const char* out_filename, mode_t perm) {
+
+  return copy_file_with_truncate(input, in_filename, out_filename, perm, 0);
 }
 
 /**
@@ -1348,8 +1367,9 @@ int setup_external_token(int ext_cred_fd, const char *ext_cred_file,
   }
 
   // 600
-  if (copy_file(ext_cred_fd, ext_cred_file, ext_cred_file_dest,
-        S_IRUSR | S_IWUSR) != 0) {
+  // Truncate credential file is it exists. This can happen during RM HA.
+  if (copy_file_with_truncate(ext_cred_fd, ext_cred_file, ext_cred_file_dest,
+        S_IRUSR | S_IWUSR, 1) != 0) {
     fprintf(LOGFILE, "failed to copy external credential file to destination\n");
     goto cleanup;
   }
