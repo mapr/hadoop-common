@@ -144,8 +144,8 @@ class NodesPage extends RmView {
               td(String.valueOf(info.getAvailableVirtualCores())).
             td(String.valueOf(usedCpu)).
             td(String.valueOf(availableCpu)).
-            td(String.valueOf(usedDisk)).
-            td(String.valueOf(availableDisk)).
+            td(StringUtils.format("%.2f", usedDisk)).
+            td(StringUtils.format("%.2f", availableDisk)).
             td(ni.getNodeManagerVersion()).
             _();
       }
