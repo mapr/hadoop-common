@@ -73,7 +73,8 @@ class NodesPage extends RmView {
               .th(".healthReport", "Health-report")
               .th(".containers", "Containers").th(".mem", "Mem Used")
               .th(".mem", "Mem Avail").th(".vcores", "VCores Used")
-              .th(".vcores", "VCores Avail")
+              .th(".vcores", "VCores Avail").th(".disk", "Disk Used")
+              .th(".disk", "Disk Avail")
               .th(".nodeManagerVersion", "Version")._()._().tbody();
       NodeState stateFilter = null;
       if (type != null && !type.isEmpty()) {
@@ -121,6 +122,11 @@ class NodesPage extends RmView {
         NodeInfo info = new NodeInfo(ni, sched);
         int usedMemory = (int) info.getUsedMemory();
         int availableMemory = (int) info.getAvailableMemory();
+        int usedCpu = (int)info.getUsedCpu();
+        int availableCpu = (int)info.getAvailableCpu();
+        double usedDisk = info.getUsedDisk();
+        double availableDisk = info.getAvailableDisk();
+
         TR<TBODY<TABLE<Hamlet>>> row =
             tbody.tr().td(StringUtils.join(",", info.getNodeLabels()))
                 .td(info.getRack()).td(info.getState()).td(info.getNodeId());
@@ -140,6 +146,10 @@ class NodesPage extends RmView {
             ._(StringUtils.byteDesc(availableMemory * BYTES_IN_MB))._()
             .td(String.valueOf(info.getUsedVirtualCores()))
             .td(String.valueOf(info.getAvailableVirtualCores()))
+            .td(String.valueOf(usedCpu))
+            .td(String.valueOf(availableCpu))
+            .td(String.valueOf(usedDisk))
+            .td(String.valueOf(availableDisk))
             .td(ni.getNodeManagerVersion())._();
       }
       tbody._()._();
