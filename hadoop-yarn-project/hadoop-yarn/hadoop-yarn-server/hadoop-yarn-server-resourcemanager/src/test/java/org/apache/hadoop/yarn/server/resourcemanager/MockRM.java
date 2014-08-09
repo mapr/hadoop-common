@@ -309,6 +309,7 @@ public class MockRM extends ResourceManager {
         .newRecord(ContainerLaunchContext.class);
     final Resource capability = Records.newRecord(Resource.class);
     capability.setMemory(masterMemory);
+    capability.setVirtualCores(1);
     sub.setResource(capability);
     clc.setApplicationACLs(acls);
     if (ts != null && UserGroupInformation.isSecurityEnabled()) {
