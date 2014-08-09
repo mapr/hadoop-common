@@ -43,6 +43,10 @@ public class NodeInfo {
   protected int numContainers;
   protected long usedMemoryMB;
   protected long availMemoryMB;
+  protected long usedCpu;
+  protected long availCpu;
+  protected double usedDisk;
+  protected double availDisk;
 
   public NodeInfo() {
   } // JAXB needs this
@@ -53,10 +57,19 @@ public class NodeInfo {
     this.numContainers = 0;
     this.usedMemoryMB = 0;
     this.availMemoryMB = 0;
+    this.usedCpu = 0;
+    this.availCpu = 0;
+    this.usedDisk = 0;
+    this.availDisk = 0;
+
     if (report != null) {
       this.numContainers = report.getNumContainers();
       this.usedMemoryMB = report.getUsedResource().getMemory();
       this.availMemoryMB = report.getAvailableResource().getMemory();
+      this.usedCpu = report.getUsedResource().getVirtualCores();
+      this.availCpu = report.getAvailableResource().getVirtualCores();
+      this.usedDisk = report.getUsedResource().getDisks();
+      this.availDisk = report.getAvailableResource().getDisks();
     }
     this.id = id.toString();
     this.rack = ni.getRackName();
@@ -112,4 +125,19 @@ public class NodeInfo {
     return this.availMemoryMB;
   }
 
+  public long getUsedCpu() {
+    return this.usedCpu;
+  }
+
+  public long getAvailableCpu() {
+    return this.availCpu;
+  }
+
+  public double getUsedDisk() {
+    return this.usedDisk;
+  }
+
+  public double getAvailableDisk() {
+    return this.availDisk;
+  }
 }
