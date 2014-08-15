@@ -325,7 +325,7 @@ public class AuthenticationFilter implements Filter {
     }
     return provider;
   }
-
+ 
   /**
    * Returns the configuration properties of the {@link AuthenticationFilter}
    * without the prefix. The returned properties are the same that the
