@@ -158,7 +158,7 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
     if (LOG.isDebugEnabled())
       LOG.debug("DistCpMapper::map(): Received " + sourcePath + ", " + relPath);
     Path target = new Path(targetWorkPath.makeQualified(targetFS.getUri(),
-                          targetFS.getWorkingDirectory()) + relPath.toString());
+                          targetFS.getWorkingDirectory()), relPath.toString());
 
     EnumSet<DistCpOptions.FileAttribute> fileAttributes
             = getFileAttributeSettings(context);
