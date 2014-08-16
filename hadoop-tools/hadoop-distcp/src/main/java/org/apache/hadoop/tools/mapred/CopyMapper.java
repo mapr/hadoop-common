@@ -180,7 +180,7 @@ public class CopyMapper extends Mapper<Text, FileStatus, Text, Text> {
       LOG.debug("DistCpMapper::map(): Received " + sourcePath + ", " + relPath);
 
     Path target = new Path(targetWorkPath.makeQualified(targetFS.getUri(),
-                          targetFS.getWorkingDirectory()) + relPath.toString());
+                          targetFS.getWorkingDirectory()), relPath.toString());
 
     EnumSet<DistCpOptions.FileAttribute> fileAttributes
             = getFileAttributeSettings(context);
