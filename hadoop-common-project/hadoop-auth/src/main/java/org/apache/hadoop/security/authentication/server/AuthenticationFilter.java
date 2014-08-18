@@ -200,7 +200,10 @@ public class AuthenticationFilter implements Filter {
       } catch (InstantiationException e) {
       } catch (IllegalAccessException e) {
       }
-    } else {
+    }
+    
+    // Fall back to random signature secret
+    if (signatureSecret == null) {
       signatureSecret = Long.toString(RAN.nextLong());
       randomSecret = true;
       LOG.warn("'signature.secret' configuration not set, using a random value as secret");
