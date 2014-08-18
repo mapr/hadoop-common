@@ -280,7 +280,6 @@ public class AuthenticationFilter implements Filter {
         throw new ServletException(ex);
       }
     }
-
     signer = new Signer(secretProvider);
   }
 
