@@ -213,7 +213,7 @@ public class IFile {
       }
       // Close the underlying stream iff we own it...
       if (ownOutputStream) {
-        out.close();
+        rawOut.close();
       }
       else {
         // Write the checksum
