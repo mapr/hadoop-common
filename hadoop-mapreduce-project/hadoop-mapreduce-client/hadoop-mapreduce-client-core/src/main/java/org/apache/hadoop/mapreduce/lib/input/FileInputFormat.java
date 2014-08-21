@@ -292,7 +292,9 @@ public abstract class FileInputFormat<K, V> extends InputFormat<K, V> {
       if (matches == null) {
         errors.add(new IOException("Input path does not exist: " + p));
       } else if (matches.length == 0) {
-        errors.add(new IOException("Input Pattern " + p + " matches 0 files"));
+        errors.add(new IOException("Input Pattern " + p + " matches 0 files. "
+            + "Paths with components .*, _* were skipped. "
+            + " additional path filters were applied."));
       } else {
         for (FileStatus globStat: matches) {
           if (globStat.isDirectory()) {

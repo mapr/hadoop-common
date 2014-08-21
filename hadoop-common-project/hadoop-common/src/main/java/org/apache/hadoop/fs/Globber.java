@@ -139,6 +139,7 @@ class Globber {
     // in.
     String scheme = schemeFromPath(pathPattern);
     String authority = authorityFromPath(pathPattern);
+    boolean existsHasNoGlobs = false;
 
     // Next we strip off everything except the pathname itself, and expand all
     // globs.  Expansion is a process which turns "grouping" clauses,
@@ -265,6 +266,8 @@ class Globber {
         // end, once the full path is built up.
         if (filter.accept(status.getPath())) {
           results.add(status);
+        } else {
+          existsHasNoGlobs = true;
         }
       }
     }
@@ -278,7 +281,7 @@ class Globber {
      * we return null.
      */
     if ((!sawWildcard) && results.isEmpty() &&
-        (flattenedPatterns.size() <= 1)) {
+        (flattenedPatterns.size() <= 1) && !existsHasNoGlobs) {
       return null;
     }
     return results.toArray(new FileStatus[0]);
