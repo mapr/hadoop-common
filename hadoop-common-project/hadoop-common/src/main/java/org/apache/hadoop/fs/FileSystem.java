@@ -2650,9 +2650,9 @@ public abstract class FileSystem extends Configured implements Closeable {
     private static class StatisticsData {
       volatile long bytesRead;
       volatile long bytesWritten;
-      volatile int readOps;
-      volatile int largeReadOps;
-      volatile int writeOps;
+      volatile long readOps;
+      volatile long largeReadOps;
+      volatile long writeOps;
       /**
        * Stores a weak reference to the thread owning this StatisticsData.
        * This allows us to remove StatisticsData objects that pertain to
