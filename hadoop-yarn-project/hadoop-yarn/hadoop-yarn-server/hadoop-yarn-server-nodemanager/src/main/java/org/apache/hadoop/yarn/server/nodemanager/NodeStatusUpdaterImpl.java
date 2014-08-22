@@ -65,6 +65,7 @@ import org.apache.hadoop.yarn.server.nodemanager.containermanager.ContainerManag
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.container.Container;
 import org.apache.hadoop.yarn.server.nodemanager.metrics.NodeManagerMetrics;
 import org.apache.hadoop.yarn.util.YarnVersionInfo;
+import org.apache.hadoop.yarn.util.resource.ResourceCalculator;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -73,6 +74,19 @@ public class NodeStatusUpdaterImpl extends AbstractService implements
 
   public static final String YARN_NODEMANAGER_DURATION_TO_TRACK_STOPPED_CONTAINERS =
       YarnConfiguration.NM_PREFIX + "duration-to-track-stopped-containers";
+
+  /** The default for amount of memory a MR app master needs.*/
+  public static final int DEFAULT_MR_AM_VMEM_MB = 1536;
+  /** The default for number of virtual cores a MR app master needs.*/
+  public static final int DEFAULT_MR_AM_CPU_VCORES = 1;
+  /** The default for amount of memory a reducer needs.*/
+  public static final int DEFAULT_REDUCE_MEMORY_MB = 3072;
+  /** The default for number of virtual cores a reducer needs.*/
+  public static final int DEFAULT_REDUCE_CPU_VCORES = 1;
+  /** The default for number of disk a reducer needs.*/
+  public static final double DEFAULT_REDUCE_DISK = 1.33;
+  /** The default for minimum memory allocated by the scheduler.*/
+  public static final int DEFAULT_SCHEDULER_MINIMUM_ALLOCATION_MB = 1024;
 
   private static final Log LOG = LogFactory.getLog(NodeStatusUpdaterImpl.class);
 
@@ -147,6 +161,14 @@ public class NodeStatusUpdaterImpl extends AbstractService implements
             YarnConfiguration.NM_DISKS, YarnConfiguration.DEFAULT_NM_DISKS);
 
     this.totalResource = Resource.newInstance(memoryMb, virtualCores, disks);
+
+    // If either of cpu, mem, disk is non-zero, make sure there is enough resources to run one AM & reducer
+    // If cpu, mem, disk are all zero, user does not want NodeManager to run on this node. NodeManager
+    // will fail to register with ResourceManager and shut down.
+    if(totalResource.getVirtualCores() != 0 || totalResource.getMemory() != 0 || totalResource.getDisks() != 0L) {
+      updateResource(conf, totalResource);
+    }
+
     metrics.addResource(totalResource);
     this.tokenKeepAliveEnabled = isTokenKeepAliveEnabled(conf);
     this.tokenRemovalDelayMs =
@@ -580,6 +602,36 @@ public class NodeStatusUpdaterImpl extends AbstractService implements
         new Thread(statusUpdaterRunnable, "Node Status Updater");
     statusUpdater.start();
   }
-  
-  
+
+  private void updateResource(Configuration conf, Resource totalResource) {
+    int requiredMemory = conf.getInt("yarn.app.mapreduce.am.resource.mb",
+      DEFAULT_MR_AM_VMEM_MB);
+    requiredMemory += conf.getInt("mapreduce.reduce.memory.mb",
+      DEFAULT_REDUCE_MEMORY_MB );
+
+    // Round up memory
+    requiredMemory = ResourceCalculator.roundUp(requiredMemory, 
+      conf.getInt("yarn.scheduler.minimum-allocation-mb",
+        DEFAULT_SCHEDULER_MINIMUM_ALLOCATION_MB));
+
+    if (totalResource.getMemory() < requiredMemory) {
+      totalResource.setMemory(requiredMemory);
+    }
+
+    int requiredvCores = conf.getInt("yarn.app.mapreduce.am.resource.cpu-vcores",
+      DEFAULT_MR_AM_CPU_VCORES);
+    requiredvCores += conf.getInt("mapreduce.reduce.cpu.vcores",
+      DEFAULT_REDUCE_CPU_VCORES);
+
+    if (totalResource.getVirtualCores() < requiredvCores) {
+      totalResource.setVirtualCores(requiredvCores);
+    }
+
+    double requiredDisks = conf.getDouble("mapreduce.reduce.disk",
+      DEFAULT_REDUCE_DISK);
+
+    if (totalResource.getDisks() < requiredDisks) {
+      totalResource.setDisks(requiredDisks);
+    }
+  }
 }
