@@ -179,8 +179,14 @@ public class CopyMapper extends Mapper<Text, FileStatus, Text, Text> {
     if (LOG.isDebugEnabled())
       LOG.debug("DistCpMapper::map(): Received " + sourcePath + ", " + relPath);
 
-    Path target = new Path(targetWorkPath.makeQualified(targetFS.getUri(),
-                          targetFS.getWorkingDirectory()), relPath.toString());
+    Path qualifiedBaseTarget = targetWorkPath.makeQualified(targetFS.getUri(),
+        targetFS.getWorkingDirectory());
+    Path remainingPath = new Path(relPath.toString());
+    // Merge paths instead of concatenating to avoid misinterpreting the path
+    // as authority. E.g. case: path1 = maprfs:/ and path2 = /foo/bar.
+    // If we simply concatenate, then it will become maprfs://foo/bar and so
+    // foo will be wrongly treated as authority.
+    Path target = Path.mergePaths(qualifiedBaseTarget, remainingPath);
 
     EnumSet<DistCpOptions.FileAttribute> fileAttributes
             = getFileAttributeSettings(context);
