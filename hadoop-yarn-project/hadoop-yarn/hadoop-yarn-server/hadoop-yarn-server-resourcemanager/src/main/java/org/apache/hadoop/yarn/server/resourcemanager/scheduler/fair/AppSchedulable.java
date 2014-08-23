@@ -56,7 +56,11 @@ public class AppSchedulable extends Schedulable {
   private static final Log LOG = LogFactory.getLog(AppSchedulable.class);
   private FSLeafQueue queue;
   private RMContainerTokenSecretManager containerTokenSecretManager;
-
+  
+  public AppSchedulable(FairScheduler scheduler){
+	  this.scheduler = scheduler;
+  }
+  
   public AppSchedulable(FairScheduler scheduler, FSSchedulerApp app, FSLeafQueue queue) {
     this.scheduler = scheduler;
     this.app = app;

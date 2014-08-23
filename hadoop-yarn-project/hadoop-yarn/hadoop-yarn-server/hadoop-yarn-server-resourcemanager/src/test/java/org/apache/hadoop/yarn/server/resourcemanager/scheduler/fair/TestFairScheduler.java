@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -1181,8 +1182,10 @@ public class TestFairScheduler {
 
     // We should be able to claw back one container from A and B each.
     // Make sure it is lowest priority container.
+    HashMap<AppSchedulable, Resource> toPreempt = new HashMap<AppSchedulable, Resource>();
+    toPreempt.put(new AppSchedulable(scheduler), Resources.createResource(2 * 1024));
     scheduler.preemptResources(scheduler.getQueueManager().getLeafQueues(),
-        Resources.createResource(2 * 1024));
+    		toPreempt);
     assertEquals(1, scheduler.getSchedulerApp(app1).getLiveContainers().size());
     assertEquals(1, scheduler.getSchedulerApp(app2).getLiveContainers().size());
     assertEquals(1, scheduler.getSchedulerApp(app4).getLiveContainers().size());
@@ -1197,25 +1200,33 @@ public class TestFairScheduler {
     // Pretend 15 seconds have passed
     clock.tick(15);
 
+//    scheduler.preemptResources(scheduler.getQueueManager().getLeafQueues(),
+//            Resources.createResource(2 * 1024));
     // Trigger a kill by insisting we want containers back
+    toPreempt.clear();
+    toPreempt.put(new AppSchedulable(scheduler), Resources.createResource(2 * 1024));
     scheduler.preemptResources(scheduler.getQueueManager().getLeafQueues(),
-        Resources.createResource(2 * 1024));
+    		toPreempt);
 
     // At this point the containers should have been killed (since we are not simulating AM)
     assertEquals(0, scheduler.getSchedulerApp(app6).getLiveContainers().size());
     assertEquals(0, scheduler.getSchedulerApp(app3).getLiveContainers().size());
 
     // Trigger a kill by insisting we want containers back
+    toPreempt.clear();
+    toPreempt.put(new AppSchedulable(scheduler), Resources.createResource(2 * 1024));
     scheduler.preemptResources(scheduler.getQueueManager().getLeafQueues(),
-        Resources.createResource(2 * 1024));
+    		toPreempt);
 
     // Pretend 15 seconds have passed
     clock.tick(15);
 
     // We should be able to claw back another container from A and B each.
     // Make sure it is lowest priority container.
+    toPreempt.clear();
+    toPreempt.put(new AppSchedulable(scheduler), Resources.createResource(2 * 1024));
     scheduler.preemptResources(scheduler.getQueueManager().getLeafQueues(),
-        Resources.createResource(2 * 1024));
+        toPreempt);
     
     assertEquals(1, scheduler.getSchedulerApp(app1).getLiveContainers().size());
     assertEquals(0, scheduler.getSchedulerApp(app2).getLiveContainers().size());
@@ -1225,8 +1236,10 @@ public class TestFairScheduler {
     assertEquals(0, scheduler.getSchedulerApp(app6).getLiveContainers().size());
 
     // Now A and B are below fair share, so preemption shouldn't do anything
+    toPreempt.clear();
+    toPreempt.put(new AppSchedulable(scheduler), Resources.createResource(2 * 1024));
     scheduler.preemptResources(scheduler.getQueueManager().getLeafQueues(),
-        Resources.createResource(2 * 1024));
+        toPreempt);
     assertEquals(1, scheduler.getSchedulerApp(app1).getLiveContainers().size());
     assertEquals(0, scheduler.getSchedulerApp(app2).getLiveContainers().size());
     assertEquals(0, scheduler.getSchedulerApp(app3).getLiveContainers().size());
@@ -1345,25 +1358,33 @@ public class TestFairScheduler {
         scheduler.getQueueManager().getLeafQueue("queueD", true);
 
     assertTrue(Resources.equals(
-        Resources.none(), scheduler.resToPreempt(schedC, clock.getTime())));
+        Resources.none(), computeTotalResource(scheduler.resToPreempt(schedC, clock.getTime()))));
     assertTrue(Resources.equals(
-        Resources.none(), scheduler.resToPreempt(schedD, clock.getTime())));
+        Resources.none(), computeTotalResource(scheduler.resToPreempt(schedD, clock.getTime()))));
     // After minSharePreemptionTime has passed, they should want to preempt min
     // share.
     clock.tick(6);
     assertEquals(
-        1024, scheduler.resToPreempt(schedC, clock.getTime()).getMemory());
+        1024, computeTotalResource(scheduler.resToPreempt(schedC, clock.getTime())).getMemory());
     assertEquals(
-        1024, scheduler.resToPreempt(schedD, clock.getTime()).getMemory());
+        1024, computeTotalResource(scheduler.resToPreempt(schedD, clock.getTime())).getMemory());
 
     // After fairSharePreemptionTime has passed, they should want to preempt
     // fair share.
     scheduler.update();
     clock.tick(6);
     assertEquals(
-        1536 , scheduler.resToPreempt(schedC, clock.getTime()).getMemory());
+        1536 , computeTotalResource(scheduler.resToPreempt(schedC, clock.getTime())).getMemory());
     assertEquals(
-        1536, scheduler.resToPreempt(schedD, clock.getTime()).getMemory());
+        1536, computeTotalResource(scheduler.resToPreempt(schedD, clock.getTime())).getMemory());
+  }
+  
+  private Resource computeTotalResource(HashMap<AppSchedulable, Resource> resToPreempt){
+	  Resource totoalResource = Resources.createResource(0);
+	  for(Resource resource : resToPreempt.values()){
+		  totoalResource = Resources.add(totoalResource, resource);
+	  }
+	  return totoalResource;
   }
   
   @Test (timeout = 5000)
