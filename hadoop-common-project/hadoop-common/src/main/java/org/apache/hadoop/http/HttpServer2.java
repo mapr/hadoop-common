@@ -291,9 +291,7 @@ public final class HttpServer2 implements FilterContainer {
 
       HttpServer2 server = new HttpServer2(this);
 
-      // Not relying on securityEnabled flag because it is set to true just
-      // based on whether kerberos settings are present in Configuration.
-      if (UserGroupInformation.isSecurityEnabled()) {
+      if (this.securityEnabled) {
         server.addGlobalFilter("Authentication", HadoopCoreAuthenticationFilter.class.getName(), null);
       }
 
