@@ -273,10 +273,6 @@ public class HttpServer implements FilterContainer {
         
     addGlobalFilter("safety", QuotingInputFilter.class.getName(), null);
 
-    if (UserGroupInformation.isSecurityEnabled()) {
-      addGlobalFilter("Authentication", HadoopCoreAuthenticationFilter.class.getName(), null);
-    }
-
     final FilterInitializer[] initializers = getFilterInitializers(conf); 
     if (initializers != null) {
       conf = new Configuration(conf);
@@ -284,6 +280,10 @@ public class HttpServer implements FilterContainer {
       for(FilterInitializer c : initializers) {
         c.initFilter(this, conf);
       }
+    }
+
+    if (UserGroupInformation.isSecurityEnabled()) {
+      addGlobalFilter("Authentication", HadoopCoreAuthenticationFilter.class.getName(), null);
     }
 
     addDefaultServlets();

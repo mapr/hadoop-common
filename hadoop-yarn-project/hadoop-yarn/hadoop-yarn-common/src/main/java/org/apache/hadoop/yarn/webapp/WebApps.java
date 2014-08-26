@@ -89,6 +89,7 @@ public class WebApps {
     Configuration conf;
     Policy httpPolicy = null;
     boolean devMode = false;
+    private boolean securityEnabled = false;
     private String spnegoPrincipalKey;
     private String spnegoKeytabKey;
     private final HashSet<ServletStruct> servlets = new HashSet<ServletStruct>();
@@ -151,13 +152,22 @@ public class WebApps {
       return this;
     }
 
+    public Builder<T> setSecurityEnabled(boolean securityEnabled) {
+      this.securityEnabled = securityEnabled;
+      return this;
+    }
+
     public Builder<T> withHttpSpnegoPrincipalKey(String spnegoPrincipalKey) {
       this.spnegoPrincipalKey = spnegoPrincipalKey;
+      // Implicitly set securityEnabled field
+      setSecurityEnabled(UserGroupInformation.isSecurityEnabled());
       return this;
     }
     
     public Builder<T> withHttpSpnegoKeytabKey(String spnegoKeytabKey) {
       this.spnegoKeytabKey = spnegoKeytabKey;
+      // Implicitly set securityEnabled field
+      setSecurityEnabled(UserGroupInformation.isSecurityEnabled());
       return this;
     }
 
@@ -250,9 +260,10 @@ public class WebApps {
 
         if (hasSpnegoConf) {
           builder.setUsernameConfKey(spnegoPrincipalKey)
-              .setKeytabConfKey(spnegoKeytabKey)
-              .setSecurityEnabled(UserGroupInformation.isSecurityEnabled());
+              .setKeytabConfKey(spnegoKeytabKey);
         }
+
+        builder.setSecurityEnabled(securityEnabled);
 
         if (httpScheme.equals(WebAppUtils.HTTPS_PREFIX)) {
           WebAppUtils.loadSslConfiguration(builder);
