@@ -177,7 +177,7 @@ public class Resources {
   public static Resource multiplyTo(Resource lhs, double by) {
     lhs.setMemory((int)(lhs.getMemory() * by));
     lhs.setVirtualCores((int)(lhs.getVirtualCores() * by));
-    lhs.setDisks((int)(lhs.getDisks() * by));
+    lhs.setDisks(lhs.getDisks() * by);
     return lhs;
   }
 
