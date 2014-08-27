@@ -458,6 +458,10 @@ public class SchedulerApplicationAttempt {
     return this.appSchedulingInfo.isBlacklisted(resourceName);
   }
 
+  public boolean isBlacklisted(SchedulerNode node, Log myLog) {
+    return this.appSchedulingInfo.isBlacklisted(node, myLog);
+  }
+
   public synchronized void addSchedulingOpportunity(Priority priority) {
     schedulingOpportunities.setCount(priority,
         schedulingOpportunities.count(priority) + 1);

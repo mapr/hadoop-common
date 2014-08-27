@@ -105,7 +105,7 @@ public class LabelExpressionHandlingHelper {
       }
       Set<String> nodeLabels = LabelStorage.getInstance().getLabelsForNode(node);
       if ( nodeLabels == null || nodeLabels.isEmpty() ) {
-        return LabelApplicabilityStatus.NOT_APPLICABLE;
+        return LabelApplicabilityStatus.NODE_DOES_NOT_HAVE_LABEL;
       }
       Map<String, BigDecimal> labelEvalFillersTmp = 
           LabelStorage.getInstance().getFillers();

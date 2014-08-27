@@ -252,11 +252,36 @@ public class AppSchedulingInfo {
     return request.getCapability();
   }
 
+  public boolean isBlacklisted(SchedulerNode node, Log myLog) {
+    // at this point deal with labels only for nodes
+    // to comply with: "prohibited all that is not allowed"
+    // behavior
+    if (isBlacklisted(node.getNodeName()) ||
+        isBlackListedBasedOnLabels(node.getNodeName())) {
+      if (myLog.isDebugEnabled()) {
+        myLog.debug("Skipping 'host' " + node.getNodeName() +
+            " for " + applicationId +
+            " since it has been blacklisted");
+      }
+      return true;
+    }
+
+    if (isBlacklisted(node.getRackName())) {
+      if (myLog.isDebugEnabled()) {
+        myLog.debug("Skipping 'rack' " + node.getRackName() +
+            " for " + applicationId +
+            " since it has been blacklisted");
+      }
+      return true;
+    }
+    return false;
+  }
+  
   public synchronized boolean isBlacklisted(String resourceName) {
     if (blacklist.contains(resourceName)) {
       return true;
     }
-    return isBlackListedBasedOnLabels(resourceName);
+    return false;
   }
   
   private boolean isBlackListedBasedOnLabels(String resourceName) {
