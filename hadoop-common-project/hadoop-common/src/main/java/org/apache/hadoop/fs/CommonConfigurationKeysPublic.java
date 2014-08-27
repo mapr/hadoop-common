@@ -293,5 +293,12 @@ public class CommonConfigurationKeysPublic {
   /** Class to override Impersonation provider */
   public static final String  HADOOP_SECURITY_IMPERSONATION_PROVIDER_CLASS =
     "hadoop.security.impersonation.provider.class";
+
+  /**
+   * Authenticator class to use for LogLevel command.
+   * @see org.apache.hadoop.log.LogLevel
+   */
+  public static final String LOG_LEVEL_AUTHENTICATOR_CLASS =
+    "hadoop.log.level.authenticator.class";
 }
 
