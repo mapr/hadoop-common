@@ -28,6 +28,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.net.InetAddress;
 import java.util.Date;
 import java.util.Random;
 import java.util.StringTokenizer;
@@ -35,6 +36,8 @@ import java.util.StringTokenizer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.fs.FSDataInputStream.FadviseType;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.io.LongWritable;
@@ -42,14 +45,7 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.SequenceFile.CompressionType;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.compress.CompressionCodec;
-import org.apache.hadoop.mapred.FileInputFormat;
-import org.apache.hadoop.mapred.FileOutputFormat;
-import org.apache.hadoop.mapred.JobClient;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.Mapper;
-import org.apache.hadoop.mapred.OutputCollector;
-import org.apache.hadoop.mapred.Reporter;
-import org.apache.hadoop.mapred.SequenceFileInputFormat;
+import org.apache.hadoop.mapred.*;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.Tool;
@@ -230,7 +226,7 @@ public class TestDFSIO implements Tool {
     long execTime = System.currentTimeMillis() - tStart;
     bench.analyzeResult(fs, TestType.TEST_TYPE_WRITE, execTime);
   }
-
+/*
   @Test (timeout = 3000)
   public void testRead() throws Exception {
     FileSystem fs = cluster.getFileSystem();
@@ -239,7 +235,7 @@ public class TestDFSIO implements Tool {
     long execTime = System.currentTimeMillis() - tStart;
     bench.analyzeResult(fs, TestType.TEST_TYPE_READ, execTime);
   }
-
+*/
   @Test (timeout = 3000)
   public void testReadRandom() throws Exception {
     FileSystem fs = cluster.getFileSystem();
@@ -440,6 +436,7 @@ public class TestDFSIO implements Tool {
     job.setOutputKeyClass(Text.class);
     job.setOutputValueClass(Text.class);
     job.setNumReduceTasks(1);
+    job.setSpeculativeExecution(false);
     JobClient.runJob(job);
   }
 
@@ -526,10 +523,171 @@ public class TestDFSIO implements Tool {
     }
   }
 
-  private void readTest(FileSystem fs) throws IOException {
+  public static class DFSIOReadMapper extends Configured
+    implements Mapper<Text, LongWritable, Text, Text> {
+    protected byte[] buffer;
+    protected int bufferSize;
+    protected FileSystem fs;
+    protected String hostName;
+
+    public DFSIOReadMapper() {
+    }
+
+    public void configure(JobConf conf) {
+      setConf(conf);
+      try {
+        fs = FileSystem.get(conf);
+      } catch (Exception e) {
+        throw new RuntimeException("Cannot create file system.", e);
+      }
+      bufferSize = conf.getInt("test.io.file.buffer.size", 4096);
+      buffer = new byte[bufferSize];
+      try {
+        hostName = InetAddress.getLocalHost().getHostName();
+      } catch(Exception e) {
+        hostName = "localhost";
+      }
+    }
+
+    public void close() throws IOException {
+    }
+
+    void collectStats(OutputCollector<Text, Text> output,
+      String name, long execTime, Long objSize) throws IOException {
+      long totalSize = objSize.longValue();
+      float ioRateMbSec = (float)totalSize * 1000 / (execTime * MEGA);
+      LOG.info("Number of bytes processed = " + totalSize);
+      LOG.info("Exec time = " + execTime);
+      LOG.info("IO rate = " + ioRateMbSec);
+
+      output.collect(new Text(AccumulatingReducer.VALUE_TYPE_LONG + "tasks"),
+        new Text(String.valueOf(1)));
+      output.collect(new Text(AccumulatingReducer.VALUE_TYPE_LONG + "size"),
+        new Text(String.valueOf(totalSize)));
+      output.collect(new Text(AccumulatingReducer.VALUE_TYPE_LONG + "time"),
+        new Text(String.valueOf(execTime)));
+      output.collect(new Text(AccumulatingReducer.VALUE_TYPE_FLOAT + "rate"),
+        new Text(String.valueOf(ioRateMbSec*1000)));
+      output.collect(new Text(AccumulatingReducer.VALUE_TYPE_FLOAT + "sqrate"),
+        new Text(String.valueOf(ioRateMbSec*ioRateMbSec*1000)));
+    }
+
+    public void map(Text key, LongWritable value, OutputCollector<Text, Text> output,
+      Reporter reporter) throws IOException {
+      String name = key.toString();
+      long longValue = value.get();
+
+      reporter.setStatus("starting " + name + " host: " + hostName);
+
+      long tStart = System.currentTimeMillis();
+      Long statValue = doIO(reporter, name, longValue);
+      long tEnd = System.currentTimeMillis();
+      long execTime = tEnd - tStart;
+      collectStats(output, name, execTime, statValue);
+
+      reporter.setStatus("finished " + name + " host: " + hostName);
+    }
+
+  public Long doIO(Reporter reporter, String name, long totalSize // in bytes 
+    ) throws IOException {
+    // open file
+    FSDataInputStream in = fs.open(new Path(getDataDir(getConf()), name));
+    long actualSize = 0;
+    try {
+      while (actualSize < totalSize) {
+        int curSize = in.read(buffer, 0, bufferSize);
+        if (curSize < 0) break;
+        actualSize += curSize;
+        reporter.setStatus("reading " + name + "@" + 
+                           actualSize + "/" + totalSize 
+                           + " ::host = " + hostName);
+      }
+    } finally {
+      try {
+        in.adviseFile(FadviseType.FILE_DONTNEED, 0, totalSize);
+      } catch (IOException ioe) {
+        if (LOG.isInfoEnabled())
+          LOG.info("Error " + ioe + " in fadvise. Ignoring it.");
+      }
+      in.close();
+    }
+    return Long.valueOf(actualSize);
+  }
+}
+
+  public static class DFSIORecordReader implements RecordReader<Text, LongWritable> {
+    Text filename;
+    LongWritable size;
+    boolean eof = false;
+
+    public DFSIORecordReader(Text filename, LongWritable size) {
+      this.filename = filename;
+      this.size = size;
+      this.eof = false;
+    }
+
+    public LongWritable createValue() {
+      return new LongWritable();
+    }
+    public Text createKey() {
+      return new Text();
+    }
+
+    public synchronized boolean next(Text key, LongWritable value) {
+      if (eof) return false;
+      key.set(filename);
+      value.set(size.get());
+      eof = true;
+      return true;    
+    }
+
+    public float getProgress() {
+      if (eof) return 1.0f;
+      return 0.0f;
+    }
+
+    public  synchronized long getPos() throws IOException {
+      return 0;
+    }
+
+    public synchronized void close() throws IOException {
+    }
+  }
+
+  public static class DFSIOFileInputFormat extends FileInputFormat<Text, LongWritable> {
+
+    @Override
+    public RecordReader<Text, LongWritable>
+      getRecordReader(InputSplit split, JobConf job, Reporter reporter) {
+
+        FileSplit fileSplit = (FileSplit) split;
+        LOG.warn("Split Details: File = " + fileSplit.getPath().toString() +
+            ", Start Offset = " + fileSplit.getStart() +
+            ", Length = " + fileSplit.getLength());
+        return new DFSIORecordReader(new Text(fileSplit.getPath().toString()), 
+          new LongWritable(fileSplit.getLength()));
+      }
+  }
+
+  private void readTest(FileSystem fs, long fileSize) throws IOException {
     Path readDir = getReadDir(config);
     fs.delete(readDir, true);
-    runIOTest(ReadMapper.class, readDir);
+    //runIOTest(ReadMapper.class, readDir);
+    JobConf job = new JobConf(config, TestDFSIO.class);
+
+    FileInputFormat.setInputPaths(job, getDataDir(config));
+    job.setInputFormat(DFSIOFileInputFormat.class);
+
+    job.setMapperClass(DFSIOReadMapper.class);
+    job.setReducerClass(AccumulatingReducer.class);
+
+    FileOutputFormat.setOutputPath(job, readDir);
+    job.setOutputKeyClass(Text.class);
+    job.setOutputValueClass(Text.class);
+    job.setNumReduceTasks(1);
+    job.setSpeculativeExecution(false);
+    job.setLong("mapred.min.split.size", fileSize); //make each file a split
+    JobClient.runJob(job);
   }
 
   /**
@@ -755,7 +913,7 @@ public class TestDFSIO implements Tool {
       writeTest(fs);
       break;
     case TEST_TYPE_READ:
-      readTest(fs);
+      readTest(fs, nrBytes);
       break;
     case TEST_TYPE_APPEND:
       appendTest(fs);
