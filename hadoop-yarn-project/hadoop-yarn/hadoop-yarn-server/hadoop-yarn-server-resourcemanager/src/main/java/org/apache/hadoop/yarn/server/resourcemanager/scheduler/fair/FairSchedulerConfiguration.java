@@ -249,8 +249,9 @@ public class FairSchedulerConfiguration extends Configuration {
       throws AllocationConfigurationException {
     try {
       int memory = findResource(val, "mb");
-      int vcores = findResource(val, "vcores");//TODO Add disk
-      return BuilderUtils.newResource(memory, vcores);
+      int vcores = findResource(val, "vcores");
+      double disks = findResourceDouble(val, "disks");
+      return BuilderUtils.newResource(memory, vcores, disks);
     } catch (AllocationConfigurationException ex) {
       throw ex;
     } catch (Exception ex) {
@@ -267,5 +268,15 @@ public class FairSchedulerConfiguration extends Configuration {
       throw new AllocationConfigurationException("Missing resource: " + units);
     }
     return Integer.parseInt(matcher.group(1));
+  }
+
+  private static double findResourceDouble(String val, String units)
+    throws AllocationConfigurationException {
+    Pattern pattern = Pattern.compile("(\\d+(\\.\\d+)?) ?" + units);
+    Matcher matcher = pattern.matcher(val);
+    if (!matcher.find()) {
+      throw new AllocationConfigurationException("Missing resource: " + units);
+    }
+    return Double.parseDouble(matcher.group(1));
   }
 }
