@@ -391,9 +391,14 @@ public class BuilderUtils {
   }
 
   public static Resource newResource(int memory, int vCores) {
+    return newResource(memory, vCores, 0);
+  }
+
+  public static Resource newResource(int memory, int vCores, double disks) {
     Resource resource = recordFactory.newRecordInstance(Resource.class);
     resource.setMemory(memory);
     resource.setVirtualCores(vCores);
+    resource.setDisks(disks);
     return resource;
   }
 
