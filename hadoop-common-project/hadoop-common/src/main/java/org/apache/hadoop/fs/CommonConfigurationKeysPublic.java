@@ -288,5 +288,12 @@ public class CommonConfigurationKeysPublic {
   /** Class to override Sasl Properties for a connection */
   public static final String  HADOOP_SECURITY_SASL_PROPS_RESOLVER_CLASS =
     "hadoop.security.saslproperties.resolver.class";
+
+  /**
+   * Authenticator class to use for LogLevel command.
+   * @see org.apache.hadoop.log.LogLevel
+   */
+  public static final String LOG_LEVEL_AUTHENTICATOR_CLASS =
+    "hadoop.log.level.authenticator.class";
 }
 

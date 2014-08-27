@@ -28,7 +28,9 @@ import org.apache.commons.logging.*;
 import org.apache.commons.logging.impl.*;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.http.HttpServer2;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.ServletUtil;
 
 /**
@@ -44,12 +46,16 @@ public class LogLevel {
    * A command line implementation
    */
   public static void main(String[] args) {
+    String httpScheme = UserGroupInformation.isSecurityEnabled()
+      ? "https://"
+      : "http://";
+
     if (args.length == 3 && "-getlevel".equals(args[0])) {
-      process("http://" + args[1] + "/logLevel?log=" + args[2]);
+      process(httpScheme + args[1] + "/logLevel?log=" + args[2]);
       return;
     }
     else if (args.length == 4 && "-setlevel".equals(args[0])) {
-      process("http://" + args[1] + "/logLevel?log=" + args[2]
+      process(httpScheme + args[1] + "/logLevel?log=" + args[2]
               + "&level=" + args[3]);
       return;
     }
@@ -62,7 +68,11 @@ public class LogLevel {
     try {
       URL url = new URL(urlstring);
       System.out.println("Connecting to " + url);
-      URLConnection connection = url.openConnection();
+
+      URLConnection connection = UserGroupInformation.isSecurityEnabled()
+        ? SecureHTTPURLConnectionProvider.openConnection(url)
+        : url.openConnection();
+
       connection.connect();
 
       BufferedReader in = new BufferedReader(new InputStreamReader(
