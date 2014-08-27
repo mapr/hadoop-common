@@ -361,5 +361,12 @@ public class CommonConfigurationKeysPublic {
     "hadoop.security.random.device.file.path";
   public static final String HADOOP_SECURITY_SECURE_RANDOM_DEVICE_FILE_PATH_DEFAULT = 
     "/dev/urandom";
+
+  /**
+   * Authenticator class to use for LogLevel command.
+   * @see org.apache.hadoop.log.LogLevel
+   */
+  public static final String LOG_LEVEL_AUTHENTICATOR_CLASS =
+    "hadoop.log.level.authenticator.class";
 }
 
