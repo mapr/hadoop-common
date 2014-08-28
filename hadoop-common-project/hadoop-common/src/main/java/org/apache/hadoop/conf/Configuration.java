@@ -701,6 +701,17 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
   }
 
   /**
+   * Removes {@link Configuration} from {@link Configuration#REGISTRY}.
+   *
+   * @param conf {@link Configuration}
+   */
+  public static void removeFromRegistry(Configuration conf) {
+    synchronized (Configuration.class) {
+      REGISTRY.remove(conf);
+    }
+  }
+
+  /**
    * Add a configuration resource. 
    * 
    * The properties of this resource will override properties of previously 
