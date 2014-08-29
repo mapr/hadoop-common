@@ -470,7 +470,7 @@ abstract class CommandWithDestination extends FsCommand {
       try {
         if (lazyPersist) {
           EnumSet<CreateFlag> createFlags = EnumSet.of(CREATE, LAZY_PERSIST);
-          return create(item.path,
+          return fs.create(item.path,
                         FsPermission.getFileDefault().applyUMask(
                             FsPermission.getUMask(getConf())),
                         createFlags,
@@ -480,7 +480,7 @@ abstract class CommandWithDestination extends FsCommand {
                         null,
                         null);
         } else {
-          return create(item.path, true);
+          return fs.create(item.path, true);
         }
       } finally { // might have been created but stream was interrupted
         deleteOnExit(item.path);
