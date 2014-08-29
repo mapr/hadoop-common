@@ -396,7 +396,7 @@ abstract class CommandWithDestination extends FsCommand {
     // tag created files as temp files
     FSDataOutputStream create(PathData item) throws IOException {
       try {
-        return create(item.path, true);
+        return fs.create(item.path, true);
       } finally { // might have been created but stream was interrupted
         deleteOnExit(item.path);
       }
