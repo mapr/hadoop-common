@@ -269,6 +269,9 @@ public class CommonConfigurationKeysPublic {
   /** See <a href="{@docRoot}/../core-default.html">core-default.xml</a> */
   public static final String  HADOOP_SECURITY_AUTH_TO_LOCAL =
     "hadoop.security.auth_to_local";
+  /** See <a href="{@docRoot}/../core-default.html">core-default.xml</a> */
+  public static final String HADOOP_SECURITY_JAVA_SECURITY_JAR_PATH =
+      "hadoop.security.java.security.login.config.jar.path";
 
   @Deprecated
   /** Only used by HttpServer. */

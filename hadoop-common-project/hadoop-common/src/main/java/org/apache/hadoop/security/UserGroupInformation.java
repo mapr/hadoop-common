@@ -21,9 +21,11 @@ import static org.apache.hadoop.fs.CommonConfigurationKeys.HADOOP_USER_GROUP_MET
 import static org.apache.hadoop.util.PlatformName.IBM_JAVA;
 
 import com.sun.security.auth.login.ConfigFile;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.UndeclaredThrowableException;
+import java.net.URL;
 import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.security.Principal;
@@ -54,9 +56,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
-
 import org.apache.hadoop.classification.MapRModified;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.metrics2.annotation.Metric;
 import org.apache.hadoop.metrics2.annotation.Metrics;
@@ -230,21 +232,41 @@ public class UserGroupInformation {
     if (LOG.isDebugEnabled())
       LOG.debug("Login configuration entry is " + userJAASConfName);
 
-    if (System.getProperty(JAVA_SECURITY_AUTH_LOGIN_CONFIG) == null) {
-      String loginConfigPath = conf.get(JAVA_SECURITY_AUTH_LOGIN_CONFIG);
-      if (loginConfigPath != null) {
-        System.setProperty(JAVA_SECURITY_AUTH_LOGIN_CONFIG, loginConfigPath);
+    String loginConfPath = System.getProperty(JAVA_SECURITY_AUTH_LOGIN_CONFIG);
+    
+    if (loginConfPath == null) {
+      loginConfPath = conf.get(JAVA_SECURITY_AUTH_LOGIN_CONFIG);
+      if (loginConfPath != null ) {
+        System.setProperty(JAVA_SECURITY_AUTH_LOGIN_CONFIG, loginConfPath);
+        loginConfPath = System.getProperty(JAVA_SECURITY_AUTH_LOGIN_CONFIG);
         LOG.info("Java System property 'java.security.auth.login.config' not"
-            + " set, unilaterally setting to " + loginConfigPath);
-      } else {
+            + " set, unilaterally setting to " + loginConfPath);
+      }
+    }
+    // still can be null
+    if ( loginConfPath == null || !(new File(loginConfPath)).canRead() ) {
+      if ( LOG.isDebugEnabled()) {
+        LOG.debug(loginConfPath + " either null or can not be read. Trying to load " 
+        + "'java.security.auth.login.config' from jar");
+      }
+      String javaSecurityJarPath = 
+          conf.get(CommonConfigurationKeysPublic.HADOOP_SECURITY_JAVA_SECURITY_JAR_PATH);
+      URL javaSecurityURL = null;
+      if ( javaSecurityJarPath != null ) {
+        javaSecurityURL = UserGroupInformation.class.getResource(javaSecurityJarPath); 
+        if ( javaSecurityURL != null ) {
+          loginConfPath = javaSecurityURL.toExternalForm();
+          System.setProperty(JAVA_SECURITY_AUTH_LOGIN_CONFIG, loginConfPath);
+          if ( LOG.isDebugEnabled()) {
+            LOG.debug("Loading 'java.security.auth.login.config' from: " + loginConfPath);
+          }
+        } 
+      } 
+      if (javaSecurityJarPath == null || javaSecurityURL == null ) {
         LOG.warn("'java.security.auth.login.config' is not"
             + " configured either in Hadoop configuration or"
-            + " via Java property, may cause login failure");
-      }
-    } else {
-      String loginConfPath = System.getProperty(JAVA_SECURITY_AUTH_LOGIN_CONFIG);
-      ConfigFile loginConfig = new ConfigFile(new File(loginConfPath).toURI());
-      javax.security.auth.login.Configuration.setConfiguration(loginConfig);
+            + " via Java property or not loaded from jar, may cause login failure");
+      }  
     }
 
     if (overrideNameRules || !HadoopKerberosName.hasRulesBeenSet()) {
