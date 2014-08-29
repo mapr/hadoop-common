@@ -598,7 +598,7 @@ abstract class CommandWithDestination extends FsCommand {
 
         EnumSet<CreateFlag> createFlags =
             EnumSet.of(CREATE, LAZY_PERSIST, OVERWRITE);
-        return create(item.path,
+        return fs.create(item.path,
                       FsPermission.getFileDefault().applyUMask(
                           FsPermission.getUMask(getConf())),
                       createFlags,
