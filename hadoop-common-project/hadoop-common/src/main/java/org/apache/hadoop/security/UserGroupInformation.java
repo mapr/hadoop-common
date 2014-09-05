@@ -202,12 +202,12 @@ public class UserGroupInformation {
     // spoofing is only allowed when insecure
     if (authenticationMethod == null || authenticationMethod.equals(AuthenticationMethod.SIMPLE)) {
       checkSpoofing(conf);
+    } else {
+      // Initialize custom auth method.
+      // TODO This code really belongs to RpcAuthRegistry.
+      customAuthPrincipalClass = SecurityUtil.getCustomAuthPrincipal(conf);
+      customRpcAuthMethodClass = SecurityUtil.getCustomRpcAuthMethod(conf);
     }
-
-    // Initialize custom auth method.
-    // TODO This code really belongs to RpcAuthRegistry.
-    customAuthPrincipalClass = SecurityUtil.getCustomAuthPrincipal(conf);
-    customRpcAuthMethodClass = SecurityUtil.getCustomRpcAuthMethod(conf);
 
     String jaasConfName = null;
     if (authenticationMethod == AuthenticationMethod.SIMPLE) {
