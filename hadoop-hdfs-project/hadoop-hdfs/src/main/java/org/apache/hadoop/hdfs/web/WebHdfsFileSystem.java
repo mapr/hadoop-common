@@ -248,6 +248,8 @@ public class WebHdfsFileSystem extends FileSystem
       LOG.warn(e.getMessage());
       LOG.debug(e.getMessage(), e);
     }
+
+    return null;
   }
 
   @VisibleForTesting

@@ -122,8 +122,6 @@ class NodesPage extends RmView {
         NodeInfo info = new NodeInfo(ni, sched);
         int usedMemory = (int) info.getUsedMemory();
         int availableMemory = (int) info.getAvailableMemory();
-        int usedCpu = (int)info.getUsedCpu();
-        int availableCpu = (int)info.getAvailableCpu();
         double usedDisk = info.getUsedDisk();
         double availableDisk = info.getAvailableDisk();
 
@@ -146,8 +144,6 @@ class NodesPage extends RmView {
             ._(StringUtils.byteDesc(availableMemory * BYTES_IN_MB))._()
             .td(String.valueOf(info.getUsedVirtualCores()))
             .td(String.valueOf(info.getAvailableVirtualCores()))
-            .td(String.valueOf(usedCpu))
-            .td(String.valueOf(availableCpu))
             .td(StringUtils.format("%.2f", usedDisk))
             .td(StringUtils.format("%.2f", availableDisk))
             .td(ni.getNodeManagerVersion())._();

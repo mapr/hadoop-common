@@ -170,7 +170,7 @@ public final class KerberosAuthMethod extends RpcAuthMethod {
   public void reLogin() throws IOException {
     if (UserGroupInformation.isLoginKeytabBased()) {
       UserGroupInformation.getLoginUser().reloginFromKeytab();
-    } else {
+    } else if (UserGroupInformation.isLoginTicketBased()) {
       UserGroupInformation.getLoginUser().reloginFromTicketCache();
     }
   }
