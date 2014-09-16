@@ -719,7 +719,7 @@ public class MapRDistributedFileSystem extends DistributedFileSystem {
     public void metaSave(String pathname) throws IOException {
         throw new UnsupportedOperationException(UNSUPPORTED_MESSAGE);
     }
-
+/*
     @Override
     public boolean reportChecksumFailure(Path f, FSDataInputStream in, long inPos, FSDataInputStream sums, long sumsPos) {
         throw new UnsupportedOperationException(UNSUPPORTED_MESSAGE);
@@ -739,7 +739,7 @@ public class MapRDistributedFileSystem extends DistributedFileSystem {
     public void cancelDelegationToken(Token<DelegationTokenIdentifier> token) throws IOException {
         throw new UnsupportedOperationException(UNSUPPORTED_MESSAGE);
     }
-
+*/
     @Override
     public void setBalancerBandwidth(long bandwidth) throws IOException {
         throw new UnsupportedOperationException(UNSUPPORTED_MESSAGE);

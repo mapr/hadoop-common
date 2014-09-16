@@ -45,8 +45,6 @@ public class NodeInfo {
   protected long availMemoryMB;
   protected long usedVirtualCores;
   protected long availableVirtualCores;
-  protected long usedCpu;
-  protected long availCpu;
   protected double usedDisk;
   protected double availDisk;
 
@@ -59,8 +57,6 @@ public class NodeInfo {
     this.numContainers = 0;
     this.usedMemoryMB = 0;
     this.availMemoryMB = 0;
-    this.usedCpu = 0;
-    this.availCpu = 0;
     this.usedDisk = 0;
     this.availDisk = 0;
 
@@ -70,8 +66,6 @@ public class NodeInfo {
       this.availMemoryMB = report.getAvailableResource().getMemory();
       this.usedVirtualCores = report.getUsedResource().getVirtualCores();
       this.availableVirtualCores = report.getAvailableResource().getVirtualCores();
-      this.usedCpu = report.getUsedResource().getVirtualCores();
-      this.availCpu = report.getAvailableResource().getVirtualCores();
       this.usedDisk = report.getUsedResource().getDisks();
       this.availDisk = report.getAvailableResource().getDisks();
     }
@@ -135,14 +129,6 @@ public class NodeInfo {
 
   public long getAvailableVirtualCores() {
     return this.availableVirtualCores;
-  }
-
-  public long getUsedCpu() {
-    return this.usedCpu;
-  }
-
-  public long getAvailableCpu() {
-    return this.availCpu;
   }
 
   public double getUsedDisk() {
