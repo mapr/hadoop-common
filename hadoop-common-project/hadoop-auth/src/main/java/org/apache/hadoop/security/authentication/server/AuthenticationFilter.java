@@ -136,11 +136,6 @@ public class AuthenticationFilter implements Filter {
   public static final String CONFIG_PREFIX = "config.prefix";
 
   /**
-   * Default configuration prefix value to use if its not specified.
-   */
-  public static final String DEFAULT_CONFIG_PREFIX_VALUE = "hadoop.http.authentication.";
-
-  /**
    * Constant for the property that specifies the authentication handler to use.
    */
   public static final String AUTH_TYPE = "type";
@@ -212,8 +207,7 @@ public class AuthenticationFilter implements Filter {
   @Override
   public void init(FilterConfig filterConfig) throws ServletException {
     configPrefix = filterConfig.getInitParameter(CONFIG_PREFIX);
-    configPrefix = (configPrefix != null) ? configPrefix + "."
-                                          : DEFAULT_CONFIG_PREFIX_VALUE;
+    configPrefix = (configPrefix != null) ? configPrefix + "." : "";
 
     config = getConfiguration(configPrefix, filterConfig);
     String authHandlerName = config.getProperty(AUTH_TYPE, null);
