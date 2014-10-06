@@ -31,6 +31,7 @@ import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.http.HttpConfig;
 import org.apache.hadoop.net.NetUtils;
+import org.apache.hadoop.util.Shell;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.yarn.api.ApplicationConstants;
 
@@ -731,6 +732,25 @@ public class YarnConfiguration extends Configuration {
   public static final String RM_PROXY_USER_PRIVILEGES_ENABLED = RM_PREFIX
       + "proxy-user-privileges.enabled";
   public static boolean DEFAULT_RM_PROXY_USER_PRIVILEGES_ENABLED = false;
+
+  public static final String DFS_LOGGING_PREFIX = YARN_PREFIX + "dfs-logging.";
+  /**
+   * Whether to save logs directly in DFS instead of writing to local file
+   * system.
+   */
+  public static final String ENABLE_DFS_LOGGING = DFS_LOGGING_PREFIX + "enable";
+
+  /**
+   * Implementation class for handling DFS logging.
+   */
+  public static final String DFS_LOGGING_HANDLER_CLASS = DFS_LOGGING_PREFIX
+      + "handler-class";
+
+  /**
+   * A regex to match log directories.
+   */
+  public static final String DFS_LOGGING_DIR_GLOB = DFS_LOGGING_PREFIX
+      + "dir-glob";
 
   /** Whether to enable log aggregation */
   public static final String LOG_AGGREGATION_ENABLED = YARN_PREFIX
@@ -1761,6 +1781,14 @@ public class YarnConfiguration extends Configuration {
    */
   public static final String YARN_EXT_TOKEN_MANAGER = YARN_PREFIX
     + "external.token.manager";
+
+  /**
+   * Hadoop native lib environment variable.
+   */
+  public static final String HADOOP_NATIVE_LIB_ENV =
+    Shell.WINDOWS ?
+    "PATH=%PATH%;%HADOOP_COMMON_HOME%\\bin":
+    "LD_LIBRARY_PATH=$HADOOP_COMMON_HOME/lib/native";
 
   public YarnConfiguration() {
     super();

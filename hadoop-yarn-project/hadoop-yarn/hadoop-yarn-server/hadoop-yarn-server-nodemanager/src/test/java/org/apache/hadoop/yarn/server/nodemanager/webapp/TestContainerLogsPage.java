@@ -106,7 +106,7 @@ public class TestContainerLogsPage {
             appId, 1);
     container.setState(ContainerState.RUNNING);
     nmContext.getContainers().put(container1, container);   
-    List<File> files = null;
+    List<Path> files = null;
     files = ContainerLogsUtils.getContainerLogDirs(container1, user, nmContext);
     Assert.assertTrue(!(files.get(0).toString().contains("file:")));
     

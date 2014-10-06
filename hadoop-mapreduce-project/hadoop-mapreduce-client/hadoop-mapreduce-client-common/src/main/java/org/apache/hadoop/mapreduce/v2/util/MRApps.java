@@ -42,7 +42,6 @@ import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapred.InvalidJobConfException;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.Task;
 import org.apache.hadoop.mapred.TaskLog;
@@ -72,6 +71,8 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 import org.apache.hadoop.yarn.util.Apps;
 import org.apache.hadoop.yarn.util.ConverterUtils;
+import org.apache.hadoop.yarn.util.TaskLogUtil;
+import org.apache.log4j.RollingFileAppender;
 
 /**
  * Helper class for MR applications
@@ -677,9 +678,9 @@ public class MRApps extends Apps {
       // log should be rolled
       vargs.add("-D" + YarnConfiguration.YARN_APP_CONTAINER_LOG_BACKUPS + "="
           + numBackups);
-      vargs.add("-Dhadoop.root.logger=" + logLevel + ",CRLA");
+      vargs.add("-Dhadoop.root.logger=" + logLevel + "," + TaskLogUtil.getRollingAppender());
     } else {
-      vargs.add("-Dhadoop.root.logger=" + logLevel + ",CLA");
+      vargs.add("-Dhadoop.root.logger=" + logLevel + "," + TaskLogUtil.getAppender());
     }
     vargs.add("-Dhadoop.root.logfile=" + TaskLog.LogName.SYSLOG);
 

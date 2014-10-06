@@ -236,8 +236,8 @@ public class TestNMWebServer {
         throws IOException, YarnException {
     // ContainerLogDir should be created
     File containerLogDir =
-        ContainerLogsUtils.getContainerLogDirs(containerId,
-            dirsHandler).get(0);
+        new File(ContainerLogsUtils.getContainerLogDirs(containerId,
+            dirsHandler).get(0).toString());
     containerLogDir.mkdirs();
     for (String fileType : new String[] { "stdout", "stderr", "syslog" }) {
       Writer writer = new FileWriter(new File(containerLogDir, fileType));

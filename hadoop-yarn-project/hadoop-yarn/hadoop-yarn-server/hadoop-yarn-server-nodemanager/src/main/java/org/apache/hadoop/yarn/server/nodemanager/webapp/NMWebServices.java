@@ -17,9 +17,8 @@
 
 package org.apache.hadoop.yarn.server.nodemanager.webapp;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Map.Entry;
 
@@ -223,7 +222,7 @@ public class NMWebServices {
       return Response.status(Status.BAD_REQUEST).build();
     }
     
-    File logFile = null;
+    org.apache.hadoop.fs.Path logFile = null;
     try {
       logFile = ContainerLogsUtils.getContainerLogFile(
           containerId, filename, request.getRemoteUser(), nmContext);
@@ -234,7 +233,7 @@ public class NMWebServices {
     }
     
     try {
-      final FileInputStream fis = ContainerLogsUtils.openLogFileForRead(
+      final InputStream fis = ContainerLogsUtils.openLogFileForRead(
           containerIdStr, logFile, nmContext);
       
       StreamingOutput stream = new StreamingOutput() {
