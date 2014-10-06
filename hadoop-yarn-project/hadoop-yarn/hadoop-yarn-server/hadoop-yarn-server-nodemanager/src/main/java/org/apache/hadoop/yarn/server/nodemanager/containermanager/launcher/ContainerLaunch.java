@@ -40,9 +40,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileContext;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.LocalDirAllocator;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.util.Shell;
@@ -77,6 +79,7 @@ import org.apache.hadoop.yarn.server.nodemanager.util.ProcessIdFileReader;
 import org.apache.hadoop.yarn.util.Apps;
 import org.apache.hadoop.yarn.util.AuxiliaryServiceHelper;
 import org.apache.hadoop.yarn.util.ConverterUtils;
+import org.apache.hadoop.yarn.util.TaskLogUtil;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -107,6 +110,12 @@ public class ContainerLaunch implements Callable<Integer> {
   private Path pidFilePath = null;
 
   private final LocalDirsHandlerService dirsHandler;
+
+  /**
+   * Permission for application log directories and files.
+   */
+  private static final FsPermission APP_LOG_PERM =
+    FsPermission.createImmutable((short) 0700);
 
   public ContainerLaunch(Context context, Configuration configuration,
       Dispatcher dispatcher, ContainerExecutor exec, Application app,
@@ -184,8 +193,14 @@ public class ContainerLaunch implements Callable<Integer> {
       String appIdStr = app.getAppId().toString();
       String relativeContainerLogDir = ContainerLaunch
           .getRelativeContainerLogDir(appIdStr, containerIdStr);
-      Path containerLogDir =
-          dirsHandler.getLogPathForWrite(relativeContainerLogDir, false);
+      Path containerLogDir = null;
+      if (TaskLogUtil.isDfsLoggingEnabled()) {
+        containerLogDir = createLogDir(appIdStr, relativeContainerLogDir, user);
+      } else {
+        containerLogDir =
+            dirsHandler.getLogPathForWrite(relativeContainerLogDir, false);
+        // The log dir creation for local FS happens inside container-executor.c
+      }
       for (String str : command) {
         // TODO: Should we instead work via symlinks without this grammar?
         newCmds.add(expandEnvironment(str, containerLogDir));
@@ -266,6 +281,12 @@ public class ContainerLaunch implements Callable<Integer> {
             new Path(containerWorkDir, 
                 FINAL_CONTAINER_TOKENS_FILE).toUri().getPath());
 
+        // Add the native libraries to LD_LIBRARY_PATH. This is currently being
+        // done for map reduce containers, but not for MRAppMaster. Adding it
+        // here benefits all app masters.
+        Apps.setEnvFromInputString(environment,
+            YarnConfiguration.HADOOP_NATIVE_LIB_ENV,
+            File.pathSeparator);
 
         // Sanitize the container's environment
         sanitizeEnv(environment, containerWorkDir, appDirs, containerLogDirs,
@@ -799,6 +820,55 @@ public class ContainerLaunch implements Callable<Integer> {
         out.close();
       }
     }
+  }
+
+  /**
+   * Creates the log directories and files for the given container and sets the
+   * owner and permission. If the application directory does not exist, then it
+   * is created first.
+   *
+   * While setting the ownership, the group is not set. So it still points to the
+   * group of the user running NM. This is the behavior for log dir created in
+   * local file system.
+   *
+   * @return created container log dir path
+   */
+  private Path createLogDir(String appIdStr, String relativeContainerLogDir,
+      String user) throws IOException {
+
+    FileSystem fs = FileSystem.get(conf);
+    Path appLogDir = TaskLogUtil.getDFSLoggingHandler()
+      .getLogDirForWrite(appIdStr);
+
+    // Create the app log dir if not present. This will only happen for
+    // the app master container.
+    if (!fs.exists(appLogDir)) {
+      FileSystem.mkdirs(fs, appLogDir, APP_LOG_PERM);
+      fs.setOwner(appLogDir, user, null);
+    }
+
+    Path containerLogDir = TaskLogUtil.getDFSLoggingHandler()
+      .getLogDirForWrite(relativeContainerLogDir);
+    FileSystem.mkdirs(fs, containerLogDir, APP_LOG_PERM);
+    fs.setOwner(containerLogDir, user, null);
+
+    // Create the 3 log files
+    createEmptyLogFile(new Path(containerLogDir, ApplicationConstants.STDOUT),
+        user, fs);
+    createEmptyLogFile(new Path(containerLogDir, ApplicationConstants.STDERR),
+        user, fs);
+    createEmptyLogFile(new Path(containerLogDir, ApplicationConstants.SYSLOG),
+        user, fs);
+
+    return containerLogDir;
+  }
+
+  private void createEmptyLogFile(Path path, String user, FileSystem fs)
+    throws IOException {
+
+    fs.createNewFile(path);
+    fs.setOwner(path, user, null);
+    fs.setPermission(path, APP_LOG_PERM);
   }
 
 }

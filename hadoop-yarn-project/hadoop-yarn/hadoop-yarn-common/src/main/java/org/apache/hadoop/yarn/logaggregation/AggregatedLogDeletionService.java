@@ -28,10 +28,13 @@ import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
+import org.apache.hadoop.yarn.util.TaskLogUtil;
 
 /**
  * A service that periodically deletes aggregated logs.
@@ -45,17 +48,42 @@ public class AggregatedLogDeletionService extends AbstractService {
   
   static class LogDeletionTask extends TimerTask {
     private Configuration conf;
+    private FileSystem fs;
     private long retentionMillis;
     private String suffix = null;
     private Path remoteRootLogDir = null;
+    /**
+     * Log directories that are specified using a glob instead of
+     * specific directory like <code>remoteRoolLogDir</code>.
+     * This option is useful when logs for an application are written to
+     * different directory hierarchies.
+     */
+    private Path[] dfsLoggingDirs = null;
     
     public LogDeletionTask(Configuration conf, long retentionSecs) {
       this.conf = conf;
+      try {
+        this.fs = FileSystem.get(conf);
+      } catch (IOException e) {
+        throw new YarnRuntimeException(e);
+      }
       this.retentionMillis = retentionSecs * 1000;
       this.suffix = LogAggregationUtils.getRemoteNodeLogDirSuffix(conf);
       this.remoteRootLogDir =
         new Path(conf.get(YarnConfiguration.NM_REMOTE_APP_LOG_DIR,
             YarnConfiguration.DEFAULT_NM_REMOTE_APP_LOG_DIR));
+
+      // Use the glob setting to determine matching log directories
+      String logDirGlob = conf.get(YarnConfiguration.DFS_LOGGING_DIR_GLOB);
+      if (logDirGlob != null) {
+        try {
+        this.dfsLoggingDirs =  FileUtil.stat2Paths(
+            fs.globStatus(new Path(logDirGlob)));
+        } catch (IOException e) {
+          LOG.error("Unable to initialize DFS logging dirs using glob: "
+              + logDirGlob);
+        }
+      }
     }
     
     @Override
@@ -63,12 +91,16 @@ public class AggregatedLogDeletionService extends AbstractService {
       long cutoffMillis = System.currentTimeMillis() - retentionMillis;
       LOG.info("aggregated log deletion started.");
       try {
-        FileSystem fs = remoteRootLogDir.getFileSystem(conf);
-
         for(FileStatus userDir : fs.listStatus(remoteRootLogDir)) {
           if(userDir.isDirectory()) {
             Path userDirPath = new Path(userDir.getPath(), suffix);
             deleteOldLogDirsFrom(userDirPath, cutoffMillis, fs);
+          }
+        }
+
+        if (dfsLoggingDirs != null) {
+          for (Path dfsLoggingDir : dfsLoggingDirs) {
+            deleteOldLogDirsFrom(dfsLoggingDir, cutoffMillis, fs);
           }
         }
       } catch (IOException e) {
@@ -170,7 +202,9 @@ public class AggregatedLogDeletionService extends AbstractService {
   private void scheduleLogDeletionTask() {
     Configuration conf = getConfig();
     if (!conf.getBoolean(YarnConfiguration.LOG_AGGREGATION_ENABLED,
-        YarnConfiguration.DEFAULT_LOG_AGGREGATION_ENABLED)) {
+          YarnConfiguration.DEFAULT_LOG_AGGREGATION_ENABLED)
+        && !TaskLogUtil.isDfsLoggingEnabled()) {
+
       // Log aggregation is not enabled so don't bother
       return;
     }

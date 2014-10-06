@@ -97,6 +97,8 @@ public interface ApplicationConstants {
 
   public static final String STDOUT = "stdout";
 
+  public static final String SYSLOG = "syslog";
+
   /**
    * The environment variable for MAX_APP_ATTEMPTS. Set in AppMaster environment
    * only

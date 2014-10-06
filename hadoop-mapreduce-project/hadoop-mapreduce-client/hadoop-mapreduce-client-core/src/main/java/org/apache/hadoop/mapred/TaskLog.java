@@ -52,6 +52,8 @@ import org.apache.hadoop.util.Shell;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.ShutdownHookManager;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.apache.hadoop.yarn.util.DFSLoggingHandler;
+import org.apache.hadoop.yarn.util.TaskLogUtil;
 import org.apache.log4j.Appender;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -75,7 +77,7 @@ public class TaskLog {
   
   // localFS is set in (and used by) writeToIndexFile()
   static LocalFileSystem localFS = null;
-  
+
   public static String getMRv2LogDir() {
     return System.getProperty(YarnConfiguration.YARN_APP_CONTAINER_LOG_DIR);
   }
@@ -526,6 +528,7 @@ public class TaskLog {
     
     String stdout = FileUtil.makeShellPath(stdoutFilename);
     String stderr = FileUtil.makeShellPath(stderrFilename);    
+
     StringBuffer mergedCmd = new StringBuffer();
     
     // Export the pid of taskJvm to env variable JVM_PID.
@@ -538,7 +541,13 @@ public class TaskLog {
       mergedCmd.append(addCommand(setup, false));
       mergedCmd.append(";");
     }
-    if (tailLength > 0) {
+
+    DFSLoggingHandler dfsLoggingHandler = null;
+    if (TaskLogUtil.isDfsLoggingEnabled()) {
+      dfsLoggingHandler = TaskLogUtil.getDFSLoggingHandler();
+    }
+
+    if (tailLength > 0 || TaskLogUtil.isDfsLoggingEnabled()) {
       mergedCmd.append("(");
     } else if(ProcessTree.isSetsidAvailable && useSetsid &&
         !Shell.WINDOWS) {
@@ -553,20 +562,43 @@ public class TaskLog {
       mergedCmd.append(tailCommand);
       mergedCmd.append(" -c ");
       mergedCmd.append(tailLength);
-      mergedCmd.append(" >> ");
-      mergedCmd.append(stdout);
+
+      if (TaskLogUtil.isDfsLoggingEnabled()) {
+        mergedCmd.append(" | ");
+        mergedCmd.append(dfsLoggingHandler.getStdOutCommand(stdout));
+      } else {
+        mergedCmd.append(" >> ");
+        mergedCmd.append(stdout);
+      }
+
       mergedCmd.append(" ; exit $PIPESTATUS ) 2>&1 | ");
       mergedCmd.append(tailCommand);
       mergedCmd.append(" -c ");
       mergedCmd.append(tailLength);
-      mergedCmd.append(" >> ");
-      mergedCmd.append(stderr);
+
+      if (TaskLogUtil.isDfsLoggingEnabled()) {
+        mergedCmd.append(" | ");
+        mergedCmd.append(dfsLoggingHandler.getStdOutCommand(stderr));
+      } else {
+        mergedCmd.append(" >> ");
+        mergedCmd.append(stderr);
+      }
+
       mergedCmd.append(" ; exit $PIPESTATUS");
     } else {
-      mergedCmd.append(" 1>> ");
-      mergedCmd.append(stdout);
-      mergedCmd.append(" 2>> ");
-      mergedCmd.append(stderr);
+      if (TaskLogUtil.isDfsLoggingEnabled()) {
+        mergedCmd.append(" | ");
+        mergedCmd.append(dfsLoggingHandler.getStdOutCommand(stdout));
+
+        mergedCmd.append(" ; exit $PIPESTATUS ) 2>&1 | ");
+        mergedCmd.append(dfsLoggingHandler.getStdOutCommand(stderr));
+        mergedCmd.append(" ; exit $PIPESTATUS");
+      } else {
+        mergedCmd.append(" 1>> ");
+        mergedCmd.append(stdout);
+        mergedCmd.append(" 2>> ");
+        mergedCmd.append(stderr);
+      }
     }
     return mergedCmd.toString();
   }

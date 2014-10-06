@@ -388,6 +388,19 @@ public class Path implements Comparable {
     if (uri.getAuthority() != null) {
       buffer.append("//");
       buffer.append(uri.getAuthority());
+    } else {
+      // Add the two forward slashes if the input path had it.
+      // This can be checked from the scheme specific part.
+      // E.g., hdfs://a/b will have authority = NULL. But we want to return
+      // the double slashes in the result. This is the behavior of URI.toString.
+      String ssPart = uri.getSchemeSpecificPart();
+      if (ssPart != null
+          && ssPart.length() > 2
+          && ssPart.charAt(0) == '/'
+          && ssPart.charAt(1) == '/')  {
+
+        buffer.append("//");
+      }
     }
     if (uri.getPath() != null) {
       String path = uri.getPath();
