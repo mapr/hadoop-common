@@ -343,6 +343,7 @@ public class YARNRunner implements ClientProtocol {
   public ApplicationSubmissionContext createApplicationSubmissionContext(
       Configuration jobConf,
       String jobSubmitDir, Credentials ts) throws IOException {
+
     ApplicationId applicationId = resMgrDelegate.getApplicationId();
 
     // Setup resource requirements
@@ -485,6 +486,7 @@ public class YARNRunner implements ClientProtocol {
     // Setup the CLASSPATH in environment
     // i.e. add { Hadoop jars, job jar, CWD } to classpath.
     Map<String, String> environment = new HashMap<String, String>();
+    environment.put(YarnConfiguration.DFS_LOGGING_SUPPORTED, "true");
     MRApps.setClasspath(environment, conf);
 
     // Setup the environment variables for Admin first

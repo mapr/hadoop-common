@@ -17,6 +17,8 @@
  */
 package org.apache.hadoop.yarn.util;
 
+import java.util.Map;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.yarn.conf.DefaultYarnConfiguration;
@@ -66,10 +68,33 @@ public class TaskLogUtil {
 
   /**
    * Determines if logs should be saved directly in DFS or written to local
-   * file system.
+   * file system. It uses the default <code>YarnConfiguration</code> to
+   * determine it. To override for specific application, use the overloaded
+   * method.
+   *
+   * @return true if DFS logging is enabled globally; false otherwise
    */
   public static boolean isDfsLoggingEnabled() {
     return enableDfsLogging;
+  }
+
+  /**
+   * Determines if logs should be saved directly in DFS or written to local
+   * file system using the given environment. In addition to the global
+   * setting defined in YarnConfiguration, it uses the given
+   * <code>env</code> to determine if DFS logging is supported by the
+   * application.
+   *
+   * @param env environment settings for the application
+   * @return true if DFS logging is enabled globally and also in the given
+   * environment; false otherwise
+   */
+  public static boolean isDfsLoggingEnabled(Map<String, String> env) {
+    String dfsLoggingSupported = env.get(
+        YarnConfiguration.DFS_LOGGING_SUPPORTED);
+
+    return enableDfsLogging && dfsLoggingSupported != null
+      && Boolean.parseBoolean(dfsLoggingSupported);
   }
 
   /**

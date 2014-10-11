@@ -24,6 +24,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SecureIOUtils;
@@ -31,6 +32,8 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.records.ApplicationAccessType;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ContainerId;
+import org.apache.hadoop.yarn.api.records.ContainerLaunchContext;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.server.nodemanager.Context;
 import org.apache.hadoop.yarn.server.nodemanager.LocalDirsHandlerService;
@@ -71,23 +74,27 @@ public class ContainerLogsUtils {
     // reading container logs. 
     if (container != null) {
       checkState(container.getContainerState());
-    }
-    
-    return getContainerLogDirs(containerId, context.getLocalDirsHandler());
-  }
-  
-  static List<Path> getContainerLogDirs(ContainerId containerId,
-      LocalDirsHandlerService dirsHandler) throws YarnException {
 
-    if (TaskLogUtil.isDfsLoggingEnabled()) {
-      try {
-        return DFSContainerLogsUtils.getContainerLogDirs(containerId);
-      } catch (IOException e) {
-        LOG.warn("Failed to find logs for container: " + containerId, e);
-        throw new NotFoundException("Cannot find logs for container: "
-            + containerId);
+      ContainerLaunchContext launchContext = container.getLaunchContext();
+      Map<String, String> env = launchContext.getEnvironment();
+      if (env != null) {
+        if (TaskLogUtil.isDfsLoggingEnabled(env)) {
+          try {
+            return DFSContainerLogsUtils.getContainerLogDirs(containerId);
+          } catch (IOException e) {
+            LOG.warn("Failed to find logs for container: " + containerId, e);
+            throw new NotFoundException("Cannot find logs for container: "
+                + containerId);
+          }
+        }
       }
     }
+
+    return getContainerLogDirs(containerId, context.getLocalDirsHandler());
+  }
+
+  static List<Path> getContainerLogDirs(ContainerId containerId,
+      LocalDirsHandlerService dirsHandler) throws YarnException {
 
     List<String> logDirs = dirsHandler.getLogDirs();
     List<Path> containerLogDirs = new ArrayList<Path>(logDirs.size());
