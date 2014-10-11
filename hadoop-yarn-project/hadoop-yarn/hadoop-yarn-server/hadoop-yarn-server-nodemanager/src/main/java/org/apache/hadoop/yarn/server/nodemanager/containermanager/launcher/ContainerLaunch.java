@@ -196,7 +196,8 @@ public class ContainerLaunch implements Callable<Integer> {
       String relativeContainerLogDir = ContainerLaunch
           .getRelativeContainerLogDir(appIdStr, containerIdStr);
       Path containerLogDir = null;
-      if (TaskLogUtil.isDfsLoggingEnabled()) {
+      Map<String, String> environment = launchContext.getEnvironment();
+      if (TaskLogUtil.isDfsLoggingEnabled(environment)) {
         containerLogDir = createLogDir(appIdStr, relativeContainerLogDir, user);
       } else {
         containerLogDir =
@@ -209,7 +210,6 @@ public class ContainerLaunch implements Callable<Integer> {
       }
       launchContext.setCommands(newCmds);
 
-      Map<String, String> environment = launchContext.getEnvironment();
       // Make a copy of env to iterate & do variable expansion
       for (Entry<String, String> entry : environment.entrySet()) {
         String value = entry.getValue();

@@ -734,11 +734,21 @@ public class YarnConfiguration extends Configuration {
   public static boolean DEFAULT_RM_PROXY_USER_PRIVILEGES_ENABLED = false;
 
   public static final String DFS_LOGGING_PREFIX = YARN_PREFIX + "dfs-logging.";
+
   /**
    * Whether to save logs directly in DFS instead of writing to local file
-   * system.
+   * system. This is a global setting and applies to all applications.
    */
   public static final String ENABLE_DFS_LOGGING = DFS_LOGGING_PREFIX + "enable";
+
+  /**
+   * Whether an application supports writing directly to DFS.
+   * This setting can be used as an override when the global ENABLE_DFS_LOGGING
+   * is set to true, but an application does not use the APIs to write to DFS.
+   * Instead it just writes it to local file system.
+   */
+  public static final String DFS_LOGGING_SUPPORTED = DFS_LOGGING_PREFIX
+    + "supported";
 
   /**
    * Implementation class for handling DFS logging.

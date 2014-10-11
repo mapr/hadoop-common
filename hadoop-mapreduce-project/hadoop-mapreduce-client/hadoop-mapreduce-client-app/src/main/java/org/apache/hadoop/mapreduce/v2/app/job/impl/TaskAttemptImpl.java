@@ -807,6 +807,8 @@ public abstract class TaskAttemptImpl implements
             MRJobConfig.DEFAULT_MAPRED_ADMIN_USER_ENV), conf
         );
 
+    environment.put(YarnConfiguration.DFS_LOGGING_SUPPORTED, "true");
+
     // Construct the actual Container
     // The null fields are per-container and will be constructed for each
     // container separately.
