@@ -20,19 +20,25 @@ package org.apache.hadoop.yarn.webapp.log;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.PrivilegedAction;
+import java.security.PrivilegedExceptionAction;
 import java.util.Arrays;
 import java.util.List;
 
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.util.TaskLogUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Contains utilities for fetching a user's log file from DFS.
  */
 public class DFSContainerLogsUtils {
+  public static final Logger LOG = LoggerFactory.getLogger(DFSContainerLogsUtils.class);
   public static List<Path> getContainerLogDirs(ContainerId containerId)
     throws IOException {
 
@@ -51,11 +57,23 @@ public class DFSContainerLogsUtils {
   }
 
   public static InputStream openLogFileForRead(String containerIdStr,
-      Path logFile)
+      final Path logFile, final String user)
     throws IOException {
 
-    FileSystem fs = FileSystem.get(TaskLogUtil.getConf());
-    return fs.open(logFile);
+    UserGroupInformation ugi = UserGroupInformation.createProxyUser(user,
+        UserGroupInformation.getLoginUser());
+
+    try {
+      return ugi.doAs(new PrivilegedExceptionAction<InputStream>() {
+        public InputStream run() throws Exception {
+          FileSystem fs = FileSystem.get(TaskLogUtil.getConf());
+          return fs.open(logFile);
+        }
+      });
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      return null;
+    }
   }
 
   public static long getFileLength(Path logFile) throws IOException {

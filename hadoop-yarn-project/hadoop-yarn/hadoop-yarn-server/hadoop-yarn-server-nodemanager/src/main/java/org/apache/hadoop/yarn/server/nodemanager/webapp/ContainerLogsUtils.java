@@ -196,16 +196,17 @@ public class ContainerLogsUtils {
   
   public static InputStream openLogFileForRead(String containerIdStr, Path logFile,
       Context context) throws IOException {
-    if (TaskLogUtil.isDfsLoggingEnabled()) {
-      return DFSContainerLogsUtils.openLogFileForRead(containerIdStr, logFile);
-    }
-
     ContainerId containerId = ConverterUtils.toContainerId(containerIdStr);
     ApplicationId applicationId = containerId.getApplicationAttemptId()
         .getApplicationId();
     String user = context.getApplications().get(
         applicationId).getUser();
     
+    if (TaskLogUtil.isDfsLoggingEnabled()) {
+      return DFSContainerLogsUtils.openLogFileForRead(containerIdStr, logFile,
+          user);
+    }
+
     try {
       File file = new File(logFile.toString());
       return SecureIOUtils.openForRead(file, user, null);

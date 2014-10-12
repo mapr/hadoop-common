@@ -65,10 +65,11 @@ public class DFSContainerLogsBlock extends HtmlBlock
           throw new YarnRuntimeException(e);
         }
       } else {
+        String user = request().getRemoteUser();
         Path logFile = DFSContainerLogsUtils.getContainerLogFile(containerId,
-            $(CONTAINER_LOG_TYPE), request().getRemoteUser());
+            $(CONTAINER_LOG_TYPE), user);
         try {
-          printLogFile(html, logFile);
+          printLogFile(html, logFile, user);
         } catch (IOException e) {
           throw new YarnRuntimeException(e);
         }
@@ -80,7 +81,9 @@ public class DFSContainerLogsBlock extends HtmlBlock
     }
   }
 
-  private void printLogFile(Block html, Path logFile) throws IOException {
+  private void printLogFile(Block html, Path logFile, String user)
+    throws IOException {
+
     long length = DFSContainerLogsUtils.getFileLength(logFile);
 
     long start =
@@ -100,7 +103,7 @@ public class DFSContainerLogsBlock extends HtmlBlock
 
       try {
         logByteStream = DFSContainerLogsUtils.openLogFileForRead($(CONTAINER_ID),
-            logFile);
+            logFile, user);
       } catch (IOException ex) {
         html.h1(ex.getMessage());
         return;
