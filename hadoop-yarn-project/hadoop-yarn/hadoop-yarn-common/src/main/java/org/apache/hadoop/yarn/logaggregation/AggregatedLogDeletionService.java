@@ -97,16 +97,23 @@ public class AggregatedLogDeletionService extends AbstractService {
             deleteOldLogDirsFrom(userDirPath, cutoffMillis, fs);
           }
         }
-
-        if (dfsLoggingDirs != null) {
-          for (Path dfsLoggingDir : dfsLoggingDirs) {
-            deleteOldLogDirsFrom(dfsLoggingDir, cutoffMillis, fs);
-          }
-        }
       } catch (IOException e) {
-        logIOException("Error reading root log dir this deletion " +
-        		"attempt is being aborted", e);
+        // If the remote root log dir does not exist, then there is nothing to
+        // delete. So just log at debug level. This is to handle the case where
+        // log aggregation is disabled and DFS logging is enabled. The remote
+        // log dir would not have been created.
+        if (LOG.isDebugEnabled()) {
+          logIOException("Error reading root log dir this deletion " +
+              "attempt is being aborted", e);
+        }
       }
+
+      if (dfsLoggingDirs != null) {
+        for (Path dfsLoggingDir : dfsLoggingDirs) {
+          deleteOldLogDirsFrom(dfsLoggingDir, cutoffMillis, fs);
+        }
+      }
+
       LOG.info("aggregated log deletion finished.");
     }
     
