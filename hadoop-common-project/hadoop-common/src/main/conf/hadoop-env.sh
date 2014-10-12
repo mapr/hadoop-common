@@ -98,6 +98,7 @@ export HADOOP_SECURE_DN_PID_DIR=${HADOOP_PID_DIR}
 export HADOOP_IDENT_STRING=$USER
 
 # source /opt/mapr/conf/env.sh to inherit MapR's env variables into 'bin/hadoop' script.
+export MAPR_IMPERSONATION_ENABLED=1
 BASEMAPR=${MAPR_HOME:-/opt/mapr}
 env=${BASEMAPR}/conf/env.sh
 [ -f $env ] && . $env
