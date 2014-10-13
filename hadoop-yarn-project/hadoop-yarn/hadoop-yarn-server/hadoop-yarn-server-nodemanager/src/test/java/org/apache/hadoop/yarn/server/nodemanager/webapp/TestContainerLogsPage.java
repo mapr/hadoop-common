@@ -36,6 +36,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.nativeio.NativeIO;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
@@ -100,7 +101,7 @@ public class TestContainerLogsPage {
             appId, 1);
     container.setState(ContainerState.RUNNING);
     nmContext.getContainers().put(container1, container);   
-    List<File> files = null;
+    List<Path> files = null;
     files = ContainerLogsUtils.getContainerLogDirs(container1, user, nmContext);
     Assert.assertTrue(!(files.get(0).toString().contains("file:")));
     

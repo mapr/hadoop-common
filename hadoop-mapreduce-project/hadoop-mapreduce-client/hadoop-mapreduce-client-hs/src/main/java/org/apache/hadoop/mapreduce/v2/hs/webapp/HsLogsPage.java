@@ -20,8 +20,10 @@ package org.apache.hadoop.mapreduce.v2.hs.webapp;
 import static org.apache.hadoop.yarn.webapp.YarnWebParams.CONTAINER_ID;
 import static org.apache.hadoop.yarn.webapp.YarnWebParams.ENTITY_STRING;
 
+import org.apache.hadoop.yarn.util.TaskLogUtil;
 import org.apache.hadoop.yarn.webapp.SubView;
 import org.apache.hadoop.yarn.webapp.log.AggregatedLogsBlock;
+import org.apache.hadoop.yarn.webapp.log.DFSContainerLogsBlock;
 
 public class HsLogsPage extends HsView {
 
@@ -45,6 +47,8 @@ public class HsLogsPage extends HsView {
    * @return HsJobBlock.class
    */
   @Override protected Class<? extends SubView> content() {
-    return AggregatedLogsBlock.class;
+    return TaskLogUtil.isDfsLoggingEnabled()
+      ? DFSContainerLogsBlock.class
+      : AggregatedLogsBlock.class;
   }
 }

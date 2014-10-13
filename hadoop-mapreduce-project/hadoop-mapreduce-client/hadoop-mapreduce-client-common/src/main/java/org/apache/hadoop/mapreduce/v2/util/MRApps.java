@@ -42,7 +42,6 @@ import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapred.InvalidJobConfException;
 import org.apache.hadoop.mapreduce.JobID;
 import org.apache.hadoop.mapreduce.MRConfig;
 import org.apache.hadoop.mapreduce.MRJobConfig;
@@ -56,8 +55,6 @@ import org.apache.hadoop.mapreduce.v2.api.records.TaskAttemptState;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskState;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
-import org.apache.hadoop.util.Shell;
-import org.apache.hadoop.util.StringInterner;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.yarn.ContainerLogAppender;
 import org.apache.hadoop.yarn.api.ApplicationConstants;
@@ -70,6 +67,7 @@ import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 import org.apache.hadoop.yarn.util.ApplicationClassLoader;
 import org.apache.hadoop.yarn.util.Apps;
 import org.apache.hadoop.yarn.util.ConverterUtils;
+import org.apache.hadoop.yarn.util.TaskLogUtil;
 import org.apache.log4j.RollingFileAppender;
 
 /**
@@ -539,13 +537,14 @@ public class MRApps extends Apps {
         ApplicationConstants.LOG_DIR_EXPANSION_VAR);
     vargs.add(
         "-D" + YarnConfiguration.YARN_APP_CONTAINER_LOG_SIZE + "=" + logSize);
+
     if (logSize > 0L && numBackups > 0) {
       // log should be rolled
       vargs.add("-D" + YarnConfiguration.YARN_APP_CONTAINER_LOG_BACKUPS + "="
           + numBackups);
-      vargs.add("-Dhadoop.root.logger=" + logLevel + ",CRLA");
+      vargs.add("-Dhadoop.root.logger=" + logLevel + "," + TaskLogUtil.getRollingAppender());
     } else {
-      vargs.add("-Dhadoop.root.logger=" + logLevel + ",CLA");
+      vargs.add("-Dhadoop.root.logger=" + logLevel + "," + TaskLogUtil.getAppender());
     }
   }
 

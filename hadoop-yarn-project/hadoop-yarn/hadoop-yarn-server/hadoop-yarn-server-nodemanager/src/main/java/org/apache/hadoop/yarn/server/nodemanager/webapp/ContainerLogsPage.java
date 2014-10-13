@@ -24,17 +24,19 @@ import static org.apache.hadoop.yarn.webapp.view.JQueryUI.ACCORDION;
 import static org.apache.hadoop.yarn.webapp.view.JQueryUI.ACCORDION_ID;
 import static org.apache.hadoop.yarn.webapp.view.JQueryUI.initID;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.exceptions.YarnException;
+import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 import org.apache.hadoop.yarn.server.nodemanager.Context;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.apache.hadoop.yarn.webapp.NotFoundException;
@@ -102,13 +104,21 @@ public class ContainerLogsPage extends NMView {
 
       try {
         if ($(CONTAINER_LOG_TYPE).isEmpty()) {
-          List<File> logFiles = ContainerLogsUtils.getContainerLogDirs(containerId,
+          List<Path> logFiles = ContainerLogsUtils.getContainerLogDirs(containerId,
               request().getRemoteUser(), nmContext);
-          printLogFileDirectory(html, logFiles);
+          try {
+            printLogFileDirectory(html, logFiles);
+          } catch (IOException e) {
+            throw new YarnRuntimeException(e);
+          }
         } else {
-          File logFile = ContainerLogsUtils.getContainerLogFile(containerId,
+          Path logFile = ContainerLogsUtils.getContainerLogFile(containerId,
               $(CONTAINER_LOG_TYPE), request().getRemoteUser(), nmContext);
-          printLogFile(html, logFile);
+          try {
+            printLogFile(html, logFile);
+          } catch (IOException e) {
+            throw new YarnRuntimeException(e);
+          }
         }
       } catch (YarnException ex) {
         html.h1(ex.getMessage());
@@ -117,21 +127,23 @@ public class ContainerLogsPage extends NMView {
       }
     }
     
-    private void printLogFile(Block html, File logFile) {
+    private void printLogFile(Block html, Path logFile) throws IOException {
+      long length = ContainerLogsUtils.getFileLength(logFile);
+
       long start =
           $("start").isEmpty() ? -4 * 1024 : Long.parseLong($("start"));
-      start = start < 0 ? logFile.length() + start : start;
+      start = start < 0 ? length + start : start;
       start = start < 0 ? 0 : start;
       long end =
-          $("end").isEmpty() ? logFile.length() : Long.parseLong($("end"));
-      end = end < 0 ? logFile.length() + end : end;
-      end = end < 0 ? logFile.length() : end;
+          $("end").isEmpty() ? length : Long.parseLong($("end"));
+      end = end < 0 ? length + end : end;
+      end = end < 0 ? length : end;
       if (start > end) {
         html.h1("Invalid start and end values. Start: [" + start + "]"
             + ", end[" + end + "]");
         return;
       } else {
-        FileInputStream logByteStream = null;
+        InputStream logByteStream = null;
 
         try {
           logByteStream = ContainerLogsUtils.openLogFileForRead($(CONTAINER_ID),
@@ -143,7 +155,7 @@ public class ContainerLogsPage extends NMView {
         
         try {
           long toRead = end - start;
-          if (toRead < logFile.length()) {
+          if (toRead < length) {
             html.p()._("Showing " + toRead + " bytes. Click ")
                 .a(url("containerlogs", $(CONTAINER_ID), $(APP_OWNER), 
                     logFile.getName(), "?start=0"), "here").
@@ -171,7 +183,7 @@ public class ContainerLogsPage extends NMView {
 
         } catch (IOException e) {
           LOG.error(
-              "Exception reading log file " + logFile.getAbsolutePath(), e);
+              "Exception reading log file " + logFile, e);
           html.h1("Exception reading log file. It might be because log "
                 + "file was aggregated : " + logFile.getName());
         } finally {
@@ -186,21 +198,25 @@ public class ContainerLogsPage extends NMView {
       }
     }
     
-    private void printLogFileDirectory(Block html, List<File> containerLogsDirs) {
+    private void printLogFileDirectory(Block html, List<Path> containerLogsDirs)
+      throws IOException {
+
       // Print out log types in lexical order
       Collections.sort(containerLogsDirs);
       boolean foundLogFile = false;
-      for (File containerLogsDir : containerLogsDirs) {
-        File[] logFiles = containerLogsDir.listFiles();
+      for (Path containerLogsDir : containerLogsDirs) {
+        Path[] logFiles = ContainerLogsUtils.getFilesInDir(containerLogsDir);
         if (logFiles != null) {
           Arrays.sort(logFiles);
-          for (File logFile : logFiles) {
+          for (Path logFile : logFiles) {
+            long length = ContainerLogsUtils.getFileLength(logFile);
             foundLogFile = true;
+            String logName = logFile.getName();
             html.p()
                 .a(url("containerlogs", $(CONTAINER_ID), $(APP_OWNER),
-                    logFile.getName(), "?start=-4096"),
-                    logFile.getName() + " : Total file length is "
-                        + logFile.length() + " bytes.")._();
+                    logName, "?start=-4096"),
+                    logName + " : Total file length is "
+                        + length + " bytes.")._();
           }
         }
       }

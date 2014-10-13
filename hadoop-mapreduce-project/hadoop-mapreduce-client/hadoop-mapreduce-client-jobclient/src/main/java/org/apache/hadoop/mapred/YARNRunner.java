@@ -86,6 +86,8 @@ import org.apache.hadoop.yarn.factories.RecordFactory;
 import org.apache.hadoop.yarn.factory.providers.RecordFactoryProvider;
 import org.apache.hadoop.yarn.security.client.RMDelegationTokenSelector;
 import org.apache.hadoop.yarn.util.ConverterUtils;
+import org.apache.hadoop.yarn.util.DFSLoggingHandler;
+import org.apache.hadoop.yarn.util.TaskLogUtil;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -102,7 +104,7 @@ public class YARNRunner implements ClientProtocol {
   private ClientCache clientCache;
   private Configuration conf;
   private final FileContext defaultFileContext;
-  
+
   /**
    * Yarn runner incapsulates the client interface of
    * yarn
@@ -341,6 +343,7 @@ public class YARNRunner implements ClientProtocol {
   public ApplicationSubmissionContext createApplicationSubmissionContext(
       Configuration jobConf,
       String jobSubmitDir, Credentials ts) throws IOException {
+
     ApplicationId applicationId = resMgrDelegate.getApplicationId();
 
     // Setup resource requirements
@@ -406,6 +409,12 @@ public class YARNRunner implements ClientProtocol {
 
     // Setup the command to run the AM
     List<String> vargs = new ArrayList<String>(8);
+    // If direct DFS logging is enabled, then wrap the command in parenthesis,
+    // so that the output can be redirected to target DFS logging handler
+    // for writing to DFS.
+    if (TaskLogUtil.isDfsLoggingEnabled()) {
+      vargs.add("(");
+    }
     vargs.add(MRApps.crossPlatformifyMREnv(jobConf, Environment.JAVA_HOME)
         + "/bin/java");
 
@@ -432,24 +441,35 @@ public class YARNRunner implements ClientProtocol {
     // so that it can be overridden by user
     String mrAppMasterAdminOptions = conf.get(MRJobConfig.MR_AM_ADMIN_COMMAND_OPTS,
         MRJobConfig.DEFAULT_MR_AM_ADMIN_COMMAND_OPTS);
-    warnForJavaLibPath(mrAppMasterAdminOptions, "app master", 
+    warnForJavaLibPath(mrAppMasterAdminOptions, "app master",
         MRJobConfig.MR_AM_ADMIN_COMMAND_OPTS, MRJobConfig.MR_AM_ADMIN_USER_ENV);
     vargs.add(mrAppMasterAdminOptions);
-    
+
     // Add AM user command opts
     String mrAppMasterUserOptions = conf.get(MRJobConfig.MR_AM_COMMAND_OPTS,
         MRJobConfig.DEFAULT_MR_AM_COMMAND_OPTS);
-    warnForJavaLibPath(mrAppMasterUserOptions, "app master", 
+    warnForJavaLibPath(mrAppMasterUserOptions, "app master",
         MRJobConfig.MR_AM_COMMAND_OPTS, MRJobConfig.MR_AM_ENV);
     vargs.add(mrAppMasterUserOptions);
-    
     vargs.add(MRJobConfig.APPLICATION_MASTER_CLASS);
-    vargs.add("1>" + ApplicationConstants.LOG_DIR_EXPANSION_VAR +
-        Path.SEPARATOR + ApplicationConstants.STDOUT);
-    vargs.add("2>" + ApplicationConstants.LOG_DIR_EXPANSION_VAR +
-        Path.SEPARATOR + ApplicationConstants.STDERR);
 
-
+    if (TaskLogUtil.isDfsLoggingEnabled()) {
+      DFSLoggingHandler dfsLoggingHandler = TaskLogUtil.getDFSLoggingHandler();
+      vargs.add(" | ");
+      vargs.add(dfsLoggingHandler.getStdOutCommand(
+            ApplicationConstants.LOG_DIR_EXPANSION_VAR
+            + Path.SEPARATOR + ApplicationConstants.STDOUT));
+      vargs.add(" ; exit $PIPESTATUS ) 2>&1 | ");
+      vargs.add(dfsLoggingHandler.getStdOutCommand(
+            ApplicationConstants.LOG_DIR_EXPANSION_VAR
+            + Path.SEPARATOR + ApplicationConstants.STDERR));
+      vargs.add(" ; exit $PIPESTATUS");
+    } else {
+      vargs.add("1>" + ApplicationConstants.LOG_DIR_EXPANSION_VAR
+          + Path.SEPARATOR + ApplicationConstants.STDOUT);
+      vargs.add("2>" + ApplicationConstants.LOG_DIR_EXPANSION_VAR
+          + Path.SEPARATOR + ApplicationConstants.STDERR);
+    }
     Vector<String> vargsFinal = new Vector<String>(8);
     // Final command
     StringBuilder mergedCommand = new StringBuilder();
@@ -458,12 +478,15 @@ public class YARNRunner implements ClientProtocol {
     }
     vargsFinal.add(mergedCommand.toString());
 
-    LOG.debug("Command to launch container for ApplicationMaster is : "
-        + mergedCommand);
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("Command to launch container for ApplicationMaster is : "
+          + mergedCommand);
+    }
 
     // Setup the CLASSPATH in environment
     // i.e. add { Hadoop jars, job jar, CWD } to classpath.
     Map<String, String> environment = new HashMap<String, String>();
+    environment.put(YarnConfiguration.DFS_LOGGING_SUPPORTED, "true");
     MRApps.setClasspath(environment, conf);
 
     // Setup the environment variables for Admin first
