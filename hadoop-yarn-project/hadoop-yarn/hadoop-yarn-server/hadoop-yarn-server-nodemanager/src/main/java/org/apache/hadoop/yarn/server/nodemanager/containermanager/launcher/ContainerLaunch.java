@@ -798,6 +798,11 @@ public class ContainerLaunch implements Callable<Integer> {
     ShellScriptBuilder sb = ShellScriptBuilder.create();
     if (environment != null) {
       for (Map.Entry<String,String> env : environment.entrySet()) {
+        // Remove DFS_LOGGING_SUPPORTED since it need not be set as env variable.
+        // It is only needed while constructing the launch command.
+        if (env.getKey().equals(YarnConfiguration.DFS_LOGGING_SUPPORTED)) {
+          continue;
+        }
         sb.env(env.getKey().toString(), env.getValue().toString());
       }
     }
