@@ -60,8 +60,15 @@ public class DFSContainerLogsUtils {
       final Path logFile, final String user)
     throws IOException {
 
-    UserGroupInformation ugi = UserGroupInformation.createProxyUser(user,
-        UserGroupInformation.getLoginUser());
+    UserGroupInformation ugi = null;
+    // Impersonate as given user only if security is enabled. This is because
+    // in unsecure mode, the given user is "Unknown".
+    if (UserGroupInformation.isSecurityEnabled()) {
+      ugi = UserGroupInformation.createProxyUser(user,
+          UserGroupInformation.getLoginUser());
+    } else {
+      ugi = UserGroupInformation.getLoginUser();
+    }
 
     try {
       return ugi.doAs(new PrivilegedExceptionAction<InputStream>() {
