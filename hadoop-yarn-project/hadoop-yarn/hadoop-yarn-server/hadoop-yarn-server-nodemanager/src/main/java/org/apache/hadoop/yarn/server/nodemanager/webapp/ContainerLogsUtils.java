@@ -75,17 +75,13 @@ public class ContainerLogsUtils {
     if (container != null) {
       checkState(container.getContainerState());
 
-      ContainerLaunchContext launchContext = container.getLaunchContext();
-      Map<String, String> env = launchContext.getEnvironment();
-      if (env != null) {
-        if (TaskLogUtil.isDfsLoggingEnabled(env)) {
-          try {
-            return DFSContainerLogsUtils.getContainerLogDirs(containerId);
-          } catch (IOException e) {
-            LOG.warn("Failed to find logs for container: " + containerId, e);
-            throw new NotFoundException("Cannot find logs for container: "
-                + containerId);
-          }
+      if (isDfsLoggingEnabled(containerId, context)) {
+        try {
+          return DFSContainerLogsUtils.getContainerLogDirs(containerId);
+        } catch (IOException e) {
+          LOG.warn("Failed to find logs for container: " + containerId, e);
+          throw new NotFoundException("Cannot find logs for container: "
+              + containerId);
         }
       }
     }
@@ -118,7 +114,7 @@ public class ContainerLogsUtils {
   public static Path getContainerLogFile(ContainerId containerId,
       String fileName, String remoteUser, Context context) throws YarnException {
     
-    if (TaskLogUtil.isDfsLoggingEnabled()) {
+    if (isDfsLoggingEnabled(containerId, context)) {
       try {
         return DFSContainerLogsUtils.getContainerLogFile(containerId, fileName, remoteUser);
       } catch (IOException e) {
@@ -202,7 +198,7 @@ public class ContainerLogsUtils {
     String user = context.getApplications().get(
         applicationId).getUser();
     
-    if (TaskLogUtil.isDfsLoggingEnabled()) {
+    if (isDfsLoggingEnabled(containerId, context)) {
       return DFSContainerLogsUtils.openLogFileForRead(containerIdStr, logFile,
           user);
     }
@@ -227,16 +223,20 @@ public class ContainerLogsUtils {
     }
   }
 
-  public static long getFileLength(Path logFile) throws IOException {
-    if (TaskLogUtil.isDfsLoggingEnabled()) {
+  public static long getFileLength(Path logFile, ContainerId containerId,
+      Context context) throws IOException {
+
+    if (isDfsLoggingEnabled(containerId, context)) {
       return DFSContainerLogsUtils.getFileLength(logFile);
     }
 
     return new File(logFile.toString()).length();
   }
 
-  public static Path[] getFilesInDir(Path dir) throws IOException {
-    if (TaskLogUtil.isDfsLoggingEnabled()) {
+  public static Path[] getFilesInDir(Path dir, ContainerId containerId,
+      Context context) throws IOException {
+
+    if (isDfsLoggingEnabled(containerId, context)) {
       return DFSContainerLogsUtils.getFilesInDir(dir);
     }
 
@@ -250,5 +250,25 @@ public class ContainerLogsUtils {
     }
 
     return paths;
+  }
+
+  private static boolean isDfsLoggingEnabled(ContainerId containerId,
+      Context context) {
+
+    Container container = context.getContainers().get(containerId);
+    if (container == null) {
+      // This means the container is completed. So the logs should be
+      // retrieved through history server.
+      return false;
+    }
+
+    ContainerLaunchContext launchContext = container.getLaunchContext();
+    Map<String, String> env = launchContext.getEnvironment();
+    if (env != null) {
+      if (TaskLogUtil.isDfsLoggingEnabled(env)) {
+        return true;
+      }
+    }
+    return false;
   }
 }
