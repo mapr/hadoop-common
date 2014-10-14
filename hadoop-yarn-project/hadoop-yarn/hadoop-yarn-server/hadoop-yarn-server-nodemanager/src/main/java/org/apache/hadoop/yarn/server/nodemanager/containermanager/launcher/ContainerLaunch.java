@@ -115,7 +115,7 @@ public class ContainerLaunch implements Callable<Integer> {
    * Permission for application log directories and files.
    */
   private static final FsPermission APP_LOG_PERM =
-    FsPermission.createImmutable((short) 0700);
+    FsPermission.createImmutable((short) 0740);
 
   public ContainerLaunch(Context context, Configuration configuration,
       Dispatcher dispatcher, ContainerExecutor exec, Application app,
