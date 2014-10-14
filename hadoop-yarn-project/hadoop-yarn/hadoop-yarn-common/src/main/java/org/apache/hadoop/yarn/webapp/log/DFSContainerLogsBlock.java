@@ -30,6 +30,7 @@ import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
+import org.apache.hadoop.yarn.util.TaskLogUtil;
 import org.apache.hadoop.yarn.webapp.NotFoundException;
 import org.apache.hadoop.yarn.webapp.YarnWebParams;
 import org.apache.hadoop.yarn.webapp.hamlet.Hamlet;
@@ -48,6 +49,13 @@ public class DFSContainerLogsBlock extends HtmlBlock
 
   @Override
   protected void render(Block html) {
+    if (!TaskLogUtil.isDfsLoggingEnabled()) {
+      html.h1()
+        ._("Logs not found. DFS Logging is not enabled.")
+        ._();
+      return;
+    }
+
     ContainerId containerId;
     try {
       containerId = ConverterUtils.toContainerId($(CONTAINER_ID));

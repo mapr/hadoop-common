@@ -108,7 +108,7 @@ public class ContainerLogsPage extends NMView {
           List<Path> logFiles = ContainerLogsUtils.getContainerLogDirs(containerId,
               request().getRemoteUser(), nmContext);
           try {
-            printLogFileDirectory(html, logFiles);
+            printLogFileDirectory(html, logFiles, containerId, nmContext);
           } catch (IOException e) {
             throw new YarnRuntimeException(e);
           }
@@ -116,7 +116,7 @@ public class ContainerLogsPage extends NMView {
           Path logFile = ContainerLogsUtils.getContainerLogFile(containerId,
               $(CONTAINER_LOG_TYPE), request().getRemoteUser(), nmContext);
           try {
-            printLogFile(html, logFile);
+            printLogFile(html, logFile, containerId, nmContext);
           } catch (IOException e) {
             throw new YarnRuntimeException(e);
           }
@@ -128,8 +128,11 @@ public class ContainerLogsPage extends NMView {
       }
     }
     
-    private void printLogFile(Block html, Path logFile) throws IOException {
-      long length = ContainerLogsUtils.getFileLength(logFile);
+    private void printLogFile(Block html, Path logFile, ContainerId containerId,
+        Context nmContext) throws IOException {
+
+      long length = ContainerLogsUtils.getFileLength(logFile, containerId,
+          nmContext);
 
       long start =
           $("start").isEmpty() ? -4 * 1024 : Long.parseLong($("start"));
@@ -200,18 +203,21 @@ public class ContainerLogsPage extends NMView {
       }
     }
     
-    private void printLogFileDirectory(Block html, List<Path> containerLogsDirs)
+    private void printLogFileDirectory(Block html, List<Path> containerLogsDirs,
+        ContainerId containerId, Context nmContext)
       throws IOException {
 
       // Print out log types in lexical order
       Collections.sort(containerLogsDirs);
       boolean foundLogFile = false;
       for (Path containerLogsDir : containerLogsDirs) {
-        Path[] logFiles = ContainerLogsUtils.getFilesInDir(containerLogsDir);
+        Path[] logFiles = ContainerLogsUtils.getFilesInDir(containerLogsDir,
+            containerId, nmContext);
         if (logFiles != null) {
           Arrays.sort(logFiles);
           for (Path logFile : logFiles) {
-            long length = ContainerLogsUtils.getFileLength(logFile);
+            long length = ContainerLogsUtils.getFileLength(logFile,
+                containerId, nmContext);
             foundLogFile = true;
             String logName = logFile.getName();
             html.p()
