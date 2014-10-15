@@ -442,6 +442,24 @@ public class AppLogAggregatorImpl implements AppLogAggregator {
       this.delService.delete(this.userUgi.getShortUserName(), null,
         localAppLogDirs.toArray(new Path[localAppLogDirs.size()]));
     }
+
+    try {
+      userUgi.doAs(new PrivilegedExceptionAction<Object>() {
+        @Override
+        public Object run() throws Exception {
+          FileSystem remoteFS = FileSystem.get(conf);
+          remoteFS.rename(remoteNodeTmpLogFileForApp, remoteNodeLogFileForApp);
+          return null;
+        }
+      });
+      // Set the group to NM group name so that NM user can access it.
+      FileSystem.get(conf).setOwner(remoteNodeLogFileForApp, null,
+          UserGroupInformation.getLoginUser().getPrimaryGroupName());
+    } catch (Exception e) {
+      LOG.error("Failed to move temporary log file to final location: ["
+          + remoteNodeTmpLogFileForApp + "] to [" + remoteNodeLogFileForApp
+          + "]", e);
+    }
     
     this.dispatcher.getEventHandler().handle(
         new ApplicationEvent(this.appId,
