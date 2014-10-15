@@ -191,6 +191,9 @@ public class AppLogAggregatorImpl implements AppLogAggregator {
           return null;
         }
       });
+      // Set the group to NM group name so that NM user can access it.
+      FileSystem.get(conf).setOwner(remoteNodeLogFileForApp, null,
+          UserGroupInformation.getLoginUser().getPrimaryGroupName());
     } catch (Exception e) {
       LOG.error("Failed to move temporary log file to final location: ["
           + remoteNodeTmpLogFileForApp + "] to [" + remoteNodeLogFileForApp
