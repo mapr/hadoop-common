@@ -89,7 +89,7 @@ public class RMProxy<T> {
         ? (YarnConfiguration) configuration
         : new YarnConfiguration(configuration);
     RetryPolicy retryPolicy = createRetryPolicy(conf);
-    if (HAUtil.isHAEnabled(conf)) {
+    if (HAUtil.isHAEnabled(conf) || HAUtil.isCustomRMHAEnabled(conf)) {
       RMFailoverProxyProvider<T> provider =
           instance.createRMFailoverProxyProvider(conf, protocol);
       return (T) RetryProxy.create(protocol, provider, retryPolicy);
@@ -199,7 +199,7 @@ public class RMProxy<T> {
     }
 
     // Handle HA case first
-    if (HAUtil.isHAEnabled(conf)) {
+    if (HAUtil.isHAEnabled(conf) || HAUtil.isCustomRMHAEnabled(conf)) {
       final long failoverSleepBaseMs = conf.getLong(
           YarnConfiguration.CLIENT_FAILOVER_SLEEPTIME_BASE_MS,
           rmConnectionRetryIntervalMS);

@@ -54,7 +54,18 @@ public class HAUtil {
         YarnConfiguration.DEFAULT_RM_HA_ENABLED);
   }
 
-  public static boolean isAutomaticFailoverEnabled(Configuration conf) {
+    /**
+     * Returns true if a Custom Resource Manager scheme HA is configured.
+     *
+     * @param conf Configuration
+     * @return true if a Custom RM HA scheme is configured in the configuration; else false.
+     */
+    public static boolean isCustomRMHAEnabled(Configuration conf) {
+        return conf.getBoolean(YarnConfiguration.CUSTOM_RM_HA_ENABLED,
+                YarnConfiguration.DEFAULT_CUSTOM_RM_HA_ENABLED);
+    }
+
+    public static boolean isAutomaticFailoverEnabled(Configuration conf) {
     return conf.getBoolean(YarnConfiguration.AUTO_FAILOVER_ENABLED,
         YarnConfiguration.DEFAULT_AUTO_FAILOVER_ENABLED);
   }
