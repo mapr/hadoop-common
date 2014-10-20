@@ -17,14 +17,14 @@
  */
 package org.apache.hadoop.http;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.security.authentication.server.AuthenticationFilter;
+import java.util.Map;
+import java.util.Properties;
 
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 
-import java.util.Map;
-import java.util.Properties;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.security.authentication.server.AuthenticationFilter;
 
 /**
  * {@link AuthenticationFilter} exposes several configuration params such as
@@ -46,6 +46,12 @@ import java.util.Properties;
  *  </property>
  */
 public class HadoopCoreAuthenticationFilter extends AuthenticationFilter {
+  /**
+   * Config prefix used for authentication related properties.
+   * This prefix should be used to filter properties from
+   * <code>Configuration</code> irrespective of what is specified as argument.
+   */
+  private static final String HTTP_AUTH_PREFIX = "hadoop.http.authentication.";
 
     @Override
     protected Properties getConfiguration(String configPrefix, FilterConfig filterConfig) throws ServletException {
@@ -53,9 +59,11 @@ public class HadoopCoreAuthenticationFilter extends AuthenticationFilter {
       Properties props = new Properties();
       for (Map.Entry<String, String> entry : conf) {
         String name = entry.getKey();
-        if (name.startsWith(configPrefix)) {
+        // configPrefix could be empty. So don't depend on that.
+        // Authentication properties have a non empty prefix.
+        if (name.startsWith(HTTP_AUTH_PREFIX)) {
           String value = conf.get(name);
-          name = name.substring(configPrefix.length());
+          name = name.substring(HTTP_AUTH_PREFIX.length());
           props.setProperty(name, value);
         }
       }
