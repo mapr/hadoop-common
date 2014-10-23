@@ -187,29 +187,25 @@ public class ContainerLogsUtils {
   }
   
   public static InputStream openLogFileForRead(String containerIdStr, Path logFile,
-      Context context) throws IOException {
+      String remoteUser, Context context) throws IOException {
     ContainerId containerId = ConverterUtils.toContainerId(containerIdStr);
-    ApplicationId applicationId = containerId.getApplicationAttemptId()
-        .getApplicationId();
-    String user = context.getApplications().get(
-        applicationId).getUser();
     
     if (isDfsLoggingEnabled(containerId, context)) {
       return DFSContainerLogsUtils.openLogFileForRead(containerIdStr, logFile,
-          user);
+          remoteUser);
     }
 
     try {
       File file = new File(logFile.toString());
-      return SecureIOUtils.openForRead(file, user, null);
+      return SecureIOUtils.openForRead(file, remoteUser, null);
     } catch (IOException e) {
       if (e.getMessage().contains(
-        "did not match expected owner '" + user
+        "did not match expected owner '" + remoteUser
             + "'")) {
         LOG.error(
             "Exception reading log file " + logFile, e);
-        throw new IOException("Exception reading log file. Application submitted by '"
-            + user
+        throw new IOException("Exception reading log file. User '"
+            + remoteUser
             + "' doesn't own requested log file : "
             + logFile.toString(), e);
       } else {
