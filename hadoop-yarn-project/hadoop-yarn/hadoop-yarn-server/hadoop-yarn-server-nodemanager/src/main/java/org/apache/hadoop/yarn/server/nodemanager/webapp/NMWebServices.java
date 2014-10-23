@@ -234,7 +234,7 @@ public class NMWebServices {
     
     try {
       final InputStream fis = ContainerLogsUtils.openLogFileForRead(
-          containerIdStr, logFile, nmContext);
+          containerIdStr, logFile, request.getRemoteUser(), nmContext);
       
       StreamingOutput stream = new StreamingOutput() {
         @Override

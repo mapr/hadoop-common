@@ -102,10 +102,11 @@ public class ContainerLogsPage extends NMView {
         return;
       }
 
+      String remoteUser = request().getRemoteUser();
       try {
         if ($(CONTAINER_LOG_TYPE).isEmpty()) {
           List<Path> logFiles = ContainerLogsUtils.getContainerLogDirs(containerId,
-              request().getRemoteUser(), nmContext);
+              remoteUser, nmContext);
           try {
             printLogFileDirectory(html, logFiles, containerId, nmContext);
           } catch (IOException e) {
@@ -115,7 +116,8 @@ public class ContainerLogsPage extends NMView {
           Path logFile = ContainerLogsUtils.getContainerLogFile(containerId,
               $(CONTAINER_LOG_TYPE), request().getRemoteUser(), nmContext);
           try {
-            printLogFile(html, logFile, containerId, nmContext);
+            printLogFile(html, logFile, containerId, remoteUser,
+                nmContext);
           } catch (IOException e) {
             throw new YarnRuntimeException(e);
           }
@@ -128,7 +130,7 @@ public class ContainerLogsPage extends NMView {
     }
     
     private void printLogFile(Block html, Path logFile, ContainerId containerId,
-        Context nmContext) throws IOException {
+        String remoteUser, Context nmContext) throws IOException {
 
       long length = ContainerLogsUtils.getFileLength(logFile, containerId,
           nmContext);
@@ -150,7 +152,7 @@ public class ContainerLogsPage extends NMView {
 
         try {
           logByteStream = ContainerLogsUtils.openLogFileForRead($(CONTAINER_ID),
-              logFile, nmContext);
+              logFile, remoteUser, nmContext);
         } catch (IOException ex) {
           html.h1(ex.getMessage());
           return;
