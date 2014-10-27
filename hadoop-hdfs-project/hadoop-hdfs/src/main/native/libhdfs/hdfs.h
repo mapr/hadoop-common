@@ -32,6 +32,10 @@
 #define O_WRONLY 2
 #endif
 
+#ifndef O_RDWR
+#define O_RDWR 4
+#endif
+
 #ifndef EINTERNAL
 #define EINTERNAL 255 
 #endif
