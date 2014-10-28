@@ -114,10 +114,20 @@ public class ContainerLaunch implements Callable<Integer> {
   private final LocalDirsHandlerService dirsHandler;
 
   /**
-   * Permission for application log directories and files.
+   * Permission for application log directories.
+   * The SGID permission is set so that any file or directory created
+   * under it will have its group set to the group of this directory.
+   * The group of this directory is same as the user running NM. This allows
+   * NM to perform management operations on it such as read, delete, etc.
+   */
+  private static final FsPermission APP_LOG_DIR_PERM =
+    FsPermission.createImmutable((short) 02750);
+
+  /**
+   * Permission for application log files.
    */
   private static final FsPermission APP_LOG_PERM =
-    FsPermission.createImmutable((short) 0740);
+    FsPermission.createImmutable((short) 0640);
 
   public ContainerLaunch(Context context, Configuration configuration,
       Dispatcher dispatcher, ContainerExecutor exec, Application app,
@@ -875,13 +885,13 @@ public class ContainerLaunch implements Callable<Integer> {
     // Create the app log dir if not present. This will only happen for
     // the app master container.
     if (!fs.exists(appLogDir)) {
-      FileSystem.mkdirs(fs, appLogDir, APP_LOG_PERM);
+      FileSystem.mkdirs(fs, appLogDir, APP_LOG_DIR_PERM);
       fs.setOwner(appLogDir, user, null);
     }
 
     Path containerLogDir = TaskLogUtil.getDFSLoggingHandler()
       .getLogDirForWrite(relativeContainerLogDir);
-    FileSystem.mkdirs(fs, containerLogDir, APP_LOG_PERM);
+    FileSystem.mkdirs(fs, containerLogDir, APP_LOG_DIR_PERM);
     fs.setOwner(containerLogDir, user, null);
 
     // Create the 3 log files
