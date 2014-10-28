@@ -88,4 +88,33 @@
     <value>mapr_direct_shuffle</value>
   </property>
 
+  <!-- BEGIN: Logging related settings -->
+  <property>
+    <name>yarn.log-aggregation-enable</name>
+    <value>false</value>
+    <description>Determines if log aggregation should be enabled. When it is enabled, logs for map reduce jobs
+      will be aggregated using this method only if yarn.use-central-logging-for-mapreduce-only is set to false.</description>
+  </property>
+
+  <property>
+    <name>yarn.use-central-logging-for-mapreduce-only</name>
+    <value>true</value>
+    <description>Determines if MapR central logging should be enabled. This is only applicable for map reduce jobs.
+      So to keep logs in MapRFS for other applications, enable log aggregation.</description>
+  </property>
+
+  <property>
+    <name>yarn.log-aggregation.retain-seconds</name>
+    <value>2592000</value>
+    <description>Determines how long to keep the logs in MapRFS. Defaults to 30 days if not specified.</description>
+  </property>
+
+  <property>
+    <name>yarn.log-aggregation.retain-check-interval-seconds</name>
+    <value>-1</value>
+    <description>Determines how often to perform log retention checks. When set to the default value of -1, the check time
+      will be set to 1/10th of the retention time. So it will be 3 days when retention time is 30 days.</description>
+  </property>
+  <!--  END: Logging related settings -->
+
 </configuration>

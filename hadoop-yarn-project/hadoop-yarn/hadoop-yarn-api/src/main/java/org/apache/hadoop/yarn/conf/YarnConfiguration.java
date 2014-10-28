@@ -742,8 +742,13 @@ public class YarnConfiguration extends Configuration {
   /**
    * Whether to save logs directly in DFS instead of writing to local file
    * system. This is a global setting and applies to all applications.
+   *
+   * Note: Since this feature is only applicable to MapReduce now, we use a
+   * mapreduce specific name. Ideally, it should be called
+   * yarn.dfs-logging.enable.
    */
-  public static final String ENABLE_DFS_LOGGING = DFS_LOGGING_PREFIX + "enable";
+  public static final String ENABLE_DFS_LOGGING = YARN_PREFIX
+    + "use-central-logging-for-mapreduce-only";
 
   /**
    * Whether an application supports writing directly to DFS.
