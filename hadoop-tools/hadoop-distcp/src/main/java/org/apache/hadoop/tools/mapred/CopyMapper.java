@@ -198,12 +198,19 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
 
     Path qualifiedBaseTarget = targetWorkPath.makeQualified(targetFS.getUri(),
         targetFS.getWorkingDirectory());
-    Path remainingPath = new Path(relPath.toString());
-    // Merge paths instead of concatenating to avoid misinterpreting the path
-    // as authority. E.g. case: path1 = maprfs:/ and path2 = /foo/bar.
-    // If we simply concatenate, then it will become maprfs://foo/bar and so
-    // foo will be wrongly treated as authority.
-    Path target = Path.mergePaths(qualifiedBaseTarget, remainingPath);
+
+    String relPathStr = relPath.toString();
+    Path target = null;
+    if (relPathStr.isEmpty()) {
+      target = qualifiedBaseTarget;
+    } else {
+      Path remainingPath = new Path(relPath.toString());
+      // Merge paths instead of concatenating to avoid misinterpreting the path
+      // as authority. E.g. case: path1 = maprfs:/ and path2 = /foo/bar.
+      // If we simply concatenate, then it will become maprfs://foo/bar and so
+      // foo will be wrongly treated as authority.
+      target = Path.mergePaths(qualifiedBaseTarget, remainingPath);
+    }
 
     EnumSet<DistCpOptions.FileAttribute> fileAttributes
             = getFileAttributeSettings(context);
