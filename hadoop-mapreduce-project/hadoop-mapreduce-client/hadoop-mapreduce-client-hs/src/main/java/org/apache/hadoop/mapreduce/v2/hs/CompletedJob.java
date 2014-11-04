@@ -144,6 +144,7 @@ public class CompletedJob implements org.apache.hadoop.mapreduce.v2.app.job.Job 
     } else {
       report.setMapProgress((float) getCompletedMaps() / getTotalMaps());
     }
+
     if ( getTotalReduces() == 0 ) {
       report.setReduceProgress(1.0f);
     } else {
