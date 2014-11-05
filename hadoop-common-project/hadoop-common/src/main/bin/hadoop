@@ -213,6 +213,11 @@ case $COMMAND in
       HADOOP_OPTS="-Dmapr.library.flatclass"
     elif [ "$COMMAND" = "conf" ] ; then
       CLASS=org.apache.hadoop.mapreduce.util.ConfigUtil
+      NONE='\033[00m'
+      CYAN='\033[01;36m'
+      echo -e "${CYAN}Try 'hadoop conf-details' for more detailed configuration.${NONE}"
+    elif [ "$COMMAND" = "conf-details" ] ; then
+      CLASS=com.mapr.hadoop.conf.HadoopConfigClassifier
     # End: MapR specific section
 
     elif [[ "$COMMAND" = -*  ]] ; then
