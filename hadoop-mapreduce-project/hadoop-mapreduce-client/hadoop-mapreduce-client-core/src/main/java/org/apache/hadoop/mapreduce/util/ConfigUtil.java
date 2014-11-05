@@ -53,7 +53,7 @@ public class ConfigUtil {
    * Adds deprecated keys and the corresponding new keys to the Configuration
    */
   @SuppressWarnings("deprecation")
-  private static void addDeprecatedKeys()  {
+  public static void addDeprecatedKeys()  {
     Configuration.addDeprecations(new DeprecationDelta[] {
       new DeprecationDelta("mapred.temp.dir",
         MRConfig.TEMP_DIR),
@@ -400,7 +400,7 @@ public class ConfigUtil {
       new DeprecationDelta("mapred.used.genericoptionsparser",
         Job.USED_GENERIC_PARSER),
       new DeprecationDelta("mapred.input.dir",
-         
+
           org.apache.hadoop.mapreduce.lib.input.FileInputFormat.INPUT_DIR),
       new DeprecationDelta("mapred.input.pathFilter.class",
         org.apache.hadoop.mapreduce.lib.input.
