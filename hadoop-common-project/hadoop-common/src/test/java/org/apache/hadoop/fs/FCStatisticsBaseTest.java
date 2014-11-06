@@ -46,17 +46,21 @@ public abstract class FCStatisticsBaseTest {
   //fc should be set appropriately by the deriving test.
   protected static FileContext fc = null;
   
+  @SuppressWarnings("deprecation")
   @Test(timeout=60000)
   public void testStatisticsOperations() throws Exception {
     final Statistics stats = new Statistics("file");
     Assert.assertEquals(0L, stats.getBytesRead());
     Assert.assertEquals(0L, stats.getBytesWritten());
     Assert.assertEquals(0, stats.getWriteOps());
+    Assert.assertEquals(0L, stats.getNumWriteOps());
     stats.incrementBytesWritten(1000);
     Assert.assertEquals(1000L, stats.getBytesWritten());
     Assert.assertEquals(0, stats.getWriteOps());
+    Assert.assertEquals(0L, stats.getNumWriteOps());
     stats.incrementWriteOps(123);
     Assert.assertEquals(123, stats.getWriteOps());
+    Assert.assertEquals(123L, stats.getNumWriteOps());
     
     Thread thread = new Thread() {
       @Override
@@ -67,13 +71,16 @@ public abstract class FCStatisticsBaseTest {
     thread.start();
     Uninterruptibles.joinUninterruptibly(thread);
     Assert.assertEquals(124, stats.getWriteOps());
+    Assert.assertEquals(124L, stats.getNumWriteOps());
     // Test copy constructor and reset function
     Statistics stats2 = new Statistics(stats);
     stats.reset();
     Assert.assertEquals(0, stats.getWriteOps());
+    Assert.assertEquals(0L, stats.getNumWriteOps());
     Assert.assertEquals(0L, stats.getBytesWritten());
     Assert.assertEquals(0L, stats.getBytesRead());
     Assert.assertEquals(124, stats2.getWriteOps());
+    Assert.assertEquals(124L, stats2.getNumWriteOps());
     Assert.assertEquals(1000L, stats2.getBytesWritten());
     Assert.assertEquals(0L, stats2.getBytesRead());
   }
