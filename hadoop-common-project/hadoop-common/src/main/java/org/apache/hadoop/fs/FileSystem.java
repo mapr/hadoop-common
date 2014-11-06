@@ -2908,9 +2908,9 @@ public abstract class FileSystem extends Configured implements Closeable {
     public static class StatisticsData {
       volatile long bytesRead;
       volatile long bytesWritten;
-      volatile int readOps;
-      volatile int largeReadOps;
-      volatile int writeOps;
+      volatile long readOps;
+      volatile long largeReadOps;
+      volatile long writeOps;
       /**
        * Stores a weak reference to the thread owning this StatisticsData.
        * This allows us to remove StatisticsData objects that pertain to
@@ -2960,16 +2960,28 @@ public abstract class FileSystem extends Configured implements Closeable {
       }
       
       public int getReadOps() {
+        return (int) readOps;
+      }
+
+      public long getNumReadOps() {
         return readOps;
       }
-      
+
       public int getLargeReadOps() {
+        return (int) largeReadOps;
+      }
+
+      public long getNumLargeReadOps() {
         return largeReadOps;
       }
-      
+
       public int getWriteOps() {
-        return writeOps;
+        return (int) writeOps;
       }
+
+      public long getNumWriteOps() {
+        return writeOps;
+      }      
     }
 
     private interface StatisticsAggregator<T> {
@@ -3158,8 +3170,16 @@ public abstract class FileSystem extends Configured implements Closeable {
      * @return number of read operations
      */
     public int getReadOps() {
-      return visitAll(new StatisticsAggregator<Integer>() {
-        private int readOps = 0;
+      return (int) getNumReadOps();
+    }
+
+    /**
+     * Get the number of file system read operations such as list files
+     * @return number of read operations as a long type
+     */
+    public long getNumReadOps() {
+      return visitAll(new StatisticsAggregator<Long>() {
+        private long readOps = 0;
 
         @Override
         public void accept(StatisticsData data) {
@@ -3167,7 +3187,7 @@ public abstract class FileSystem extends Configured implements Closeable {
           readOps += data.largeReadOps;
         }
 
-        public Integer aggregate() {
+        public Long aggregate() {
           return readOps;
         }
       });
@@ -3179,15 +3199,24 @@ public abstract class FileSystem extends Configured implements Closeable {
      * @return number of large read operations
      */
     public int getLargeReadOps() {
-      return visitAll(new StatisticsAggregator<Integer>() {
-        private int largeReadOps = 0;
+      return (int) getNumLargeReadOps();
+    }
+
+    /**
+     * Get the number of large file system read operations such as list files
+     * under a large directory
+     * @return number of large read operations as a long type
+     */
+    public long getNumLargeReadOps() {
+      return visitAll(new StatisticsAggregator<Long>() {
+        private long largeReadOps = 0;
 
         @Override
         public void accept(StatisticsData data) {
           largeReadOps += data.largeReadOps;
         }
 
-        public Integer aggregate() {
+        public Long aggregate() {
           return largeReadOps;
         }
       });
@@ -3199,15 +3228,24 @@ public abstract class FileSystem extends Configured implements Closeable {
      * @return number of write operations
      */
     public int getWriteOps() {
-      return visitAll(new StatisticsAggregator<Integer>() {
-        private int writeOps = 0;
+      return (int) getNumWriteOps();
+    }
+
+    /**
+     * Get the number of file system write operations such as create, append
+     * rename etc.
+     * @return number of write operations as a long type
+     */
+    public long getNumWriteOps() {
+      return visitAll(new StatisticsAggregator<Long>() {
+        private long writeOps = 0;
 
         @Override
         public void accept(StatisticsData data) {
           writeOps += data.writeOps;
         }
 
-        public Integer aggregate() {
+        public Long aggregate() {
           return writeOps;
         }
       });

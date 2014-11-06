@@ -954,9 +954,9 @@ abstract public class Task implements Writable, Configurable {
       for (FileSystem.Statistics stat: stats) {
         readBytes = readBytes + stat.getBytesRead();
         writeBytes = writeBytes + stat.getBytesWritten();
-        readOps = readOps + stat.getReadOps();
-        largeReadOps = largeReadOps + stat.getLargeReadOps();
-        writeOps = writeOps + stat.getWriteOps();
+        readOps = readOps + stat.getNumReadOps();
+        largeReadOps = largeReadOps + stat.getNumLargeReadOps();
+        writeOps = writeOps + stat.getNumWriteOps();
       }
       readBytesCounter.setValue(readBytes);
       writeBytesCounter.setValue(writeBytes);
