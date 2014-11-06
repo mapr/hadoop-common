@@ -45,9 +45,11 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.ipc.ProtocolSignature;
+import org.apache.hadoop.mapred.MapTask.MapOutputBuffer;
 import org.apache.hadoop.mapreduce.Cluster.JobTrackerStatus;
 import org.apache.hadoop.mapreduce.ClusterMetrics;
 import org.apache.hadoop.mapreduce.MRConfig;
+import org.apache.hadoop.mapreduce.MRJobConfig;
 import org.apache.hadoop.mapreduce.OutputFormat;
 import org.apache.hadoop.mapreduce.QueueInfo;
 import org.apache.hadoop.mapreduce.TaskCompletionEvent;
@@ -59,6 +61,7 @@ import org.apache.hadoop.mapreduce.server.jobtracker.JTConfig;
 import org.apache.hadoop.mapreduce.split.JobSplit.TaskSplitMetaInfo;
 import org.apache.hadoop.mapreduce.split.SplitMetaInfoReader;
 import org.apache.hadoop.mapreduce.task.TaskAttemptContextImpl;
+import org.apache.hadoop.mapreduce.task.reduce.Shuffle;
 import org.apache.hadoop.mapreduce.v2.LogParams;
 import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -162,7 +165,10 @@ public class LocalJobRunner implements ClientProtocol {
       // this will trigger localFile to be re-written again.
       localDistributedCacheManager = new LocalDistributedCacheManager();
       localDistributedCacheManager.setup(conf);
-      
+
+      // Reset to 'apache shuffle' parameters as we are running in 'local' mode.
+      resetShuffleParams(conf);
+
       // Write out configuration file.  Instead of copying it from
       // systemJobFile, we re-write it, since setup(), above, may have
       // updated it.
@@ -189,6 +195,14 @@ public class LocalJobRunner implements ClientProtocol {
       jobs.put(id, this);
 
       this.start();
+    }
+
+    private void resetShuffleParams(JobConf conf) {
+      conf.setClass(MRConfig.TASK_LOCAL_OUTPUT_CLASS, MROutputFiles.class, MapOutputFile.class);
+      conf.setClass(MRJobConfig.MAP_OUTPUT_COLLECTOR_CLASS_ATTR, MapOutputBuffer.class, MapOutputCollector.class);
+      conf.setClass(MRConfig.SHUFFLE_CONSUMER_PLUGIN, Shuffle.class, ShuffleConsumerPlugin.class);
+      conf.setClass(MRConfig.MAPRED_IFILE_OUTPUTSTREAM, IFileOutputStream.class, IFileOutputStream.class);
+      conf.setClass(MRConfig.MAPRED_IFILE_INPUTSTREAM, IFileInputStream.class, IFileInputStream.class);
     }
 
     protected abstract class RunnableWithThrowable implements Runnable {
