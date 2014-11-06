@@ -28,7 +28,7 @@ public class Times {
   static final ThreadLocal<SimpleDateFormat> dateFormat =
       new ThreadLocal<SimpleDateFormat>() {
         @Override protected SimpleDateFormat initialValue() {
-          return new SimpleDateFormat("d-MMM-yyyy HH:mm:ss");
+          return new SimpleDateFormat("EEE MMM dd HH:mm:ss Z yyyy");
         }
       };
 
