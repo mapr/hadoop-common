@@ -21,25 +21,32 @@ package org.apache.hadoop.examples.terasort;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.zip.Checksum;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.examples.terasort.TeraGen.Counters;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableUtils;
-import org.apache.hadoop.mapred.FileOutputFormat;
-import org.apache.hadoop.mapred.InputFormat;
-import org.apache.hadoop.mapred.InputSplit;
-import org.apache.hadoop.mapred.JobClient;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.Counter;
+import org.apache.hadoop.mapreduce.InputFormat;
+import org.apache.hadoop.mapreduce.JobContext;
+import org.apache.hadoop.mapreduce.MRJobConfig;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.MapReduceBase;
-import org.apache.hadoop.mapred.Mapper;
-import org.apache.hadoop.mapred.OutputCollector;
-import org.apache.hadoop.mapred.RecordReader;
-import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.RecordReader;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.util.PureJavaCrc32;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
@@ -67,12 +74,12 @@ public class TeraGenWithCRC extends Configured implements Tool {
    * An input format that assigns ranges of longs to each mapper.
    */
   static class RangeInputFormat 
-       implements InputFormat<LongWritable, NullWritable> {
+       extends InputFormat<LongWritable, NullWritable> {
     
     /**
      * An input split consisting of a range on numbers.
      */
-    static class RangeInputSplit implements InputSplit {
+    static class RangeInputSplit extends InputSplit implements Writable {
       long firstRow;
       long rowCount;
 
@@ -106,39 +113,42 @@ public class TeraGenWithCRC extends Configured implements Tool {
      * A record reader that will generate a range of numbers.
      */
     static class RangeRecordReader 
-          implements RecordReader<LongWritable, NullWritable> {
+        extends RecordReader<LongWritable, NullWritable> {
       long startRow;
       long finishedRows;
       long totalRows;
+      LongWritable key = null;
 
-      public RangeRecordReader(RangeInputSplit split) {
-        startRow = split.firstRow;
+      public RangeRecordReader() {
+      }
+      
+      public void initialize(InputSplit split, TaskAttemptContext context) 
+          throws IOException, InterruptedException {
+        startRow = ((RangeInputSplit)split).firstRow;
         finishedRows = 0;
-        totalRows = split.rowCount;
+        totalRows = ((RangeInputSplit)split).rowCount;
       }
 
       public void close() throws IOException {
         // NOTHING
       }
 
-      public LongWritable createKey() {
-        return new LongWritable();
+      public LongWritable getCurrentKey() {
+        return key;
       }
 
-      public NullWritable createValue() {
+      public NullWritable getCurrentValue() {
         return NullWritable.get();
-      }
-
-      public long getPos() throws IOException {
-        return finishedRows;
       }
 
       public float getProgress() throws IOException {
         return finishedRows / (float) totalRows;
       }
 
-      public boolean next(LongWritable key, 
-                          NullWritable value) {
+      public boolean nextKeyValue() {
+        if (key == null) {
+          key = new LongWritable();
+        }
         if (finishedRows < totalRows) {
           key.set(startRow + finishedRows);
           finishedRows += 1;
@@ -150,41 +160,40 @@ public class TeraGenWithCRC extends Configured implements Tool {
       
     }
 
-    public RecordReader<LongWritable, NullWritable> 
-      getRecordReader(InputSplit split, JobConf job,
-                      Reporter reporter) throws IOException {
-      return new RangeRecordReader((RangeInputSplit) split);
-    }
+	@Override
+	public org.apache.hadoop.mapreduce.RecordReader<LongWritable, NullWritable> createRecordReader(
+			org.apache.hadoop.mapreduce.InputSplit split,
+			TaskAttemptContext context) throws IOException,
+			InterruptedException {
+		return new RangeRecordReader();
+	}
 
-    /**
-     * Create the desired number of splits, dividing the number of rows
-     * between the mappers.
-     */
-    public InputSplit[] getSplits(JobConf job, 
-                                  int numSplits) {
-      long totalRows = getNumberOfRows(job);
-      long rowsPerSplit = totalRows / numSplits;
-      System.out.println("Generating " + totalRows + " using " + numSplits + 
-                         " maps with step of " + rowsPerSplit);
-      InputSplit[] splits = new InputSplit[numSplits];
-      long currentRow = 0;
-      for(int split=0; split < numSplits-1; ++split) {
-        splits[split] = new RangeInputSplit(currentRow, rowsPerSplit);
-        currentRow += rowsPerSplit;
-      }
-      splits[numSplits-1] = new RangeInputSplit(currentRow, 
-                                                totalRows - currentRow);
-      return splits;
-    }
+	@Override
+	public List<org.apache.hadoop.mapreduce.InputSplit> getSplits(
+			JobContext context) throws IOException, InterruptedException {
+	      long totalRows = getNumberOfRows(context);
+	      int numSplits = context.getConfiguration().getInt(MRJobConfig.NUM_MAPS, 1);
+	      long rowsPerSplit = totalRows / numSplits;
+	      System.out.println("Generating " + totalRows + " using " + numSplits + 
+	                         " maps with step of " + rowsPerSplit);
+	      List<InputSplit> splits = new ArrayList<InputSplit>(numSplits);
+	      long currentRow = 0;
+	      for(int split=0; split < numSplits-1; ++split) {
+	        splits.add(new RangeInputSplit(currentRow, rowsPerSplit));
+	        currentRow += rowsPerSplit;
+	      }
+	      splits.add(new RangeInputSplit(currentRow, totalRows - currentRow));
+	      return splits;
+	}
 
   }
   
-  static long getNumberOfRows(JobConf job) {
-    return job.getLong("terasort.num-rows", 0);
+  static long getNumberOfRows(JobContext job) {
+    return job.getConfiguration().getLong("terasort.num-rows", 0);
   }
   
-  static void setNumberOfRows(JobConf job, long numRows) {
-    job.setLong("terasort.num-rows", numRows);
+  static void setNumberOfRows(Job job, long numRows) {
+    job.getConfiguration().setLong("terasort.num-rows", numRows);
   }
 
   static class RandomGenerator {
@@ -259,90 +268,59 @@ public class TeraGenWithCRC extends Configured implements Tool {
    * The Mapper class that given a row number, will generate the appropriate 
    * output line.
    */
-  public static class SortGenMapper extends MapReduceBase 
-      implements Mapper<LongWritable, NullWritable, Text, Text> {
+  public static class SortGenMapper 
+      extends Mapper<LongWritable, NullWritable, Text, Text> {
 
     private Text key = new Text();
     private Text value = new Text();
-    private RandomGenerator rand;
-    private byte[] keyBytes = new byte[12];
-    private byte[] spaces = "          ".getBytes();
-    private byte[][] filler = new byte[26][];
-    {
-      for(int i=0; i < 26; ++i) {
-        filler[i] = new byte[10];
-        for(int j=0; j<10; ++j) {
-          filler[i][j] = (byte) ('A' + i);
-        }
-      }
-    }
-    
-    /**
-     * Add a random key to the text
-     * @param rowId
-     */
-    private void addKey() {
-      for(int i=0; i<3; i++) {
-        long temp = rand.next() / 52;
-        keyBytes[3 + 4*i] = (byte) (' ' + (temp % 95));
-        temp /= 95;
-        keyBytes[2 + 4*i] = (byte) (' ' + (temp % 95));
-        temp /= 95;
-        keyBytes[1 + 4*i] = (byte) (' ' + (temp % 95));
-        temp /= 95;
-        keyBytes[4*i] = (byte) (' ' + (temp % 95));
-      }
-      key.set(keyBytes, 0, 10);
-    }
-    
-    /**
-     * Add the rowid to the row.
-     * @param rowId
-     */
-    private void addRowId(long rowId) {
-      byte[] rowid = Integer.toString((int) rowId).getBytes();
-      int padSpace = 10 - rowid.length;
-      if (padSpace > 0) {
-        value.append(spaces, 0, 10 - rowid.length);
-      }
-      value.append(rowid, 0, Math.min(rowid.length, 10));
-    }
+    private Unsigned16 rand = null;
+    private Unsigned16 rowId = null;
+    private Unsigned16 checksum = new Unsigned16();
+    private Checksum crc32 = new PureJavaCrc32();
+    private Unsigned16 total = new Unsigned16();
+    private static final Unsigned16 ONE = new Unsigned16(1);
+    private byte[] buffer = new byte[TeraInputFormat.KEY_LENGTH +
+                                     TeraInputFormat.VALUE_LENGTH];
+    private Counter checksumCounter;
 
-    /**
-     * Add the required filler bytes. Each row consists of 5 blocks of
-     * 10 characters and 1 block of 8 characters.
-     * @param rowId the current row number
-     */
-    private void addFiller(long rowId) {
-      int base = (int) ((rowId * 8) % 26);
-      for(int i=0; i<5; ++i) {
-        value.append(filler[(base+i) % 26], 0, 10);
-      }
-      value.append(filler[(base+7) % 26], 0, 8);
-    }
-    
     public void map(LongWritable row, NullWritable ignored,
-                    OutputCollector<Text, Text> output,
-                    Reporter reporter) throws IOException {
-      long rowId = row.get();
+        Context context) throws IOException, InterruptedException {
       if (rand == null) {
-        // we use 3 random numbers per a row
-        rand = new RandomGenerator(rowId*3);
+        rowId = new Unsigned16(row.get());
+        rand = Random16.skipAhead(rowId);
+        checksumCounter = context.getCounter(Counters.CHECKSUM);
       }
-      addKey();
-      value.clear();
-      addRowId(rowId);
-      addFiller(rowId);
-      output.collect(key, value);
+      Random16.nextRand(rand);
+      GenSort.generateRecord(buffer, rand, rowId);
+      key.set(buffer, 0, TeraInputFormat.KEY_LENGTH);
+      value.set(buffer, TeraInputFormat.KEY_LENGTH, 
+                TeraInputFormat.VALUE_LENGTH);
+      context.write(key, value);
+      crc32.reset();
+      crc32.update(buffer, 0, 
+                   TeraInputFormat.KEY_LENGTH + TeraInputFormat.VALUE_LENGTH);
+      checksum.set(crc32.getValue());
+      total.add(checksum);
+      rowId.add(ONE);
     }
 
+    @Override
+    public void cleanup(Context context) {
+      if (checksumCounter != null) {
+        checksumCounter.increment(total.getLow8());
+      }
+    }
   }
+
 
   /**
    * @param args the cli arguments
+ * @throws InterruptedException 
+ * @throws ClassNotFoundException 
    */
-  public int run(String[] args) throws IOException {
-    JobConf job = (JobConf) getConf();
+  public int run(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
+    //JobConf job = (JobConf) getConf();
+	  Job job = Job.getInstance(getConf());
     setNumberOfRows(job, Long.parseLong(args[0]));
     FileOutputFormat.setOutputPath(job, new Path(args[1]));
     job.setJobName("TeraGenWithCRC");
@@ -352,11 +330,10 @@ public class TeraGenWithCRC extends Configured implements Tool {
     job.setNumReduceTasks(0);
     job.setOutputKeyClass(Text.class);
     job.setOutputValueClass(Text.class);
-    job.setInputFormat(RangeInputFormat.class);
-    job.setOutputFormat(TeraOutputFormatWithCRC.class);
+    job.setInputFormatClass(RangeInputFormat.class);
+    job.setOutputFormatClass(TeraOutputFormatWithCRC.class);
     
-    JobClient.runJob(job);
-    return 0;
+    return job.waitForCompletion(true) ? 0 : 1;
   }
 
   public static void main(String[] args) throws Exception {

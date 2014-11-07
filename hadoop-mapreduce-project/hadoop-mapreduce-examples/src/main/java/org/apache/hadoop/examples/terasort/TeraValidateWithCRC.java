@@ -26,15 +26,17 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MapReduceBase;
-import org.apache.hadoop.mapred.Mapper;
+import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
-import org.apache.hadoop.mapred.Reducer;
+import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
@@ -55,8 +57,7 @@ public class TeraValidateWithCRC extends Configured implements Tool {
   private static final Text error = new Text("error");
   static Log LOG = LogFactory.getLog(TeraGenWithCRC.class);
 
-  static class ValidateMapper extends MapReduceBase 
-      implements Mapper<Text,Text,Text,Text> {
+  static class ValidateMapper extends Mapper<Text,Text,Text,Text> {
     private Text lastKey;
     private OutputCollector<Text,Text> output;
     private String filename;
@@ -102,8 +103,8 @@ public class TeraValidateWithCRC extends Configured implements Tool {
    * boundary keys are always increasing.
    * Also passes any error reports along intact.
    */
-  static class ValidateReducer extends MapReduceBase 
-      implements Reducer<Text,Text,Text,Text> {
+  static class ValidateReducer  
+      extends Reducer<Text,Text,Text,Text> {
     private boolean firstKey = true;
     private Text lastKey = new Text();
     private Text lastValue = new Text();
@@ -133,7 +134,8 @@ public class TeraValidateWithCRC extends Configured implements Tool {
   }
 
   public int run(String[] args) throws Exception {
-    JobConf job = (JobConf) getConf();
+    //JobConf job = (JobConf) getConf();
+    Job job = Job.getInstance(getConf());
     TeraInputFormatWithCRC.setInputPaths(job, new Path(args[0]));
     FileOutputFormat.setOutputPath(job, new Path(args[1]));
     job.setJobName("TeraValidateWithCRC");
@@ -145,10 +147,9 @@ public class TeraValidateWithCRC extends Configured implements Tool {
     // force a single reducer
     job.setNumReduceTasks(1);
     // force a single split 
-    job.setLong("mapred.min.split.size", Long.MAX_VALUE);
-    job.setInputFormat(TeraInputFormatWithCRC.class);
-    JobClient.runJob(job);
-    return 0;
+    FileInputFormat.setMinInputSplitSize(job, Long.MAX_VALUE);
+    job.setInputFormatClass(TeraInputFormatWithCRC.class);
+    return job.waitForCompletion(true) ? 0 : 1;
   }
 
   /**
