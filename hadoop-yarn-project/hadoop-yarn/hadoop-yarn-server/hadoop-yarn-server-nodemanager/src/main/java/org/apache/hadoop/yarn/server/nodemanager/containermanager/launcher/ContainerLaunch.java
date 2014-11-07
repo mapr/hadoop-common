@@ -335,10 +335,17 @@ public class ContainerLaunch implements Callable<Integer> {
       else {
         exec.activateContainer(containerID, pidFilePath);
 
+        // Invoke any registered external token localizer. External tokens are
+        // localized as part of resource localization. But some tasks may not
+        // need resource localization and so we need to localize the token here.
+        ExternalTokenLocalizer extTokenLocalizer = ExternalTokenLocalizerFactory.get();
+        if (extTokenLocalizer != null) {
+          extTokenLocalizer.run(containerID, user, conf);
+        }
+
         Path extTokenPath = null;
         String extTokenEnvVar = null;
 
-        ExternalTokenLocalizer extTokenLocalizer = ExternalTokenLocalizerFactory.get();
         if (extTokenLocalizer != null) {
           extTokenPath = extTokenLocalizer.getTokenPath(appIdStr, conf);
           extTokenEnvVar = extTokenLocalizer.getTokenEnvVar();

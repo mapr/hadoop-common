@@ -19,8 +19,8 @@ package org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.sec
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.yarn.server.nodemanager.LocalDirsHandlerService;
-import org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.LocalizerContext;
+import org.apache.hadoop.yarn.api.records.ApplicationId;
+import org.apache.hadoop.yarn.api.records.ContainerId;
 
 /**
  * Interface to plug in a token localizer that can localize any distribution
@@ -39,12 +39,11 @@ public interface ExternalTokenLocalizer {
    * Localizes any distribution specific tokens. This method will be invoked with
    * the privileges of the user account used to run NodeManager service.
    *
-   * @param context localizer context
+   * @param containerId container id
+   * @param user user
    * @param conf YarnConfiguration instance
-   * @param localDirsHandlerService
    */
-  void run(LocalizerContext context, Configuration conf,
-      LocalDirsHandlerService localDirsHandlerService);
+  void run(ContainerId containerId, String user, Configuration conf);
 
   /**
    * Returns the path of the localized token for given application id.
@@ -60,4 +59,11 @@ public interface ExternalTokenLocalizer {
    * the localization process and the actual container process running the task.
    */
   String getTokenEnvVar();
+
+  /**
+   * Cleans up any resources tracked for the given application.
+   *
+   * @param appId application id
+   */
+  void cleanup(ApplicationId appId);
 }
