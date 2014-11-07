@@ -33,10 +33,10 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.FileOutputFormat;
-import org.apache.hadoop.mapred.JobClient;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.Partitioner;
+import org.apache.hadoop.mapreduce.Partitioner;
+import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
@@ -54,7 +54,7 @@ public class TeraSortWithCRC extends Configured implements Tool {
    * A partitioner that splits text keys into roughly equal partitions
    * in a global sorted order.
    */
-  static class TotalOrderPartitioner implements Partitioner<Text,Text>{
+  static class TotalOrderPartitioner extends Partitioner<Text,Text>{
     private TrieNode trie;
     private Text[] splitPoints;
 
@@ -225,9 +225,10 @@ public class TeraSortWithCRC extends Configured implements Tool {
   
   public int run(String[] args) throws Exception {
     LOG.info("starting");
-    JobConf job = (JobConf) getConf();
+    //JobConf job = (JobConf) getConf();
+    Job job = Job.getInstance(getConf());
     Path inputDir = new Path(args[0]);
-    inputDir = inputDir.makeQualified(inputDir.getFileSystem(job));
+    inputDir = inputDir.makeQualified(inputDir.getFileSystem(job.getConfiguration()));
     Path partitionFile = new Path(inputDir, TeraInputFormatWithCRC.PARTITION_FILENAME);
     URI partitionUri = new URI(partitionFile.toString() +
                                "#" + TeraInputFormatWithCRC.PARTITION_FILENAME);
@@ -237,17 +238,17 @@ public class TeraSortWithCRC extends Configured implements Tool {
     job.setJarByClass(TeraSortWithCRC.class);
     job.setOutputKeyClass(Text.class);
     job.setOutputValueClass(Text.class);
-    job.setInputFormat(TeraInputFormatWithCRC.class);
-    job.setOutputFormat(TeraOutputFormatWithCRC.class);
+    job.setInputFormatClass(TeraInputFormatWithCRC.class);
+    job.setOutputFormatClass(TeraOutputFormatWithCRC.class);
     job.setPartitionerClass(TotalOrderPartitioner.class);
     TeraInputFormatWithCRC.writePartitionFile(job, partitionFile);
-    DistributedCache.addCacheFile(partitionUri, job);
-    DistributedCache.createSymlink(job);
-    job.setInt("dfs.replication", 1);
+    job.addCacheFile(partitionUri);
+    DistributedCache.createSymlink(job.getConfiguration());
+    job.getConfiguration().setInt("dfs.replication", 1);
     TeraOutputFormatWithCRC.setFinalSync(job, true);
-    JobClient.runJob(job);
+    int ret = job.waitForCompletion(true) ? 0 : 1;
     LOG.info("done");
-    return 0;
+    return ret;
   }
 
   /**

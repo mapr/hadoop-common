@@ -24,30 +24,29 @@ import java.util.TreeSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.FileOutputFormat;
-import org.apache.hadoop.mapred.JobClient;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.MapReduceBase;
-import org.apache.hadoop.mapred.Mapper;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
-import org.apache.hadoop.mapred.Reducer;
+import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapred.Reporter;
-import org.apache.hadoop.mapred.TextOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-public class TeraValidateRecords extends Configured 
-																 implements Tool {
+public class TeraValidateRecords extends Configured implements Tool {
 	
 	static Log LOG = LogFactory.getLog(TeraValidateRecords.class);
 	
-	static class TeraValidateMapper extends MapReduceBase 
-			implements Mapper<Text,Text,IntWritable,LongWritable> {
+	static class TeraValidateMapper  
+			extends Mapper<Text,Text,IntWritable,LongWritable> {
 		private static int ROW_LENGTH = 10;
 		private int numPartitions;
 		private long num_records;
@@ -70,8 +69,8 @@ public class TeraValidateRecords extends Configured
     }
 	}
 	
-	static class TeraValidateReducer extends MapReduceBase 
-		implements Reducer<IntWritable, LongWritable, LongWritable, Text> {
+	static class TeraValidateReducer 
+		extends Reducer<IntWritable, LongWritable, LongWritable, Text> {
 		
 		private int numPartitions;
 		private long num_records;
@@ -111,7 +110,9 @@ public class TeraValidateRecords extends Configured
 	}
 
 	public int run(String[] args) throws Exception {
-		JobConf conf = (JobConf) getConf();
+		//JobConf conf = (JobConf) getConf();
+		Job job = Job.getInstance(getConf());
+		Configuration conf = job.getConfiguration();
 		int num_records = 0;
 		int num_reducers = 1;
 		String inputPath = null;
@@ -133,33 +134,33 @@ public class TeraValidateRecords extends Configured
 		
 		conf.setLong("map.num.records", num_records);
 		
-		TeraInputFormatWithCRC.setInputPaths(conf, inputPath);
-		FileOutputFormat.setOutputPath(conf, new Path(outputPath));
+		TeraInputFormatWithCRC.setInputPaths(job, inputPath);
+		FileOutputFormat.setOutputPath(job, new Path(outputPath));
 		
-		conf.setJobName("TeraValidateRecords");
+		job.setJobName("TeraValidateRecords");
 		
-		conf.setJarByClass(TeraValidateRecords.class);
+		job.setJarByClass(TeraValidateRecords.class);
 		
-		conf.setMapperClass(TeraValidateMapper.class);
+		job.setMapperClass(TeraValidateMapper.class);
 		
-		conf.setMapOutputKeyClass(IntWritable.class);
+		job.setMapOutputKeyClass(IntWritable.class);
 		
-		conf.setMapOutputValueClass(LongWritable.class);
+		job.setMapOutputValueClass(LongWritable.class);
 		
-		conf.setReducerClass(TeraValidateReducer.class);
+		job.setReducerClass(TeraValidateReducer.class);
 		
-		conf.setNumReduceTasks(num_reducers);
+		job.setNumReduceTasks(num_reducers);
 		
-		conf.setOutputKeyClass(LongWritable.class);
+		job.setOutputKeyClass(LongWritable.class);
 		
-		conf.setOutputValueClass(Text.class);
+		job.setOutputValueClass(Text.class);
 		
-    conf.setInputFormat(TeraInputFormatWithCRC.class);
+		job.setInputFormatClass(TeraInputFormatWithCRC.class);
     
-    conf.setOutputFormat(TextOutputFormat.class);
+		job.setOutputFormatClass(TextOutputFormat.class);
     
-    JobClient.runJob(conf);
-		return 0;
+		return job.waitForCompletion(true) ? 0 : 1;
+
   }
 	
 	public static void main(String[] args) throws Exception {

@@ -18,29 +18,33 @@
 
 package org.apache.hadoop.examples.terasort;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.zip.CRC32;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.FileInputFormat;
-import org.apache.hadoop.mapred.FileSplit;
-import org.apache.hadoop.mapred.InputSplit;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.LineRecordReader;
-import org.apache.hadoop.mapred.RecordReader;
-import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.mapreduce.JobContext;
+import org.apache.hadoop.mapreduce.MRJobConfig;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.hadoop.mapreduce.TaskAttemptID;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.apache.hadoop.mapreduce.lib.input.LineRecordReader;
+import org.apache.hadoop.mapreduce.task.TaskAttemptContextImpl;
+import org.apache.hadoop.mapreduce.InputSplit;
+import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.util.IndexedSortable;
 import org.apache.hadoop.util.QuickSort;
-import org.omg.CORBA.CTX_RESTRICT_SCOPE;
+import org.apache.hadoop.util.StringUtils;
 
 /**
  * An input format that reads the first 10 characters of each line as the key
@@ -51,8 +55,9 @@ public class TeraInputFormatWithCRC extends FileInputFormat<Text,Text> {
 
   static final String PARTITION_FILENAME = "_partition.lst";
   static final String SAMPLE_SIZE = "terasort.partitions.sample";
-  private static JobConf lastConf = null;
-  private static InputSplit[] lastResult = null;
+  private static MRJobConfig lastContext = null;
+  private static List<InputSplit> lastResult = null;
+
 
   static class TextSampler implements IndexedSortable {
     private ArrayList<Text> records = new ArrayList<Text>();
@@ -109,32 +114,43 @@ public class TeraInputFormatWithCRC extends FileInputFormat<Text,Text> {
    * @param partFile where to write the output file to
    * @throws IOException if something goes wrong
    */
-  public static void writePartitionFile(JobConf conf, 
+  public static void writePartitionFile(final JobContext job, 
                                         Path partFile) throws IOException {
     TeraInputFormatWithCRC inFormat = new TeraInputFormatWithCRC();
     TextSampler sampler = new TextSampler();
-    Text key = new Text();
-    Text value = new Text();
-    int partitions = conf.getNumReduceTasks();
+    Configuration conf = job.getConfiguration();
+    int partitions = job.getNumReduceTasks();
     long sampleSize = conf.getLong(SAMPLE_SIZE, 100000);
-    InputSplit[] splits = inFormat.getSplits(conf, conf.getNumMapTasks());
-    int samples = Math.min(10, splits.length);
+    List<InputSplit> splits = inFormat.getSplits(job);
+    int samples = Math.min(10, splits.size());
     long recordsPerSample = sampleSize / samples;
-    int sampleStep = splits.length / samples;
+    int sampleStep = splits.size() / samples;
     long records = 0;
     // take N samples from different parts of the input
+    
+    TaskAttemptContext context = new TaskAttemptContextImpl(
+            job.getConfiguration(), new TaskAttemptID());
     for(int i=0; i < samples; ++i) {
-      RecordReader<Text,Text> reader = 
-        inFormat.getRecordReader(splits[sampleStep * i], conf, null);
-      while (reader.next(key, value)) {
-      	if(key.getLength() > 0){
-          sampler.addKey(key);
-          records += 1;
-          if ((i+1) * recordsPerSample <= records) {
-            break;
-          }
-      	}
-      }
+      try {
+	      RecordReader<Text,Text> reader = 
+	        inFormat.createRecordReader(splits.get(sampleStep * i), context);
+	      reader.initialize(splits.get(sampleStep * i), context);
+	      while (reader.nextKeyValue()) {
+	      	if(reader.getCurrentKey().getLength() > 0){
+	          sampler.addKey(new Text(reader.getCurrentKey()));
+	          records += 1;
+	          if ((i+1) * recordsPerSample <= records) {
+	            break;
+	          }
+	      	}
+	      }
+      } catch (IOException ie){
+          System.err.println("Got an exception while reading splits " +
+              StringUtils.stringifyException(ie));
+          throw new RuntimeException(ie);
+      } catch(InterruptedException iex) {
+    		
+   	  }
     }
     FileSystem outFs = partFile.getFileSystem(conf);
     if (outFs.exists(partFile)) {
@@ -150,107 +166,135 @@ public class TeraInputFormatWithCRC extends FileInputFormat<Text,Text> {
     writer.close();
   }
 
-  static class TeraRecordReader implements RecordReader<Text,Text> {
-    private LineRecordReader in;
-    private LongWritable junk = new LongWritable();
-    private Text line = new Text();
+  static class TeraRecordReader extends RecordReader<Text,Text> {
     private static int KEY_LENGTH = 10;
+    static final int VALUE_LENGTH = 90;
     private static int CRC_LENGTH = 20;
+    private Text key;
+    private Text value;
+    private FSDataInputStream in;
+    private long offset;
+    private long length;
+    private static final int RECORD_LENGTH = KEY_LENGTH + VALUE_LENGTH + CRC_LENGTH;
+    private byte[] buffer = new byte[RECORD_LENGTH];
 
-    public TeraRecordReader(Configuration job, 
-                            FileSplit split) throws IOException {
-      in = new LineRecordReader(job, split);
+
+    public TeraRecordReader() {
+    	
     }
+    
+	@Override
+	public void initialize(org.apache.hadoop.mapreduce.InputSplit split,
+			TaskAttemptContext context) throws IOException,
+			InterruptedException {
+        Path p = ((FileSplit)split).getPath();
+        FileSystem fs = p.getFileSystem(context.getConfiguration());
+        in = fs.open(p);
+        long start = ((FileSplit)split).getStart();
+        // find the offset to start at a record boundary
+        offset = (RECORD_LENGTH - (start % RECORD_LENGTH)) % RECORD_LENGTH;
+        in.seek(start + offset);
+        length = ((FileSplit)split).getLength();
+	}
 
     public void close() throws IOException {
       in.close();
     }
 
-    public Text createKey() {
-      return new Text();
-    }
-
-    public Text createValue() {
-      return new Text();
-    }
-
-    public long getPos() throws IOException {
-      return in.getPos();
-    }
-
     public float getProgress() throws IOException {
-      return in.getProgress();
+      return (float) offset / length;
     }
 
-    public boolean next(Text key, Text value) throws IOException {
-      if (in.next(junk, line)) {
-        if (line.getLength() < KEY_LENGTH) {
-        	try {
-	          throw new Exception("The length of the line is less than key length " + line.getLength());
+	@Override
+	public Text getCurrentKey() throws IOException, InterruptedException {
+		return key;
+	}
+	@Override
+	public Text getCurrentValue() throws IOException, InterruptedException {
+		return value;
+	}
+
+	@Override
+	public boolean nextKeyValue() throws IOException, InterruptedException {
+      if (offset >= length) {
+        return false;
+      }
+      int read = 0;
+      while (read < RECORD_LENGTH) {
+	      long newRead = in.read(buffer, read, RECORD_LENGTH - read);
+	      if (newRead == -1) {
+	        if (read == 0) {
+	          return false;
+	        } else {
+	          throw new EOFException("read past eof");
+	        }
+	      }
+	      read += newRead;
+      }
+      if ( buffer.length < KEY_LENGTH ) {
+    	try {
+	          throw new Exception("The length of the line is less than key length " + buffer.length);
           } catch (Exception e) {
 	          // TODO Auto-generated catch block
 	          e.printStackTrace();
           }
-          /*key.set(line);
-          value.clear();*/
-        } else {
-          byte[] bytes = line.getBytes();
-          int actual_value_length = bytes.length - KEY_LENGTH - CRC_LENGTH;
-          
-          key.set(bytes, 0, KEY_LENGTH);
-          value.set(bytes, KEY_LENGTH, actual_value_length);
-          
-          Long start_cksum = System.currentTimeMillis();
-          CRC32 checksum = new CRC32();
-          checksum.update(key.getBytes());
-          checksum.update(bytes, KEY_LENGTH, actual_value_length);
-          Long end_cksum = System.currentTimeMillis();
-          
-          String cksum_bytes = new String(bytes, KEY_LENGTH + actual_value_length, CRC_LENGTH).trim();
-          long stored_cksum = Long.parseLong(cksum_bytes);
-          
-          long computed_cksum = checksum.getValue();
-          String computed_cksum_str = Long.toString(computed_cksum);
-          
-          String rowid_str = new String(bytes, KEY_LENGTH, 10).trim();
-          long rowid = Long.parseLong(rowid_str);
-          
-          if(!computed_cksum_str.equals(cksum_bytes))
-          {
-          	try {
+      } else {
+	     if (key == null) {
+	       key = new Text();
+	     }
+	     if (value == null) {
+	       value = new Text();
+	     }
+         int actual_value_length = buffer.length - KEY_LENGTH - CRC_LENGTH;
+         key.set(buffer, 0, KEY_LENGTH);
+         value.set(buffer, KEY_LENGTH, actual_value_length);
+         
+         Long start_cksum = System.currentTimeMillis();
+         CRC32 checksum = new CRC32();
+         checksum.update(key.getBytes(), 0, key.getLength());
+         checksum.update(value.getBytes(), 0, value.getLength());
+        // checksum.update(bytes, KEY_LENGTH, actual_value_length);
+         Long end_cksum = System.currentTimeMillis();
+         
+         String cksum_bytes = new String(buffer, KEY_LENGTH + actual_value_length, CRC_LENGTH).trim();
+         long stored_cksum = Long.parseLong(cksum_bytes);
+         
+         long computed_cksum = checksum.getValue();
+         String computed_cksum_str = Long.toString(computed_cksum);
+         
+         String rowid_str = new String(buffer, KEY_LENGTH+2, 32).trim();
+         long rowid = Long.parseLong(rowid_str, 16);
+         if(!computed_cksum_str.equals(cksum_bytes)) {
+	     	try {
 	            throw new Exception("CHECKSUM MISMATCH at row " + rowid + ": computed " 
 	            		+ computed_cksum + " stored " + stored_cksum);
 	          } catch (Exception e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
 	            System.exit(1);
-	          }
-          	
-            return true;
-          }
-        }
-        return true;
-      } else {
-        return false;
+	          }         	
+	     }
       }
-    }
+      offset += RECORD_LENGTH;
+      return true;
+
+	}
   }
 
   @Override
-  public RecordReader<Text, Text> 
-      getRecordReader(InputSplit split,
-                      JobConf job, 
-                      Reporter reporter) throws IOException {
-    return new TeraRecordReader(job, (FileSplit) split);
-  }
-
-  @Override
-  public InputSplit[] getSplits(JobConf conf, int splits) throws IOException {
-    if (conf == lastConf) {
+  public List<InputSplit> getSplits(JobContext job) throws IOException {
+    if (job == lastContext) {
       return lastResult;
     }
-    lastConf = conf;
-    lastResult = super.getSplits(conf, splits);
+    lastContext = job;
+    lastResult = super.getSplits(job);
     return lastResult;
+  }
+
+  @Override
+  public org.apache.hadoop.mapreduce.RecordReader<Text, Text> createRecordReader(
+		org.apache.hadoop.mapreduce.InputSplit split, TaskAttemptContext context)
+		throws IOException, InterruptedException {
+	return new TeraRecordReader();
   }
 }

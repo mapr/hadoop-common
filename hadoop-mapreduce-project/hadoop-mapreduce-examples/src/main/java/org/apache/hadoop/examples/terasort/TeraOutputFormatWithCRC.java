@@ -26,10 +26,10 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.RecordWriter;
-import org.apache.hadoop.mapred.TextOutputFormat;
-import org.apache.hadoop.util.Progressable;
+import org.apache.hadoop.mapreduce.JobContext;
+import org.apache.hadoop.mapreduce.RecordWriter;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 /**
  * A streamlined text output format that writes key, value, and "\r\n".
@@ -40,72 +40,70 @@ public class TeraOutputFormatWithCRC extends TextOutputFormat<Text,Text> {
   /**
    * Set the requirement for a final sync before the stream is closed.
    */
-  public static void setFinalSync(JobConf conf, boolean newValue) {
-    conf.setBoolean(FINAL_SYNC_ATTRIBUTE, newValue);
+  public static void setFinalSync(JobContext conf, boolean newValue) {
+    conf.getConfiguration().setBoolean(FINAL_SYNC_ATTRIBUTE, newValue);
   }
 
   /**
    * Does the user want a final sync at close?
    */
-  public static boolean getFinalSync(JobConf conf) {
-    return conf.getBoolean(FINAL_SYNC_ATTRIBUTE, false);
+  public static boolean getFinalSync(JobContext conf) {
+    return conf.getConfiguration().getBoolean(FINAL_SYNC_ATTRIBUTE, false);
   }
 
-  static class TeraRecordWriter extends LineRecordWriter<Text,Text> {
+  static class TeraRecordWriter extends RecordWriter<Text,Text> {
     private static final byte[] newLine = "\r\n".getBytes();
     private boolean finalSync = false;
     private String space = "";
     private int CRC_LEN = 20;
 
-    public TeraRecordWriter(DataOutputStream out,
-                            JobConf conf) {
-      super(out);
+    private FSDataOutputStream out;
+
+    public TeraRecordWriter(FSDataOutputStream out,
+                            JobContext conf) {
+      this.out = out;
       finalSync = getFinalSync(conf);
     }
 
     public synchronized void write(Text key, 
                                    Text value) throws IOException {
-    	out.write(key.getBytes(), 0, key.getLength());
-      //out.write(value.getBytes(), 0, value.getLength());
+     	out.write(key.getBytes(), 0, key.getLength());
       
-      StringBuffer spaces = new StringBuffer(CRC_LEN);
-      byte[] valueToCksum = value.toString().getBytes();
+      StringBuilder spaces = new StringBuilder(CRC_LEN);
+      byte[] valueToCksum = value.copyBytes();
     	CRC32 checksum = new CRC32();
-    	checksum.update(key.toString().getBytes());
+    	checksum.update(key.getBytes());
+    	System.out.println("key checksum: " + checksum.getValue());
     	checksum.update(valueToCksum,0,valueToCksum.length);
+    	System.out.println("total checksum: " + checksum.getValue());
     	long cksum = checksum.getValue();
     	byte[] cksum_bytes = Long.toString(cksum).getBytes();
     	int padspaces = CRC_LEN - cksum_bytes.length;
     	if(padspaces > 0)
     	{
     		for(int i = 0;i < padspaces; ++i){
-        	spaces.append(" ");
+        	spaces.append(' ');
         }
-    		//out.write(spaces.toString().getBytes());
     		value.append(spaces.toString().getBytes(), 0, spaces.toString().getBytes().length);
     	}
-    	//out.write(cksum_bytes);
-    	value.append(cksum_bytes, 0, cksum_bytes.length);
+     	value.append(cksum_bytes, 0, cksum_bytes.length);
     	out.write(value.getBytes(), 0, value.getLength());
-    	out.write(newLine, 0, newLine.length);
     }
     
-    public void close() throws IOException {
-      if (finalSync) {
-        ((FSDataOutputStream) out).sync();
+    public void close(TaskAttemptContext context) throws IOException {
+        if (finalSync) {
+          out.sync();
+        }
+        out.close();
       }
-      super.close(null);
-    }
   }
 
-  public RecordWriter<Text,Text> getRecordWriter(FileSystem ignored,
-                                                 JobConf job,
-                                                 String name,
-                                                 Progressable progress
-                                                 ) throws IOException {
-    Path dir = getWorkOutputPath(job);
-    FileSystem fs = dir.getFileSystem(job);
-    FSDataOutputStream fileOut = fs.create(new Path(dir, name), progress);
-    return new TeraRecordWriter(fileOut, job);
+  public RecordWriter<Text,Text> getRecordWriter(TaskAttemptContext job) 
+  			throws IOException {
+	  Path file = getDefaultWorkFile(job, "");
+	  FileSystem fs = file.getFileSystem(job.getConfiguration());
+	  FSDataOutputStream fileOut = fs.create(file);
+	  return new TeraRecordWriter(fileOut, job);
   }
+  
 }
