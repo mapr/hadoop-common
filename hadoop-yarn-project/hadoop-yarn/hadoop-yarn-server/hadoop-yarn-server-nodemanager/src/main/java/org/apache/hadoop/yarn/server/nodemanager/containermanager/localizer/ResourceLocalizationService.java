@@ -562,6 +562,8 @@ public class ResourceLocalizationService extends CompositeService
     // TODO: decrement reference counts of all resources associated with this
     // app
 
+    ExternalTokenLocalizer extTokenLocalizer = ExternalTokenLocalizerFactory.get();
+    extTokenLocalizer.cleanup(appId);
     dispatcher.getEventHandler().handle(new ApplicationEvent(
           application.getAppId(),
           ApplicationEventType.APPLICATION_RESOURCES_CLEANEDUP));
@@ -1075,7 +1077,8 @@ public class ResourceLocalizationService extends CompositeService
         // localization itself to run.
         ExternalTokenLocalizer extTokenLocalizer = ExternalTokenLocalizerFactory.get();
         if (extTokenLocalizer != null) {
-          extTokenLocalizer.run(context, getConfig(), dirsHandler);
+          extTokenLocalizer.run(context.getContainerId(), context.getUser(),
+              getConfig());
         }
 
         // 2) exec initApplication and wait
