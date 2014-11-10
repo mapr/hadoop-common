@@ -39,6 +39,8 @@ public class JHAdminConfig {
   public static final String DEFAULT_MR_HISTORY_ADDRESS = "0.0.0.0:" +
       DEFAULT_MR_HISTORY_PORT;
   
+  public static final String ALL_IFACE_LISTEN_ADDRESS = "0.0.0.0";
+  
   /** The address of the History server admin interface. */
   public static final String JHS_ADMIN_ADDRESS = MR_HISTORY_PREFIX
       + "admin.address";
@@ -152,6 +154,10 @@ public class JHAdminConfig {
   public static final String DEFAULT_MR_HISTORY_WEBAPP_HTTPS_ADDRESS =
       "0.0.0.0:" + DEFAULT_MR_HISTORY_WEBAPP_HTTPS_PORT;
   
+  public static final String MR_HISTORY_WEBAPP_IS_ALL_IFACES =
+      MR_HISTORY_PREFIX + "webapp.all-ifaces";
+  public static final boolean DEFAULT_MR_HISTORY_WEBAPP_IS_ALL_IFACES = true;
+
   /**The kerberos principal to be used for spnego filter for history server*/
   public static final String MR_WEBAPP_SPNEGO_USER_NAME_KEY =
       MR_HISTORY_PREFIX + "webapp.spnego-principal";

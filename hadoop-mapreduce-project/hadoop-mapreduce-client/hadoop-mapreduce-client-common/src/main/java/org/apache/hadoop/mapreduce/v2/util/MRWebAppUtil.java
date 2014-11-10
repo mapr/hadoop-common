@@ -90,12 +90,28 @@ public class MRWebAppUtil {
   }
   
   public static String getJHSWebappURLWithoutScheme(Configuration conf) {
-    if (httpPolicyInJHS == Policy.HTTPS_ONLY) {
-      return conf.get(JHAdminConfig.MR_HISTORY_WEBAPP_HTTPS_ADDRESS,
-          JHAdminConfig.DEFAULT_MR_HISTORY_WEBAPP_HTTPS_ADDRESS);
+    
+    if ( conf.getBoolean(JHAdminConfig.MR_HISTORY_WEBAPP_IS_ALL_IFACES, 
+        JHAdminConfig.DEFAULT_MR_HISTORY_WEBAPP_IS_ALL_IFACES) ) {
+      if (httpPolicyInJHS == Policy.HTTPS_ONLY) {
+        return JHAdminConfig.ALL_IFACE_LISTEN_ADDRESS + ":" +
+            conf.getSocketAddr(JHAdminConfig.MR_HISTORY_WEBAPP_HTTPS_ADDRESS,
+                  JHAdminConfig.DEFAULT_MR_HISTORY_WEBAPP_HTTPS_ADDRESS,
+                  JHAdminConfig.DEFAULT_MR_HISTORY_WEBAPP_HTTPS_PORT).getPort();
+      } else {
+        return JHAdminConfig.ALL_IFACE_LISTEN_ADDRESS + ":" +
+            conf.getSocketAddr(JHAdminConfig.MR_HISTORY_WEBAPP_ADDRESS,
+                  JHAdminConfig.DEFAULT_MR_HISTORY_WEBAPP_ADDRESS,
+                  JHAdminConfig.DEFAULT_MR_HISTORY_WEBAPP_PORT).getPort();
+      }
     } else {
-      return conf.get(JHAdminConfig.MR_HISTORY_WEBAPP_ADDRESS,
-          JHAdminConfig.DEFAULT_MR_HISTORY_WEBAPP_ADDRESS);
+      if (httpPolicyInJHS == Policy.HTTPS_ONLY) {
+        return conf.get(JHAdminConfig.MR_HISTORY_WEBAPP_HTTPS_ADDRESS,
+            JHAdminConfig.DEFAULT_MR_HISTORY_WEBAPP_HTTPS_ADDRESS);
+      } else {
+        return conf.get(JHAdminConfig.MR_HISTORY_WEBAPP_ADDRESS,
+            JHAdminConfig.DEFAULT_MR_HISTORY_WEBAPP_ADDRESS);
+      }
     }
   }
   
@@ -104,15 +120,35 @@ public class MRWebAppUtil {
   }
   
   public static InetSocketAddress getJHSWebBindAddress(Configuration conf) {
+    
+    InetSocketAddress jhsAddress;
+    
     if (httpPolicyInJHS == Policy.HTTPS_ONLY) {
-      return conf.getSocketAddr(JHAdminConfig.MR_HISTORY_WEBAPP_HTTPS_ADDRESS,
+      jhsAddress = conf.getSocketAddr(JHAdminConfig.MR_HISTORY_WEBAPP_HTTPS_ADDRESS,
           JHAdminConfig.DEFAULT_MR_HISTORY_WEBAPP_HTTPS_ADDRESS,
           JHAdminConfig.DEFAULT_MR_HISTORY_WEBAPP_HTTPS_PORT);
     } else {
-      return conf.getSocketAddr(JHAdminConfig.MR_HISTORY_WEBAPP_ADDRESS,
+      jhsAddress = conf.getSocketAddr(JHAdminConfig.MR_HISTORY_WEBAPP_ADDRESS,
           JHAdminConfig.DEFAULT_MR_HISTORY_WEBAPP_ADDRESS,
           JHAdminConfig.DEFAULT_MR_HISTORY_WEBAPP_PORT);
     }
+        
+    if ( conf.getBoolean(JHAdminConfig.MR_HISTORY_WEBAPP_IS_ALL_IFACES, 
+        JHAdminConfig.DEFAULT_MR_HISTORY_WEBAPP_IS_ALL_IFACES) ) {
+      if (httpPolicyInJHS == Policy.HTTPS_ONLY) {
+        jhsAddress = NetUtils.createSocketAddr(
+            JHAdminConfig.ALL_IFACE_LISTEN_ADDRESS,
+            jhsAddress.getPort(),
+            JHAdminConfig.MR_HISTORY_WEBAPP_HTTPS_ADDRESS);
+      } else {
+        jhsAddress = NetUtils.createSocketAddr(
+            JHAdminConfig.ALL_IFACE_LISTEN_ADDRESS,
+            jhsAddress.getPort(),
+            JHAdminConfig.MR_HISTORY_WEBAPP_ADDRESS);
+      }
+    }
+    
+    return jhsAddress;
   }
   
   public static String getApplicationWebURLOnJHSWithoutScheme(Configuration conf,
