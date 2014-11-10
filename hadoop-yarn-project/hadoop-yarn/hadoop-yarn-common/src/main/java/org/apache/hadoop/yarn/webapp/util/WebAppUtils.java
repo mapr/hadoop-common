@@ -26,6 +26,8 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Evolving;
 import org.apache.hadoop.conf.Configuration;
@@ -46,6 +48,9 @@ public class WebAppUtils {
       "ssl.server.keystore.password";
   public static final String WEB_APP_KEY_PASSWORD_KEY =
       "ssl.server.keystore.keypassword";
+  
+  private static final Log LOG = LogFactory.getLog(WebAppUtils.class);
+  
   public static final String HTTPS_PREFIX = "https://";
   public static final String HTTP_PREFIX = "http://";
 
@@ -83,12 +88,28 @@ public class WebAppUtils {
   }
   
   public static String getRMWebAppURLWithoutScheme(Configuration conf) {
-    if (YarnConfiguration.useHttps(conf)) {
-      return conf.get(YarnConfiguration.RM_WEBAPP_HTTPS_ADDRESS,
-          YarnConfiguration.DEFAULT_RM_WEBAPP_HTTPS_ADDRESS);
-    }else {
-      return conf.get(YarnConfiguration.RM_WEBAPP_ADDRESS,
-          YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS);
+    
+    if ( conf.getBoolean(YarnConfiguration.RM_WEBAPP_IS_ALL_IFACES,
+        YarnConfiguration.DEFAULT_RM_WEBAPP_IS_ALL_IFACES) ) {
+      if (YarnConfiguration.useHttps(conf)) {
+        return YarnConfiguration.ALL_IFACE_LISTEN_ADDRESS + ":" + 
+            conf.getSocketAddr(YarnConfiguration.RM_WEBAPP_HTTPS_ADDRESS,
+                YarnConfiguration.DEFAULT_RM_WEBAPP_HTTPS_ADDRESS,
+                YarnConfiguration.DEFAULT_RM_WEBAPP_HTTPS_PORT).getPort();
+      } else {
+        return YarnConfiguration.ALL_IFACE_LISTEN_ADDRESS + ":" + 
+            conf.getSocketAddr(YarnConfiguration.RM_WEBAPP_ADDRESS,
+                YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS,
+                YarnConfiguration.DEFAULT_RM_WEBAPP_PORT).getPort();
+      }
+    } else {
+      if (YarnConfiguration.useHttps(conf)) {
+        return conf.get(YarnConfiguration.RM_WEBAPP_HTTPS_ADDRESS,
+            YarnConfiguration.DEFAULT_RM_WEBAPP_HTTPS_ADDRESS);
+      } else {
+        return conf.get(YarnConfiguration.RM_WEBAPP_ADDRESS,
+            YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS);
+      }
     }
   }
 
@@ -224,25 +245,55 @@ public class WebAppUtils {
   }
 
   public static String getNMWebAppURLWithoutScheme(Configuration conf) {
-    if (YarnConfiguration.useHttps(conf)) {
-      return conf.get(YarnConfiguration.NM_WEBAPP_HTTPS_ADDRESS,
-        YarnConfiguration.DEFAULT_NM_WEBAPP_HTTPS_ADDRESS);
+    if ( conf.getBoolean(YarnConfiguration.NM_WEBAPP_IS_ALL_IFACES,
+        YarnConfiguration.DEFAULT_NM_WEBAPP_IS_ALL_IFACES) ) {
+      if (YarnConfiguration.useHttps(conf)) {
+        return YarnConfiguration.ALL_IFACE_LISTEN_ADDRESS + ":" + 
+            conf.getSocketAddr(YarnConfiguration.NM_WEBAPP_HTTPS_ADDRESS,
+                YarnConfiguration.DEFAULT_NM_WEBAPP_HTTPS_ADDRESS,
+                YarnConfiguration.DEFAULT_NM_WEBAPP_HTTPS_PORT).getPort();
+      } else {
+        return YarnConfiguration.ALL_IFACE_LISTEN_ADDRESS + ":" + 
+            conf.getSocketAddr(YarnConfiguration.NM_WEBAPP_ADDRESS,
+                YarnConfiguration.DEFAULT_NM_WEBAPP_ADDRESS,
+                YarnConfiguration.DEFAULT_NM_WEBAPP_PORT).getPort();
+      }
     } else {
-      return conf.get(YarnConfiguration.NM_WEBAPP_ADDRESS,
-        YarnConfiguration.DEFAULT_NM_WEBAPP_ADDRESS);
-    }
-  }
-
-  public static String getAHSWebAppURLWithoutScheme(Configuration conf) {
-    if (YarnConfiguration.useHttps(conf)) {
-      return conf.get(YarnConfiguration.TIMELINE_SERVICE_WEBAPP_HTTPS_ADDRESS,
-        YarnConfiguration.DEFAULT_TIMELINE_SERVICE_WEBAPP_HTTPS_ADDRESS);
-    } else {
-      return conf.get(YarnConfiguration.TIMELINE_SERVICE_WEBAPP_ADDRESS,
-        YarnConfiguration.DEFAULT_TIMELINE_SERVICE_WEBAPP_ADDRESS);
+      if (YarnConfiguration.useHttps(conf)) {
+        return conf.get(YarnConfiguration.NM_WEBAPP_HTTPS_ADDRESS,
+            YarnConfiguration.DEFAULT_NM_WEBAPP_HTTPS_ADDRESS);
+      } else {
+        return conf.get(YarnConfiguration.NM_WEBAPP_ADDRESS,
+            YarnConfiguration.DEFAULT_NM_WEBAPP_ADDRESS);
+      }
     }
   }
   
+  public static String getAHSWebAppURLWithoutScheme(Configuration conf) {
+    if ( conf.getBoolean(YarnConfiguration.TIMELINE_SERVICE_IS_ALL_IFACES,
+        YarnConfiguration.DEFAULT_TIMELINE_SERVICE_IS_ALL_IFACES) ) {
+      if (YarnConfiguration.useHttps(conf)) {
+        return YarnConfiguration.ALL_IFACE_LISTEN_ADDRESS + ":" + 
+            conf.getSocketAddr(YarnConfiguration.TIMELINE_SERVICE_WEBAPP_HTTPS_ADDRESS,
+                YarnConfiguration.DEFAULT_TIMELINE_SERVICE_WEBAPP_HTTPS_ADDRESS,
+                YarnConfiguration.DEFAULT_TIMELINE_SERVICE_WEBAPP_HTTPS_PORT).getPort();
+      } else {
+        return YarnConfiguration.ALL_IFACE_LISTEN_ADDRESS + ":" + 
+            conf.getSocketAddr(YarnConfiguration.TIMELINE_SERVICE_WEBAPP_ADDRESS,
+                YarnConfiguration.DEFAULT_TIMELINE_SERVICE_WEBAPP_ADDRESS,
+                YarnConfiguration.DEFAULT_TIMELINE_SERVICE_WEBAPP_PORT).getPort();
+      }
+    } else {
+      if (YarnConfiguration.useHttps(conf)) {
+        return conf.get(YarnConfiguration.TIMELINE_SERVICE_WEBAPP_HTTPS_ADDRESS,
+            YarnConfiguration.DEFAULT_TIMELINE_SERVICE_WEBAPP_HTTPS_ADDRESS);
+      } else {
+        return conf.get(YarnConfiguration.TIMELINE_SERVICE_WEBAPP_ADDRESS,
+            YarnConfiguration.DEFAULT_TIMELINE_SERVICE_WEBAPP_ADDRESS);
+      }
+    }
+  }
+
   /**
    * if url has scheme then it will be returned as it is else it will return
    * url with scheme.

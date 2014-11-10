@@ -237,13 +237,14 @@ public class YarnConfiguration extends Configuration {
     RM_PREFIX + "scheduler.monitor.policies";
 
   /** The address of the RM web application.*/
-  public static final String RM_WEBAPP_ADDRESS = 
-    RM_PREFIX + "webapp.address";
+  public static final String RM_WEBAPP_ADDRESS = RM_PREFIX + "webapp.address";
+  public static final String RM_WEBAPP_IS_ALL_IFACES = RM_PREFIX + "webapp.all-ifaces";
+  public static final boolean DEFAULT_RM_WEBAPP_IS_ALL_IFACES = true;
 
   public static final int DEFAULT_RM_WEBAPP_PORT = 8088;
   public static final String DEFAULT_RM_WEBAPP_ADDRESS = "0.0.0.0:" +
     DEFAULT_RM_WEBAPP_PORT;
-  
+
   /** The https address of the RM web application.*/
   public static final String RM_WEBAPP_HTTPS_ADDRESS =
       RM_PREFIX + "webapp.https.address";
@@ -875,6 +876,9 @@ public class YarnConfiguration extends Configuration {
   public static final String DEFAULT_NM_WEBAPP_ADDRESS = "0.0.0.0:" +
     DEFAULT_NM_WEBAPP_PORT;
   
+  public static final String NM_WEBAPP_IS_ALL_IFACES = NM_PREFIX + "webapp.all-ifaces";
+  public static final boolean DEFAULT_NM_WEBAPP_IS_ALL_IFACES = true;
+  
   /** NM Webapp https address.**/
   public static final String NM_WEBAPP_HTTPS_ADDRESS = NM_PREFIX
       + "webapp.https.address";
@@ -1378,6 +1382,11 @@ public class YarnConfiguration extends Configuration {
   /** host:port address for timeline service RPC APIs. */
   public static final String TIMELINE_SERVICE_ADDRESS =
       TIMELINE_SERVICE_PREFIX + "address";
+
+  public static final String TIMELINE_SERVICE_IS_ALL_IFACES =
+      TIMELINE_SERVICE_PREFIX + "webapp.all-ifaces";
+  public static final boolean DEFAULT_TIMELINE_SERVICE_IS_ALL_IFACES = true;
+  
   public static final int DEFAULT_TIMELINE_SERVICE_PORT = 10200;
   public static final String DEFAULT_TIMELINE_SERVICE_ADDRESS = "0.0.0.0:"
       + DEFAULT_TIMELINE_SERVICE_PORT;
