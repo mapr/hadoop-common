@@ -160,7 +160,21 @@ public enum DistCpOptionSwitch {
    * Specify bandwidth per map in MB
    */
   BANDWIDTH(DistCpConstants.CONF_LABEL_BANDWIDTH_MB,
-      new Option("bandwidth", true, "Specify bandwidth per map in MB"));
+      new Option("bandwidth", true, "Specify bandwidth per map in MB")),
+
+  /**
+   * Option to filter out files that are less than or equal to some size.
+   */
+  MIN_FILE_SIZE(DistCpConstants.CONF_LABEL_MIN_FILE_SIZE,
+      new Option("filesizemin", true, "Limit the file size to be >= n bytes "
+        + "(default 0)")),
+
+  /**
+   * Option to filter out files that are greater than some size.
+   */
+  MAX_FILE_SIZE(DistCpConstants.CONF_LABEL_MAX_FILE_SIZE,
+      new Option("filesizemax", true, "Limit the file size to be < n bytes "
+        + "(default 8 exbibyte)"));
 
   private final String confLabel;
   private final Option option;

@@ -235,6 +235,36 @@ public class OptionsParser {
               " option. Ignoring.");
     }
 
+    if (command.hasOption(DistCpOptionSwitch.MIN_FILE_SIZE.getSwitch())) {
+      String minFileSizeString = getVal(command,
+                              DistCpOptionSwitch.MIN_FILE_SIZE.getSwitch().trim());
+      try {
+        option.setMinFileSize(Long.parseLong(minFileSizeString));
+      } catch (NumberFormatException e) {
+        throw new IllegalArgumentException("Minimum file size is invalid: "
+                                            + minFileSizeString, e);
+      }
+    }
+
+    if (command.hasOption(DistCpOptionSwitch.MAX_FILE_SIZE.getSwitch())) {
+      String maxFileSizeString = getVal(command,
+                              DistCpOptionSwitch.MAX_FILE_SIZE.getSwitch().trim());
+      try {
+        long maxFileSize = Long.parseLong(maxFileSizeString);
+        if (maxFileSize <= 0) {
+          throw new IllegalArgumentException("Maximum file size should be positive");
+        }
+        option.setMaxFileSize(maxFileSize);
+        if (maxFileSize < option.getMinFileSize()) {
+          throw new IllegalArgumentException("Maximum file size cannot be less "
+              + "than minimum file size: " + option.getMinFileSize());
+        }
+      } catch (NumberFormatException e) {
+        throw new IllegalArgumentException("Maximum file size is invalid: "
+                                            + maxFileSizeString, e);
+      }
+    }
+
     return option;
   }
 

@@ -64,6 +64,9 @@ public class DistCpOptions {
   // targetPathExist is a derived field, it's initialized in the 
   // beginning of distcp.
   private boolean targetPathExists = true;
+
+  private long minFileSize = DistCpConstants.DEFAULT_MIN_FILE_SIZE;
+  private long maxFileSize = DistCpConstants.DEFAULT_MAX_FILE_SIZE;
   
   public static enum FileAttribute{
     REPLICATION, BLOCKSIZE, USER, GROUP, PERMISSION, CHECKSUMTYPE, ACL, XATTR;
@@ -129,6 +132,8 @@ public class DistCpOptions {
       this.sourcePaths = that.getSourcePaths();
       this.targetPath = that.getTargetPath();
       this.targetPathExists = that.getTargetPathExists();
+      this.minFileSize = that.minFileSize;
+      this.maxFileSize = that.maxFileSize;
     }
   }
 
@@ -315,6 +320,22 @@ public class DistCpOptions {
   public void setMapBandwidth(int mapBandwidth) {
     assert mapBandwidth > 0 : "Bandwidth " + mapBandwidth + " is invalid (should be > 0)";
     this.mapBandwidth = mapBandwidth;
+  }
+
+  public long getMinFileSize() {
+    return minFileSize;
+  }
+
+  public void setMinFileSize(long minFileSize) {
+    this.minFileSize = minFileSize;
+  }
+
+  public long getMaxFileSize() {
+    return maxFileSize;
+  }
+
+  public void setMaxFileSize(long maxFileSize) {
+    this.maxFileSize = maxFileSize;
   }
 
   /**
@@ -544,6 +565,10 @@ public class DistCpOptions {
         String.valueOf(mapBandwidth));
     DistCpOptionSwitch.addToConf(conf, DistCpOptionSwitch.PRESERVE_STATUS,
         DistCpUtils.packAttributes(preserveStatus));
+    DistCpOptionSwitch.addToConf(conf, DistCpOptionSwitch.MIN_FILE_SIZE,
+        String.valueOf(minFileSize));
+    DistCpOptionSwitch.addToConf(conf, DistCpOptionSwitch.MAX_FILE_SIZE,
+        String.valueOf(maxFileSize));
   }
 
   /**

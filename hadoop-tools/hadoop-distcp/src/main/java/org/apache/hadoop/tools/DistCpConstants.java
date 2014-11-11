@@ -34,6 +34,9 @@ public class DistCpConstants {
    */
   public static final String UNIFORMSIZE = "uniformsize";
 
+  public static final long DEFAULT_MIN_FILE_SIZE = 0;
+  public static final long DEFAULT_MAX_FILE_SIZE = Long.MAX_VALUE;
+
   /**
    *  Constants mapping to command line switches/input options
    */
@@ -52,6 +55,8 @@ public class DistCpConstants {
   public static final String CONF_LABEL_OVERWRITE = "distcp.copy.overwrite";
   public static final String CONF_LABEL_APPEND = "distcp.copy.append";
   public static final String CONF_LABEL_BANDWIDTH_MB = "distcp.map.bandwidth.mb";
+  public static final String CONF_LABEL_MIN_FILE_SIZE = "distcp.min.file.size";
+  public static final String CONF_LABEL_MAX_FILE_SIZE = "distcp.max.file.size";
   
   public static final String CONF_LABEL_MAX_CHUNKS_TOLERABLE =
       "distcp.dynamic.max.chunks.tolerable";
