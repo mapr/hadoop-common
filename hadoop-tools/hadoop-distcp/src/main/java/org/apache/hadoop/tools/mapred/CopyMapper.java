@@ -87,6 +87,9 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
   private FileSystem targetFS = null;
   private Path    targetWorkPath = null;
 
+  private long minFileSize = 0;
+  private long maxFileSize = Long.MAX_VALUE;
+
   /**
    * Implementation of the Mapper::setup() method. This extracts the DistCp-
    * options specified in the Job's configuration, to set up the Job.
@@ -118,6 +121,14 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
     if (conf.get(DistCpConstants.CONF_LABEL_SSL_CONF) != null) {
       initializeSSLConf(context);
     }
+
+    minFileSize = conf.getLong(
+        DistCpOptionSwitch.MIN_FILE_SIZE.getConfigLabel(),
+        minFileSize);
+
+    maxFileSize = conf.getLong(
+        DistCpOptionSwitch.MAX_FILE_SIZE.getConfigLabel(),
+        maxFileSize);
   }
 
   /**
@@ -280,10 +291,10 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
       } else {
         copyFileWithRetry(description, sourceCurrStatus, target, context,
             action, fileAttributes);
-      }
 
-      DistCpUtils.preserve(target.getFileSystem(conf), target, sourceCurrStatus,
-          fileAttributes, preserveRawXattrs);
+        DistCpUtils.preserve(target.getFileSystem(conf), target,
+            sourceCurrStatus, fileAttributes, preserveRawXattrs);
+      }
     } catch (IOException exception) {
       handleFailures(exception, sourceFileStatus, target, context);
     }
@@ -359,6 +370,11 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
 
   private FileAction checkUpdate(FileSystem sourceFS, FileStatus source,
       Path target) throws IOException {
+
+    if (canSkip(source)) {
+      return FileAction.SKIP;
+    }
+
     final FileStatus targetFileStatus;
     try {
       targetFileStatus = targetFS.getFileStatus(target);
@@ -400,5 +416,23 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
     } else {
       return false;
     }
+  }
+
+  /**
+   * Determines if the given source file can be skipped and not copied to
+   * target.
+   *
+   * @param source source file status
+   */
+  private boolean canSkip(FileStatus source) {
+    if (source.getLen() < minFileSize || source.getLen() >= maxFileSize) {
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("Skipping file: " + source.getPath() + " as its size: "
+            + source.getLen() + " is outside the range.");
+      }
+      return true;
+    }
+
+    return false;
   }
 }

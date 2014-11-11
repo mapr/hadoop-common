@@ -676,4 +676,40 @@ public class TestOptionsParser {
           "Diff is valid only with update and delete options", e);
     }
   }
+
+  @Test
+  public void testFileSizeOption() {
+    Configuration conf = new Configuration();
+    Assert.assertNull(conf.get(DistCpOptionSwitch.MIN_FILE_SIZE.getConfigLabel()));
+    DistCpOptionSwitch.addToConf(conf, DistCpOptionSwitch.MIN_FILE_SIZE, "10");
+    Assert.assertEquals("10",
+        conf.get(DistCpOptionSwitch.MIN_FILE_SIZE.getConfigLabel()));
+
+    Assert.assertNull(conf.get(DistCpOptionSwitch.MAX_FILE_SIZE.getConfigLabel()));
+    DistCpOptionSwitch.addToConf(conf, DistCpOptionSwitch.MAX_FILE_SIZE, "900");
+    Assert.assertEquals("900",
+        conf.get(DistCpOptionSwitch.MAX_FILE_SIZE.getConfigLabel()));
+
+    DistCpOptions options = OptionsParser.parse(new String[] {
+        "-filesizemin", "20", "-filesizemax", "50",
+        "hdfs://localhost:8020/source/first",
+        "hdfs://localhost:8020/target/"});
+    options.appendToConf(conf);
+    Assert.assertEquals("20",
+        conf.get(DistCpOptionSwitch.MIN_FILE_SIZE.getConfigLabel()));
+
+    Assert.assertEquals("50",
+        conf.get(DistCpOptionSwitch.MAX_FILE_SIZE.getConfigLabel()));
+
+    try {
+      options = OptionsParser.parse(new String[] {
+        "-filesizemin", "100" , "-filesizemax", "99",
+        "hdfs://localhost:8020/source/first",
+        "hdfs://localhost:8020/target/"});
+      fail("Should fail since max file size is less than min file size");
+    } catch (IllegalArgumentException e) {
+      GenericTestUtils.assertExceptionContains(
+          "Maximum file size cannot be less than minimum file size: 100", e);
+    }
+  }
 }
