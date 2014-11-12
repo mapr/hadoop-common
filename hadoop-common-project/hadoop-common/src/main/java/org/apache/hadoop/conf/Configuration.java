@@ -993,6 +993,12 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
     Preconditions.checkArgument(
         value != null,
         "The value of property " + name + " must not be null");
+
+    if (finalParameters.contains(name)) {
+      LOG.warn("An attempt to override final parameter: " + name + ". Ignoring.");
+      return;
+    }
+
     name = name.trim();
     DeprecationContext deprecations = deprecationContext.get();
     if (deprecations.getDeprecatedKeyMap().isEmpty()) {
