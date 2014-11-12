@@ -601,14 +601,7 @@ public class SecurityUtil {
   }
 
   public static AuthenticationMethod getAuthenticationMethod(Configuration conf) {
-    String value = conf.get(HADOOP_SECURITY_AUTHENTICATION, "simple");
-    try {
-      return Enum.valueOf(AuthenticationMethod.class,
-          StringUtils.toUpperCase(value));
-    } catch (IllegalArgumentException iae) {
-      throw new IllegalArgumentException("Invalid attribute value for " +
-          HADOOP_SECURITY_AUTHENTICATION + " of " + value);
-    }
+    return UserGroupInformation.getUGIAuthenticationMethod();
   }
 
   public static void setAuthenticationMethod(
