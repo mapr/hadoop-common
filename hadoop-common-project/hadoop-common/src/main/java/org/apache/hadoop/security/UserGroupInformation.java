@@ -18,9 +18,8 @@
 package org.apache.hadoop.security;
 
 import static org.apache.hadoop.fs.CommonConfigurationKeys.HADOOP_USER_GROUP_METRICS_PERCENTILES_INTERVALS;
+import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION;
 import static org.apache.hadoop.util.PlatformName.IBM_JAVA;
-
-import com.sun.security.auth.login.ConfigFile;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,6 +31,7 @@ import java.security.Principal;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -40,15 +40,14 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
 import javax.security.auth.Subject;
 import javax.security.auth.kerberos.KerberosKey;
 import javax.security.auth.kerberos.KerberosPrincipal;
 import javax.security.auth.kerberos.KerberosTicket;
 import javax.security.auth.login.AppConfigurationEntry;
-import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
@@ -195,12 +194,12 @@ public class UserGroupInformation {
    */
   private static synchronized void initialize(Configuration conf,
                                               boolean overrideNameRules) {
-    authenticationMethod = SecurityUtil.getAuthenticationMethod(conf);
+    AuthenticationMethod authenticationMethodFromConf = getAuthenticationMethodFromConfiguration(conf);
     if (LOG.isDebugEnabled())
-      LOG.debug("HADOOP_SECURITY_AUTHENTICATION is set to: " + authenticationMethod);
+      LOG.debug("HADOOP_SECURITY_AUTHENTICATION is set to: " + authenticationMethodFromConf);
 
     // spoofing is only allowed when insecure
-    if (authenticationMethod == null || authenticationMethod.equals(AuthenticationMethod.SIMPLE)) {
+    if (authenticationMethodFromConf == null || authenticationMethodFromConf.equals(AuthenticationMethod.SIMPLE)) {
       checkSpoofing(conf);
     } else {
       // Initialize custom auth method.
@@ -210,7 +209,7 @@ public class UserGroupInformation {
     }
 
     String jaasConfName = null;
-    if (authenticationMethod == AuthenticationMethod.SIMPLE) {
+    if (authenticationMethodFromConf == AuthenticationMethod.SIMPLE) {
       jaasConfName = "simple";
     } else {
       LOG.debug("Security is enabled.");
@@ -266,6 +265,8 @@ public class UserGroupInformation {
             + " via Java property or not loaded from jar, may cause login failure");
       }  
     }
+    // by this time JAAS config file is fully loaded. Set UGI's authenticationMethod from JAAS config.
+    setUGIAuthenticationMethodFromJAASConfiguration(jaasConfName);
 
     if (overrideNameRules || !HadoopKerberosName.hasRulesBeenSet()) {
       try {
@@ -294,6 +295,46 @@ public class UserGroupInformation {
         metrics.getGroupsQuantiles = getGroupsQuantiles;
       }
     }
+  }
+
+  private static AuthenticationMethod getAuthenticationMethodFromConfiguration(Configuration conf) {
+    String value = conf.get(HADOOP_SECURITY_AUTHENTICATION, "simple");
+    try {
+      return Enum.valueOf(AuthenticationMethod.class, value.toUpperCase(Locale.ENGLISH));
+    } catch (IllegalArgumentException iae) {
+      throw new IllegalArgumentException("Invalid attribute value for " +
+          HADOOP_SECURITY_AUTHENTICATION + " of " + value);
+    }
+  }
+
+  /**
+   * The only supported options in JAAS config file (currently) are SIMPLE, KERBEROS and CUSTOM.
+   *
+   * DIGEST/TOKEN is internal to hadoop. PROXY is used during impersonation. These two options
+   * are therefore not never returned via this method.
+   */
+  private static void setUGIAuthenticationMethodFromJAASConfiguration(String jaasConfName) {
+    if (jaasConfName.contains("simple")) {
+      UserGroupInformation.authenticationMethod = AuthenticationMethod.SIMPLE;
+    } else if (jaasConfName.contains("kerberos")) {
+      UserGroupInformation.authenticationMethod = AuthenticationMethod.KERBEROS;
+    } else { // if it's not SIMPLE and not KERBEROS, treat it as CUSTOM
+      UserGroupInformation.authenticationMethod = AuthenticationMethod.CUSTOM;
+    }
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("authenticationMethod from JAAS configuration:" + UserGroupInformation.authenticationMethod);
+    }
+  }
+
+  /**
+   * Returns authenticationMethod obtained by inspecting JAAS configuration.
+   * @return
+   */
+  public static AuthenticationMethod getUGIAuthenticationMethod() {
+    if (UserGroupInformation.authenticationMethod == null) {
+      ensureInitialized();
+    }
+    return UserGroupInformation.authenticationMethod;
   }
 
   /**
@@ -445,7 +486,6 @@ public class UserGroupInformation {
           authMethods.add(rpcAuthMethod);
         }
       }
-      authMethods.add(RpcAuthRegistry.getAuthMethod(authenticationMethod));
 
       if (isSecurityEnabled()
           && !"hadoop_simple".equals(confName)
