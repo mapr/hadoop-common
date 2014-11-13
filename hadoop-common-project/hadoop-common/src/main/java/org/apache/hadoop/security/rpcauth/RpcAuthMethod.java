@@ -31,6 +31,7 @@ import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod;
 import org.apache.hadoop.security.token.SecretManager;
+import javax.security.auth.callback.CallbackHandler;
 
 public abstract class RpcAuthMethod {
   private static final String[] LOGIN_MODULES = new String[0];
@@ -61,6 +62,11 @@ public abstract class RpcAuthMethod {
 
   public AuthenticationMethod getAuthenticationMethod() {
     return authenticationMethod;
+  }
+
+  public CallbackHandler createCallbackHandler() {
+    throw new UnsupportedOperationException(
+        this.getClass().getCanonicalName() + " does not support createCallbackHandler()");
   }
 
   @Override
