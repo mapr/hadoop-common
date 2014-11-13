@@ -320,6 +320,10 @@ public final class HttpServer2 implements FilterContainer {
             c.setTruststoreType(trustStoreType);
             c.setTrustPassword(trustStorePassword);
           }
+          String excludeCipherSuites = conf.get(CommonConfigurationKeys.SSL_EXCLUDE_CIPHER_SUITES,
+              CommonConfigurationKeys.SSL_EXCLUDE_CIPHER_SUITES_DEFAULT);
+          c.setExcludeCipherSuites(excludeCipherSuites.split(","));
+          LOG.info("Exclude SSL cipher suites: " + excludeCipherSuites);
           listener = c;
 
         } else {

@@ -262,6 +262,17 @@ public class CommonConfigurationKeys extends CommonConfigurationKeysPublic {
   public static final String CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY =
       "hadoop.security.custom.auth.principal.class";
 
+  /**
+   * List of ciphers that should be excluded for https hand shake.
+   */
+  public static final String SSL_EXCLUDE_CIPHER_SUITES =
+      "hadoop.ssl.exclude.cipher.suites";
+
+  public static final String SSL_EXCLUDE_CIPHER_SUITES_DEFAULT =
+      "SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA," +
+          "SSL_RSA_EXPORT_WITH_DES40_CBC_SHA," +
+          "SSL_RSA_EXPORT_WITH_RC4_40_MD5";
+
   public static final long HADOOP_SECURITY_UID_NAME_CACHE_TIMEOUT_DEFAULT =
     4*60*60; // 4 hours
   
