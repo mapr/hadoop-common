@@ -116,7 +116,7 @@ public class LineRecordReader extends RecordReader<LongWritable, Text> {
     }
     this.pos = start;
   }
-  
+
 
   private int maxBytesToConsume(long pos) {
     return isCompressedInput
@@ -178,21 +178,29 @@ public class LineRecordReader extends RecordReader<LongWritable, Text> {
     int newSize = 0;
     // We always read one extra line, which lies outside the upper
     // split limit i.e. (end - 1)
-    while (getFilePosition() <= end || in.needAdditionalRecordAfterSplit()) {
-      if (pos == 0) {
-        newSize = skipUtfByteOrderMark();
-      } else {
-        newSize = in.readLine(value, maxLineLength, maxBytesToConsume(pos));
-        pos += newSize;
-      }
+    try {
+      while (getFilePosition() <= end || in.needAdditionalRecordAfterSplit()) {
+        if (pos == 0) {
+          newSize = skipUtfByteOrderMark();
+        } else {
+          newSize = in.readLine(value, maxLineLength, maxBytesToConsume(pos));
+          pos += newSize;
+        }
 
-      if ((newSize == 0) || (newSize < maxLineLength)) {
-        break;
-      }
+        if ((newSize == 0) || (newSize < maxLineLength)) {
+          break;
+        }
 
-      // line too long. try again
-      LOG.info("Skipped line of size " + newSize + " at pos " + 
-               (pos - newSize));
+        // line too long. try again
+        LOG.info("Skipped line of size " + newSize + " at pos " +
+                 (pos - newSize));
+      }
+    } catch (OutOfMemoryError oome) {
+        String message = "Out of memory error while reading a very large single line input record. " +
+            "To skip this record set " + MAX_LINE_LENGTH + " to a lower value. Current value: " +
+            maxLineLength + ", jvm heap size: " + Runtime.getRuntime().maxMemory() +
+            ", potential value: " + Math.min(Runtime.getRuntime().maxMemory(), maxLineLength) / 16;
+        throw new IOException(message, oome);
     }
     if (newSize == 0) {
       key = null;
