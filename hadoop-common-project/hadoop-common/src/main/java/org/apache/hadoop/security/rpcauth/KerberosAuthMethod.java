@@ -149,6 +149,11 @@ public final class KerberosAuthMethod extends RpcAuthMethod {
   }
 
   @Override
+  public CallbackHandler createCallbackHandler() {
+    return new SaslGssCallbackHandler();
+  }
+
+  @Override
   public synchronized boolean shouldReLogin() throws IOException {
     UserGroupInformation loginUser = UserGroupInformation.getLoginUser();
     UserGroupInformation currentUser =
