@@ -229,13 +229,7 @@ public class HttpServer implements FilterContainer {
         } catch (GeneralSecurityException ex) {
           throw new IOException(ex);
         }
-        SslSocketConnector sslListener = new SslSocketConnector() {
-          @Override
-          protected SSLServerSocketFactory createFactory() throws Exception {
-            return sslFactory.createSSLServerSocketFactory();
-          }
-        };
-        listener = sslListener;
+        listener = createSslSocketConnector(conf, sslFactory);
       } else {
         listener = createBaseListener(conf);
       }
@@ -294,6 +288,31 @@ public class HttpServer implements FilterContainer {
         addFilterPathMapping(path, webAppContext);
       }
     }
+  }
+
+  public static SslSocketConnector createSslSocketConnector(Configuration conf, SSLFactory factory) throws IOException {
+    final SSLFactory sslFactory = factory != null ? factory : createSslFactory(conf);
+    SslSocketConnector sslSocketConnector = new SslSocketConnector() {
+      @Override
+      protected SSLServerSocketFactory createFactory() throws Exception {
+        return sslFactory.createSSLServerSocketFactory();
+      }
+    };
+    String excludeCipherSuites = conf.get(CommonConfigurationKeys.SSL_EXCLUDE_CIPHER_SUITES,
+        CommonConfigurationKeys.SSL_EXCLUDE_CIPHER_SUITES_DEFAULT);
+    sslSocketConnector.setExcludeCipherSuites(excludeCipherSuites.split(","));
+    LOG.info("Exclude SSL cipher suites: " + excludeCipherSuites);
+    return sslSocketConnector;
+  }
+
+  private static SSLFactory createSslFactory(Configuration conf) throws IOException {
+    SSLFactory factory = new SSLFactory(SSLFactory.Mode.SERVER, conf);
+    try {
+      factory.init();
+    } catch (GeneralSecurityException ex) {
+      throw new IOException(ex);
+    }
+    return factory;
   }
 
   @SuppressWarnings("unchecked")
