@@ -110,9 +110,10 @@ if [ "$COMMAND" == "jar" ] && [ -f ${MAPR_HBASE_VERSION_FILE} ]; then
 fi
 
 if [ -d "$MAPR_HOME/lib" ]; then
-  CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/kvstore-0.1.jar
-  CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/libprotodefs.jar
-  CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/baseutils-0.1.jar
+  CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/kvstore*.jar
+  CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/libprotodefs*.jar
+  CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/baseutils*.jar
+  CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/maprutil*.jar
   CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/json-20080701.jar
   CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/flexjson-2.1.jar
 fi
