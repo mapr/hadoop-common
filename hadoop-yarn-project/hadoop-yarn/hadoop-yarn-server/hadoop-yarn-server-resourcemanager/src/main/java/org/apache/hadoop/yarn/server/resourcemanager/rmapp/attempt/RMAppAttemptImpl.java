@@ -710,8 +710,10 @@ public class RMAppAttemptImpl implements RMAppAttempt, Recoverable {
     if (UserGroupInformation.isSecurityEnabled()) {
       byte[] clientTokenMasterKeyBytes = appAttemptTokens.getSecretKey(
           RMStateStore.AM_CLIENT_TOKEN_MASTER_KEY_NAME);
-      clientTokenMasterKey = rmContext.getClientToAMTokenSecretManager()
-          .registerMasterKey(applicationAttemptId, clientTokenMasterKeyBytes);
+      if (clientTokenMasterKeyBytes != null) {
+        clientTokenMasterKey = rmContext.getClientToAMTokenSecretManager()
+            .registerMasterKey(applicationAttemptId, clientTokenMasterKeyBytes);
+      }
     }
 
     // Only one AMRMToken is stored per-attempt, so this should be fine. Can't
