@@ -60,6 +60,10 @@ public class AppSchedulable extends Schedulable {
 
   private RMContainerComparator comparator = new RMContainerComparator();
 
+  public AppSchedulable(FairScheduler scheduler){
+	 this.scheduler = scheduler;
+  }
+  
   public AppSchedulable(FairScheduler scheduler, FSSchedulerApp app, FSLeafQueue queue) {
     this.scheduler = scheduler;
     this.app = app;
@@ -415,9 +419,10 @@ public class AppSchedulable extends Schedulable {
     RMContainer toBePreempted = null;
     for (RMContainer container : app.getLiveContainers()) {
       if (! app.getPreemptionContainers().contains(container) &&
+    	  ! app.getNonEligibleForPreemptionSet().contains(container) &&
           (toBePreempted == null ||
               comparator.compare(toBePreempted, container) > 0)) {
-        toBePreempted = container;
+	         toBePreempted = container;    		  
       }
     }
     return toBePreempted;

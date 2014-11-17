@@ -19,6 +19,7 @@
 package org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -60,6 +61,7 @@ public class FSSchedulerApp extends SchedulerApplicationAttempt {
   private AppSchedulable appSchedulable;
 
   final Map<RMContainer, Long> preemptionMap = new HashMap<RMContainer, Long>();
+  final Set<RMContainer> noneligibleForPreemptionSet = new HashSet<RMContainer>();
 
   private Resource preemptedResources = Resources.createResource(0);
   
@@ -329,6 +331,18 @@ public class FSSchedulerApp extends SchedulerApplicationAttempt {
     Resources.addTo(preemptedResources, container.getAllocatedResource());
   }
 
+  public void addNonEligibleForPreemption(RMContainer container) {
+	  noneligibleForPreemptionSet.add(container);
+  }
+  
+  public Set<RMContainer> getNonEligibleForPreemptionSet() {
+	  return noneligibleForPreemptionSet;
+  }
+  
+  public void resetNonEligibleForPreemptionSet() {
+	  noneligibleForPreemptionSet.clear();
+  }
+  
   public Long getContainerPreemptionTime(RMContainer container) {
     return preemptionMap.get(container);
   }

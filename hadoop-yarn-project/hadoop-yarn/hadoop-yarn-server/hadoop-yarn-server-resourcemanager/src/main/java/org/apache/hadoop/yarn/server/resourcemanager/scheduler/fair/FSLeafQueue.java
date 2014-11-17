@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.PriorityQueue;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -237,17 +238,20 @@ public class FSLeafQueue extends FSQueue {
     // Choose the app that is most over fair share
     Comparator<Schedulable> comparator = policy.getComparator();
     AppSchedulable candidateSched = null;
-    for (AppSchedulable sched : runnableAppScheds) {
-      if (candidateSched == null ||
-          comparator.compare(sched, candidateSched) > 0) {
-        candidateSched = sched;
-      }
-    }
-
-    // Preempt from the selected app
-    if (candidateSched != null) {
+    PriorityQueue<AppSchedulable> priorityScheds = new PriorityQueue<AppSchedulable>(runnableAppScheds.size(), 
+    		Collections.reverseOrder(comparator));
+    priorityScheds.addAll(runnableAppScheds);
+    while ( !priorityScheds.isEmpty() ) {
+      candidateSched = priorityScheds.poll();
       toBePreempted = candidateSched.preemptContainer();
+      if ( toBePreempted != null ) {
+    	  // we are done here
+    	 break;
+      } 
     }
+    priorityScheds.clear();
+    priorityScheds = null; 
+ 
     return toBePreempted;
   }
 

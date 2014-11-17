@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.PriorityQueue;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -35,7 +36,6 @@ import org.apache.hadoop.yarn.api.records.QueueUserACLInfo;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainer;
 import org.apache.hadoop.yarn.util.resource.Resources;
-import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainer;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ActiveUsersManager;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicationAttempt;
 
@@ -172,17 +172,19 @@ public class FSParentQueue extends FSQueue {
     // Find the childQueue which is most over fair share
     FSQueue candidateQueue = null;
     Comparator<Schedulable> comparator = policy.getComparator();
-    for (FSQueue queue : childQueues) {
-      if (candidateQueue == null ||
-          comparator.compare(queue, candidateQueue) > 0) {
-        candidateQueue = queue;
-      }
+    PriorityQueue<FSQueue> sortedQueues = new PriorityQueue<FSQueue>(childQueues.size(), 
+    		Collections.reverseOrder(comparator));
+    sortedQueues.addAll(childQueues);
+    while (!sortedQueues.isEmpty()) {
+    	candidateQueue = sortedQueues.poll();
+    	toBePreempted = candidateQueue.preemptContainer();
+    	if (toBePreempted != null ) {
+    		break;
+    	}
     }
+    sortedQueues.clear();
+    sortedQueues = null; 
 
-    // Let the selected queue choose which of its container to preempt
-    if (candidateQueue != null) {
-      toBePreempted = candidateQueue.preemptContainer();
-    }
     return toBePreempted;
   }
 
