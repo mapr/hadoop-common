@@ -35,6 +35,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.HashMap;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -49,8 +50,12 @@ public class TestFairSchedulerPreemption extends FairSchedulerTestBase {
     public int lastPreemptMemory = -1;
 
     @Override
-    protected void preemptResources(Resource toPreempt) {
-      lastPreemptMemory = toPreempt.getMemory();
+    protected void preemptResources(HashMap<AppSchedulable, Resource> toPreempt) {
+      Resource totoalResource = Resources.createResource(0);
+  	  for(Resource resource : toPreempt.values()){
+  		totoalResource = Resources.add(totoalResource, resource);
+  	  }
+      lastPreemptMemory = totoalResource.getMemory();
     }
 
     public void resetLastPreemptResources() {

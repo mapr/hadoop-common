@@ -1630,7 +1630,9 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     scheduler.update();
 
     // We should be able to claw back one container from queueA and queueB each.
-    scheduler.preemptResources(Resources.createResource(2 * 1024));
+    HashMap<AppSchedulable, Resource> toPreempt = new HashMap<AppSchedulable, Resource>();
+    toPreempt.put(new AppSchedulable(scheduler), Resources.createResource(2 * 1024));
+    scheduler.preemptResources(toPreempt);
     assertEquals(2, scheduler.getSchedulerApp(app1).getLiveContainers().size());
     assertEquals(2, scheduler.getSchedulerApp(app3).getLiveContainers().size());
 
@@ -1650,7 +1652,7 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     clock.tick(15);
 
     // Trigger a kill by insisting we want containers back
-    scheduler.preemptResources(Resources.createResource(2 * 1024));
+    scheduler.preemptResources(toPreempt);
 
     // At this point the containers should have been killed (since we are not simulating AM)
     assertEquals(1, scheduler.getSchedulerApp(app2).getLiveContainers().size());
@@ -1674,7 +1676,7 @@ public class TestFairScheduler extends FairSchedulerTestBase {
         "preempted.", set.isEmpty());
 
     // Trigger a kill by insisting we want containers back
-    scheduler.preemptResources(Resources.createResource(2 * 1024));
+    scheduler.preemptResources(toPreempt);
 
     // Pretend 15 seconds have passed
     clock.tick(15);
@@ -1683,7 +1685,7 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     // For queueA (fifo), continue preempting from app2.
     // For queueB (fair), even app4 has a lowest priority container with p=4, it
     // still preempts from app3 as app3 is most over fair share.
-    scheduler.preemptResources(Resources.createResource(2 * 1024));
+    scheduler.preemptResources(toPreempt);
 
     assertEquals(2, scheduler.getSchedulerApp(app1).getLiveContainers().size());
     assertEquals(0, scheduler.getSchedulerApp(app2).getLiveContainers().size());
@@ -1691,7 +1693,7 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     assertEquals(1, scheduler.getSchedulerApp(app4).getLiveContainers().size());
 
     // Now A and B are below fair share, so preemption shouldn't do anything
-    scheduler.preemptResources(Resources.createResource(2 * 1024));
+    scheduler.preemptResources(toPreempt);
     assertTrue("App1 should have no container to be preempted",
         scheduler.getSchedulerApp(app1).getPreemptionContainers().isEmpty());
     assertTrue("App2 should have no container to be preempted",
@@ -1888,25 +1890,25 @@ public class TestFairScheduler extends FairSchedulerTestBase {
         scheduler.getQueueManager().getLeafQueue("queueD", true);
 
     assertTrue(Resources.equals(
-        Resources.none(), scheduler.resToPreempt(schedC, clock.getTime())));
+        Resources.none(), computeTotalResource(scheduler.resToPreempt(schedC, clock.getTime()))));
     assertTrue(Resources.equals(
-        Resources.none(), scheduler.resToPreempt(schedD, clock.getTime())));
+        Resources.none(), computeTotalResource(scheduler.resToPreempt(schedD, clock.getTime()))));
     // After minSharePreemptionTime has passed, they should want to preempt min
     // share.
     clock.tick(6);
     assertEquals(
-        1024, scheduler.resToPreempt(schedC, clock.getTime()).getMemory());
+        1024, computeTotalResource(scheduler.resToPreempt(schedC, clock.getTime())).getMemory());
     assertEquals(
-        1024, scheduler.resToPreempt(schedD, clock.getTime()).getMemory());
+        1024, computeTotalResource(scheduler.resToPreempt(schedD, clock.getTime())).getMemory());
 
     // After fairSharePreemptionTime has passed, they should want to preempt
     // fair share.
     scheduler.update();
     clock.tick(6);
     assertEquals(
-        1536 , scheduler.resToPreempt(schedC, clock.getTime()).getMemory());
+        1536 , computeTotalResource(scheduler.resToPreempt(schedC, clock.getTime())).getMemory());
     assertEquals(
-        1536, scheduler.resToPreempt(schedD, clock.getTime()).getMemory());
+        1536, computeTotalResource(scheduler.resToPreempt(schedD, clock.getTime())).getMemory());
   }
 
   @Test
@@ -2206,6 +2208,14 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     assertEquals(.6f, userQueue.getFairSharePreemptionThreshold(), 0.001);
   }
 
+  private Resource computeTotalResource(HashMap<AppSchedulable, Resource> resToPreempt){
+	  Resource totoalResource = Resources.createResource(0);
+	  for(Resource resource : resToPreempt.values()){
+		totoalResource = Resources.add(totoalResource, resource);
+	  }
+	  return totoalResource;
+  }
+  
   @Test (timeout = 5000)
   public void testMultipleContainersWaitingForReservation() throws IOException {
     scheduler.init(conf);
