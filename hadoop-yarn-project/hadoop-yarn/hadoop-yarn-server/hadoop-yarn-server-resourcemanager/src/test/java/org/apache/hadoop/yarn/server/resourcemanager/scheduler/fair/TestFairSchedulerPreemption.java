@@ -52,9 +52,9 @@ public class TestFairSchedulerPreemption extends FairSchedulerTestBase {
     @Override
     protected void preemptResources(HashMap<AppSchedulable, Resource> toPreempt) {
       Resource totoalResource = Resources.createResource(0);
-  	  for(Resource resource : toPreempt.values()){
-  		totoalResource = Resources.add(totoalResource, resource);
-  	  }
+      for (Resource resource : toPreempt.values()) {
+        totoalResource = Resources.add(totoalResource, resource);
+      }
       lastPreemptMemory = totoalResource.getMemory();
     }
 

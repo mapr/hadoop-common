@@ -418,7 +418,7 @@ public class FairScheduler extends
               !toPreempt.isEmpty()) {
         warnOrKillContainer(container);
         // subtract container resource from toPreempt map
-        subtractContainerResourceFromToPreempt(container, toPreempt, preemptMapping.get(container));
+        updateResourceToPreempt(container, toPreempt, preemptMapping.get(container));
       } else {
         warnedIter.remove();
       }
@@ -432,37 +432,43 @@ public class FairScheduler extends
       }
 
       while (!toPreempt.isEmpty()) {
-        RMContainer container =
-            getQueueManager().getRootQueue().preemptContainer();
+        RMContainer container = getQueueManager().getRootQueue()
+            .preemptContainer();
         if (container == null) {
           // nothing more to preempt
           break;
         } else {
-         FSSchedulerNode node = nodes.get(container.getContainer().getNodeId());
-         // check if the app is able to be preempt on this particular container
-         AppSchedulable preemptApp = null;
-         Iterator<Entry<AppSchedulable, Resource>> it = toPreempt.entrySet().iterator();
-         while(it.hasNext()){
-           Map.Entry<AppSchedulable, Resource> entry = it.next();
-           if(!SchedulerAppUtils.isBlacklisted(entry.getKey().getApp(), node, LOG)){
-             preemptApp = entry.getKey();
-             break;
-           }
-         } 
-         // if the app is unable to run in this container, continue checking other running containers
-         if(preemptApp == null) {
-    	   getSchedulerApp(container.getApplicationAttemptId()).addNonEligibleForPreemption(container);
-    	   continue;
-         }
-         // else, do preemption
-         warnOrKillContainer(container);
-         warnedContainers.add(container);
-         // mapping killed/preempted container with preemptApp
-         preemptMapping.put(container, preemptApp);
-       
-         // subtract container resource from toPreempt map
-         subtractContainerResourceFromToPreempt(container, toPreempt, preemptApp);
-       }
+          FSSchedulerNode node = nodes
+              .get(container.getContainer().getNodeId());
+          // check if the app is able to be preempt on this particular container
+          AppSchedulable preemptApp = null;
+          Iterator<Entry<AppSchedulable, Resource>> it = toPreempt.entrySet()
+              .iterator();
+          while (it.hasNext()) {
+            Map.Entry<AppSchedulable, Resource> entry = it.next();
+            if (!SchedulerAppUtils.isBlacklisted(entry.getKey().getApp(), node,
+                LOG)) {
+              preemptApp = entry.getKey();
+              break;
+            }
+          }
+          // if the app is unable to run in this container, continue checking
+          // other running containers
+          if (preemptApp == null) {
+            getSchedulerApp(container.getApplicationAttemptId())
+                .addNonEligibleForPreemption(container);
+            continue;
+          }
+          // else, do preemption
+          warnOrKillContainer(container);
+          warnedContainers.add(container);
+          // mapping killed/preempted container with preemptApp
+          preemptMapping.put(container, preemptApp);
+
+          // subtract container resource from toPreempt map
+          updateResourceToPreempt(container, toPreempt,
+              preemptApp);
+        }
       }
     } finally {
       // Clear preemptedResources for each app
@@ -476,18 +482,25 @@ public class FairScheduler extends
     fsOpDurations.addPreemptCallDuration(duration);
   }
 
-  private void subtractContainerResourceFromToPreempt(RMContainer container, HashMap<AppSchedulable, Resource> toPreempt, 
-     AppSchedulable preemptApp){
-   Resource toPreemptResource = toPreempt.get(preemptApp);
-   Resource containerResource = container.getContainer().getResource();
-   if(Resources.greaterThan(RESOURCE_CALCULATOR, clusterResource,
-       toPreemptResource, containerResource)){ // 1. toPreempt requires more Resource
-     toPreempt.put(preemptApp,  Resources.subtractFrom(toPreemptResource,
-         containerResource));
-   }else{// 2. container has more Resource
-     // remove from toPreempt resources
-     toPreempt.remove(preemptApp);
-   }
+  /**
+   * Helper method to update toPreempt Map (map of application to resources to preempt)
+   * @param container
+   * @param toPreempt
+   * @param preemptApp
+   */
+  private void updateResourceToPreempt(RMContainer container,
+      HashMap<AppSchedulable, Resource> toPreempt, AppSchedulable preemptApp) {
+    Resource toPreemptResource = toPreempt.get(preemptApp);
+    Resource containerResource = container.getContainer().getResource();
+    if (Resources.greaterThan(RESOURCE_CALCULATOR, clusterResource,
+        toPreemptResource, containerResource)) { // 1. toPreempt requires more
+                                                 // Resource
+      toPreempt.put(preemptApp, Resources.subtractFrom(toPreemptResource,
+          containerResource));
+    } else {// 2. container has more Resource
+      // remove from toPreempt resources
+      toPreempt.remove(preemptApp);
+    }
   }
   
   protected void warnOrKillContainer(RMContainer container) {
@@ -523,7 +536,7 @@ public class FairScheduler extends
   }
 
   /**
-   * Return the resource amount that this queue is allowed to preempt, if any.
+   * Returns map of applications to resource that this queue is allowed to preempt, if any.
    * If the queue has been below its min share for at least its preemption
    * timeout, it should preempt the difference between its current share and
    * this min share. If it has been below its fair share preemption threshold
@@ -549,36 +562,36 @@ public class FairScheduler extends
       resDueToFairShare = Resources.max(RESOURCE_CALCULATOR, clusterResource,
           Resources.none(), Resources.subtract(target, sched.getResourceUsage()));
     }
-    Resource numResToPreempt = Resources.max(RESOURCE_CALCULATOR, clusterResource,
+    Resource resToPreempt = Resources.max(RESOURCE_CALCULATOR, clusterResource,
         resDueToMinShare, resDueToFairShare);
     // resToPreempt is a map which matches different apps with # preemptResources
-    HashMap<AppSchedulable, Resource> resToPreempt = new HashMap<AppSchedulable, Resource>();
+    HashMap<AppSchedulable, Resource> resPerAppMap = new HashMap<AppSchedulable, Resource>();
 
     if (Resources.greaterThan(RESOURCE_CALCULATOR, clusterResource,
-        numResToPreempt, Resources.none())) {
-      String message = "Should preempt " + numResToPreempt + " res for queue "
+        resToPreempt, Resources.none())) {
+      String message = "Should preempt " + resToPreempt + " res for queue "
           + sched.getName() + ": resDueToMinShare = " + resDueToMinShare
           + ", resDueToFairShare = " + resDueToFairShare;
       LOG.info(message);
-      // App label is stored in AppSchedulable and it determines which node can run the task
-      for(AppSchedulable as : sched.getRunnableAppSchedulables()){
-       Resource demand = as.getDemand();
-       if(Resources.greaterThanOrEqual(RESOURCE_CALCULATOR, clusterResource,
-    		   demand, numResToPreempt)){
-         resToPreempt.put(as, numResToPreempt);
-         break;
-       }else{
-         resToPreempt.put(as, demand);
-         numResToPreempt = Resources.subtract(numResToPreempt, demand);
-         if ( Resources.lessThanOrEqual(RESOURCE_CALCULATOR, clusterResource, 
-        	  numResToPreempt, Resources.none()) ) {
-        	 break;
-         }
-       }
+      // App label is stored in AppSchedulable and it determines which node can
+      // run the task
+      for (AppSchedulable as : sched.getRunnableAppSchedulables()) {
+        Resource demand = as.getDemand();
+        if (Resources.greaterThanOrEqual(RESOURCE_CALCULATOR, clusterResource,
+            demand, resToPreempt)) {
+          resPerAppMap.put(as, resToPreempt);
+          break;
+        } else {
+          resPerAppMap.put(as, demand);
+          resToPreempt = Resources.subtract(resToPreempt, demand);
+          if (Resources.lessThanOrEqual(RESOURCE_CALCULATOR, clusterResource,
+              resToPreempt, Resources.none())) {
+            break;
+          }
+        }
       }
-
     }
-    return resToPreempt;
+    return resPerAppMap;
   }
 
   public synchronized RMContainerTokenSecretManager

@@ -2208,13 +2208,14 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     assertEquals(.6f, userQueue.getFairSharePreemptionThreshold(), 0.001);
   }
 
-  private Resource computeTotalResource(HashMap<AppSchedulable, Resource> resToPreempt){
-	  Resource totoalResource = Resources.createResource(0);
-	  for(Resource resource : resToPreempt.values()){
-		totoalResource = Resources.add(totoalResource, resource);
-	  }
-	  return totoalResource;
-  }
+   private Resource computeTotalResource(
+       HashMap<AppSchedulable, Resource> resToPreempt) {
+     Resource totoalResource = Resources.createResource(0);
+     for (Resource resource : resToPreempt.values()) {
+       totoalResource = Resources.add(totoalResource, resource);
+     }
+     return totoalResource;
+   }
   
   @Test (timeout = 5000)
   public void testMultipleContainersWaitingForReservation() throws IOException {
