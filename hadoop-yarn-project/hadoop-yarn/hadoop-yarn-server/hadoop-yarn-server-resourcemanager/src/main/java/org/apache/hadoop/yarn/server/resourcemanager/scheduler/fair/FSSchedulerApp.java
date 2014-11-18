@@ -332,15 +332,15 @@ public class FSSchedulerApp extends SchedulerApplicationAttempt {
   }
 
   public void addNonEligibleForPreemption(RMContainer container) {
-	  noneligibleForPreemptionSet.add(container);
+    noneligibleForPreemptionSet.add(container);
   }
-  
+
   public Set<RMContainer> getNonEligibleForPreemptionSet() {
-	  return noneligibleForPreemptionSet;
+    return noneligibleForPreemptionSet;
   }
-  
+
   public void resetNonEligibleForPreemptionSet() {
-	  noneligibleForPreemptionSet.clear();
+    noneligibleForPreemptionSet.clear();
   }
   
   public Long getContainerPreemptionTime(RMContainer container) {

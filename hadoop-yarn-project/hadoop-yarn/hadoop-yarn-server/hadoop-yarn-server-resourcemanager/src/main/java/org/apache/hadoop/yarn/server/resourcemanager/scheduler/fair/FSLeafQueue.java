@@ -238,19 +238,19 @@ public class FSLeafQueue extends FSQueue {
     // Choose the app that is most over fair share
     Comparator<Schedulable> comparator = policy.getComparator();
     AppSchedulable candidateSched = null;
-    PriorityQueue<AppSchedulable> priorityScheds = new PriorityQueue<AppSchedulable>(runnableAppScheds.size(), 
-    		Collections.reverseOrder(comparator));
+    PriorityQueue<AppSchedulable> priorityScheds = new PriorityQueue<AppSchedulable>(
+        runnableAppScheds.size(), Collections.reverseOrder(comparator));
     priorityScheds.addAll(runnableAppScheds);
-    while ( !priorityScheds.isEmpty() ) {
+    while (!priorityScheds.isEmpty()) {
       candidateSched = priorityScheds.poll();
       toBePreempted = candidateSched.preemptContainer();
-      if ( toBePreempted != null ) {
-    	  // we are done here
-    	 break;
-      } 
+      if (toBePreempted != null) {
+        // we are done here
+        break;
+      }
     }
     priorityScheds.clear();
-    priorityScheds = null; 
+    priorityScheds = null;
  
     return toBePreempted;
   }

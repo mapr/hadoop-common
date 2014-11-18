@@ -172,18 +172,18 @@ public class FSParentQueue extends FSQueue {
     // Find the childQueue which is most over fair share
     FSQueue candidateQueue = null;
     Comparator<Schedulable> comparator = policy.getComparator();
-    PriorityQueue<FSQueue> sortedQueues = new PriorityQueue<FSQueue>(childQueues.size(), 
-    		Collections.reverseOrder(comparator));
+    PriorityQueue<FSQueue> sortedQueues = new PriorityQueue<FSQueue>(
+        childQueues.size(), Collections.reverseOrder(comparator));
     sortedQueues.addAll(childQueues);
     while (!sortedQueues.isEmpty()) {
-    	candidateQueue = sortedQueues.poll();
-    	toBePreempted = candidateQueue.preemptContainer();
-    	if (toBePreempted != null ) {
-    		break;
-    	}
+      candidateQueue = sortedQueues.poll();
+      toBePreempted = candidateQueue.preemptContainer();
+      if (toBePreempted != null) {
+        break;
+      }
     }
     sortedQueues.clear();
-    sortedQueues = null; 
+    sortedQueues = null;
 
     return toBePreempted;
   }

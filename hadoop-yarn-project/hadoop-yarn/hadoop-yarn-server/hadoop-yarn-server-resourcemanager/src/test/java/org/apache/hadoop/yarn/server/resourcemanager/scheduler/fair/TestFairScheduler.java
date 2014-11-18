@@ -1356,12 +1356,13 @@ public class TestFairScheduler extends FairSchedulerTestBase {
         1536, computeTotalResource(scheduler.resToPreempt(schedD, clock.getTime())).getMemory());
   }
 
-  private Resource computeTotalResource(HashMap<AppSchedulable, Resource> resToPreempt){
-	  Resource totoalResource = Resources.createResource(0);
-	  for(Resource resource : resToPreempt.values()){
-		totoalResource = Resources.add(totoalResource, resource);
-	  }
-	  return totoalResource;
+  private Resource computeTotalResource(
+      HashMap<AppSchedulable, Resource> resToPreempt) {
+    Resource totoalResource = Resources.createResource(0);
+    for (Resource resource : resToPreempt.values()) {
+      totoalResource = Resources.add(totoalResource, resource);
+    }
+    return totoalResource;
   }
   
   @Test (timeout = 5000)
