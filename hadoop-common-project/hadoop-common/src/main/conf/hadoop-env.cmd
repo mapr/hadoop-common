@@ -78,4 +78,4 @@ set HADOOP_PID_DIR=%HADOOP_PID_DIR%
 set HADOOP_SECURE_DN_PID_DIR=%HADOOP_PID_DIR%
 
 @rem A string representing this instance of hadoop. %USERNAME% by default.
-set HADOOP_IDENT_STRING=%USERNAME%
+set HADOOP_IDENT_STRING="%USERNAME%"
