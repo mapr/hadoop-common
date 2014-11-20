@@ -18,23 +18,23 @@
 
 package org.apache.hadoop.examples.terasort;
 
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configurable;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapreduce.MRJobConfig;
 import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.util.Tool;
@@ -54,9 +54,11 @@ public class TeraSortWithCRC extends Configured implements Tool {
    * A partitioner that splits text keys into roughly equal partitions
    * in a global sorted order.
    */
-  static class TotalOrderPartitioner extends Partitioner<Text,Text>{
+  static class TotalOrderPartitioner extends Partitioner<Text,Text> 
+    implements Configurable {
     private TrieNode trie;
     private Text[] splitPoints;
+    private Configuration conf;
 
     /**
      * A generic trie node
@@ -88,13 +90,13 @@ public class TeraSortWithCRC extends Configured implements Tool {
         if (key.getLength() <= level) {
           return child[0].findPartition(key);
         }
-        return child[key.getBytes()[level]].findPartition(key);
+        return child[key.getBytes()[level] & 0xff].findPartition(key);
       }
       void setChild(int idx, TrieNode child) {
         this.child[idx] = child;
       }
       void print(PrintStream strm) throws IOException {
-        for(int ch=0; ch < 255; ++ch) {
+        for(int ch=0; ch < 256; ++ch) {
           for(int i = 0; i < 2*getLevel(); ++i) {
             strm.print(' ');
           }
@@ -149,17 +151,18 @@ public class TeraSortWithCRC extends Configured implements Tool {
      * @throws IOException
      */
     private static Text[] readPartitions(FileSystem fs, Path p, 
-                                         JobConf job) throws IOException {
-      SequenceFile.Reader reader = new SequenceFile.Reader(fs, p, job);
-      List<Text> parts = new ArrayList<Text>();
-      Text key = new Text();
-      NullWritable value = NullWritable.get();
-      while (reader.next(key, value)) {
-        parts.add(key);
-        key = new Text();
+                                         Configuration conf) throws IOException {
+
+      int reduces = conf.getInt(MRJobConfig.NUM_REDUCES, 1);
+      Text[] result = new Text[reduces - 1];
+      DataInputStream reader = fs.open(p);
+      for(int i=0; i < reduces - 1; ++i) {
+        result[i] = new Text();
+        result[i].readFields(reader);
       }
       reader.close();
-      return parts.toArray(new Text[parts.size()]);  
+      return result;
+
     }
 
     /**
@@ -214,6 +217,24 @@ public class TeraSortWithCRC extends Configured implements Tool {
       }
     }
 
+    @Override
+    public void setConf(Configuration conf) {
+      try {
+        FileSystem fs = FileSystem.getLocal(conf);
+        this.conf = conf;
+        Path partFile = new Path(TeraInputFormatWithCRC.PARTITION_FILENAME);
+        splitPoints = readPartitions(fs, partFile, conf);
+        trie = buildTrie(splitPoints, 0, splitPoints.length, new Text(), 2);
+      } catch (IOException ie) {
+        throw new IllegalArgumentException("can't read partitions file", ie);
+      }
+    }
+
+    @Override
+    public Configuration getConf() {
+      return conf;
+    }
+      
     public TotalOrderPartitioner() {
     }
 
