@@ -19,7 +19,6 @@
 package org.apache.hadoop.examples.terasort;
 
 import java.io.IOException;
-import java.util.Iterator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -28,14 +27,10 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.apache.hadoop.mapred.FileSplit;
-import org.apache.hadoop.mapred.JobClient;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapreduce.Reducer;
-import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
@@ -59,7 +54,6 @@ public class TeraValidateWithCRC extends Configured implements Tool {
 
   static class ValidateMapper extends Mapper<Text,Text,Text,Text> {
     private Text lastKey;
-    private OutputCollector<Text,Text> output;
     private String filename;
     private final int filler_len = 58;
     private final int crc_len = 8;
@@ -74,16 +68,15 @@ public class TeraValidateWithCRC extends Configured implements Tool {
       return split.getPath().getName();
     }
 
-    public void map(Text key, Text value, OutputCollector<Text,Text> output,
-                    Reporter reporter) throws IOException {
+    @Override
+    public void map(Text key, Text value, Context context) throws IOException, InterruptedException {
     	if (lastKey == null) {
-        filename = getFilename((FileSplit) reporter.getInputSplit());
-        output.collect(new Text(filename + ":begin"), key);
+        filename = getFilename((FileSplit) context.getInputSplit());
+        context.write(new Text(filename + ":begin"), key);
         lastKey = new Text();
-        this.output = output;
       } else {
         if (key.compareTo(lastKey) < 0) {
-          output.collect(error, new Text("misorder in " + filename + 
+         context.write(error, new Text("misorder in " + filename + 
                                          " last: '" + lastKey + 
                                          "' current: '" + key + "'"));
         }
@@ -91,9 +84,10 @@ public class TeraValidateWithCRC extends Configured implements Tool {
       lastKey.set(key);
     }
     
-    public void close() throws IOException {
+    @Override
+    public void cleanup(Context context) throws IOException, InterruptedException {
       if (lastKey != null) {
-        output.collect(new Text(filename + ":end"), lastKey);
+        context.write(new Text(filename + ":end"), lastKey);
       }
     }
   }
@@ -108,20 +102,22 @@ public class TeraValidateWithCRC extends Configured implements Tool {
     private boolean firstKey = true;
     private Text lastKey = new Text();
     private Text lastValue = new Text();
-    public void reduce(Text key, Iterator<Text> values,
-                       OutputCollector<Text, Text> output, 
-                       Reporter reporter) throws IOException {
+    
+    @Override
+    public void reduce(Text key, Iterable<Text> values,
+                       Context context) throws IOException, InterruptedException {
+      
       if (error.equals(key)) {
-        while(values.hasNext()) {
-          output.collect(key, values.next());
+        for (Text val : values ) {
+          context.write(key, val);
         }
       } else {
-        Text value = values.next();
+        Text value = values.iterator().next();
         if (firstKey) {
           firstKey = false;
         } else {
           if (value.compareTo(lastValue) < 0) {
-            output.collect(error, 
+            context.write(error, 
                            new Text("misordered keys last: " + 
                                     lastKey + " '" + lastValue +
                                     "' current: " + key + " '" + value + "'"));

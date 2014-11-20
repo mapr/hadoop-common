@@ -18,6 +18,7 @@
 
 package org.apache.hadoop.examples.terasort;
 
+import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -156,12 +157,10 @@ public class TeraInputFormatWithCRC extends FileInputFormat<Text,Text> {
     if (outFs.exists(partFile)) {
       outFs.delete(partFile, false);
     }
-    SequenceFile.Writer writer = 
-      SequenceFile.createWriter(outFs, conf, partFile, Text.class, 
-                                NullWritable.class);
-    NullWritable nullValue = NullWritable.get();
+    DataOutputStream writer = outFs.create(partFile, true, 64*1024, (short) 10, 
+        outFs.getDefaultBlockSize(partFile));
     for(Text split : sampler.createPartitions(partitions)) {
-      writer.append(split, nullValue);
+      split.write(writer);
     }
     writer.close();
   }
