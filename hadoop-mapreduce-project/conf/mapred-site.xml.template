@@ -17,5 +17,18 @@
 <!-- Put site-specific property overrides in this file. -->
 
 <configuration>
-
+  <property>
+    <name>mapreduce.jobhistory.address</name>
+    <value>__HS_IP__:10020</value>
+  </property>
+  <property>
+    <name>mapreduce.jobhistory.webapp.address</name>
+    <value>__HS_IP__:19888</value>
+  </property>
+  <!--
+  <property>
+    <name>mapreduce.framework.name</name>
+    <value>yarn-tez</value>
+  </property>
+  -->
 </configuration>
