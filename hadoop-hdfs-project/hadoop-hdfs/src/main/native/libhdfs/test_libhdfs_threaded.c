@@ -28,6 +28,39 @@
 #include <stdlib.h>
 #include <string.h>
 
+
+#ifdef __MACH__
+#include <mach/mach_init.h>
+#include <mach/task.h>
+#include <mach/semaphore.h>
+typedef semaphore_t hadoop_sem_t;
+int hadoop_sem_init(hadoop_sem_t* sem, unsigned int value) {
+    kern_return_t err;
+    err = semaphore_create(mach_task_self(), sem, SYNC_POLICY_FIFO, value);
+    if (err == KERN_SUCCESS) {
+        return 0;
+    }
+    return -1;
+}
+
+int hadoop_sem_destroy(hadoop_sem_t* sem) {
+    if (semaphore_destroy(mach_task_self(), *sem)) {
+        return -1;
+    }
+    return 0;
+}
+
+#else
+typedef sem_t hadoop_sem_t;
+int hadoop_sem_init(hadoop_sem_t* sem, unsigned int value) {
+    return sem_init(sem, 0, value);
+}
+
+int hadoop_sem_destroy(hadoop_sem_t* sem) {
+    return sem_destroy(sem);
+}
+#endif
+
 #define TO_STR_HELPER(X) #X
 #define TO_STR(X) TO_STR_HELPER(X)
 
@@ -35,7 +68,7 @@
 
 #define TLH_DEFAULT_BLOCK_SIZE 134217728
 
-static sem_t tlhSem;
+static hadoop_sem_t tlhSem;
 
 static struct NativeMiniDfsCluster* tlhCluster;
 
@@ -85,7 +118,7 @@ static int hdfsSingleNameNodeConnect(struct NativeMiniDfsCluster *cl, hdfsFS *fs
 
 static int doTestGetDefaultBlockSize(hdfsFS fs, const char *path)
 {
-    uint64_t blockSize;
+    int64_t blockSize;
     int ret;
 
     blockSize = hdfsGetDefaultBlockSize(fs);
@@ -323,7 +356,7 @@ int main(void)
         ti[i].threadIdx = i;
     }
 
-    EXPECT_ZERO(sem_init(&tlhSem, 0, tlhNumThreads));
+    EXPECT_ZERO(hadoop_sem_init(&tlhSem, tlhNumThreads));
     tlhCluster = nmdCreate(&conf);
     EXPECT_NONNULL(tlhCluster);
     EXPECT_ZERO(nmdWaitClusterUp(tlhCluster));
@@ -338,6 +371,6 @@ int main(void)
 
     EXPECT_ZERO(nmdShutdown(tlhCluster));
     nmdFree(tlhCluster);
-    EXPECT_ZERO(sem_destroy(&tlhSem));
+    EXPECT_ZERO(hadoop_sem_destroy(&tlhSem));
     return checkFailures(ti, tlhNumThreads);
 }

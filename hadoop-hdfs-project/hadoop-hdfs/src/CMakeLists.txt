@@ -176,11 +176,18 @@ target_link_libraries(test_libhdfs_zerocopy
 add_executable(test_libhdfs_vecsum
     main/native/libhdfs/test/vecsum.c
 )
-target_link_libraries(test_libhdfs_vecsum
-    hdfs
-    pthread
-    rt
-)
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  target_link_libraries(test_libhdfs_vecsum
+      hdfs
+      pthread
+  )
+else (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  target_link_libraries(test_libhdfs_vecsum
+      hdfs
+      pthread
+      rt
+  )
+endif (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
 IF(REQUIRE_LIBWEBHDFS)
     add_subdirectory(contrib/libwebhdfs)
