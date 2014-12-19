@@ -32,11 +32,13 @@ import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.util.StringUtils.TraditionalBinaryPrefix;
 import org.apache.hadoop.yarn.api.records.ContainerExitStatus;
 import org.apache.hadoop.yarn.api.records.ContainerId;
+import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.event.AsyncDispatcher;
 import org.apache.hadoop.yarn.event.Dispatcher;
 import org.apache.hadoop.yarn.server.nodemanager.ContainerExecutor;
 import org.apache.hadoop.yarn.server.nodemanager.Context;
+import org.apache.hadoop.yarn.server.nodemanager.NodeStatusUpdaterImpl;
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.container.ContainerKillEvent;
 import org.apache.hadoop.yarn.util.ResourceCalculatorProcessTree;
 import org.apache.hadoop.yarn.util.ResourceCalculatorPlugin;
@@ -106,19 +108,31 @@ public class ContainersMonitorImpl extends AbstractService implements
     LOG.info(" Using ResourceCalculatorProcessTree : "
         + this.processTreeClass);
 
-    long configuredPMemForContainers = conf.getLong(
+    int configuredPMemForContainers = conf.getInt(
         YarnConfiguration.NM_PMEM_MB,
-        YarnConfiguration.DEFAULT_NM_PMEM_MB) * 1024 * 1024l;
+        YarnConfiguration.DEFAULT_NM_PMEM_MB);
 
-    long configuredVCoresForContainers = conf.getLong(
+    int configuredVCoresForContainers = conf.getInt(
         YarnConfiguration.NM_VCORES,
         YarnConfiguration.DEFAULT_NM_VCORES);
-
+    
+    // If either of cpu, mem, disk is non-zero, make sure there is enough resources to run one AM & reducer
+    // If cpu, mem, disk are all zero, user does not want NodeManager to run on this node. NodeManager
+    // will fail to register with ResourceManager and shut down. (See NodeStatusUpdaterImpl.java)
+    if( configuredPMemForContainers != 0 || 
+    	configuredVCoresForContainers != 0 || 
+        conf.getDouble(YarnConfiguration.NM_DISKS, YarnConfiguration.DEFAULT_NM_DISKS) != 0 ) {
+      Resource updatedRes = Resource.newInstance(configuredPMemForContainers,
+          configuredVCoresForContainers);
+      NodeStatusUpdaterImpl.updateResource(conf, updatedRes);
+      configuredPMemForContainers = updatedRes.getMemory();
+      configuredVCoresForContainers = updatedRes.getVirtualCores();
+    }
 
     // Setting these irrespective of whether checks are enabled. Required in
     // the UI.
     // ///////// Physical memory configuration //////
-    this.maxPmemAllottedForContainers = configuredPMemForContainers;
+    this.maxPmemAllottedForContainers = configuredPMemForContainers * 1024 * 1024L;
     this.maxVCoresAllottedForContainers = configuredVCoresForContainers;
 
     // ///////// Virtual memory configuration //////

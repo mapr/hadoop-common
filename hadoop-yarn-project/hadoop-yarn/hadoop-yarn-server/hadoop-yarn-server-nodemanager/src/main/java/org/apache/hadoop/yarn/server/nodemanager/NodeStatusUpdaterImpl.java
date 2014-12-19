@@ -199,8 +199,10 @@ public class NodeStatusUpdaterImpl extends AbstractService implements
     }
     super.serviceInit(conf);
     LOG.info("Initialized nodemanager for " + nodeId + ":" +
-        " physical-memory=" + memoryMb + " virtual-memory=" + virtualMemoryMb +
-        " virtual-cores=" + virtualCores + " disks=" + disks);
+        " physical-memory=" + this.totalResource.getMemory() +
+        " virtual-memory=" + virtualMemoryMb +
+        " virtual-cores=" + this.totalResource.getVirtualCores() +
+        " disks=" + this.totalResource.getDisks());
   }
 
   @Override
@@ -631,7 +633,7 @@ public class NodeStatusUpdaterImpl extends AbstractService implements
     statusUpdater.start();
   }
 
-  private void updateResource(Configuration conf, Resource totalResource) {
+  public static void updateResource(Configuration conf, Resource totalResource) {
     int requiredMemory = conf.getInt("yarn.app.mapreduce.am.resource.mb",
       DEFAULT_MR_AM_VMEM_MB);
     requiredMemory += conf.getInt("mapreduce.reduce.memory.mb",
