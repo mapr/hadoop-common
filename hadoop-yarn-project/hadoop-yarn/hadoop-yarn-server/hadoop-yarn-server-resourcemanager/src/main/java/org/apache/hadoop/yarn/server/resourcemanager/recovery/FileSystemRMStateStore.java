@@ -481,12 +481,13 @@ public class FileSystemRMStateStore extends RMStateStore {
           DELEGATION_TOKEN_SEQUENCE_NUMBER_PREFIX + latestSequenceNumber);
     LOG.info("Storing " + DELEGATION_TOKEN_SEQUENCE_NUMBER_PREFIX
         + latestSequenceNumber);
-    if (dtSequenceNumberPath == null) {
+    if (dtSequenceNumberPath == null && !fs.exists(latestSequenceNumberPath)) {
       if (!createFile(latestSequenceNumberPath)) {
         throw new Exception("Failed to create " + latestSequenceNumberPath);
       }
     } else {
-      if (!renameFile(dtSequenceNumberPath, latestSequenceNumberPath)) {
+      if (!dtSequenceNumberPath.equals(latestSequenceNumberPath) &&
+          !renameFile(dtSequenceNumberPath, latestSequenceNumberPath)) {
         throw new Exception("Failed to rename " + dtSequenceNumberPath);
       }
     }
