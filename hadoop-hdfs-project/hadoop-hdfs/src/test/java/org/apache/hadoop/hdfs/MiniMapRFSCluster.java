@@ -676,8 +676,9 @@ public class MiniMapRFSCluster extends MiniDFSCluster {
 
   @Override
   public synchronized void startDataNodes(Configuration conf, int numDataNodes,
-      StorageType storageType, boolean manageDfsDirs, StartupOption operation,
+      StorageType[][] storageTypes, boolean manageDfsDirs, StartupOption operation,
       String[] racks, String[] hosts,
+      long[][] storageCapacities,
       long[] simulatedCapacities,
       boolean setupHostsFile,
       boolean checkDataNodeAddrConfig,
@@ -935,7 +936,7 @@ public class MiniMapRFSCluster extends MiniDFSCluster {
     }
 
     @Override
-    String makeDataNodeDirs(int dnIndex, StorageType storageType) throws IOException {
+    String makeDataNodeDirs(int dnIndex, StorageType[] storageTypes) throws IOException {
         throw new UnsupportedOperationException(UNSUPPORTED_MESSAGE);
     }
 
