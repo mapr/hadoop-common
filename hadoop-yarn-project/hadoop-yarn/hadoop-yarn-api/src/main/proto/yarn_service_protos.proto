@@ -209,10 +209,10 @@ message GetLabelsToNodesResponseProto {
   repeated LabelsToNodeIdsProto labelsToNodes = 1;
 }
 
-message GetClusterNodeLabelsRequestProto {
+message NoOpGetClusterNodeLabelsRequestProto {
 }
 
-message GetClusterNodeLabelsResponseProto {
+message NoOpGetClusterNodeLabelsResponseProto {
   repeated string nodeLabels = 1;
 }
 

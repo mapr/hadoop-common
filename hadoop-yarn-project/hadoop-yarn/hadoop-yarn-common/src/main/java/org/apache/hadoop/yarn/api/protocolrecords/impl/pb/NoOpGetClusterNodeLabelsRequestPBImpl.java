@@ -18,34 +18,29 @@
 
 package org.apache.hadoop.yarn.api.protocolrecords.impl.pb;
 
-import org.apache.hadoop.classification.InterfaceAudience.Private;
-import org.apache.hadoop.classification.InterfaceStability.Unstable;
-import org.apache.hadoop.yarn.api.protocolrecords.GetClusterNodeLabelsRequest;
-import org.apache.hadoop.yarn.proto.YarnServiceProtos.GetClusterNodeLabelsRequestProto;
+import org.apache.hadoop.yarn.api.protocolrecords.NoOpGetClusterNodeLabelsRequest;
+
 import com.google.protobuf.TextFormat;
+import org.apache.hadoop.yarn.proto.YarnServiceProtos.NoOpGetClusterNodeLabelsRequestProto;
 
-@Private
-@Unstable
-public class GetClusterNodeLabelsRequestPBImpl extends
-    GetClusterNodeLabelsRequest {
+public class NoOpGetClusterNodeLabelsRequestPBImpl extends
+    NoOpGetClusterNodeLabelsRequest {
 
-  GetClusterNodeLabelsRequestProto proto =
-      GetClusterNodeLabelsRequestProto.getDefaultInstance();
-  GetClusterNodeLabelsRequestProto.Builder builder = null;
+  NoOpGetClusterNodeLabelsRequestProto proto = NoOpGetClusterNodeLabelsRequestProto
+      .getDefaultInstance();
+  NoOpGetClusterNodeLabelsRequestProto.Builder builder = null;
   boolean viaProto = false;
 
-  public GetClusterNodeLabelsRequestPBImpl() {
-    builder = GetClusterNodeLabelsRequestProto.newBuilder();
+  public NoOpGetClusterNodeLabelsRequestPBImpl() {
+    builder = NoOpGetClusterNodeLabelsRequestProto.newBuilder();
   }
 
-  public GetClusterNodeLabelsRequestPBImpl(
-      GetClusterNodeLabelsRequestProto proto) {
+  public NoOpGetClusterNodeLabelsRequestPBImpl(NoOpGetClusterNodeLabelsRequestProto proto) {
     this.proto = proto;
     viaProto = true;
   }
 
-  public GetClusterNodeLabelsRequestProto getProto() {
-    mergeLocalToProto();
+  public NoOpGetClusterNodeLabelsRequestProto getProto() {
     proto = viaProto ? proto : builder.build();
     viaProto = true;
     return proto;
@@ -58,9 +53,8 @@ public class GetClusterNodeLabelsRequestPBImpl extends
 
   @Override
   public boolean equals(Object other) {
-    if (other == null) {
+    if (other == null)
       return false;
-    }
     if (other.getClass().isAssignableFrom(this.getClass())) {
       return this.getProto().equals(this.getClass().cast(other).getProto());
     }
@@ -70,24 +64,5 @@ public class GetClusterNodeLabelsRequestPBImpl extends
   @Override
   public String toString() {
     return TextFormat.shortDebugString(getProto());
-  }
-
-  private void mergeLocalToBuilder() {
-  }
-
-  private void mergeLocalToProto() {
-    if (viaProto) {
-      maybeInitBuilder();
-    }
-    mergeLocalToBuilder();
-    proto = builder.build();
-    viaProto = true;
-  }
-
-  private void maybeInitBuilder() {
-    if (viaProto || builder == null) {
-      builder = GetClusterNodeLabelsRequestProto.newBuilder(proto);
-    }
-    viaProto = false;
   }
 }

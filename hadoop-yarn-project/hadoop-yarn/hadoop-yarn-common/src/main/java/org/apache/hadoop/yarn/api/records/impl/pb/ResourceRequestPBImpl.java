@@ -188,6 +188,26 @@ public class ResourceRequestPBImpl extends  ResourceRequest {
   }
 
   @Override
+  public String getLabel() {
+    ResourceRequestProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasLabel()) {
+      return null;
+    }
+    return (p.getLabel());
+
+  }
+
+  @Override
+  public void setLabel(String label) {
+    maybeInitBuilder();
+    if (label == null) {
+      builder.clearLabel();
+      return;
+    }
+    builder.setLabel(label);
+  }
+
+  @Override
   public String getNodeLabelExpression() {
     ResourceRequestProtoOrBuilder p = viaProto ? proto : builder;
     if (!p.hasNodeLabelExpression()) {

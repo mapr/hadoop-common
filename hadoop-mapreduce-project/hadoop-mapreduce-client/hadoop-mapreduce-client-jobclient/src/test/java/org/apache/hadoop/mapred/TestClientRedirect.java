@@ -82,6 +82,8 @@ import org.apache.hadoop.yarn.api.protocolrecords.GetClusterMetricsRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetClusterMetricsResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.GetClusterNodeLabelsRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetClusterNodeLabelsResponse;
+import org.apache.hadoop.yarn.api.protocolrecords.NoOpGetClusterNodeLabelsRequest;
+import org.apache.hadoop.yarn.api.protocolrecords.NoOpGetClusterNodeLabelsResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.GetClusterNodesRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetClusterNodesResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.GetContainerReportRequest;
@@ -430,8 +432,14 @@ public class TestClientRedirect {
     }
 
     @Override
-    public GetNodesToLabelsResponse getNodeToLabels(
-        GetNodesToLabelsRequest request) throws YarnException, IOException {
+    public NoOpGetNodesToLabelsResponse getNodeToLabels(
+        NoOpGetNodesToLabelsRequest request) throws YarnException, IOException {
+      return null;
+    }
+
+    @Override
+    public NoOpGetClusterNodeLabelsResponse getClusterNodeLabelsNoOp(
+        NoOpGetClusterNodeLabelsRequest request) throws YarnException, IOException {
       return null;
     }
 

@@ -18,24 +18,6 @@
 
 package org.apache.hadoop.yarn.api.protocolrecords.impl.pb;
 
-<<<<<<< HEAD
-import java.util.HashSet;
-import java.util.Set;
-import org.apache.hadoop.yarn.api.protocolrecords.GetClusterNodeLabelsResponse;
-import org.apache.hadoop.yarn.proto.YarnServiceProtos.GetClusterNodeLabelsResponseProto;
-import org.apache.hadoop.yarn.proto.YarnServiceProtos.GetClusterNodeLabelsResponseProtoOrBuilder;
-
-public class GetClusterNodeLabelsResponsePBImpl extends
-    GetClusterNodeLabelsResponse {
-  Set<String> labels;
-  GetClusterNodeLabelsResponseProto proto = GetClusterNodeLabelsResponseProto
-      .getDefaultInstance();
-  GetClusterNodeLabelsResponseProto.Builder builder = null;
-  boolean viaProto = false;
-
-  public GetClusterNodeLabelsResponsePBImpl() {
-    this.builder = GetClusterNodeLabelsResponseProto.newBuilder();
-=======
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -63,7 +45,7 @@ public class GetClusterNodeLabelsResponsePBImpl extends
 
   public GetClusterNodeLabelsResponsePBImpl() {
     builder = GetClusterNodeLabelsResponseProto.newBuilder();
->>>>>>> MAPR-14424: Implementation for 'mapred job -showlabels' and 'mapred job -refreshlabaels' cli command
+
   }
 
   public GetClusterNodeLabelsResponsePBImpl(
@@ -72,19 +54,6 @@ public class GetClusterNodeLabelsResponsePBImpl extends
     viaProto = true;
   }
 
-<<<<<<< HEAD
-  private void maybeInitBuilder() {
-    if (viaProto || builder == null) {
-      builder = GetClusterNodeLabelsResponseProto.newBuilder(proto);
-    }
-    viaProto = false;
-  }
-
-  private void mergeLocalToBuilder() {
-    if (this.labels != null && !this.labels.isEmpty()) {
-      builder.clearNodeLabels();
-      builder.addAllNodeLabels(this.labels);
-=======
   @Override
   public List<NodeToLabelsList> getClusterNodeLabels() {
     initClusterNodeLabels();
@@ -131,73 +100,18 @@ public class GetClusterNodeLabelsResponsePBImpl extends
   private void mergeLocalToBuilder() {
     if (this.clusterNodeLabels != null) {
       addClusterNodeLabelsToProto();
->>>>>>> MAPR-14424: Implementation for 'mapred job -showlabels' and 'mapred job -refreshlabaels' cli command
     }
   }
 
   private void mergeLocalToProto() {
-<<<<<<< HEAD
-    if (viaProto)
-      maybeInitBuilder();
-=======
     if (viaProto) {
       maybeInitBuilder();
     }
->>>>>>> MAPR-14424: Implementation for 'mapred job -showlabels' and 'mapred job -refreshlabaels' cli command
     mergeLocalToBuilder();
     proto = builder.build();
     viaProto = true;
   }
 
-<<<<<<< HEAD
-  public GetClusterNodeLabelsResponseProto getProto() {
-    mergeLocalToProto();
-    proto = viaProto ? proto : builder.build();
-    viaProto = true;
-    return proto;
-  }
-
-  private void initNodeLabels() {
-    if (this.labels != null) {
-      return;
-    }
-    GetClusterNodeLabelsResponseProtoOrBuilder p = viaProto ? proto : builder;
-    this.labels = new HashSet<String>();
-    this.labels.addAll(p.getNodeLabelsList());
-  }
-
-  @Override
-  public void setNodeLabels(Set<String> labels) {
-    maybeInitBuilder();
-    if (labels == null || labels.isEmpty()) {
-      builder.clearNodeLabels();
-    }
-    this.labels = labels;
-  }
-
-  @Override
-  public Set<String> getNodeLabels() {
-    initNodeLabels();
-    return this.labels;
-  }
-
-  @Override
-  public int hashCode() {
-    assert false : "hashCode not designed";
-    return 0;
-  }
-  
-  @Override
-  public boolean equals(Object other) {
-    if (other == null)
-      return false;
-    if (other.getClass().isAssignableFrom(this.getClass())) {
-      return this.getProto().equals(this.getClass().cast(other).getProto());
-    }
-    return false;
-  }
-}
-=======
   private void maybeInitBuilder() {
     if (viaProto || builder == null) {
       builder = GetClusterNodeLabelsResponseProto.newBuilder(proto);
@@ -262,4 +176,3 @@ public class GetClusterNodeLabelsResponsePBImpl extends
   }
 }
 
->>>>>>> MAPR-14424: Implementation for 'mapred job -showlabels' and 'mapred job -refreshlabaels' cli command

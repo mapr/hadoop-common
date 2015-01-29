@@ -807,9 +807,9 @@ public class YarnClientImpl extends YarnClient {
   }
 
   @Override
-  public Set<String> getClusterNodeLabels() throws YarnException, IOException {
-    return rmClient.getClusterNodeLabels(
-        GetClusterNodeLabelsRequest.newInstance()).getNodeLabels();
+  public Set<String> getClusterNodeLabelsNoOp() throws YarnException, IOException {
+    return rmClient.getClusterNodeLabelsNoOp(
+      NoOpGetClusterNodeLabelsRequest.newInstance()).getNodeLabels();
   }
   public List<NodeToLabelsList> getClusterNodeLabels()
     throws YarnException, IOException {

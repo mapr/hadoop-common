@@ -18,45 +18,27 @@
 
 package org.apache.hadoop.yarn.api.protocolrecords;
 
-import java.util.List;
+import java.util.Set;
 
 import org.apache.hadoop.classification.InterfaceAudience.Public;
-import org.apache.hadoop.classification.InterfaceStability.Unstable;
-import org.apache.hadoop.yarn.api.records.NodeToLabelsList;
+import org.apache.hadoop.classification.InterfaceStability.Evolving;
 import org.apache.hadoop.yarn.util.Records;
 
-/**
- * <p>
- * The response sent by the <code>ResourceManager</code> to a client requesting
- * labels for nodes in the cluster.
- * </p>
- * 
- * <p>
- * The response includes a list of {@link NodeToLabelsList} each of which has labels
- * for a single node.
- * </p>
- * 
- */
 @Public
-@Unstable
-public abstract class GetClusterNodeLabelsResponse {
-
-  @Public
-  @Unstable
-  public static GetClusterNodeLabelsResponse newInstance(
-    List<NodeToLabelsList> clusterNodeLabels) {
-    GetClusterNodeLabelsResponse response =
-        Records.newRecord(GetClusterNodeLabelsResponse.class);
-    response.setClusterNodeLabels(clusterNodeLabels);
-    return response;
+@Evolving
+public abstract class NoOpGetClusterNodeLabelsResponse {
+  public static NoOpGetClusterNodeLabelsResponse newInstance(Set<String> labels) {
+	  NoOpGetClusterNodeLabelsResponse request =
+        Records.newRecord(NoOpGetClusterNodeLabelsResponse.class);
+    request.setNodeLabels(labels);
+    return request;
   }
 
   @Public
-  @Unstable
-  public abstract List<NodeToLabelsList> getClusterNodeLabels();
+  @Evolving
+  public abstract void setNodeLabels(Set<String> labels);
 
   @Public
-  @Unstable
-  public abstract void setClusterNodeLabels(List<NodeToLabelsList> clusterNodeLabels);
-
+  @Evolving
+  public abstract Set<String> getNodeLabels();
 }

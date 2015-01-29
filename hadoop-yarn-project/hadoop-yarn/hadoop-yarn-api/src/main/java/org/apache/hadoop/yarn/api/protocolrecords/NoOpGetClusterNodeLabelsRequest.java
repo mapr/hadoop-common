@@ -18,45 +18,19 @@
 
 package org.apache.hadoop.yarn.api.protocolrecords;
 
-import java.util.List;
-
 import org.apache.hadoop.classification.InterfaceAudience.Public;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
-import org.apache.hadoop.yarn.api.records.NodeToLabelsList;
 import org.apache.hadoop.yarn.util.Records;
 
-/**
- * <p>
- * The response sent by the <code>ResourceManager</code> to a client requesting
- * labels for nodes in the cluster.
- * </p>
- * 
- * <p>
- * The response includes a list of {@link NodeToLabelsList} each of which has labels
- * for a single node.
- * </p>
- * 
- */
 @Public
 @Unstable
-public abstract class GetClusterNodeLabelsResponse {
+public abstract class NoOpGetClusterNodeLabelsRequest {
 
   @Public
   @Unstable
-  public static GetClusterNodeLabelsResponse newInstance(
-    List<NodeToLabelsList> clusterNodeLabels) {
-    GetClusterNodeLabelsResponse response =
-        Records.newRecord(GetClusterNodeLabelsResponse.class);
-    response.setClusterNodeLabels(clusterNodeLabels);
-    return response;
+  public static NoOpGetClusterNodeLabelsRequest newInstance() {
+	  NoOpGetClusterNodeLabelsRequest request =
+        Records.newRecord(NoOpGetClusterNodeLabelsRequest.class);
+    return request;
   }
-
-  @Public
-  @Unstable
-  public abstract List<NodeToLabelsList> getClusterNodeLabels();
-
-  @Public
-  @Unstable
-  public abstract void setClusterNodeLabels(List<NodeToLabelsList> clusterNodeLabels);
-
 }

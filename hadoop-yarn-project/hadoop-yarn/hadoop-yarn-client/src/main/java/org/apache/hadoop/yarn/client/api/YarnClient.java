@@ -638,7 +638,7 @@ public abstract class YarnClient extends AbstractService {
    */
   @Public
   @Unstable
-  public abstract Set<String> getClusterNodeLabels()
+  public abstract Set<String> getClusterNodeLabelsNoOp()
       throws YarnException, IOException;
 
    * Refresh labels for nodes in the cluster

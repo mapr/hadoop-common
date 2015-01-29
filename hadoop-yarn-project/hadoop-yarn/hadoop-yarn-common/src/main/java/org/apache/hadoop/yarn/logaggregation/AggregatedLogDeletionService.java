@@ -125,7 +125,7 @@ public class AggregatedLogDeletionService extends AbstractService {
 
       if (dfsLoggingDirs != null) {
         for (Path dfsLoggingDir : dfsLoggingDirs) {
-          deleteOldLogDirsFrom(dfsLoggingDir, cutoffMillis, fs);
+          deleteOldLogDirsFrom(dfsLoggingDir, cutoffMillis, fs, rmClient);
         }
       }
 

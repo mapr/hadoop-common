@@ -456,6 +456,25 @@ extends ApplicationSubmissionContext {
   }
 
   @Override
+  public String getLabel() {
+    ApplicationSubmissionContextProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasLabel()) {
+      return null;
+    }
+    return (p.getLabel());
+  }
+
+  @Override
+  public void setLabel(String label) {
+    maybeInitBuilder();
+    if (label == null) {
+      builder.clearLabel();
+      return;
+    }
+    builder.setLabel((label));
+  }
+
+  @Override
   public String getNodeLabelExpression() {
     ApplicationSubmissionContextProtoOrBuilder p = viaProto ? proto : builder;
     if (!p.hasNodeLabelExpression()) {

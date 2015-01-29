@@ -43,6 +43,8 @@ import org.apache.hadoop.yarn.api.protocolrecords.GetQueueUserAclsInfoRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetQueueUserAclsInfoResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.GetClusterNodeLabelsRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetClusterNodeLabelsResponse;
+import org.apache.hadoop.yarn.api.protocolrecords.NoOpGetClusterNodeLabelsRequest;
+import org.apache.hadoop.yarn.api.protocolrecords.NoOpGetClusterNodeLabelsResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.KillApplicationRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.KillApplicationResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.MoveApplicationAcrossQueuesRequest;
@@ -380,6 +382,21 @@ public interface ApplicationClientProtocol extends ApplicationBaseProtocol {
   @Unstable
   public ReservationDeleteResponse deleteReservation(
       ReservationDeleteRequest request) throws YarnException, IOException;
+
+  /**
+   * <p>
+   * The interface used by client to get node labels in the cluster
+   * </p>
+   *
+   * @param request to get node labels collection of this cluster
+   * @return node labels collection of this cluster
+   * @throws YarnException
+   * @throws IOException
+   */
+  @Public
+  @Unstable
+  public NoOpGetClusterNodeLabelsResponse getClusterNodeLabelsNoOp(
+      NoOpGetClusterNodeLabelsRequest request) throws YarnException, IOException;
 
   /**
    * <p>

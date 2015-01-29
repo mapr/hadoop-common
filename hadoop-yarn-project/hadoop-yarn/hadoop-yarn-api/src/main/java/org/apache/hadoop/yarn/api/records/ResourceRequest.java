@@ -73,7 +73,30 @@ public abstract class ResourceRequest implements Comparable<ResourceRequest> {
     return newInstance(priority, hostName, capability, numContainers,
         relaxLocality, null);
   }
-  
+
+  @Public
+  @Stable
+  public static ResourceRequest newInstance(Priority priority, String hostName,
+      Resource capability, int numContainers, String label) {
+    return newInstance(priority, hostName, capability, numContainers, true, label);
+  }
+
+  @Public
+  @Stable
+  public static ResourceRequest newInstance(Priority priority, String hostName,
+      Resource capability, int numContainers, boolean relaxLocality, String label) {
+    ResourceRequest request = Records.newRecord(ResourceRequest.class);
+    request.setPriority(priority);
+    request.setResourceName(hostName);
+    request.setCapability(capability);
+    request.setNumContainers(numContainers);
+    request.setRelaxLocality(relaxLocality);
+    request.setLabel(label);
+    return request;
+  }
+
+  /*  MapR: Open source implementation of LBS is currently disabled.
+   * This method is commented as it matches the signature of the one defined above.
   @Public
   @Stable
   public static ResourceRequest newInstance(Priority priority, String hostName,
@@ -87,7 +110,7 @@ public abstract class ResourceRequest implements Comparable<ResourceRequest> {
     request.setRelaxLocality(relaxLocality);
     request.setNodeLabelExpression(labelExpression);
     return request;
-  }
+  } */
 
   @Public
   @Stable
@@ -248,7 +271,15 @@ public abstract class ResourceRequest implements Comparable<ResourceRequest> {
   @Public
   @Stable
   public abstract void setRelaxLocality(boolean relaxLocality);
-  
+
+  @Public
+  @Stable
+  public abstract String getLabel();
+
+  @Public
+  @Stable
+  public abstract void setLabel(String label);
+
   /**
    * Get node-label-expression for this Resource Request. If this is set, all
    * containers allocated to satisfy this resource-request will be only on those
@@ -324,6 +355,17 @@ public abstract class ResourceRequest implements Comparable<ResourceRequest> {
         return false;
     } else if (!priority.equals(other.getPriority()))
       return false;
+
+    String label = getLabel();
+    if ( label == null ) {
+      if ( other.getLabel() != null ) {
+        return false;
+      }
+    } else if (!label.equals(other.getLabel())) {
+        return false;
+    }
+
+    /* MapR: Open source implementation of LBS is currently disabled
     if (getNodeLabelExpression() == null) {
       if (other.getNodeLabelExpression() != null) {
         return false;
@@ -337,7 +379,7 @@ public abstract class ResourceRequest implements Comparable<ResourceRequest> {
       if (!label1.equals(label2)) {
         return false;
       }
-    }
+    }*/
     return true;
   }
 
