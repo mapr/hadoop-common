@@ -310,8 +310,8 @@ public class TestDefaultContainerExecutor {
       mockExec.init();
       mockExec.activateContainer(cId, pidFile);
       int ret = mockExec
-          .launchContainer(container, scriptPath, tokensPath, appSubmitter,
-              appId, workDir, localDirs, localDirs);
+          .launchContainer(container, scriptPath, tokensPath, null, null,
+              appSubmitter, appId, workDir, localDirs, localDirs);
       Assert.assertNotSame(0, ret);
     } finally {
       mockExec.deleteAsUser(appSubmitter, localDir);
@@ -410,7 +410,8 @@ public class TestDefaultContainerExecutor {
     when(dirsHandler.getLogDirs()).thenReturn(logDirs);
     
     try {
-      mockExec.startLocalizer(nmPrivateCTokensPath, localizationServerAddress,
+      mockExec.startLocalizer(nmPrivateCTokensPath,
+          null, null, localizationServerAddress,
           appSubmitter, appId, locId, dirsHandler);
     } catch (IOException e) {
       Assert.fail("StartLocalizer failed to copy token file " + e);

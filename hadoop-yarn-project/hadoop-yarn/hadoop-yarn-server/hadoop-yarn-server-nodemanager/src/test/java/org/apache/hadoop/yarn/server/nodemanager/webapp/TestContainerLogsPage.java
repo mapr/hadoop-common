@@ -236,7 +236,7 @@ public class TestContainerLogsPage {
     ContainerId containerId = mock(ContainerIdPBImpl.class);
     when(containerId.getApplicationAttemptId()).thenReturn(appAttemptId);
     
-    List<File> logDirFiles = ContainerLogsUtils.getContainerLogDirs(
+    List<Path> logDirFiles = ContainerLogsUtils.getContainerLogDirs(
       containerId, localDirs);
     
     Assert.assertTrue("logDir lost drive letter " +
@@ -283,7 +283,7 @@ public class TestContainerLogsPage {
     when(context.getApplications()).thenReturn(applications);
     when(context.getContainers()).thenReturn(containers);
     
-    File logFile = ContainerLogsUtils.getContainerLogFile(containerId,
+    Path logFile = ContainerLogsUtils.getContainerLogFile(containerId,
       "fileName", null, context);
       
     Assert.assertTrue("logFile lost drive letter " +

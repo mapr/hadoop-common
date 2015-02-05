@@ -844,33 +844,11 @@ public class ContainerLaunch implements Callable<Integer> {
           meta.getKey(), meta.getValue(), environment);
     }
   }
-    
-  static void writeLaunchEnv(OutputStream out,
-      Map<String,String> environment, Map<Path,List<String>> resources,
-      List<String> command)
-      throws IOException {
-    ShellScriptBuilder sb = ShellScriptBuilder.create();
-    if (environment != null) {
-      for (Map.Entry<String,String> env : environment.entrySet()) {
-        // Remove DFS_LOGGING_SUPPORTED since it need not be set as env variable.
-        // It is only needed while constructing the launch command.
-        if (env.getKey().equals(YarnConfiguration.DFS_LOGGING_SUPPORTED)) {
-          continue;
-        }
-        sb.env(env.getKey().toString(), env.getValue().toString());
-      }
-    }
-    if (resources != null) {
-      for (Map.Entry<Path,List<String>> entry : resources.entrySet()) {
-        for (String linkName : entry.getValue()) {
-          sb.symlink(entry.getKey(), new Path(linkName));
-        }
-      }
-    }
 
   public static String getExitCodeFile(String pidFile) {
     return pidFile + EXIT_CODE_FILE_SUFFIX;
   }
+
   /**
    * Creates the log directories and files for the given container and sets the
    * owner and permission. If the application directory does not exist, then it

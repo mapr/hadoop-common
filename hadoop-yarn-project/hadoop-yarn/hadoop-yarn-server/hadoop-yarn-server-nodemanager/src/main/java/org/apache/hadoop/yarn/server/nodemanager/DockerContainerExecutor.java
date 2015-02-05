@@ -109,6 +109,7 @@ public class DockerContainerExecutor extends ContainerExecutor {
 
   @Override
   public synchronized void startLocalizer(Path nmPrivateContainerTokensPath,
+                                          Path nmPrivateExtTokensPath, String extTokensEnvVar,
                                           InetSocketAddress nmAddr, String user, String appId, String locId,
                                           LocalDirsHandlerService dirsHandler)
     throws IOException, InterruptedException {
@@ -118,7 +119,7 @@ public class DockerContainerExecutor extends ContainerExecutor {
 
     ContainerLocalizer localizer =
       new ContainerLocalizer(lfs, user, appId, locId, getPaths(localDirs),
-        RecordFactoryProvider.getRecordFactory(getConf()));
+        RecordFactoryProvider.getRecordFactory(getConf()),getConf());
 
     createUserLocalDirs(localDirs, user);
     createUserCacheDirs(localDirs, user);
@@ -142,6 +143,7 @@ public class DockerContainerExecutor extends ContainerExecutor {
   @Override
   public int launchContainer(Container container,
                              Path nmPrivateContainerScriptPath, Path nmPrivateTokensPath,
+                             Path nmPrivateExtTokensPath, String extTokensEnvVar,
                              String userName, String appId, Path containerWorkDir,
                              List<String> localDirs, List<String> logDirs) throws IOException {
     String containerImageName = container.getLaunchContext().getEnvironment()

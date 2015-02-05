@@ -164,7 +164,7 @@ public class TestDockerContainerExecutor {
 
     exec.activateContainer(cId, pidFile);
     return exec.launchContainer(container, scriptPath, tokensPath,
-        appSubmitter, appId, workDir, dirsHandler.getLocalDirs(),
+      null, null, appSubmitter, appId, workDir, dirsHandler.getLocalDirs(),
         dirsHandler.getLogDirs());
   }
 

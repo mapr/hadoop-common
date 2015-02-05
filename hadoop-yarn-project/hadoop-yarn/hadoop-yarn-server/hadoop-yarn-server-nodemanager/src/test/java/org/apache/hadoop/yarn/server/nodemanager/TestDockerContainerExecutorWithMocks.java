@@ -144,7 +144,7 @@ public class TestDockerContainerExecutorWithMocks {
 
     dockerContainerExecutor.activateContainer(cId, pidFile);
     dockerContainerExecutor.launchContainer(container, scriptPath, tokensPath,
-        appSubmitter, appId, workDir, dirsHandler.getLocalDirs(),
+        null, null, appSubmitter, appId, workDir, dirsHandler.getLocalDirs(),
         dirsHandler.getLogDirs());
   }
 
@@ -176,7 +176,7 @@ public class TestDockerContainerExecutorWithMocks {
 
     dockerContainerExecutor.activateContainer(cId, pidFile);
     dockerContainerExecutor.launchContainer(container, scriptPath, tokensPath,
-      appSubmitter, appId, workDir, dirsHandler.getLocalDirs(),
+      null, null, appSubmitter, appId, workDir, dirsHandler.getLocalDirs(),
       dirsHandler.getLogDirs());
   }
 
@@ -206,7 +206,7 @@ public class TestDockerContainerExecutorWithMocks {
 
     dockerContainerExecutor.activateContainer(cId, pidFile);
     int ret = dockerContainerExecutor.launchContainer(container, scriptPath, tokensPath,
-        appSubmitter, appId, workDir, dirsHandler.getLocalDirs(),
+        null, null, appSubmitter, appId, workDir, dirsHandler.getLocalDirs(),
         dirsHandler.getLogDirs());
     assertEquals(0, ret);
     //get the script
