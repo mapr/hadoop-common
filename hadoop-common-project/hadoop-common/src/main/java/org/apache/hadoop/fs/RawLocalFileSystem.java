@@ -567,7 +567,7 @@ public class RawLocalFileSystem extends FileSystem {
 
     /// loads permissions, owner, and group from `ls -ld`
     private void loadPermissionInfo() {
-      if (NativeIO.isAvailable()) {
+      if (!Shell.WINDOWS && NativeIO.isAvailable()) {
         loadNativePermissionInfo();
       } else {
         IOException e = null;
