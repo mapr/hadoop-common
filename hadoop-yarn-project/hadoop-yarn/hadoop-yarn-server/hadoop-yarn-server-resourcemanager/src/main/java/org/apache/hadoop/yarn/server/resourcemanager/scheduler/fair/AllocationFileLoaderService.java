@@ -218,6 +218,8 @@ public class AllocationFileLoaderService extends AbstractService {
     Map<String, ResourceWeights> queueWeights = new HashMap<String, ResourceWeights>();
     Map<String, SchedulingPolicy> queuePolicies = new HashMap<String, SchedulingPolicy>();
     Map<String, Long> minSharePreemptionTimeouts = new HashMap<String, Long>();
+    Map<String, String> queueLabels = new HashMap<String, String>();
+    Map<String, Queue.QueueLabelPolicy> queueLabelPolicies = new HashMap<String, Queue.QueueLabelPolicy>();
     Map<String, Long> fairSharePreemptionTimeouts = new HashMap<String, Long>();
     Map<String, Float> fairSharePreemptionThresholds =
         new HashMap<String, Float>();
@@ -354,7 +356,7 @@ public class AllocationFileLoaderService extends AbstractService {
           queueMaxApps, userMaxApps, queueMaxAMShares, queueWeights,
           queuePolicies, minSharePreemptionTimeouts, fairSharePreemptionTimeouts,
           fairSharePreemptionThresholds, queueAcls, configuredQueues,
-          reservableQueues);
+          reservableQueues, queueLabels, queueLabelPolicies);
     }
 
     // Load placement policy and pass it configured queues
@@ -403,7 +405,7 @@ public class AllocationFileLoaderService extends AbstractService {
         minSharePreemptionTimeouts, fairSharePreemptionTimeouts,
         fairSharePreemptionThresholds, queueAcls,
         newPlacementPolicy, configuredQueues, globalReservationQueueConfig,
-        reservableQueues);
+        reservableQueues, queueLabels, queueLabelPolicies);
     
     lastSuccessfulReload = clock.getTime();
     lastReloadAttemptFailed = false;
@@ -425,7 +427,9 @@ public class AllocationFileLoaderService extends AbstractService {
       Map<String, Float> fairSharePreemptionThresholds,
       Map<String, Map<QueueACL, AccessControlList>> queueAcls,
       Map<FSQueueType, Set<String>> configuredQueues,
-      Set<String> reservableQueues)
+      Set<String> reservableQueues,
+      Map<String, String> queueLabels,
+      Map<String, Queue.QueueLabelPolicy> queueLabelPolicies) 
       throws AllocationConfigurationException {
     String queueName = element.getAttribute("name");
 
@@ -496,13 +500,25 @@ public class AllocationFileLoaderService extends AbstractService {
         isLeaf = false;
         reservableQueues.add(queueName);
         configuredQueues.get(FSQueueType.PARENT).add(queueName);
+      } else if ("label".equals(field.getTagName())) {
+        String text = ((Text)field.getFirstChild()).getData().trim();
+        queueLabels.put(queueName, text);
+      } else if ("labelPolicy".equals(field.getTagName())) {
+        String text = ((Text)field.getFirstChild()).getData().trim();
+        try {
+          Queue.QueueLabelPolicy policy = Queue.QueueLabelPolicy.valueOf(text);
+          queueLabelPolicies.put(queueName, policy);
+        } catch( IllegalArgumentException ie)  {
+          LOG.warn("Unknown Label Policy: " + text);
+        }        
       } else if ("queue".endsWith(field.getTagName()) || 
           "pool".equals(field.getTagName())) {
         loadQueue(queueName, field, minQueueResources, maxQueueResources,
             queueMaxApps, userMaxApps, queueMaxAMShares, queueWeights,
             queuePolicies, minSharePreemptionTimeouts,
             fairSharePreemptionTimeouts, fairSharePreemptionThresholds,
-            queueAcls, configuredQueues, reservableQueues);
+            queueAcls, configuredQueues, reservableQueues,
+            queueLabels, queueLabelPolicies);
         isLeaf = false;
       }
     }

@@ -62,6 +62,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.NodeType;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceLimits;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicationAttempt;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerUtils;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.fica.FiCaSchedulerApp;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.fica.FiCaSchedulerNode;
 import org.apache.hadoop.yarn.util.resource.Resources;
@@ -83,17 +84,10 @@ public class ParentQueue extends AbstractCSQueue {
   private Expression label;
   private Queue.QueueLabelPolicy labelPolicy;
   
-  private final Resource minimumAllocation;
-
-  private volatile int numApplications;
-  private volatile int numContainers;
-
-  private QueueState state;
-
-  private final QueueMetrics metrics;
-
   private final RecordFactory recordFactory = 
     RecordFactoryProvider.getRecordFactory(null);
+
+  private CapacitySchedulerContext scheduler;
 
   public ParentQueue(CapacitySchedulerContext cs, 
       String queueName, CSQueue parent, CSQueue old) throws IOException {
@@ -128,6 +122,9 @@ public class ParentQueue extends AbstractCSQueue {
     for (Map.Entry<AccessType, AccessControlList> e : acls.entrySet()) {
       aclsString.append(e.getKey() + ":" + e.getValue().getAclString());
     }
+
+    this.label = refreshLabel();
+    this.labelPolicy = refreshLabelPolicy();
 
     StringBuilder labelStrBuilder = new StringBuilder(); 
     if (accessibleLabels != null) {
@@ -775,24 +772,61 @@ public class ParentQueue extends AbstractCSQueue {
     }
   }
 
+  public synchronized int getNumApplications() {
+    return numApplications;
+  }
+
+  private QueueLabelPolicy refreshLabelPolicy() {
+    String labelPolicyStr = this.scheduler.getConfiguration().get(CapacitySchedulerConfiguration.PREFIX +
+      getQueuePath() +
+      CapacitySchedulerConfiguration.DOT +
+      CapacitySchedulerConfiguration.LABEL_POLICY);
+    if ( labelPolicyStr == null ) {
+      if ( parent != null ) {
+        return ((ParentQueue) parent).getLabelPolicy();
+      } else {
+        return QueueLabelPolicy.AND;
+      }
+    }
+    try {
+      return QueueLabelPolicy.valueOf(labelPolicyStr);
+    } catch (IllegalArgumentException ie) {
+      LOG.warn("Unknown label policy: " + labelPolicyStr);
+      return QueueLabelPolicy.AND;
+    }
+  }
+
+  @Override
+  public QueueLabelPolicy getLabelPolicy() {
+    return labelPolicy;
+  }
+
   private Expression refreshLabel() {
+    String labelStr = this.scheduler.getConfiguration().get(CapacitySchedulerConfiguration.PREFIX +
+      getQueuePath() +
+      CapacitySchedulerConfiguration.DOT +
+      CapacitySchedulerConfiguration.LABEL);
+
+    if ( labelStr != null ) {
       try {
         return LabelManager.getInstance().getEffectiveLabelExpr(labelStr);
       } catch (IOException e) {
         return null;
       }
+    }
+    if ( parent != null ) {
+      return ((ParentQueue) parent).refreshLabel();
+    } else {
       try {
         return LabelManager.getInstance().getEffectiveLabelExpr("all");
       } catch (IOException e) {
         return null;
-      }    
-
-  public synchronized int getNumApplications() {
-    return numApplications;
+      }
+    }
   }
 
   @Override
   public Expression getLabel() {
     return label;
-   }
+  }
 }

@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -77,6 +78,7 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
   private Resource preemptedResources = Resources.createResource(0);
   private RMContainerComparator comparator = new RMContainerComparator();
   private final Map<RMContainer, Long> preemptionMap = new HashMap<RMContainer, Long>();
+  final Set<RMContainer> noneligibleForPreemptionSet = new HashSet<RMContainer>();
 
   /**
    * Delay scheduling: We often want to prioritize scheduling of node-local
@@ -379,6 +381,18 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
     assert preemptionMap.get(container) == null;
     preemptionMap.put(container, time);
     Resources.addTo(preemptedResources, container.getAllocatedResource());
+  }
+
+  public void addNonEligibleForPreemption(RMContainer container) {
+    noneligibleForPreemptionSet.add(container);
+  }
+
+  public Set<RMContainer> getNonEligibleForPreemptionSet() {
+    return noneligibleForPreemptionSet;
+  }
+
+  public void resetNonEligibleForPreemptionSet() {
+    noneligibleForPreemptionSet.clear();
   }
 
   public Long getContainerPreemptionTime(RMContainer container) {

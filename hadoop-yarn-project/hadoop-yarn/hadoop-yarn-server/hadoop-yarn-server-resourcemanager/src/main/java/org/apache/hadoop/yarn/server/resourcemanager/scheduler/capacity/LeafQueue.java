@@ -67,6 +67,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ActiveUsersManage
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.NodeType;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceLimits;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceUsage;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerAppUtils;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicationAttempt;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerUtils;
@@ -105,8 +106,6 @@ public class LeafQueue extends AbstractCSQueue {
   private Expression label;
   private Queue.QueueLabelPolicy labelPolicy;
   
-  private final Resource minimumAllocation;
-  private final Resource maximumAllocation;
   private float minimumAllocationFactor;
 
   private Map<String, User> users = new HashMap<String, User>();
@@ -208,6 +207,9 @@ public class LeafQueue extends AbstractCSQueue {
     for (Map.Entry<AccessType, AccessControlList> e : acls.entrySet()) {
       aclsString.append(e.getKey() + ":" + e.getValue().getAclString());
     }
+
+    this.label = refreshLabel();
+    this.labelPolicy = refreshLabelPolicy();
 
     StringBuilder labelStrBuilder = new StringBuilder(); 
     if (accessibleLabels != null) {
@@ -1968,8 +1970,6 @@ public class LeafQueue extends AbstractCSQueue {
       // Inform the parent queue
       getParent().attachContainer(clusterResource, application, rmContainer);
     }
-      LOG.warn("Unknown label policy: " + labelPolicyStr + 
-          ". defaulting to: " + QueueLabelPolicy.AND.name());
   }
 
   @Override
@@ -1992,12 +1992,6 @@ public class LeafQueue extends AbstractCSQueue {
   
   public void setCapacity(float capacity) {
     queueCapacities.setCapacity(capacity);
-  }
-
-  @Override
-  public Expression getLabel() {
-
-    return this.label;
   }
 
   public void setAbsoluteCapacity(float absoluteCapacity) {
@@ -2031,5 +2025,48 @@ public class LeafQueue extends AbstractCSQueue {
     public Resource getClusterResource() {
       return clusterResource;
     }
+  }
+
+  private QueueLabelPolicy refreshLabelPolicy() {
+    String labelPolicyStr = this.scheduler.getConfiguration().get(CapacitySchedulerConfiguration.PREFIX + 
+        getQueuePath() + 
+        CapacitySchedulerConfiguration.DOT + 
+        CapacitySchedulerConfiguration.LABEL_POLICY);
+    if ( labelPolicyStr == null ) {
+      return ((ParentQueue) getParent()).getLabelPolicy();
+    }
+    try {
+      return QueueLabelPolicy.valueOf(labelPolicyStr);
+    } catch (IllegalArgumentException ie) {
+      LOG.warn("Unknown label policy: " + labelPolicyStr + 
+          ". defaulting to: " + QueueLabelPolicy.AND.name());
+      return QueueLabelPolicy.AND;
+    }
+  }
+
+  @Override
+  public QueueLabelPolicy getLabelPolicy() {
+    return this.labelPolicy;
+  }
+
+  private Expression refreshLabel() {
+    String labelStr = this.scheduler.getConfiguration().get(CapacitySchedulerConfiguration.PREFIX + 
+        getQueuePath() + 
+        CapacitySchedulerConfiguration.DOT + 
+        CapacitySchedulerConfiguration.LABEL);
+
+    if (labelStr == null ) {
+      return ((ParentQueue) getParent()).getLabel();
+    }
+    try {
+      return LabelManager.getInstance().getEffectiveLabelExpr(labelStr);
+    } catch (IOException e) {
+      return null;
+    }
+  }
+
+  @Override
+  public Expression getLabel() {
+    return this.label;
   }
 }

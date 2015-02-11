@@ -113,7 +113,9 @@ public class AllocationConfiguration extends ReservationSchedulerConfiguration {
       QueuePlacementPolicy placementPolicy,
       Map<FSQueueType, Set<String>> configuredQueues,
       ReservationQueueConfiguration globalReservationQueueConfig,
-      Set<String> reservableQueues) {
+      Set<String> reservableQueues,
+      Map<String, String> queueLabels, 
+      Map<String, Queue.QueueLabelPolicy> queueLabelPolicies) {
     this.minQueueResources = minQueueResources;
     this.maxQueueResources = maxQueueResources;
     this.queueMaxApps = queueMaxApps;
@@ -133,6 +135,8 @@ public class AllocationConfiguration extends ReservationSchedulerConfiguration {
     this.globalReservationQueueConfig = globalReservationQueueConfig;
     this.placementPolicy = placementPolicy;
     this.configuredQueues = configuredQueues;
+    this.labels = queueLabels;
+    this.labelPolicies = queueLabelPolicies;
   }
   
   public AllocationConfiguration(Configuration conf) {

@@ -63,8 +63,8 @@ import org.apache.hadoop.yarn.api.protocolrecords.GetApplicationReportRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetApplicationReportResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.GetApplicationsRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetApplicationsResponse;
-import org.apache.hadoop.yarn.api.protocolrecords.GetClusterNodeLabelsRequest;
-import org.apache.hadoop.yarn.api.protocolrecords.GetClusterNodeLabelsResponse;
+import org.apache.hadoop.yarn.api.protocolrecords.NoOpGetClusterNodeLabelsRequest;
+import org.apache.hadoop.yarn.api.protocolrecords.NoOpGetClusterNodeLabelsResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.GetClusterNodesRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetContainerReportRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetContainerReportResponse;
@@ -1419,8 +1419,8 @@ public class TestClientRMService {
             ApplicationClientProtocol.class, rmAddress, conf);
 
     // Get node labels collection
-    GetClusterNodeLabelsResponse response =
-        client.getClusterNodeLabels(GetClusterNodeLabelsRequest.newInstance());
+    NoOpGetClusterNodeLabelsResponse response =
+        client.getClusterNodeLabelsNoOp(NoOpGetClusterNodeLabelsRequest.newInstance());
     Assert.assertTrue(response.getNodeLabels().containsAll(
         Arrays.asList("x", "y")));
 

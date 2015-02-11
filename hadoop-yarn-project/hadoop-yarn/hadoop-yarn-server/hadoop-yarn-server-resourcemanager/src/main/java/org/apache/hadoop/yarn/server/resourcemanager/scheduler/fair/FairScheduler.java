@@ -172,7 +172,7 @@ public class FairScheduler extends
   // Containers whose AMs have been warned that they will be preempted soon.
   private List<RMContainer> warnedContainers = new ArrayList<RMContainer>();
   // Killed/Preempted container, mapping with the application which will get its deallocated resources
-  private HashMap<RMContainer, AppSchedulable> preemptMapping = new HashMap<RMContainer, AppSchedulable>();
+  private HashMap<RMContainer, FSAppAttempt> preemptMapping = new HashMap<RMContainer, FSAppAttempt>();
 
   protected boolean sizeBasedWeight; // Give larger weights to larger jobs
   protected WeightAdjuster weightAdjuster; // Can be null for no weight adjuster
@@ -381,7 +381,7 @@ public class FairScheduler extends
     }
     lastPreemptCheckTime = curTime;
 
-    HashMap<AppSchedulable, Resource> resToPreempt = new HashMap<AppSchedulable, Resource>();
+    HashMap<FSAppAttempt, Resource> resToPreempt = new HashMap<FSAppAttempt, Resource>();
     for (FSLeafQueue sched : queueMgr.getLeafQueues()) {
       resToPreempt.putAll(resToPreempt(sched, curTime));
     }
@@ -401,7 +401,7 @@ public class FairScheduler extends
    * containers with lowest priority to preempt.
    * We make sure that no queue is placed below its fair share in the process.
    */
-  protected void preemptResources(HashMap<AppSchedulable, Resource> toPreempt) {
+  protected void preemptResources(HashMap<FSAppAttempt, Resource> toPreempt) {
      long start = getClock().getTime();
      if (toPreempt.isEmpty()) {
       return;
@@ -441,12 +441,12 @@ public class FairScheduler extends
           FSSchedulerNode node = nodes
               .get(container.getContainer().getNodeId());
           // check if the app is able to be preempt on this particular container
-          AppSchedulable preemptApp = null;
-          Iterator<Entry<AppSchedulable, Resource>> it = toPreempt.entrySet()
+          FSAppAttempt preemptApp = null;
+          Iterator<Entry<FSAppAttempt, Resource>> it = toPreempt.entrySet()
               .iterator();
           while (it.hasNext()) {
-            Map.Entry<AppSchedulable, Resource> entry = it.next();
-            if (!SchedulerAppUtils.isBlacklisted(entry.getKey().getApp(), node,
+            Map.Entry<FSAppAttempt, Resource> entry = it.next();
+            if (!SchedulerAppUtils.isBlacklisted(entry.getKey(), node,
                 LOG)) {
               preemptApp = entry.getKey();
               break;
@@ -489,7 +489,7 @@ public class FairScheduler extends
    * @param preemptApp
    */
   private void updateResourceToPreempt(RMContainer container,
-      HashMap<AppSchedulable, Resource> toPreempt, AppSchedulable preemptApp) {
+      HashMap<FSAppAttempt, Resource> toPreempt, FSAppAttempt preemptApp) {
     Resource toPreemptResource = toPreempt.get(preemptApp);
     Resource containerResource = container.getContainer().getResource();
     if (Resources.greaterThan(RESOURCE_CALCULATOR, clusterResource,
@@ -545,7 +545,7 @@ public class FairScheduler extends
    * max of the two amounts (this shouldn't happen unless someone sets the
    * timeouts to be identical for some reason).
    */
-  protected HashMap<AppSchedulable, Resource> resToPreempt(FSLeafQueue sched, long curTime) {
+  protected HashMap<FSAppAttempt, Resource> resToPreempt(FSLeafQueue sched, long curTime) {
     long minShareTimeout = sched.getMinSharePreemptionTimeout();
     long fairShareTimeout = sched.getFairSharePreemptionTimeout();
     Resource resDueToMinShare = Resources.none();
@@ -565,7 +565,7 @@ public class FairScheduler extends
     Resource resToPreempt = Resources.max(RESOURCE_CALCULATOR, clusterResource,
         resDueToMinShare, resDueToFairShare);
     // resToPreempt is a map which matches different apps with # preemptResources
-    HashMap<AppSchedulable, Resource> resPerAppMap = new HashMap<AppSchedulable, Resource>();
+    HashMap<FSAppAttempt, Resource> resPerAppMap = new HashMap<FSAppAttempt, Resource>();
 
     if (Resources.greaterThan(RESOURCE_CALCULATOR, clusterResource,
         resToPreempt, Resources.none())) {
@@ -575,7 +575,7 @@ public class FairScheduler extends
       LOG.info(message);
       // App label is stored in AppSchedulable and it determines which node can
       // run the task
-      for (AppSchedulable as : sched.getRunnableAppSchedulables()) {
+      for (FSAppAttempt as : sched.getRunnableAppSchedulables()) {
         Resource demand = as.getDemand();
         if (Resources.greaterThanOrEqual(RESOURCE_CALCULATOR, clusterResource,
             demand, resToPreempt)) {

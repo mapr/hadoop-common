@@ -143,9 +143,9 @@ public class AdminService extends CompositeService implements
    
    if ( conf.getBoolean(YarnConfiguration.RM_IS_ALL_IFACES, 
        YarnConfiguration.DEFAULT_RM_IS_ALL_IFACES)) {
-     masterServiceAddress = NetUtils.createSocketAddr(
+     masterServiceBindAddress = NetUtils.createSocketAddr(
          YarnConfiguration.ALL_IFACE_LISTEN_ADDRESS, 
-         masterServiceAddress.getPort(), 
+         masterServiceBindAddress.getPort(), 
          YarnConfiguration.RM_ADMIN_ADDRESS);
    }
     

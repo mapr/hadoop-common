@@ -1630,8 +1630,13 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     scheduler.update();
 
     // We should be able to claw back one container from queueA and queueB each.
-    HashMap<AppSchedulable, Resource> toPreempt = new HashMap<AppSchedulable, Resource>();
-    toPreempt.put(new AppSchedulable(scheduler), Resources.createResource(2 * 1024));
+    HashMap<FSAppAttempt, Resource> toPreempt = new HashMap<FSAppAttempt, Resource>();
+    FSAppAttempt appAttempt2 = scheduler.getSchedulerApp(app2);
+    FSAppAttempt appAttempt4 = scheduler.getSchedulerApp(app4);
+    
+    toPreempt.put(appAttempt2, Resources.createResource(1 * 1024));
+    toPreempt.put(appAttempt4, Resources.createResource(1 * 1024));
+
     scheduler.preemptResources(toPreempt);
     assertEquals(2, scheduler.getSchedulerApp(app1).getLiveContainers().size());
     assertEquals(2, scheduler.getSchedulerApp(app3).getLiveContainers().size());
@@ -1767,9 +1772,9 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     clock.tick(11);
 
     scheduler.update();
-    Resource toPreempt = scheduler.resToPreempt(scheduler.getQueueManager()
+    HashMap<FSAppAttempt, Resource> toPreempt = scheduler.resToPreempt(scheduler.getQueueManager()
         .getLeafQueue("queueA.queueA2", false), clock.getTime());
-    assertEquals(3277, toPreempt.getMemory());
+    assertEquals(3277, computeTotalResource(toPreempt).getMemory());
 
     // verify if the 3 containers required by queueA2 are preempted in the same
     // round
@@ -2025,71 +2030,71 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     FSLeafQueue queueC = queueMgr.getLeafQueue("queueC", true);
 
     assertTrue(Resources.equals(
-        Resources.none(), scheduler.resToPreempt(queueB1, clock.getTime())));
+        Resources.none(), computeTotalResource(scheduler.resToPreempt(queueB1, clock.getTime()))));
     assertTrue(Resources.equals(
-        Resources.none(), scheduler.resToPreempt(queueB2, clock.getTime())));
+        Resources.none(), computeTotalResource(scheduler.resToPreempt(queueB2, clock.getTime()))));
     assertTrue(Resources.equals(
-        Resources.none(), scheduler.resToPreempt(queueC, clock.getTime())));
+        Resources.none(), computeTotalResource(scheduler.resToPreempt(queueC, clock.getTime()))));
 
     // After 5 seconds, queueB1 wants to preempt min share
     scheduler.update();
     clock.tick(6);
     assertEquals(
-       1024, scheduler.resToPreempt(queueB1, clock.getTime()).getMemory());
+       1024, computeTotalResource(scheduler.resToPreempt(queueB1, clock.getTime())).getMemory());
     assertEquals(
-        0, scheduler.resToPreempt(queueB2, clock.getTime()).getMemory());
+        0, computeTotalResource(scheduler.resToPreempt(queueB2, clock.getTime())).getMemory());
     assertEquals(
-        0, scheduler.resToPreempt(queueC, clock.getTime()).getMemory());
+        0, computeTotalResource(scheduler.resToPreempt(queueC, clock.getTime())).getMemory());
 
     // After 10 seconds, queueB2 wants to preempt min share
     scheduler.update();
     clock.tick(5);
     assertEquals(
-        1024, scheduler.resToPreempt(queueB1, clock.getTime()).getMemory());
+        1024, computeTotalResource(scheduler.resToPreempt(queueB1, clock.getTime())).getMemory());
     assertEquals(
-        1024, scheduler.resToPreempt(queueB2, clock.getTime()).getMemory());
+        1024, computeTotalResource(scheduler.resToPreempt(queueB2, clock.getTime())).getMemory());
     assertEquals(
-        0, scheduler.resToPreempt(queueC, clock.getTime()).getMemory());
+        0, computeTotalResource(scheduler.resToPreempt(queueC, clock.getTime())).getMemory());
 
     // After 15 seconds, queueC wants to preempt min share
     scheduler.update();
     clock.tick(5);
     assertEquals(
-        1024, scheduler.resToPreempt(queueB1, clock.getTime()).getMemory());
+        1024, computeTotalResource(scheduler.resToPreempt(queueB1, clock.getTime())).getMemory());
     assertEquals(
-        1024, scheduler.resToPreempt(queueB2, clock.getTime()).getMemory());
+        1024, computeTotalResource(scheduler.resToPreempt(queueB2, clock.getTime())).getMemory());
     assertEquals(
-        1024, scheduler.resToPreempt(queueC, clock.getTime()).getMemory());
+        1024, computeTotalResource(scheduler.resToPreempt(queueC, clock.getTime())).getMemory());
 
     // After 20 seconds, queueB2 should want to preempt fair share
     scheduler.update();
     clock.tick(5);
     assertEquals(
-        1024, scheduler.resToPreempt(queueB1, clock.getTime()).getMemory());
+        1024, computeTotalResource(scheduler.resToPreempt(queueB1, clock.getTime())).getMemory());
     assertEquals(
-        1536, scheduler.resToPreempt(queueB2, clock.getTime()).getMemory());
+        1536, computeTotalResource(scheduler.resToPreempt(queueB2, clock.getTime())).getMemory());
     assertEquals(
-        1024, scheduler.resToPreempt(queueC, clock.getTime()).getMemory());
+        1024, computeTotalResource(scheduler.resToPreempt(queueC, clock.getTime())).getMemory());
 
     // After 25 seconds, queueB1 should want to preempt fair share
     scheduler.update();
     clock.tick(5);
     assertEquals(
-        1536, scheduler.resToPreempt(queueB1, clock.getTime()).getMemory());
+        1536, computeTotalResource(scheduler.resToPreempt(queueB1, clock.getTime())).getMemory());
     assertEquals(
-        1536, scheduler.resToPreempt(queueB2, clock.getTime()).getMemory());
+        1536, computeTotalResource(scheduler.resToPreempt(queueB2, clock.getTime())).getMemory());
     assertEquals(
-        1024, scheduler.resToPreempt(queueC, clock.getTime()).getMemory());
+        1024, computeTotalResource(scheduler.resToPreempt(queueC, clock.getTime())).getMemory());
 
     // After 30 seconds, queueC should want to preempt fair share
     scheduler.update();
     clock.tick(5);
     assertEquals(
-        1536, scheduler.resToPreempt(queueB1, clock.getTime()).getMemory());
+        1536, computeTotalResource(scheduler.resToPreempt(queueB1, clock.getTime())).getMemory());
     assertEquals(
-        1536, scheduler.resToPreempt(queueB2, clock.getTime()).getMemory());
+        1536, computeTotalResource(scheduler.resToPreempt(queueB2, clock.getTime())).getMemory());
     assertEquals(
-        1536, scheduler.resToPreempt(queueC, clock.getTime()).getMemory());
+        1536, computeTotalResource(scheduler.resToPreempt(queueC, clock.getTime())).getMemory());
   }
 
   @Test
@@ -2209,7 +2214,7 @@ public class TestFairScheduler extends FairSchedulerTestBase {
   }
 
    private Resource computeTotalResource(
-       HashMap<AppSchedulable, Resource> resToPreempt) {
+       HashMap<FSAppAttempt, Resource> resToPreempt) {
      Resource totoalResource = Resources.createResource(0);
      for (Resource resource : resToPreempt.values()) {
        totoalResource = Resources.add(totoalResource, resource);

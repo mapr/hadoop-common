@@ -371,21 +371,9 @@ public class FSLeafQueue extends FSQueue {
 
     // Preempt from the selected app
     if (candidateSched != null) {
-    AppSchedulable candidateSched = null;
-    PriorityQueue<AppSchedulable> priorityScheds = new PriorityQueue<AppSchedulable>(
-        runnableAppScheds.size(), Collections.reverseOrder(comparator));
-    priorityScheds.addAll(runnableAppScheds);
-    while (!priorityScheds.isEmpty()) {
-      candidateSched = priorityScheds.poll();
       toBePreempted = candidateSched.preemptContainer();
-      if (toBePreempted != null) {
-        // we are done here
-        break;
-      }
     }
-    priorityScheds.clear();
-    priorityScheds = null;
- 
+
     return toBePreempted;
   }
 

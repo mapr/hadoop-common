@@ -145,6 +145,7 @@ public class NodeInfo {
 
   public ArrayList<String> getNodeLabels() {
     return this.nodeLabels;
+  }
 
   public double getUsedDisk() {
     return this.usedDisk;

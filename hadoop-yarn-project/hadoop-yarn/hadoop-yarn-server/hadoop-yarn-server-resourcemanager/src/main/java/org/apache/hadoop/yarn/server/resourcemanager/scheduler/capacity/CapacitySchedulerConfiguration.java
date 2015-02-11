@@ -96,7 +96,13 @@ public class CapacitySchedulerConfiguration extends ReservationSchedulerConfigur
 
   @Private
   public static final String STATE = "state";
-  
+
+  @Private
+  public static final String LABEL_POLICY = "label-policy";
+
+  @Private
+  public static final String LABEL = "label";
+
   @Private
   public static final String ACCESSIBLE_NODE_LABELS = "accessible-node-labels";
   

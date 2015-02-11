@@ -50,12 +50,11 @@ public abstract class FSQueue implements Queue, Schedulable {
   private final String name;
   protected final FairScheduler scheduler;
   private final FSQueueMetrics metrics;
-  
-  protected final FSParentQueue parent;
-  
+
   protected Expression label;
   protected QueueLabelPolicy labelPolicy;
-  
+
+  protected final FSParentQueue parent;
   protected final RecordFactory recordFactory =
       RecordFactoryProvider.getRecordFactory(null);
   
@@ -187,17 +186,6 @@ public abstract class FSQueue implements Queue, Schedulable {
   public boolean hasAccess(QueueACL acl, UserGroupInformation user) {
     return scheduler.getAllocationConfiguration().hasAccess(name, acl, user);
   }
-  protected Expression refreshLabel() {
-      return parent.refreshLabel();
-    }
-    try {
-      if ( labelStr != null ) {
-          return LabelManager.getInstance().getEffectiveLabelExpr(labelStr);
-      } else {
-          return LabelManager.getInstance().getEffectiveLabelExpr("all");
-      }
-    } catch (IOException e) {
-      return null;
 
   public long getFairSharePreemptionTimeout() {
     return fairSharePreemptionTimeout;
@@ -215,16 +203,8 @@ public abstract class FSQueue implements Queue, Schedulable {
     this.minSharePreemptionTimeout = minSharePreemptionTimeout;
   }
 
-  @Override
-  public Expression getLabel() {
-    return label;
-  }
-
   public float getFairSharePreemptionThreshold() {
     return fairSharePreemptionThreshold;
-  }
-  public void setLabel(Expression label) {
-    this.label = label;
   }
 
   public void setFairSharePreemptionThreshold(float fairSharePreemptionThreshold) {
@@ -317,5 +297,48 @@ public abstract class FSQueue implements Queue, Schedulable {
   public String getDefaultNodeLabelExpression() {
     // TODO, add implementation for FS
     return null;
+  }
+
+  protected Expression refreshLabel() {
+    String labelStr = scheduler.getAllocationConfiguration().getLabels().get(getName());
+    if ( labelStr == null && parent != null ) {
+      return parent.refreshLabel();
+    }
+    try {
+      if ( labelStr != null ) {
+          return LabelManager.getInstance().getEffectiveLabelExpr(labelStr);
+      } else {
+          return LabelManager.getInstance().getEffectiveLabelExpr("all");
+      }
+    } catch (IOException e) {
+      return null;
+    }
+  }
+
+  protected QueueLabelPolicy refreshLabelPolicy() {
+    QueueLabelPolicy labelPolicy = 
+        scheduler.getAllocationConfiguration().getLabelPolicies().get(getName());
+    if ( labelPolicy == null &&  parent != null ) {
+      labelPolicy = parent.refreshLabelPolicy();
+    }
+    return ( labelPolicy != null ) ? labelPolicy : QueueLabelPolicy.AND;
+  }
+
+  @Override
+  public QueueLabelPolicy getLabelPolicy() {
+    return labelPolicy;
+  }
+
+  @Override
+  public Expression getLabel() {
+    return label;
+  }
+	  
+  public void setLabel(Expression label) {
+    this.label = label;
+  }
+
+  public void setLabelPolicy(QueueLabelPolicy labelPolicy) {
+    this.labelPolicy = labelPolicy;
   }
 }
