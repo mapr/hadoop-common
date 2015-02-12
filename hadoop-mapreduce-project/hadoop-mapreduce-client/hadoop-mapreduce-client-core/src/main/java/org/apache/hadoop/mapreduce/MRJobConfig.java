@@ -62,6 +62,8 @@ public interface MRJobConfig {
   public static final String PRIORITY = "mapreduce.job.priority";
 
   public static final String QUEUE_NAME = "mapreduce.job.queuename";
+  
+  public static final String LABEL_NAME = "mapreduce.job.label";
 
   public static final String RESERVATION_ID = "mapreduce.job.reservation.id";
 

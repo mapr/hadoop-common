@@ -432,8 +432,8 @@ public class TestClientRedirect {
     }
 
     @Override
-    public NoOpGetNodesToLabelsResponse getNodeToLabels(
-        NoOpGetNodesToLabelsRequest request) throws YarnException, IOException {
+    public GetNodesToLabelsResponse getNodeToLabels(
+        GetNodesToLabelsRequest request) throws YarnException, IOException {
       return null;
     }
 

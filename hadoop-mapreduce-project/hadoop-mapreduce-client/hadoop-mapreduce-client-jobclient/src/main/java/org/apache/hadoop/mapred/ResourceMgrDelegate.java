@@ -455,7 +455,7 @@ public class ResourceMgrDelegate extends YarnClient {
   @Override
   public Set<String> getClusterNodeLabelsNoOp()
       throws YarnException, IOException {
-    return client.getClusterNodeLabels();
+    return client.getClusterNodeLabelsNoOp();
   }
 
   public List<NodeToLabelsList> getClusterNodeLabels() throws YarnException,
