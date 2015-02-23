@@ -55,7 +55,6 @@ import org.apache.hadoop.mapred.Task.CombineValuesIterator;
 import org.apache.hadoop.mapreduce.MRJobConfig;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.mapreduce.TaskID;
-import org.apache.hadoop.mapreduce.CryptoUtils;
 import org.apache.hadoop.mapreduce.task.reduce.MapOutput.MapOutputComparator;
 import org.apache.hadoop.util.Progress;
 import org.apache.hadoop.util.ReflectionUtils;
@@ -471,9 +470,8 @@ public class DirectShuffleMergeManagerImpl<K, V> implements MergeManager<K, V> {
                                            mergeOutputSize); //.suffix(
                                                //Task.MERGED_OUTPUT_PREFIX);
 
-      FSDataOutputStream out = CryptoUtils.wrapIfNecessary(jobConf, rfs.create(outputPath));
       Writer<K,V> writer = 
-        new Writer<K,V>(jobConf, out,
+        new Writer<K,V>(jobConf, rfs.create(outputPath),
                         (Class<K>) jobConf.getMapOutputKeyClass(),
                         (Class<V>) jobConf.getMapOutputValueClass(), codec, null, true);
 
@@ -552,9 +550,8 @@ public class DirectShuffleMergeManagerImpl<K, V> implements MergeManager<K, V> {
           paths[0].toString(),
           approxOutputSize).suffix(Task.MERGED_OUTPUT_PREFIX);
 
-      FSDataOutputStream out = CryptoUtils.wrapIfNecessary(jobConf, rfs.create(outputPath));
       Writer<K,V> writer = 
-        new Writer<K,V>(jobConf, out, 
+        new Writer<K,V>(jobConf, rfs.create(outputPath), 
                         (Class<K>) jobConf.getMapOutputKeyClass(), 
                         (Class<V>) jobConf.getMapOutputValueClass(), codec, null, true);
       RawKeyValueIterator iter  = null;
@@ -734,8 +731,7 @@ public class DirectShuffleMergeManagerImpl<K, V> implements MergeManager<K, V> {
             tmpDir, comparator, reporter, spilledRecordsCounter, null, 
             mergePhase);
 
-        FSDataOutputStream out = CryptoUtils.wrapIfNecessary(job, fs.create(outputPath));
-        Writer<K,V> writer = new Writer<K,V>(job, out, keyClass, valueClass,
+        Writer<K,V> writer = new Writer<K,V>(job, fs.create(outputPath), keyClass, valueClass,
           codec, null, true);
         try {
           Merger.writeFile(rIter, writer, reporter, job);
