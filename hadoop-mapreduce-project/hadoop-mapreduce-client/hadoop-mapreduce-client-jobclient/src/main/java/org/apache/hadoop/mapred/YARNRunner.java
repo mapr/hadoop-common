@@ -538,6 +538,7 @@ public class YARNRunner implements ClientProtocol {
     appContext.setQueue(                                       // Queue name
         jobConf.get(JobContext.QUEUE_NAME,
         YarnConfiguration.DEFAULT_QUEUE_NAME));
+    appContext.setLabel(jobConf.get(MRJobConfig.LABEL_NAME, "all"));
     // add reservationID if present
     ReservationId reservationID = null;
     try {

@@ -372,7 +372,7 @@ public class RMAppManager implements EventHandler<RMAppManagerEvent>,
         amReq =
             BuilderUtils.newResourceRequest(
                 RMAppAttemptImpl.AM_CONTAINER_PRIORITY, ResourceRequest.ANY,
-                submissionContext.getResource(), 1);
+                submissionContext.getResource(), 1, submissionContext.getLabel());
       }
       
       // set label expression for AM container
