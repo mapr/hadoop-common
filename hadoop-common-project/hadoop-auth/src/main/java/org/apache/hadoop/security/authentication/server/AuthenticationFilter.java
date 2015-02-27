@@ -257,6 +257,7 @@ public class AuthenticationFilter implements Filter {
         IllegalAccessException ex) {
       throw new ServletException(ex);
     }
+
   }
 
   protected void initializeSecretProvider(FilterConfig filterConfig)
@@ -276,6 +277,7 @@ public class AuthenticationFilter implements Filter {
     }
     signer = new Signer(secretProvider);
   }
+
   public static SignerSecretProvider constructSecretProvider(
       ServletContext ctx, Properties config,
       boolean disallowFallbackToRandomSecretProvider) throws Exception {
