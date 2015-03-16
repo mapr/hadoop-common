@@ -87,5 +87,14 @@
     <ClInclude Include="src\org\apache\hadoop\io\compress\snappy\org_apache_hadoop_io_compress_snappy.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+	<ClInclude Include="src\org\apache\hadoop\io\compress\zlib\org_apache_hadoop_io_compress_zlib_ZlibCompressor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\org\apache\hadoop\io\compress\zlib\org_apache_hadoop_io_compress_zlib_ZlibDecompressor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\org\apache\hadoop\io\compress\zlib\org_apache_hadoop_io_compress_zlib.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
