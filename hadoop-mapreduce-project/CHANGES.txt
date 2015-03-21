@@ -1,9 +1,11 @@
 Hadoop MapReduce Change Log
 
+  BUG FIXES
+
+    MAPREDUCE-6213. NullPointerException caused by job history server addr not
+    resolvable. (Peng Zhang via harsh)
+
 Release 2.7.0 - 2015-04-20
-
-  INCOMPATIBLE CHANGES
-
   NEW FEATURES
 
     MAPREDUCE-6227. DFSIO for truncate. (shv via yliu)
