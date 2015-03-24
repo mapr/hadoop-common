@@ -1,5 +1,20 @@
 Hadoop HDFS Change Log
 
+Release 2.8.0 - UNRELEASED
+
+  INCOMPATIBLE CHANGES
+
+  NEW FEATURES
+
+  IMPROVEMENTS
+
+    HDFS-7854. Separate class DataStreamer out of DFSOutputStream. (Li Bo via
+    jing9)
+
+  OPTIMIZATIONS
+
+  BUG FIXES
+
 Release 2.7.0 - 2015-04-20
 
   INCOMPATIBLE CHANGES
@@ -41,7 +56,7 @@ Release 2.7.0 - 2015-04-20
 
     HDFS-7838. Expose truncate API for libhdfs. (yliu)
 
-    HDFS-6826. Plugin interface to enable delegation of HDFS authorization 
+    HDFS-6826. Plugin interface to enable delegation of HDFS authorization
     assertions. (Arun Suresh via jitendra)
 
   IMPROVEMENTS
@@ -459,7 +474,7 @@ Release 2.7.0 - 2015-04-20
     HDFS-7410. Support CreateFlags with append() to support hsync() for
     appending streams (Vinayakumar B via Colin P. McCabe)
 
-    HDFS-7742. Favoring decommissioning node for replication can cause a block 
+    HDFS-7742. Favoring decommissioning node for replication can cause a block
     to stay underreplicated for long periods (Nathan Roberts via kihwal)
 
     HDFS-7811. Avoid recursive call getStoragePolicyID in
@@ -976,10 +991,10 @@ Release 2.7.0 - 2015-04-20
 
     HDFS-8063: Fix intermittent test failures in TestTracing (Masatake Iwasaki
     via Colin P. McCabe)
-    
+
     HDFS-9347. Invariant assumption in TestQuorumJournalManager.shutdown()
     is wrong. (Wei-Chiu Chuang via zhz)
-    
+
     HDFS-9612. DistCp worker threads are not terminated after jobs are done.
     (Wei-Chiu Chuang via Yongjun Zhang)
 
