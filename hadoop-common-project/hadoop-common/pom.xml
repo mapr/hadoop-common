@@ -767,6 +767,49 @@
                   </arguments>
                 </configuration>
               </execution>
+			  <execution>
+			    <id>chmod-ms-native-dll</id>
+				<phase>compile</phase>
+				<goals>
+				  <goal>exec</goal>
+				</goals>
+				<configuration>
+				  <executable>chmod</executable>
+				  <arguments>
+				    <argument>-R</argument>
+				    <argument>a+rw</argument>
+					<argument>target/bin</argument>
+				  </arguments>
+				</configuration>
+			  </execution>
+			  <execution>
+			    <id>chmod-ms-native-exe</id>
+				<phase>compile</phase>
+				<goals>
+				  <goal>exec</goal>
+				</goals>
+				<configuration>
+				  <executable>chmod</executable>
+				  <arguments>
+				    <argument>a+rwx</argument>
+					<argument>target/bin/*.exe</argument>
+				  </arguments>
+				</configuration>
+			  </execution>
+			  <execution>
+			    <id>chmod-ms-native-exe-dlls</id>
+				<phase>compile</phase>
+				<goals>
+				  <goal>exec</goal>
+				</goals>
+				<configuration>
+				  <executable>chmod</executable>
+				  <arguments>
+				    <argument>a+rwx</argument>
+					<argument>target/bin/*.dll</argument>
+				  </arguments>
+				</configuration>
+			  </execution>
             </executions>
           </plugin>
         </plugins>

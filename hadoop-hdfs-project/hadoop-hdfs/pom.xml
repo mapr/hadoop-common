@@ -455,6 +455,7 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
                     <condition property="generator" value="Visual Studio 10" else="Visual Studio 10 Win64">
                       <equals arg1="Win32" arg2="${env.PLATFORM}" />
                     </condition>
+		    <echo>begin antrun block make</echo>
                     <mkdir dir="${project.build.directory}/native"/>
                     <exec executable="cmake" dir="${project.build.directory}/native"
                         failonerror="true">
@@ -465,9 +466,28 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
                       <arg line="ALL_BUILD.vcxproj /nologo /p:Configuration=RelWithDebInfo /p:LinkIncremental=false"/>
                     </exec>
                     <!-- Copy for inclusion in distribution. -->
+					<exec executable="chmod">
+					  <arg value="-v"/>
+					  <arg value="a+rw"/>
+					  <arg value="${project.build.directory}/native/target/bin/RelWithDebInfo/*"/>
+					</exec>
+					<exec executable="ls">
+					  <arg value="-la"/>
+					  <arg value="${project.build.directory}/native/target/bin/RelWithDebInfo"/>
+					</exec>
                     <copy todir="${project.build.directory}/bin">
                       <fileset dir="${project.build.directory}/native/target/bin/RelWithDebInfo"/>
                     </copy>
+					<exec executable="chmod">
+					  <arg value="-v"/>
+					  <arg value="a+rw"/>
+					  <arg value="${project.build.directory}/bin/*"/>
+					</exec>
+					<exec executable="ls">
+					  <arg value="-la"/>
+					  <arg value="${project.build.directory}/bin"/>
+					</exec>
+					<echo>end antrun block make</echo>
                   </target>
                 </configuration>
               </execution>
@@ -502,6 +522,100 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
               </execution>
             </executions>
           </plugin>
+		  <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+			<executions>
+			  <execution>
+			    <id>chmod-ms-hdfs-dll-RelWithDebInfo</id>
+				<phase>compile</phase>
+				<goals>
+				  <goal>exec</goal>
+				</goals>
+				<configuration>
+				  <executable>chmod</executable>
+				  <arguments>
+				    <argument>-Rv</argument>
+				    <argument>a+rw</argument>
+					<argument>target/native/target/bin/RelWithDebInfo</argument>
+				  </arguments>
+				</configuration>
+			  </execution>
+			  <execution>
+			    <id>chmod-ms-hdfs-exe-RelWithDebInfo</id>
+				<phase>compile</phase>
+				<goals>
+				  <goal>exec</goal>
+				</goals>
+				<configuration>
+				  <executable>chmod</executable>
+				  <arguments>
+				    <argument>-v</argument>
+				    <argument>a+rwx</argument>
+					<argument>target/native/target/bin/RelWithDebInfo/*.dll</argument>
+				  </arguments>
+				</configuration>
+			  </execution>
+			  <execution>
+			    <id>check-chmod-RelWithDebInfo</id>
+				<phase>compile</phase>
+				<goals>
+				  <goal>exec</goal>
+				</goals>
+				<configuration>
+				  <executable>ls</executable>
+				  <arguments>
+				    <argument>-la</argument>
+					<argument>target/native/target/bin/RelWithDebInfo</argument>
+				  </arguments>
+				</configuration>
+			  </execution>
+			  <execution>
+			    <id>chmod-ms-hdfs-dll</id>
+				<phase>compile</phase>
+				<goals>
+				  <goal>exec</goal>
+				</goals>
+				<configuration>
+				  <executable>chmod</executable>
+				  <arguments>
+				    <argument>-Rv</argument>
+				    <argument>a+rw</argument>
+					<argument>target/bin</argument>
+				  </arguments>
+				</configuration>
+			  </execution>
+			  <execution>
+			    <id>chmod-ms-hdfs-exe</id>
+				<phase>compile</phase>
+				<goals>
+				  <goal>exec</goal>
+				</goals>
+				<configuration>
+				  <executable>chmod</executable>
+				  <arguments>
+				    <argument>-v</argument>
+				    <argument>a+rwx</argument>
+					<argument>target/bin/*.dll</argument>
+				  </arguments>
+				</configuration>
+			  </execution>
+			  <execution>
+			    <id>check-chmod-target-bin</id>
+				<phase>compile</phase>
+				<goals>
+				  <goal>exec</goal>
+				</goals>
+				<configuration>
+				  <executable>ls</executable>
+				  <arguments>
+				    <argument>-la</argument>
+					<argument>target/bin</argument>
+				  </arguments>
+				</configuration>
+			  </execution>
+			</executions>
+		  </plugin>
         </plugins>
       </build>
     </profile>

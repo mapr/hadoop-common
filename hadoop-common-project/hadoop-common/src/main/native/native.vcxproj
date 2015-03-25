@@ -63,6 +63,7 @@
     <OutDir>..\..\..\target\bin\</OutDir>
     <IntDir>..\..\..\target\native\$(Configuration)\</IntDir>
     <TargetName>hadoop</TargetName>
+    <ExecutablePath>C:\Program Files\Microsoft SDKs\Windows\v7.0A\bin\NETFX 4.0 Tools;$(ExecutablePath)</ExecutablePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -104,6 +105,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>Ws2_32.lib;libwinutils.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\..\..\target\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Program Files\Microsoft SDKs\Windows\v7.1\Lib;..\..\..\target\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
