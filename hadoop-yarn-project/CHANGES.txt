@@ -277,7 +277,11 @@ Release 2.7.1 - UNRELEASED
     YARN-4000. RM crashes with NPE if leaf queue becomes parent queue during restart.
     (Varun Saxena via jianhe)
 
+    YARN-3400. [JDK 8] Build Failure due to unreported exceptions in
+    RPCUtil (rkanter)
+
 Release 2.7.0 - 2015-04-20
+
 
   INCOMPATIBLE CHANGES
 
@@ -1027,7 +1031,7 @@ Release 2.7.0 - 2015-04-20
     YARN-3430. Made headroom data available on app attempt page of RM WebUI.
     (Xuan Gong via zjshen)
 
-    YARN-3466. Fix RM nodes web page to sort by node HTTP-address, #containers 
+    YARN-3466. Fix RM nodes web page to sort by node HTTP-address, #containers
     and node-label column (Jason Lowe via wangda)
 
     YARN-3055. Fixed ResourceManager's DelegationTokenRenewer to not stop token
