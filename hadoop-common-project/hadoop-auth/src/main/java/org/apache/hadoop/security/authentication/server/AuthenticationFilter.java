@@ -259,7 +259,7 @@ public class AuthenticationFilter implements Filter {
     }
 
   }
-
+ 
   protected void initializeSecretProvider(FilterConfig filterConfig)
       throws ServletException {
     secretProvider = (SignerSecretProvider) filterConfig.getServletContext().
