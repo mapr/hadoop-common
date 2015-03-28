@@ -124,7 +124,7 @@ public class DefaultContainerExecutor extends ContainerExecutor {
         + localizerFc.getWorkingDirectory());
     ContainerLocalizer localizer =
         new ContainerLocalizer(localizerFc, user, appId, locId, 
-            getPaths(localDirs), RecordFactoryProvider.getRecordFactory(getConf()));
+            getPaths(localDirs), RecordFactoryProvider.getRecordFactory(getConf()), getConf());
     // TODO: DO it over RPC for maintaining similarity?
     localizer.runLocalization(nmAddr);
   }
