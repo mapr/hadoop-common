@@ -207,7 +207,7 @@ case $COMMAND in
         echo $CLASSPATH
         exit
       fi
-
+ 
     # Begin: MapR specific section
     elif [ "$COMMAND" = "mfs" ] ; then
       CLASS=com.mapr.fs.clicommands.MapRCliCommands
