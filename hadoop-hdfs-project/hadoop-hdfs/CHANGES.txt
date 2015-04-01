@@ -489,6 +489,9 @@ Release 2.7.0 - 2015-04-20
     HDFS-8071. Redundant checkFileProgress() in PART II of getAdditionalBlock().
     (shv)
 
+    HDFS-8008. Support client-side back off when the datanodes are congested.
+    (wheat9)
+
   OPTIMIZATIONS
 
     HDFS-7454. Reduce memory footprint for AclEntries in NameNode.
