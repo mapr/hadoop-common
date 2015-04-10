@@ -177,24 +177,26 @@ public abstract class PipeMapRed {
       if (new File(prog).isAbsolute()) {
         // we don't own it. Hope it is executable
       } else {
-        FileUtil.chmod(new File(currentDir, prog).toString(), "a+x");
-      }
-
-      // 
-      // argvSplit[0]:
-      // An absolute path should be a preexisting valid path on all TaskTrackers
-      // A relative path is converted into an absolute pathname by looking
-      // up the PATH env variable. If it still fails, look it up in the
-      // tasktracker's local working directory
-      //
-      if (!new File(argvSplit[0]).isAbsolute()) {
-        PathFinder finder = new PathFinder("PATH");
-        finder.prependPathComponent(currentDir.toString());
-        File f = finder.getAbsolutePath(argvSplit[0]);
-        if (f != null) {
-          argvSplit[0] = f.getAbsolutePath();
-        }
-        f = null;
+        //
+        // argvSplit[0]:
+        // An absolute path should be a preexisting valid path on all TaskTrackers
+        // A relative path is converted into an absolute pathname by looking
+        // up the PATH env variable. If it still fails, look it up in the
+        // tasktracker's local working directory
+        //
+         PathFinder finder = new PathFinder("PATH");
+         File f = finder.getAbsolutePath(argvSplit[0]);
+         if (f != null) {
+           argvSplit[0] = f.getAbsolutePath();
+         } else {
+           final File ourFile = new File(currentDir, prog).getAbsoluteFile();
+           if (ourFile.isFile() && ourFile.canRead()) {
+             FileUtil.chmod(ourFile.toString(), "a+x");
+             argvSplit[0] = ourFile.toString();
+           } else {
+             throw new IOException(ourFile + " is not a file or does not have read permissions");
+           }
+         }
       }
       LOG.info("PipeMapRed exec " + Arrays.asList(argvSplit));
       Environment childEnv = (Environment) StreamUtil.env().clone();
