@@ -62,6 +62,9 @@ Release 2.7.5 - 2017-12-14
     YARN-4411. RMAppAttemptImpl#createApplicationAttemptReport throws
     IllegalArgumentException. (Bibin A Chundatt, yarntime via devaraj)
 
+    YARN-3348. Add a 'yarn top' tool to help understand cluster usage. (Varun
+    Vasudev via jianhe)
+
   IMPROVEMENTS
 
     YARN-4579. Allow DefaultContainerExecutor container log directory
@@ -232,7 +235,7 @@ Release 2.7.3 - 2016-08-25
     YARN-3102. Decommisioned Nodes not listed in Web UI (Kuhu Shukla via
     jlowe)
 
-    YARN-4000. RM crashes with NPE if leaf queue becomes parent queue during restart. 
+    YARN-4000. RM crashes with NPE if leaf queue becomes parent queue during restart.
     (Varun Saxena via jianhe)
 
     YARN-4155. TestLogAggregationService.testLogAggregationServiceWithInterval failing
