@@ -11,6 +11,9 @@ Release 2.8.0 - UNRELEASED
     HDFS-7854. Separate class DataStreamer out of DFSOutputStream. (Li Bo via
     jing9)
 
+    HDFS-8100. Refactor DFSClient.Conf to a standalone class and separates
+    short-circuit related conf to ShortCirc
+
   OPTIMIZATIONS
 
   BUG FIXES
