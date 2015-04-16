@@ -65,15 +65,34 @@ public class SpillRecord {
   public SpillRecord(Path indexFileName, JobConf job, Checksum crc,
                      String expectedIndexOwner)
       throws IOException {
-    this(indexFileName, job, crc, expectedIndexOwner, FileSystem.getLocal(job).getRaw());
-  }
-
-  public SpillRecord(Path indexFileName, JobConf job, Checksum crc,
-                     String expectedIndexOwner, FileSystem rfs)
-      throws IOException {
     final FSDataInputStream in =
         SecureIOUtils.openFSDataInputStream(new File(indexFileName.toUri()
             .getRawPath()), expectedIndexOwner, null);
+    spillRecordReadHelper(indexFileName, job, crc, expectedIndexOwner, FileSystem.getLocal(job).getRaw(), in);
+  }
+
+  
+  public SpillRecord(Path indexFileName, JobConf job, Checksum crc,
+                     String expectedIndexOwner, FileSystem rfs)
+      throws IOException {
+    
+    final FSDataInputStream in = rfs.open(indexFileName);
+    spillRecordReadHelper(indexFileName, job, crc, expectedIndexOwner, rfs, in);    
+  }
+
+  /**
+   * Helper method to differentiate between different InputStreams
+   * @param indexFileName
+   * @param job
+   * @param crc
+   * @param expectedIndexOwner
+   * @param rfs
+   * @param in
+   * @throws IOException
+   */
+  private void spillRecordReadHelper(Path indexFileName, JobConf job, Checksum crc,
+      String expectedIndexOwner, FileSystem rfs, final FSDataInputStream in) 
+          throws IOException {
     try {
       final long length = rfs.getFileStatus(indexFileName).getLen();
       final int partitions = (int) length / MAP_OUTPUT_INDEX_RECORD_LENGTH;
