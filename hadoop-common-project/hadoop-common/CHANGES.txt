@@ -1,6 +1,9 @@
 Hadoop Change Log
 
-HADOOP-12682. Fix TestKMS#testKMSRestart* failure. Contributed by Wei-Chiu Chuang.
+    HADOOP-11843. Make setting up the build environment easier.
+    (Niels Basjes via cnauroth)
+
+    HADOOP-12682. Fix TestKMS#testKMSRestart* failure. Contributed by Wei-Chiu Chuang.
 
     HADOOP-12413. AccessControlList should avoid calling getGroupNames in
     isUserInList with empty groups. (Zhihai Xu via cnauroth)
