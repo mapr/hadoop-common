@@ -434,6 +434,9 @@ Release 2.7.0 - 2015-04-20
 
     backport YARN-3493. RM fails to come up with error "Failed to load/recover state" when mem settings are changed (Jian He) to branch-2.7
 
+    YARN-3464. Race condition in LocalizerRunner kills localizer before
+    localizing all resources. (Zhihai Xu via kasha)
+
     YARN-3071. Remove invalid char from sample conf in doc of FairScheduler.
     (Masatake Iwasaki via aajisaka)
 
