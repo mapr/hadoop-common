@@ -87,8 +87,6 @@ public class ParentQueue extends AbstractCSQueue {
   private final RecordFactory recordFactory = 
     RecordFactoryProvider.getRecordFactory(null);
 
-  private CapacitySchedulerContext scheduler;
-
   public ParentQueue(CapacitySchedulerContext cs, 
       String queueName, CSQueue parent, CSQueue old) throws IOException {
     super(cs, queueName, parent, old);

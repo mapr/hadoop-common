@@ -175,6 +175,17 @@ public class FSLeafQueue extends FSQueue {
     }
   }
 
+  public void resetNonEligibleForPreemptionSet() {
+    readLock.lock();
+    try {
+      for (FSAppAttempt attempt : runnableApps) {
+        attempt.resetNonEligibleForPreemptionSet();
+      }
+    } finally {
+      readLock.unlock();
+    }
+  }
+
   public void clearPreemptedResources() {
     readLock.lock();
     try {
@@ -186,11 +197,19 @@ public class FSLeafQueue extends FSQueue {
     }
   }
 
+  public List<FSAppAttempt> getCopyOfRunnableAppSchedulables() {
+    return getAppSchedulables(runnableApps);
+  }
+
   public List<FSAppAttempt> getCopyOfNonRunnableAppSchedulables() {
+    return getAppSchedulables(nonRunnableApps);
+  }
+
+  private List<FSAppAttempt> getAppSchedulables(List<FSAppAttempt> appSchedulables) {
     List<FSAppAttempt> appsToReturn = new ArrayList<FSAppAttempt>();
     readLock.lock();
     try {
-      appsToReturn.addAll(nonRunnableApps);
+      appsToReturn.addAll(appSchedulables);
     } finally {
       readLock.unlock();
     }

@@ -126,7 +126,7 @@ public class ClusterCLI extends YarnCLI {
       nodeLabels =
           getNodeLabelManagerInstance(getConf()).getClusterNodeLabels();
     } else {
-      nodeLabels = client.getClusterNodeLabels();
+      nodeLabels = client.getClusterNodeLabelsNoOp();
     }
     sysout.println(String.format("Node Labels: %s",
         StringUtils.join(sortStrSet(nodeLabels).iterator(), ",")));

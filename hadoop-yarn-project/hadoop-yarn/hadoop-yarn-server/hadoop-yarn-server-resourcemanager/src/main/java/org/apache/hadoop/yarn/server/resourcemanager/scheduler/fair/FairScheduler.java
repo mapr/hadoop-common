@@ -88,6 +88,7 @@ import org.apache.hadoop.yarn.util.Clock;
 import org.apache.hadoop.yarn.util.SystemClock;
 import org.apache.hadoop.yarn.util.resource.DiskBasedResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.DominantResourceCalculator;
+import org.apache.hadoop.yarn.util.resource.DiskBasedDominantResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.ResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.Resources;
 
@@ -128,7 +129,7 @@ public class FairScheduler extends
   private static final Log LOG = LogFactory.getLog(FairScheduler.class);
   
   private static final ResourceCalculator RESOURCE_CALCULATOR =
-      new DefaultResourceCalculatorWithDisk();
+      new DiskBasedResourceCalculator();
   private static final ResourceCalculator DOMINANT_RESOURCE_CALCULATOR =
       new DiskBasedDominantResourceCalculator();
   
@@ -575,7 +576,7 @@ public class FairScheduler extends
       LOG.info(message);
       // App label is stored in AppSchedulable and it determines which node can
       // run the task
-      for (FSAppAttempt as : sched.getRunnableAppSchedulables()) {
+      for (FSAppAttempt as : sched.getCopyOfRunnableAppSchedulables()) {
         Resource demand = as.getDemand();
         if (Resources.greaterThanOrEqual(RESOURCE_CALCULATOR, clusterResource,
             demand, resToPreempt)) {

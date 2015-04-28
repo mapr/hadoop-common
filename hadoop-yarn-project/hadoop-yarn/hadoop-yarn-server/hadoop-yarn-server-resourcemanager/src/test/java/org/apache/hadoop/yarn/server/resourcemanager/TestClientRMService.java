@@ -1472,8 +1472,8 @@ public class TestClientRMService {
             ApplicationClientProtocol.class, rmAddress, conf);
 
     // Get node labels collection
-    GetClusterNodeLabelsResponse response =
-        client.getClusterNodeLabels(GetClusterNodeLabelsRequest.newInstance());
+    NoOpGetClusterNodeLabelsResponse response =
+        client.getClusterNodeLabelsNoOp(NoOpGetClusterNodeLabelsRequest.newInstance());
     Assert.assertTrue(response.getNodeLabels().containsAll(
         Arrays.asList("x", "y", "z")));
 

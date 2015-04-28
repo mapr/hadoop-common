@@ -54,7 +54,7 @@ public class TestClusterCLI {
   @Test
   public void testGetClusterNodeLabels() throws Exception {
     YarnClient client = mock(YarnClient.class);
-    when(client.getClusterNodeLabels()).thenReturn(
+    when(client.getClusterNodeLabelsNoOp()).thenReturn(
         ImmutableSet.of("label1", "label2"));
     ClusterCLI cli = new ClusterCLI();
     cli.setClient(client);
@@ -75,7 +75,7 @@ public class TestClusterCLI {
   @Test
   public void testGetClusterNodeLabelsWithLocalAccess() throws Exception {
     YarnClient client = mock(YarnClient.class);
-    when(client.getClusterNodeLabels()).thenReturn(
+    when(client.getClusterNodeLabelsNoOp()).thenReturn(
         ImmutableSet.of("remote1", "remote2"));
     ClusterCLI cli = new ClusterCLI();
     cli.setClient(client);
@@ -102,7 +102,7 @@ public class TestClusterCLI {
   @Test
   public void testGetEmptyClusterNodeLabels() throws Exception {
     YarnClient client = mock(YarnClient.class);
-    when(client.getClusterNodeLabels()).thenReturn(new HashSet<String>());
+    when(client.getClusterNodeLabelsNoOp()).thenReturn(new HashSet<String>());
     ClusterCLI cli = new ClusterCLI();
     cli.setClient(client);
     cli.setSysOutPrintStream(sysOut);
