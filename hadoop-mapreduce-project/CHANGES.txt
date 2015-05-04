@@ -127,6 +127,10 @@ Release 2.7.3 - UNRELEASED
     (Ming Ma via jlowe)
 
 Release 2.7.1 - UNRELEASED
+    MAPREDUCE-6259. IllegalArgumentException due to missing job submit time
+    (zhihai xu via jlowe)
+
+Release 2.7.0 - 2015-04-20
 
   INCOMPATIBLE CHANGES
 
