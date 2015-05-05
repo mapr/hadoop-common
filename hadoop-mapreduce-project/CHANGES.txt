@@ -109,6 +109,9 @@ Release 2.7.3 - UNRELEASED
     MAPREDUCE-6252. JobHistoryServer should not fail when encountering a 
     missing directory. (Craig Welch via devaraj)
 
+    MAPREDUCE-6165. [JDK8] TestCombineFileInputFormat failed on JDK8.
+    (Akira AJISAKA via ozawa)
+
 Release 2.7.1 - UNRELEASED
 
   INCOMPATIBLE CHANGES
