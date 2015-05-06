@@ -59,6 +59,9 @@ Release 2.7.3 - UNRELEASED
 
     YARN-3582. NPE in WebAppProxyServlet. (jian he via xgong)
 
+    YARN-3580. [JDK8] TestClientRMService.testGetLabelsToNodes fails. (Robert Kanter
+    via junping_du)
+
     YARN-4760. proxy redirect to history server uses wrong URL (Eric Badger
     via jlowe)
 
