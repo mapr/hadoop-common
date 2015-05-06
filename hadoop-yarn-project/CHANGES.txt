@@ -51,6 +51,8 @@ Release 2.7.3 - UNRELEASED
 
     YARN-3762. FairScheduler: CME on FSParentQueue#getQueueUserAclInfo. (kasha)
 
+    YARN-3582. NPE in WebAppProxyServlet. (jian he via xgong)
+
 Release 2.7.1 - UNRELEASED
 
   INCOMPATIBLE CHANGES
