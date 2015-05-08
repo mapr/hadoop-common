@@ -1,5 +1,19 @@
 Hadoop YARN Change Log
 
+Release 2.8.0 - UNRELEASED
+
+  INCOMPATIBLE CHANGES
+
+  NEW FEATURES
+
+  IMPROVEMENTS
+  
+    YARN-1050. Document the Fair Scheduler REST API. (Kenji Kikushima and Roman Shaposhnik via kasha)
+
+  OPTIMIZATIONS
+
+  BUG FIXES
+
 Release 2.7.3 - UNRELEASED
 
   INCOMPATIBLE CHANGES
