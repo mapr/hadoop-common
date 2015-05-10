@@ -65,6 +65,15 @@ public class HAUtil {
                 YarnConfiguration.DEFAULT_CUSTOM_RM_HA_ENABLED);
     }
 
+    public static String getCurrentRMAddress(Configuration conf, String address,
+        String defaultAddr, int defaultPort) {
+      CustomRMAddressFinder finder = RMAddressFinderLoader.getInstance().getCustomRMAddressFinder(conf);
+      if ( finder != null ) {
+        return finder.getRMAddress(conf, address, defaultAddr, defaultPort);
+      } 
+      return null;
+    }
+    
     public static boolean isAutomaticFailoverEnabled(Configuration conf) {
     return conf.getBoolean(YarnConfiguration.AUTO_FAILOVER_ENABLED,
         YarnConfiguration.DEFAULT_AUTO_FAILOVER_ENABLED);

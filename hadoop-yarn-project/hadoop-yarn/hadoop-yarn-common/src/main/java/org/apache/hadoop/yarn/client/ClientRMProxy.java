@@ -30,6 +30,7 @@ import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.Token;
@@ -155,6 +156,12 @@ public class ClientRMProxy<T> extends RMProxy<T>  {
             .toString());
       }
       return new Text(Joiner.on(',').join(services));
+    } else if (HAUtil.isCustomRMHAEnabled(conf)) {
+      String currentRMAddress = HAUtil.getCurrentRMAddress(conf, address,
+          defaultAddr, defaultPort);
+      if ( currentRMAddress != null ) {
+        return SecurityUtil.buildTokenService(NetUtils.createSocketAddr(currentRMAddress));
+      }
     }
 
     // Non-HA case - no need to set RM_ID
