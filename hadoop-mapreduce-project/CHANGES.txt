@@ -8,6 +8,9 @@ Hadoop MapReduce Change Log
     MAPREDUCE-5649. Reduce cannot use more than 2G memory for the final merge
     (Gera Shegalov via jlowe)
 
+    MAPREDUCE-5465. Tasks are often killed before they exit on their own
+    (Ming Ma via jlowe)
+
     MAPREDUCE-5948. org.apache.hadoop.mapred.LineRecordReader does not handle
     multibyte record delimiters well (Vinayakumar B, Rushabh Shah, and Akira
     AJISAKA via jlowe)
