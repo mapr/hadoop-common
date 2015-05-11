@@ -114,6 +114,9 @@ Release 2.7.3 - UNRELEASED
 
     MAPREDUCE-6165. [JDK8] TestCombineFileInputFormat failed on JDK8.
     (Akira AJISAKA via ozawa)
+    
+    MAPREDUCE-5465. Tasks are often killed before they exit on their own
+    (Ming Ma via jlowe)
 
 Release 2.7.1 - UNRELEASED
 
