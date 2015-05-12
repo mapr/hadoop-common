@@ -100,6 +100,10 @@ Release 2.7.0 - 2015-04-20
 
   BUG FIXES
 
+    MAPREDUCE-6361. NPE issue in shuffle caused by concurrent issue between
+    copySucceeded() in one thread and copyFailed() in another thread on the
+    same host. (Junping Du via ozawa)
+
     MAPREDUCE-6210. Use getApplicationAttemptId() instead of getApplicationId()
     for logging AttemptId in RMContainerAllocator.java (Leitao Guo via aajisaka)
 
