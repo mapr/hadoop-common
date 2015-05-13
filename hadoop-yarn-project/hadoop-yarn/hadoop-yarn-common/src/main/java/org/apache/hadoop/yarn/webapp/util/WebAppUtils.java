@@ -171,6 +171,18 @@ public class WebAppUtils {
       rmId = (String) HAUtil.getRMHAIds(conf).toArray()[0];
     }
 
+    if ( HAUtil.isCustomRMHAEnabled(conf)) {
+      if (httpPolicy == Policy.HTTPS_ONLY) {
+        address = NetUtils.createSocketAddr(HAUtil.getCurrentRMAddress(conf, YarnConfiguration.RM_WEBAPP_HTTPS_ADDRESS,
+          YarnConfiguration.DEFAULT_RM_WEBAPP_HTTPS_ADDRESS, 
+          YarnConfiguration.DEFAULT_RM_WEBAPP_HTTPS_PORT));
+      } else {
+        address = NetUtils.createSocketAddr(HAUtil.getCurrentRMAddress(conf, YarnConfiguration.RM_WEBAPP_ADDRESS,
+            YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, YarnConfiguration.DEFAULT_RM_WEBAPP_PORT));       
+      }
+      return getResolvedAddress(address);
+    }
+    
     if (httpPolicy == Policy.HTTPS_ONLY) {
       address =
           conf.getSocketAddr(

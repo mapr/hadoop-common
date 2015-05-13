@@ -23,8 +23,11 @@ import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -39,11 +42,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.hadoop.classification.InterfaceAudience.Public;
+import org.apache.hadoop.yarn.api.ApplicationConstants;
 import org.apache.hadoop.yarn.conf.HAUtil;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.server.webproxy.ProxyUtils;
 import org.apache.hadoop.yarn.server.webproxy.WebAppProxyServlet;
 import org.apache.hadoop.yarn.util.RMHAUtils;
+import org.apache.hadoop.yarn.webapp.util.WebAppUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,7 +67,7 @@ public class AmIpFilter implements Filter {
   //update the proxy IP list about every 5 min
   private static final long updateInterval = 5 * 60 * 1000;
 
-  private String[] proxyHosts;
+  private List<String> proxyHosts = new ArrayList<>();
   private Set<String> proxyAddresses = null;
   private long lastUpdate;
   private Map<String, String> proxyUriBases;
@@ -72,12 +77,13 @@ public class AmIpFilter implements Filter {
     // Maintain for backwards compatibility
     if (conf.getInitParameter(PROXY_HOST) != null
         && conf.getInitParameter(PROXY_URI_BASE) != null) {
-      proxyHosts = new String[]{conf.getInitParameter(PROXY_HOST)};
+      //proxyHosts = new ArrayList<>(1);
+      proxyHosts.add(conf.getInitParameter(PROXY_HOST));
       proxyUriBases = new HashMap<>(1);
       proxyUriBases.put("dummy", conf.getInitParameter(PROXY_URI_BASE));
     } else {
-      proxyHosts = conf.getInitParameter(PROXY_HOSTS)
-          .split(PROXY_HOSTS_DELIMITER);
+      proxyHosts.addAll(Arrays.asList(conf.getInitParameter(PROXY_HOSTS)
+          .split(PROXY_HOSTS_DELIMITER)));
 
       String[] proxyUriBasesArr = conf.getInitParameter(PROXY_URI_BASES)
           .split(PROXY_URI_BASES_DELIMITER);
@@ -167,14 +173,26 @@ public class AmIpFilter implements Filter {
 
   protected String findRedirectUrl() throws ServletException {
     String addr;
-    if (proxyUriBases.size() == 1) {  // external proxy or not RM HA
+    YarnConfiguration conf = new YarnConfiguration();
+    String addressPropertyPrefix = YarnConfiguration.useHttps(conf)
+        ? YarnConfiguration.RM_WEBAPP_HTTPS_ADDRESS
+        : YarnConfiguration.RM_WEBAPP_ADDRESS;
+
+    if ( HAUtil.isCustomRMHAEnabled(conf)) {
+      // http(s)://host:port
+      String currentRMAddress = WebAppUtils.getResolvedRMWebAppURLWithScheme(conf);
+      addr = currentRMAddress.concat(System.getenv(ApplicationConstants.APPLICATION_WEB_PROXY_BASE_ENV));
+      try {
+        URL url = new URL(currentRMAddress);
+        proxyUriBases.put(url.getHost() + ":" + url.getPort(), addr);
+        proxyHosts.add(url.getHost());
+      } catch (MalformedURLException e) {
+        LOG.warn("{} does not appear to be a valid URL", currentRMAddress, e);
+      }
+    } else if (proxyUriBases.size() == 1) {  // external proxy or not RM HA
       addr = proxyUriBases.values().iterator().next();
     } else {                          // RM HA
-      YarnConfiguration conf = new YarnConfiguration();
       String activeRMId = RMHAUtils.findActiveRMHAId(conf);
-      String addressPropertyPrefix = YarnConfiguration.useHttps(conf)
-          ? YarnConfiguration.RM_WEBAPP_HTTPS_ADDRESS
-          : YarnConfiguration.RM_WEBAPP_ADDRESS;
       String host = conf.get(
           HAUtil.addSuffix(addressPropertyPrefix, activeRMId));
       addr = proxyUriBases.get(host);
