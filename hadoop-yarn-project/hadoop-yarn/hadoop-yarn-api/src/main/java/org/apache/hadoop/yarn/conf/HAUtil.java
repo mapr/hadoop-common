@@ -71,7 +71,7 @@ public class HAUtil {
       if ( finder != null ) {
         return finder.getRMAddress(conf, address, defaultAddr, defaultPort);
       } 
-      return null;
+      return defaultAddr;
     }
     
     public static boolean isAutomaticFailoverEnabled(Configuration conf) {
