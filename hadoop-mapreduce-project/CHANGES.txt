@@ -99,6 +99,10 @@ Release 2.7.3 - UNRELEASED
    MAPREDUCE-6554. MRAppMaster servicestart failing with NPE in
    MRAppMaster#parsePreviousJobHistory (Bibin A Chundatt via jlowe)
 
+    MAPREDUCE-6273. HistoryFileManager should check whether summaryFile exists to 
+    avoid FileNotFoundException causing HistoryFileInfo into MOVE_FAILED state.
+    (zhihai xu via devaraj)
+
 Release 2.7.1 - UNRELEASED
 
   INCOMPATIBLE CHANGES
