@@ -446,6 +446,8 @@ public class YarnConfiguration extends Configuration {
 
   /** Custom HA scheme(s) config */
   public static final String CUSTOM_RM_HA_ENABLED= RM_HA_PREFIX + "custom-ha-enabled";
+  
+  public static final String CUSTOM_RM_HA_RMFINDER= RM_HA_PREFIX + "custom-ha-rmaddressfinder";
   public static final boolean DEFAULT_CUSTOM_RM_HA_ENABLED = false;
 
   public static final String RM_HA_IDS = RM_HA_PREFIX + "rm-ids";

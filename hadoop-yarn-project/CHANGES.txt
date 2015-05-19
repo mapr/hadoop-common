@@ -1,5 +1,19 @@
 Hadoop YARN Change Log
 
+Release 2.7.1 - UNRELEASED
+
+  INCOMPATIBLE CHANGES
+
+  NEW FEATURES
+
+  IMPROVEMENTS
+
+  OPTIMIZATIONS
+
+  BUG FIXES
+
+    YARN-3351. AppMaster tracking URL is broken in HA. (Anubhav Dhoot via kasha)
+
 Release 2.7.0 - 2015-04-20
 
   INCOMPATIBLE CHANGES
