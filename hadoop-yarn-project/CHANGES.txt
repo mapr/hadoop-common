@@ -362,6 +362,8 @@ Release 2.7.0 - 2015-04-20
 
   BUG FIXES
 
+    YARN-3601. Fix UT TestRMFailover.testRMWebAppRedirect. (Weiwei Yang via xgong)
+
     YARN-3071. Remove invalid char from sample conf in doc of FairScheduler.
     (Masatake Iwasaki via aajisaka)
 
