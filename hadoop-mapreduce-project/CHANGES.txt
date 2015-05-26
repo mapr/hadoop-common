@@ -38,6 +38,9 @@ Release 2.8.0 - UNRELEASED
  
   NEW FEATURES
   
+    MAPREDUCE-6364. Add a "Kill" link to Task Attempts page. (Ryu Kobayashi
+    via ozawa)
+  
   IMPROVEMENTS
   
     MAPREDUCE-6595. Fix findbugs warnings in OutputCommitter and
