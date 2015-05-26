@@ -477,7 +477,12 @@ public class CapacitySchedulerConfiguration extends ReservationSchedulerConfigur
   }
   
   public String getDefaultNodeLabelExpression(String queue) {
-    return get(getQueuePrefix(queue) + DEFAULT_NODE_LABEL_EXPRESSION);
+    String defaultLabelExpression = get(getQueuePrefix(queue)
+        + DEFAULT_NODE_LABEL_EXPRESSION);
+    if (defaultLabelExpression == null) {
+      return null;
+    }
+    return defaultLabelExpression.trim();
   }
   
   public void setDefaultNodeLabelExpression(String queue, String exp) {

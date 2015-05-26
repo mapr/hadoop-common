@@ -362,6 +362,9 @@ Release 2.7.0 - 2015-04-20
 
   BUG FIXES
 
+    YARN-3686. CapacityScheduler should trim default_node_label_expression.
+    (Sunil G via wangda)
+
     YARN-3071. Remove invalid char from sample conf in doc of FairScheduler.
     (Masatake Iwasaki via aajisaka)
 
