@@ -27,6 +27,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.MRConfig;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.SecurityUtil;
+import org.apache.hadoop.yarn.conf.HAUtil;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 
 @Private
@@ -55,6 +56,12 @@ public class Master {
       return NetUtils.createSocketAddr(masterAddress, 8012, MRConfig.MASTER_ADDRESS);
     } 
     else {
+      if ( HAUtil.isCustomRMHAEnabled(conf)) {
+          return NetUtils.createSocketAddr(HAUtil.getCurrentRMAddress(conf, 
+              YarnConfiguration.RM_ADDRESS,
+              YarnConfiguration.DEFAULT_RM_ADDRESS, 
+              YarnConfiguration.DEFAULT_RM_PORT));
+      }
       return conf.getSocketAddr(
           YarnConfiguration.RM_ADDRESS,
           YarnConfiguration.DEFAULT_RM_ADDRESS,
