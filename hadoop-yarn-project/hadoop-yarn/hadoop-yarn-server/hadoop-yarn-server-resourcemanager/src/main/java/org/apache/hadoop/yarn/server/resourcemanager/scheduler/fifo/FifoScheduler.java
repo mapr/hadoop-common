@@ -249,14 +249,19 @@ public class FifoScheduler extends
     this.minimumAllocation =
         Resources.createResource(conf.getInt(
             YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_MB,
-            YarnConfiguration.DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_MB));
+            YarnConfiguration.DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_MB),
+          conf.getInt(YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_VCORES,
+            YarnConfiguration.DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_VCORES),
+          conf.getDouble(YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_DISKS,
+            YarnConfiguration.DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_DISKS));
     initMaximumResourceCapability(
         Resources.createResource(conf.getInt(
             YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_MB,
             YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_MB),
-          conf.getInt(
-            YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES,
-            YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES)));
+          conf.getInt(YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES,
+            YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES),
+          conf.getDouble(YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS,
+	        YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS)));
     this.usePortForNodeName = conf.getBoolean(
         YarnConfiguration.RM_SCHEDULER_INCLUDE_PORT_IN_NODE_NAME,
         YarnConfiguration.DEFAULT_RM_SCHEDULER_USE_PORT_FOR_NODE_NAME);
@@ -304,8 +309,44 @@ public class FifoScheduler extends
         + "=" + maxMem + ", min and max should be greater than 0"
         + ", max should be no smaller than min.");
     }
+
+    // validate scheduler vcores allocation setting
+    int minVcores = conf.getInt(
+      YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_VCORES,
+      YarnConfiguration.DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_VCORES);
+    int maxVcores = conf.getInt(
+      YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES,
+      YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES);
+
+    if (minVcores <= 0 || minVcores > maxVcores) {
+      throw new YarnRuntimeException("Invalid resource scheduler vcores"
+        + " allocation configuration"
+        + ", " + YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_VCORES
+        + "=" + minVcores
+        + ", " + YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES
+        + "=" + maxVcores + ", min and max should be greater than 0"
+        + ", max should be no smaller than min.");
+    }
+
+    // validate scheduler disk allocation setting
+    double minDisks = conf.getDouble(
+      YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_DISKS,
+      YarnConfiguration.DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_DISKS);
+    double maxDisks = conf.getDouble(
+      YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS,
+      YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS);
+
+    if (minDisks < 0 || minDisks > maxDisks) {
+      throw new YarnRuntimeException("Invalid resource scheduler disk"
+        + " allocation configuration"
+        + ", " + YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_DISKS
+        + "=" + minDisks
+        + ", " + YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS
+        + "=" + maxDisks + ", min and max should be greater than 0"
+        + ", max should be no smaller than min.");
+    }
   }
-  
+
   @Override
   public synchronized Configuration getConf() {
     return conf;
