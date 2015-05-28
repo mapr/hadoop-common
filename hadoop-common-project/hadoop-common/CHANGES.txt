@@ -23,9 +23,12 @@ HADOOP-12682. Fix TestKMS#testKMSRestart* failure. Contributed by Wei-Chiu Chuan
     HADOOP-12404. Disable caching for JarURLConnection to avoid sharing
     JarFile with other users when loading resource from URL in Configuration
     class. (zxu)
-    
+
     HADOOP-11827. Speed-up distcp buildListing() using threadpool
     (Zoran Dimitrijevic via raviprak)
+
+    HADOOP-11934. Use of JavaKeyStoreProvider in LdapGroupsMapping causes
+    infinite loop. (Larry McCay via cnauroth)
 Release 2.7.0 - 2015-04-20
 
   INCOMPATIBLE CHANGES
