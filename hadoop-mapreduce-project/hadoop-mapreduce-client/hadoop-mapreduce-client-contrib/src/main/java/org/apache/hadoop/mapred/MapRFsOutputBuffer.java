@@ -19,11 +19,7 @@
 package org.apache.hadoop.mapred;
 
 import java.io.IOException;
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.DataOutputStream;
-import java.io.File;
-import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -31,7 +27,6 @@ import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -40,66 +35,38 @@ import java.util.concurrent.Future;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
-import java.nio.LongBuffer;
-import java.util.zip.Checksum;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.classification.InterfaceAudience;
-import org.apache.hadoop.classification.InterfaceStability;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileSystem.Statistics;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.PathId;
-import org.apache.hadoop.mapred.Task;
 import org.apache.hadoop.mapred.Task.TaskReporter;
 import org.apache.hadoop.mapred.Task.CombinerRunner;
 import org.apache.hadoop.mapred.Task.CombineOutputCollector;
 import org.apache.hadoop.mapred.MapTask;
 import org.apache.hadoop.mapred.MapTask.MapBufferTooSmallException;
 import org.apache.hadoop.mapred.MapRFsOutputFile;
-//import org.apache.hadoop.mapred.DirectShuffleWriter;
 
 import org.apache.hadoop.io.DataInputBuffer;
-import org.apache.hadoop.io.IOUtils;
-import org.apache.hadoop.io.SecureIOUtils;
 import org.apache.hadoop.io.RawComparator;
-import org.apache.hadoop.io.SequenceFile;
-import org.apache.hadoop.io.SequenceFile.CompressionType;
-import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.DefaultCodec;
-import org.apache.hadoop.io.serializer.Deserializer;
 import org.apache.hadoop.io.serializer.SerializationFactory;
 import org.apache.hadoop.io.serializer.Serializer;
 import org.apache.hadoop.io.WritableComparator;
-import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.HasRawComparablePrefix;
-
 import org.apache.hadoop.mapred.IFile.Writer;
 import org.apache.hadoop.mapred.Merger.Segment;
-import org.apache.hadoop.mapred.SortedRanges.SkipRangeIterator;
-import org.apache.hadoop.mapreduce.*;
-import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.apache.hadoop.mapreduce.lib.input.FileInputFormatCounter;
-import org.apache.hadoop.mapreduce.lib.map.WrappedMapper;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormatCounter;
-import org.apache.hadoop.mapreduce.split.JobSplit.TaskSplitIndex;
-import org.apache.hadoop.mapreduce.task.MapContextImpl;
+import org.apache.hadoop.mapreduce.TaskCounter;
+import org.apache.hadoop.mapreduce.TaskType;
 import org.apache.hadoop.util.IndexedSortable;
 import org.apache.hadoop.util.IndexedSorter;
 import org.apache.hadoop.util.Progress;
 import org.apache.hadoop.util.QuickSort;
 import org.apache.hadoop.util.ReflectionUtils;
-import org.apache.hadoop.util.StringInterner;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.security.UserGroupInformation;
 
@@ -1338,25 +1305,34 @@ public class MapRFsOutputBuffer<K extends Object, V extends Object>
       if ( LOG.isDebugEnabled() ) {
         LOG.debug("Before threading");
       }
-      threadPool.invokeAll(calls);
+      List<Future<Integer>> futures = threadPool.invokeAll(calls);
+      for ( Future<Integer> future : futures) {
+        try {
+          future.get();
+        } catch (CancellationException ignore) {
+        } catch (ExecutionException exp) {
+          LOG.error("Exception while processing sortAndWrite", exp);
+          throw new IOException(exp);
+        }
+      }
       if ( LOG.isDebugEnabled() ) {
         LOG.debug("After threading");
       }
-
     } catch (InterruptedException e) {
       LOG.error("Exception while trying to write map outputs", e);
       throw new IOException(e);
-    }
+    } finally {
+      for ( int i = 0; i < closerList.size(); i++) {
+        closerList.get(i).signalShutdown();
+      }
+      for ( int i = 0; i < closerList.size(); i++) {
+        closerList.get(i).awaitTermination();
+      }
   
-    for ( int i = 0; i < closerList.size(); i++) {
-      closerList.get(i).signalShutdown();
+      if ( LOG.isDebugEnabled()) {
+        LOG.debug("End of sortandWrite");
+      }
     }
-    for ( int i = 0; i < closerList.size(); i++) {
-      closerList.get(i).awaitTermination();
-    }
-
-    if ( LOG.isDebugEnabled()) 
-      LOG.debug("End of sortandWrite");
   }
 
   protected void mergeParts() throws IOException, InterruptedException, 
@@ -1602,6 +1578,11 @@ public class MapRFsOutputBuffer<K extends Object, V extends Object>
       throw new IOException("Interrupted while waiting for the writer", e);
     } finally {
       spillLock.unlock();
+      // If spillThread is not shutdown when exception is thrown
+      // in close() it will try to do closeQuitely() in MapTask
+      // which will cause task hanging if Exception is thrown
+      // from this try block
+      spillThread.shutdown();
     }
     assert !spillLock.isHeldByCurrentThread();
     // shut down spill thread and wait for it to exit. Since the preceding
@@ -1617,7 +1598,8 @@ public class MapRFsOutputBuffer<K extends Object, V extends Object>
       throw new IOException("Spill failed", e);
     }*/
     // MapR
-    spillThread.shutdown();
+    // Moving spill thread shutdown into "finally" block
+    //spillThread.shutdown();
     // release sort buffer before the merge
     kvbuffer = null;
     freeKvOffsets(kvoffsets);
