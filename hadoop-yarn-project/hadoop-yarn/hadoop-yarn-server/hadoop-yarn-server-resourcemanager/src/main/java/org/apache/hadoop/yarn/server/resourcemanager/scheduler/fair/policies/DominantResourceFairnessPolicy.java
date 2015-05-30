@@ -44,6 +44,8 @@ public class DominantResourceFairnessPolicy extends SchedulingPolicy {
 
   public static final String NAME = "DRF";
 
+  public static final double EPSILON = 0.00001;
+
   private DominantResourceFairnessComparator comparator =
       new DominantResourceFairnessComparator();
 
@@ -165,8 +167,8 @@ public class DominantResourceFairnessPolicy extends SchedulingPolicy {
      * Calculates and orders a resource's share of a pool in terms of two vectors.
      * The shares vector contains, for each resource, the fraction of the pool that
      * it takes up.  The resourceOrder vector contains an ordering of resources
-     * by largest share.  So if resource=<10 MB, 5 CPU>, and pool=<100 MB, 10 CPU>,
-     * shares will be [.1, .5] and resourceOrder will be [CPU, MEMORY].
+     * by largest share.  So if resource=<10 MB, 5 CPU, 1 DISK >, and pool=<100 MB, 10 CPU, 20 DISK>,
+     * shares will be [.1, .5, .05] and resourceOrder will be [CPU, MEMORY, DISK].
      */
     void calculateShares(Resource resource, Resource pool,
         ResourceWeights shares, ResourceType[] resourceOrder, ResourceWeights weights) {
@@ -174,18 +176,55 @@ public class DominantResourceFairnessPolicy extends SchedulingPolicy {
           (pool.getMemory() * weights.getWeight(MEMORY)));
       shares.setWeight(CPU, (float)resource.getVirtualCores() /
           (pool.getVirtualCores() * weights.getWeight(CPU)));
+      double totalDiskWeight = pool.getDisks() * weights.getWeight(DISK);
+      //Check for divide by zero
+      if(Math.abs(totalDiskWeight) < EPSILON) {
+        shares.setWeight(DISK, 0.0f);
+      } else {
+        shares.setWeight(DISK, (float)(resource.getDisks() / totalDiskWeight));
+      }
+
       // sort order vector by resource share
       if (resourceOrder != null) {
-        if (shares.getWeight(MEMORY) > shares.getWeight(CPU)) {
-          resourceOrder[0] = MEMORY;
-          resourceOrder[1] = CPU;
-        } else  {
-          resourceOrder[0] = CPU;
-          resourceOrder[1] = MEMORY;
+      // The ordering is biased towards CPU, MEMORY, DISK.
+      // i.e. if the weights are equal for cpu, memory and disk then the order will be [CPU, MEMORY, DISK].
+        if (shares.getWeight(DISK) > shares.getWeight(MEMORY) && shares.getWeight(DISK) > shares.getWeight(CPU)) {
+          // DISK is largest, now compare CPU and MEMEORY
+            if (shares.getWeight(MEMORY) > shares.getWeight(CPU)) {
+              resourceOrder[0] = DISK;
+              resourceOrder[1] = MEMORY;
+              resourceOrder[2] = CPU;
+            } else {
+              resourceOrder[0] = DISK;
+              resourceOrder[1] = CPU;
+              resourceOrder[2] = MEMORY;
+            }
+        } else if (shares.getWeight(MEMORY) > shares.getWeight(DISK) && shares.getWeight(MEMORY) > shares.getWeight(CPU)) {
+          // Memory is largest, now compare CPU and DISK
+          if (shares.getWeight(DISK) > shares.getWeight(CPU)) {
+            resourceOrder[0] = MEMORY;
+            resourceOrder[1] = DISK;
+            resourceOrder[2] = CPU;
+          } else {
+            resourceOrder[0] = MEMORY;
+            resourceOrder[1] = CPU;
+            resourceOrder[2] = DISK;
+          }
+        } else{
+          // CPU is largest, now compare MEMORY and DISK
+            if (shares.getWeight(DISK) > shares.getWeight(MEMORY)) {
+              resourceOrder[0] = CPU;
+              resourceOrder[1] = DISK;
+              resourceOrder[2] = MEMORY;
+            } else {
+              resourceOrder[0] = CPU;
+              resourceOrder[1] = MEMORY;
+              resourceOrder[2] = DISK;
+            }
         }
       }
     }
-    
+
     private int compareShares(ResourceWeights shares1, ResourceWeights shares2,
         ResourceType[] resourceOrder1, ResourceType[] resourceOrder2) {
       for (int i = 0; i < resourceOrder1.length; i++) {
