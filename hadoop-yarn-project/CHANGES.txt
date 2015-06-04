@@ -362,6 +362,9 @@ Release 2.7.0 - 2015-04-20
 
   BUG FIXES
 
+    YARN-3733. Fix DominantRC#compare() does not work as expected if
+    cluster resource is empty. (Rohith Sharmaks via wangda)
+
     YARN-3071. Remove invalid char from sample conf in doc of FairScheduler.
     (Masatake Iwasaki via aajisaka)
 
