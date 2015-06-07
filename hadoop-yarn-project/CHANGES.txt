@@ -46,6 +46,9 @@ Release 2.7.3 - UNRELEASED
     YARN-4452. NPE when submit Unmanaged application. (Naganarasimha G R via
     junping_du)
 
+    YARN-3655. FairScheduler: potential livelock due to maxAMShare limitation
+    and container reservation. (Zhihai Xu via kasha)
+
 Release 2.7.1 - UNRELEASED
 
   INCOMPATIBLE CHANGES

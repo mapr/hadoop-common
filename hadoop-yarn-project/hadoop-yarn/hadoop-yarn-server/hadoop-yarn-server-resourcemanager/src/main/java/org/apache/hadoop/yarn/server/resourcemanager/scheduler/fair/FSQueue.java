@@ -341,4 +341,19 @@ public abstract class FSQueue implements Queue, Schedulable {
   public void setLabelPolicy(QueueLabelPolicy labelPolicy) {
     this.labelPolicy = labelPolicy;
   }
+
+  public boolean fitsInMaxShare(Resource additionalResource) {
+    Resource usagePlusAddition =
+        Resources.add(getResourceUsage(), additionalResource);
+
+    if (!Resources.fitsIn(usagePlusAddition, getMaxShare())) {
+      return false;
+    }
+
+    FSQueue parentQueue = getParent();
+    if (parentQueue != null) {
+      return parentQueue.fitsInMaxShare(additionalResource);
+    }
+    return true;
+  }
 }
