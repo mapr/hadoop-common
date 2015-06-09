@@ -29,7 +29,7 @@ import org.apache.hadoop.util.TestFileBasedIPList;
 
 public class TestWhitelistBasedResolver extends TestCase {
 
-  public static final Map<String, Object> SASL_PRIVACY_PROPS =
+  public static final Map<String, String> SASL_PRIVACY_PROPS =
     WhitelistBasedResolver.getSaslProperties(new Configuration());
 
   public void testFixedVariableAndLocalWhiteList() throws IOException {

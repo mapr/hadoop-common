@@ -90,7 +90,7 @@ public class WhitelistBasedResolver extends SaslPropertiesResolver {
 
   private CombinedIPWhiteList whiteList;
 
-  private Map<String, Object> saslProps;
+  private Map<String, String> saslProps;
 
   @Override
   public void setConf(Configuration conf) {
@@ -118,22 +118,22 @@ public class WhitelistBasedResolver extends SaslPropertiesResolver {
    * @return the sasl properties to be used for the connection.
    */
   @Override
-  public Map<String, Object> getServerProperties(InetAddress clientAddress) {
+  public Map<String, String> getServerProperties(InetAddress clientAddress) {
     if (clientAddress == null) {
       return saslProps;
     }
     return  whiteList.isIn(clientAddress.getHostAddress())?getDefaultProperties():saslProps;
   }
 
-  public Map<String, Object> getServerProperties(String clientAddress) throws UnknownHostException {
+  public Map<String, String> getServerProperties(String clientAddress) throws UnknownHostException {
     if (clientAddress == null) {
       return saslProps;
     }
     return getServerProperties(InetAddress.getByName(clientAddress));
   }
 
-  static Map<String, Object> getSaslProperties(Configuration conf) {
-    Map<String, Object> saslProps =new TreeMap<String, Object>();
+  static Map<String, String> getSaslProperties(Configuration conf) {
+    Map<String, String> saslProps =new TreeMap<String, String>();
     String[] qop = conf.getStrings(HADOOP_RPC_PROTECTION_NON_WHITELIST,
         QualityOfProtection.PRIVACY.toString());
 

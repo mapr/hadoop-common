@@ -59,6 +59,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -1583,9 +1584,8 @@ public abstract class Server {
     
     private SaslServer createSaslServer(RpcAuthMethod authMethod)
         throws IOException, InterruptedException {
-      final Map<String,Object> saslProps =
-                  saslPropsResolver.getServerProperties(addr);
-      return new SaslRpcServer(authMethod).create(this, saslProps, secretManager);
+      return new SaslRpcServer(authMethod).create(this, new TreeMap<String, Object>(
+          saslPropsResolver.getServerProperties(addr)), secretManager);
     }
     
     /**

@@ -988,8 +988,8 @@ public class TestSaslRPC {
   static class AuthSaslPropertiesResolver extends SaslPropertiesResolver{
 
     @Override
-    public Map<String, Object> getServerProperties(InetAddress address) {
-      Map<String, Object> newPropertes = new HashMap<String, Object>(getDefaultProperties());
+    public Map<String, String> getServerProperties(InetAddress address) {
+      Map<String, String> newPropertes = new HashMap<String, String>(getDefaultProperties());
       newPropertes.put(Sasl.QOP, QualityOfProtection.AUTHENTICATION.getSaslQop());
       return newPropertes;
     }

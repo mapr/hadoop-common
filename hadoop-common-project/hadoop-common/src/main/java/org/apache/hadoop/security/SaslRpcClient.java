@@ -33,6 +33,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.regex.Pattern;
 
 import javax.security.auth.callback.Callback;
@@ -203,8 +204,8 @@ public class SaslRpcClient {
       throws SaslException, IOException {
     // SASL requires the client and server to use the same proto and serverId
     // if necessary, auth types below will verify they are valid
-    Map<String, Object> saslProperties =
-      saslPropsResolver.getClientProperties(serverAddr.getAddress());
+    Map<String, Object> saslProperties = new TreeMap<String, Object>(
+        saslPropsResolver.getClientProperties(serverAddr.getAddress()));
 
     final RpcAuthMethod method = RpcAuthRegistry.getAuthMethod(authType.getMethod());
     switch (method.getAuthenticationMethod()) {
