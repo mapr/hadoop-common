@@ -61,7 +61,7 @@ class SaslParticipant {
    * @throws SaslException for any error
    */
   public static SaslParticipant createServerSaslParticipant(
-      Map<String, Object> saslProps, CallbackHandler callbackHandler)
+      Map<String, String> saslProps, CallbackHandler callbackHandler)
       throws SaslException {
     return new SaslParticipant(Sasl.createSaslServer(MECHANISM,
       PROTOCOL, SERVER_NAME, saslProps, callbackHandler));
@@ -77,7 +77,7 @@ class SaslParticipant {
    * @throws SaslException for any error
    */
   public static SaslParticipant createClientSaslParticipant(String userName,
-      Map<String, Object> saslProps, CallbackHandler callbackHandler)
+      Map<String, String> saslProps, CallbackHandler callbackHandler)
       throws SaslException {
     return new SaslParticipant(Sasl.createSaslClient(new String[] { MECHANISM },
       userName, PROTOCOL, SERVER_NAME, saslProps, callbackHandler));

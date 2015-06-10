@@ -286,7 +286,7 @@ public class SaslDataTransferClient {
   private IOStreamPair getEncryptedStreams(OutputStream underlyingOut,
       InputStream underlyingIn, DataEncryptionKey encryptionKey)
       throws IOException {
-    Map<String, Object> saslProps = createSaslPropertiesForEncryption(
+    Map<String, String> saslProps = createSaslPropertiesForEncryption(
       encryptionKey.encryptionAlgorithm);
 
     LOG.debug("Client using encryption algorithm {}",
@@ -382,7 +382,7 @@ public class SaslDataTransferClient {
       OutputStream underlyingOut, InputStream underlyingIn,
       Token<BlockTokenIdentifier> accessToken, DatanodeID datanodeId)
       throws IOException {
-    Map<String, Object> saslProps = saslPropsResolver.getClientProperties(addr);
+    Map<String, String> saslProps = saslPropsResolver.getClientProperties(addr);
 
     String userName = buildUserName(accessToken);
     char[] password = buildClientPassword(accessToken);
@@ -431,7 +431,7 @@ public class SaslDataTransferClient {
    * @throws IOException for any error
    */
   private IOStreamPair doSaslHandshake(OutputStream underlyingOut,
-      InputStream underlyingIn, String userName, Map<String, Object> saslProps,
+      InputStream underlyingIn, String userName, Map<String, String> saslProps,
       CallbackHandler callbackHandler) throws IOException {
 
     DataOutputStream out = new DataOutputStream(underlyingOut);

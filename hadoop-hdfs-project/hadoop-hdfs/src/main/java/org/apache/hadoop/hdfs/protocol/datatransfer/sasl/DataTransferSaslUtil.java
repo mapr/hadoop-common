@@ -92,12 +92,12 @@ public final class DataTransferSaslUtil {
    * @throws IOException for any error
    */
   public static void checkSaslComplete(SaslParticipant sasl,
-      Map<String, Object> saslProps) throws IOException {
+      Map<String, String> saslProps) throws IOException {
     if (!sasl.isComplete()) {
       throw new IOException("Failed to complete SASL handshake");
     }
     Set<String> requestedQop = ImmutableSet.copyOf(Arrays.asList(
-      saslProps.get(Sasl.QOP).toString().split(",")));
+      saslProps.get(Sasl.QOP).split(",")));
     String negotiatedQop = sasl.getNegotiatedQop();
     LOG.debug("Verifying QOP, requested QOP = {}, negotiated QOP = {}",
       requestedQop, negotiatedQop);
@@ -115,9 +115,9 @@ public final class DataTransferSaslUtil {
    * @return boolean true if privacy exists
    */
   public static boolean requestedQopContainsPrivacy(
-      Map<String, Object> saslProps) {
+      Map<String, String> saslProps) {
     Set<String> requestedQop = ImmutableSet.copyOf(Arrays.asList(
-        saslProps.get(Sasl.QOP).toString().split(",")));
+        saslProps.get(Sasl.QOP).split(",")));
     return requestedQop.contains("auth-conf");
   }
 
@@ -127,9 +127,9 @@ public final class DataTransferSaslUtil {
    * @param encryptionAlgorithm to use for SASL negotation
    * @return properties of encrypted SASL negotiation
    */
-  public static Map<String, Object> createSaslPropertiesForEncryption(
+  public static Map<String, String> createSaslPropertiesForEncryption(
       String encryptionAlgorithm) {
-    Map<String, Object> saslProps = Maps.newHashMapWithExpectedSize(3);
+    Map<String, String> saslProps = Maps.newHashMapWithExpectedSize(3);
     saslProps.put(Sasl.QOP, QualityOfProtection.PRIVACY.getSaslQop());
     saslProps.put(Sasl.SERVER_AUTH, "true");
     saslProps.put("com.sun.security.sasl.digest.cipher", encryptionAlgorithm);

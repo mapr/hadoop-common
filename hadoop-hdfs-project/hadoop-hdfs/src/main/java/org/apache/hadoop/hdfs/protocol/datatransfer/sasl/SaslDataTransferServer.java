@@ -160,7 +160,7 @@ public class SaslDataTransferServer {
       return new IOStreamPair(underlyingIn, underlyingOut);
     }
 
-    Map<String, Object> saslProps = createSaslPropertiesForEncryption(
+    Map<String, String> saslProps = createSaslPropertiesForEncryption(
       dnConf.getEncryptionAlgorithm());
 
     if (LOG.isDebugEnabled()) {
@@ -285,7 +285,7 @@ public class SaslDataTransferServer {
     }
 
     SaslPropertiesResolver saslPropsResolver = dnConf.getSaslPropsResolver();
-    Map<String, Object> saslProps = saslPropsResolver.getServerProperties(
+    Map<String, String> saslProps = saslPropsResolver.getServerProperties(
       getPeerAddress(peer));
 
     CallbackHandler callbackHandler = new SaslServerCallbackHandler(
@@ -346,7 +346,7 @@ public class SaslDataTransferServer {
    * @throws IOException for any error
    */
   private IOStreamPair doSaslHandshake(OutputStream underlyingOut,
-      InputStream underlyingIn, Map<String, Object> saslProps,
+      InputStream underlyingIn, Map<String, String> saslProps,
       CallbackHandler callbackHandler) throws IOException {
 
     DataInputStream in = new DataInputStream(underlyingIn);
