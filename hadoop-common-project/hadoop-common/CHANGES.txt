@@ -276,6 +276,9 @@ Release 2.7.0 - 2015-04-20
 
   BUG FIXES
 
+    HADOOP-11872. "hadoop dfs" command prints message about using "yarn jar" on
+    Windows(branch-2 only) (Varun Vasudev via cnauroth)
+
     HADOOP-11512. Use getTrimmedStrings when reading serialization keys
     (Ryan P via harsh)
 
