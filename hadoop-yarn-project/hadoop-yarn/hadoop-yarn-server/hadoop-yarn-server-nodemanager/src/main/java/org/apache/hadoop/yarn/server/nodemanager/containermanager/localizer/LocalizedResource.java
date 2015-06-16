@@ -241,16 +241,26 @@ public class LocalizedResource implements EventHandler<ResourceEvent> {
    * Same as FetchResourceTransition, but does not generate a new localizer
    * event to avoid localizing the resource multiple times.
    */
+  @SuppressWarnings("unchecked") // dispatcher not typed
   private static class DuplicateFetchResourceTransition extends ResourceTransition {
     @Override
     public void transition(LocalizedResource rsrc, ResourceEvent event) {
       ResourceRequestEvent req = (ResourceRequestEvent) event;
       LocalizerContext ctxt = req.getContext();
       ContainerId container = ctxt.getContainerId();
+      boolean isEmpty = rsrc.ref.isEmpty();
       rsrc.ref.add(container);
-      if (LOG.isDebugEnabled()) {
-        LOG.debug("Duplicate fetch resource transition for : " + rsrc.getRequest()
-            + ". Event: " + event);
+      if ( isEmpty ) {
+        // there was a failure before and ref count was not incremented
+        // trying to localize again
+        rsrc.dispatcher.getEventHandler().handle(
+            new LocalizerResourceRequestEvent(rsrc, req.getVisibility(), ctxt, 
+                req.getLocalResourceRequest().getPattern()));
+      } else {
+        if (LOG.isDebugEnabled()) {
+          LOG.debug("Duplicate fetch resource transition for : " + rsrc.getRequest()
+              + ". Event: " + event);
+        }
       }
     }
   }
