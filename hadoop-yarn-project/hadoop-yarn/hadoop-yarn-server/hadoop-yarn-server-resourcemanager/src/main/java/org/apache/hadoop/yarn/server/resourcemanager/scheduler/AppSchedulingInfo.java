@@ -70,6 +70,7 @@ public class AppSchedulingInfo {
   // since Expression can be evaluated to null
   // need indicator that will determine whether it was evaluated
   private final AtomicBoolean isAppLabelExpressionSet = new AtomicBoolean(false);
+  private String applicationLabel;
   final String user;
   // TODO making containerIdCounter long
   private final AtomicLong containerIdCounter;
@@ -100,6 +101,14 @@ public class AppSchedulingInfo {
     this.containerIdCounter = new AtomicLong(epoch << EPOCH_BIT_SHIFT);
   }
 
+  public void setApplicationLabel(String applicationLabel) {
+    this.applicationLabel = applicationLabel;
+  }
+  
+  public String getApplicationLabel() {
+    return this.applicationLabel;
+  }
+  
   public ApplicationId getApplicationId() {
     return applicationId;
   }
@@ -295,17 +304,29 @@ public class AppSchedulingInfo {
     if ( !lb.isServiceEnabled() ) {
       return false;
     }
+    final Priority priority;
+    if ( priorities.contains(RMAppAttemptImpl.AM_CONTAINER_PRIORITY)) {
+      priority = RMAppAttemptImpl.AM_CONTAINER_PRIORITY;
+    } else {
+      if ( priorities.iterator().hasNext() ) {
+        priority = priorities.iterator().next();
+      } else {
+        LOG.warn("priorities is empty. Marking resource as not blacklisted");
+        return false;
+      }
+    }
     // Get ResourceRequest for AppMaster as it will determine whole App label
-    ResourceRequest req = getResourceRequest(RMAppAttemptImpl.AM_CONTAINER_PRIORITY, 
+    ResourceRequest req = getResourceRequest(priority, 
         resourceName);
     if ( req == null ) {
-      req = getResourceRequest(RMAppAttemptImpl.AM_CONTAINER_PRIORITY, 
+      req = getResourceRequest(priority, 
           ResourceRequest.ANY);
     }
     if ( req != null ) {
       try {
         if (!isAppLabelExpressionSet.get()) {
-          appLabelExpression = lb.getEffectiveLabelExpr(req.getLabel());
+          final String requestLabel = (req.getLabel() == null ? applicationLabel : req.getLabel());
+          appLabelExpression = lb.getEffectiveLabelExpr(requestLabel);
           isAppLabelExpressionSet.set(true);
         }
         Expression finalExp = 

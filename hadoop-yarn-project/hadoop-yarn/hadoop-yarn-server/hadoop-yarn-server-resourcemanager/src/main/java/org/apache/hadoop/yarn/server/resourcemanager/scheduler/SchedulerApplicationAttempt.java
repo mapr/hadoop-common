@@ -144,6 +144,10 @@ public class SchedulerApplicationAttempt {
         unmanagedAM = appSubmissionContext.getUnmanagedAM();
         this.logAggregationContext =
             appSubmissionContext.getLogAggregationContext();
+        String applicationLabel = appSubmissionContext.getLabel();
+        if ( applicationLabel != null ) {
+          this.appSchedulingInfo.setApplicationLabel(applicationLabel);
+        }
       }
     }
   }
