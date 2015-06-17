@@ -107,8 +107,8 @@ public class RMAdminCLI extends HAAdmin {
               "Reload the service-level authorization policy file. \n\t\t" +
                   "ResoureceManager will reload the authorization policy file."))
           .put("-getGroups", new UsageInfo("[username]",
-              "Get the groups which given user belongs to."))
-          .put("-addToClusterNodeLabels",
+              "Get the groups which given user belongs to.")).build();
+/*          .put("-addToClusterNodeLabels",
               new UsageInfo("[label1,label2,label3] (label splitted by \",\")",
                   "add to cluster node labels "))
           .put("-removeFromClusterNodeLabels",
@@ -132,6 +132,8 @@ public class RMAdminCLI extends HAAdmin {
                   +
                   " when the command run on the machine where RM is running."))
               .build();
+*/
+
 
   public RMAdminCLI() {
     super();
@@ -188,6 +190,11 @@ public class RMAdminCLI extends HAAdmin {
     }
   }
 
+  private static void printNodeLabelsMsg() {
+    System.out.println("Please refer to http://doc.mapr.com/display/MapR/Label-based+Scheduling" +
+      " to learn how to configure label based scheduling.");
+  }
+
   private static void buildUsageMsg(StringBuilder builder,
       boolean isHAEnabled) {
     builder.append("Usage: yarn rmadmin\n");
@@ -221,11 +228,13 @@ public class RMAdminCLI extends HAAdmin {
       " [-showLabels]" +
       " [-refreshLabels]" +
       " [-refreshServiceAcl]" +
-      " [-getGroup [username]]" +
-      " [[-addToClusterNodeLabels [label1,label2,label3]]" +
+      " [-getGroup [username]]");
+/*      " [[-addToClusterNodeLabels [label1,label2,label3]]" +
       " [-removeFromClusterNodeLabels [label1,label2,label3]]" +
       " [-replaceLabelsOnNode [node1[:port]=label1,label2 node2[:port]=label1]" +
       " [-directlyAccessNodeLabelStore]]");
+      " [-getGroup [username]]");*/
+
     if (isHAEnabled) {
       appendHAUsage(summary);
     }
@@ -417,7 +426,7 @@ public class RMAdminCLI extends HAAdmin {
 
   private int addToClusterNodeLabels(String args) throws IOException,
       YarnException {
-    Set<String> labels = buildNodeLabelsSetFromStr(args);
+    /* Set<String> labels = buildNodeLabelsSetFromStr(args);
 
     if (directlyAccessNodeLabelStore) {
       getNodeLabelManagerInstance(getConf()).addToCluserNodeLabels(labels);
@@ -427,13 +436,14 @@ public class RMAdminCLI extends HAAdmin {
       AddToClusterNodeLabelsRequest request =
           AddToClusterNodeLabelsRequest.newInstance(labels);
       adminProtocol.addToClusterNodeLabels(request);
-    }
+    }*/
+    printNodeLabelsMsg();
     return 0;
   }
 
   private int removeFromClusterNodeLabels(String args) throws IOException,
       YarnException {
-    Set<String> labels = buildNodeLabelsSetFromStr(args);
+    /*Set<String> labels = buildNodeLabelsSetFromStr(args);
 
     if (directlyAccessNodeLabelStore) {
       getNodeLabelManagerInstance(getConf()).removeFromClusterNodeLabels(
@@ -444,8 +454,8 @@ public class RMAdminCLI extends HAAdmin {
       RemoveFromClusterNodeLabelsRequest request =
           RemoveFromClusterNodeLabelsRequest.newInstance(labels);
       adminProtocol.removeFromClusterNodeLabels(request);
-    }
-
+    }*/
+    printNodeLabelsMsg();
     return 0;
   }
   
@@ -497,8 +507,11 @@ public class RMAdminCLI extends HAAdmin {
 
   private int replaceLabelsOnNodes(String args) throws IOException,
       YarnException {
-    Map<NodeId, Set<String>> map = buildNodeLabelsMapFromStr(args);
+    /* Map<NodeId, Set<String>> map = buildNodeLabelsMapFromStr(args);
     return replaceLabelsOnNodes(map);
+    */
+    printNodeLabelsMsg();
+    return 0;
   }
 
   private int replaceLabelsOnNodes(Map<NodeId, Set<String>> map)
