@@ -181,6 +181,30 @@ public class MetricsRegistry {
   }
 
   /**
+   * Create a mutable double gauge
+   * @param name  of the metric
+   * @param desc  metric description
+   * @param val  initial value
+   * @return a new gauge object
+   */
+  public MutableGaugeDouble newGauge(String name, String desc, double val) {
+    return newGauge(Interns.info(name, desc), val);
+  }
+
+  /**
+   * Create a mutable double gauge
+   * @param info  metadata of the metric
+   * @param val  initial value
+   * @return a new gauge object
+   */
+  public synchronized MutableGaugeDouble newGauge(MetricsInfo info, double val) {
+    checkMetricName(info.name());
+    MutableGaugeDouble ret = new MutableGaugeDouble(info, val);
+    metricsMap.put(info.name(), ret);
+    return ret;
+  }
+
+  /**
    * Create a mutable metric that estimates quantiles of a stream of values
    * @param name of the metric
    * @param desc metric description

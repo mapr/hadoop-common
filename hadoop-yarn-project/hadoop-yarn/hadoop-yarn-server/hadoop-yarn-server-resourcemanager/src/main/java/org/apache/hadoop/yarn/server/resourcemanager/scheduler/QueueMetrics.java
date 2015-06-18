@@ -38,6 +38,7 @@ import org.apache.hadoop.metrics2.lib.MetricsRegistry;
 import org.apache.hadoop.metrics2.lib.MutableCounterInt;
 import org.apache.hadoop.metrics2.lib.MutableCounterLong;
 import org.apache.hadoop.metrics2.lib.MutableGaugeInt;
+import org.apache.hadoop.metrics2.lib.MutableGaugeDouble;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
@@ -61,16 +62,20 @@ public class QueueMetrics implements MetricsSource {
 
   @Metric("Allocated memory in MB") MutableGaugeInt allocatedMB;
   @Metric("Allocated CPU in virtual cores") MutableGaugeInt allocatedVCores;
+  @Metric("Allocated DISK count") MutableGaugeDouble allocatedDisks;
   @Metric("# of allocated containers") MutableGaugeInt allocatedContainers;
   @Metric("Aggregate # of allocated containers") MutableCounterLong aggregateContainersAllocated;
   @Metric("Aggregate # of released containers") MutableCounterLong aggregateContainersReleased;
   @Metric("Available memory in MB") MutableGaugeInt availableMB;
   @Metric("Available CPU in virtual cores") MutableGaugeInt availableVCores;
+  @Metric("Available DISK count") MutableGaugeDouble availableDisks;
   @Metric("Pending memory allocation in MB") MutableGaugeInt pendingMB;
   @Metric("Pending CPU allocation in virtual cores") MutableGaugeInt pendingVCores;
+  @Metric("Pending DISK count") MutableGaugeDouble pendingDisks;
   @Metric("# of pending containers") MutableGaugeInt pendingContainers;
   @Metric("# of reserved memory in MB") MutableGaugeInt reservedMB;
   @Metric("Reserved CPU in virtual cores") MutableGaugeInt reservedVCores;
+  @Metric("Reserved DISK count") MutableGaugeDouble reservedDisks;
   @Metric("# of reserved containers") MutableGaugeInt reservedContainers;
   @Metric("# of active users") MutableGaugeInt activeUsers;
   @Metric("# of active applications") MutableGaugeInt activeApplications;
@@ -319,6 +324,7 @@ public class QueueMetrics implements MetricsSource {
   public void setAvailableResourcesToQueue(Resource limit) {
     availableMB.set(limit.getMemory());
     availableVCores.set(limit.getVirtualCores());
+    availableDisks.set(limit.getDisks());
   }
 
   /**
@@ -356,6 +362,7 @@ public class QueueMetrics implements MetricsSource {
     pendingContainers.incr(containers);
     pendingMB.incr(res.getMemory() * containers);
     pendingVCores.incr(res.getVirtualCores() * containers);
+    pendingDisks.incr(res.getDisks() * containers);
   }
 
   public void decrPendingResources(String user, int containers, Resource res) {
@@ -373,6 +380,7 @@ public class QueueMetrics implements MetricsSource {
     pendingContainers.decr(containers);
     pendingMB.decr(res.getMemory() * containers);
     pendingVCores.decr(res.getVirtualCores() * containers);
+    pendingDisks.decr(res.getDisks() * containers);
   }
 
   public void allocateResources(String user, int containers, Resource res,
@@ -381,6 +389,7 @@ public class QueueMetrics implements MetricsSource {
     aggregateContainersAllocated.incr(containers);
     allocatedMB.incr(res.getMemory() * containers);
     allocatedVCores.incr(res.getVirtualCores() * containers);
+    allocatedDisks.incr(res.getDisks() * containers);
     if (decrPending) {
       _decrPendingResources(containers, res);
     }
@@ -398,6 +407,7 @@ public class QueueMetrics implements MetricsSource {
     aggregateContainersReleased.incr(containers);
     allocatedMB.decr(res.getMemory() * containers);
     allocatedVCores.decr(res.getVirtualCores() * containers);
+    allocatedDisks.decr(res.getDisks() * containers);
     QueueMetrics userMetrics = getUserMetrics(user);
     if (userMetrics != null) {
       userMetrics.releaseResources(user, containers, res);
@@ -411,6 +421,7 @@ public class QueueMetrics implements MetricsSource {
     reservedContainers.incr();
     reservedMB.incr(res.getMemory());
     reservedVCores.incr(res.getVirtualCores());
+    reservedDisks.incr(res.getDisks());
     QueueMetrics userMetrics = getUserMetrics(user);
     if (userMetrics != null) {
       userMetrics.reserveResource(user, res);
@@ -424,6 +435,7 @@ public class QueueMetrics implements MetricsSource {
     reservedContainers.decr();
     reservedMB.decr(res.getMemory());
     reservedVCores.decr(res.getVirtualCores());
+    reservedDisks.decr(res.getDisks());
     QueueMetrics userMetrics = getUserMetrics(user);
     if (userMetrics != null) {
       userMetrics.unreserveResource(user, res);
@@ -488,7 +500,7 @@ public class QueueMetrics implements MetricsSource {
   }
   
   public Resource getAllocatedResources() {
-    return BuilderUtils.newResource(allocatedMB.value(), allocatedVCores.value());
+    return BuilderUtils.newResource(allocatedMB.value(), allocatedVCores.value(), allocatedDisks.value());
   }
 
   public int getAllocatedMB() {
@@ -497,6 +509,10 @@ public class QueueMetrics implements MetricsSource {
   
   public int getAllocatedVirtualCores() {
     return allocatedVCores.value();
+  }
+
+  public double getAllocatedDisks() {
+    return allocatedDisks.value();
   }
 
   public int getAllocatedContainers() {
@@ -511,12 +527,20 @@ public class QueueMetrics implements MetricsSource {
     return availableVCores.value();
   }
 
+  public double getAvailableDisks() {
+    return availableDisks.value();
+  }
+
   public int getPendingMB() {
     return pendingMB.value();
   }
   
   public int getPendingVirtualCores() {
     return pendingVCores.value();
+  }
+
+  public double getPendingDisks() {
+    return pendingDisks.value();
   }
 
   public int getPendingContainers() {
@@ -529,6 +553,10 @@ public class QueueMetrics implements MetricsSource {
   
   public int getReservedVirtualCores() {
     return reservedVCores.value();
+  }
+
+  public double getReservedDisks() {
+    return reservedDisks.value();
   }
 
   public int getReservedContainers() {

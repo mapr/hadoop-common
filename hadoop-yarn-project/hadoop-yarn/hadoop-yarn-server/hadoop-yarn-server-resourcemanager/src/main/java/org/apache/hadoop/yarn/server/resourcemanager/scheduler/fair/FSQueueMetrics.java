@@ -24,6 +24,7 @@ import org.apache.hadoop.metrics2.annotation.Metric;
 import org.apache.hadoop.metrics2.annotation.Metrics;
 import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 import org.apache.hadoop.metrics2.lib.MutableGaugeInt;
+import org.apache.hadoop.metrics2.lib.MutableGaugeDouble;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.QueueMetrics;
@@ -33,12 +34,16 @@ public class FSQueueMetrics extends QueueMetrics {
 
   @Metric("Fair share of memory in MB") MutableGaugeInt fairShareMB;
   @Metric("Fair share of CPU in vcores") MutableGaugeInt fairShareVCores;
+  @Metric("Fair share of Disk") MutableGaugeDouble fairShareDisks;
   @Metric("Steady fair share of memory in MB") MutableGaugeInt steadyFairShareMB;
   @Metric("Steady fair share of CPU in vcores") MutableGaugeInt steadyFairShareVCores;
+  @Metric("Steady fair share of Disk") MutableGaugeDouble steadyFairShareDisks;
   @Metric("Minimum share of memory in MB") MutableGaugeInt minShareMB;
   @Metric("Minimum share of CPU in vcores") MutableGaugeInt minShareVCores;
+  @Metric("Minimum share of Disks") MutableGaugeDouble minShareDisks;  
   @Metric("Maximum share of memory in MB") MutableGaugeInt maxShareMB;
   @Metric("Maximum share of CPU in vcores") MutableGaugeInt maxShareVCores;
+  @Metric("Maximum share of Disks") MutableGaugeDouble maxShareDisks;
   
   FSQueueMetrics(MetricsSystem ms, String queueName, Queue parent,
       boolean enableUserMetrics, Configuration conf) {
@@ -48,6 +53,7 @@ public class FSQueueMetrics extends QueueMetrics {
   public void setFairShare(Resource resource) {
     fairShareMB.set(resource.getMemory());
     fairShareVCores.set(resource.getVirtualCores());
+    fairShareDisks.set(resource.getDisks());
   }
   
   public int getFairShareMB() {
@@ -58,9 +64,14 @@ public class FSQueueMetrics extends QueueMetrics {
     return fairShareVCores.value();
   }
 
+  public double getFairShareDisks() {
+    return fairShareDisks.value();
+  }
+
   public void setSteadyFairShare(Resource resource) {
     steadyFairShareMB.set(resource.getMemory());
     steadyFairShareVCores.set(resource.getVirtualCores());
+    steadyFairShareDisks.set(resource.getDisks());
   }
 
   public int getSteadyFairShareMB() {
@@ -71,9 +82,14 @@ public class FSQueueMetrics extends QueueMetrics {
     return steadyFairShareVCores.value();
   }
 
+  public double getSteadyFairShareDisks() {
+    return steadyFairShareDisks.value();
+  }
+
   public void setMinShare(Resource resource) {
     minShareMB.set(resource.getMemory());
     minShareVCores.set(resource.getVirtualCores());
+    minShareDisks.set(resource.getDisks());
   }
   
   public int getMinShareMB() {
@@ -83,10 +99,15 @@ public class FSQueueMetrics extends QueueMetrics {
   public int getMinShareVirtualCores() {
     return minShareVCores.value();
   }
+
+  public double getMinShareDisks() {
+    return minShareDisks.value();
+  }
   
   public void setMaxShare(Resource resource) {
     maxShareMB.set(resource.getMemory());
     maxShareVCores.set(resource.getVirtualCores());
+    maxShareDisks.set(resource.getDisks());
   }
   
   public int getMaxShareMB() {
@@ -96,7 +117,11 @@ public class FSQueueMetrics extends QueueMetrics {
   public int getMaxShareVirtualCores() {
     return maxShareVCores.value();
   }
-  
+
+  public double getMaxShareDisks() {
+    return maxShareDisks.value();
+  }
+
   public synchronized 
   static FSQueueMetrics forQueue(String queueName, Queue parent,
       boolean enableUserMetrics, Configuration conf) {
