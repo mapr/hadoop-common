@@ -244,7 +244,7 @@ public class AuthenticationFilter implements Filter {
     }
 
     cookieDomain = config.getProperty(COOKIE_DOMAIN, domainName);
-    cookiePath = config.getProperty(COOKIE_PATH, null);
+    cookiePath = config.getProperty(COOKIE_PATH, "/");
   }
 
   protected void initializeAuthHandler(String authHandlerClassName, FilterConfig filterConfig)
