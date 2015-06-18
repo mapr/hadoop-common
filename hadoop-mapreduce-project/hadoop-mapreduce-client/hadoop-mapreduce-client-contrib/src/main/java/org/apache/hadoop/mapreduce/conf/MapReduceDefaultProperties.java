@@ -93,7 +93,7 @@ public class MapReduceDefaultProperties extends Properties {
     props.put(MRJobConfig.REDUCE_CPU_VCORES, "1");
     props.put(MRJobConfig.REDUCE_DISK, "1.33");
     props.put(MRJobConfig.REDUCE_JAVA_OPTS, "-Xmx2560m");
-    props.put(MRJobConfig.COMPLETED_MAPS_FOR_REDUCE_SLOWSTART, "0.95");
+    props.put(MRJobConfig.COMPLETED_MAPS_FOR_REDUCE_SLOWSTART, "1.00");
     props.put(MRJobConfig.SHUFFLE_PARALLEL_COPIES, "12");
   }
   
