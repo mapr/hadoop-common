@@ -841,7 +841,12 @@ public class RMAppAttemptImpl implements RMAppAttempt, Recoverable {
 
     Credentials credentials = attemptState.getAppAttemptTokens();
     setMasterContainer(attemptState.getMasterContainer());
-    recoverAppAttemptCredentials(credentials, attemptState.getState());
+    if (state.getAMRMTokenSecretManagerState() != null ) {
+      recoverAppAttemptCredentials(credentials, attemptState.getState());
+    } else {
+      LOG.warn("AMRMTokenSecretManagerState is null. Will not be able to recover credentials for: " + 
+                applicationAttemptId);
+    }
     this.recoveredFinalState = attemptState.getState();
     this.originalTrackingUrl = attemptState.getFinalTrackingUrl();
     this.finalStatus = attemptState.getFinalApplicationStatus();
