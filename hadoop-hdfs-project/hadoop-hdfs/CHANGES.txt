@@ -14,6 +14,9 @@ Release 2.8.0 - UNRELEASED
     HDFS-8100. Refactor DFSClient.Conf to a standalone class and separates
     short-circuit related conf to ShortCirc
 
+    HDFS-6564. Use slf4j instead of common-logging in hdfs-client.
+    (Rakesh R via wheat9)
+
   OPTIMIZATIONS
 
     HDFS-8026. Trace FSOutputSummer#writeChecksumChunks rather than
@@ -2906,7 +2909,7 @@ Release 2.4.0 - 2014-04-07
 
     HDFS-5726. Fix compilation error in AbstractINodeDiff for JDK7. (jing9)
 
-    HDFS-5768. Consolidate the serialization code in DelegationTokenSecretManager 
+    HDFS-5768. Consolidate the serialization code in DelegationTokenSecretManager
     (Haohui Mai via brandonli)
 
     HDFS-5775. Consolidate the code for serialization in CacheManager
@@ -3253,7 +3256,7 @@ Release 2.4.0 - 2014-04-07
 
     HDFS-6127. WebHDFS tokens cannot be renewed in HA setup. (wheat9)
 
-    HDFS-6131. Move HDFSHighAvailabilityWithNFS.apt.vm and 
+    HDFS-6131. Move HDFSHighAvailabilityWithNFS.apt.vm and
     HDFSHighAvailabilityWithQJM.apt.vm from Yarn to HDFS. (jing9)
 
     HDFS-6140. WebHDFS cannot create a file with spaces in the name after HA
@@ -3958,7 +3961,7 @@ Release 2.3.0 - 2014-02-18
     HDFS-5519. COMMIT handler should update the commit status after sync
     (brandonli)
 
-    HDFS-5372. In FSNamesystem, hasReadLock() returns false if the current 
+    HDFS-5372. In FSNamesystem, hasReadLock() returns false if the current
     thread holds the write lock (Vinaykumar B via umamahesh)
 
     HDFS-4516. Client crash after block allocation and NN switch before lease recovery for 
@@ -4630,7 +4633,7 @@ Release 2.1.1-beta - 2013-09-23
     HDFS-2933. Improve DataNode Web UI Index Page. (Vivek Ganesan via
     Arpit Agarwal)
 
-    HDFS-5111. Remove duplicated error message for snapshot commands when 
+    HDFS-5111. Remove duplicated error message for snapshot commands when
     processing invalid arguments. (jing9)
 
     HDFS-5045. Add more unit tests for retry cache to cover all AtMostOnce 
@@ -4777,7 +4780,7 @@ Release 2.1.0-beta - 2013-08-22
     HADOOP-8562. Enhancements to support Hadoop on Windows Server and Windows
     Azure environments. (See breakdown of tasks below for subtasks and
     contributors)
-    
+
     HDFS-3601. Add BlockPlacementPolicyWithNodeGroup to support block placement
     with 4-layer network topology.  (Junping Du via szetszwo)
 
@@ -4900,7 +4903,7 @@ Release 2.1.0-beta - 2013-08-22
 
     HDFS-2857. Cleanup BlockInfo class. (suresh)
 
-    HDFS-3009. Remove duplicate code in DFSClient#isLocalAddress by using 
+    HDFS-3009. Remove duplicate code in DFSClient#isLocalAddress by using
     NetUtils. (Hari Mankude via suresh)
 
     HDFS-4914. Use DFSClient.Conf instead of Configuration.  (szetszwo)
@@ -4961,7 +4964,7 @@ Release 2.1.0-beta - 2013-08-22
 
     HDFS-3934. duplicative dfs_hosts entries handled wrong. (Colin Patrick
     McCabe)
-    
+
     HDFS-4470. Several HDFS tests attempt file operations on invalid HDFS
     paths when running on Windows. (Chris Nauroth via suresh)
 
@@ -7128,7 +7131,7 @@ Release 2.0.0-alpha - 05-23-2012
     HDFS-2992. Edit log failure trace should include transaction ID of
     error.  (Colin Patrick McCabe via eli)
 
-    HDFS-3030. Remove getProtocolVersion and getProtocolSignature from 
+    HDFS-3030. Remove getProtocolVersion and getProtocolSignature from
     translators. (jitendra)
 
     HDFS-2158. Add JournalSet to manage the set of journals. (jitendra)
@@ -7314,7 +7317,7 @@ Release 2.0.0-alpha - 05-23-2012
     HDFS-3378. Remove DFS_NAMENODE_SECONDARY_HTTPS_PORT_KEY and DEFAULT. (eli)
 
   BUG FIXES
- 
+
     HDFS-2481. Unknown protocol: org.apache.hadoop.hdfs.protocol.ClientProtocol.
     (sanjay)
 
@@ -7415,8 +7418,8 @@ Release 2.0.0-alpha - 05-23-2012
     HDFS-3214. InterDatanodeProtocolServerSideTranslatorPB doesn't handle
     null response from initReplicaRecovery (todd)
 
-    HDFS-3119. Overreplicated block is not deleted even after the replication 
-    factor is reduced after sync follwed by closing that file. (Ashish Singhi 
+    HDFS-3119. Overreplicated block is not deleted even after the replication
+    factor is reduced after sync follwed by closing that file. (Ashish Singhi
     via umamahesh)
 
     HDFS-3234. Accidentally left log message in GetConf after HDFS-3226 (todd)
@@ -7465,7 +7468,7 @@ Release 2.0.0-alpha - 05-23-2012
     HDFS-3319. Change DFSOutputStream to not to start a thread in constructors.
     (szetszwo)
 
-    HDFS-3222. DFSInputStream#openInfo should not silently get the length as 0 
+    HDFS-3222. DFSInputStream#openInfo should not silently get the length as 0
     when locations length is zero for last partial block. (umamahesh)
 
     HDFS-3181. Fix a test case in TestLeaseRecovery2.  (szetszwo)
@@ -7476,13 +7479,13 @@ Release 2.0.0-alpha - 05-23-2012
     HDFS-3326. Append enabled log message uses the wrong variable.
     (Matthew Jacobs via eli)
 
-    HDFS-3275. Skip format for non-file based directories. 
+    HDFS-3275. Skip format for non-file based directories.
     (Amith D K via umamahesh)
 
     HDFS-3286. When the threshold value for balancer is zero, unexpected output is displayed.
     (Ashish Singhi via umamahesh)
 
-    HDFS-3336. hdfs launcher script will be better off not special casing 
+    HDFS-3336. hdfs launcher script will be better off not special casing
     namenode command with regards to hadoop.security.logger (rvs via tucu)
 
     HDFS-3330. If GetImageServlet throws an Error or RTE, response should not
@@ -7491,7 +7494,7 @@ Release 2.0.0-alpha - 05-23-2012
     HDFS-3351. NameNode#initializeGenericKeys should always set fs.defaultFS
     regardless of whether HA or Federation is enabled. (atm)
 
-    HDFS-3332. NullPointerException in DN when directoryscanner is trying to 
+    HDFS-3332. NullPointerException in DN when directoryscanner is trying to
     report bad blocks. (Amith D K via umamahesh)
 
     HDFS-3359. DFSClient.close should close cached sockets. (todd)
@@ -7897,7 +7900,7 @@ Release 0.23.8 - 2013-06-05
 
   IMPROVEMENTS
 
-    HDFS-4714. Log short messages in Namenode RPC server for exceptions 
+    HDFS-4714. Log short messages in Namenode RPC server for exceptions
     meant for clients. (kihwal)
 
   OPTIMIZATIONS
@@ -8130,10 +8133,10 @@ Release 0.23.2 - UNRELEASED
     HDFS-2931. Switch DataNode's BlockVolumeChoosingPolicy to private-audience.
     (harsh via szetszwo)
 
-    HDFS-2655. BlockReaderLocal#skip performs unnecessary IO. (Brandon Li 
+    HDFS-2655. BlockReaderLocal#skip performs unnecessary IO. (Brandon Li
     via jitendra)
 
-    HDFS-2725. hdfs script usage information is missing the information 
+    HDFS-2725. hdfs script usage information is missing the information
     about "dfs" command (Prashant Sharma via stevel)
 
     HDFS-2907.  Add a conf property dfs.datanode.fsdataset.factory to make
@@ -8281,12 +8284,12 @@ Release 0.23.1 - 2012-02-17
 
     HDFS-2729. Update BlockManager's comments regarding the invalid block
     set (harsh)
- 
+
     HDFS-2726. Fix a logging issue under DFSClient's createBlockOutputStream
     method (harsh)
 
     HDFS-554. Use System.arraycopy in BlockInfo.ensureCapacity. (harsh)
- 
+
     HDFS-1314. Make dfs.blocksize accept size-indicating prefixes.
     (Sho Shimauchi via harsh)
 
@@ -8307,7 +8310,7 @@ Release 0.23.1 - 2012-02-17
 
     HDFS-2397. Undeprecate SecondaryNameNode. (eli)
 
-    HDFS-2814. NamenodeMXBean does not account for svn revision in the version 
+    HDFS-2814. NamenodeMXBean does not account for svn revision in the version
     information. (Hitesh Shah via jitendra)
 
     HDFS-2784. Update hftp and hdfs for host-based token support.
@@ -8398,7 +8401,7 @@ Release 0.23.1 - 2012-02-17
     HDFS-2705. HttpFS server should check that upload requests have correct 
     content-type. (tucu)
 
-    HDFS-2707. HttpFS should read the hadoop-auth secret from a file instead 
+    HDFS-2707. HttpFS should read the hadoop-auth secret from a file instead
     inline from the configuration. (tucu)
 
     HDFS-2790. FSNamesystem.setTimes throws exception with wrong
@@ -9242,7 +9245,7 @@ Release 0.23.0 - 2011-11-01
     HDFS-2344. Fix the TestOfflineEditsViewer test failure in 0.23 branch.
     (Uma Maheswara Rao G via mattf)
 
-    HDFS-2347. Fix checkpointTxnCount's comment about editlog size. 
+    HDFS-2347. Fix checkpointTxnCount's comment about editlog size.
     (Uma Maheswara Rao G via mattf)
 
     HDFS-2011. Removal and restoration of storage directories on checkpointing
@@ -9543,7 +9546,7 @@ Release 0.23.0 - 2011-11-01
     (todd)
 
     HDFS-2289. Ensure jsvc is bundled with the HDFS distribution artifact.
-    (Alejandro Abdelnur via acmurthy) 
+    (Alejandro Abdelnur via acmurthy)
 
     HDFS-2314. MRV1 test compilation broken after HDFS-2197 (todd)
 
@@ -9770,7 +9773,7 @@ Release 0.23.0 - 2011-11-01
 
     HDFS-2170. Address remaining TODOs in HDFS-1073 branch. (todd)
 
-    HDFS-2172. Address findbugs and javadoc warnings in HDFS-1073 branch. 
+    HDFS-2172. Address findbugs and javadoc warnings in HDFS-1073 branch.
                (todd)
 
     HDFS-2445. Ensure failed tests exit with proper error code. (Jonathan 
@@ -10917,7 +10920,7 @@ Release 0.21.0 - 2010-08-13
     HDFS-1012. hdfsproxy: Support for fully qualified HDFS path in addition to
     simple unqualified path.  (Srikanth Sundarrajan via szetszwo)
 
-    HDFS-933. Namenode should issue a delegation token only for kerberos 
+    HDFS-933. Namenode should issue a delegation token only for kerberos
     authenticated clients.(jnp via boryas)
 
     HDFS-1087. Modify audit log to use a StringBuilder rather than a Formatter.

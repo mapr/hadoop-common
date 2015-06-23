@@ -23,8 +23,6 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.DelegationTokenRenewer;
@@ -39,6 +37,8 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.TokenRenewer;
 import org.apache.hadoop.security.token.delegation.AbstractDelegationTokenSelector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -123,11 +123,11 @@ final class TokenAspect<T extends FileSystem & Renewable> {
   private final DTSelecorByKind dtSelector;
   private final T fs;
   private boolean hasInitedToken;
-  private final Log LOG;
+  private final Logger LOG;
   private final Text serviceName;
 
   TokenAspect(T fs, final Text serviceName, final Text kind) {
-    this.LOG = LogFactory.getLog(fs.getClass());
+    this.LOG = LoggerFactory.getLogger(fs.getClass());
     this.fs = fs;
     this.dtSelector = new DTSelecorByKind(kind);
     this.serviceName = serviceName;
@@ -142,7 +142,9 @@ final class TokenAspect<T extends FileSystem & Renewable> {
       if (token != null) {
         fs.setDelegationToken(token);
         addRenewAction(fs);
-        LOG.debug("Created new DT for " + token.getService());
+        if (LOG.isDebugEnabled()) {
+          LOG.debug("Created new DT for {}", token.getService());
+        }
       }
       hasInitedToken = true;
     }
@@ -155,7 +157,9 @@ final class TokenAspect<T extends FileSystem & Renewable> {
   synchronized void initDelegationToken(UserGroupInformation ugi) {
     Token<?> token = selectDelegationToken(ugi);
     if (token != null) {
-      LOG.debug("Found existing DT for " + token.getService());
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("Found existing DT for {}", token.getService());
+      }
       fs.setDelegationToken(token);
       hasInitedToken = true;
     }

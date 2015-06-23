@@ -36,8 +36,6 @@ import java.util.StringTokenizer;
 
 import javax.ws.rs.core.MediaType;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
@@ -80,6 +78,8 @@ import org.apache.hadoop.security.token.TokenSelector;
 import org.apache.hadoop.security.token.delegation.AbstractDelegationTokenSelector;
 import org.apache.hadoop.util.Progressable;
 import org.apache.hadoop.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
@@ -89,8 +89,9 @@ import com.google.common.collect.Lists;
 /** A FileSystem for HDFS over the web. */
 public class WebHdfsFileSystem extends FileSystem
     implements DelegationTokenRenewer.Renewable, TokenAspect.TokenManagementDelegator {
-  public static final Log LOG = LogFactory.getLog(WebHdfsFileSystem.class);
-  /** File System URI: {SCHEME}://namenode:port/path/to/file */
+  public static final Logger LOG = LoggerFactory
+          .getLogger(WebHdfsFileSystem.class);
+   /** File System URI: {SCHEME}://namenode:port/path/to/file */
   public static final String SCHEME = "webhdfs";
   /** WebHdfs version. */
   public static final int VERSION = 1;
@@ -211,7 +212,7 @@ public class WebHdfsFileSystem extends FileSystem
   }
 
   /** Is WebHDFS enabled in conf? */
-  public static boolean isEnabled(final Configuration conf, final Log log) {
+  public static boolean isEnabled(final Configuration conf) {
     final boolean b = conf.getBoolean(DFSConfigKeys.DFS_WEBHDFS_ENABLED_KEY,
         DFSConfigKeys.DFS_WEBHDFS_ENABLED_DEFAULT);
     return b;
@@ -231,12 +232,12 @@ public class WebHdfsFileSystem extends FileSystem
         // refetch tokens.  even if ugi has credentials, don't attempt
         // to get another token to match hdfs/rpc behavior
         if (token != null) {
-          LOG.debug("Using UGI token: " + token);
-          canRefreshDelegationToken = false; 
+          LOG.debug("Using UGI token: {}", token);
+          canRefreshDelegationToken = false;
         } else {
           token = getDelegationToken(null);
           if (token != null) {
-            LOG.debug("Fetched new token: " + token);
+            LOG.debug("Fetched new token: {}", token);
           } else { // security is disabled
             canRefreshDelegationToken = false;
           }
@@ -257,7 +258,9 @@ public class WebHdfsFileSystem extends FileSystem
     boolean replaced = false;
     if (canRefreshDelegationToken) {
       Token<?> token = getDelegationToken(null);
-      LOG.debug("Replaced expired token: " + token);
+      if(LOG.isDebugEnabled()) {
+        LOG.debug("Replaced expired token: " + token);
+      }
       setDelegationToken(token);
       replaced = (token != null);
     }
@@ -275,7 +278,7 @@ public class WebHdfsFileSystem extends FileSystem
   public URI getUri() {
     return this.uri;
   }
-  
+
   @Override
   protected URI canonicalizeUri(URI uri) {
     return NetUtils.getCanonicalUri(uri, getDefaultPort());
@@ -379,10 +382,10 @@ public class WebHdfsFileSystem extends FileSystem
 
   /**
    * Covert an exception to an IOException.
-   * 
+   *
    * For a non-IOException, wrap it with IOException.
    * For a RemoteException, unwrap it.
-   * For an IOException which is not a RemoteException, return it. 
+   * For an IOException which is not a RemoteException, return it.
    */
   private static IOException toIOException(Exception e) {
     if (!(e instanceof IOException)) {
@@ -421,7 +424,7 @@ public class WebHdfsFileSystem extends FileSystem
     final URL url = new URL(getTransportScheme(), nnAddr.getHostName(),
           nnAddr.getPort(), path + '?' + query);
     if (LOG.isTraceEnabled()) {
-      LOG.trace("url=" + url);
+      LOG.trace("url={}", url);
     }
     return url;
   }
@@ -458,7 +461,7 @@ public class WebHdfsFileSystem extends FileSystem
         + Param.toSortedString("&", parameters);
     final URL url = getNamenodeURL(path, query);
     if (LOG.isTraceEnabled()) {
-      LOG.trace("url=" + url);
+      LOG.trace("url={}", url);
     }
     return url;
   }
@@ -649,9 +652,9 @@ public class WebHdfsFileSystem extends FileSystem
               a.action == RetryPolicy.RetryAction.RetryDecision.FAILOVER_AND_RETRY;
 
           if (isRetry || isFailoverAndRetry) {
-            LOG.info("Retrying connect to namenode: " + nnAddr
-                + ". Already tried " + retry + " time(s); retry policy is "
-                + retryPolicy + ", delay " + a.delayMillis + "ms.");
+            LOG.info("Retrying connect to namenode: {}. Already tried {}"
+                + " time(s); retry policy is {}, delay {}ms.", nnAddr, retry,
+                retryPolicy, a.delayMillis);
 
             if (isFailoverAndRetry) {
               resetStateToFailOver();
@@ -748,7 +751,7 @@ public class WebHdfsFileSystem extends FileSystem
         final IOException ioe =
             new IOException("Response decoding failure: "+e.toString(), e);
         if (LOG.isDebugEnabled()) {
-          LOG.debug(ioe);
+          LOG.debug("Response decoding failure: {}", e.toString(), e);
         }
         throw ioe;
       } finally {
@@ -1203,7 +1206,9 @@ public class WebHdfsFileSystem extends FileSystem
         cancelDelegationToken(delegationToken);
       }
     } catch (IOException ioe) {
-      LOG.debug("Token cancel failed: "+ioe);
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("Token cancel failed: ", ioe);
+      }
     } finally {
       super.close();
     }
@@ -1239,7 +1244,7 @@ public class WebHdfsFileSystem extends FileSystem
       final URL offsetUrl = offset == 0L? url
           : new URL(url + "&" + new OffsetParam(offset));
       return new URLRunner(GetOpParam.Op.OPEN, offsetUrl, resolved).run();
-    }  
+    }
   }
 
   private static final String OFFSET_PARAM_PREFIX = OffsetParam.NAME + "=";
@@ -1376,7 +1381,7 @@ public class WebHdfsFileSystem extends FileSystem
         new TokenArgumentParam(token.encodeToUrlString())
     ).run();
   }
-  
+
   @Override
   public BlockLocation[] getFileBlockLocations(final FileStatus status,
       final long offset, final long length) throws IOException {
@@ -1387,7 +1392,7 @@ public class WebHdfsFileSystem extends FileSystem
   }
 
   @Override
-  public BlockLocation[] getFileBlockLocations(final Path p, 
+  public BlockLocation[] getFileBlockLocations(final Path p,
       final long offset, final long length) throws IOException {
     statistics.incrementReadOps(1);
 
@@ -1416,7 +1421,7 @@ public class WebHdfsFileSystem extends FileSystem
     return new FsPathResponseRunner<ContentSummary>(op, p) {
       @Override
       ContentSummary decodeResponse(Map<?,?> json) {
-        return JsonUtil.toContentSummary(json);        
+        return JsonUtil.toContentSummary(json);
       }
     }.run();
   }
@@ -1425,7 +1430,7 @@ public class WebHdfsFileSystem extends FileSystem
   public MD5MD5CRC32FileChecksum getFileChecksum(final Path p
       ) throws IOException {
     statistics.incrementReadOps(1);
-  
+
     final HttpOpParam.Op op = GetOpParam.Op.GETFILECHECKSUM;
     return new FsPathResponseRunner<MD5MD5CRC32FileChecksum>(op, p) {
       @Override
