@@ -92,6 +92,9 @@ Release 2.7.3 - UNRELEASED
     YARN-4344. NMs reconnecting with changed capabilities can lead to wrong
     cluster resource calculations (Varun Vasudev via jlowe)
 
+    YARN-2871. TestRMRestart#testRMRestartGetApplicationList sometime fails in trunk.
+    (zhihai xu via xgong)
+
 Release 2.7.1 - UNRELEASED
 
   INCOMPATIBLE CHANGES
