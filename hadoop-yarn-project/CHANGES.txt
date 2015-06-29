@@ -38,6 +38,9 @@ Release 2.8.0 - UNRELEASED
     YARN-5197. RM leaks containers if running container disappears from
     node update. Contributed by Jason Lowe.
 
+    YARN-3695. ServerProxy (NMProxy, etc.) shouldn't retry forever for non
+    network exception. (Raju Bairishetti via jianhe)
+
 Release 2.7.3 - UNRELEASED
 
   INCOMPATIBLE CHANGES
