@@ -27,6 +27,9 @@ HADOOP-12682. Fix TestKMS#testKMSRestart* failure. Contributed by Wei-Chiu Chuan
     HADOOP-11827. Speed-up distcp buildListing() using threadpool
     (Zoran Dimitrijevic via raviprak)
 
+    HADOOP-10798. globStatus() should always return a sorted list of files
+    (cmccabe)
+
     HADOOP-11934. Use of JavaKeyStoreProvider in LdapGroupsMapping causes
     infinite loop. (Larry McCay via cnauroth)
 Release 2.7.0 - 2015-04-20
