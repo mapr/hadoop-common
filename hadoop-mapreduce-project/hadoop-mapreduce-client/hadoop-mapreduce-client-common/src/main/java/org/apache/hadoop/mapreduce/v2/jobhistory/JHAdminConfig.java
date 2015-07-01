@@ -223,5 +223,13 @@ public class JHAdminConfig {
    * conflicts.
    */
   public static boolean DEFAULT_MR_HISTORY_MINICLUSTER_FIXED_PORTS = false;
+  
+  /**
+   * Settings for .jhist file format.
+   */
+  public static final String MR_HS_JHIST_FORMAT =
+      MR_HISTORY_PREFIX + "jhist.format";
+  public static final String DEFAULT_MR_HS_JHIST_FORMAT =
+      "json";
 
 }
