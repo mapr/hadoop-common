@@ -10,6 +10,9 @@ HADOOP-12682. Fix TestKMS#testKMSRestart* failure. Contributed by Wei-Chiu Chuan
 
     HADOOP-12304. Applications using FileContext fail with the default file
     system configured to be wasb/s3/etc. (cnauroth)
+    
+    HADOOP-12045. Enable LocalFileSystem#setTimes to change atime.
+    (Kazuho Fujii via cnauroth)
 
     HADOOP-11859. PseudoAuthenticationHandler fails with httpcomponents v4.4.
     (Eugene Koifman via jitendra)
