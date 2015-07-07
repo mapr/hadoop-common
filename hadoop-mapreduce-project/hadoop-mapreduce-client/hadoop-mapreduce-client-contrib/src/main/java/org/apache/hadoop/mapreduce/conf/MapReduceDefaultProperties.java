@@ -34,15 +34,16 @@ import java.util.Map;
 import java.util.Properties;
 
 public class MapReduceDefaultProperties extends Properties {
+
+  public static final String CLUSTER_NAME_PREFIX = "cluster.name.prefix";
   private static final Map<String, String> props =
     new HashMap<String, String>();
 
   static { // MapReduce framework related defaults
     props.put(MRConfig.FRAMEWORK_NAME, MRConfig.YARN_FRAMEWORK_NAME);
 
-    // TODO Refer to YarnDefaultProperties.DEFAULT_RM_STAGING_DIR once this
-    // file is moved out to MapR code base.
-    props.put(MRJobConfig.MR_AM_STAGING_DIR, "${fs.defaultFS}/var/mapr/cluster/yarn/rm/staging");
+    props.put(MRJobConfig.MR_AM_STAGING_DIR, "${yarn.resourcemanager.dir}/staging");
+
   }
 
   static { // Direct shuffle configuration
@@ -55,7 +56,15 @@ public class MapReduceDefaultProperties extends Properties {
     props.put(MRConfig.MAPRED_LOCAL_MAP_OUTPUT, "false");
     props.put(MRJobConfig.MAPREDUCE_JOB_SHUFFLE_PROVIDER_SERVICES, "mapr_direct_shuffle");
 
-    props.put("mapr.mapred.localvolume.root.dir.name", "nodeManager");
+    final String name; 
+    if ( System.getProperty(CLUSTER_NAME_PREFIX) != null ) {
+      props.put(CLUSTER_NAME_PREFIX, System.getProperty(CLUSTER_NAME_PREFIX));
+      name = System.getProperty(CLUSTER_NAME_PREFIX) + "/nodeManager";
+    } else {
+      name = "nodeManager";
+    } 
+    props.put("mapr.mapred.localvolume.root.dir.name", name); 
+  
     props.put("mapr.localoutput.dir", "output");
     props.put("mapr.localspill.dir", "spill");
 
