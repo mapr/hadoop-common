@@ -60,6 +60,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.server.AuthenticationFilter;
 import org.apache.hadoop.security.authorize.AccessControlList;
 import org.apache.hadoop.security.ssl.SSLFactory;
+import org.apache.hadoop.security.ssl.SslSocketConnectorSecure;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.Shell;
 import org.mortbay.io.Buffer;
@@ -292,7 +293,8 @@ public class HttpServer implements FilterContainer {
 
   public static SslSocketConnector createSslSocketConnector(Configuration conf, SSLFactory factory) throws IOException {
     final SSLFactory sslFactory = factory != null ? factory : createSslFactory(conf);
-    SslSocketConnector sslSocketConnector = new SslSocketConnector() {
+      // Disabling SSLV3 for Jetty
+      SslSocketConnector sslSocketConnector = new SslSocketConnectorSecure() {
       @Override
       protected SSLServerSocketFactory createFactory() throws Exception {
         return sslFactory.createSSLServerSocketFactory();
