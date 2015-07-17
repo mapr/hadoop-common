@@ -23,6 +23,9 @@ Release 2.7.1 - UNRELEASED
 
     YARN-3697. FairScheduler: ContinuousSchedulingThread can fail to shutdown.
     (Zhihai Xu via kasha)
+    
+    YARN-3535. Scheduler must re-request container resources when RMContainer transitions
+    from ALLOCATED to KILLED. (rohithsharma and peng.zhang via asuresh)
 
     YARN-4180. AMLauncher does not retry on failures when talking to NM.
     (adhoot)
