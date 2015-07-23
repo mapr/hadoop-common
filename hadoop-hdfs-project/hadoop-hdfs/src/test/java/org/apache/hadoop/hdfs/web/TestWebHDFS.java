@@ -20,6 +20,7 @@ package org.apache.hadoop.hdfs.web;
 
 import static org.junit.Assert.fail;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -565,6 +566,45 @@ public class TestWebHDFS {
       if (cluster != null) {
         cluster.shutdown();
       }
+    }
+  }
+
+  @Test
+  public void testWebHdfsPread() throws Exception {
+    final Configuration conf = WebHdfsTestUtil.createConf();
+    MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1)
+        .build();
+    byte[] content = new byte[1024];
+    RANDOM.nextBytes(content);
+    final Path foo = new Path("/foo");
+    FSDataInputStream in = null;
+    try {
+      final WebHdfsFileSystem fs = WebHdfsTestUtil.getWebHdfsFileSystem(conf,
+          WebHdfsFileSystem.SCHEME);
+      try (OutputStream os = fs.create(foo)) {
+        os.write(content);
+      }
+
+      // pread
+      in = fs.open(foo, 1024);
+      byte[] buf = new byte[1024];
+      try {
+        in.readFully(1020, buf, 0, 5);
+        Assert.fail("EOF expected");
+      } catch (EOFException ignored) {}
+
+      // mix pread with stateful read
+      int length = in.read(buf, 0, 512);
+      in.readFully(100, new byte[1024], 0, 100);
+      int preadLen = in.read(200, new byte[1024], 0, 200);
+      Assert.assertTrue(preadLen > 0);
+      IOUtils.readFully(in, buf, length, 1024 - length);
+      Assert.assertArrayEquals(content, buf);
+    } finally {
+      if (in != null) {
+        in.close();
+      }
+      cluster.shutdown();
     }
   }
 }

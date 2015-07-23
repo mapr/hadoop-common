@@ -1,6 +1,6 @@
 Hadoop HDFS Change Log
 
-Release 2.8.0 - UNRELEASED
+Release 2.8.0
 
   INCOMPATIBLE CHANGES
 
@@ -23,6 +23,10 @@ Release 2.8.0 - UNRELEASED
     DFSOutputStream#writeChunk (cmccabe)
 
   BUG FIXES
+
+Release 2.7.5
+
+    HDFS-8797. WebHdfsFileSystem creates too many connections for pread. (jing9)
 
 Release 2.7.0 - 2015-04-20
 
@@ -131,7 +135,7 @@ Release 2.7.0 - 2015-04-20
 
     HDFS-7035. Make adding a new data directory to the DataNode an atomic
     operation and improve error handling (Lei Xu via Colin P. McCabe)
-    
+
     HDFS-6917. Add an hdfs debug command to validate blocks, call recoverlease,
     etc. (cmccabe)
 
@@ -645,7 +649,7 @@ Release 2.7.0 - 2015-04-20
     HDFS-7552. Change FsVolumeList toString() to fix
     TestDataNodeVolumeFailureToleration (Liang Xie via Colin P. McCabe)
 
-    HDFS-7557. Fix spacing for a few keys in DFSConfigKeys.java 
+    HDFS-7557. Fix spacing for a few keys in DFSConfigKeys.java
     (Colin P.McCabe)
 
     HDFS-7560. ACLs removed by removeDefaultAcl() will be back after NameNode
