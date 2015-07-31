@@ -15,11 +15,13 @@ Release 2.7.1 - UNRELEASED
     YARN-3793. Several NPEs when deleting local files on NM recovery (Varun
     Saxena via jlowe)
 
-    YARN-4047. ClientRMService getApplications has high scheduler lock contention.
-    (Jason Lowe via jianhe)
-
+    YARN-3990. AsyncDispatcher may overloaded with RMAppNodeUpdateEvent when
+    Node is connected/disconnected (Bibin A Chundatt via jlowe)
 
     YARN-3351. AppMaster tracking URL is broken in HA. (Anubhav Dhoot via kasha)
+
+    YARN-4047. ClientRMService getApplications has high scheduler lock contention.
+    (Jason Lowe via jianhe)
 
 Release 2.7.0 - 2015-04-20
 
