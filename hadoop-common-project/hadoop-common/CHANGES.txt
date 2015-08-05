@@ -1,5 +1,8 @@
 Hadoop Change Log
 
+    HADOOP-12304. Applications using FileContext fail with the default file
+    system configured to be wasb/s3/etc. (cnauroth)
+
 Release 2.7.0 - 2015-04-20
 
   INCOMPATIBLE CHANGES
