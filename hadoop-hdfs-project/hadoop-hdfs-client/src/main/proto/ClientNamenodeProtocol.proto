@@ -34,6 +34,7 @@ import "acl.proto";
 import "xattr.proto";
 import "encryption.proto";
 import "inotify.proto";
+import "erasurecoding.proto";
 
 /**
  * The ClientNamenodeProtocol Service defines the interface between a client 
@@ -866,8 +867,14 @@ service ClientNamenodeProtocol {
       returns(ListEncryptionZonesResponseProto);
   rpc getEZForPath(GetEZForPathRequestProto)
       returns(GetEZForPathResponseProto);
+  rpc createErasureCodingZone(CreateErasureCodingZoneRequestProto)
+      returns(CreateErasureCodingZoneResponseProto);
   rpc getCurrentEditLogTxid(GetCurrentEditLogTxidRequestProto)
       returns(GetCurrentEditLogTxidResponseProto);
   rpc getEditsFromTxid(GetEditsFromTxidRequestProto)
       returns(GetEditsFromTxidResponseProto);
+  rpc getECSchemas(GetECSchemasRequestProto)
+      returns(GetECSchemasResponseProto);
+  rpc getErasureCodingZone(GetErasureCodingZoneRequestProto)
+      returns(GetErasureCodingZoneResponseProto);
 }
