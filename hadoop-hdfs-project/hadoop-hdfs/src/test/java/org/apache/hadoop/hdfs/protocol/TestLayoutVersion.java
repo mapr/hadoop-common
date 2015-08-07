@@ -126,7 +126,8 @@ public class TestLayoutVersion {
     EnumSet<NameNodeLayoutVersion.Feature> compatibleFeatures = EnumSet.of(
         NameNodeLayoutVersion.Feature.TRUNCATE,
         NameNodeLayoutVersion.Feature.APPEND_NEW_BLOCK,
-        NameNodeLayoutVersion.Feature.QUOTA_BY_STORAGE_TYPE);
+        NameNodeLayoutVersion.Feature.QUOTA_BY_STORAGE_TYPE,
+        NameNodeLayoutVersion.Feature.ERASURE_CODING);
     for (LayoutFeature f : compatibleFeatures) {
       assertEquals(String.format("Expected minimum compatible layout version " +
           "%d for feature %s.", baseLV, f), baseLV,

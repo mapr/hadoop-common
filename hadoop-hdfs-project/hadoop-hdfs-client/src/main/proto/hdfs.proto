@@ -220,6 +220,10 @@ message LocatedBlockProto {
   repeated bool isCached = 6 [packed=true]; // if a location in locs is cached
   repeated StorageTypeProto storageTypes = 7;
   repeated string storageIDs = 8;
+
+  // striped block related fields
+  repeated uint32 blockIndex = 9; // used for striped block to indicate block index for each storage
+  repeated hadoop.common.TokenProto blockTokens = 10; // each internal block has a block token
 }
 
 message DataEncryptionKeyProto {
@@ -300,6 +304,29 @@ message LocatedBlocksProto {
   optional LocatedBlockProto lastBlock = 4;
   required bool isLastBlockComplete = 5;
   optional FileEncryptionInfoProto fileEncryptionInfo = 6;
+
+  // Optional field for erasure coding
+  optional ECSchemaProto eCSchema = 7;
+  optional uint32 stripeCellSize = 8;
+}
+
+/**
+ * ECSchema options entry
+ */
+message ECSchemaOptionEntryProto {
+  required string key = 1;
+  required string value = 2;
+}
+
+/**
+ * ECSchema for erasurecoding
+ */
+message ECSchemaProto {
+  required string schemaName = 1;
+  required string codecName = 2;
+  required uint32 dataUnits = 3;
+  required uint32 parityUnits = 4;
+  repeated ECSchemaOptionEntryProto options = 5;
 }
 
 /**
@@ -336,7 +363,11 @@ message HdfsFileStatusProto {
   optional FileEncryptionInfoProto fileEncryptionInfo = 15;
 
   optional uint32 storagePolicy = 16 [default = 0]; // block storage policy id
-} 
+
+  // Optional field for erasure coding
+  optional ECSchemaProto ecSchema = 17;
+  optional uint32 stripeCellSize = 18;
+}
 
 /**
  * Checksum algorithms/types used in HDFS
@@ -498,6 +529,9 @@ message BlockWithLocationsProto {
   repeated string datanodeUuids = 2; // Datanodes with replicas of the block
   repeated string storageUuids = 3;  // Storages with replicas of the block
   repeated StorageTypeProto storageTypes = 4;
+
+  optional bytes indices = 5;
+  optional uint32 dataBlockNum = 6;
 }
 
 /**

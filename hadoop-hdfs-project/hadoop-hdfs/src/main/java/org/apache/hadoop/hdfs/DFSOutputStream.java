@@ -24,6 +24,8 @@ import java.nio.channels.ClosedChannelException;
 import java.util.EnumSet;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.HadoopIllegalArgumentException;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.crypto.CryptoProtocolVersion;
@@ -110,7 +112,7 @@ public class DFSOutputStream extends FSOutputSummer
   protected final int bytesPerChecksum;
 
   protected DFSPacket currentPacket = null;
-  private DataStreamer streamer;
+  protected DataStreamer streamer;
   protected int packetSize = 0; // write packet size, not including the header.
   protected int chunksPerPacket = 0;
   protected long lastFlushOffset = 0; // offset when flush was invoked
@@ -269,8 +271,14 @@ public class DFSOutputStream extends FSOutputSummer
         }
       }
       Preconditions.checkNotNull(stat, "HdfsFileStatus should not be null!");
-      final DFSOutputStream out = new DFSOutputStream(dfsClient, src, stat,
-          flag, progress, checksum, favoredNodes);
+      final DFSOutputStream out;
+      if(stat.getECSchema() != null) {
+        out = new DFSStripedOutputStream(dfsClient, src, stat,
+            flag, progress, checksum, favoredNodes);
+      } else {
+        out = new DFSOutputStream(dfsClient, src, stat,
+            flag, progress, checksum, favoredNodes);
+      }
       out.start();
       return out;
     } finally {
@@ -350,6 +358,9 @@ public class DFSOutputStream extends FSOutputSummer
       String[] favoredNodes) throws IOException {
     TraceScope scope =
         dfsClient.getPathTraceScope("newStreamForAppend", src);
+	if(stat.getReplication() == 0) {
+      throw new IOException("Not support appending to a striping layout file yet.");
+    }
     try {
       final DFSOutputStream out = new DFSOutputStream(dfsClient, src, flags,
           progress, lastBlock, stat, checksum, favoredNodes);
@@ -413,7 +424,6 @@ public class DFSOutputStream extends FSOutputSummer
     getStreamer().incBytesCurBlock(len);
 
     // If packet is full, enqueue it for transmission
-    //
     if (currentPacket.getNumChunks() == currentPacket.getMaxChunks() ||
         getStreamer().getBytesCurBlock() == blockSize) {
       enqueueCurrentPacketFull();
@@ -906,5 +916,10 @@ public class DFSOutputStream extends FSOutputSummer
    */
   protected DataStreamer getStreamer() {
     return streamer;
+  }
+
+  @Override
+  public String toString() {
+    return getClass().getSimpleName() + ":" + streamer;
   }
 }

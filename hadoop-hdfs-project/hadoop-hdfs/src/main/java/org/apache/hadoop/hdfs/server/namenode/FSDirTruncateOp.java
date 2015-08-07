@@ -19,6 +19,7 @@ package org.apache.hadoop.hdfs.server.namenode;
 
 import java.io.IOException;
 
+import com.google.common.base.Preconditions;
 import org.apache.hadoop.HadoopIllegalArgumentException;
 import org.apache.hadoop.fs.UnresolvedLinkException;
 import org.apache.hadoop.fs.permission.FsAction;
@@ -85,6 +86,12 @@ final class FSDirTruncateOp {
       INodeFile file = INodeFile.valueOf(iip.getLastINode(), src);
       final BlockStoragePolicy lpPolicy = fsd.getBlockManager()
           .getStoragePolicy("LAZY_PERSIST");
+
+      // not support truncating file with striped blocks
+      if (file.isStriped()) {
+        throw new UnsupportedOperationException(
+            "Cannot truncate file with striped block " + src);
+      }
 
       if (lpPolicy != null && lpPolicy.getId() == file.getStoragePolicyID()) {
         throw new UnsupportedOperationException(
@@ -214,10 +221,12 @@ final class FSDirTruncateOp {
         file.getFileUnderConstructionFeature().getClientName(), file.getId());
     boolean shouldRecoverNow = (newBlock == null);
     BlockInfo oldBlock = file.getLastBlock();
+    Preconditions.checkState(!oldBlock.isStriped());
     boolean shouldCopyOnTruncate = shouldCopyOnTruncate(fsn, file, oldBlock);
     if (newBlock == null) {
-      newBlock = (shouldCopyOnTruncate) ? fsn.createNewBlock() : new Block(
-          oldBlock.getBlockId(), oldBlock.getNumBytes(),
+      newBlock = (shouldCopyOnTruncate) ?
+          fsn.createNewBlock(file.isStriped()) :
+          new Block(oldBlock.getBlockId(), oldBlock.getNumBytes(),
           fsn.nextGenerationStamp(fsn.getBlockIdManager().isLegacyBlock(
               oldBlock)));
     }
@@ -231,7 +240,8 @@ final class FSDirTruncateOp {
           file.getPreferredBlockReplication());
       truncatedBlockUC.setNumBytes(oldBlock.getNumBytes() - lastBlockDelta);
       truncatedBlockUC.setTruncateBlock(oldBlock);
-      file.setLastBlock(truncatedBlockUC, blockManager.getStorages(oldBlock));
+      file.convertLastBlockToUC(truncatedBlockUC,
+          blockManager.getStorages(oldBlock));
       blockManager.addBlockCollection(truncatedBlockUC, file);
 
       NameNode.stateChangeLog.debug(

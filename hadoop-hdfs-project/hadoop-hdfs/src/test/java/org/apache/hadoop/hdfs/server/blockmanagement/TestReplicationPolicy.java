@@ -1208,8 +1208,17 @@ public class TestReplicationPolicy {
     BlockManager bm = new BlockManager(mockNS, new HdfsConfiguration());
     UnderReplicatedBlocks underReplicatedBlocks = bm.neededReplications;
 
-    BlockInfo block1 = genBlockInfo(ThreadLocalRandom.current().nextLong());
-    BlockInfo block2 = genBlockInfo(ThreadLocalRandom.current().nextLong());
+    long blkID1 = ThreadLocalRandom.current().nextLong();
+    if (blkID1 < 0) {
+      blkID1 *= -1;
+    }
+    long blkID2 = ThreadLocalRandom.current().nextLong();
+    if (blkID2 < 0) {
+      blkID2 *= -1;
+    }
+
+    BlockInfo block1 = genBlockInfo(blkID1);
+    BlockInfo block2 = genBlockInfo(blkID2);
 
     // Adding QUEUE_UNDER_REPLICATED block
     underReplicatedBlocks.add(block1, 0, 1, 1);
@@ -1224,7 +1233,7 @@ public class TestReplicationPolicy {
     chosenBlocks = underReplicatedBlocks.chooseUnderReplicatedBlocks(1);
     assertTheChosenBlocks(chosenBlocks, 1, 0, 0, 0, 0);
 
-    final BlockInfo info = new BlockInfoContiguous(block1, (short) 1);
+    final BlockInfoContiguous info = new BlockInfoContiguous(block1, (short) 1);
     final BlockCollection mbc = mock(BlockCollection.class);
     when(mbc.getLastBlock()).thenReturn(info);
     when(mbc.getPreferredBlockSize()).thenReturn(block1.getNumBytes() + 1);
@@ -1247,12 +1256,12 @@ public class TestReplicationPolicy {
     when(storage.getState()).thenReturn(DatanodeStorage.State.NORMAL);
     when(storage.getDatanodeDescriptor()).thenReturn(dn);
     when(storage.removeBlock(any(BlockInfo.class))).thenReturn(true);
-    when(storage.addBlock(any(BlockInfo.class))).thenReturn
+    when(storage.addBlock(any(BlockInfoContiguous.class))).thenReturn
         (DatanodeStorageInfo.AddBlockResult.ADDED);
-    ucBlock.addStorage(storage);
+    ucBlock.addStorage(storage, ucBlock);
 
-    when(mbc.setLastBlock((BlockInfo) any(), (DatanodeStorageInfo[]) any()))
-    .thenReturn(ucBlock);
+    BlockInfo lastBlk = mbc.getLastBlock();
+    when(mbc.getLastBlock()).thenReturn(lastBlk, ucBlock);
 
     bm.convertLastBlockToUnderConstruction(mbc, 0L);
 
@@ -1287,7 +1296,7 @@ public class TestReplicationPolicy {
     chosenBlocks = underReplicatedBlocks.chooseUnderReplicatedBlocks(1);
     assertTheChosenBlocks(chosenBlocks, 1, 0, 0, 0, 0);
 
-    bm.setReplication((short)0, (short)1, "", block1);
+    bm.setReplication((short)0, (short)1, "", (BlockInfoContiguous) block1);
 
     // Choose 1 block from UnderReplicatedBlocks. Then it should pick 1 block
     // from QUEUE_VERY_UNDER_REPLICATED.

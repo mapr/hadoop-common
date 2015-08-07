@@ -87,6 +87,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.management.ObjectName;
 
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
@@ -151,6 +152,7 @@ import org.apache.hadoop.hdfs.server.common.HdfsServerConstants.StartupOption;
 import org.apache.hadoop.hdfs.server.common.Storage;
 import org.apache.hadoop.hdfs.server.common.StorageInfo;
 import org.apache.hadoop.hdfs.server.datanode.SecureDataNodeStarter.SecureResources;
+import org.apache.hadoop.hdfs.server.datanode.erasurecode.ErasureCodingWorker;
 import org.apache.hadoop.hdfs.server.datanode.fsdataset.FsDatasetSpi;
 import org.apache.hadoop.hdfs.server.datanode.fsdataset.FsVolumeSpi;
 import org.apache.hadoop.hdfs.server.datanode.metrics.DataNodeMetrics;
@@ -358,6 +360,8 @@ public class DataNode extends ReconfigurableBase
   private String dnUserName = null;
 
   private SpanReceiverHost spanReceiverHost;
+
+  private ErasureCodingWorker ecWorker;
   private static final int NUM_CORES = Runtime.getRuntime()
       .availableProcessors();
   private static final double CONGESTION_RATIO = 1.5;
@@ -1159,6 +1163,8 @@ public class DataNode extends ReconfigurableBase
     saslClient = new SaslDataTransferClient(dnConf.conf, 
         dnConf.saslPropsResolver, dnConf.trustedChannelResolver);
     saslServer = new SaslDataTransferServer(dnConf, blockPoolTokenSecretManager);
+    // Initialize ErasureCoding worker
+    ecWorker = new ErasureCodingWorker(conf, this);
   }
 
   /**
@@ -1221,6 +1227,10 @@ public class DataNode extends ReconfigurableBase
   
   public static String generateUuid() {
     return UUID.randomUUID().toString();
+  }
+
+  public SaslDataTransferClient getSaslClient() {
+    return saslClient;
   }
 
   /**
@@ -1485,7 +1495,7 @@ public class DataNode extends ReconfigurableBase
   /**
    * Creates either NIO or regular depending on socketWriteTimeout.
    */
-  protected Socket newSocket() throws IOException {
+  public Socket newSocket() throws IOException {
     return (dnConf.socketWriteTimeout > 0) ? 
            SocketChannel.open().socket() : new Socket();                                   
   }
@@ -1894,6 +1904,21 @@ public class DataNode extends ReconfigurableBase
   int getXmitsInProgress() {
     return xmitsInProgress.get();
   }
+  
+  /**
+   * Increments the xmitsInProgress count. xmitsInProgress count represents the
+   * number of data replication/reconstruction tasks running currently.
+   */
+  public void incrementXmitsInProgress() {
+    xmitsInProgress.getAndIncrement();
+  }
+
+  /**
+   * Decrements the xmitsInProgress count
+   */
+  public void decrementXmitsInProgress() {
+    xmitsInProgress.getAndDecrement();
+  }
 
   private void reportBadBlock(final BPOfferService bpos,
       final ExtendedBlock block, final String msg) {
@@ -2113,7 +2138,7 @@ public class DataNode extends ReconfigurableBase
      */
     @Override
     public void run() {
-      xmitsInProgress.getAndIncrement();
+      incrementXmitsInProgress();
       Socket sock = null;
       DataOutputStream out = null;
       DataInputStream in = null;
@@ -2133,11 +2158,8 @@ public class DataNode extends ReconfigurableBase
         //
         // Header info
         //
-        Token<BlockTokenIdentifier> accessToken = BlockTokenSecretManager.DUMMY_TOKEN;
-        if (isBlockTokenEnabled) {
-          accessToken = blockPoolTokenSecretManager.generateToken(b, 
-              EnumSet.of(BlockTokenIdentifier.AccessMode.WRITE));
-        }
+        Token<BlockTokenIdentifier> accessToken = getBlockAccessToken(b, 
+            EnumSet.of(BlockTokenIdentifier.AccessMode.WRITE));
 
         long writeTimeout = dnConf.socketWriteTimeout + 
                             HdfsServerConstants.WRITE_TIMEOUT_EXTENSION * (targets.length-1);
@@ -2195,13 +2217,26 @@ public class DataNode extends ReconfigurableBase
         // check if there are any disk problem
         checkDiskErrorAsync();
       } finally {
-        xmitsInProgress.getAndDecrement();
+        decrementXmitsInProgress();
         IOUtils.closeStream(blockSender);
         IOUtils.closeStream(out);
         IOUtils.closeStream(in);
         IOUtils.closeSocket(sock);
       }
     }
+  }
+
+  /***
+   * Use BlockTokenSecretManager to generate block token for current user.
+   */
+  public Token<BlockTokenIdentifier> getBlockAccessToken(ExtendedBlock b,
+      EnumSet<AccessMode> mode) throws IOException {
+    Token<BlockTokenIdentifier> accessToken = 
+        BlockTokenSecretManager.DUMMY_TOKEN;
+    if (isBlockTokenEnabled) {
+      accessToken = blockPoolTokenSecretManager.generateToken(b, mode);
+    }
+    return accessToken;
   }
 
   /**
@@ -2211,7 +2246,7 @@ public class DataNode extends ReconfigurableBase
    * @param block for which the factory needs to create a key
    * @return DataEncryptionKeyFactory for block's block pool ID
    */
-  DataEncryptionKeyFactory getDataEncryptionKeyFactoryForBlock(
+  public DataEncryptionKeyFactory getDataEncryptionKeyFactoryForBlock(
       final ExtendedBlock block) {
     return new DataEncryptionKeyFactory() {
       @Override
@@ -3258,5 +3293,10 @@ public class DataNode extends ReconfigurableBase
   public void removeSpanReceiver(long id) throws IOException {
     checkSuperuserPrivilege();
     spanReceiverHost.removeSpanReceiver(id);
+  }
+  
+  public ErasureCodingWorker getErasureCodingWorker(){
+    return ecWorker;
+    
   }
 }
