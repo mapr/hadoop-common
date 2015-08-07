@@ -45,6 +45,7 @@ import org.apache.hadoop.hdfs.security.token.delegation.DelegationTokenSelector;
 import org.apache.hadoop.hdfs.server.protocol.DatanodeStorageReport;
 import org.apache.hadoop.io.EnumSetWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.erasurecode.ECSchema;
 import org.apache.hadoop.io.retry.AtMostOnce;
 import org.apache.hadoop.io.retry.Idempotent;
 import org.apache.hadoop.security.KerberosInfo;
@@ -1483,4 +1484,30 @@ public interface ClientProtocol {
    */
   @Idempotent
   EventBatchList getEditsFromTxid(long txid) throws IOException;
+
+  /**
+   * Create an erasure coding zone with specified schema, if any, otherwise
+   * default
+   */
+  @AtMostOnce
+  void createErasureCodingZone(String src, ECSchema schema, int cellSize)
+      throws IOException;
+
+  /**
+   * Gets list of ECSchemas loaded in Namenode
+   *
+   * @return Returns the list of ECSchemas loaded at Namenode
+   * @throws IOException
+   */
+  @Idempotent
+  ECSchema[] getECSchemas() throws IOException;
+
+  /**
+   * Get the information about the EC zone for the path
+   *
+   * @param src path to get the info for
+   * @throws IOException
+   */
+  @Idempotent
+  ErasureCodingZone getErasureCodingZone(String src) throws IOException;
 }

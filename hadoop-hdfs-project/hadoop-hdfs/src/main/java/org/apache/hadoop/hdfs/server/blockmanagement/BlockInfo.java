@@ -55,16 +55,17 @@ public abstract class  BlockInfo extends Block
 
   /**
    * Construct an entry for blocksmap
-   * @param replication the block's replication factor
+   * @param size the block's replication factor, or the total number of blocks
+   *             in the block group
    */
-  public BlockInfo(short replication) {
-    this.triplets = new Object[3*replication];
+  public BlockInfo(short size) {
+    this.triplets = new Object[3*size];
     this.bc = null;
   }
 
-  public BlockInfo(Block blk, short replication) {
+  public BlockInfo(Block blk, short size) {
     super(blk);
-    this.triplets = new Object[3*replication];
+    this.triplets = new Object[3 * size];
     this.bc = null;
   }
 
@@ -108,7 +109,7 @@ public abstract class  BlockInfo extends Block
     BlockInfo info = (BlockInfo)triplets[index*3+1];
     assert info == null ||
         info.getClass().getName().startsWith(BlockInfo.class.getName()) :
-              "BlockInfo is expected at " + index*3;
+        "BlockInfo is expected at " + index*3;
     return info;
   }
 
@@ -150,7 +151,7 @@ public abstract class  BlockInfo extends Block
    *
    * @param index - the datanode index
    * @param to - block to be set to next on the list of blocks
-   *    * @return current next block on the list of blocks
+   * @return current next block on the list of blocks
    */
   BlockInfo setNext(int index, BlockInfo to) {
     assert this.triplets != null : "BlockInfo is not initialized";
@@ -167,14 +168,20 @@ public abstract class  BlockInfo extends Block
   }
 
   /**
-   * Count the number of data-nodes the block belongs to.
+   * Count the number of data-nodes the block currently belongs to (i.e., NN
+   * has received block reports from the DN).
    */
   public abstract int numNodes();
 
   /**
-   * Add a {@link DatanodeStorageInfo} location for a block.
+   * Add a {@link DatanodeStorageInfo} location for a block
+   * @param storage The storage to add
+   * @param reportedBlock The block reported from the datanode. This is only
+   *                      used by erasure coded blocks, this block's id contains
+   *                      information indicating the index of the block in the
+   *                      corresponding block group.
    */
-  abstract boolean addStorage(DatanodeStorageInfo storage);
+  abstract boolean addStorage(DatanodeStorageInfo storage, Block reportedBlock);
 
   /**
    * Remove {@link DatanodeStorageInfo} location for a block
@@ -188,6 +195,11 @@ public abstract class  BlockInfo extends Block
    */
   abstract void replaceBlock(BlockInfo newBlock);
 
+  public abstract boolean isStriped();
+
+  /** @return true if there is no datanode storage associated with the block */
+  abstract boolean hasNoStorage();
+
   /**
    * Find specified DatanodeStorageInfo.
    * @return DatanodeStorageInfo or null if not found.
@@ -196,10 +208,9 @@ public abstract class  BlockInfo extends Block
     int len = getCapacity();
     for(int idx = 0; idx < len; idx++) {
       DatanodeStorageInfo cur = getStorageInfo(idx);
-      if(cur == null)
-        break;
-      if(cur.getDatanodeDescriptor() == dn)
+      if(cur != null && cur.getDatanodeDescriptor() == dn) {
         return cur;
+      }
     }
     return null;
   }
@@ -214,9 +225,6 @@ public abstract class  BlockInfo extends Block
       DatanodeStorageInfo cur = getStorageInfo(idx);
       if (cur == storageInfo) {
         return idx;
-      }
-      if (cur == null) {
-        break;
       }
     }
     return -1;
@@ -261,12 +269,15 @@ public abstract class  BlockInfo extends Block
     BlockInfo prev = this.getPrevious(dnIndex);
     this.setNext(dnIndex, null);
     this.setPrevious(dnIndex, null);
-    if(prev != null)
+    if (prev != null) {
       prev.setNext(prev.findStorageInfo(storage), next);
-    if(next != null)
+    }
+    if (next != null) {
       next.setPrevious(next.findStorageInfo(storage), prev);
-    if(this == head)  // removing the head
+    }
+    if (this == head) { // removing the head
       head = next;
+    }
     return head;
   }
 
@@ -295,7 +306,7 @@ public abstract class  BlockInfo extends Block
   /**
    * BlockInfo represents a block that is not being constructed.
    * In order to start modifying the block, the BlockInfo should be converted
-   * to {@link BlockInfoContiguousUnderConstruction}.
+   * to {@link BlockInfoUnderConstruction}.
    * @return {@link BlockUCState#COMPLETE}
    */
   public BlockUCState getBlockUCState() {
@@ -309,28 +320,6 @@ public abstract class  BlockInfo extends Block
    */
   public boolean isComplete() {
     return getBlockUCState().equals(BlockUCState.COMPLETE);
-  }
-
-  /**
-   * Convert a complete block to an under construction block.
-   * @return BlockInfoUnderConstruction -  an under construction block.
-   */
-  public BlockInfoContiguousUnderConstruction convertToBlockUnderConstruction(
-      BlockUCState s, DatanodeStorageInfo[] targets) {
-    if(isComplete()) {
-      BlockInfoContiguousUnderConstruction ucBlock =
-          new BlockInfoContiguousUnderConstruction(this,
-          getBlockCollection().getPreferredBlockReplication(), s, targets);
-      ucBlock.setBlockCollection(getBlockCollection());
-      return ucBlock;
-    }
-    // the block is already under construction
-    BlockInfoContiguousUnderConstruction ucBlock =
-        (BlockInfoContiguousUnderConstruction)this;
-    ucBlock.setBlockUCState(s);
-    ucBlock.setExpectedLocations(targets);
-    ucBlock.setBlockCollection(getBlockCollection());
-    return ucBlock;
   }
 
   @Override

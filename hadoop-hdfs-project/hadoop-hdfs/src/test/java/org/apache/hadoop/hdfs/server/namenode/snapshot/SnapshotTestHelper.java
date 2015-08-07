@@ -175,7 +175,7 @@ public class SnapshotTestHelper {
    * localName (className@hashCode) parent permission group user
    * 
    * Specific information for different types of INode: 
-   * {@link INodeDirectory}:childrenSize 
+   * {@link INodeDirectory}:childrenSize
    * {@link INodeFile}: fileSize, block list. Check {@link BlockInfo#toString()}
    * and {@link BlockInfoContiguousUnderConstruction#toString()} for detailed information.
    * {@link FileWithSnapshot}: next link

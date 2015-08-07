@@ -49,14 +49,14 @@ public class LocatedBlock {
   // else false. If block has few corrupt replicas, they are filtered and
   // their locations are not part of this object
   private boolean corrupt;
-  private Token<BlockTokenIdentifier> blockToken = new Token<BlockTokenIdentifier>();
+  private Token<BlockTokenIdentifier> blockToken = new Token<>();
   /**
    * List of cached datanode locations
    */
   private DatanodeInfo[] cachedLocs;
 
   // Used when there are no locations
-  private static final DatanodeInfoWithStorage[] EMPTY_LOCS =
+  static final DatanodeInfoWithStorage[] EMPTY_LOCS =
       new DatanodeInfoWithStorage[0];
 
   public LocatedBlock(ExtendedBlock b, DatanodeInfo[] locs) {
@@ -202,5 +202,9 @@ public class LocatedBlock {
         + "; offset=" + offset
         + "; locs=" + Arrays.asList(locs)
         + "}";
+  }
+
+  public boolean isStriped() {
+    return false;
   }
 }

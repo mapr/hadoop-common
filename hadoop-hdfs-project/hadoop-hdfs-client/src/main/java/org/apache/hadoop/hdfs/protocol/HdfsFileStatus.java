@@ -26,6 +26,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSUtilClient;
+import org.apache.hadoop.io.erasurecode.ECSchema;
 
 /** Interface that represents the over the wire information for a file.
  */
@@ -48,6 +49,9 @@ public class HdfsFileStatus {
 
   private final FileEncryptionInfo feInfo;
 
+  private final ECSchema ecSchema;
+  private final int stripeCellSize;
+  
   // Used by dir, not including dot and dotdot. Always zero for a regular file.
   private final int childrenNum;
   private final byte storagePolicy;
@@ -73,7 +77,7 @@ public class HdfsFileStatus {
       long blocksize, long modification_time, long access_time,
       FsPermission permission, String owner, String group, byte[] symlink,
       byte[] path, long fileId, int childrenNum, FileEncryptionInfo feInfo,
-      byte storagePolicy) {
+      byte storagePolicy, ECSchema ecSchema, int stripeCellSize) {
     this.length = length;
     this.isdir = isdir;
     this.block_replication = (short)block_replication;
@@ -93,6 +97,8 @@ public class HdfsFileStatus {
     this.childrenNum = childrenNum;
     this.feInfo = feInfo;
     this.storagePolicy = storagePolicy;
+    this.ecSchema = ecSchema;
+    this.stripeCellSize = stripeCellSize;
   }
 
   /**
@@ -248,6 +254,14 @@ public class HdfsFileStatus {
 
   public final FileEncryptionInfo getFileEncryptionInfo() {
     return feInfo;
+  }
+
+  public ECSchema getECSchema() {
+    return ecSchema;
+  }
+
+  public int getStripeCellSize() {
+    return stripeCellSize;
   }
 
   public final int getChildrenNum() {
