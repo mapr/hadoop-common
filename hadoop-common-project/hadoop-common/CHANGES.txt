@@ -32,6 +32,9 @@ HADOOP-12682. Fix TestKMS#testKMSRestart* failure. Contributed by Wei-Chiu Chuan
 
     HADOOP-10798. globStatus() should always return a sorted list of files
     (cmccabe)
+    
+    HADOOP-12258. Need translate java.nio.file.NoSuchFileException to
+    FileNotFoundException to avoid regression. (Zhihai Xu via cnauroth)
 
     HADOOP-11934. Use of JavaKeyStoreProvider in LdapGroupsMapping causes
     infinite loop. (Larry McCay via cnauroth)
