@@ -73,6 +73,7 @@ public class TestResourceManager {
 
   @After
   public void tearDown() throws Exception {
+    resourceManager.stop();
   }
   
   @BeforeClass
