@@ -47,7 +47,7 @@ public class SslSocketConnectorSecure extends SslSocketConnector {
             super.newServerSocket(host, port, backlog);
     ArrayList<String> nonSSLProtocols = new ArrayList<String>();
     for (String p : socket.getEnabledProtocols()) {
-      if (!p.contains("SSLv3")) {
+      if (!(p.contains("SSLv3")||p.contains("TLSv1"))) {
         nonSSLProtocols.add(p);
       }
     }
