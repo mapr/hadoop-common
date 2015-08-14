@@ -12,6 +12,9 @@ Hadoop MapReduce Change Log
 
     MAPREDUCE-6549. multibyte delimiters with LineRecordReader cause
     duplicate records (wilfreds via rkanter)
+    
+    MAPREDUCE-5817. Mappers get rescheduled on node transition even after all
+    reducers are completed. (Sangjin Lee via kasha)
 
     MAPREDUCE-5948. org.apache.hadoop.mapred.LineRecordReader does not handle
     multibyte record delimiters well (Vinayakumar B, Rushabh Shah, and Akira
