@@ -18,6 +18,9 @@ Release 2.7.1 - UNRELEASED
     YARN-3990. AsyncDispatcher may overloaded with RMAppNodeUpdateEvent when
     Node is connected/disconnected (Bibin A Chundatt via jlowe)
 
+    YARN-3857: Memory leak in ResourceManager with SIMPLE mode.
+    (mujunchao via zxu)
+
     YARN-3878. AsyncDispatcher can hang while stopping if it is configured for
     draining events on stop. (Varun Saxena via jianhe)
 
