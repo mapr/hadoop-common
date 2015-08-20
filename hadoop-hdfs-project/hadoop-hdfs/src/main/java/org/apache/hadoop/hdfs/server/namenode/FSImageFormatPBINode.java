@@ -71,6 +71,7 @@ import org.apache.hadoop.hdfs.util.ReadOnlyList;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
+import org.apache.hadoop.io.erasurecode.ECSchema;
 
 @InterfaceAudience.Private
 public final class FSImageFormatPBINode {
@@ -338,6 +339,9 @@ public final class FSImageFormatPBINode {
       LoaderContext state = parent.getLoaderContext();
       ErasureCodingPolicy ecPolicy = ErasureCodingPolicyManager.getSystemDefaultPolicy();
 
+      if (isStriped) {
+        Preconditions.checkState(f.hasStripingCellSize());
+      }
       BlockInfo[] blocks = new BlockInfo[bp.size()];
       for (int i = 0; i < bp.size(); ++i) {
         BlockProto b = bp.get(i);
@@ -657,6 +661,16 @@ public final class FSImageFormatPBINode {
       if (blocks != null) {
         for (Block block : n.getBlocks()) {
           b.addBlocks(PBHelper.convert(block));
+        }
+      }
+
+      if (n.isStriped()) {
+        if (blocks != null && blocks.length > 0) {
+          BlockInfo firstBlock = blocks[0];
+          Preconditions.checkState(firstBlock.isStriped());
+          b.setStripingCellSize(((BlockInfoStriped)firstBlock).getCellSize());
+        } else {
+          b.setStripingCellSize(HdfsConstants.BLOCK_STRIPED_CELL_SIZE);
         }
       }
 

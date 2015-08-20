@@ -294,6 +294,123 @@ public class TestFSImage {
     }
   }
 
+  private void testSaveAndLoadStripedINodeFile(FSNamesystem fsn, Configuration conf,
+                                               boolean isUC) throws IOException{
+    // contruct a INode with StripedBlock for saving and loading
+    fsn.createErasureCodingZone("/", null, false);
+    long id = 123456789;
+    byte[] name = "testSaveAndLoadInodeFile_testfile".getBytes();
+    PermissionStatus permissionStatus = new PermissionStatus("testuser_a",
+            "testuser_groups", new FsPermission((short)0x755));
+    long mtime = 1426222916-3600;
+    long atime = 1426222916;
+    BlockInfoContiguous[] blks = new BlockInfoContiguous[0];
+    short replication = 3;
+    long preferredBlockSize = 128*1024*1024;
+    INodeFile file = new INodeFile(id, name, permissionStatus, mtime, atime,
+        blks, replication, preferredBlockSize, (byte) 0, true);
+    ByteArrayOutputStream bs = new ByteArrayOutputStream();
+
+    //construct StripedBlocks for the INode
+    BlockInfoStriped[] stripedBlks = new BlockInfoStriped[3];
+    long stripedBlkId = 10000001;
+    long timestamp = mtime+3600;
+    for (int i = 0; i < stripedBlks.length; i++) {
+      stripedBlks[i] = new BlockInfoStriped(
+              new Block(stripedBlkId + i, preferredBlockSize, timestamp),
+              testECPolicy);
+      file.addBlock(stripedBlks[i]);
+    }
+
+    final String client = "testClient";
+    final String clientMachine = "testClientMachine";
+    final String path = "testUnderConstructionPath";
+
+    //save the INode to byte array
+    DataOutput out = new DataOutputStream(bs);
+    if (isUC) {
+      file.toUnderConstruction(client, clientMachine);
+      FSImageSerialization.writeINodeUnderConstruction((DataOutputStream) out,
+          file, path);
+    } else {
+      FSImageSerialization.writeINodeFile(file, out, false);
+    }
+    DataInput in = new DataInputStream(
+            new ByteArrayInputStream(bs.toByteArray()));
+
+    // load the INode from the byte array
+    INodeFile fileByLoaded;
+    if (isUC) {
+      fileByLoaded = FSImageSerialization.readINodeUnderConstruction(in,
+              fsn, fsn.getFSImage().getLayoutVersion());
+    } else {
+      fileByLoaded = (INodeFile) new FSImageFormat.Loader(conf, fsn)
+              .loadINodeWithLocalName(false, in, false);
+    }
+
+    assertEquals(id, fileByLoaded.getId() );
+    assertArrayEquals(isUC ? path.getBytes() : name,
+        fileByLoaded.getLocalName().getBytes());
+    assertEquals(permissionStatus.getUserName(),
+        fileByLoaded.getPermissionStatus().getUserName());
+    assertEquals(permissionStatus.getGroupName(),
+        fileByLoaded.getPermissionStatus().getGroupName());
+    assertEquals(permissionStatus.getPermission(),
+        fileByLoaded.getPermissionStatus().getPermission());
+    assertEquals(mtime, fileByLoaded.getModificationTime());
+    assertEquals(isUC ? mtime : atime, fileByLoaded.getAccessTime());
+    // TODO for striped blocks, we currently save and load them as contiguous
+    // blocks to/from legacy fsimage
+    assertEquals(3, fileByLoaded.getBlocks().length);
+    assertEquals(preferredBlockSize, fileByLoaded.getPreferredBlockSize());
+
+    if (isUC) {
+      assertEquals(client,
+          fileByLoaded.getFileUnderConstructionFeature().getClientName());
+      assertEquals(clientMachine,
+          fileByLoaded.getFileUnderConstructionFeature().getClientMachine());
+    }
+  }
+
+  /**
+   * Test if a INodeFile with BlockInfoStriped can be saved by
+   * FSImageSerialization and loaded by FSImageFormat#Loader.
+   */
+  @Test
+  public void testSaveAndLoadStripedINodeFile() throws IOException{
+    Configuration conf = new Configuration();
+    MiniDFSCluster cluster = null;
+    try {
+      cluster = new MiniDFSCluster.Builder(conf).build();
+      cluster.waitActive();
+      testSaveAndLoadStripedINodeFile(cluster.getNamesystem(), conf, false);
+    } finally {
+      if (cluster != null) {
+        cluster.shutdown();
+      }
+    }
+  }
+
+  /**
+   * Test if a INodeFileUnderConstruction with BlockInfoStriped can be
+   * saved and loaded by FSImageSerialization
+   */
+  @Test
+  public void testSaveAndLoadStripedINodeFileUC() throws IOException{
+    // construct a INode with StripedBlock for saving and loading
+    Configuration conf = new Configuration();
+    MiniDFSCluster cluster = null;
+    try {
+      cluster = new MiniDFSCluster.Builder(conf).build();
+      cluster.waitActive();
+      testSaveAndLoadStripedINodeFile(cluster.getNamesystem(), conf, true);
+    } finally {
+      if (cluster != null) {
+        cluster.shutdown();
+      }
+    }
+  }
+
   /**
    * Ensure that the digest written by the saver equals to the digest of the
    * file.

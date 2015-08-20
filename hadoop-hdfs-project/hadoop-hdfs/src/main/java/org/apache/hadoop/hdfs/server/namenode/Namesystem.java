@@ -61,4 +61,13 @@ public interface Namesystem extends RwLock, SafeMode {
       throws IOException;
 
   CacheManager getCacheManager();
+
+  /**
+   * Gets the ECZone for path
+   * @param src the filesystem path
+   * @return {@link ErasureCodingZone}
+   * @throws IOException
+   */
+  ErasureCodingZone getErasureCodingZoneForPath(String src)
+      throws IOException;
 }
