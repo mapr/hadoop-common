@@ -246,11 +246,30 @@ public class MRApps extends Apps {
       conf.getBoolean(MRJobConfig.MAPREDUCE_JOB_CLASSLOADER, false)
         ? Environment.APP_CLASSPATH.name() : Environment.CLASSPATH.name();
 
+    String hadoopClasspathEnvVar = Environment.HADOOP_CLASSPATH.name();
+
     MRApps.addToEnvironment(environment,
       classpathEnvVar, crossPlatformifyMREnv(conf, Environment.PWD), conf);
+
+    MRApps.addToEnvironment(environment,
+        hadoopClasspathEnvVar, crossPlatformifyMREnv(conf, Environment.PWD),
+        conf);
+
     if (!userClassesTakesPrecedence) {
       MRApps.setMRFrameworkClasspath(environment, conf);
     }
+
+    addClasspathToEnv(environment, classpathEnvVar, conf);
+    addClasspathToEnv(environment, hadoopClasspathEnvVar, conf);
+
+    if (userClassesTakesPrecedence) {
+      MRApps.setMRFrameworkClasspath(environment, conf);
+    }
+  }
+
+  @SuppressWarnings("deprecation")
+  public static void addClasspathToEnv(Map<String, String> environment,
+      String classpathEnvVar, Configuration conf) throws IOException {
     MRApps.addToEnvironment(
         environment,
         classpathEnvVar,
@@ -258,15 +277,21 @@ public class MRApps extends Apps {
     MRApps.addToEnvironment(
         environment,
         classpathEnvVar,
-        MRJobConfig.JOB_JAR + Path.SEPARATOR + "classes" + Path.SEPARATOR, conf);
+        MRJobConfig.JOB_JAR + Path.SEPARATOR + "classes" + Path.SEPARATOR,
+        conf);
+
     MRApps.addToEnvironment(
         environment,
         classpathEnvVar,
-        MRJobConfig.JOB_JAR + Path.SEPARATOR + "lib" + Path.SEPARATOR + "*", conf);
+        MRJobConfig.JOB_JAR + Path.SEPARATOR + "lib" + Path.SEPARATOR + "*",
+        conf);
+
     MRApps.addToEnvironment(
         environment,
         classpathEnvVar,
-        crossPlatformifyMREnv(conf, Environment.PWD) + Path.SEPARATOR + "*", conf);
+        crossPlatformifyMREnv(conf, Environment.PWD) + Path.SEPARATOR + "*",
+        conf);
+
     // a * in the classpath will only find a .jar, so we need to filter out
     // all .jars and add everything else
     addToClasspathIfNotJar(DistributedCache.getFileClassPaths(conf),
@@ -277,9 +302,6 @@ public class MRApps extends Apps {
         DistributedCache.getCacheArchives(conf),
         conf,
         environment, classpathEnvVar);
-    if (userClassesTakesPrecedence) {
-      MRApps.setMRFrameworkClasspath(environment, conf);
-    }
   }
   
   /**
@@ -447,6 +469,7 @@ public class MRApps extends Apps {
     return startCommitFile;
   }
 
+  @SuppressWarnings("deprecation")
   public static void setupDistributedCache( 
       Configuration conf, 
       Map<String, LocalResource> localResources) 
@@ -479,6 +502,7 @@ public class MRApps extends Apps {
    * @param conf
    * @throws java.io.IOException
    */
+  @SuppressWarnings("deprecation")
   public static void setupDistributedCacheLocal(Configuration conf)
       throws IOException {
 
@@ -546,6 +570,7 @@ public class MRApps extends Apps {
   // TODO - Move this to MR!
   // Use TaskDistributedCacheManager.CacheFiles.makeCacheFiles(URI[], 
   // long[], boolean[], Path[], FileType)
+  @SuppressWarnings("deprecation")
   private static void parseDistributedCacheArtifacts(
       Configuration conf,
       Map<String, LocalResource> localResources,

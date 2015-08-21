@@ -240,6 +240,22 @@ Release 2.7.0 - 2015-04-20
     MAPREDUCE-6303. Read timeout when retrying a fetch error can be fatal 
     to a reducer. (Jason Lowe via junping_du)
 
+Release 2.6.2 - UNRELEASED
+ 
+ INCOMPATIBLE CHANGES
+ 
+ NEW FEATURES
+ 
+ IMPROVEMENTS
+ 
+ OPTIMIZATIONS
+ 
+ BUG FIXES
+ 
+   MAPREDUCE-6454. Fixed MapReduce to modify HADOOP_CLASSPATH to have distributed
+   cache files so that child processes running hadoop scripts can access these
+   files. (Junping Du via vinodkv)
+
 Release 2.6.1 - UNRELEASED
 
   INCOMPATIBLE CHANGES
