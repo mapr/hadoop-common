@@ -24,6 +24,7 @@ import java.util.Comparator;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.fs.FileEncryptionInfo;
+import org.apache.hadoop.io.erasurecode.ECSchema;
 
 /**
  * Collection of blocks with their locations and the file length.
