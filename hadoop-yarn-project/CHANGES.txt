@@ -75,6 +75,9 @@ Release 2.7.3 - UNRELEASED
   NEW FEATURES
 
   IMPROVEMENTS
+  
+  YARN-1556. NPE getting application report with a null appId. (Weiwei Yang via 
+  junping_du)
 
   OPTIMIZATIONS
 
