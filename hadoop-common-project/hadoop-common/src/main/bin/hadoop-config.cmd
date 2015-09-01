@@ -39,6 +39,9 @@ if not defined YARN_DIR (
 if not defined YARN_LIB_JARS_DIR (
   set YARN_LIB_JARS_DIR=share\hadoop\yarn\lib
 )
+if not defined MYRIAD_LIB_JARS_DIR (
+  set MYRIAD_LIB_JARS_DIR=share\hadoop\myriad\lib
+)
 if not defined MAPRED_DIR (
   set MAPRED_DIR=share\hadoop\mapreduce
 )

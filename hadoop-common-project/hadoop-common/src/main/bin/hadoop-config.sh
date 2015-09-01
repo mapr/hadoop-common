@@ -61,6 +61,7 @@ HDFS_DIR=${HDFS_DIR:-"share/hadoop/hdfs"}
 HDFS_LIB_JARS_DIR=${HDFS_LIB_JARS_DIR:-"share/hadoop/hdfs/lib"}
 YARN_DIR=${YARN_DIR:-"share/hadoop/yarn"}
 YARN_LIB_JARS_DIR=${YARN_LIB_JARS_DIR:-"share/hadoop/yarn/lib"}
+MYRIAD_LIB_JARS_DIR=${MYRIAD_LIB_JARS_DIR:-"share/hadoop/myriad/lib"}
 MAPRED_DIR=${MAPRED_DIR:-"share/hadoop/mapreduce"}
 MAPRED_LIB_JARS_DIR=${MAPRED_LIB_JARS_DIR:-"share/hadoop/mapreduce/lib"}
 

@@ -141,6 +141,10 @@ if "%1" == "--loglevel" (
   set CLASSPATH=%CLASSPATH%;%HADOOP_YARN_HOME%\%YARN_DIR%\*
   set CLASSPATH=%CLASSPATH%;%HADOOP_YARN_HOME%\%YARN_LIB_JARS_DIR%\*
 
+  if exist %HADOOP_COMMON_HOME%\%MYRIAD_LIB_JARS_DIR% (
+    set CLASSPATH=%CLASSPATH%;%HADOOP_YARN_HOME%\%MYRIAD_LIB_JARS_DIR%\*
+  )
+
   if %yarn-command% == classpath (
     if not defined yarn-command-arguments (
       @rem No need to bother starting up a JVM for this simple case. 
