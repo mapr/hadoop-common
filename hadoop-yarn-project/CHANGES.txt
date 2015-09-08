@@ -9,6 +9,9 @@ Release 2.8.0 - UNRELEASED
 
   NEW FEATURES
 
+    YARN-2019. Retrospect on decision of making RM crashed if any exception throw 
+    in ZKRMStateStore. (Jian He via junping_du)
+
   IMPROVEMENTS
 
     YARN-1050. Document the Fair Scheduler REST API. (Kenji Kikushima and Roman Shaposhnik via kasha)
