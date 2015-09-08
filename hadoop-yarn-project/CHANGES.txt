@@ -131,6 +131,9 @@ Release 2.7.3 - UNRELEASED
 
     YARN-3999. RM hangs on draing events. (Jian He via xgong)
 
+    YARN-4087. Followup fixes after YARN-2019 regarding RM behavior when
+    state-store error occurs. (Jian He via xgong)
+
     YARN-4459. container-executor should only kill process groups (Jun Gong
     via jlowe)
 
