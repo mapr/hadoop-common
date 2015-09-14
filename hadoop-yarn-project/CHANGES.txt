@@ -21,6 +21,9 @@ Release 2.7.1 - UNRELEASED
     YARN-3857: Memory leak in ResourceManager with SIMPLE mode.
     (mujunchao via zxu)
 
+    YARN-3697. FairScheduler: ContinuousSchedulingThread can fail to shutdown.
+    (Zhihai Xu via kasha)
+
     YARN-2902. Killing a container that is localizing can orphan resources in
     the DOWNLOADING state (Varun Saxena via jlowe)
 
@@ -28,8 +31,8 @@ Release 2.7.1 - UNRELEASED
     junping_du)
 
     YARN-3878. AsyncDispatcher can hang while stopping if it is configured for
-    draining events on stop. (Varun Saxena via jianhe)
-  
+    draining events on stop. (Varun Saxena via jianhe) 
+
     YARN-3351. AppMaster tracking URL is broken in HA. (Anubhav Dhoot via kasha)
 
     YARN-4047. ClientRMService getApplications has high scheduler lock contention.
