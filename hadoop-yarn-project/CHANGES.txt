@@ -209,6 +209,8 @@ Release 2.7.1 - UNRELEASED
     YARN-4288. Fixed RMProxy to retry on IOException from local host.
     (Junping Du via jianhe)
     
+    YARN-4153. TestAsyncDispatcher failed at branch-2.7 (Zhihai Xu via jianhe)
+    
 Release 2.7.0 - 2015-04-20
 
   INCOMPATIBLE CHANGES
