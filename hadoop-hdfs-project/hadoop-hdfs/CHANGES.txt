@@ -28,6 +28,10 @@ Release 2.7.5
 
     HDFS-8797. WebHdfsFileSystem creates too many connections for pread. (jing9)
 
+    HDFS-8829. Make SO_RCVBUF and SO_SNDBUF size configurable for
+    DataTransferProtocol sockets and allow configuring auto-tuning (He Tianyi
+    via Colin P. McCabe)
+
 Release 2.7.0 - 2015-04-20
 
   INCOMPATIBLE CHANGES
