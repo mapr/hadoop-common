@@ -19,6 +19,9 @@ Hadoop MapReduce Change Log
     position/key information for uncompressed input sometimes. (Zhihai Xu via
     jlowe)
 
+    MAPREDUCE-5982. Task attempts that fail from the ASSIGNED state can
+    disappear (Chang Li via jlowe)
+
 Release 2.7.0 - 2015-04-20
   NEW FEATURES
 
