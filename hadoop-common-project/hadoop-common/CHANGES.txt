@@ -20,6 +20,9 @@ HADOOP-12682. Fix TestKMS#testKMSRestart* failure. Contributed by Wei-Chiu Chuan
     HADOOP-12042. Users may see TrashPolicy if hdfs dfs -rm is run
     (Andreina J via vinayakumarb)
 
+    HADOOP-12404. Disable caching for JarURLConnection to avoid sharing
+    JarFile with other users when loading resource from URL in Configuration
+    class. (zxu)
 Release 2.7.0 - 2015-04-20
 
   INCOMPATIBLE CHANGES
