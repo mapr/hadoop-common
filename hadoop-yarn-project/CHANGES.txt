@@ -7,6 +7,9 @@ Release 2.8.0 - UNRELEASED
   NEW FEATURES
 
   IMPROVEMENTS
+  
+    MAPREDUCE-6478. Add an option to skip cleanupJob stage or ignore cleanup
+    failure during commitJob. (Junping Du via wangda)
 
   OPTIMIZATIONS
 
