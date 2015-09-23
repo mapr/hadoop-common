@@ -85,6 +85,9 @@ Release 2.7.1 - UNRELEASED
 
     YARN-4180. AMLauncher does not retry on failures when talking to NM.
     (adhoot)
+    
+    YARN-3975. WebAppProxyServlet should not redirect to RM page if AHS is
+    enabled (Mit Desai via jlowe)
 
     YARN-2902. Killing a container that is localizing can orphan resources in
     the DOWNLOADING state (Varun Saxena via jlowe)
