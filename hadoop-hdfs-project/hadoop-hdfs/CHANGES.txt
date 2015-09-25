@@ -32,6 +32,9 @@ Release 2.7.5
     DataTransferProtocol sockets and allow configuring auto-tuning (He Tianyi
     via Colin P. McCabe)
 
+    HDFS-9107. Prevent NN's unrecoverable death spiral after full GC (Daryn
+    Sharp via Colin P. McCabe)
+
 Release 2.7.0 - 2015-04-20
 
   INCOMPATIBLE CHANGES
