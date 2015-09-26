@@ -8,6 +8,9 @@ Release 2.7.6 - UNRELEASED
 
   IMPROVEMENTS
 
+    HADOOP-11918. Listing an empty s3a root directory throws FileNotFound.
+    (Lei (Eddy) Xu via cnauroth)
+
     HADOOP-14246. Authentication Tokens should use SecureRandom instead of
     Random and 256 bit secrets (Conttributed by Robert Kanter via
     Daniel Templeton)
