@@ -18,4 +18,12 @@
 
 <configuration>
 
+<property>
+  <name>dfs.client.htrace.sampler.classes</name>
+  <value></value>
+  <description>
+    The class names of the HTrace Samplers to use for the HDFS client.
+  </description>
+</property>
+
 </configuration>

@@ -32,6 +32,7 @@ import org.apache.hadoop.fs.CreateFlag;
 import org.apache.hadoop.fs.FSOutputSummer;
 import org.apache.hadoop.fs.FileAlreadyExistsException;
 import org.apache.hadoop.fs.FileEncryptionInfo;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.ParentNotDirectoryException;
 import org.apache.hadoop.fs.Syncable;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -60,9 +61,7 @@ import org.apache.hadoop.util.DataChecksum;
 import org.apache.hadoop.util.DataChecksum.Type;
 import org.apache.hadoop.util.Progressable;
 import org.apache.hadoop.util.Time;
-import org.apache.htrace.Sampler;
-import org.apache.htrace.Trace;
-import org.apache.htrace.TraceScope;
+import org.apache.htrace.core.TraceScope;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -226,7 +225,7 @@ public class DFSOutputStream extends FSOutputSummer
       short replication, long blockSize, Progressable progress, int buffersize,
       DataChecksum checksum, String[] favoredNodes) throws IOException {
     TraceScope scope =
-        dfsClient.getPathTraceScope("newStreamForCreate", src);
+        dfsClient.newPathTraceScope("newStreamForCreate", src);
     try {
       HdfsFileStatus stat = null;
 
@@ -343,7 +342,7 @@ public class DFSOutputStream extends FSOutputSummer
       LocatedBlock lastBlock, HdfsFileStatus stat, DataChecksum checksum,
       String[] favoredNodes) throws IOException {
     TraceScope scope =
-        dfsClient.getPathTraceScope("newStreamForAppend", src);
+        dfsClient.newPathTraceScope("newStreamForAppend", src);
     try {
       final DFSOutputStream out = new DFSOutputStream(dfsClient, src, flags,
           progress, lastBlock, stat, checksum);
@@ -371,7 +370,7 @@ public class DFSOutputStream extends FSOutputSummer
   }
 
   protected TraceScope createWriteTraceScope() {
-    return dfsClient.getPathTraceScope("DFSOutputStream#write", src);
+    return dfsClient.newPathTraceScope("DFSOutputStream#write", src);
   }
 
   // @see FSOutputSummer#writeChunk()
@@ -392,7 +391,7 @@ public class DFSOutputStream extends FSOutputSummer
     }
 
     if (currentPacket == null) {
-      currentPacket = createPacket(packetSize, chunksPerPacket, 
+      currentPacket = createPacket(packetSize, chunksPerPacket,
           streamer.getBytesCurBlock(), streamer.getAndIncCurrentSeqno(), false);
       if (DFSClient.LOG.isDebugEnabled()) {
         DFSClient.LOG.debug("DFSClient writeChunk allocating new packet seqno=" + 
@@ -472,7 +471,7 @@ public class DFSOutputStream extends FSOutputSummer
   @Override
   public void hflush() throws IOException {
     TraceScope scope =
-        dfsClient.getPathTraceScope("hflush", src);
+        dfsClient.newPathTraceScope("hflush", src);
     try {
       flushOrSync(false, EnumSet.noneOf(SyncFlag.class));
     } finally {
@@ -483,7 +482,7 @@ public class DFSOutputStream extends FSOutputSummer
   @Override
   public void hsync() throws IOException {
     TraceScope scope =
-        dfsClient.getPathTraceScope("hsync", src);
+        dfsClient.newPathTraceScope("hsync", src);
     try {
       flushOrSync(true, EnumSet.noneOf(SyncFlag.class));
     } finally {
@@ -506,7 +505,7 @@ public class DFSOutputStream extends FSOutputSummer
    */
   public void hsync(EnumSet<SyncFlag> syncFlags) throws IOException {
     TraceScope scope =
-        dfsClient.getPathTraceScope("hsync", src);
+        dfsClient.newPathTraceScope("hsync", src);
     try {
       flushOrSync(true, syncFlags);
     } finally {
@@ -744,7 +743,7 @@ public class DFSOutputStream extends FSOutputSummer
   @Override
   public synchronized void close() throws IOException {
     TraceScope scope =
-        dfsClient.getPathTraceScope("DFSOutputStream#close", src);
+        dfsClient.newPathTraceScope("DFSOutputStream#close", src);
     try {
       closeImpl();
     } finally {
@@ -780,7 +779,7 @@ public class DFSOutputStream extends FSOutputSummer
       // get last block before destroying the streamer
       ExtendedBlock lastBlock = streamer.getBlock();
       closeThreads(false);
-      TraceScope scope = Trace.startSpan("completeFile", Sampler.NEVER);
+      TraceScope scope = dfsClient.getTracer().newScope("completeFile");
       try {
         completeFile(lastBlock);
       } finally {

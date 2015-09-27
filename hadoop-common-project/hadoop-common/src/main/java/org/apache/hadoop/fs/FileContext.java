@@ -58,6 +58,8 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.util.ShutdownHookManager;
 
+import org.apache.htrace.core.Tracer;
+
 /**
  * The FileContext class provides an interface to the application writer for
  * using the Hadoop file system.
@@ -228,12 +230,14 @@ public class FileContext {
   private final Configuration conf;
   private final UserGroupInformation ugi;
   final boolean resolveSymlinks;
+  private final Tracer tracer;
 
   private FileContext(final AbstractFileSystem defFs,
     final FsPermission theUmask, final Configuration aConf) {
     defaultFS = defFs;
     umask = FsPermission.getUMask(aConf);
     conf = aConf;
+    tracer = FsTracer.get(aConf);
     try {
       ugi = UserGroupInformation.getCurrentUser();
     } catch (IOException e) {
@@ -2573,5 +2577,9 @@ public class FileContext {
         return fs.listXAttrs(p);
       }
     }.resolve(this, absF);
+  }
+
+  Tracer getTracer() {
+      return tracer;
   }
 }

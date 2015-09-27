@@ -61,7 +61,7 @@
   <name>hadoop.http.core.filter.enable</name>
   <value>true</value>
   <description>Whether HadoopCoreAuthenticationFilter is added to the filter chain</description>
-</property> 
+</property>
 
 <!--- security properties -->
 
@@ -900,7 +900,7 @@ for ldap providers in the same way as above does.
 </property>
 
 <property>
-  <description>The maximum number of entries the FileSystem 
+  <description>The maximum number of entries the FileSystem
     cache may contain
   </description>
   <name>fs.cache.lru.entries.max-size</name>
@@ -908,7 +908,7 @@ for ldap providers in the same way as above does.
 </property>
 
 <property>
-  <description>The length of time after an entry is last accessed 
+  <description>The length of time after an entry is last accessed
     that it should be automatically removed from the FileSystem cache
   </description>
   <name>fs.cache.lru.entries.expire-after-access-ms</name>
@@ -1835,10 +1835,10 @@ for ldap providers in the same way as above does.
   <name>hadoop.htrace.spanreceiver.classes</name>
   <value></value>
   <description>
-    A comma separated list of the fully-qualified class name of classes 
-    implementing SpanReceiver. The tracing system works by collecting 
-    information in structs called 'Spans'. It is up to you to choose 
-    how you want to receive this information by implementing the 
+    A comma separated list of the fully-qualified class name of classes
+    implementing SpanReceiver. The tracing system works by collecting
+    information in structs called 'Spans'. It is up to you to choose
+    how you want to receive this information by implementing the
     SpanReceiver interface.
   </description>
 </property>
@@ -1986,4 +1986,18 @@ for ldap providers in the same way as above does.
     <value>Client</value>
   </property>
 
+  <property>
+    <name>fs.client.htrace.sampler.classes</name>
+    <value></value>
+    <description>The class names of the HTrace Samplers to use for Hadoop
+      filesystem clients.
+    </description>
+  </property>
+
+  <property>
+    <name>hadoop.htrace.span.receiver.classes</name>
+    <value></value>
+    <description>The class names of the Span Receivers to use for Hadoop.
+    </description>
+  </property>
 </configuration>

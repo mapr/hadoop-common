@@ -73,6 +73,8 @@ import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.ShutdownHookManager;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.MapRCommonSecurityUtil;
+import org.apache.htrace.core.Tracer;
+import org.apache.htrace.core.TraceScope;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -132,6 +134,13 @@ public abstract class FileSystem extends Configured implements Closeable {
   private Set<Path> deleteOnExit = new TreeSet<Path>();
   
   boolean resolveSymlinks;
+
+  private Tracer tracer;
+
+  protected final Tracer getTracer() {
+    return tracer;
+  }
+
   /**
    * This method adds a file system for testing so that we can find it later. It
    * is only for testing.
@@ -195,30 +204,30 @@ public abstract class FileSystem extends Configured implements Closeable {
     throw new UnsupportedOperationException();
   }
 
-  public FSDataInputStream openFid2(PathId pfid, String file,  int readAheadBytesHint) 
+  public FSDataInputStream openFid2(PathId pfid, String file,  int readAheadBytesHint)
       throws IOException {
     throw new UnsupportedOperationException("See concrete FS for implementation");
   }
-  public FSDataOutputStream createFid(String pfid, String file) 
+  public FSDataOutputStream createFid(String pfid, String file)
       throws IOException {
     throw new UnsupportedOperationException("See concrete FS for implementation");
   }
-  public boolean deleteFid(String pfid, String dir) 
+  public boolean deleteFid(String pfid, String dir)
       throws IOException {
     throw new UnsupportedOperationException("See concrete FS for implementation");
   }
   public String mkdirsFid(Path p) throws IOException {
     throw new UnsupportedOperationException("See concrete FS for implementation");
   }
-  public String mkdirsFid(String pfid, String dir) 
+  public String mkdirsFid(String pfid, String dir)
       throws IOException {
     throw new UnsupportedOperationException("See concrete FS for implementation");
   }
   public void setOwnerFid(String fid, String user, String group) throws IOException {
     throw new UnsupportedOperationException("See concrete FS for implementation");
   }
-  
-  
+
+
   /** Set the default filesystem URI in a configuration.
    * @param conf the configuration to alter
    * @param uri the new default filesystem uri
@@ -2700,13 +2709,13 @@ public abstract class FileSystem extends Configured implements Closeable {
     private final ClientFinalizer clientFinalizer = new ClientFinalizer();
 
     Configuration conf = new Configuration();
-    
+
     private final Map<Key, FileSystem> map = getCacheMap(conf);
     private final Set<Key> toAutoClose = new HashSet<Key>();
 
     /** A variable that makes all objects in the cache unique */
     private static AtomicLong unique = new AtomicLong(1);
-    
+
     private Map<Key, FileSystem> getCacheMap(Configuration conf) {
       Map<Key, FileSystem> map;
 
@@ -2726,7 +2735,7 @@ public abstract class FileSystem extends Configured implements Closeable {
 
       return map;
     }
-    
+
     private Map<Key, FileSystem> createLruCacheMap(Configuration conf) {
       final int FS_CACHE_LRU_ENTRIES_MAX_SIZE = conf.getInt(
         CommonConfigurationKeys.FS_CACHE_LRU_ENTRIES_MAX_SIZE,
@@ -3046,7 +3055,7 @@ public abstract class FileSystem extends Configured implements Closeable {
 
       public long getNumWriteOps() {
         return writeOps;
-      }      
+      }
     }
 
     private interface StatisticsAggregator<T> {
@@ -3068,7 +3077,7 @@ public abstract class FileSystem extends Configured implements Closeable {
      * Thread-local data.
      */
     private final ThreadLocal<StatisticsData> threadData;
-    
+
     /**
      * List of all thread-local data areas.  Protected by the Statistics lock.
      */
@@ -3433,7 +3442,7 @@ public abstract class FileSystem extends Configured implements Closeable {
                          ": " + pair.getValue());
     }
   }
-  
+
   // But this causes issues for existing MR1 class TaskRunner which needs to
   // create symlink using local file system. So enabling symlinks.
   private static boolean symlinksEnabled = true;
@@ -3469,7 +3478,7 @@ public abstract class FileSystem extends Configured implements Closeable {
    * @param pfid the parent-fid of the file to open
    * @param file the file to be opened
    */
-  public FSDataInputStream openFid(String pfid, String file, long [] ips) 
+  public FSDataInputStream openFid(String pfid, String file, long [] ips)
     throws IOException {
     throw new UnsupportedOperationException("See concrete FS for implementation");
   }
