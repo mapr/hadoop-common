@@ -28,6 +28,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import com.google.common.collect.ImmutableList;
 import net.java.dev.eval.Expression;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -309,7 +310,7 @@ public class FSParentQueue extends FSQueue {
   public List<FSQueue> getChildQueues() {
     readLock.lock();
     try {
-      return Collections.unmodifiableList(childQueues);
+      return ImmutableList.copyOf(childQueues);
     } finally {
       readLock.unlock();
     }
