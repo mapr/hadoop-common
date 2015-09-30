@@ -445,6 +445,9 @@ Release 2.7.0 - 2015-04-20
 
   BUG FIXES
 
+    YARN-3727. For better error recovery, check if the directory exists before
+    using it for localization. (Zhihai Xu via jlowe)
+
     YARN-3554. Default value for maximum nodemanager connect wait time is too high. Contributed by Naganarasimha G R
 
     YARN-4414. Nodemanager connection errors are retried at multiple levels. Contributed by Chang Li
