@@ -30,6 +30,21 @@ Hadoop MapReduce Change Log
     TaskAttemptImpl#sendJHStartEventForAssignedFailTask (Bibin A Chundatt via
     jlowe)
 
+Release 2.8.0 - UNRELEASED
+
+  INCOMPATIBLE CHANGES
+ 
+  NEW FEATURES
+  
+  IMPROVEMENTS
+  
+  OPTIMIZATIONS
+  
+  BUG FIXES
+  
+    MAPREDUCE-6302. Preempt reducers after a configurable timeout irrespective 
+    of headroom. (kasha)
+
 Release 2.7.0 - 2015-04-20
   NEW FEATURES
 
