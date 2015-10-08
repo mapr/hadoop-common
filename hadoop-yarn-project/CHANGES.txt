@@ -133,6 +133,9 @@ Release 2.7.1 - UNRELEASED
 
     YARN-4321. Incessant retries if NoAuthException is thrown by Zookeeper in non
     HA mode.  (Varun Saxena via jianhe)
+    
+    YARN-3780. Should use equals when compare Resource in RMNodeImpl#ReconnectNodeTransition.
+    (zhihai xu via devaraj)
 
     YARN-3351. AppMaster tracking URL is broken in HA. (Anubhav Dhoot via kasha)
 
