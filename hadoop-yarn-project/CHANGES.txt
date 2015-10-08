@@ -136,6 +136,9 @@ Release 2.7.1 - UNRELEASED
     
     YARN-3780. Should use equals when compare Resource in RMNodeImpl#ReconnectNodeTransition.
     (zhihai xu via devaraj)
+    
+    YARN-3802. Two RMNodes for the same NodeId are used in RM sometimes
+    after NM is reconnected. (zhihai xu via xgong)
 
     YARN-3351. AppMaster tracking URL is broken in HA. (Anubhav Dhoot via kasha)
 
