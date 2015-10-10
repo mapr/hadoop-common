@@ -300,7 +300,7 @@ public class FifoScheduler extends
       YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_MB,
       YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_MB);
 
-    if (minMem <= 0 || minMem > maxMem) {
+    if (minMem < 0 || minMem > maxMem) {
       throw new YarnRuntimeException("Invalid resource scheduler memory"
         + " allocation configuration"
         + ", " + YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_MB
@@ -318,7 +318,7 @@ public class FifoScheduler extends
       YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES,
       YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES);
 
-    if (minVcores <= 0 || minVcores > maxVcores) {
+    if (minVcores < 0 || minVcores > maxVcores) {
       throw new YarnRuntimeException("Invalid resource scheduler vcores"
         + " allocation configuration"
         + ", " + YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_VCORES
