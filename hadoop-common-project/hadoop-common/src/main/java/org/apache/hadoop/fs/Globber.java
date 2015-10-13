@@ -47,7 +47,7 @@ class Globber {
     this.fc = null;
     this.pathPattern = pathPattern;
     this.filter = filter;
-    this.tracer = fs.getTracer();
+    this.tracer = FsTracer.get(fs.getConf());
   }
 
   public Globber(FileContext fc, Path pathPattern, PathFilter filter) {
@@ -142,6 +142,16 @@ class Globber {
   }
 
   public FileStatus[] glob() throws IOException {
+    TraceScope scope = tracer.newScope("Globber#glob");
+    scope.addKVAnnotation("pattern", pathPattern.toUri().getPath());
+    try {
+      return doGlob();
+    } finally {
+      scope.close();
+    }
+  }
+
+  private FileStatus[] doGlob() throws IOException {
     // First we get the scheme and authority of the pattern that was passed
     // in.
     String scheme = schemeFromPath(pathPattern);
