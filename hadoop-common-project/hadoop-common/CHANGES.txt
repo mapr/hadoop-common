@@ -66,6 +66,10 @@ Hadoop Change Log
     ProviderUtils.excludeIncompatibleCredentialProviders.
     (Larry McCay via cnauroth)
 
+    HADOOP-12474. MiniKMS should use random ports for Jetty server by default.
+    (Mingliang Liu via wheat9)
+
+
 Release 2.7.0 - 2015-04-20
 
   INCOMPATIBLE CHANGES

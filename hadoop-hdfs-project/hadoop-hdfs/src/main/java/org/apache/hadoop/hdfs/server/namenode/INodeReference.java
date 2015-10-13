@@ -31,7 +31,7 @@ import org.apache.hadoop.hdfs.server.namenode.snapshot.DirectoryWithSnapshotFeat
 import org.apache.hadoop.hdfs.server.namenode.snapshot.Snapshot;
 
 import com.google.common.base.Preconditions;
-import org.mortbay.log.Log;
+import org.eclipse.jetty.util.log.Log;
 
 /**
  * An anonymous reference to an inode.
@@ -566,7 +566,7 @@ public abstract class INodeReference extends INode {
         try {
           ref.addSpaceConsumed(counts.negation(), true);
         } catch (QuotaExceededException e) {
-          Log.warn("Should not have QuotaExceededException");
+          Log.getLog().warn("Should not have QuotaExceededException");
         }
       }
       

@@ -50,7 +50,6 @@ public class MiniKMS {
   private static Server createJettyServer(String keyStore, String password, int inPort) {
     try {
       boolean ssl = keyStore != null;
-      InetAddress localhost = InetAddress.getByName("localhost");
       String host = "localhost";
       Server server = new Server();
       ServerConnector conn = new ServerConnector(server);
@@ -100,7 +99,7 @@ public class MiniKMS {
     private String log4jConfFile;
     private File keyStoreFile;
     private String keyStorePassword;
-    private int inPort = -1;
+    private int inPort;
 
     public Builder() {
       kmsConfDir = new File("target/test-classes").getAbsoluteFile();

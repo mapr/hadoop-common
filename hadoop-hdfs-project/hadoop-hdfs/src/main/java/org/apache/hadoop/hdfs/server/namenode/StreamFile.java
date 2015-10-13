@@ -39,7 +39,7 @@ import org.apache.hadoop.hdfs.server.datanode.DatanodeJspHelper;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.ServletUtil;
-import org.mortbay.jetty.InclusiveByteRange;
+import org.eclipse.jetty.server.InclusiveByteRange;
 
 @InterfaceAudience.Private
 public class StreamFile extends DfsServlet {
@@ -95,7 +95,7 @@ public class StreamFile extends DfsServlet {
       out = response.getOutputStream();
       final long fileLen = in.getVisibleLength();
       if (reqRanges != null) {
-        List<InclusiveByteRange> ranges = 
+        List<InclusiveByteRange> ranges =
           InclusiveByteRange.satisfiableRanges(reqRanges, fileLen);
         StreamFile.sendPartialData(in, out, response, fileLen, ranges);
       } else {
