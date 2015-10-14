@@ -65,6 +65,7 @@ import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.apache.hadoop.yarn.util.timeline.TimelineUtils;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.apache.hadoop.yarn.util.timeline.TimelineUtils;
 
 /**
  * The launch of the AM itself.

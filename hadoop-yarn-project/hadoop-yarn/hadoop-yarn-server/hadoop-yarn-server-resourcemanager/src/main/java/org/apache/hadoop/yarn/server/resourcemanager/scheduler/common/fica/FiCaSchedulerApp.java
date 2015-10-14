@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.mutable.MutableObject;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
@@ -73,6 +74,11 @@ import com.google.common.annotations.VisibleForTesting;
 @Unstable
 public class FiCaSchedulerApp extends SchedulerApplicationAttempt {
   private static final Log LOG = LogFactory.getLog(FiCaSchedulerApp.class);
+
+  static final CSAssignment NULL_ASSIGNMENT =
+      new CSAssignment(Resources.createResource(0, 0), NodeType.NODE_LOCAL);
+
+  static final CSAssignment SKIP_ASSIGNMENT = new CSAssignment(true);
 
   private final Set<ContainerId> containersToPreempt =
     new HashSet<ContainerId>();

@@ -43,6 +43,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
@@ -179,7 +182,7 @@ public class ApplicationMaster {
   public static enum DSEvent {
     DS_APP_ATTEMPT_START, DS_APP_ATTEMPT_END, DS_CONTAINER_START, DS_CONTAINER_END
   }
-  
+
   @VisibleForTesting
   @Private
   public static enum DSEntity {
@@ -330,6 +333,23 @@ public class ApplicationMaster {
     }
   }
   
+  //TODO remove threadPool after adding non-blocking call in TimelineClient
+  private static void shutdownAndAwaitTermination() {
+    threadPool.shutdown();
+    try {
+      // Wait a while for existing tasks to terminate
+      if (!threadPool.awaitTermination(60, TimeUnit.SECONDS)) {
+        threadPool.shutdownNow();
+        if (!threadPool.awaitTermination(60, TimeUnit.SECONDS))
+            LOG.error("ThreadPool did not terminate");
+      }
+    } catch (InterruptedException ie) {
+      threadPool.shutdownNow();
+      // Preserve interrupt status
+      Thread.currentThread().interrupt();
+    }
+  }
+
   //TODO remove threadPool after adding non-blocking call in TimelineClient
   private static void shutdownAndAwaitTermination() {
     threadPool.shutdown();
@@ -564,7 +584,6 @@ public class ApplicationMaster {
             "Timeline service is not enabled");
       }
     }
-
     return true;
   }
 
@@ -775,7 +794,7 @@ public class ApplicationMaster {
     FinalApplicationStatus appStatus;
     String appMessage = null;
     boolean success = true;
-    if (numFailedContainers.get() == 0 && 
+    if (numFailedContainers.get() == 0 &&
         numCompletedContainers.get() == numTotalContainers) {
       appStatus = FinalApplicationStatus.SUCCEEDED;
     } else {
@@ -794,7 +813,7 @@ public class ApplicationMaster {
     } catch (IOException e) {
       LOG.error("Failed to unregister application", e);
     }
-    
+
     amRMClient.stop();
 
     // Stop Timeline Client
@@ -864,7 +883,7 @@ public class ApplicationMaster {
           }
         }
       }
-      
+
       // ask for more containers if any failed
       int askCount = numTotalContainers - numRequestedContainers.get();
       numRequestedContainers.addAndGet(askCount);
@@ -875,7 +894,7 @@ public class ApplicationMaster {
           amRMClient.addContainerRequest(containerAsk);
         }
       }
-      
+
       if (numCompletedContainers.get() == numTotalContainers) {
         done = true;
       }
@@ -1194,7 +1213,7 @@ public class ApplicationMaster {
       org.apache.commons.io.IOUtils.closeQuietly(ds);
     }
   }
-  
+
   private static void publishContainerStartEvent(
       final TimelineClient timelineClient, Container container, String domainId,
       UserGroupInformation ugi) {
@@ -1414,6 +1433,23 @@ public class ApplicationMaster {
     event.setTimestamp(System.currentTimeMillis());
     entity.addEvent(event);
 
+  private static void publishContainerEndEventOnNewTimelineServiceBase(
+      final TimelineClient timelineClient, final ContainerStatus container,
+      final String domainId, final UserGroupInformation ugi) {
+    final org.apache.hadoop.yarn.api.records.timelineservice.TimelineEntity
+        entity =
+        new org.apache.hadoop.yarn.api.records.timelineservice.TimelineEntity();
+    entity.setId(container.getContainerId().toString());
+    entity.setType(DSEntity.DS_CONTAINER.toString());
+    //entity.setDomainId(domainId);
+    entity.addInfo("user", ugi.getShortUserName());
+    org.apache.hadoop.yarn.api.records.timelineservice.TimelineEvent event =
+        new org.apache.hadoop.yarn.api.records.timelineservice.TimelineEvent();
+    event.setTimestamp(System.currentTimeMillis());
+    event.setId(DSEvent.DS_CONTAINER_END.toString());
+    event.addInfo("State", container.getState().name());
+    event.addInfo("Exit Status", container.getExitStatus());
+    entity.addEvent(event);
     try {
       ugi.doAs(new PrivilegedExceptionAction<Object>() {
         @Override
@@ -1426,8 +1462,7 @@ public class ApplicationMaster {
       LOG.error("App Attempt "
           + (appEvent.equals(DSEvent.DS_APP_ATTEMPT_START) ? "start" : "end")
           + " event could not be published for "
-          + appAttemptId.toString(),
-          e instanceof UndeclaredThrowableException ? e.getCause() : e);
+          + appAttemptId.toString(), e);
     }
   }
 

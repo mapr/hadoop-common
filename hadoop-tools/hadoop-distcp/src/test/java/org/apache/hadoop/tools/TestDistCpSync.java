@@ -239,6 +239,11 @@ public class TestDistCpSync {
             HdfsConstants.DOT_SNAPSHOT_DIR + Path.SEPARATOR + "s2");
     Assert.assertEquals(spath, options.getSourcePaths().get(0));
 
+    // make sure the source path has been updated to the snapshot path
+    final Path spath = new Path(source,
+        HdfsConstants.DOT_SNAPSHOT_DIR + Path.SEPARATOR + "s2");
+    Assert.assertEquals(spath, options.getSourcePaths().get(0));
+
     // build copy listing
     final Path listingPath = new Path("/tmp/META/fileList.seq");
     CopyListing listing = new SimpleCopyListing(conf, new Credentials(), distCpSync);

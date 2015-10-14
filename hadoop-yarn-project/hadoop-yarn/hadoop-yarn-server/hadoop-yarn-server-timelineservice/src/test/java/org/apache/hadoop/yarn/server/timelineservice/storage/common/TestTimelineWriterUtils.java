@@ -15,19 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.hadoop.yarn.server.timelineservice.storage.common;
 
-package org.apache.hadoop.tools;
+import org.junit.Test;
 
-import org.apache.hadoop.fs.Path;
+public class TestTimelineWriterUtils {
 
-/**
- * A CopyFilter which always returns true.
- *
- */
-public class TrueCopyFilter extends CopyFilter {
-
-  @Override
-  public boolean shouldCopy(Path path) {
-    return true;
+  @Test
+  public void test() {
+    // TODO: implement a test for the remaining method in TimelineWriterUtils.
   }
+
 }

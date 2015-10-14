@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,13 +16,9 @@
  * limitations under the License.
  */
 
-package org.apache.hadoop.yarn.server.timelineservice.storage;
+@InterfaceAudience.Private
+@InterfaceStability.Unstable
+package org.apache.hadoop.yarn.server.timelineservice.storage.common;
 
-/**
- * specifies the tracks along which an entity
- * info is to be aggregated on
- *
- */
-public enum TimelineAggregationTrack {
-  FLOW, USER, QUEUE
-}
+import org.apache.hadoop.classification.InterfaceAudience;
+import org.apache.hadoop.classification.InterfaceStability;
