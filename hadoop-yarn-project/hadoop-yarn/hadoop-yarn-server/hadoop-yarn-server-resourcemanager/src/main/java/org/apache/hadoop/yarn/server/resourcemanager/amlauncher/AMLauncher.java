@@ -61,7 +61,6 @@ import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttempt;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttemptEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttemptEventType;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttemptImpl;
-import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.event.RMAppAttemptLaunchFailedEvent;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -85,7 +84,7 @@ public class AMLauncher implements Runnable {
   private final EventHandler handler;
 
   private ExternalTokenManager extTokenMgr = ExternalTokenManagerFactory.get();
-  
+
   public AMLauncher(RMContext rmContext, RMAppAttempt application,
       AMLauncherEventType eventType, Configuration conf) {
     this.application = application;
@@ -267,8 +266,8 @@ public class AMLauncher implements Runnable {
         String message = "Error launching " + application.getAppAttemptId()
             + ". Got exception: " + StringUtils.stringifyException(ie);
         LOG.info(message);
-        handler.handle(new RMAppAttemptLaunchFailedEvent(application
-            .getAppAttemptId(), message));
+        handler.handle(new RMAppAttemptEvent(application
+            .getAppAttemptId(), RMAppAttemptEventType.LAUNCH_FAILED, message));
       }
       break;
     case CLEANUP:

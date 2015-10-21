@@ -9,7 +9,7 @@ Release 2.8.0 - UNRELEASED
 
   NEW FEATURES
 
-    YARN-2019. Retrospect on decision of making RM crashed if any exception throw 
+    YARN-2019. Retrospect on decision of making RM crashed if any exception throw
     in ZKRMStateStore. (Jian He via junping_du)
 
   IMPROVEMENTS
@@ -219,6 +219,9 @@ Release 2.7.1 - UNRELEASED
     (Junping Du via jianhe)
 
     YARN-4153. TestAsyncDispatcher failed at branch-2.7 (Zhihai Xu via jianhe)
+
+    YARN-4000. RM crashes with NPE if leaf queue becomes parent queue during restart.
+    (Varun Saxena via jianhe)
 
 Release 2.7.0 - 2015-04-20
 

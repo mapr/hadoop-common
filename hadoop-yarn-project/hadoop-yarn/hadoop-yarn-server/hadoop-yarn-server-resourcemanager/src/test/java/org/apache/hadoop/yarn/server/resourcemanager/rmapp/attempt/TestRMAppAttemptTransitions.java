@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -89,11 +90,8 @@ import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppEventType;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppFailedAttemptEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppImpl;
-import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppRejectedEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppRunningOnNodeEvent;
-import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.event.RMAppAttemptContainerAllocatedEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.event.RMAppAttemptContainerFinishedEvent;
-import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.event.RMAppAttemptLaunchFailedEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.event.RMAppAttemptRegistrationEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.event.RMAppAttemptUnregistrationEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.ContainerAllocationExpirer;
@@ -126,6 +124,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatcher;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -421,10 +420,16 @@ public class TestRMAppAttemptTransitions {
     // Check events
     verify(masterService).
         unregisterAttempt(applicationAttempt.getAppAttemptId());
-    
-    // this works for unmanaged and managed AM's because this is actually doing
-    // verify(application).handle(anyObject());
-    verify(application).handle(any(RMAppRejectedEvent.class));
+    // ATTEMPT_FAILED should be notified to app if app attempt is submitted to
+    // failed state.
+    ArgumentMatcher<RMAppEvent> matcher = new ArgumentMatcher<RMAppEvent>() {
+      @Override
+      public boolean matches(Object o) {
+        RMAppEvent event = (RMAppEvent) o;
+        return event.getType() == RMAppEventType.ATTEMPT_FAILED;
+      }
+    };
+    verify(application).handle(argThat(matcher));
     verifyTokenCount(applicationAttempt.getAppAttemptId(), 1);
     verifyApplicationAttemptFinished(RMAppAttemptState.FAILED);
   }
@@ -658,8 +663,8 @@ public class TestRMAppAttemptTransitions {
         thenReturn(rmContainer);
     
     applicationAttempt.handle(
-        new RMAppAttemptContainerAllocatedEvent(
-            applicationAttempt.getAppAttemptId()));
+        new RMAppAttemptEvent(applicationAttempt.getAppAttemptId(),
+            RMAppAttemptEventType.CONTAINER_ALLOCATED));
     
     assertEquals(RMAppAttemptState.ALLOCATED_SAVING, 
         applicationAttempt.getAppAttemptState());
@@ -928,9 +933,8 @@ public class TestRMAppAttemptTransitions {
     Container amContainer = allocateApplicationAttempt();
     String diagnostics = "Launch Failed";
     applicationAttempt.handle(
-        new RMAppAttemptLaunchFailedEvent(
-            applicationAttempt.getAppAttemptId(), 
-            diagnostics));
+        new RMAppAttemptEvent(applicationAttempt.getAppAttemptId(),
+            RMAppAttemptEventType.LAUNCH_FAILED, diagnostics));
     assertEquals(YarnApplicationAttemptState.ALLOCATED,
         applicationAttempt.createApplicationAttemptState());
     testAppAttemptFailedState(amContainer, diagnostics);
@@ -957,8 +961,9 @@ public class TestRMAppAttemptTransitions {
     // verify for both launched and launch_failed transitions in final_saving
     applicationAttempt.handle(new RMAppAttemptEvent(applicationAttempt
         .getAppAttemptId(), RMAppAttemptEventType.LAUNCHED));
-    applicationAttempt.handle(new RMAppAttemptLaunchFailedEvent(
-        applicationAttempt.getAppAttemptId(), "Launch Failed"));
+    applicationAttempt.handle(
+        new RMAppAttemptEvent(applicationAttempt.getAppAttemptId(),
+            RMAppAttemptEventType.LAUNCH_FAILED, "Launch Failed"));
 
     assertEquals(RMAppAttemptState.FINAL_SAVING,
         applicationAttempt.getAppAttemptState());
@@ -968,8 +973,9 @@ public class TestRMAppAttemptTransitions {
     // verify for both launched and launch_failed transitions in killed
     applicationAttempt.handle(new RMAppAttemptEvent(applicationAttempt
         .getAppAttemptId(), RMAppAttemptEventType.LAUNCHED));
-    applicationAttempt.handle(new RMAppAttemptLaunchFailedEvent(
-        applicationAttempt.getAppAttemptId(), "Launch Failed"));
+    applicationAttempt.handle(new RMAppAttemptEvent(
+        applicationAttempt.getAppAttemptId(),
+            RMAppAttemptEventType.LAUNCH_FAILED, "Launch Failed"));
     assertEquals(RMAppAttemptState.KILLED,
         applicationAttempt.getAppAttemptState());
   }
