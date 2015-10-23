@@ -46,6 +46,8 @@ Release 2.7.1 - UNRELEASED
     
     YARN-4424. Fix deadlock in RMAppImpl. (Jian he via wangda)
 
+    YARN-4041. Slow delegation token renewal can severely prolong RM recovery. Contributed by Sunil G
+
 Release 2.7.0 - 2015-04-20
 
   INCOMPATIBLE CHANGES
