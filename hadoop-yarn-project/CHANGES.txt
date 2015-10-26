@@ -232,7 +232,31 @@ Release 2.7.3 - 2016-08-25
     YARN-3102. Decommisioned Nodes not listed in Web UI (Kuhu Shukla via
     jlowe)
 
-Release 2.7.1
+    YARN-4000. RM crashes with NPE if leaf queue becomes parent queue during restart. 
+    (Varun Saxena via jianhe)
+
+    YARN-4155. TestLogAggregationService.testLogAggregationServiceWithInterval failing
+    (Bibin A Chundatt via stevel)
+
+    YARN-4270. Limit application resource reservation on nodes for non-node/rack
+    specific requests (asuresh)
+
+    YARN-4256. YARN fair scheduler vcores with decimal values. (Jun Gong via zxu)
+
+    YARN-4294. [JDK8] Fix javadoc errors caused by wrong reference and illegal
+    tag. (aajisaka)
+
+    YARN-4289. TestDistributedShell failing with bind exception.
+    (Brahma Reddy Battula via stevel)
+
+    YARN-3724. Use POSIX nftw(3) instead of fts(3) (Alan Burlison via aw)
+
+    YARN-4246. NPE while listing app attempt. (Nijel S F via rohithsharmaks)
+
+    YARN-3528. Tests with 12345 as hard-coded port break jenkins.
+    (Brahma Reddy Battula via ozawa)
+
+Release 2.7.2 - UNRELEASED
 
   INCOMPATIBLE CHANGES
 

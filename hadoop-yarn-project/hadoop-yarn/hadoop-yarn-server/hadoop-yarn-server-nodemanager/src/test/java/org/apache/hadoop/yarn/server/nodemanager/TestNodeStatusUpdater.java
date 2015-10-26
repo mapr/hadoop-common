@@ -57,6 +57,7 @@ import org.apache.hadoop.io.retry.RetryPolicy;
 import org.apache.hadoop.io.retry.RetryProxy;
 import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 import org.apache.hadoop.net.NetUtils;
+import org.apache.hadoop.net.ServerSocketUtil;
 import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.security.token.delegation.web.DelegationTokenIdentifier;
 import org.apache.hadoop.service.Service.STATE;
@@ -140,7 +141,7 @@ public class TestNodeStatusUpdater {
   private AtomicBoolean assertionFailedInThread = new AtomicBoolean(false);
 
   @Before
-  public void setUp() {
+  public void setUp() throws IOException {
     nmLocalDir.mkdirs();
     tmpDir.mkdirs();
     logsDir.mkdirs();
@@ -1041,7 +1042,7 @@ public class TestNodeStatusUpdater {
   }
 
   @Test
-  public void testNMRegistration() throws InterruptedException {
+  public void testNMRegistration() throws InterruptedException, IOException {
     nm = new NodeManager() {
       @Override
       protected NodeStatusUpdater createNodeStatusUpdater(Context context,
@@ -1484,7 +1485,8 @@ public class TestNodeStatusUpdater {
       throws Exception {
     final long connectionWaitSecs = 1000;
     final long connectionRetryIntervalMs = 1000;
-    YarnConfiguration conf = createNMConfig();
+    int port = ServerSocketUtil.getPort(49156, 10);
+    YarnConfiguration conf = createNMConfig(port);
     conf.setLong(YarnConfiguration.RESOURCEMANAGER_CONNECT_MAX_WAIT_MS,
         connectionWaitSecs);
     conf.setLong(YarnConfiguration
@@ -1500,7 +1502,7 @@ public class TestNodeStatusUpdater {
     ContainerId cId = TestNodeManagerShutdown.createContainerId();
     FileContext localFS = FileContext.getLocalFSFileContext();
     TestNodeManagerShutdown.startContainer(nm, cId, localFS, nmLocalDir,
-      new File("start_file.txt"));
+        new File("start_file.txt"), port);
 
     try {
       // Wait until we start stopping
@@ -1517,7 +1519,8 @@ public class TestNodeStatusUpdater {
   }
 
   @Test
-  public void testRMVersionLessThanMinimum() throws InterruptedException {
+  public void testRMVersionLessThanMinimum() throws InterruptedException,
+      IOException {
     final AtomicInteger numCleanups = new AtomicInteger(0);
     YarnConfiguration conf = createNMConfig();
     conf.set(YarnConfiguration.NM_RESOURCEMANAGER_MINIMUM_VERSION, "3.0.0");
@@ -1725,17 +1728,19 @@ public class TestNodeStatusUpdater {
         this.registeredNodes.size());
   }
 
-  private YarnConfiguration createNMConfig() {
+  private YarnConfiguration createNMConfig(int port) throws IOException {
     YarnConfiguration conf = new YarnConfiguration();
     String localhostAddress = null;
     try {
-      localhostAddress = InetAddress.getByName("localhost").getCanonicalHostName();
+      localhostAddress = InetAddress.getByName("localhost")
+          .getCanonicalHostName();
     } catch (UnknownHostException e) {
       Assert.fail("Unable to get localhost address: " + e.getMessage());
     }
     conf.setInt(YarnConfiguration.NM_PMEM_MB, 5 * 1024); // 5GB
-    conf.set(YarnConfiguration.NM_ADDRESS, localhostAddress + ":12345");
-    conf.set(YarnConfiguration.NM_LOCALIZER_ADDRESS, localhostAddress + ":12346");
+    conf.set(YarnConfiguration.NM_ADDRESS, localhostAddress + ":" + port);
+    conf.set(YarnConfiguration.NM_LOCALIZER_ADDRESS, localhostAddress + ":"
+        + ServerSocketUtil.getPort(49160, 10));
     conf.set(YarnConfiguration.NM_LOG_DIRS, logsDir.getAbsolutePath());
     conf.set(YarnConfiguration.NM_REMOTE_APP_LOG_DIR,
       remoteLogsDir.getAbsolutePath());
@@ -1744,6 +1749,10 @@ public class TestNodeStatusUpdater {
     conf.setBoolean(YarnConfiguration.NM_RECOVERY_ENABLED, false);
     conf.setBoolean(YarnConfiguration.NM_STATUS_SERVER_ENABLED, false);
     return conf;
+  }
+
+  private YarnConfiguration createNMConfig() throws IOException {
+    return createNMConfig(ServerSocketUtil.getPort(49170, 10));
   }
 
   private NodeManager getNodeManager(final NodeAction nodeHeartBeatAction) {
