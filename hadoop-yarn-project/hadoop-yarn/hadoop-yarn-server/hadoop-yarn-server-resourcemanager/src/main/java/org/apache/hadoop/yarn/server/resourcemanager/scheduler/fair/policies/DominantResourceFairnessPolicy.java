@@ -92,7 +92,7 @@ public class DominantResourceFairnessPolicy extends SchedulingPolicy {
 
   @Override
   public Resource getHeadroom(Resource queueFairShare, Resource queueUsage,
-                              Resource clusterAvailable) {
+                              Resource maxAvailable) {
     int queueAvailableMemory =
         Math.max(queueFairShare.getMemory() - queueUsage.getMemory(), 0);
     int queueAvailableCPU =
@@ -102,9 +102,9 @@ public class DominantResourceFairnessPolicy extends SchedulingPolicy {
         Math.max(queueFairShare.getDisks() - queueUsage
             .getDisks(), 0);
     Resource headroom = Resources.createResource(
-        Math.min(clusterAvailable.getMemory(), queueAvailableMemory),
-        Math.min(clusterAvailable.getVirtualCores(), queueAvailableCPU),
-        Math.min(clusterAvailable.getDisks(), queueAvailableDisk));
+        Math.min(maxAvailable.getMemory(), queueAvailableMemory),
+        Math.min(maxAvailable.getVirtualCores(),
+                queueAvailableCPU));
     return headroom;
   }
 

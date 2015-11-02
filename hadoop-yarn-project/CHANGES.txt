@@ -14,6 +14,7 @@ Release 2.7.1 - UNRELEASED
 
     YARN-3351. AppMaster tracking URL is broken in HA. (Anubhav Dhoot via kasha)
 
+    
 Release 2.7.0 - 2015-04-20
 
   INCOMPATIBLE CHANGES
@@ -361,6 +362,9 @@ Release 2.7.0 - 2015-04-20
     rack-local delays, even for off-rack-only requests. (kasha)
 
   BUG FIXES
+  
+    YARN-3485. FairScheduler headroom calculation doesn't consider 
+    maxResources for Fifo and FairShare policies. (kasha)
 
     YARN-3071. Remove invalid char from sample conf in doc of FairScheduler.
     (Masatake Iwasaki via aajisaka)
