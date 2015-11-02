@@ -11,6 +11,8 @@ Release 2.7.1 - UNRELEASED
   OPTIMIZATIONS
 
   BUG FIXES
+    YARN-3487. CapacityScheduler scheduler lock obtained unnecessarily when 
+    calling getQueue (Jason Lowe via wangda)
 
     YARN-3351. AppMaster tracking URL is broken in HA. (Anubhav Dhoot via kasha)
 
