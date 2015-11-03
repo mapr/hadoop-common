@@ -231,7 +231,23 @@ Publishing of application specific data
   **Note** : Following are the points which needs to be observed during updating a entity.
 
   * Domain ID should not be modified for already existing entity.
+Note that the value of the key/value pair for `primaryFilter` and
+`secondaryFilters` parameters can be of different data types, and matching is
+data type sensitive. Users need to format the value properly. For example, `123`
+and `"123"` means an integer and a string respectively. If the entity has a
+string `"123"` for `primaryFilter`, but the parameter is set to the integer
+`123`, the entity will not be matched. Similarly, `true` means a boolean while
+`"true"` means a string. In general, the value will be casted as a certain Java
+type in consistent with `jackson` library parsing a JSON clip.
+
+`Timeline Entity` for syntax of the timeline entity object.
+See also `Timeline Event List` for syntax of the timeline event object. Note
+that `value` of `primaryfilters` and `otherinfo` is an Object instead of a
+String.
+Below is the elements of a single event object.  Note that `value` of
+`eventinfo` and `otherinfo` is an Object instead of a String.
 
   * Its advisable to have same primary filters for all updates on entity. As on modification of primary filter by subsequent updates will result in not fetching the information before the update when queried with updated primary filter.
 
   * On modification of Primary filter value, new value will be appended with the old value.
+returned as a collection of container objects. See also `Container` for
