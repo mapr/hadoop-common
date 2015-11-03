@@ -365,6 +365,9 @@ Release 2.7.0 - 2015-04-20
 
   BUG FIXES
 
+    YARN-3701. Isolating the error of generating a single app report when
+    getting all apps from generic history service. (Zhijie Shen via xgong)
+
     YARN-3522. Fixed DistributedShell to instantiate TimeLineClient as the
     correct user. (Zhijie Shen via jianhe)
 
