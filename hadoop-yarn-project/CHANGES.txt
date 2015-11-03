@@ -368,6 +368,9 @@ Release 2.7.0 - 2015-04-20
     YARN-3522. Fixed DistributedShell to instantiate TimeLineClient as the
     correct user. (Zhijie Shen via jianhe)
 
+    YARN-3681. yarn cmd says "could not find main class 'queue'" in windows.
+    (Craig Welch and Varun Saxena via xgong)
+
     YARN-3842. NMProxy should retry on NMNotYetReadyException.
     (Robert Kanter via kasha)
 
