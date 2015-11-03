@@ -100,6 +100,15 @@ Release 2.7.0 - 2015-04-20
 
   BUG FIXES
 
+    MAPREDUCE-6410. Fixed MapReduce JobHistory server to use the right (login)
+    UGI to refresh log and cleaner settings. (Varun Saxena via vinodkv)
+
+    MAPREDUCE-6339. Job history file is not flushed correctly because isTimerActive
+    flag is not set true when flushTimerTask is scheduled. (zhihai xu via devaraj)
+
+    MAPREDUCE-6238. MR2 can't run local jobs with -libjars command options
+    which is a regression from MR1 (zxu via rkanter)
+
     MAPREDUCE-6210. Use getApplicationAttemptId() instead of getApplicationId()
     for logging AttemptId in RMContainerAllocator.java (Leitao Guo via aajisaka)
 
