@@ -365,6 +365,9 @@ Release 2.7.0 - 2015-04-20
 
   BUG FIXES
 
+    YARN-3675. FairScheduler: RM quits when node removal races with
+    continuous-scheduling on the same node. (Anubhav Dhoot via kasha)
+
     YARN-3601. Fix UT TestRMFailover.testRMWebAppRedirect. (Weiwei Yang via xgong)
 
     YARN-3585. NodeManager cannot exit on SHUTDOWN event triggered and NM
