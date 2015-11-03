@@ -91,8 +91,7 @@ public class ContainerLogsUtils {
 
   static List<Path> getContainerLogDirs(ContainerId containerId,
       LocalDirsHandlerService dirsHandler) throws YarnException {
-
-    List<String> logDirs = dirsHandler.getLogDirs();
+    List<String> logDirs = dirsHandler.getLogDirsForRead();
     List<Path> containerLogDirs = new ArrayList<Path>(logDirs.size());
     for (String logDir : logDirs) {
       logDir = new File(logDir).toURI().getPath();
