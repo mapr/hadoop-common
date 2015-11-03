@@ -365,6 +365,9 @@ Release 2.7.0 - 2015-04-20
 
   BUG FIXES
 
+    YARN-3832. Resource Localization fails on a cluster due to existing cache
+    directories (Brahma Reddy Battula via jlowe)
+
     YARN-3753. RM failed to come up with "java.io.IOException: Wait for
     ZKClient creation timed out”. (Jian He via xgong)
 
