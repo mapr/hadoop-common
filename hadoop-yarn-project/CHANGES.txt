@@ -365,6 +365,9 @@ Release 2.7.0 - 2015-04-20
 
   BUG FIXES
 
+    YARN-3753. RM failed to come up with "java.io.IOException: Wait for
+    ZKClient creation timed out”. (Jian He via xgong)
+
     YARN-3675. FairScheduler: RM quits when node removal races with
     continuous-scheduling on the same node. (Anubhav Dhoot via kasha)
 
