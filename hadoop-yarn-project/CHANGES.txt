@@ -365,6 +365,9 @@ Release 2.7.0 - 2015-04-20
 
   BUG FIXES
 
+    YARN-3487. CapacityScheduler scheduler lock obtained unnecessarily when
+    calling getQueue (Jason Lowe via wangda)
+
     YARN-3764. CapacityScheduler should forbid moving LeafQueue from one parent
     to another. (Wangda Tan via jianhe)
 
