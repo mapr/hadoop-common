@@ -365,6 +365,9 @@ Release 2.7.0 - 2015-04-20
 
   BUG FIXES
 
+    YARN-3585. NodeManager cannot exit on SHUTDOWN event triggered and NM
+    recovery is enabled (Rohith Sharmaks via jlowe)
+
     YARN-3487. CapacityScheduler scheduler lock obtained unnecessarily when
     calling getQueue (Jason Lowe via wangda)
 
