@@ -274,7 +274,16 @@ public class CommonConfigurationKeys extends CommonConfigurationKeysPublic {
    */
   public static final String CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY =
       "hadoop.security.custom.auth.principal.class";
+  /**
+   * List of excluded protocols for https hand shake.
+   */
+  public static final String SSL_EXCLUDE_INSECURE_PROTOCOLS_KEY =
+      "hadoop.ssl.exclude.insecure.protocols";
 
+  public static final String SSL_EXCLUDE_INSECURE_PROTOCOLS_DEFAULT =
+      "SSLv3," +
+      "TLSv1";
+  
   /**
    * List of ciphers that should be excluded for https hand shake.
    */
