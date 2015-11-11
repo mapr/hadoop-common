@@ -409,6 +409,9 @@ Release 2.7.0 - 2015-04-20
     YARN-3804. Both RM are on standBy state when kerberos user not in yarn.admin.acl
     (Varun Saxena via xgong)
 
+    YARN-3725. App submission via REST API is broken in secure mode due to
+    Timeline DT service address is empty. (Zhijie Shen via wangda)
+
     YARN-3071. Remove invalid char from sample conf in doc of FairScheduler.
     (Masatake Iwasaki via aajisaka)
 
