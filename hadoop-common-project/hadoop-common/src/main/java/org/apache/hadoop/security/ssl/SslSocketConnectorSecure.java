@@ -24,6 +24,12 @@ import javax.net.ssl.SSLServerSocket;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.ArrayList;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
+import java.util.List;
+import java.util.Arrays;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * This subclass of the Jetty SslSocketConnector exists solely to control
@@ -32,7 +38,7 @@ import java.util.ArrayList;
  * Only TLS 1.0 and later protocols are allowed.
  */
 public class SslSocketConnectorSecure extends SslSocketConnector {
-
+  public static final Log LOG = LogFactory.getLog(SslSocketConnectorSecure.class);
   public SslSocketConnectorSecure() {
     super();
   }
@@ -46,11 +52,20 @@ public class SslSocketConnectorSecure extends SslSocketConnector {
     SSLServerSocket socket = (SSLServerSocket)
             super.newServerSocket(host, port, backlog);
     ArrayList<String> nonSSLProtocols = new ArrayList<String>();
+    // Get the list of excluded protocols from core-site.xml
+    Configuration conf = new Configuration();
+    String excludeProtocols = conf.get(CommonConfigurationKeys.SSL_EXCLUDE_INSECURE_PROTOCOLS_KEY,
+        CommonConfigurationKeys.SSL_EXCLUDE_INSECURE_PROTOCOLS_DEFAULT);
+    LOG.info("Exclude protocols: "+excludeProtocols);
+    List<String> excludeProtocolsList = Arrays.asList(excludeProtocols.split(","));
+    // For all enabled protocols, check if it is in excluded protocols
     for (String p : socket.getEnabledProtocols()) {
-      if (!(p.equals("SSLv3")||p.equals("TLSv1"))) { 
+      if (!excludeProtocolsList.contains(p)) { 
+        // If yes don't add the protocol 
         nonSSLProtocols.add(p);
       }
     }
+    LOG.info("Enabled protocols: "+Arrays.toString(nonSSLProtocols.toArray(new String[nonSSLProtocols.size()])));
     socket.setEnabledProtocols(nonSSLProtocols.toArray(
             new String[nonSSLProtocols.size()]));
     return socket;
