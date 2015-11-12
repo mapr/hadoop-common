@@ -368,6 +368,8 @@ Release 2.7.0 - 2015-04-20
     YARN-3485. FairScheduler headroom calculation doesn't consider 
     maxResources for Fifo and FairShare policies. (kasha)
 
+    YARN-4256. YARN fair scheduler vcores with decimal values. Contributed by Jun Gong
+
     YARN-3832. Resource Localization fails on a cluster due to existing cache
     directories (Brahma Reddy Battula via jlowe)
 
