@@ -1290,7 +1290,7 @@ public class RMAppImpl implements RMApp, Recoverable {
         || appState == RMAppState.KILLED;
   }
   
-  private RMAppState getRecoveredFinalState() {
+  public RMAppState getRecoveredFinalState() {
     return this.recoveredFinalState;
   }
 
