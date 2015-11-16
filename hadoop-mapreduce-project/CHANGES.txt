@@ -61,6 +61,9 @@ Release 2.7.3 - UNRELEASED
  
     MAPREDUCE-6622. Add capability to set JHS job cache to a
   	task-based limit (rchiang via rkanter)
+  	
+  	MAPREDUCE-5485. Allow repeating job commit by extending OutputCommitter API
+    Junping Du via jianhe)
  
  OPTIMIZATIONS
  

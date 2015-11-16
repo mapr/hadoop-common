@@ -190,6 +190,11 @@ public class FileOutputCommitter extends OutputCommitter {
   }
 
   @Override
+  public boolean isCommitJobRepeatable(JobContext context) throws IOException {
+    return getWrapped(context).isCommitJobRepeatable(context);
+  }
+
+  @Override
   public boolean isRecoverySupported(JobContext context) throws IOException {
     return getWrapped(context).isRecoverySupported(context);
   }
