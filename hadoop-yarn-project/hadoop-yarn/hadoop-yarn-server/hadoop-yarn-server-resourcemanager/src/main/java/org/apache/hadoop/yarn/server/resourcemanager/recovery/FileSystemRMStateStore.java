@@ -457,7 +457,7 @@ public class FileSystemRMStateStore extends RMStateStore {
         appState.getApplicationSubmissionContext().getApplicationId();
     Path nodeRemovePath = getAppDir(rmAppRoot, appId);
     LOG.info("Removing info for app: " + appId + " at: " + nodeRemovePath);
-    checkAndRemovePathWithRetries(nodeRemovePath);
+    deleteFileWithRetries(nodeRemovePath);
   }
 
   @Override
@@ -473,7 +473,7 @@ public class FileSystemRMStateStore extends RMStateStore {
     Path nodeCreatePath = getNodePath(rmDTSecretManagerRoot,
       DELEGATION_TOKEN_PREFIX + identifier.getSequenceNumber());
     LOG.info("Removing RMDelegationToken_" + identifier.getSequenceNumber());
-    checkAndRemovePathWithRetries(nodeCreatePath);
+    deleteFileWithRetries(nodeCreatePath);
   }
 
   @Override
@@ -537,12 +537,14 @@ public class FileSystemRMStateStore extends RMStateStore {
     Path nodeCreatePath = getNodePath(rmDTSecretManagerRoot,
           DELEGATION_KEY_PREFIX + masterKey.getKeyId());
     LOG.info("Removing RMDelegationKey_"+ masterKey.getKeyId());
-    checkAndRemovePathWithRetries(nodeCreatePath);
+    deleteFileWithRetries(nodeCreatePath);
   }
 
   @Override
   public synchronized void deleteStore() throws Exception {
-	  checkAndRemovePathWithRetries(rootDirPath);
+    if (existsWithRetries(rootDirPath)) {
+      deleteFileWithRetries(rootDirPath);
+    }
   }
 
   private Path getAppDir(Path root, ApplicationId appId) {
@@ -550,15 +552,7 @@ public class FileSystemRMStateStore extends RMStateStore {
   }
 
   // FileSystem related code
-  private void checkAndRemovePathWithRetries(final Path deletePath) 
-		  	throws Exception {
-	  if (existsWithRetries(deletePath)) {
-		  deleteFileWithRetries(deletePath);
-	  } else {
-		  LOG.info("File doesn't exist. Skip deleting the file " + deletePath);
-	  }
-  }
-  
+
   private boolean checkAndRemovePartialRecordWithRetries(final Path record)
       throws Exception {
     return new FSAction<Boolean>() {

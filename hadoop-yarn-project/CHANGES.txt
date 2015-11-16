@@ -364,9 +364,6 @@ Release 2.7.0 - 2015-04-20
     rack-local delays, even for off-rack-only requests. (kasha)
 
   BUG FIXES
-
-    YARN-3614 FileSystemRMStateStore throw exception when failed to remove
-    application, that cause resourcemanager to crash
   
     YARN-3485. FairScheduler headroom calculation doesn't consider 
     maxResources for Fifo and FairShare policies. (kasha)
