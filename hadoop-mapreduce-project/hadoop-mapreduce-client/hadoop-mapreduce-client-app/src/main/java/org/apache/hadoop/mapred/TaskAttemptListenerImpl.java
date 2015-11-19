@@ -121,7 +121,7 @@ public class TaskAttemptListenerImpl extends CompositeService
       server = 
           new RPC.Builder(conf).setProtocol(TaskUmbilicalProtocol.class)
             .setInstance(this).setBindAddress("0.0.0.0")
-            .setPort(0).setNumHandlers(
+            .setPortRangeConfig(MRJobConfig.MR_AM_JOB_CLIENT_PORT_RANGE).setNumHandlers(
                 conf.getInt(MRJobConfig.MR_AM_TASK_LISTENER_THREAD_COUNT, 
                     MRJobConfig.DEFAULT_MR_AM_TASK_LISTENER_THREAD_COUNT))
                     .setVerbose(false).setSecretManager(jobTokenSecretManager)
