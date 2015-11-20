@@ -28,6 +28,9 @@ Release 2.7.3 - UNRELEASED
   BUG FIXES
 
     YARN-4347. Resource manager fails with Null pointer exception. (Jian He via wangda)
+    
+    YARN-3849. Too much of preemption activity causing continuos killing of containers
+    across queues. (Sunil G via wangda)
 
 Release 2.7.1 - UNRELEASED
 
