@@ -1,5 +1,44 @@
 Hadoop Change Log
 
+Release 2.7.6 - UNRELEASED
+
+  INCOMPATIBLE CHANGES
+
+  NEW FEATURES
+
+  IMPROVEMENTS
+
+  OPTIMIZATIONS
+
+  BUG FIXES
+
+    HADOOP-12181. Fix intermittent test failure of TestZKSignerSecretProvider.
+    (Masatake Iwasaki via wheat9)
+
+Release 2.7.5 - 2017-12-14
+
+  INCOMPATIBLE CHANGES
+
+  NEW FEATURES
+
+  IMPROVEMENTS
+
+    HADOOP-13442. Optimize UGI group lookups. (Daryn Sharp via kihwal, shv)
+
+    HADOOP-14827. Allow StopWatch to accept a Timer parameter for tests.
+    (Erik Krogen via jlowe)
+
+    HADOOP-14867. Update HDFS Federation setup document, for incorrect
+    property name for secondary name node http address.
+    (Bharat Viswanadham via Arpit Agarwal)
+
+  OPTIMIZATIONS
+
+  BUG FIXES
+
+    HADOOP-14702. Fix formatting issue and regression caused by conversion from
+    APT to Markdown. (Doris Gu via iwasakims)
+
     HADOOP-14881. LoadGenerator should use Time.monotonicNow() to measure
     durations. (Bharat Viswanadham via jlowe)
 
