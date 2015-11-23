@@ -29,6 +29,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.InetAddress;
+import java.text.DecimalFormat;
 import java.util.Date;
 import java.util.Random;
 import java.util.StringTokenizer;
@@ -602,7 +603,7 @@ public class TestDFSIO implements Tool {
       reporter.setStatus("finished " + name + " host: " + hostName);
     }
 
-  public Long doIO(Reporter reporter, String name, long totalSize // in bytes 
+  public Long doIO(Reporter reporter, String name, long totalSize // in bytes
     ) throws IOException {
     // open file
     FSDataInputStream in = fs.open(new Path(getDataDir(getConf()), name));
@@ -612,8 +613,8 @@ public class TestDFSIO implements Tool {
         int curSize = in.read(buffer, 0, bufferSize);
         if (curSize < 0) break;
         actualSize += curSize;
-        reporter.setStatus("reading " + name + "@" + 
-                           actualSize + "/" + totalSize 
+        reporter.setStatus("reading " + name + "@" +
+                           actualSize + "/" + totalSize
                            + " ::host = " + hostName);
       }
     } finally {
@@ -652,7 +653,7 @@ public class TestDFSIO implements Tool {
       key.set(filename);
       value.set(size.get());
       eof = true;
-      return true;    
+      return true;
     }
 
     public float getProgress() {
@@ -678,7 +679,7 @@ public class TestDFSIO implements Tool {
         LOG.warn("Split Details: File = " + fileSplit.getPath().toString() +
             ", Start Offset = " + fileSplit.getStart() +
             ", Length = " + fileSplit.getLength());
-        return new DFSIORecordReader(new Text(fileSplit.getPath().toString()), 
+        return new DFSIORecordReader(new Text(fileSplit.getPath().toString()),
           new LongWritable(fileSplit.getLength()));
       }
   }
@@ -1061,19 +1062,21 @@ public class TestDFSIO implements Tool {
       if(in != null) in.close();
       if(lines != null) lines.close();
     }
-    
+
     double med = rate / 1000 / tasks;
     double stdDev = Math.sqrt(Math.abs(sqrate / 1000 / tasks - med*med));
+    DecimalFormat df = new DecimalFormat("#.##");
     String resultLines[] = {
-      "----- TestDFSIO ----- : " + testType,
-      "           Date & time: " + new Date(System.currentTimeMillis()),
-      "       Number of files: " + tasks,
-      "Total MBytes processed: " + toMB(size),
-      "     Throughput mb/sec: " + size * 1000.0 / (time * MEGA),
-      "Average IO rate mb/sec: " + med,
-      " IO rate std deviation: " + stdDev,
-      "    Test exec time sec: " + (float)execTime / 1000,
-      "" };
+        "----- TestDFSIO ----- : " + testType,
+        "            Date & time: " + new Date(System.currentTimeMillis()),
+        "        Number of files: " + tasks,
+        " Total MBytes processed: " + df.format(toMB(size)),
+        "      Throughput mb/sec: " + df.format(size * 1000.0 / (time * MEGA)),
+        "Total Throughput mb/sec: " + df.format(toMB(size) / ((float)execTime)),
+        " Average IO rate mb/sec: " + df.format(med),
+        "  IO rate std deviation: " + df.format(stdDev),
+        "     Test exec time sec: " + df.format((float)execTime / 1000),
+        "" };
 
     PrintStream res = null;
     try {
