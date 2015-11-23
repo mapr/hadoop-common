@@ -1254,7 +1254,7 @@ public class CapacityScheduler extends
     FiCaSchedulerNode schedulerNode = new FiCaSchedulerNode(nodeManager,
         usePortForNodeName, nodeManager.getNodeLabels());
     this.nodes.put(nodeManager.getNodeID(), schedulerNode);
-    Resources.addTo(clusterResource, nodeManager.getTotalCapability());
+    Resources.addTo(clusterResource, schedulerNode.getTotalResource());
     root.updateClusterResource(clusterResource, new ResourceLimits(
         clusterResource));
     int numNodes = numNodeManagers.incrementAndGet();
@@ -1270,7 +1270,7 @@ public class CapacityScheduler extends
     // update this node to node label manager
     if (labelManager != null) {
       labelManager.activateNode(nodeManager.getNodeID(),
-          nodeManager.getTotalCapability());
+          schedulerNode.getTotalResource());
     }
   }
 
@@ -1284,7 +1284,7 @@ public class CapacityScheduler extends
     if (node == null) {
       return;
     }
-    Resources.subtractFrom(clusterResource, node.getRMNode().getTotalCapability());
+    Resources.subtractFrom(clusterResource, node.getTotalResource());
     root.updateClusterResource(clusterResource, new ResourceLimits(
         clusterResource));
     int numNodes = numNodeManagers.decrementAndGet();
