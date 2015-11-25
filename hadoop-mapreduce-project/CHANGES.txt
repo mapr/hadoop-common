@@ -29,6 +29,8 @@ Hadoop MapReduce Change Log
     MAPREDUCE-6492. AsyncDispatcher exit with NPE on
     TaskAttemptImpl#sendJHStartEventForAssignedFailTask (Bibin A Chundatt via
     jlowe)
+    
+    MAPREDUCE-6555. TestMRAppMaster fails on trunk. (Junping Du via ozawa)
 
 Release 2.8.0 - UNRELEASED
 
