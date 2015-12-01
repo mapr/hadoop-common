@@ -423,6 +423,11 @@ Release 2.7.0 - 2015-04-20
     YARN-3733. Fix DominantRC#compare() does not work as expected if
     cluster resource is empty. (Rohith Sharmaks via wangda)
 
+    YARN-3493. RM fails to come up with error "Failed to load/recover state"
+    when mem settings are changed. (Jian He via wangda)
+
+    backport YARN-3493. RM fails to come up with error "Failed to load/recover state" when mem settings are changed (Jian He) to branch-2.7
+
     YARN-3071. Remove invalid char from sample conf in doc of FairScheduler.
     (Masatake Iwasaki via aajisaka)
 
