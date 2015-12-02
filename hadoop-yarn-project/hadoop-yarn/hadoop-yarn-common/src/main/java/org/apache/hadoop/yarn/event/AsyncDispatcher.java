@@ -63,7 +63,7 @@ public class AsyncDispatcher extends AbstractService implements Dispatcher {
   // For drainEventsOnStop enabled only, block newly coming events into the
   // queue while stopping.
   private volatile boolean blockNewEvents = false;
-  private EventHandler handlerInstance = null;
+  private final EventHandler handlerInstance = new GenericEventHandler();
 
   private Thread eventHandlingThread;
   protected final Map<Class<? extends Enum>, EventHandler> eventDispatchers;
@@ -216,9 +216,6 @@ public class AsyncDispatcher extends AbstractService implements Dispatcher {
 
   @Override
   public EventHandler getEventHandler() {
-    if (handlerInstance == null) {
-      handlerInstance = new GenericEventHandler();
-    }
     return handlerInstance;
   }
 
