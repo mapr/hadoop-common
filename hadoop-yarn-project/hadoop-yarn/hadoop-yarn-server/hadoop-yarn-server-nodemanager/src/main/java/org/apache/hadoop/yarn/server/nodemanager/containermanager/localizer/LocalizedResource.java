@@ -49,7 +49,7 @@ import org.apache.hadoop.yarn.state.StateMachineFactory;
 /**
  * Datum representing a localized resource. Holds the statemachine of a
  * resource. State of the resource is one of {@link ResourceState}.
- * 
+ *
  */
 public class LocalizedResource implements EventHandler<ResourceEvent> {
 
@@ -190,7 +190,18 @@ public class LocalizedResource implements EventHandler<ResourceEvent> {
       this.writeLock.lock();
 
       Path resourcePath = event.getLocalResourceRequest().getPath();
-      LOG.debug("Processing " + resourcePath + " of type " + event.getType());
+      StringBuilder message = new StringBuilder();
+      message.append("Processing ");
+      message.append(event.getLocalResourceRequest());
+      message.append(" of type ");
+      message.append(event.getType());
+      if (event.getType().equals(ResourceEventType.REQUEST)) {
+        message.append(" for user ");
+        message.append(((ResourceRequestEvent) event).getContext().getUser());
+        message.append(" for container ");
+        message.append(((ResourceRequestEvent) event).getContext().getContainerId());
+      }
+      LOG.debug(message.toString());
 
       ResourceState oldState = this.stateMachine.getCurrentState();
       ResourceState newState = null;
@@ -200,7 +211,7 @@ public class LocalizedResource implements EventHandler<ResourceEvent> {
         LOG.warn("Can't handle this event at current state", e);
       }
       if (oldState != newState) {
-        LOG.info("Resource " + resourcePath + (localPath != null ? 
+        LOG.info("Resource " + resourcePath + (localPath != null ?
           "(->" + localPath + ")": "") + " transitioned from " + oldState
             + " to " + newState);
       }
@@ -229,10 +240,10 @@ public class LocalizedResource implements EventHandler<ResourceEvent> {
       rsrc.ref.add(container);
       if (LOG.isDebugEnabled()) {
         LOG.debug("Fetch resource transition for : " + rsrc.getRequest()
-            + ". Event: " + event);
+            + ". Event: " + event + ". Container: " + container + ". User: " + ctxt.getUser());
       }
       rsrc.dispatcher.getEventHandler().handle(
-          new LocalizerResourceRequestEvent(rsrc, req.getVisibility(), ctxt, 
+          new LocalizerResourceRequestEvent(rsrc, req.getVisibility(), ctxt,
               req.getLocalResourceRequest().getPattern()));
     }
   }
@@ -257,9 +268,14 @@ public class LocalizedResource implements EventHandler<ResourceEvent> {
             new LocalizerResourceRequestEvent(rsrc, req.getVisibility(), ctxt, 
                 req.getLocalResourceRequest().getPattern()));
       } else {
+        StringBuilder sb = new StringBuilder();
+        for (ContainerId waitingContainer : rsrc.ref) {
+            sb.append(waitingContainer.toString()).append(", ");
+        }
         if (LOG.isDebugEnabled()) {
           LOG.debug("Duplicate fetch resource transition for : " + rsrc.getRequest()
-              + ". Event: " + event);
+                  + ". Event: " + event + ". Container: " + container
+                  + ". User: " + ctxt.getUser() + ". Queue: " + sb.toString());
         }
       }
     }
@@ -276,10 +292,19 @@ public class LocalizedResource implements EventHandler<ResourceEvent> {
       rsrc.localPath =
           Path.getPathWithoutSchemeAndAuthority(locEvent.getLocation());
       rsrc.size = locEvent.getSize();
+      StringBuilder sb = new StringBuilder();
       for (ContainerId container : rsrc.ref) {
+        if (LOG.isDebugEnabled()) {
+          sb.append(container.toString()).append(", ");
+        }
         rsrc.dispatcher.getEventHandler().handle(
             new ContainerResourceLocalizedEvent(
               container, rsrc.rsrc, rsrc.localPath));
+      }
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("Fetch success transition for : " + rsrc.getRequest()
+            + ". Event: " + event + ". Resource Size: " + rsrc.size
+            + ". Containers waiting on this resource: " + sb.toString());
       }
     }
   }
@@ -314,6 +339,10 @@ public class LocalizedResource implements EventHandler<ResourceEvent> {
       ResourceRequestEvent reqEvent = (ResourceRequestEvent) event;
       ContainerId container = reqEvent.getContext().getContainerId();
       rsrc.ref.add(container);
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("LocalizedResourceTransition: Resource already localized for : " + rsrc.getRequest()
+            + ". Event: " + event + ". Container: " + container);
+      }
       rsrc.dispatcher.getEventHandler().handle(
           new ContainerResourceLocalizedEvent(
             container, rsrc.rsrc, rsrc.localPath));
