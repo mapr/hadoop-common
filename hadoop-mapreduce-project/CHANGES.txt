@@ -102,6 +102,8 @@ Release 2.7.0 - 2015-04-20
 
   BUG FIXES
 
+    MAPREDUCE-6338 MR AppMaster does not honor ephemeral port range
+
     MAPREDUCE-6334. Fetcher#copyMapOutput is leaking usedMemory upon
     IOException during InMemoryMapOutput shuffle handler (Eric Payne via jlowe)
 
