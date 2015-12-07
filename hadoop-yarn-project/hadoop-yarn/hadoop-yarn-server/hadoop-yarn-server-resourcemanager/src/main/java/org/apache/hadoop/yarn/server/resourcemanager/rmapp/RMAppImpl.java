@@ -413,9 +413,6 @@ public class RMAppImpl implements RMApp, Recoverable {
     this.writeLock = lock.writeLock();
 
     this.stateMachine = stateMachineFactory.make(this);
-
-    rmContext.getRMApplicationHistoryWriter().applicationStarted(this);
-    rmContext.getSystemMetricsPublisher().appCreated(this, startTime);
   }
 
   @Override
@@ -614,7 +611,7 @@ public class RMAppImpl implements RMApp, Recoverable {
           this.name, host, rpcPort, clientToAMToken,
           createApplicationState(), diags,
           trackingUrl, this.startTime, this.finishTime, finishState,
-          appUsageReport, origTrackingUrl, progress, this.applicationType, 
+          appUsageReport, origTrackingUrl, progress, this.applicationType,
           amrmToken, applicationTags);
     } finally {
       this.readLock.unlock();
@@ -740,6 +737,9 @@ public class RMAppImpl implements RMApp, Recoverable {
       this.nextAttemptId = firstAttemptIdInStateStore;
     }
 
+    // send the ATS create Event
+    sendATSCreateEvent(this, this.startTime);
+
     RMAppAttemptImpl preAttempt = null;
     for (ApplicationAttemptId attemptId :
         new TreeSet<>(appState.attempts.keySet())) {
@@ -840,7 +840,7 @@ public class RMAppImpl implements RMApp, Recoverable {
         moveEvent.getResult().setException(ex);
         return;
       }
-      
+
       // TODO: Write out change to state store (YARN-1558)
       // Also take care of RM failover
       moveEvent.getResult().set(null);
@@ -997,6 +997,9 @@ public class RMAppImpl implements RMApp, Recoverable {
       // communication
       LOG.info("Storing application with id " + app.applicationId);
       app.rmContext.getStateStore().storeNewApplication(app);
+
+      // send the ATS create Event
+      app.sendATSCreateEvent(app, app.startTime);
     }
   }
 
@@ -1397,5 +1400,10 @@ public class RMAppImpl implements RMApp, Recoverable {
   @VisibleForTesting
   public int getNextAttemptId() {
     return nextAttemptId;
+  }
+
+  private void sendATSCreateEvent(RMApp app, long startTime) {
+    rmContext.getRMApplicationHistoryWriter().applicationStarted(app);
+    rmContext.getSystemMetricsPublisher().appCreated(app, startTime);
   }
 }
