@@ -28,6 +28,8 @@ Release 2.7.1 - UNRELEASED
 
     YARN-4047. ClientRMService getApplications has high scheduler lock contention.
     (Jason Lowe via jianhe)
+    
+    YARN-4424. Fix deadlock in RMAppImpl. (Jian he via wangda)
 
 Release 2.7.0 - 2015-04-20
 
