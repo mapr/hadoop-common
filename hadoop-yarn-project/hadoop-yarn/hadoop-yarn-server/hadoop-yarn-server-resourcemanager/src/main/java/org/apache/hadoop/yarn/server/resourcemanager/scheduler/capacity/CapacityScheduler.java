@@ -972,6 +972,11 @@ public class CapacityScheduler extends
     return root.getQueueUserAclInfo(user);
   }
 
+  @Override
+  public Resource getIncrementResourceCapability() {
+    return this.getMinimumResourceCapability();
+  }
+
   private synchronized void nodeUpdate(RMNode nm) {
     if (LOG.isDebugEnabled()) {
       LOG.debug("nodeUpdate: " + nm + " clusterResources: " + clusterResource);

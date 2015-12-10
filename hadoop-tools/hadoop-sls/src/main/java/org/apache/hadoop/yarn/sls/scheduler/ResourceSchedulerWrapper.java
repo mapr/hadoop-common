@@ -930,6 +930,11 @@ public class ResourceSchedulerWrapper
   }
 
   @Override
+  public Resource getIncrementResourceCapability() {
+    return this.getMinimumResourceCapability();
+  }
+
+  @Override
   public synchronized List<Container> getTransferredContainers(
       ApplicationAttemptId currentAttempt) {
     return new ArrayList<Container>();

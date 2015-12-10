@@ -394,7 +394,7 @@ public class RMAppManager implements EventHandler<RMAppManagerEvent>,
           scheduler.getClusterResource(),
           scheduler.getMinimumResourceCapability(),
           scheduler.getMaximumResourceCapability(),
-          scheduler.getMinimumResourceCapability());
+          scheduler.getIncrementResourceCapability());
       return amReq;
     }
     

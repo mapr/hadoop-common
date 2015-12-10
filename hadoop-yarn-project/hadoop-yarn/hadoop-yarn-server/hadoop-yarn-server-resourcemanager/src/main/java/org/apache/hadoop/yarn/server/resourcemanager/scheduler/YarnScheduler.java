@@ -84,6 +84,14 @@ public interface YarnScheduler extends EventHandler<SchedulerEvent> {
   public Resource getClusterResource();
 
   /**
+   * Get increment allocatable {@link Resource}.
+   * @return incremental allocatable resource.
+   */
+  @Public
+  @Stable
+  public Resource getIncrementResourceCapability();
+
+  /**
    * Get minimum allocatable {@link Resource}.
    * @return minimum allocatable resource
    */

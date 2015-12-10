@@ -987,6 +987,11 @@ public class FifoScheduler extends
   }
 
   @Override
+  public Resource getIncrementResourceCapability() {
+    return this.getMinimumResourceCapability();
+  }
+
+  @Override
   public ResourceCalculator getResourceCalculator() {
     return resourceCalculator;
   }
