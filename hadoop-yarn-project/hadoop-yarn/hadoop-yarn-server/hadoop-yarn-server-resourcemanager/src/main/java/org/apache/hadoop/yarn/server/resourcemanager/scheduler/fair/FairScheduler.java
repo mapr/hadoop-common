@@ -669,7 +669,7 @@ public class FairScheduler extends
    */
   protected synchronized void addApplication(ApplicationId applicationId,
       String queueName, String user, boolean isAppRecovering) {
-    if (queueName == null || queueName.isEmpty()) {
+    if (queueName == null || queueName.trim().isEmpty()) {
       String message = "Reject application " + applicationId +
               " submitted by user " + user + " with an empty queue name.";
       LOG.info(message);
@@ -688,6 +688,9 @@ public class FairScheduler extends
           .handle(new RMAppRejectedEvent(applicationId, message));
       return;
     }
+
+    queueName = queueName.trim();
+    user = user.trim();
 
     RMApp rmApp = rmContext.getRMApps().get(applicationId);
     FSLeafQueue queue = assignToQueue(rmApp, queueName, user);

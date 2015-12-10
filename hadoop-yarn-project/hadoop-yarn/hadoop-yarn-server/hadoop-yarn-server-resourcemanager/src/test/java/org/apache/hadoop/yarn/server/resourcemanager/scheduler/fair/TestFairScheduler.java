@@ -986,7 +986,74 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     assertEquals(1, scheduler.getQueueManager().getLeafQueues().size());
     assertNull(scheduler.getSchedulerApp(appAttemptId));
     assertEquals(0, resourceManager.getRMContext().getRMApps().size());
+
+      ApplicationAttemptId appAttemptId2 = createAppAttemptId(2, 1);
+      AppAddedSchedulerEvent appAddedEvent2 =
+              new AppAddedSchedulerEvent(appAttemptId2.getApplicationId(), "  ", "user1");
+      scheduler.handle(appAddedEvent2);
+
+      // submission rejected
+      assertEquals(1, scheduler.getQueueManager().getLeafQueues().size());
+      assertNull(scheduler.getSchedulerApp(appAttemptId2));
+      assertEquals(0, resourceManager.getRMContext().getRMApps().size());
   }
+
+    @Test
+    public void testQueueNameWithSpace() throws Exception {
+        conf.set(FairSchedulerConfiguration.ALLOCATION_FILE, ALLOC_FILE);
+        conf.setClass(CommonConfigurationKeys.HADOOP_SECURITY_GROUP_MAPPING,
+                SimpleGroupsMapping.class, GroupMappingServiceProvider.class);
+        PrintWriter out = new PrintWriter(new FileWriter(ALLOC_FILE));
+        out.println("<?xml version=\"1.0\"?>");
+        out.println("<allocations>");
+        out.println("<queue name=\"adhoc\" type=\"parent\">");
+        out.println("<weight>10</weight>");
+        out.println("<maxRunningApps>300</maxRunningApps>");
+        out.println("</queue>");
+        out.println("<queue name=\"default\">");
+        out.println("<weight>1</weight>");
+        out.println("</queue>");
+        out.println("<queue name=\"emergencyuseonly\">");
+        out.println("<weight>1</weight>");
+        out.println("</queue>");
+        out.println("<queuePlacementPolicy>");
+        out.println("<rule name=\"nestedUserQueue\">");
+        out.println("     <rule name=\"specified\" create=\"false\" />");
+        out.println("</rule>");
+        out.println("<rule name=\"specified\" create=\"false\" />");
+        out.println("<rule name=\"reject\" />");
+        out.println("</queuePlacementPolicy>");
+        out.println("<userMaxAppsDefault>20</userMaxAppsDefault>");
+        out.println("<fairSharePreemptionTimeout>60</fairSharePreemptionTimeout>");
+        out.println("</allocations>");
+        out.close();
+
+        scheduler.init(conf);
+        scheduler.start();
+        scheduler.reinitialize(conf, resourceManager.getRMContext());
+        RMApp rmApp1 = new MockRMApp(0, 0, RMAppState.NEW);
+
+        String queueName  = "adhoc";
+        String username1 = "birvine";
+
+        AppAddedSchedulerEvent appAddedEvent1 =
+                new AppAddedSchedulerEvent(rmApp1.getApplicationId(), queueName, username1);
+        scheduler.handle(appAddedEvent1);
+
+        QueueManager queueManager = scheduler.getQueueManager();
+        FSLeafQueue user1Leaf = queueManager.getLeafQueue(queueName + "." + username1, false);
+        assertEquals("root.adhoc.birvine", user1Leaf.getName());
+
+        String usernameWithEmptySpace = "birvine ";
+
+        RMApp rmApp2 = new MockRMApp(2, 0, RMAppState.NEW);
+        AppAddedSchedulerEvent appAddedEvent2 =
+                new AppAddedSchedulerEvent(rmApp2.getApplicationId(), queueName, usernameWithEmptySpace);
+        scheduler.handle(appAddedEvent2);
+
+        FSLeafQueue user2Leaf = queueManager.getLeafQueue(queueName + "." + usernameWithEmptySpace.trim(), false);
+        assertEquals("root.adhoc.birvine", user2Leaf.getName());
+    }
 
   @Test
   public void testQueueuNameWithPeriods() throws Exception {
