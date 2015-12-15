@@ -333,6 +333,8 @@ Release 2.6.2 - UNRELEASED
 
  IMPROVEMENTS
 
+ MAPREDUCE-6436. JobHistory cache issue. (Kai Sasaki via zxu)
+
  OPTIMIZATIONS
 
  BUG FIXES
