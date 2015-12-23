@@ -24,7 +24,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
+import java.util.Map;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -119,6 +119,10 @@ public class TestRMWebApp {
         YarnApplicationState.RUNNING.toString()));
     rmViewInstance.render();
     WebAppTests.flushOutput(injector);
+    Map<String, String> moreParams =
+            rmViewInstance.context().requestContext().moreParams();
+    String appsTableColumnsMeta = moreParams.get("ui.dataTables.apps.init");
+    Assert.assertTrue(appsTableColumnsMeta.indexOf("natural") != -1);
   }
 
   @Test public void testNodesPage() {
