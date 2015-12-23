@@ -365,6 +365,8 @@ Release 2.7.0 - 2015-04-20
 
   BUG FIXES
 
+    YARN-3840 Resource Manager web ui issue when sorting application by id (with application having id > 9999) (Bug 21865)
+
     YARN-3544. Got back AM logs link on the RM web UI for a completed app.
     (Xuan Gong via zjshen)
 
