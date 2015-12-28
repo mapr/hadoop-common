@@ -1658,7 +1658,7 @@ public class TestRMWebServicesApps extends JerseyTestBase {
       String user)
       throws JSONException, Exception {
 
-    assertEquals("incorrect number of elements", 6, info.length());
+    assertEquals("incorrect number of elements", 8, info.length());
 
     verifyAppAttemptInfoGeneric(appAttempt, info.getInt("id"),
         info.getLong("startTime"), info.getString("containerId"),

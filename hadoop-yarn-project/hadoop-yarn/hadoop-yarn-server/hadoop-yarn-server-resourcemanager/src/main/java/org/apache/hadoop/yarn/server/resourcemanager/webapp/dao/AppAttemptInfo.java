@@ -32,10 +32,12 @@ public class AppAttemptInfo {
 
   protected int id;
   protected long startTime;
+  protected long finishedTime;
   protected String containerId;
   protected String nodeHttpAddress;
   protected String nodeId;
   protected String logsLink;
+  protected String appAttemptId;
 
   public AppAttemptInfo() {
   }
@@ -49,6 +51,7 @@ public class AppAttemptInfo {
     if (attempt != null) {
       this.id = attempt.getAppAttemptId().getAttemptId();
       this.startTime = attempt.getStartTime();
+      this.finishedTime = attempt.getFinishTime();
       Container masterContainer = attempt.getMasterContainer();
       if (masterContainer != null) {
         this.containerId = masterContainer.getId().toString();
@@ -58,6 +61,7 @@ public class AppAttemptInfo {
             WebAppUtils.getRunningLogURL("//" + masterContainer.getNodeHttpAddress(),
                 ConverterUtils.toString(masterContainer.getId()), user);
       }
+      this.appAttemptId = attempt.getAppAttemptId().toString();
     }
   }
 
@@ -67,6 +71,10 @@ public class AppAttemptInfo {
 
   public long getStartTime() {
     return this.startTime;
+  }
+
+  public long getFinishedTime() {
+    return this.finishedTime;
   }
 
   public String getNodeHttpAddress() {
