@@ -103,6 +103,8 @@ Release 2.7.1 - UNRELEASED
     YARN-3415. Non-AM containers can be counted towards amResourceUsage of a
     Fair Scheduler queue (Zhihai Xu via Sandy Ryza)
 
+    YARN-3480. Remove attempts that are beyond max-attempt limit from state
+    store. (Jun Gong via jianhe)
 Release 2.7.0 - 2015-04-20
 
   INCOMPATIBLE CHANGES

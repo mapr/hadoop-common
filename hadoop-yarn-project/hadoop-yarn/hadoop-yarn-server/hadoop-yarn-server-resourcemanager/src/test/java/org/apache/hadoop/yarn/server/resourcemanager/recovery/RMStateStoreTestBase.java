@@ -22,6 +22,7 @@ import org.apache.hadoop.yarn.event.Event;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
@@ -118,6 +119,7 @@ public class RMStateStoreTestBase extends ClientBaseWithFixes{
     void writeVersion(Version version) throws Exception;
     Version getCurrentVersion() throws Exception;
     boolean appExists(RMApp app) throws Exception;
+    boolean attemptExists(RMAppAttempt attempt) throws Exception;
   }
 
   void waitNotify(TestDispatcher dispatcher) {
@@ -154,7 +156,7 @@ public class RMStateStoreTestBase extends ClientBaseWithFixes{
     return mockApp;
   }
 
-  protected ContainerId storeAttempt(RMStateStore store,
+  protected RMAppAttempt storeAttempt(RMStateStore store,
       ApplicationAttemptId attemptId,
       String containerIdStr, Token<AMRMTokenIdentifier> appToken,
       SecretKey clientTokenMasterKey, TestDispatcher dispatcher)
@@ -177,7 +179,7 @@ public class RMStateStoreTestBase extends ClientBaseWithFixes{
     dispatcher.attemptId = attemptId;
     store.storeNewApplicationAttempt(mockAttempt);
     waitNotify(dispatcher);
-    return container.getId();
+    return mockAttempt;
   }
 
   void testRMAppStateStore(RMStateStoreHelper stateStoreHelper)
@@ -213,8 +215,9 @@ public class RMStateStoreTestBase extends ClientBaseWithFixes{
         clientToAMTokenMgr.createMasterKey(attemptId1);
 
     ContainerId containerId1 = storeAttempt(store, attemptId1,
-          "container_1352994193343_0001_01_000001",
-          appAttemptToken1, clientTokenKey1, dispatcher);
+        "container_1352994193343_0001_01_000001",
+        appAttemptToken1, clientTokenKey1, dispatcher)
+        .getMasterContainer().getId();
 
     String appAttemptIdStr2 = "appattempt_1352994193343_0001_000002";
     ApplicationAttemptId attemptId2 =
@@ -227,8 +230,9 @@ public class RMStateStoreTestBase extends ClientBaseWithFixes{
         clientToAMTokenMgr.createMasterKey(attemptId2);
 
     ContainerId containerId2 = storeAttempt(store, attemptId2,
-          "container_1352994193343_0001_02_000001",
-          appAttemptToken2, clientTokenKey2, dispatcher);
+        "container_1352994193343_0001_02_000001",
+        appAttemptToken2, clientTokenKey2, dispatcher)
+        .getMasterContainer().getId();
 
     ApplicationAttemptId attemptIdRemoved = ConverterUtils
         .toApplicationAttemptId("appattempt_1352994193343_0002_000001");
@@ -589,6 +593,47 @@ public class RMStateStoreTestBase extends ClientBaseWithFixes{
     for (RMApp app : appList) {
       Assert.assertFalse(stateStoreHelper.appExists(app));
     }
+  }
+  
+  public void testRemoveAttempt(RMStateStoreHelper stateStoreHelper)
+    throws Exception {
+    RMStateStore store = stateStoreHelper.getRMStateStore();
+    TestDispatcher dispatcher = new TestDispatcher();
+    store.setRMDispatcher(dispatcher);
+
+    ApplicationId appId = ApplicationId.newInstance(1383183339, 6);
+    storeApp(store, appId, 123456, 564321);
+
+    ApplicationAttemptId attemptId1 =
+        ApplicationAttemptId.newInstance(appId, 1);
+    RMAppAttempt attempt1 = storeAttempt(store, attemptId1,
+        ContainerId.newContainerId(attemptId1, 1).toString(),
+        null, null, dispatcher);
+    ApplicationAttemptId attemptId2 =
+        ApplicationAttemptId.newInstance(appId, 2);
+    RMAppAttempt attempt2 = storeAttempt(store, attemptId2,
+        ContainerId.newContainerId(attemptId2, 1).toString(),
+        null, null, dispatcher);
+    store.removeApplicationAttemptInternal(attemptId1);
+    Assert.assertFalse(stateStoreHelper.attemptExists(attempt1));
+    Assert.assertTrue(stateStoreHelper.attemptExists(attempt2));
+
+    // let things settle down
+    Thread.sleep(1000);
+    store.close();
+
+    // load state
+    store = stateStoreHelper.getRMStateStore();
+    RMState state = store.loadState();
+    Map<ApplicationId, ApplicationStateData> rmAppState =
+        state.getApplicationState();
+
+    ApplicationStateData appState = rmAppState.get(appId);
+    // app is loaded
+    assertNotNull(appState);
+    assertEquals(2, appState.getFirstAttemptId());
+    assertNull(appState.getAttempt(attemptId1));
+    assertNotNull(appState.getAttempt(attemptId2));
   }
 
   protected void modifyAppState() throws Exception {
