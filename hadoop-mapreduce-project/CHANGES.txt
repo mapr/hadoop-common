@@ -365,6 +365,9 @@ Release 2.6.2 - UNRELEASED
 
    MAPREDUCE-6618. YarnClientProtocolProvider leaking the YarnClient thread.
    (Xuan Gong via jlowe)
+   
+   MAPREDUCE-6577. MR AM unable to load native library without
+   MR_AM_ADMIN_USER_ENV set (sjlee)
 
    MAPREDUCE-6454. Fixed MapReduce to modify HADOOP_CLASSPATH to have distributed
    cache files so that child processes running hadoop scripts can access these
