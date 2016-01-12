@@ -73,6 +73,9 @@ public class MetricsOverviewTable extends HtmlBlock {
         th().$class("ui-state-default")._("VCores Used")._().
         th().$class("ui-state-default")._("VCores Total")._().
         th().$class("ui-state-default")._("VCores Reserved")._().
+        th().$class("ui-state-default")._("Disks Used")._().
+        th().$class("ui-state-default")._("Disks Total")._().        
+        th().$class("ui-state-default")._("Disks Reserved")._().
         th().$class("ui-state-default")._("Active Nodes")._().
         th().$class("ui-state-default")._("Decommissioned Nodes")._().
         th().$class("ui-state-default")._("Lost Nodes")._().
@@ -98,6 +101,9 @@ public class MetricsOverviewTable extends HtmlBlock {
         td(String.valueOf(clusterMetrics.getAllocatedVirtualCores())).
         td(String.valueOf(clusterMetrics.getTotalVirtualCores())).
         td(String.valueOf(clusterMetrics.getReservedVirtualCores())).
+        td(String.valueOf(clusterMetrics.getAllocatedDisks())).
+        td(String.valueOf(clusterMetrics.getTotalDisks())).
+        td(String.valueOf(clusterMetrics.getReservedDisks())).
         td().a(url("nodes"),String.valueOf(clusterMetrics.getActiveNodes()))._().
         td().a(url("nodes/decommissioned"),String.valueOf(clusterMetrics.getDecommissionedNodes()))._().
         td().a(url("nodes/lost"),String.valueOf(clusterMetrics.getLostNodes()))._().
