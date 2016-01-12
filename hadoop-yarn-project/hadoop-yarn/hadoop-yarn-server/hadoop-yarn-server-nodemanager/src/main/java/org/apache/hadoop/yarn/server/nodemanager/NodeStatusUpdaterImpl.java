@@ -94,6 +94,8 @@ public class NodeStatusUpdaterImpl extends AbstractService implements
   /** The default for minimum memory allocated by the scheduler.*/
   public static final int DEFAULT_SCHEDULER_MINIMUM_ALLOCATION_MB = 1024;
 
+  private static final double ZERO_LIMIT = 0.0099999999999999;
+
   private static final Log LOG = LogFactory.getLog(NodeStatusUpdaterImpl.class);
 
   private final Object heartbeatMonitor = new Object();
@@ -726,6 +728,11 @@ public class NodeStatusUpdaterImpl extends AbstractService implements
   }
 
   private void updateResource(Configuration conf, Resource totalResource) {
+    // If Myriad do not update resources
+    if(isMyriad(conf)) {
+      return;
+    }
+
     int requiredMemory = conf.getInt("yarn.app.mapreduce.am.resource.mb",
       DEFAULT_MR_AM_VMEM_MB);
     requiredMemory += conf.getInt("mapreduce.reduce.memory.mb",
@@ -755,5 +762,33 @@ public class NodeStatusUpdaterImpl extends AbstractService implements
     if (totalResource.getDisks() < requiredDisks) {
       totalResource.setDisks(requiredDisks);
     }
+  }
+
+  /*
+   * Anything greater than -0.01 and less than 0.01 is zero
+   */
+  private static boolean isZero(double a) {
+    if(Math.abs(a) > ZERO_LIMIT) {
+      return false;
+    }
+    return true;
+  }
+
+  /*
+   *  In Myriad the following properties are set to zero
+   *  yarn.scheduler.minimum-allocation-mb,
+   *  yarn.scheduler.minimum-allocation-vcores,
+   *  yarn.scheduler.minimum-allocation-disks
+   */
+  private static boolean isMyriad(Configuration conf) {
+    if (conf.getInt(YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_MB,
+          YarnConfiguration.DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_MB) == 0 &&
+        conf.getInt(YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_VCORES,
+          YarnConfiguration.DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_VCORES) == 0 &&
+        isZero(conf.getDouble(YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_DISKS,
+          YarnConfiguration.DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_DISKS))) {
+      return true;
+    }
+    return false;
   }
 }
