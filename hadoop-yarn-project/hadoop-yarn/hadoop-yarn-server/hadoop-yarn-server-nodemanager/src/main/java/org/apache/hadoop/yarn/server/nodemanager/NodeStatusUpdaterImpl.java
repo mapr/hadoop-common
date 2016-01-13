@@ -94,7 +94,7 @@ public class NodeStatusUpdaterImpl extends AbstractService implements
   /** The default for minimum memory allocated by the scheduler.*/
   public static final int DEFAULT_SCHEDULER_MINIMUM_ALLOCATION_MB = 1024;
 
-  private static final double ZERO_LIMIT = 0.0099999999999999;
+  private static final double ZERO_LIMIT = 0.01;
 
   private static final Log LOG = LogFactory.getLog(NodeStatusUpdaterImpl.class);
 
@@ -728,8 +728,7 @@ public class NodeStatusUpdaterImpl extends AbstractService implements
   }
 
   private void updateResource(Configuration conf, Resource totalResource) {
-    // If Myriad do not update resources
-    if(isMyriad(conf)) {
+    if(dontUpdateResources(conf)) {
       return;
     }
 
@@ -768,10 +767,7 @@ public class NodeStatusUpdaterImpl extends AbstractService implements
    * Anything greater than -0.01 and less than 0.01 is zero
    */
   private static boolean isZero(double a) {
-    if(Math.abs(a) > ZERO_LIMIT) {
-      return false;
-    }
-    return true;
+    return Math.abs(a) < ZERO_LIMIT;
   }
 
   /*
@@ -779,8 +775,9 @@ public class NodeStatusUpdaterImpl extends AbstractService implements
    *  yarn.scheduler.minimum-allocation-mb,
    *  yarn.scheduler.minimum-allocation-vcores,
    *  yarn.scheduler.minimum-allocation-disks
+   *  We don't update resources for Myriad
    */
-  private static boolean isMyriad(Configuration conf) {
+  private static boolean dontUpdateResources(Configuration conf) {
     if (conf.getInt(YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_MB,
           YarnConfiguration.DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_MB) == 0 &&
         conf.getInt(YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_VCORES,
