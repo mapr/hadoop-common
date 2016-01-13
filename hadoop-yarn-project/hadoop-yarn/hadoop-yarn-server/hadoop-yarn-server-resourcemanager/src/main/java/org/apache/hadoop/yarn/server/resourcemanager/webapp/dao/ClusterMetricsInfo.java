@@ -45,12 +45,17 @@ public class ClusterMetricsInfo {
   protected long availableVirtualCores;
   protected long allocatedVirtualCores;
 
+  protected double reservedDisks;
+  protected double availableDisks;
+  protected double allocatedDisks;
+
   protected int containersAllocated;
   protected int containersReserved;
   protected int containersPending;
 
   protected long totalMB;
   protected long totalVirtualCores;
+  protected double totalDisks;
   protected int totalNodes;
   protected int lostNodes;
   protected int unhealthyNodes;
@@ -81,12 +86,17 @@ public class ClusterMetricsInfo {
     this.availableVirtualCores = metrics.getAvailableVirtualCores();
     this.allocatedVirtualCores = metrics.getAllocatedVirtualCores();
 
+    this.reservedDisks = metrics.getReservedDisks();
+    this.availableDisks = metrics.getAvailableDisks();
+    this.allocatedDisks = metrics.getAllocatedDisks();
+
     this.containersAllocated = metrics.getAllocatedContainers();
     this.containersPending = metrics.getPendingContainers();
     this.containersReserved = metrics.getReservedContainers();
 
     this.totalMB = availableMB + allocatedMB;
     this.totalVirtualCores = availableVirtualCores + allocatedVirtualCores;
+    this.totalDisks = availableDisks + allocatedDisks;
     this.activeNodes = clusterMetrics.getNumActiveNMs();
     this.lostNodes = clusterMetrics.getNumLostNMs();
     this.unhealthyNodes = clusterMetrics.getUnhealthyNMs();
@@ -144,6 +154,18 @@ public class ClusterMetricsInfo {
     return this.allocatedVirtualCores;
   }
 
+  public double getReservedDisks() {
+    return this.reservedDisks;
+  }
+
+  public double getAvailableDisks() {
+    return this.availableDisks;
+  }
+
+  public double getAllocatedDisks() {
+    return this.allocatedDisks;
+  }
+
   public int getContainersAllocated() {
     return this.containersAllocated;
   }
@@ -162,6 +184,10 @@ public class ClusterMetricsInfo {
 
   public long getTotalVirtualCores() {
     return this.totalVirtualCores;
+  }
+
+  public double getTotalDisks() {
+    return this.totalDisks;
   }
 
   public int getTotalNodes() {
