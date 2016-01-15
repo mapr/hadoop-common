@@ -23,6 +23,14 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.EOFException;
 
+import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.Schema;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.Decoder;
+import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.specific.SpecificData;
+import org.apache.avro.specific.SpecificDatumReader;
+
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.fs.FileSystem;
@@ -30,13 +38,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.CounterGroup;
 import org.apache.hadoop.mapreduce.Counters;
 import org.apache.hadoop.util.StringInterner;
-
-import org.apache.avro.Schema;
-import org.apache.avro.io.Decoder;
-import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.io.DatumReader;
-import org.apache.avro.specific.SpecificData;
-import org.apache.avro.specific.SpecificDatumReader;
 
 @InterfaceAudience.Private
 @InterfaceStability.Unstable
@@ -66,16 +67,26 @@ public class EventReader implements Closeable {
   public EventReader(DataInputStream in) throws IOException {
     this.in = in;
     this.version = in.readLine();
-
+  
     Schema myschema = new SpecificData(Event.class.getClassLoader()).getSchema(Event.class);
-    this.schema = Schema.parse(in.readLine());
-    this.reader = new SpecificDatumReader(schema, myschema);
-    if (EventWriter.VERSION.equals(version)) {
-      this.decoder = DecoderFactory.get().jsonDecoder(schema, in);
-    } else if (EventWriter.VERSION_BINARY.equals(version)) {
-      this.decoder = DecoderFactory.get().binaryDecoder(in, null);
+    Schema.Parser parser = new Schema.Parser();
+    String eventschema = in.readLine();
+    if (null != eventschema) {
+      try {
+        this.schema = parser.parse(eventschema);
+        this.reader = new SpecificDatumReader(schema, myschema);
+        if (EventWriter.VERSION.equals(version)) {
+          this.decoder = DecoderFactory.get().jsonDecoder(schema, in);
+        } else if (EventWriter.VERSION_BINARY.equals(version)) {
+          this.decoder = DecoderFactory.get().binaryDecoder(in, null);
+        } else {
+          throw new IOException("Incompatible event log version: " + version);
+        }
+      } catch (AvroRuntimeException e) {
+        throw new IOException(e);
+      }
     } else {
-      throw new IOException("Incompatible event log version: " + version);
+      throw new IOException("Event schema string not parsed since its null");
     }
   }
   

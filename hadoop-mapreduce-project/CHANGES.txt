@@ -68,6 +68,9 @@ Release 2.7.3 - UNRELEASED
  
    MAPREDUCE-6689. MapReduce job can infinitely increase number of reducer
    resource requests (Wangda Tan via jlowe)
+   
+   MAPREDUCE-6554. MRAppMaster servicestart failing with NPE in
+   MRAppMaster#parsePreviousJobHistory (Bibin A Chundatt via jlowe)
 
 Release 2.7.0 - 2015-04-20
   NEW FEATURES
