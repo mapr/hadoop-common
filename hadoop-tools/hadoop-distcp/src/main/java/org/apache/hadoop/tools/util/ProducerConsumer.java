@@ -20,21 +20,18 @@ package org.apache.hadoop.tools.util;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.tools.util.WorkReport;
-import org.apache.hadoop.tools.util.WorkRequest;
-import org.apache.hadoop.tools.util.WorkRequestProcessor;
 
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * ProducerConsumer class encapsulates input and output queues and a
- * thread-pool of Workers that loop on WorkRequest<T> inputQueue and for each
- * consumed WorkRequest Workers invoke WorkRequestProcessor.processItem()
- * and output resulting WorkReport<R> to the outputQueue.
+ * thread-pool of Workers that loop on WorkRequest{@literal <T>} inputQueue
+ * and for each consumed WorkRequest Workers invoke
+ * WorkRequestProcessor.processItem() and output resulting
+ * WorkReport{@literal <R>} to the outputQueue.
  */
 public class ProducerConsumer<T, R> {
   private Log LOG = LogFactory.getLog(ProducerConsumer.class);
@@ -50,16 +47,16 @@ public class ProducerConsumer<T, R> {
    *  @param numThreads   Size of thread-pool to execute Workers.
    */
   public ProducerConsumer(int numThreads) {
-    this.inputQueue = new LinkedBlockingQueue<WorkRequest<T>>();
-    this.outputQueue = new LinkedBlockingQueue<WorkReport<R>>();
+    this.inputQueue = new LinkedBlockingQueue<>();
+    this.outputQueue = new LinkedBlockingQueue<>();
     executor = Executors.newFixedThreadPool(numThreads);
     workCnt = new AtomicInteger(0);
   }
 
   /**
-   *  Add another worker that will consume WorkRequest<T> items from input
-   *  queue, process each item using supplied processor, and for every
-   *  processed item output WorkReport<R> to output queue.
+   *  Add another worker that will consume WorkRequest{@literal <T>} items
+   *  from input queue, process each item using supplied processor, and for
+   *  every processed item output WorkReport{@literal <R>} to output queue.
    *
    *  @param processor  Processor implementing WorkRequestProcessor interface.
    *
@@ -73,7 +70,10 @@ public class ProducerConsumer<T, R> {
    *  completion of any pending work.
    */
   public void shutdown() {
-    executor.shutdown();
+    if (hasWork()) {
+      LOG.warn("Shutdown() is called but there are still unprocessed work!");
+    }
+    executor.shutdownNow();
   }
 
   /**
@@ -102,7 +102,7 @@ public class ProducerConsumer<T, R> {
   /**
    *  Blocking put workRequest to ProducerConsumer input queue.
    *
-   *  @param  WorkRequest<T> item to be processed.
+   *  @param  workRequest item to be processed.
    */
   public void put(WorkRequest<T> workRequest) {
     boolean isDone = false;
@@ -120,7 +120,9 @@ public class ProducerConsumer<T, R> {
   /**
    *  Blocking take from ProducerConsumer output queue that can be interrupted.
    *
-   *  @return  WorkReport<R> item returned by processor's processItem().
+   *  @throws InterruptedException if interrupted before an element becomes
+   *  available.
+   *  @return  item returned by processor's processItem().
    */
   public WorkReport<R> take() throws InterruptedException {
     WorkReport<R> report = outputQueue.take();
@@ -132,7 +134,7 @@ public class ProducerConsumer<T, R> {
    *  Blocking take from ProducerConsumer output queue (catches exceptions and
    *  retries forever).
    *
-   *  @return  WorkReport<R> item returned by processor's processItem().
+   *  @return  item returned by processor's processItem().
    */
   public WorkReport<R> blockingTake() {
     while (true) {
@@ -146,30 +148,52 @@ public class ProducerConsumer<T, R> {
     }
   }
 
+  /**
+   * Worker thread implementation.
+   *
+   */
   private class Worker implements Runnable {
     private WorkRequestProcessor<T, R> processor;
 
+    /**
+     * Constructor.
+     * @param processor is used to process an item from input queue.
+     */
     public Worker(WorkRequestProcessor<T, R> processor) {
       this.processor = processor;
     }
 
+    /**
+     * The worker continuously gets an item from input queue, process it and
+     * then put the processed result into output queue. It waits to get an item
+     * from input queue if there's none.
+     */
     public void run() {
       while (true) {
-        try {
-          WorkRequest<T> work = inputQueue.take();
-          WorkReport<R> result = processor.processItem(work);
+        WorkRequest<T> work;
 
-          boolean isDone = false;
-          while (!isDone) {
-            try {
-              outputQueue.put(result);
-              isDone = true;
-            } catch (InterruptedException ie) {
-              LOG.debug("Could not put report into outputQueue. Retrying...");
-            }
+        try {
+          work = inputQueue.take();
+        } catch (InterruptedException e) {
+          // It is assumed that if an interrupt occurs while taking a work
+          // out from input queue, the interrupt is likely triggered by
+          // ProducerConsumer.shutdown(). Therefore, exit the thread.
+          LOG.debug("Interrupted while waiting for requests from inputQueue.");
+          return;
+        }
+
+        boolean isDone = false;
+        while (!isDone) {
+          try {
+            // if the interrupt happens while the work is being processed,
+            // go back to process the same work again.
+            WorkReport<R> result = processor.processItem(work);
+            outputQueue.put(result);
+            isDone = true;
+          } catch (InterruptedException ie) {
+            LOG.debug("Worker thread was interrupted while processing an item,"
+                + " or putting into outputQueue. Retrying...");
           }
-        } catch (InterruptedException ie) {
-          LOG.debug("Interrupted while waiting for request from inputQueue.");
         }
       }
     }

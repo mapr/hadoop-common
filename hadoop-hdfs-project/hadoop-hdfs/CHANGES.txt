@@ -979,6 +979,9 @@ Release 2.7.0 - 2015-04-20
     
     HDFS-9347. Invariant assumption in TestQuorumJournalManager.shutdown()
     is wrong. (Wei-Chiu Chuang via zhz)
+    
+    HDFS-9612. DistCp worker threads are not terminated after jobs are done.
+    (Wei-Chiu Chuang via Yongjun Zhang)
 
     BREAKDOWN OF HDFS-7584 SUBTASKS AND RELATED JIRAS
 
