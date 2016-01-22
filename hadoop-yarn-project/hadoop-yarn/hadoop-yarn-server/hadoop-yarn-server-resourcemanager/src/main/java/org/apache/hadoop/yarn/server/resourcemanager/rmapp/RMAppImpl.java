@@ -732,7 +732,7 @@ public class RMAppImpl implements RMApp, Recoverable {
     this.storedFinishTime = appState.getFinishTime();
     this.startTime = appState.getStartTime();
     // If interval > 0, some attempts might have been deleted.
-    if (submissionContext.getAttemptFailuresValidityInterval() > 0) {
+    if (this.attemptFailuresValidityInterval > 0) {
       this.firstAttemptIdInStateStore = appState.getFirstAttemptId();
       this.nextAttemptId = firstAttemptIdInStateStore;
     }
@@ -1236,7 +1236,9 @@ public class RMAppImpl implements RMApp, Recoverable {
           + "is " + numberOfFailure + ". The max attempts is "
           + app.maxAppAttempts);
 
-      removeExcessAttempts(app);
+      if (app.attemptFailuresValidityInterval > 0) {
+        removeExcessAttempts(app);
+      }
 
       if (!app.submissionContext.getUnmanagedAM()
           && numberOfFailure < app.maxAppAttempts) {
@@ -1276,15 +1278,22 @@ public class RMAppImpl implements RMApp, Recoverable {
     }
 
     private void removeExcessAttempts(RMAppImpl app) {
-      while (app.nextAttemptId - app.firstAttemptIdInStateStore
-          > app.maxAppAttempts) {
+      while (app.nextAttemptId
+          - app.firstAttemptIdInStateStore > app.maxAppAttempts) {
         // attempts' first element is oldest attempt because it is a
         // LinkedHashMap
         ApplicationAttemptId attemptId = ApplicationAttemptId.newInstance(
             app.getApplicationId(), app.firstAttemptIdInStateStore);
-        app.firstAttemptIdInStateStore++;
-        LOG.info("Remove attempt from state store : " + attemptId);
-        app.rmContext.getStateStore().removeApplicationAttempt(attemptId);
+        RMAppAttempt rmAppAttempt = app.getRMAppAttempt(attemptId);
+        long endTime = app.systemClock.getTime();
+        if (rmAppAttempt.getFinishTime() < (endTime
+            - app.attemptFailuresValidityInterval)) {
+          app.firstAttemptIdInStateStore++;
+          LOG.info("Remove attempt from state store : " + attemptId);
+          app.rmContext.getStateStore().removeApplicationAttempt(attemptId);
+        } else {
+          break;
+        }
       }
     }
   }
