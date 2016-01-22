@@ -105,6 +105,9 @@ Release 2.7.1 - UNRELEASED
 
     YARN-3480. Remove attempts that are beyond max-attempt limit from state
     store. (Jun Gong via jianhe)
+    
+    YARN-4497. RM might fail to restart when recovering apps whose attempts are missing.
+    (Jun Gong via rohithsharmaks)
 Release 2.7.0 - 2015-04-20
 
   INCOMPATIBLE CHANGES

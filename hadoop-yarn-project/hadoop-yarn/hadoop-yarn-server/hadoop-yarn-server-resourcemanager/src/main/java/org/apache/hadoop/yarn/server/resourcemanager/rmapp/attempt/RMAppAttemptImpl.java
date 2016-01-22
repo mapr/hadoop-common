@@ -1975,4 +1975,12 @@ public class RMAppAttemptImpl implements RMAppAttempt, Recoverable {
       this.writeLock.unlock();
     }
   }
+
+  public RMAppAttemptState getRecoveredFinalState() {
+    return recoveredFinalState;
+  }
+
+  public void setRecoveredFinalState(RMAppAttemptState finalState) {
+    this.recoveredFinalState = finalState;
+  }
 }
