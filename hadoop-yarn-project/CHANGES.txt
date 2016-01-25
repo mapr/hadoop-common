@@ -44,6 +44,9 @@ Release 2.8.0 - UNRELEASED
     YARN-5543. ResourceManager SchedulingMonitor could potentially terminate the
     preemption checker thread. (Min Shen, Jonathan Hung via shv).
 
+    YARN-4520. Finished app info is unnecessarily persisted in NM state-store
+    if container is acquired but not lunched on this node. (sandflee via jianeh)
+
 Release 2.7.3 - UNRELEASED
 
   INCOMPATIBLE CHANGES
