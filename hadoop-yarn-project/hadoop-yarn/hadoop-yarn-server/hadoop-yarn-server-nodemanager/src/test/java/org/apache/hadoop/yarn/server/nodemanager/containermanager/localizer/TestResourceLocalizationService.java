@@ -1082,7 +1082,10 @@ public class TestResourceLocalizationService {
   private static class DummyExecutor extends DefaultContainerExecutor {
     private volatile boolean stopLocalization = false;
     @Override
-    public void startLocalizer(LocalizerStartContext ctx)
+    public void startLocalizer(Path nmPrivateContainerTokensPath,
+                               Path nmPrivateExtTokensPath, String extTokensEnvVar,
+                               InetSocketAddress nmAddr, String user, String appId, String locId,
+                               LocalDirsHandlerService dirsHandler)
         throws IOException, InterruptedException {
       while (!stopLocalization) {
         Thread.yield();

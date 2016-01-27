@@ -782,13 +782,6 @@ public class TestLocalResourcesTrackerImpl {
     }
   }
 
-    } finally {
-      if (dispatcher != null) {
-        dispatcher.stop();
-      }
-    }
-  }
-
   @Test
   @SuppressWarnings("unchecked")
   public void testReleaseWhileDownloading() throws Exception {
@@ -832,6 +825,14 @@ public class TestLocalResourcesTrackerImpl {
       tracker.handle(rle);
 
       dispatcher.await();
+
+    } finally {
+      if (dispatcher != null) {
+        dispatcher.stop();
+      }
+    }
+  }
+
   private boolean createdummylocalizefile(Path path) {
     boolean ret = false;
     File file = new File(path.toUri().getRawPath().toString());
