@@ -119,6 +119,9 @@ Release 2.8.0 - UNRELEASED
     YARN-2194. Fix bug causing CGroups functionality to fail on RHEL7.
     (Wei Yan via vvasudev)
 
+    YARN-4643. Container recovery is broken with delegating container runtime
+        (Sidharta Seethana via jlowe)
+
 Release 2.7.3 - 2016-08-25
 
   INCOMPATIBLE CHANGES
@@ -590,7 +593,7 @@ Release 2.7.0 - 2015-04-20
     YARN-3285. (Backport YARN-3168) Convert branch-2 .apt.vm files of YARN to
     markdown. (Masatake Iwasaki via jianhe)
 
-    YARN-3122. Metrics for container's actual CPU usage. 
+    YARN-3122. Metrics for container's actual CPU usage.
     (Anubhav Dhoot via kasha)
 
     YARN-1809. Synchronize RM and TimeLineServer Web-UIs. (Zhijie Shen and
@@ -1255,7 +1258,7 @@ Release 2.6.0 - 2014-11-18
     YARN-2197. Add a link to YARN CHANGES.txt in the left side of doc
       (Akira AJISAKA via aw)
 
-    YARN-1918. Typo in description and error message for 
+    YARN-1918. Typo in description and error message for
       'yarn.resourcemanager.cluster-id' (Anandha L Ranganathan via aw)
 
     YARN-2389. Added functionality for schedulers to kill all applications in a
@@ -1322,7 +1325,7 @@ Release 2.6.0 - 2014-11-18
     YARN-2577. Clarify ACL delimiter and how to configure ACL groups only
     (Miklos Christine via aw)
 
-    YARN-2372. There are Chinese Characters in the FairScheduler's document 
+    YARN-2372. There are Chinese Characters in the FairScheduler's document
     (Fengdong Yu via aw)
 
     YARN-668. Changed NMTokenIdentifier/AMRMTokenIdentifier/ContainerTokenIdentifier
@@ -1839,7 +1842,7 @@ Release 2.6.0 - 2014-11-18
     YARN-2752. Made ContainerExecutor append "nice -n" arg only when priority
     adjustment flag is set. (Xuan Gong via zjshen)
 
-    YARN-2010. Handle app-recovery failures gracefully. 
+    YARN-2010. Handle app-recovery failures gracefully.
     (Jian He and Karthik Kambatla via kasha)
 
     YARN-2804. Fixed Timeline service to not fill the logs with JAXB bindings
@@ -2144,7 +2147,7 @@ Release 2.5.0 - 2014-08-11
     YARN-2241. ZKRMStateStore: On startup, show nicer messages if znodes already 
     exist. (Robert Kanter via kasha)
 
-	YARN-1408 Preemption caused Invalid State Event: ACQUIRED at KILLED and caused 
+	YARN-1408 Preemption caused Invalid State Event: ACQUIRED at KILLED and caused
 	a task timeout for 30mins. (Sunil G via mayank)
 
     YARN-2300. Improved the documentation of the sample requests for RM REST API -
@@ -2364,7 +2367,7 @@ Release 2.4.1 - 2014-06-23
 
     YARN-1931. Private API change in YARN-1824 in 2.4 broke compatibility 
     with previous releases (Sandy Ryza via tgraves)
-    
+
     YARN-1750. TestNodeStatusUpdater#testNMRegistration is incorrect in test 
     case. (Wangda Tan via junping_du)
 
@@ -4522,7 +4525,7 @@ Release 2.0.5-alpha - 06/06/2013
 
   BUG FIXES
 
-Release 2.0.4-alpha - 2013-04-25 
+Release 2.0.4-alpha - 2013-04-25
 
   INCOMPATIBLE CHANGES
 
@@ -4638,7 +4641,7 @@ Release 2.0.3-alpha - 2013-02-06
 
   OPTIMIZATIONS
 
-  BUG FIXES 
+  BUG FIXES
     
     YARN-131. Fix incorrect ACL properties in capacity scheduler documentation.
     (Ahmed Radwan via sseth)
@@ -4777,7 +4780,7 @@ Release 2.0.2-alpha - 2012-09-07
     MAPREDUCE-2374. "Text File Busy" errors launching MR tasks. (Andy Isaacson
     via atm)
 
-    YARN-12. Fix findbugs warnings in FairScheduler. (Junping Du via acmurthy) 
+    YARN-12. Fix findbugs warnings in FairScheduler. (Junping Du via acmurthy)
 
     YARN-22. Fix ContainerLogs to work if the log-dir is specified as a URI.
     (Mayank Bansal via sseth)
