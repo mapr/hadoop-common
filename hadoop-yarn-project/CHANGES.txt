@@ -36,6 +36,9 @@ Release 2.8.0 - UNRELEASED
     alternative to custom memory-monitoring. (Varun Vasudev via vinodkv)
 
 
+    YARN-4411. RMAppAttemptImpl#createApplicationAttemptReport throws
+    IllegalArgumentException. (Bibin A Chundatt, yarntime via devaraj)
+
   IMPROVEMENTS
 
     YARN-4579. Allow DefaultContainerExecutor container log directory
