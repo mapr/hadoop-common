@@ -4,7 +4,7 @@ Hadoop MapReduce Change Log
 
     MAPREDUCE-6213. NullPointerException caused by job history server addr not
     resolvable. (Peng Zhang via harsh)
-    
+
     MAPREDUCE-4785. TestMRApp occasionally fails (haibochen via rkanter)
 
     MAPREDUCE-5649. Reduce cannot use more than 2G memory for the final merge
@@ -12,10 +12,10 @@ Hadoop MapReduce Change Log
 
     MAPREDUCE-6549. multibyte delimiters with LineRecordReader cause
     duplicate records (wilfreds via rkanter)
-    
+
     MAPREDUCE-5817. Mappers get rescheduled on node transition even after all
     reducers are completed. (Sangjin Lee via kasha)
-    
+
     MAPREDUCE-6513. Job got hanged forever when one NM unstable for some
     time. Contributed by Varun Saxena & Wangda Tan
 
@@ -55,7 +55,7 @@ Release 2.8.0 - UNRELEASED
 
     MAPREDUCE-6316. Task Attempt List entries should link to the task overview.
     (Siqi Li via gera)
-    
+
     MAPREDUCE-6566. Add retry support to mapreduce CLI tool.
     (Varun Vasudev via xgong)
 
@@ -102,11 +102,14 @@ Release 2.7.3 - UNRELEASED
    MAPREDUCE-6554. MRAppMaster servicestart failing with NPE in
    MRAppMaster#parsePreviousJobHistory (Bibin A Chundatt via jlowe)
 
+   MAPREDUCE-6618. YarnClientProtocolProvider leaking the YarnClient thread.
+   (Xuan Gong via jlowe)
+
     MAPREDUCE-6273. HistoryFileManager should check whether summaryFile exists to 
     avoid FileNotFoundException causing HistoryFileInfo into MOVE_FAILED state.
     (zhihai xu via devaraj)
 
-    MAPREDUCE-6252. JobHistoryServer should not fail when encountering a 
+    MAPREDUCE-6252. JobHistoryServer should not fail when encountering a
     missing directory. (Craig Welch via devaraj)
 
     MAPREDUCE-6165. [JDK8] TestCombineFileInputFormat failed on JDK8.
@@ -200,10 +203,10 @@ Release 2.7.0 - 2015-04-20
     MAPREDUCE-6248. Exposed the internal MapReduce job's information as a public
     API in DistCp. (Jing Zhao via vinodkv)
 
-    MAPREDUCE-6267. Refactor JobSubmitter#copyAndConfigureFiles into it's own 
+    MAPREDUCE-6267. Refactor JobSubmitter#copyAndConfigureFiles into it's own
     class. (Chris Trezzo via kasha)
 
-    MAPREDUCE-6263. Configurable timeout between YARNRunner terminate the 
+    MAPREDUCE-6263. Configurable timeout between YARNRunner terminate the
     application and forcefully kill. (Eric Payne via junping_du)
 
     MAPREDUCE-6265. Make ContainerLauncherImpl.INITIAL_POOL_SIZE configurable 
@@ -335,7 +338,7 @@ Release 2.7.0 - 2015-04-20
     MAPREDUCE-6285. ClientServiceDelegate should not retry upon
     AuthenticationException. (Jonathan Eagles via ozawa)
 
-    MAPREDUCE-6303. Read timeout when retrying a fetch error can be fatal 
+    MAPREDUCE-6303. Read timeout when retrying a fetch error can be fatal
     to a reducer. (Jason Lowe via junping_du)
 
 Release 2.6.2 - UNRELEASED
@@ -351,6 +354,9 @@ Release 2.6.2 - UNRELEASED
  OPTIMIZATIONS
 
  BUG FIXES
+
+   MAPREDUCE-6618. YarnClientProtocolProvider leaking the YarnClient thread.
+   (Xuan Gong via jlowe)
 
    MAPREDUCE-6454. Fixed MapReduce to modify HADOOP_CLASSPATH to have distributed
    cache files so that child processes running hadoop scripts can access these
