@@ -33,6 +33,9 @@ Hadoop MapReduce Change Log
 
     MAPREDUCE-6555. TestMRAppMaster fails on trunk. (Junping Du via ozawa)
 
+    MAPREDUCE-6620. Jobs that did not start are shown as starting in 1969 in
+    the JHS web UI (haibochen via rkanter)
+
 Release 2.8.0 - UNRELEASED
 
   INCOMPATIBLE CHANGES
