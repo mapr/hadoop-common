@@ -105,6 +105,9 @@ Release 2.7.3 - UNRELEASED
    MAPREDUCE-6618. YarnClientProtocolProvider leaking the YarnClient thread.
    (Xuan Gong via jlowe)
 
+    MAPREDUCE-6621. Memory Leak in JobClient#submitJobInternal() (Xuan Gong
+    via jlowe)
+
     MAPREDUCE-6273. HistoryFileManager should check whether summaryFile exists to 
     avoid FileNotFoundException causing HistoryFileInfo into MOVE_FAILED state.
     (zhihai xu via devaraj)
@@ -361,6 +364,9 @@ Release 2.6.2 - UNRELEASED
    MAPREDUCE-6454. Fixed MapReduce to modify HADOOP_CLASSPATH to have distributed
    cache files so that child processes running hadoop scripts can access these
    files. (Junping Du via vinodkv)
+
+   MAPREDUCE-6621. Memory Leak in JobClient#submitJobInternal() (Xuan Gong
+   via jlowe)
 
 Release 2.6.1 - UNRELEASED
 
