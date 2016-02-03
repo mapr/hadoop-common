@@ -30,7 +30,6 @@ import org.apache.hadoop.mapreduce.v2.app.AppContext;
 import org.apache.hadoop.mapreduce.v2.app.TaskAttemptFinishingMonitor;
 import org.apache.hadoop.mapreduce.v2.app.job.event.TaskAttemptEvent;
 import org.apache.hadoop.mapreduce.v2.app.job.event.TaskAttemptEventType;
-import org.apache.hadoop.mapreduce.v2.app.rm.preemption.CheckpointAMPreemptionPolicy;
 import org.apache.hadoop.mapreduce.v2.app.rm.RMHeartbeatHandler;
 import org.apache.hadoop.mapreduce.v2.util.MRBuilderUtils;
 import org.apache.hadoop.yarn.event.Event;
@@ -68,10 +67,8 @@ public class TestTaskAttemptFinishingMonitor {
         taskAttemptFinishingMonitor);
     when(appCtx.getClock()).thenReturn(clock);
 
-    CheckpointAMPreemptionPolicy policy = new CheckpointAMPreemptionPolicy();
-    policy.init(appCtx);
     TaskAttemptListenerImpl listener =
-        new TaskAttemptListenerImpl(appCtx, secret, rmHeartbeatHandler, policy);
+        new TaskAttemptListenerImpl(appCtx, secret, rmHeartbeatHandler);
 
     listener.init(conf);
     listener.start();
