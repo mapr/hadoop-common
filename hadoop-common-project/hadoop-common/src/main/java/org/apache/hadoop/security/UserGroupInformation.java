@@ -748,7 +748,7 @@ public class UserGroupInformation {
       loginUser.spawnAutoRenewalThreadForUserCreds();
     } catch (LoginException le) {
       LOG.debug("failure to login", le);
-      throw new IOException("failure to login: " + le.getMessage(), le);
+      throw new IOException("failure to login: " + le, le);
     }
     if (LOG.isDebugEnabled()) {
       LOG.debug("UGI loginUser:"+loginUser);
@@ -940,7 +940,8 @@ public class UserGroupInformation {
       }
     } catch (LoginException le) {
       throw new IOException("Logout failure for " + user + " from keytab " +
-          keytabFile, le);
+          keytabFile + ": " + le,
+          le);
     }
 
     LOG.info("Logout successful for user " + keytabPrincipal
@@ -1027,7 +1028,7 @@ public class UserGroupInformation {
         metrics.loginFailure.add(Time.now() - start);
       }
       throw new IOException("Login failure for " + keytabPrincipal + 
-          " from keytab " + keytabFile, le);
+          " from keytab " + keytabFile + ": " + le, le);
     } 
   }
 
@@ -1071,7 +1072,8 @@ public class UserGroupInformation {
       login.login();
       setLogin(login);
     } catch (LoginException le) {
-      throw new IOException("Login failure for " + getUserName(), le);
+      throw new IOException("Login failure for " + getUserName() + ": " + le,
+          le);
     } 
   }
 
@@ -1118,7 +1120,7 @@ public class UserGroupInformation {
         metrics.loginFailure.add(Time.now() - start);
       }
       throw new IOException("Login failure for " + user + " from keytab " + 
-                            path, le);
+                            path + ": " + le, le);
     } finally {
       if(oldKeytabFile != null) keytabFile = oldKeytabFile;
       if(oldKeytabPrincipal != null) keytabPrincipal = oldKeytabPrincipal;
@@ -1636,7 +1638,7 @@ public class UserGroupInformation {
       }
       if (cause == null) {
         throw new RuntimeException("PrivilegedActionException with no " +
-                "underlying cause. UGI [" + this + "]", pae);
+                "underlying cause. UGI [" + this + "]" +": " + pae, pae);
       } else if (cause instanceof IOException) {
         throw (IOException) cause;
       } else if (cause instanceof Error) {
