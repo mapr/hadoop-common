@@ -4,16 +4,16 @@ HADOOP-12682. Fix TestKMS#testKMSRestart* failure. Contributed by Wei-Chiu Chuan
 
     HADOOP-12413. AccessControlList should avoid calling getGroupNames in
     isUserInList with empty groups. (Zhihai Xu via cnauroth)
-    
+
     HADOOP-12284. UserGroupInformation doAs can throw misleading exception
     (Aaron Dosset via stevel)
 
     HADOOP-12304. Applications using FileContext fail with the default file
     system configured to be wasb/s3/etc. (cnauroth)
-    
+
     HADOOP-12045. Enable LocalFileSystem#setTimes to change atime.
     (Kazuho Fujii via cnauroth)
-    
+
     HADOOP-11031. Design Document for Credential Provider API.
     (Larry McCay via cnauroth)
 
@@ -22,6 +22,9 @@ HADOOP-12682. Fix TestKMS#testKMSRestart* failure. Contributed by Wei-Chiu Chuan
 
     HADOOP-12555. WASB to read credentials from a credential provider.
     (Larry McCay via cnauroth)
+
+    HADOOP-12292. Make use of DeleteObjects optional.
+    (Thomas Demoor via stevel)
 
     HADOOP-11859. PseudoAuthenticationHandler fails with httpcomponents v4.4.
     (Eugene Koifman via jitendra)
@@ -41,7 +44,7 @@ HADOOP-12682. Fix TestKMS#testKMSRestart* failure. Contributed by Wei-Chiu Chuan
 
     HADOOP-10798. globStatus() should always return a sorted list of files
     (cmccabe)
-    
+
     HADOOP-12258. Need translate java.nio.file.NoSuchFileException to
     FileNotFoundException to avoid regression. (Zhihai Xu via cnauroth)
 
@@ -1014,7 +1017,7 @@ Release 2.6.0 - 2014-11-18
     HADOOP-11101. How about inputstream close statement from catch block to
     finally block in FileContext#copy() ( skrho via vinayakumarb )
 
-    HADOOP-8808. Update FsShell documentation to mention deprecation of some 
+    HADOOP-8808. Update FsShell documentation to mention deprecation of some
     of the commands, and mention alternatives (Akira AJISAKA via aw)
 
     HADOOP-10954. Adding site documents of hadoop-tools (Masatake Iwasaki 
