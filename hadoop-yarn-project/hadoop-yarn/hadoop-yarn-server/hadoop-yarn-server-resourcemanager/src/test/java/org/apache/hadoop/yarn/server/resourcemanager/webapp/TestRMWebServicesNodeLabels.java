@@ -36,16 +36,17 @@ import org.apache.hadoop.yarn.server.resourcemanager.ResourceManager;
 import org.apache.hadoop.yarn.server.resourcemanager.webapp.dao.NodeLabelsInfo;
 import org.apache.hadoop.yarn.server.resourcemanager.webapp.dao.NodeToLabelsInfo;
 import org.apache.hadoop.yarn.webapp.GenericExceptionHandler;
+import org.apache.hadoop.yarn.webapp.GuiceServletConfig;
 import org.apache.hadoop.yarn.webapp.JerseyTestBase;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.junit.Ignore;
+import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.servlet.GuiceServletContextListener;
 import com.google.inject.servlet.ServletModule;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
@@ -61,12 +62,13 @@ public class TestRMWebServicesNodeLabels extends JerseyTestBase {
       .getLog(TestRMWebServicesNodeLabels.class);
 
   private static MockRM rm;
-  private YarnConfiguration conf;
+  private static YarnConfiguration conf;
 
-  private String userName;
-  private String notUserName;
+  private static String userName;
+  private static String notUserName;
 
-  private Injector injector = Guice.createInjector(new ServletModule() {
+  private static class WebServletModule extends ServletModule {
+
     @Override
     protected void configureServlets() {
       bind(JAXBContextResolver.class);
@@ -87,14 +89,14 @@ public class TestRMWebServicesNodeLabels extends JerseyTestBase {
           TestRMWebServicesAppsModification.TestRMCustomAuthFilter.class);
       serve("/*").with(GuiceContainer.class);
     }
-  });
+  };
 
-  public class GuiceServletConfig extends GuiceServletContextListener {
-
-    @Override
-    protected Injector getInjector() {
-      return injector;
-    }
+  @Override
+  @Before
+  public void setUp() throws Exception {
+    super.setUp();
+    GuiceServletConfig.setInjector(
+        Guice.createInjector(new WebServletModule()));
   }
 
   public TestRMWebServicesNodeLabels() {
@@ -316,7 +318,7 @@ public class TestRMWebServicesNodeLabels extends JerseyTestBase {
     assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getType());
     json = response.getEntity(JSONObject.class);
     assertEquals("a", json.getString("nodeLabels"));
-    
+
     
     // Remove cluster label with post
     response =

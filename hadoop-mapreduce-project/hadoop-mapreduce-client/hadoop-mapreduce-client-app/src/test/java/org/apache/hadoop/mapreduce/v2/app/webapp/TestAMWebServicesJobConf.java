@@ -45,6 +45,7 @@ import org.apache.hadoop.mapreduce.v2.app.job.Job;
 import org.apache.hadoop.mapreduce.v2.util.MRApps;
 import org.apache.hadoop.yarn.webapp.GenericExceptionHandler;
 import org.apache.hadoop.yarn.webapp.JerseyTestBase;
+import org.apache.hadoop.yarn.webapp.GuiceServletConfig;
 import org.apache.hadoop.yarn.webapp.WebServicesTestUtils;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
@@ -58,8 +59,6 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.servlet.GuiceServletContextListener;
 import com.google.inject.servlet.ServletModule;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
@@ -80,7 +79,8 @@ public class TestAMWebServicesJobConf extends JerseyTestBase {
   private static File testConfDir = new File("target",
       TestAMWebServicesJobConf.class.getSimpleName() + "confDir");
 
-  private Injector injector = Guice.createInjector(new ServletModule() {
+  private static class WebServletModule extends ServletModule {
+
     @Override
     protected void configureServlets() {
 
@@ -117,14 +117,11 @@ public class TestAMWebServicesJobConf extends JerseyTestBase {
 
       serve("/*").with(GuiceContainer.class);
     }
-  });
+  };
 
-  public class GuiceServletConfig extends GuiceServletContextListener {
-
-    @Override
-    protected Injector getInjector() {
-      return injector;
-    }
+  static {
+    GuiceServletConfig.setInjector(
+        Guice.createInjector(new WebServletModule()));
   }
 
   @Before
@@ -132,7 +129,8 @@ public class TestAMWebServicesJobConf extends JerseyTestBase {
   public void setUp() throws Exception {
     super.setUp();
     testConfDir.mkdir();
-
+    GuiceServletConfig.setInjector(
+        Guice.createInjector(new WebServletModule()));
   }
 
   @AfterClass
