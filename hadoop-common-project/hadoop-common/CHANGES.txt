@@ -17,6 +17,9 @@ HADOOP-12682. Fix TestKMS#testKMSRestart* failure. Contributed by Wei-Chiu Chuan
     HADOOP-11031. Design Document for Credential Provider API.
     (Larry McCay via cnauroth)
 
+    HADOOP-12548. Read s3a creds from a Credential Provider.
+    (Larry McCay via cnauroth)
+
     HADOOP-12059. S3Credentials should support use of CredentialProvider.
     (Sean Busbey via wang)
 
