@@ -174,6 +174,7 @@ public final class HttpServer2 implements FilterContainer {
     private String hostName;
     private boolean disallowFallbackToRandomSignerSecretProvider;
     private String authFilterConfigurationPrefix = "hadoop.http.authentication.";
+    private String excludeCiphers;
 
     public Builder setName(String name){
       this.name = name;
@@ -283,6 +284,11 @@ public final class HttpServer2 implements FilterContainer {
       return this;
     }
 
+    public Builder excludeCiphers(String pExcludeCiphers) {
+      this.excludeCiphers = pExcludeCiphers;
+      return this;
+    }
+
     public HttpServer2 build() throws IOException {
       Preconditions.checkNotNull(name, "name is not set");
       Preconditions.checkState(!endpoints.isEmpty(), "No endpoints specified");
@@ -327,6 +333,12 @@ public final class HttpServer2 implements FilterContainer {
               CommonConfigurationKeys.SSL_EXCLUDE_CIPHER_SUITES_DEFAULT);
           c.setExcludeCipherSuites(excludeCipherSuites.split(","));
           LOG.info("Exclude SSL cipher suites: " + excludeCipherSuites);
+
+          if(null != excludeCiphers && !excludeCiphers.isEmpty()) {
+            c.setExcludeCipherSuites(excludeCiphers.split(","));
+            LOG.info("Excluded Cipher List:" + excludeCiphers);
+          }
+
           listener = c;
 
         } else {
