@@ -1,5 +1,8 @@
 Hadoop Change Log
 
+    HADOOP-11613. Remove commons-httpclient dependency from hadoop-azure.
+    (Masatake Iwasaki via cnauroth)
+
     HADOOP-10296. Incorrect null check in SwiftRestClient#buildException().
     (Rahul Palamuttam and Kanaka Kumar Avvaru via aajisaka)
 
