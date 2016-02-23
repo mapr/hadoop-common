@@ -44,6 +44,9 @@ Release 2.8.0 - UNRELEASED
   
     MAPREDUCE-6302. Preempt reducers after a configurable timeout irrespective 
     of headroom. (kasha)
+    
+    MAPREDUCE-6635. Unsafe long to int conversion in UncompressedSplitLineReader
+    and IndexOutOfBoundsException. (Junping Du via vvasudev)
 
 Release 2.7.3 - UNRELEASED
  
