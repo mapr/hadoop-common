@@ -20,6 +20,9 @@ HADOOP-12682. Fix TestKMS#testKMSRestart* failure. Contributed by Wei-Chiu Chuan
     HADOOP-12059. S3Credentials should support use of CredentialProvider.
     (Sean Busbey via wang)
 
+    HADOOP-12555. WASB to read credentials from a credential provider.
+    (Larry McCay via cnauroth)
+
     HADOOP-11859. PseudoAuthenticationHandler fails with httpcomponents v4.4.
     (Eugene Koifman via jitendra)
 
