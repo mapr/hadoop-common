@@ -68,7 +68,7 @@ Copy file or directories recursively. More information can be found at
 
 Command to interact with Map Reduce Jobs.
 
-Usage: `mapred job | [GENERIC_OPTIONS] | [-submit <job-file>] | [-status <job-id>] | [-counter <job-id> <group-name> <counter-name>] | [-kill <job-id>] | [-events <job-id> <from-event-#> <#-of-events>] | [-history [all] <jobHistoryFile> [-outfile <file>] [-format <human|json>]] | [-list [all]] | [-kill-task <task-id>] | [-fail-task <task-id>] | [-set-priority <job-id> <priority>]`
+Usage: `mapred job | [GENERIC_OPTIONS] | [-submit <job-file>] | [-status <job-id>] | [-counter <job-id> <group-name> <counter-name>] | [-kill <job-id>] | [-events <job-id> <from-event-#> <#-of-events>] | [-history [all] <jobHistoryFile|jobId> [-outfile <file>] [-format <human|json>]] | [-list [all]] | [-kill-task <task-id>] | [-fail-task <task-id>] | [-set-priority <job-id> <priority>]`
 
 | COMMAND\_OPTION | Description |
 |:---- |:---- |
@@ -77,7 +77,7 @@ Usage: `mapred job | [GENERIC_OPTIONS] | [-submit <job-file>] | [-status <job-id
 | -counter *job-id* *group-name* *counter-name* | Prints the counter value. |
 | -kill *job-id* | Kills the job. |
 | -events *job-id* *from-event-\#* *\#-of-events* | Prints the events' details received by jobtracker for the given range. |
-| -history [all] *jobHistoryFile* [-outfile *file*] [-format *human|json*] | Prints job details, failed and killed task details. More details about the job such as successful tasks, task attempts made for each task, task counters, etc can be viewed by specifying the [all] option. An optional file output path (instead of stdout) can be specified. The format defaults to human-readable but can also be changed to JSON with the [-format] option. |
+| -history [all] *jobHistoryFile|jobId* [-outfile *file*] [-format *human|json*] | Prints job details, failed and killed task details. More details about the job such as successful tasks, task attempts made for each task, task counters, etc can be viewed by specifying the [all] option. An optional file output path (instead of stdout) can be specified. The format defaults to human-readable but can also be changed to JSON with the [-format] option. |
 | -list [all] | Displays jobs which are yet to complete. `-list all` displays all jobs. |
 | -kill-task *task-id* | Kills the task. Killed tasks are NOT counted against failed attempts. |
 | -fail-task *task-id* | Fails the task. Failed tasks are counted against failed attempts. |
