@@ -108,7 +108,11 @@ public class JHAdminConfig {
   public static final String MR_HISTORY_LOADED_JOB_CACHE_SIZE = 
     MR_HISTORY_PREFIX + "loadedjobs.cache.size";
   public static final int DEFAULT_MR_HISTORY_LOADED_JOB_CACHE_SIZE = 5;
-  
+
+  /** Size of the loaded job cache (in tasks).*/
+  public static final String MR_HISTORY_LOADED_TASKS_CACHE_SIZE =
+      MR_HISTORY_PREFIX + "loadedtasks.cache.size";
+
   /**
    * The maximum age of a job history file before it is deleted from the history
    * server.
