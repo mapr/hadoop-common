@@ -47,6 +47,9 @@ HADOOP-12682. Fix TestKMS#testKMSRestart* failure. Contributed by Wei-Chiu Chuan
 
     HADOOP-11934. Use of JavaKeyStoreProvider in LdapGroupsMapping causes
     infinite loop. (Larry McCay via cnauroth)
+
+    HADOOP-12846. Credential Provider Recursive Dependencies.
+    (Larry McCay via cnauroth)
 Release 2.7.0 - 2015-04-20
 
   INCOMPATIBLE CHANGES
