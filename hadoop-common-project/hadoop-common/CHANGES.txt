@@ -1,5 +1,7 @@
 Hadoop Change Log
 
+    HADOOP-12552. Fix undeclared/unused dependency to httpclient (iwasakims)
+
     HADOOP-14586. StringIndexOutOfBoundsException breaks org.apache.hadoop.util.Shell on 2.7.x with Java 9. (Uwe Schindler via shv)
 
     HADOOP-11843. Make setting up the build environment easier.
