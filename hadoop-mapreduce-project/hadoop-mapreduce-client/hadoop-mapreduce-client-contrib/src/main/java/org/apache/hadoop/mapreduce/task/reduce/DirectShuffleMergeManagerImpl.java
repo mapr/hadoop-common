@@ -172,10 +172,8 @@ public class DirectShuffleMergeManagerImpl<K, V> implements MergeManager<K, V> {
     }
 
     // Allow unit tests to fix Runtime memory
-    this.memoryLimit = 
-      (long)(jobConf.getLong(MRJobConfig.REDUCE_MEMORY_TOTAL_BYTES,
-          Math.min(Runtime.getRuntime().maxMemory(), Integer.MAX_VALUE))
-        * maxInMemCopyUse);
+    this.memoryLimit = (long)(jobConf.getLong(MRJobConfig.REDUCE_MEMORY_TOTAL_BYTES,
+          Runtime.getRuntime().maxMemory()) * maxInMemCopyUse);
  
     this.ioSortFactor = jobConf.getInt(MRJobConfig.IO_SORT_FACTOR, 100);
 
@@ -687,9 +685,7 @@ public class DirectShuffleMergeManagerImpl<K, V> implements MergeManager<K, V> {
       throw new IOException(MRJobConfig.REDUCE_INPUT_BUFFER_PERCENT +
                             maxRedPer);
     }
-    int maxInMemReduce = (int)Math.min(
-        Runtime.getRuntime().maxMemory() * maxRedPer, Integer.MAX_VALUE);
-    
+    long maxInMemReduce = (long)(memoryLimit * maxRedPer);
 
     // merge config params
     Class<K> keyClass = (Class<K>)job.getMapOutputKeyClass();

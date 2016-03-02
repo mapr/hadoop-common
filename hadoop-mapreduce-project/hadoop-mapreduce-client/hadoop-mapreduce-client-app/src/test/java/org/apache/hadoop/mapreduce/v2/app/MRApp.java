@@ -481,6 +481,20 @@ public class MRApp extends MRAppMaster {
   }
 
   @Override
+  protected TaskAttemptFinishingMonitor
+      createTaskAttemptFinishingMonitor(
+      EventHandler eventHandler) {
+    return new TaskAttemptFinishingMonitor(eventHandler) {
+      @Override
+      public synchronized void register(TaskAttemptId attemptID) {
+        getContext().getEventHandler().handle(
+            new TaskAttemptEvent(attemptID,
+                TaskAttemptEventType.TA_CONTAINER_COMPLETED));
+      }
+    };
+  }
+
+  @Override
   protected TaskAttemptListener createTaskAttemptListener(AppContext context) {
     return new TaskAttemptListener(){
       @Override
@@ -528,10 +542,7 @@ public class MRApp extends MRAppMaster {
     public void handle(ContainerLauncherEvent event) {
       switch (event.getType()) {
       case CONTAINER_REMOTE_LAUNCH:
-        getContext().getEventHandler().handle(
-            new TaskAttemptContainerLaunchedEvent(event.getTaskAttemptID(),
-                shufflePort));
-        
+        containerLaunched(event.getTaskAttemptID(), shufflePort);
         attemptLaunched(event.getTaskAttemptID());
         break;
       case CONTAINER_REMOTE_CLEANUP:
@@ -539,8 +550,16 @@ public class MRApp extends MRAppMaster {
             new TaskAttemptEvent(event.getTaskAttemptID(),
                 TaskAttemptEventType.TA_CONTAINER_CLEANED));
         break;
+      case CONTAINER_COMPLETED:
+        break;
       }
     }
+  }
+
+  protected void containerLaunched(TaskAttemptId attemptID, int shufflePort) {
+    getContext().getEventHandler().handle(
+      new TaskAttemptContainerLaunchedEvent(attemptID,
+          shufflePort));
   }
 
   protected void attemptLaunched(TaskAttemptId attemptID) {
