@@ -88,8 +88,6 @@ import org.apache.hadoop.yarn.server.resourcemanager.security.RMContainerTokenSe
 import org.apache.hadoop.yarn.util.Clock;
 import org.apache.hadoop.yarn.util.SystemClock;
 import org.apache.hadoop.yarn.util.resource.DiskBasedResourceCalculator;
-import org.apache.hadoop.yarn.util.resource.DominantResourceCalculator;
-import org.apache.hadoop.yarn.util.resource.DiskBasedDominantResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.ResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.Resources;
 
@@ -131,8 +129,6 @@ public class FairScheduler extends
   
   private static final ResourceCalculator RESOURCE_CALCULATOR =
       new DiskBasedResourceCalculator();
-  private static final ResourceCalculator DOMINANT_RESOURCE_CALCULATOR =
-      new DiskBasedDominantResourceCalculator();
   
   // Value that container assignment methods return when a container is
   // reserved
@@ -987,8 +983,8 @@ public class FairScheduler extends
     }
 
     // Sanity check
-    SchedulerUtils.normalizeRequests(ask, /*new DominantResourceCalculator(),*/ new DiskBasedResourceCalculator(),
-        clusterResource, minimumAllocation, getMaximumResourceCapability(), incrAllocation);
+    SchedulerUtils.normalizeRequests(ask, RESOURCE_CALCULATOR, clusterResource,
+            minimumAllocation, getMaximumResourceCapability(), incrAllocation);
 
     // Set amResource for this app
     if (!application.getUnmanagedAM() && ask.size() == 1
@@ -1242,10 +1238,10 @@ public class FairScheduler extends
    */
   private boolean shouldAttemptPreemption() {
     if (preemptionEnabled) {
-      return (preemptionUtilizationThreshold < Math.max(
-          (float) rootMetrics.getAllocatedMB() / clusterResource.getMemory(),
-          (float) rootMetrics.getAllocatedVirtualCores() /
-              clusterResource.getVirtualCores()));
+      return (preemptionUtilizationThreshold < Math.max(Math.max(
+            (float) rootMetrics.getAllocatedMB() / clusterResource.getMemory(),
+            (float) rootMetrics.getAllocatedVirtualCores() / clusterResource.getVirtualCores()),
+          (float) rootMetrics.getAllocatedDisks() / clusterResource.getDisks()));
     }
     return false;
   }
