@@ -93,9 +93,10 @@ public class TestMRTimelineEventHandling {
       cluster.start();
       TimelineStore ts = cluster.getApplicationHistoryServer()
               .getTimelineStore();
-
-      Path inDir = new Path("input");
-      Path outDir = new Path("output");
+      String localPathRoot = System.getProperty("test.build.data",
+          "build/test/data");
+      Path inDir = new Path(localPathRoot, "input");
+      Path outDir = new Path(localPathRoot, "output");
       RunningJob job =
               UtilsForTests.runJobSucceed(new JobConf(conf), inDir, outDir);
       Assert.assertEquals(JobStatus.SUCCEEDED,
@@ -148,8 +149,10 @@ public class TestMRTimelineEventHandling {
       TimelineStore ts = cluster.getApplicationHistoryServer()
           .getTimelineStore();
 
-      Path inDir = new Path("input");
-      Path outDir = new Path("output");
+      String localPathRoot = System.getProperty("test.build.data",
+          "build/test/data");
+      Path inDir = new Path(localPathRoot, "input");
+      Path outDir = new Path(localPathRoot, "output");
       RunningJob job =
           UtilsForTests.runJobSucceed(new JobConf(conf), inDir, outDir);
       Assert.assertEquals(JobStatus.SUCCEEDED,
@@ -185,8 +188,10 @@ public class TestMRTimelineEventHandling {
       TimelineStore ts = cluster.getApplicationHistoryServer()
           .getTimelineStore();
 
-      Path inDir = new Path("input");
-      Path outDir = new Path("output");
+      String localPathRoot = System.getProperty("test.build.data",
+          "build/test/data");
+      Path inDir = new Path(localPathRoot, "input");
+      Path outDir = new Path(localPathRoot, "output");
 
       conf.setBoolean(MRJobConfig.MAPREDUCE_JOB_EMIT_TIMELINE_DATA, false);
       RunningJob job =
