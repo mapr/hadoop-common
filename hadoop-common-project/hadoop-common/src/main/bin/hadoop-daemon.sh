@@ -111,7 +111,7 @@ if [ ! -w "$HADOOP_LOG_DIR" ] ; then
 fi
 
 if [ "$HADOOP_PID_DIR" = "" ]; then
-  HADOOP_PID_DIR=/tmp
+  HADOOP_PID_DIR=$MAPR_HOME/pid
 fi
 
 # some variables
