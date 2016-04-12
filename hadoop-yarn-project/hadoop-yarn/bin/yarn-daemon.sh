@@ -85,7 +85,7 @@ if [ ! -w "$YARN_LOG_DIR" ] ; then
 fi
 
 if [ "$YARN_PID_DIR" = "" ]; then
-  YARN_PID_DIR=/tmp
+  YARN_PID_DIR=$MAPR_HOME/pid
 fi
 
 # some variables
