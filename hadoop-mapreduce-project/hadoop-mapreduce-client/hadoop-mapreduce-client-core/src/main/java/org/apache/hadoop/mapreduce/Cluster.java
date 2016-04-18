@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
@@ -112,7 +113,7 @@ public class Cluster {
         } 
         catch (Exception e) {
           LOG.info("Failed to use " + provider.getClass().getName()
-              + " due to error: " + e.getMessage());
+              + " due to error: " + ExceptionUtils.getRootCauseMessage(e));
         }
       }
     }
