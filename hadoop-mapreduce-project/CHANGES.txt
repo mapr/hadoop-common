@@ -15,6 +15,9 @@ Hadoop MapReduce Change Log
     
     MAPREDUCE-5817. Mappers get rescheduled on node transition even after all
     reducers are completed. (Sangjin Lee via kasha)
+    
+    MAPREDUCE-6513. Job got hanged forever when one NM unstable for some
+    time. Contributed by Varun Saxena & Wangda Tan
 
     MAPREDUCE-5948. org.apache.hadoop.mapred.LineRecordReader does not handle
     multibyte record delimiters well (Vinayakumar B, Rushabh Shah, and Akira
