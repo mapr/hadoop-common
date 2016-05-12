@@ -149,6 +149,10 @@
           <groupId>commons-el</groupId>
           <artifactId>commons-el</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>com.mapr.hadoop</groupId>
+          <artifactId>maprfs</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
