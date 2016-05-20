@@ -36,6 +36,7 @@ import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.Protocol;
+import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSCredentialsProviderChain;
 
 import com.amazonaws.auth.InstanceProfileCredentialsProvider;
@@ -160,16 +161,9 @@ public class S3AFileSystem extends FileSystem {
     workingDir = new Path("/user", System.getProperty("user.name")).makeQualified(this.uri,
         this.getWorkingDirectory());
 
-    AWSAccessKeys creds = getAWSAccessKeys(name, conf);
-
-    AWSCredentialsProviderChain credentials = new AWSCredentialsProviderChain(
-        new BasicAWSCredentialsProvider(
-            creds.getAccessKey(), creds.getAccessSecret()),
-        new InstanceProfileCredentialsProvider(),
-        new AnonymousAWSCredentialsProvider()
-    );
-
     bucket = name.getHost();
+
+    AWSCredentialsProvider credentials = getAWSCredentialsProvider(name, conf);
 
     ClientConfiguration awsConf = new ClientConfiguration();
     awsConf.setMaxConnections(conf.getInt(MAXIMUM_CONNECTIONS,
@@ -289,7 +283,7 @@ public class S3AFileSystem extends FileSystem {
   }
 
   private void initAmazonS3Client(Configuration conf,
-      AWSCredentialsProviderChain credentials, ClientConfiguration awsConf)
+      AWSCredentialsProvider credentials, ClientConfiguration awsConf)
       throws IllegalArgumentException {
     s3 = new AmazonS3Client(credentials, awsConf);
     String endPoint = conf.getTrimmed(ENDPOINT,"");
@@ -392,6 +386,48 @@ public class S3AFileSystem extends FileSystem {
   }
 
   /**
+   * Create the standard credential provider, or load in one explicitly
+   * identified in the configuration.
+   * @param binding the S3 binding/bucket.
+   * @param conf configuration
+   * @return a credential provider
+   * @throws IOException on any problem. Class construction issues may be
+   * nested inside the IOE.
+   */
+  private AWSCredentialsProvider getAWSCredentialsProvider(URI binding,
+      Configuration conf) throws IOException {
+    AWSCredentialsProvider credentials;
+
+    String className = conf.getTrimmed(AWS_CREDENTIALS_PROVIDER);
+    if (StringUtils.isEmpty(className)) {
+      AWSAccessKeys creds = getAWSAccessKeys(binding, conf);
+      credentials = new AWSCredentialsProviderChain(
+          new BasicAWSCredentialsProvider(
+              creds.getAccessKey(), creds.getAccessSecret()),
+          new InstanceProfileCredentialsProvider(),
+          new AnonymousAWSCredentialsProvider()
+      );
+
+    } else {
+      try {
+        LOG.debug("Credential provider class is {}", className);
+        credentials = (AWSCredentialsProvider) Class.forName(className)
+            .getDeclaredConstructor(URI.class, Configuration.class)
+            .newInstance(this.uri, conf);
+      } catch (ClassNotFoundException e) {
+        throw new IOException(className + " not found.", e);
+      } catch (NoSuchMethodException | SecurityException e) {
+        throw new IOException(className + " constructor exception.", e);
+      } catch (ReflectiveOperationException | IllegalArgumentException e) {
+        throw new IOException(className + " instantiation exception.", e);
+      }
+      LOG.debug("Using {} for {}.", credentials, this.uri);
+    }
+
+    return credentials;
+  }
+
+  /**
    * Return the protocol scheme for the FileSystem.
    *
    * @return "s3a"
@@ -470,7 +506,7 @@ public class S3AFileSystem extends FileSystem {
    * @throws IOException in the event of IO related errors.
    * @see #setPermission(Path, FsPermission)
    */
-  public FSDataOutputStream create(Path f, FsPermission permission, boolean overwrite, 
+  public FSDataOutputStream create(Path f, FsPermission permission, boolean overwrite,
     int bufferSize, short replication, long blockSize, Progressable progress) throws IOException {
     String key = pathToKey(f);
 
