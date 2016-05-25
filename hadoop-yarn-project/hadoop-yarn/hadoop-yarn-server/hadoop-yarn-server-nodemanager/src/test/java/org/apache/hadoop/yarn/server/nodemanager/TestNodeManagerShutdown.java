@@ -283,7 +283,7 @@ public class TestNodeManagerShutdown {
    */
   private static File createUnhaltingScriptFile(ContainerId cId,
       File scriptFileDir, File processStartFile) throws IOException {
-    File scriptFile = Shell.appendScriptExtension(scriptFileDir, "scriptFile");
+    File scriptFile = Shell.appendScriptExtension(scriptFileDir, "scriptFile_" + cId);
     PrintWriter fileWriter = new PrintWriter(scriptFile);
     if (Shell.WINDOWS) {
       fileWriter.println("@echo \"Running testscript for delayed kill\"");

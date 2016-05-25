@@ -33,7 +33,7 @@ Release 2.8.0 - UNRELEASED
 
     YARN-4496. Improve HA ResourceManager Failover detection on the client.
     (Jian He via xgong)
-    
+
     YARN-4655. Log uncaught exceptions/errors in various thread pools in YARN.
     (Sidharta Seethana via vvasudev)
 
@@ -55,16 +55,16 @@ Release 2.8.0 - UNRELEASED
 
     YARN-3695. ServerProxy (NMProxy, etc.) shouldn't retry forever for non
     network exception. (Raju Bairishetti via jianhe)
-    
+
     YARN-5543. ResourceManager SchedulingMonitor could potentially terminate the
     preemption checker thread. (Min Shen, Jonathan Hung via shv).
 
     YARN-4520. Finished app info is unnecessarily persisted in NM state-store
     if container is acquired but not lunched on this node. (sandflee via jianeh)
-    
+
     YARN-4017. container-executor overuses PATH_MAX.
     (Sidharta Seethana via vvasudev)
-    
+
     YARN-5121. fix some container-executor portability issues.
     (Allen Wittenauer) Backport YARN-6698 by  Akira Ajisaka.
 
@@ -78,8 +78,8 @@ Release 2.7.3 - UNRELEASED
   NEW FEATURES
 
   IMPROVEMENTS
-  
-  YARN-1556. NPE getting application report with a null appId. (Weiwei Yang via 
+
+  YARN-1556. NPE getting application report with a null appId. (Weiwei Yang via
   junping_du)
 
   OPTIMIZATIONS
@@ -112,7 +112,7 @@ Release 2.7.3 - UNRELEASED
 
     YARN-4562. YARN WebApp ignores the configuration passed to it for keystore
     settings (Sergey Shelukhin via vvasudev)
-    
+
     YARN-4344. NMs reconnecting with changed capabilities can lead to wrong
     cluster resource calculations (Varun Vasudev via jlowe)
 
@@ -121,13 +121,16 @@ Release 2.7.3 - UNRELEASED
 
     YARN-3749. We should make a copy of configuration when init MiniYARNCluster
     with multiple RMs. (Chun Chen via xgong)
-    
+
     YARN-4204. ConcurrentModificationException in FairSchedulerQueueInfo. (adhoot)
-    
+
     YARN-4398. Remove unnecessary synchronization in RMStateStore. (Ning Ding via jianhe)
 
     YARN-3999. RM hangs on draing events. (Jian He via xgong)
-    
+
+    YARN-4459. container-executor should only kill process groups (Jun Gong
+    via jlowe)
+
 Release 2.7.1 - UNRELEASED
 
   INCOMPATIBLE CHANGES
@@ -175,10 +178,10 @@ Release 2.7.1 - UNRELEASED
 
     YARN-4321. Incessant retries if NoAuthException is thrown by Zookeeper in non
     HA mode.  (Varun Saxena via jianhe)
-    
+
     YARN-3780. Should use equals when compare Resource in RMNodeImpl#ReconnectNodeTransition.
     (zhihai xu via devaraj)
-    
+
     YARN-3802. Two RMNodes for the same NodeId are used in RM sometimes
     after NM is reconnected. (zhihai xu via xgong)
 
@@ -205,12 +208,12 @@ Release 2.7.1 - UNRELEASED
 
     YARN-3646. Applications are getting stuck some times in case of retry
     policy forever. (Raju Bairishetti via devaraj)
-    
+
     YARN-4288. Fixed RMProxy to retry on IOException from local host.
     (Junping Du via jianhe)
-    
+
     YARN-4153. TestAsyncDispatcher failed at branch-2.7 (Zhihai Xu via jianhe)
-    
+
 Release 2.7.0 - 2015-04-20
 
   INCOMPATIBLE CHANGES
@@ -1048,7 +1051,7 @@ Release 2.7.0 - 2015-04-20
 
     YARN-3055. Fixed ResourceManager's DelegationTokenRenewer to not stop token
     renewal of applications part of a bigger workflow. (Daryn Sharp via vinodkv)
-    
+
     YARN-2890. MiniYarnCluster should turn on timeline service if
     configured to do so. (Mit Desai via hitesh)
 

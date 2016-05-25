@@ -790,7 +790,7 @@ public class TestContainerLaunch extends BaseContainerManagerTest {
         new File(tmpDir, "pid.txt").getAbsoluteFile();
 
     // setup a script that can handle sigterm gracefully
-    File scriptFile = Shell.appendScriptExtension(tmpDir, "testscript");
+    File scriptFile = Shell.appendScriptExtension(tmpDir, "testscript_" + cId);
     PrintWriter writer = new PrintWriter(new FileOutputStream(scriptFile));
     if (Shell.WINDOWS) {
       writer.println("@echo \"Running testscript for delayed kill\"");

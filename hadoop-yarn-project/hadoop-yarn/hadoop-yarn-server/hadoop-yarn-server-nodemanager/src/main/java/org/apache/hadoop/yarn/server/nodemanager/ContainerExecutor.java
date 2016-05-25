@@ -49,6 +49,7 @@ import org.apache.hadoop.yarn.server.nodemanager.containermanager.launcher.Conta
 import org.apache.hadoop.yarn.server.nodemanager.util.ProcessIdFileReader;
 import org.apache.hadoop.util.Shell;
 import org.apache.hadoop.util.StringUtils;
+import org.apache.hadoop.yarn.util.ConverterUtils;
 
 public abstract class ContainerExecutor implements Configurable {
 
@@ -478,7 +479,10 @@ public abstract class ContainerExecutor implements Configurable {
     public void run() {
       try {
         Thread.sleep(delay);
-        containerExecutor.signalContainer(user, pid, signal);
+        String containerIdStr = ConverterUtils.toString(container.getContainerId());
+        if (containerIdStr != null && shouldDoSignal(containerIdStr, pid)) {
+          containerExecutor.signalContainer(user, pid, signal);
+        }
       } catch (InterruptedException e) {
         return;
       } catch (IOException e) {
@@ -488,6 +492,24 @@ public abstract class ContainerExecutor implements Configurable {
         container.handle(new ContainerDiagnosticsUpdateEvent(container
           .getContainerId(), message));
       }
+    }
+
+    /**
+     * to check if the process is the container process
+     * @param containerIdStr
+     * @param processId
+     * @return
+     */
+    private boolean shouldDoSignal(String containerIdStr, String processId) {
+      try {
+        LOG.debug("Getting current list of processes for container " + containerIdStr + " with pid " + processId);
+        String ret = Shell.execCommand("/bin/sh", "-c", "ps -ef | grep " + processId);
+        LOG.debug("Processes list for pid: " + ret);
+        return ret.contains(containerIdStr);
+      } catch (IOException e) {
+        LOG.warn("Not able to execute command /bin/sh -c 'ps'");
+      }
+      return false;
     }
   }
 }
