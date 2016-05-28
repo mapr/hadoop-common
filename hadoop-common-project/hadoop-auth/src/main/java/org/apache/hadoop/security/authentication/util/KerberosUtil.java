@@ -34,13 +34,16 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import org.apache.directory.server.kerberos.shared.keytab.Keytab;
-import org.apache.directory.server.kerberos.shared.keytab.KeytabEntry;
-import javax.crypto.Cipher;
-
-import org.apache.log4j.Logger;
+import org.apache.kerby.kerberos.kerb.keytab.Keytab;
+import org.apache.kerby.kerberos.kerb.type.base.PrincipalName;
 import org.ietf.jgss.GSSException;
 import org.ietf.jgss.Oid;
+import org.apache.log4j.Logger;
+
+import javax.crypto.Cipher;
+import javax.security.auth.kerberos.KerberosPrincipal;
+import javax.security.auth.kerberos.KerberosTicket;
+import javax.security.auth.kerberos.KeyTab;
 
 public class KerberosUtil {
   private static final Logger LOG = Logger.getLogger(KerberosUtil.class);
@@ -88,7 +91,7 @@ public class KerberosUtil {
          new Class[0]);
     return (String)getDefaultRealmMethod.invoke(kerbConf, new Object[0]);
   }
-  
+
   /* Return fqdn of the current host */
   static String getLocalHostName() throws UnknownHostException {
     return InetAddress.getLocalHost().getCanonicalHostName();
@@ -98,7 +101,7 @@ public class KerberosUtil {
    * Create Kerberos principal for a given service and hostname. It converts
    * hostname to lower case. If hostname is null or "0.0.0.0", it uses
    * dynamically looked-up fqdn of the current host instead.
-   * 
+   *
    * @param service
    *          Service for which you want to generate the principal.
    * @param hostname
@@ -128,14 +131,14 @@ public class KerberosUtil {
    *          If keytab entries cannot be read from the file.
    */
   static final String[] getPrincipalNames(String keytabFileName) throws IOException {
-      Keytab keytab = Keytab.read(new File(keytabFileName));
-      Set<String> principals = new HashSet<String>();
-      List<KeytabEntry> entries = keytab.getEntries();
-      for (KeytabEntry entry: entries){
-        principals.add(entry.getPrincipalName().replace("\\", "/"));
-      }
-      return principals.toArray(new String[0]);
+    Keytab keytab = Keytab.loadKeytab(new File(keytabFileName));
+    Set<String> principals = new HashSet<String>();
+    List<PrincipalName> entries = keytab.getPrincipals();
+    for (PrincipalName entry : entries) {
+      principals.add(entry.getName().replace("\\", "/"));
     }
+    return principals.toArray(new String[0]);
+  }
 
   /**
    * Get all the unique principals from keytabfile which matches a pattern.
