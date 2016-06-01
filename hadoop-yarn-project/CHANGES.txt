@@ -1,5 +1,22 @@
 Hadoop YARN Change Log
 
+Release 2.8.0 - UNRELEASED
+
+  INCOMPATIBLE CHANGES
+  
+    YARN-2336. Fair scheduler's REST API returns a missing '[' bracket JSON for
+    deep queue tree. (Kenji Kikushima and Akira Ajisaka via ozawa)
+
+  NEW FEATURES
+
+  IMPROVEMENTS
+  
+    YARN-1050. Document the Fair Scheduler REST API. (Kenji Kikushima and Roman Shaposhnik via kasha)
+
+  OPTIMIZATIONS
+
+  BUG FIXES
+
 Release 2.7.3 - UNRELEASED
 
   INCOMPATIBLE CHANGES
