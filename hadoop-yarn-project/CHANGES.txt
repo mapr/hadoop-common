@@ -13,9 +13,15 @@ Release 2.8.0 - UNRELEASED
   
     YARN-1050. Document the Fair Scheduler REST API. (Kenji Kikushima and Roman Shaposhnik via kasha)
 
+    MAPREDUCE-6478. Add an option to skip cleanupJob stage or ignore cleanup
+    failure during commitJob. (Junping Du via wangda)
+
   OPTIMIZATIONS
 
   BUG FIXES
+  
+    YARN-4546. ResourceManager crash due to scheduling opportunity overflow.
+    (Jason Lowe via junping_du)
 
 Release 2.7.3 - UNRELEASED
 
@@ -30,6 +36,15 @@ Release 2.7.3 - UNRELEASED
   BUG FIXES
 
     YARN-4347. Resource manager fails with Null pointer exception. (Jian He via wangda)
+    
+    YARN-3849. Too much of preemption activity causing continuos killing of containers
+    across queues. (Sunil G via wangda)
+    
+    YARN-4422. Generic AHS sometimes doesn't show started, node, or logs on App page
+    (Eric Payne via jeagles)
+    
+    YARN-4452. NPE when submit Unmanaged application. (Naganarasimha G R via
+    junping_du)
 
 Release 2.7.1 - UNRELEASED
 

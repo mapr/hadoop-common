@@ -172,6 +172,7 @@ public abstract class TaskAttemptImpl implements
   private static AtomicBoolean initialClasspathFlag = new AtomicBoolean();
   private static String initialClasspath = null;
   private static String initialAppClasspath = null;
+  private static String initialHadoopClasspath = null;
   private static Object commonContainerSpecLock = new Object();
   private static ContainerLaunchContext commonContainerSpec = null;
   private static final Object classpathLock = new Object();
@@ -759,6 +760,7 @@ public abstract class TaskAttemptImpl implements
       MRApps.setClasspath(env, conf);
       initialClasspath = env.get(Environment.CLASSPATH.name());
       initialAppClasspath = env.get(Environment.APP_CLASSPATH.name());
+      initialHadoopClasspath = env.get(Environment.HADOOP_CLASSPATH.name());
       initialClasspathFlag.set(true);
       return initialClasspath;
     }
@@ -895,6 +897,13 @@ public abstract class TaskAttemptImpl implements
           environment,  
           Environment.CLASSPATH.name(), 
           getInitialClasspath(conf), conf);
+
+      if (initialHadoopClasspath != null) {
+        MRApps.addToEnvironment(
+            environment,
+            Environment.HADOOP_CLASSPATH.name(),
+            initialHadoopClasspath, conf);
+      }
 
       if (initialAppClasspath != null) {
         MRApps.addToEnvironment(

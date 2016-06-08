@@ -38,6 +38,8 @@ import org.apache.hadoop.mapreduce.OutputCommitter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 
+import com.google.common.annotations.VisibleForTesting;
+
 /** An {@link OutputCommitter} that commits files specified 
  * in job output directory i.e. ${mapreduce.output.fileoutputformat.outputdir}.
  **/
@@ -64,9 +66,30 @@ public class FileOutputCommitter extends OutputCommitter {
   public static final String FILEOUTPUTCOMMITTER_ALGORITHM_VERSION =
       "mapreduce.fileoutputcommitter.algorithm.version";
   public static final int FILEOUTPUTCOMMITTER_ALGORITHM_VERSION_DEFAULT = 1;
+  // Skip cleanup _temporary folders under job's output directory
+  public static final String FILEOUTPUTCOMMITTER_CLEANUP_SKIPPED =
+      "mapreduce.fileoutputcommitter.cleanup.skipped";
+  public static final boolean
+      FILEOUTPUTCOMMITTER_CLEANUP_SKIPPED_DEFAULT = false;
+  
+  // Ignore exceptions in cleanup _temporary folder under job's output directory
+  public static final String FILEOUTPUTCOMMITTER_CLEANUP_FAILURES_IGNORED =
+      "mapreduce.fileoutputcommitter.cleanup-failures.ignored";
+  public static final boolean
+      FILEOUTPUTCOMMITTER_CLEANUP_FAILURES_IGNORED_DEFAULT = false;
+
+  // Number of attempts when failure happens in commit job
+  public static final String FILEOUTPUTCOMMITTER_FAILURE_ATTEMPTS =
+      "mapreduce.fileoutputcommitter.failures.attempts";
+
+  // default value to be 1 to keep consistent with previous behavior
+  public static final int FILEOUTPUTCOMMITTER_FAILURE_ATTEMPTS_DEFAULT = 1;
+  
   private Path outputPath = null;
   private Path workPath = null;
   private final int algorithmVersion;
+  private final boolean skipCleanup;
+  private final boolean ignoreCleanupFailures;
 
   /**
    * Create a file output committer
@@ -101,6 +124,21 @@ public class FileOutputCommitter extends OutputCommitter {
     if (algorithmVersion != 1 && algorithmVersion != 2) {
       throw new IOException("Only 1 or 2 algorithm version is supported");
     }
+  
+    // if skip cleanup
+    skipCleanup = conf.getBoolean(
+        FILEOUTPUTCOMMITTER_CLEANUP_SKIPPED,
+        FILEOUTPUTCOMMITTER_CLEANUP_SKIPPED_DEFAULT);
+    
+    // if ignore failures in cleanup
+    ignoreCleanupFailures = conf.getBoolean(
+        FILEOUTPUTCOMMITTER_CLEANUP_FAILURES_IGNORED,
+        FILEOUTPUTCOMMITTER_CLEANUP_FAILURES_IGNORED_DEFAULT);
+    
+    LOG.info("FileOutputCommitter skip cleanup _temporary folders under " +
+        "output directory:" + skipCleanup + ", ignore cleanup failures: " +
+        ignoreCleanupFailures);
+    
     if (outputPath != null) {
       FileSystem fs = outputPath.getFileSystem(context.getConfiguration());
       this.outputPath = fs.makeQualified(outputPath);
@@ -311,12 +349,40 @@ public class FileOutputCommitter extends OutputCommitter {
   }
 
   /**
-   * The job has completed so move all committed tasks to the final output dir.
+   * The job has completed, so do works in commitJobInternal().
+   * Could retry on failure if using algorithm 2.
+   * @param context the job's context
+   */
+  public void commitJob(JobContext context) throws IOException {
+    int maxAttemptsOnFailure = isCommitJobRepeatable(context) ?
+        context.getConfiguration().getInt(FILEOUTPUTCOMMITTER_FAILURE_ATTEMPTS,
+            FILEOUTPUTCOMMITTER_FAILURE_ATTEMPTS_DEFAULT) : 1;
+    int attempt = 0;
+    boolean jobCommitNotFinished = true;
+    while (jobCommitNotFinished) {
+      try {
+        commitJobInternal(context);
+        jobCommitNotFinished = false;
+      } catch (Exception e) {
+        if (++attempt >= maxAttemptsOnFailure) {
+          throw e;
+        } else {
+          LOG.warn("Exception get thrown in job commit, retry (" + attempt +
+              ") time.", e);
+        }
+      }
+    }
+  }
+
+  /**
+   * The job has completed, so do following commit job, include:
+   * Move all committed tasks to the final output dir (algorithm 1 only).
    * Delete the temporary directory, including all of the work directories.
    * Create a _SUCCESS file to make it as successful.
    * @param context the job's context
    */
-  public void commitJob(JobContext context) throws IOException {
+  @VisibleForTesting
+  protected void commitJobInternal(JobContext context) throws IOException {
     if (hasOutputPath()) {
       Path finalOutput = getOutputPath();
       FileSystem fs = finalOutput.getFileSystem(context.getConfiguration());
@@ -326,14 +392,39 @@ public class FileOutputCommitter extends OutputCommitter {
           mergePaths(fs, stat, finalOutput);
         }
       }
-
-      // delete the _temporary folder and create a _done file in the o/p folder
-      cleanupJob(context);
+  
+      if (skipCleanup) {
+        LOG.info("Skip cleanup the _temporary folders under job's output " +
+            "directory in commitJob.");
+      } else {
+        // delete the _temporary folder and create a _done file in the o/p
+        // folder
+        try {
+          cleanupJob(context);
+        } catch (IOException e) {
+          if (ignoreCleanupFailures) {
+            // swallow exceptions in cleanup as user configure to make sure
+            // commitJob could be success even when cleanup get failure.
+            LOG.error("Error in cleanup job, manually cleanup is needed.", e);
+          } else {
+            // throw back exception to fail commitJob.
+            throw e;
+          }
+        }
+      }
       // True if the job requires output.dir marked on successful job.
       // Note that by default it is set to true.
-      if (context.getConfiguration().getBoolean(SUCCESSFUL_JOB_OUTPUT_DIR_MARKER, true)) {
+      if (context.getConfiguration().getBoolean(
+          SUCCESSFUL_JOB_OUTPUT_DIR_MARKER, true)) {
         Path markerPath = new Path(outputPath, SUCCEEDED_FILE_NAME);
-        fs.create(markerPath).close();
+        // If job commit is repeatable and previous/another AM could write
+        // mark file already, we need to set overwritten to be true explicitly
+        // in case other FS implementations don't overwritten by default.
+        if (isCommitJobRepeatable(context)) {
+          fs.create(markerPath, true).close();
+        } else {
+          fs.create(markerPath).close();
+        }
       }
     } else {
       LOG.warn("Output Path is null in commitJob()");
@@ -412,7 +503,16 @@ public class FileOutputCommitter extends OutputCommitter {
       Path pendingJobAttemptsPath = getPendingJobAttemptsPath();
       FileSystem fs = pendingJobAttemptsPath
           .getFileSystem(context.getConfiguration());
-      fs.delete(pendingJobAttemptsPath, true);
+      // if job allow repeatable commit and pendingJobAttemptsPath could be
+      // deleted by previous AM, we should tolerate FileNotFoundException in
+      // this case.
+      try {
+        fs.delete(pendingJobAttemptsPath, true);
+      } catch (FileNotFoundException e) {
+        if (!isCommitJobRepeatable(context)) {
+          throw e;
+        }
+      }
     } else {
       LOG.warn("Output Path is null in cleanupJob()");
     }
@@ -549,6 +649,11 @@ public class FileOutputCommitter extends OutputCommitter {
     return true;
   }
   
+  @Override
+  public boolean isCommitJobRepeatable(JobContext context) throws IOException {
+    return algorithmVersion == 2;
+  }
+
   @Override
   public void recoverTask(TaskAttemptContext context)
       throws IOException {

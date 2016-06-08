@@ -29,6 +29,56 @@ Hadoop MapReduce Change Log
     MAPREDUCE-6492. AsyncDispatcher exit with NPE on
     TaskAttemptImpl#sendJHStartEventForAssignedFailTask (Bibin A Chundatt via
     jlowe)
+    
+    MAPREDUCE-6555. TestMRAppMaster fails on trunk. (Junping Du via ozawa)
+
+Release 2.8.0 - UNRELEASED
+
+  INCOMPATIBLE CHANGES
+ 
+  NEW FEATURES
+  
+  IMPROVEMENTS
+  
+    MAPREDUCE-6595. Fix findbugs warnings in OutputCommitter and
+    FileOutputCommitter. (Akira AJISAKA via junping_du)
+  
+  OPTIMIZATIONS
+  
+    MAPREDUCE-6376. Add avro binary support for jhist files (Ray Chiang via
+    jlowe)
+  
+  BUG FIXES
+  
+    MAPREDUCE-6302. Preempt reducers after a configurable timeout irrespective 
+    of headroom. (kasha)
+    
+    MAPREDUCE-6635. Unsafe long to int conversion in UncompressedSplitLineReader
+    and IndexOutOfBoundsException. (Junping Du via vvasudev)
+
+Release 2.7.3 - UNRELEASED
+ 
+ INCOMPATIBLE CHANGES
+ 
+ NEW FEATURES
+ 
+ IMPROVEMENTS
+ 
+    MAPREDUCE-6622. Add capability to set JHS job cache to a
+  	task-based limit (rchiang via rkanter)
+  	
+  	MAPREDUCE-5485. Allow repeating job commit by extending OutputCommitter API
+    Junping Du via jianhe)
+ 
+ OPTIMIZATIONS
+ 
+ BUG FIXES
+ 
+   MAPREDUCE-6689. MapReduce job can infinitely increase number of reducer
+   resource requests (Wangda Tan via jlowe)
+   
+   MAPREDUCE-6554. MRAppMaster servicestart failing with NPE in
+   MRAppMaster#parsePreviousJobHistory (Bibin A Chundatt via jlowe)
 
 Release 2.7.0 - 2015-04-20
   NEW FEATURES
@@ -239,6 +289,22 @@ Release 2.7.0 - 2015-04-20
 
     MAPREDUCE-6303. Read timeout when retrying a fetch error can be fatal 
     to a reducer. (Jason Lowe via junping_du)
+
+Release 2.6.2 - UNRELEASED
+ 
+ INCOMPATIBLE CHANGES
+ 
+ NEW FEATURES
+ 
+ IMPROVEMENTS
+ 
+ OPTIMIZATIONS
+ 
+ BUG FIXES
+ 
+   MAPREDUCE-6454. Fixed MapReduce to modify HADOOP_CLASSPATH to have distributed
+   cache files so that child processes running hadoop scripts can access these
+   files. (Junping Du via vinodkv)
 
 Release 2.6.1 - UNRELEASED
 
