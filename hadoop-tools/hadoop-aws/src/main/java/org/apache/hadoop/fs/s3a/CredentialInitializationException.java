@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,33 +18,29 @@
 
 package org.apache.hadoop.fs.s3a;
 
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.auth.AWSCredentials;
-import org.apache.commons.lang.StringUtils;
+import com.amazonaws.AmazonClientException;
 
-public class BasicAWSCredentialsProvider implements AWSCredentialsProvider {
-  private final String accessKey;
-  private final String secretKey;
-
-  public BasicAWSCredentialsProvider(String accessKey, String secretKey) {
-    this.accessKey = accessKey;
-    this.secretKey = secretKey;
+/**
+ * Exception which Hadoop's AWSCredentialsProvider implementations should
+ * throw when there is a problem with the credential setup. This
+ * is a subclass of {@link AmazonClientException} which sets
+ * {@link #isRetryable()} to false, so as to fail fast.
+ */
+public class CredentialInitializationException extends AmazonClientException {
+  public CredentialInitializationException(String message, Throwable t) {
+    super(message, t);
   }
 
-  public AWSCredentials getCredentials() {
-    if (!StringUtils.isEmpty(accessKey) && !StringUtils.isEmpty(secretKey)) {
-      return new BasicAWSCredentials(accessKey, secretKey);
-    }
-    throw new CredentialInitializationException(
-        "Access key or secret key is null");
+  public CredentialInitializationException(String message) {
+    super(message);
   }
 
-  public void refresh() {}
-
+  /**
+   * This exception is not going to go away if you try calling it again.
+   * @return false, always.
+   */
   @Override
-  public String toString() {
-    return getClass().getSimpleName();
+  public boolean isRetryable() {
+    return false;
   }
-
 }
