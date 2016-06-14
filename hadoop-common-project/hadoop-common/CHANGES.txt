@@ -24,6 +24,10 @@ Hadoop Change Log
     HADOOP-12284. UserGroupInformation doAs can throw misleading exception
     (Aaron Dosset via stevel)
 
+    HADOOP-13270. BZip2CompressionInputStream finds the same compression marker
+    twice in corner case, causing duplicate data blocks.
+    (Kai Sasaki via aajisaka)
+
     HADOOP-12304. Applications using FileContext fail with the default file
     system configured to be wasb/s3/etc. (cnauroth)
 
