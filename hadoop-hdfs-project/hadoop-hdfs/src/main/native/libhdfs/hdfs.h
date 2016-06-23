@@ -443,17 +443,6 @@ extern  "C" {
      */
     LIBHDFS_EXTERNAL
     int hdfsExists(hdfsFS fs, const char *path);
-    
-
-    /** 
-     * hdfsExists2 - Checks if a given path exists on the filesystem skipping
-     * the client cache.
-     * @param fs The configured filesystem handle.
-     * @param path The path to look for
-     * @return Returns 0 on success, -1 on error.  
-     */
-    LIBHDFS_EXTERNAL
-    int hdfsExists2(hdfsFS fs, const char *path);
 
 
     /** 
@@ -877,6 +866,15 @@ extern  "C" {
      * The fetched size is set in the 'nameSizeInBytes' parameter
      */
     int hdfsCreateDirectory2(hdfsFS fs, const char* path, tSize *nameSizeInBytes);
+
+    /** 
+     * hdfsExists2 - Checks if a given path exists on the filesystem skipping
+     * the client cache.
+     * @param fs The configured filesystem handle.
+     * @param path The path to look for
+     * @return Returns 0 on success, -1 on error.  
+     */
+    int hdfsExists2(hdfsFS fs, const char *path);
 
     /** 
      * hdfsSetThreads
