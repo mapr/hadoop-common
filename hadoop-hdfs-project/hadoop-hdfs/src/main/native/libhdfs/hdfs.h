@@ -433,16 +433,27 @@ extern  "C" {
      */
     LIBHDFS_EXTERNAL
     int hdfsCloseFile(hdfsFS fs, hdfsFile file);
-
+    
 
     /** 
-     * hdfsExists - Checks if a given path exsits on the filesystem 
+     * hdfsExists - Checks if a given path exists on the filesystem 
      * @param fs The configured filesystem handle.
      * @param path The path to look for
      * @return Returns 0 on success, -1 on error.  
      */
     LIBHDFS_EXTERNAL
     int hdfsExists(hdfsFS fs, const char *path);
+    
+
+    /** 
+     * hdfsExists2 - Checks if a given path exists on the filesystem skipping
+     * the client cache.
+     * @param fs The configured filesystem handle.
+     * @param path The path to look for
+     * @return Returns 0 on success, -1 on error.  
+     */
+    LIBHDFS_EXTERNAL
+    int hdfsExists2(hdfsFS fs, const char *path);
 
 
     /** 
