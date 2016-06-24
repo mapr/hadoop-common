@@ -875,6 +875,15 @@ extern  "C" {
      * @return Returns 0 on success, -1 on error.  
      */
     int hdfsExists2(hdfsFS fs, const char *path);
+    
+    /**
+     * hdfsCreateHardlink - Creats a hard link to an existing file.
+     * @param fs The configured filesystem handle.
+     * @param oldPath The path of the existing file.
+     * @param newPath the path of the new link.
+     * @return Returns 0 on success, -1 on error.
+     */
+    int hdfsCreateHardlink(hdfsFS fs, const char *oldPath, const char *newPath); 
 
     /** 
      * hdfsSetThreads
