@@ -143,11 +143,10 @@ public class HsTaskPage extends HsView {
         }
         long attemptElapsed =
             Times.elapsed(attemptStartTime, attemptFinishTime, false);
-        int sortId = attempt.getID().getId()
-                   + (attempt.getID().getTaskId().getId() * 10000);
+        TaskId taskId = attempt.getID().getTaskId();
 
         attemptsTableData.append("[\"")
-        .append(sortId + " ").append(taid).append("\",\"")
+        .append(getAttemptId(taskId, ta)).append("\",\"")
         .append(ta.getState()).append("\",\"")
         .append(StringEscapeUtils.escapeJavaScript(
               StringEscapeUtils.escapeHtml(ta.getStatus()))).append("\",\"")
@@ -234,6 +233,10 @@ public class HsTaskPage extends HsView {
       footRow._()._()._();
     }
 
+    protected String getAttemptId(TaskId taskId, TaskAttemptInfo ta) {
+      return ta.getId();
+    }
+
     /**
      * @return true if this is a valid request else false.
      */
@@ -295,8 +298,8 @@ public class HsTaskPage extends HsView {
       .append("\n{'aTargets': [ 4 ]")
       .append(", 'bSearchable': false }")
 
-      .append("\n, {'sType':'numeric', 'aTargets': [ 0 ]")
-      .append(", 'mRender': parseHadoopAttemptID }")
+      .append("\n, {'sType':'natural', 'aTargets': [ 0 ]")
+      .append(", 'mRender': parseHadoopID }")
 
       .append("\n, {'sType':'numeric', 'aTargets': [ 5, 6")
       //Column numbers are different for maps and reduces

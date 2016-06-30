@@ -38,10 +38,16 @@ Release 2.8.0 - UNRELEASED
  
   NEW FEATURES
   
+    MAPREDUCE-6364. Add a "Kill" link to Task Attempts page. (Ryu Kobayashi
+    via ozawa)
+  
   IMPROVEMENTS
   
     MAPREDUCE-6595. Fix findbugs warnings in OutputCommitter and
     FileOutputCommitter. (Akira AJISAKA via junping_du)
+    
+    MAPREDUCE-6316. Task Attempt List entries should link to the task overview.
+    (Siqi Li via gera)
   
   OPTIMIZATIONS
   
@@ -55,6 +61,12 @@ Release 2.8.0 - UNRELEASED
     
     MAPREDUCE-6635. Unsafe long to int conversion in UncompressedSplitLineReader
     and IndexOutOfBoundsException. (Junping Du via vvasudev)
+    
+    MAPREDUCE-6405. NullPointerException in App Attempts page.
+    (Siqi Li and Gera Shegalov via devaraj)
+    
+    MAPREDUCE-6419. JobHistoryServer doesn't sort properly based on Job ID when Job id's
+    exceed 9999. (Mohammad Shahid Khan via rohithsharmaks)
 
 Release 2.7.3 - UNRELEASED
  
