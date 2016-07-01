@@ -883,7 +883,7 @@ extern  "C" {
      * @param newPath the path of the new link.
      * @return Returns 0 on success, -1 on error.
      */
-    int hdfsCreateHardlink(hdfsFS fs, const char *oldPath, const char *newPath); 
+    //int hdfsCreateHardlink(hdfsFS fs, const char *oldPath, const char *newPath); 
 
     /** 
      * hdfsSetThreads
