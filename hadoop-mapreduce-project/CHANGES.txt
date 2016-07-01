@@ -37,6 +37,9 @@ Release 2.8.0 - UNRELEASED
   INCOMPATIBLE CHANGES
  
   NEW FEATURES
+
+    MAPREDUCE-6284. Add Task Attempt State API to MapReduce Application
+    Master REST API. (Ryu Kobayashi via ozawa)
   
     MAPREDUCE-6364. Add a "Kill" link to Task Attempts page. (Ryu Kobayashi
     via ozawa)
@@ -8091,4 +8094,3 @@ Release 0.21.0 - 2010-08-13
     (Amar Kamat via amareshwari)
 
     MAPREDUCE-1856. Extract a subset of tests for smoke (DOA) validation (cos)
-
