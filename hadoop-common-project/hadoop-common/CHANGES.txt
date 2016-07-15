@@ -20,9 +20,6 @@ Release 2.7.3 - UNRELEASED
    
    HADOOP-12706. TestLocalFsFCStatistics#testStatisticsThreadLocalDataCleanUp
    times out occasionally (Sangjin Lee and Colin Patrick McCabe via jlowe)
-   
-   HADOOP-12958. PhantomReference for filesystem statistics can trigger OOM
-   (Sangjin Lee via jlowe)
 
 Release 2.7.0 - 2015-04-20
 
