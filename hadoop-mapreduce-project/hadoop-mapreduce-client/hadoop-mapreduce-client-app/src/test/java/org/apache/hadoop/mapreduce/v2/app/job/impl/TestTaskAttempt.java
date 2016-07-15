@@ -150,18 +150,6 @@ public class TestTaskAttempt{
             TaskAttemptEventType.TA_FAILMSG);
     testTaskAttemptAssignedFailHistory(app);
 
-    // test TA_FAILMSG_BY_CLIENT for map
-    app =
-        new FailingAttemptsDuringAssignedMRApp(1, 0,
-            TaskAttemptEventType.TA_FAILMSG_BY_CLIENT);
-    testTaskAttemptAssignedFailHistory(app);
-
-    // test TA_FAILMSG_BY_CLIENT for reduce
-    app =
-        new FailingAttemptsDuringAssignedMRApp(0, 1,
-            TaskAttemptEventType.TA_FAILMSG_BY_CLIENT);
-    testTaskAttemptAssignedFailHistory(app);
-
     // test TA_KILL for map
     app =
         new FailingAttemptsDuringAssignedMRApp(1, 0,
