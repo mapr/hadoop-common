@@ -900,10 +900,5 @@ public class TestRuntimeEstimators {
       // bogus - Not Required
       return null;
     }
-
-    @Override
-    public TaskAttemptFinishingMonitor getTaskAttemptFinishingMonitor() {
-      return null;
-    }
   }
 }
