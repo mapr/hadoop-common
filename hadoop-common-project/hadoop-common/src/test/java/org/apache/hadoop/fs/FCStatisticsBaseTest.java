@@ -32,8 +32,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileSystem.Statistics;
 import org.apache.hadoop.test.GenericTestUtils;
 import org.junit.Assert;
@@ -48,8 +46,6 @@ import com.google.common.util.concurrent.Uninterruptibles;
  * </p>
  */
 public abstract class FCStatisticsBaseTest {
-  private static final Log LOG = LogFactory.getLog(FCStatisticsBaseTest.class);
-
   static protected int blockSize = 512;
   static protected int numBlocks = 1;
   
@@ -121,7 +117,7 @@ public abstract class FCStatisticsBaseTest {
     fc.delete(filePath, true);
   }
 
-  @Test(timeout=70000)
+  @Test(timeout=60000)
   public void testStatisticsThreadLocalDataCleanUp() throws Exception {
     final Statistics stats = new Statistics("test");
     // create a small thread pool to test the statistics
@@ -148,24 +144,17 @@ public abstract class FCStatisticsBaseTest {
     es.shutdownNow();
     es.awaitTermination(1, TimeUnit.MINUTES);
     es = null;
-    System.gc(); // force GC to garbage collect threads
+    System.gc();
 
-    // wait for up to 60 seconds
+    // wait for up to 10 seconds
     GenericTestUtils.waitFor(new Supplier<Boolean>() {
           @Override
           public Boolean get() {
             int size = stats.getAllThreadLocalDataSize();
             allDataSize.set(size);
-            if (size == 0) {
-              return true;
-            }
-            LOG.warn("not all references have been cleaned up; still " +
-                allDataSize.get() + " references left");
-            LOG.warn("triggering another GC");
-            System.gc();
-            return false;
+            return size == 0;
           }
-        }, 500, 60*1000);
+        }, 1000, 10*1000);
     Assert.assertEquals(0, allDataSize.get());
     Assert.assertEquals(size, stats.getReadOps());
   }

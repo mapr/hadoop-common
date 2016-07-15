@@ -17,9 +17,6 @@ Release 2.7.3 - UNRELEASED
  
    HADOOP-12107. long running apps may have a huge number of StatisticsData
    instances under FileSystem (Sangjin Lee via Ming Ma)
-   
-   HADOOP-12706. TestLocalFsFCStatistics#testStatisticsThreadLocalDataCleanUp
-   times out occasionally (Sangjin Lee and Colin Patrick McCabe via jlowe)
 
 Release 2.7.0 - 2015-04-20
 
