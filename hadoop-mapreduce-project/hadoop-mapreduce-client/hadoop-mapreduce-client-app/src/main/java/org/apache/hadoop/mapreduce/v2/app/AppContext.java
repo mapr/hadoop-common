@@ -67,6 +67,4 @@ public interface AppContext {
   boolean hasSuccessfullyUnregistered();
 
   String getNMHostname();
-
-  TaskAttemptFinishingMonitor getTaskAttemptFinishingMonitor();
 }

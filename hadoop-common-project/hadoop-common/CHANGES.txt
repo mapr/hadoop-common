@@ -3,27 +3,6 @@ Hadoop Change Log
     HADOOP-12304. Applications using FileContext fail with the default file
     system configured to be wasb/s3/etc. (cnauroth)
 
-Release 2.7.3 - UNRELEASED
- 
- INCOMPATIBLE CHANGES
- 
- NEW FEATURES
- 
- IMPROVEMENTS
- 
- OPTIMIZATIONS
- 
- BUG FIXES
- 
-   HADOOP-12107. long running apps may have a huge number of StatisticsData
-   instances under FileSystem (Sangjin Lee via Ming Ma)
-   
-   HADOOP-12706. TestLocalFsFCStatistics#testStatisticsThreadLocalDataCleanUp
-   times out occasionally (Sangjin Lee and Colin Patrick McCabe via jlowe)
-   
-   HADOOP-12958. PhantomReference for filesystem statistics can trigger OOM
-   (Sangjin Lee via jlowe)
-
 Release 2.7.0 - 2015-04-20
 
   INCOMPATIBLE CHANGES

@@ -370,7 +370,7 @@ public class MRClientService extends AbstractService implements ClientService {
           new TaskAttemptDiagnosticsUpdateEvent(taskAttemptId, message));
       appContext.getEventHandler().handle(
           new TaskAttemptEvent(taskAttemptId, 
-              TaskAttemptEventType.TA_FAILMSG_BY_CLIENT));
+              TaskAttemptEventType.TA_FAILMSG));
       FailTaskAttemptResponse response = recordFactory.
         newRecordInstance(FailTaskAttemptResponse.class);
       return response;

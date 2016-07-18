@@ -5,10 +5,6 @@ Hadoop MapReduce Change Log
     MAPREDUCE-6213. NullPointerException caused by job history server addr not
     resolvable. (Peng Zhang via harsh)
 
-
-    MAPREDUCE-5465. Tasks are often killed before they exit on their own
-    (Ming Ma via jlowe)
-
     MAPREDUCE-5649. Reduce cannot use more than 2G memory for the final merge
     (Gera Shegalov via jlowe)
 

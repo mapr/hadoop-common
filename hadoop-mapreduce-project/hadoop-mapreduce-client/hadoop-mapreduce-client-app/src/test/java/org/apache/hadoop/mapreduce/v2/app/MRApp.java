@@ -481,20 +481,6 @@ public class MRApp extends MRAppMaster {
   }
 
   @Override
-  protected TaskAttemptFinishingMonitor
-      createTaskAttemptFinishingMonitor(
-      EventHandler eventHandler) {
-    return new TaskAttemptFinishingMonitor(eventHandler) {
-      @Override
-      public synchronized void register(TaskAttemptId attemptID) {
-        getContext().getEventHandler().handle(
-            new TaskAttemptEvent(attemptID,
-                TaskAttemptEventType.TA_CONTAINER_COMPLETED));
-      }
-    };
-  }
-
-  @Override
   protected TaskAttemptListener createTaskAttemptListener(AppContext context) {
     return new TaskAttemptListener(){
       @Override
@@ -549,8 +535,6 @@ public class MRApp extends MRAppMaster {
         getContext().getEventHandler().handle(
             new TaskAttemptEvent(event.getTaskAttemptID(),
                 TaskAttemptEventType.TA_CONTAINER_CLEANED));
-        break;
-      case CONTAINER_COMPLETED:
         break;
       }
     }
