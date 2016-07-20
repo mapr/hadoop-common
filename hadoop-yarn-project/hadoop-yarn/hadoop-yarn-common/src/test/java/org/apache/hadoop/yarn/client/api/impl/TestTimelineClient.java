@@ -25,14 +25,17 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
 import java.net.ConnectException;
 
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.security.User;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.rpcauth.KerberosAuthMethod;
+import org.apache.hadoop.security.ssl.KeyStoreTestUtil;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.delegation.AbstractDelegationTokenSecretManager;
 import org.apache.hadoop.security.token.delegation.web.KerberosDelegationTokenAuthenticator;
@@ -56,9 +59,15 @@ import com.sun.jersey.api.client.ClientResponse;
 public class TestTimelineClient {
 
   private TimelineClientImpl client;
+  private static final File testDir = new File(
+      System.getProperty("test.build.data",
+          System.getProperty("java.io.tmpdir")),
+      "TestTimelineClient");
 
   @Before
   public void setup() {
+    FileUtil.fullyDelete(testDir);
+    testDir.mkdirs();
     YarnConfiguration conf = new YarnConfiguration();
     conf.setBoolean(YarnConfiguration.TIMELINE_SERVICE_ENABLED, true);
     client = createTimelineClient(conf);
@@ -66,6 +75,7 @@ public class TestTimelineClient {
 
   @After
   public void tearDown() {
+    FileUtil.fullyDelete(testDir);
     if (client != null) {
       client.stop();
     }
@@ -370,6 +380,49 @@ public class TestTimelineClient {
     client.init(conf);
     client.start();
     return client;
+  }
+
+  @Test
+  public void testTimelineClientCleanup() throws Exception {
+    YarnConfiguration conf = new YarnConfiguration();
+    conf.setBoolean(YarnConfiguration.TIMELINE_SERVICE_ENABLED, true);
+    conf.setInt(YarnConfiguration.TIMELINE_SERVICE_CLIENT_MAX_RETRIES, 0);
+
+    String sslConfDir =
+        KeyStoreTestUtil.getClasspathDir(TestTimelineClient.class);
+    KeyStoreTestUtil.setupSSLConfig(testDir.getAbsolutePath(),
+        sslConfDir, conf, false);
+    client = createTimelineClient(conf);
+
+    ThreadGroup threadGroup = Thread.currentThread().getThreadGroup();
+
+    while (threadGroup.getParent() != null) {
+      threadGroup = threadGroup.getParent();
+    }
+
+    Thread[] threads = new Thread[threadGroup.activeCount()];
+
+    threadGroup.enumerate(threads);
+    Thread reloaderThread = null;
+    for (Thread thread : threads) {
+      if ((thread.getName() != null)
+          && (thread.getName().contains("Truststore reloader thread"))) {
+        reloaderThread = thread;
+      }
+    }
+    Assert.assertTrue("Reloader is not alive", reloaderThread.isAlive());
+
+    client.close();
+
+    boolean reloaderStillAlive = true;
+    for (int i = 0; i < 10; i++) {
+      reloaderStillAlive = reloaderThread.isAlive();
+      if (!reloaderStillAlive) {
+        break;
+      }
+      Thread.sleep(1000);
+    }
+    Assert.assertFalse("Reloader is still alive", reloaderStillAlive);
   }
 
   private static class TestTimlineDelegationTokenSecretManager extends
