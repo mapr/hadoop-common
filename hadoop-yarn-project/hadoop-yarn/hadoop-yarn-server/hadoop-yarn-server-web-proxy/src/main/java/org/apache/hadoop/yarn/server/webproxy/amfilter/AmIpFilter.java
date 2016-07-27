@@ -181,7 +181,20 @@ public class AmIpFilter implements Filter {
     if ( HAUtil.isCustomRMHAEnabled(conf)) {
       // http(s)://host:port
       String currentRMAddress = WebAppUtils.getResolvedRMWebAppURLWithScheme(conf);
-      addr = currentRMAddress.concat(System.getenv(ApplicationConstants.APPLICATION_WEB_PROXY_BASE_ENV));
+      String applicationWebProxy = System.getenv(ApplicationConstants.APPLICATION_WEB_PROXY_BASE_ENV);
+        if(applicationWebProxy == null || applicationWebProxy.isEmpty()){
+            for (Map.Entry<String,String> entry: proxyUriBases.entrySet()) {
+                String address = entry.getValue();
+                if(address.contains("/proxy/application")){
+                    applicationWebProxy = address.substring(address.indexOf("/proxy/application"),address.length());
+                    break;
+                }
+            }
+            if(applicationWebProxy == null){
+                applicationWebProxy = "";
+            }
+        }
+      addr = currentRMAddress.concat(applicationWebProxy);
       try {
         URL url = new URL(currentRMAddress);
         proxyUriBases.put(url.getHost() + ":" + url.getPort(), addr);
