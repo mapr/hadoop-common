@@ -52,6 +52,9 @@ Release 2.8.0 - UNRELEASED
     
     YARN-4017. container-executor overuses PATH_MAX.
     (Sidharta Seethana via vvasudev)
+    
+    YARN-5121. fix some container-executor portability issues.
+    (Allen Wittenauer) Backport YARN-6698 by  Akira Ajisaka.
 
     YARN-4573. Fix test failure in TestRMAppTransitions#testAppRunningKill and
     testAppKilledKilled. (Takashi Ohnishi via rohithsharmaks)
