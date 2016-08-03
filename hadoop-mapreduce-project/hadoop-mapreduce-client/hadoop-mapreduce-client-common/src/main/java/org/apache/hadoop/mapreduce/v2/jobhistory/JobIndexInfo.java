@@ -57,7 +57,7 @@ public class JobIndexInfo {
     this.numMaps = numMaps;
     this.numReduces = numReduces;
     this.jobStatus = jobStatus;
-    this.jobStartTime = -1;
+    this.jobStartTime = 0;
     this.queueName = queueName;
   }
 
