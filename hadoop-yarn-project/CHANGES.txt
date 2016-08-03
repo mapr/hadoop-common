@@ -23,6 +23,10 @@ Release 2.8.0 - UNRELEASED
     YARN-4546. ResourceManager crash due to scheduling opportunity overflow.
     (Jason Lowe via junping_du)
 
+    YARN-4717. TestResourceLocalizationService.testPublicResourceInitializesLocalDir
+    fails Intermittently due to IllegalArgumentException from cleanup
+    (Daniel Templeton via rkanter)
+
 Release 2.7.3 - UNRELEASED
 
   INCOMPATIBLE CHANGES
