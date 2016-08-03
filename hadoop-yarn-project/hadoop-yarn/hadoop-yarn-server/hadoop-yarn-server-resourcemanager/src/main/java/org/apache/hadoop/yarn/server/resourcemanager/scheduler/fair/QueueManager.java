@@ -183,6 +183,8 @@ public class QueueManager {
       String queueName = newQueueNames.get(i);
       if (i == 0 && queueType != FSQueueType.PARENT) {
         leafQueue = new FSLeafQueue(name, scheduler, parent);
+        leafQueue.setLabel(leafQueue.refreshLabel());
+        leafQueue.setLabelPolicy(leafQueue.refreshLabelPolicy());
         try {
           leafQueue.setPolicy(queueConf.getDefaultSchedulingPolicy());
         } catch (AllocationConfigurationException ex) {

@@ -71,9 +71,6 @@ public abstract class FSQueue implements Queue, Schedulable {
     metrics.setMinShare(getMinShare());
     metrics.setMaxShare(getMaxShare());
     this.parent = parent;
-    this.label = refreshLabel();
-    this.labelPolicy = refreshLabelPolicy();
-
   }
   
   public String getName() {
