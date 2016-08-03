@@ -110,6 +110,11 @@ Release 2.7.5 - 2017-12-14
 
   BUG FIXES
 
+    YARN-5092. TestRMDelegationTokens fails intermittently. Contributed by Jason Lowe.
+
+    YARN-5462. TestNodeStatusUpdater.testNodeStatusUpdaterRetryAndNMShutdown
+    fails intermittently (Eric Badger via jlowe)
+
     YARN-5195. RM intermittently crashed with NPE while handling
     APP_ATTEMPT_REMOVED event when async-scheduling enabled in
     CapacityScheduler. (sandflee and Jonathan Hung via jlowe)
