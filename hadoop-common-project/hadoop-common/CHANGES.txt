@@ -1,5 +1,7 @@
 Hadoop Change Log
 
+    HADOOP-13442. Optimize UGI group lookups. (Daryn Sharp via kihwal, shv)
+
     HADOOP-11613. Remove commons-httpclient dependency from hadoop-azure.
     (Masatake Iwasaki via cnauroth)
 

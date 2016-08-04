@@ -40,7 +40,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -127,7 +126,7 @@ public class UserGroupInformation {
   }
   // End MapR section
 
-  /** 
+  /**
    * UgiMetrics maintains UGI activity statistics
    * and publishes them through the metrics interfaces.
    */
@@ -170,7 +169,7 @@ public class UserGroupInformation {
 
   /** JAAS configuration name to be used for service login */
   private static String serviceJAASConfName;
-  
+
   /** Leave 10 minutes between relogin attempts. */
   private static final long MIN_TIME_BEFORE_RELOGIN = 10 * 60 * 1000L;
   
@@ -244,7 +243,7 @@ public class UserGroupInformation {
       LOG.debug("Login configuration entry is " + userJAASConfName);
 
     String loginConfPath = System.getProperty(JAVA_SECURITY_AUTH_LOGIN_CONFIG);
-    
+
     if (loginConfPath == null) {
       loginConfPath = conf.get(JAVA_SECURITY_AUTH_LOGIN_CONFIG, DEFAULT_JAVA_SECURITY_AUTH_LOGIN_CONFIG);
       if (loginConfPath != null ) {
@@ -257,27 +256,27 @@ public class UserGroupInformation {
     // still can be null
     if ( loginConfPath == null || !(new File(loginConfPath)).canRead() ) {
       if ( LOG.isDebugEnabled()) {
-        LOG.debug(loginConfPath + " either null or can not be read. Trying to load " 
+        LOG.debug(loginConfPath + " either null or can not be read. Trying to load "
         + "'java.security.auth.login.config' from jar");
       }
-      String javaSecurityJarPath = 
+      String javaSecurityJarPath =
           conf.get(CommonConfigurationKeysPublic.HADOOP_SECURITY_JAVA_SECURITY_JAR_PATH);
       URL javaSecurityURL = null;
       if ( javaSecurityJarPath != null ) {
-        javaSecurityURL = UserGroupInformation.class.getResource(javaSecurityJarPath); 
+        javaSecurityURL = UserGroupInformation.class.getResource(javaSecurityJarPath);
         if ( javaSecurityURL != null ) {
           loginConfPath = javaSecurityURL.toExternalForm();
           System.setProperty(JAVA_SECURITY_AUTH_LOGIN_CONFIG, loginConfPath);
           if ( LOG.isDebugEnabled()) {
             LOG.debug("Loading 'java.security.auth.login.config' from: " + loginConfPath);
           }
-        } 
-      } 
+        }
+      }
       if (javaSecurityJarPath == null || javaSecurityURL == null ) {
         LOG.warn("'java.security.auth.login.config' is not"
             + " configured either in Hadoop configuration or"
             + " via Java property or not loaded from jar, may cause login failure");
-      }  
+      }
     }
     // by this time JAAS config file is fully loaded. Set UGI's authenticationMethod from JAAS config.
     setUGIAuthenticationMethodFromJAASConfiguration(jaasConfName);
@@ -404,7 +403,7 @@ public class UserGroupInformation {
   private final boolean isKrbTkt;
   private List<RpcAuthMethod> rpcAuthMethodList;
 
-  private static final boolean windows = 
+  private static final boolean windows =
       System.getProperty("os.name").startsWith("Windows");
 
   private static class RealUser implements Principal {
@@ -1383,11 +1382,11 @@ public class UserGroupInformation {
   }
 
   public String getPrimaryGroupName() throws IOException {
-    String[] groups = getGroupNames();
-    if (groups.length == 0) {
+    List<String> groups = getGroups();
+    if (groups.isEmpty()) {
       throw new IOException("There is no primary group for UGI " + this);
     }
-    return groups[0];
+    return groups.get(0);
   }
 
   /**
@@ -1504,22 +1503,35 @@ public class UserGroupInformation {
   }
 
   /**
+   * Get the group names for this user. {@ #getGroups(String)} is less
+   * expensive alternative when checking for a contained element.
+   * @return the list of users with the primary group first. If the command
+   *    fails, it returns an empty list.
+   */
+  public String[] getGroupNames() {
+    List<String> groups = getGroups();
+    return groups.toArray(new String[groups.size()]);
+  }
+
+  /**
    * Get the group names for this user.
    * @return the list of users with the primary group first. If the command
    *    fails, it returns an empty list.
    */
-  public synchronized String[] getGroupNames() {
+  public List<String> getGroups() {
     ensureInitialized();
     try {
-      Set<String> result = new LinkedHashSet<String>
-        (groups.getGroups(getShortUserName()));
-      return result.toArray(new String[result.size()]);
+      return groups.getGroups(getShortUserName());
     } catch (IOException ie) {
-      LOG.warn("No groups available for user " + getShortUserName());
-      return new String[0];
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("Failed to get groups for user " + getShortUserName()
+            + " by " + ie);
+        LOG.trace("TRACE", ie);
+      }
+      return Collections.emptyList();
     }
   }
-  
+
   /**
    * Return the username.
    */
