@@ -64,6 +64,10 @@ public abstract class YARNDelegationTokenIdentifier extends
     setMasterKeyId(builder.getMasterKeyId());
   }
 
+  public synchronized void readOldFormatFields(DataInput in) throws IOException {
+    super.readFields(in);
+  }
+
   private void setBuilderFields() {
     if (builder.getOwner() != null &&
         !builder.getOwner().equals(getOwner().toString())) {
