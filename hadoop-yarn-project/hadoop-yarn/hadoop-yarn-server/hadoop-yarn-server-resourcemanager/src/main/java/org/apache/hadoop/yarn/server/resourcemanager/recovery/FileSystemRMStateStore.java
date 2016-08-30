@@ -354,7 +354,7 @@ public class FileSystemRMStateStore extends RMStateStore {
         } else if (childNodeName.startsWith(DELEGATION_TOKEN_PREFIX)) {
 
           RMDelegationTokenIdentifier identifier = null;
-          long renewDate = -1;
+          long renewDate;
 
           try {
             RMDelegationTokenIdentifierData identifierData =
@@ -362,24 +362,20 @@ public class FileSystemRMStateStore extends RMStateStore {
             identifierData.readFields(fsIn);
             identifier = identifierData.getTokenIdentifier();
             renewDate = identifierData.getRenewDate();
-
           } catch (InvalidProtocolBufferException e) {
-            if (LOG.isDebugEnabled()) {
-              LOG.debug("Recovering old formatted data");
-            }
+            LOG.warn("Recovering old formatted data");
             identifier = new RMDelegationTokenIdentifier();
             fsIn.reset();
             identifier.readOldFormatFields(fsIn);
             renewDate = fsIn.readLong();
           }
 
-          if (renewDate > -1) {
             rmState.rmSecretManagerState.delegationTokenState.put(identifier,
                 renewDate);
             if (LOG.isDebugEnabled()) {
               LOG.debug("Loaded RMDelegationTokenIdentifier: " + identifier
                   + " renewDate=" + renewDate);
-            }
+
           }
         } else {
           LOG.warn("Unknown file for recovering RMDelegationTokenSecretManager");
