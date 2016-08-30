@@ -24,6 +24,7 @@ import java.io.IOException;
 
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.WritableUtils;
 import org.apache.hadoop.security.token.delegation.AbstractDelegationTokenIdentifier;
 import org.apache.hadoop.yarn.proto.YarnSecurityTokenProtos.YARNDelegationTokenIdentifierProto;
 
@@ -62,6 +63,21 @@ public abstract class YARNDelegationTokenIdentifier extends
     setMaxDate(builder.getMaxDate());
     setSequenceNumber(builder.getSequenceNumber());
     setMasterKeyId(builder.getMasterKeyId());
+  }
+
+  public synchronized void readOldFormatFields(DataInput in) throws IOException {
+    byte version = in.readByte();
+    if (version != super.getVersion()) {
+      throw new IOException("Unknown version of delegation token " +
+          version);
+    }
+    getOwner().readFields(in, Text.DEFAULT_MAX_LEN);
+    getRenewer().readFields(in, Text.DEFAULT_MAX_LEN);
+    getRealUser().readFields(in, Text.DEFAULT_MAX_LEN);
+    setIssueDate(WritableUtils.readVLong(in));
+    setMaxDate(WritableUtils.readVLong(in));
+    setSequenceNumber(WritableUtils.readVInt(in));
+    setMasterKeyId(WritableUtils.readVInt(in));
   }
 
   private void setBuilderFields() {

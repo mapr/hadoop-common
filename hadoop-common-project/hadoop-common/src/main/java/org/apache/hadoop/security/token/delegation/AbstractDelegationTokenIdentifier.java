@@ -159,6 +159,10 @@ extends TokenIdentifier {
     return masterKeyId;
   }
 
+  protected byte getVersion() {
+    return VERSION;
+  }
+
   protected static boolean isEqual(Object a, Object b) {
     return a == null ? b == null : a.equals(b);
   }

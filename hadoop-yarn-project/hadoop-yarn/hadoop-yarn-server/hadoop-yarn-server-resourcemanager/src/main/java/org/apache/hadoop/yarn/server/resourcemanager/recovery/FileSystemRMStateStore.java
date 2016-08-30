@@ -27,6 +27,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.protobuf.InvalidProtocolBufferException;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
@@ -168,7 +170,7 @@ public class FileSystemRMStateStore extends RMStateStore {
       writeFileWithRetries(versionNodePath, data);
     }
   }
-  
+
   @Override
   public synchronized long getAndIncrementEpoch() throws Exception {
     Path epochNodePath = getNodePath(rootDirPath, EPOCH_NODE);
@@ -191,7 +193,7 @@ public class FileSystemRMStateStore extends RMStateStore {
     }
     return currentEpoch;
   }
-  
+
   @Override
   public synchronized RMState loadState() throws Exception {
     RMState rmState = new RMState();
@@ -350,18 +352,30 @@ public class FileSystemRMStateStore extends RMStateStore {
                 + ", expirationDate=" + key.getExpiryDate());
           }
         } else if (childNodeName.startsWith(DELEGATION_TOKEN_PREFIX)) {
-          RMDelegationTokenIdentifierData identifierData =
-              new RMDelegationTokenIdentifierData();
-          identifierData.readFields(fsIn);
-          RMDelegationTokenIdentifier identifier =
-              identifierData.getTokenIdentifier();
-          long renewDate = identifierData.getRenewDate();
 
-          rmState.rmSecretManagerState.delegationTokenState.put(identifier,
-            renewDate);
-          if (LOG.isDebugEnabled()) {
-            LOG.debug("Loaded RMDelegationTokenIdentifier: " + identifier
-                + " renewDate=" + renewDate);
+          RMDelegationTokenIdentifier identifier = null;
+          long renewDate;
+
+          try {
+            RMDelegationTokenIdentifierData identifierData =
+                new RMDelegationTokenIdentifierData();
+            identifierData.readFields(fsIn);
+            identifier = identifierData.getTokenIdentifier();
+            renewDate = identifierData.getRenewDate();
+          } catch (InvalidProtocolBufferException e) {
+            LOG.warn("Recovering old formatted data");
+            identifier = new RMDelegationTokenIdentifier();
+            fsIn.reset();
+            identifier.readOldFormatFields(fsIn);
+            renewDate = fsIn.readLong();
+          }
+
+            rmState.rmSecretManagerState.delegationTokenState.put(identifier,
+                renewDate);
+            if (LOG.isDebugEnabled()) {
+              LOG.debug("Loaded RMDelegationTokenIdentifier: " + identifier
+                  + " renewDate=" + renewDate);
+
           }
         } else {
           LOG.warn("Unknown file for recovering RMDelegationTokenSecretManager");
