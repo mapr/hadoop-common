@@ -28,6 +28,15 @@ Release 2.7.6 - UNRELEASED
     HADOOP-12611. TestZKSignerSecretProvider#testMultipleInit occasionally fail.
     (ebadger via rkanter)
 
+    HADOOP-14842. Hadoop 2.8.2 release build process get stuck due to java
+    issue. Contributed by Junping Du.
+
+    HADOOP-12751. While using kerberos Hadoop incorrectly assumes names with
+    '@' to be non-simple. (Bolke de Bruin via stevel).
+
+    HADOOP-13375. o.a.h.security.TestGroupsCaching.testBackgroundRefreshCounters
+    seems flaky. (Weiwei Yang via Mingliang Liu, shv)
+
 Release 2.7.5 - 2017-12-14
 
   INCOMPATIBLE CHANGES
