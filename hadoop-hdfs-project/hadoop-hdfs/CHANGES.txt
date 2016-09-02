@@ -22,6 +22,9 @@ Release 2.8.0
     HDFS-8026. Trace FSOutputSummer#writeChecksumChunks rather than
     DFSOutputStream#writeChunk (cmccabe)
 
+    HDFS-10711. Optimize FSPermissionChecker group membership check.
+    (Daryn Sharp via kihwal)
+
   BUG FIXES
 
 Release 2.7.5
