@@ -344,6 +344,10 @@ public class FileSystemRMStateStore extends RMStateStore {
       ByteArrayInputStream is = new ByteArrayInputStream(childData);
       try (DataInputStream fsIn = new DataInputStream(is)) {
         if (childNodeName.startsWith(DELEGATION_KEY_PREFIX)) {
+          if (fsIn.available() == 0) {
+            LOG.warn("Can't read delegation key from empty file " + childNodeName);
+            continue;
+          }
           DelegationKey key = new DelegationKey();
           key.readFields(fsIn);
           rmState.rmSecretManagerState.masterKeyState.add(key);
