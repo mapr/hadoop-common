@@ -60,6 +60,9 @@ Release 2.8.0 - UNRELEASED
 
     MAPREDUCE-6566. Add retry support to mapreduce CLI tool.
     (Varun Vasudev via xgong)
+    
+    MAPREDUCE-6741. Add MR support to redact job conf properties. (Haibo Chen
+    via jlowe)
 
   OPTIMIZATIONS
 

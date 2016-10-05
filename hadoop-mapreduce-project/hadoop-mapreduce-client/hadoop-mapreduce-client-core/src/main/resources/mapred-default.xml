@@ -2204,6 +2204,14 @@
 </property>
 
 <property>
+  <description>
+    The list of job configuration properties whose value will be redacted.
+  </description>
+  <name>mapreduce.job.redacted-properties</name>
+  <value></value>
+</property>
+
+<property>
   <name>mapreduce.task.exit.timeout</name>
   <value>60000</value>
   <description>The number of milliseconds before a task will be
