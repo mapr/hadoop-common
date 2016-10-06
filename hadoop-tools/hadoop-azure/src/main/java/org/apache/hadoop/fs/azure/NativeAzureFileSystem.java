@@ -39,6 +39,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
@@ -66,19 +70,15 @@ import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.Progressable;
 
-
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.microsoft.azure.storage.AccessCondition;
 import com.microsoft.azure.storage.OperationContext;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.blob.CloudBlob;
 import com.microsoft.azure.storage.core.*;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * A {@link FileSystem} for reading and writing files stored on <a
@@ -170,7 +170,7 @@ public class NativeAzureFileSystem extends FileSystem {
       } catch (JsonParseException e) {
         this.committed = false;
       } catch (IOException e) {
-        this.committed = false;  
+        this.committed = false;
       }
       
       if (!this.committed) {
@@ -189,17 +189,17 @@ public class NativeAzureFileSystem extends FileSystem {
       if (oldFolderName == null || newFolderName == null) {
     	  this.committed = false;
       } else {
-        this.srcKey = oldFolderName.getTextValue();
-        this.dstKey = newFolderName.getTextValue();
+        this.srcKey = oldFolderName.textValue();
+        this.dstKey = newFolderName.textValue();
         if (this.srcKey == null || this.dstKey == null) {
-          this.committed = false;    	  
+          this.committed = false;
         } else {
           JsonNode fileList = json.get("FileList");
           if (fileList == null) {
-            this.committed = false;	
+            this.committed = false;
           } else {
             for (int i = 0; i < fileList.size(); i++) {
-              fileStrList.add(fileList.get(i).getTextValue());
+              fileStrList.add(fileList.get(i).textValue());
             }
           }
         }
@@ -1061,7 +1061,7 @@ public class NativeAzureFileSystem extends FileSystem {
           + conf.getLong(AZURE_BLOCK_SIZE_PROPERTY_NAME, MAX_AZURE_BLOCK_SIZE));
     }
   }
-  
+
   @Override
   public Path getHomeDirectory() {
     return makeQualified(new Path(

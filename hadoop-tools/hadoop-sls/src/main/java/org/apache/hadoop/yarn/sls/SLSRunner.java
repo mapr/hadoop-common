@@ -32,6 +32,9 @@ import java.util.Iterator;
 import java.util.Random;
 import java.util.Arrays;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.fs.Path;
@@ -65,8 +68,6 @@ import org.apache.hadoop.yarn.server.resourcemanager.ResourceManager;
 import org.apache.hadoop.yarn.server.utils.BuilderUtils;
 import org.apache.hadoop.yarn.sls.utils.SLSUtils;
 import org.apache.log4j.Logger;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.map.ObjectMapper;
 
 @Private
 @Unstable
@@ -291,7 +292,7 @@ public class SLSRunner {
     for (String inputTrace : inputTraces) {
       Reader input = new FileReader(inputTrace);
       try {
-        Iterator<Map> i = mapper.readValues(jsonF.createJsonParser(input),
+        Iterator<Map> i = mapper.readValues(jsonF.createParser(input),
                 Map.class);
         while (i.hasNext()) {
           Map jsonJob = i.next();

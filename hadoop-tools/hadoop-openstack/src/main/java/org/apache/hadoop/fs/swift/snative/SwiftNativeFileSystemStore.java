@@ -17,6 +17,8 @@
  */
 package org.apache.hadoop.fs.swift.snative;
 
+import com.fasterxml.jackson.databind.type.CollectionType;
+
 import org.apache.http.Header;
 import org.apache.http.HttpStatus;
 import org.apache.http.message.BasicHeader;
@@ -37,7 +39,6 @@ import org.apache.hadoop.fs.swift.util.DurationStats;
 import org.apache.hadoop.fs.swift.util.JSONUtil;
 import org.apache.hadoop.fs.swift.util.SwiftObjectPath;
 import org.apache.hadoop.fs.swift.util.SwiftUtils;
-import org.codehaus.jackson.map.type.CollectionType;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;

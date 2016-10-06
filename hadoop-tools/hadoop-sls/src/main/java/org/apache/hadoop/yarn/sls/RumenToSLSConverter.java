@@ -44,6 +44,10 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+
 @Private
 @Unstable
 public class RumenToSLSConverter {
@@ -126,7 +130,7 @@ public class RumenToSLSConverter {
         ObjectMapper mapper = new ObjectMapper();
         ObjectWriter writer = mapper.writerWithDefaultPrettyPrinter();
         Iterator<Map> i = mapper.readValues(
-                new JsonFactory().createJsonParser(input), Map.class);
+            new JsonFactory().createParser(input), Map.class);
         while (i.hasNext()) {
           Map m = i.next();
           output.write(writer.writeValueAsString(createSLSJob(m)) + EOL);
