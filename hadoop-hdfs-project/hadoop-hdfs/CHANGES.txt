@@ -17,6 +17,8 @@ Release 2.8.0
     HDFS-6564. Use slf4j instead of common-logging in hdfs-client.
     (Rakesh R via wheat9)
 
+    HDFS-10984. Expose nntop output as metrics. (Siddharth Wagle via xyao, zhz)
+
   OPTIMIZATIONS
 
     HDFS-8026. Trace FSOutputSummer#writeChecksumChunks rather than
