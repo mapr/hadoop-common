@@ -265,7 +265,7 @@ public abstract class FSQueue implements Queue, Schedulable {
    * @return true if check passes (can assign) or false otherwise
    */
   protected boolean assignContainerPreCheck(FSSchedulerNode node) {
-    if (!Resources.fitsIn(getResourceUsage(),
+    if (!Resources.fitsInWithoutEqual(getResourceUsage(),
         scheduler.getAllocationConfiguration().getMaxResources(getName()))
         || node.getReservedContainer() != null) {
       return false;
