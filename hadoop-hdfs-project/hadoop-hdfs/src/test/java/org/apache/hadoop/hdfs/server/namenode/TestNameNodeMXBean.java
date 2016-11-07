@@ -17,6 +17,7 @@
  */
 package org.apache.hadoop.hdfs.server.namenode;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.Uninterruptibles;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -31,7 +32,6 @@ import org.apache.hadoop.hdfs.server.namenode.top.window.RollingWindowManager;
 import org.apache.hadoop.io.nativeio.NativeIO;
 import org.apache.hadoop.io.nativeio.NativeIO.POSIX.NoMlockCacheManipulator;
 import org.apache.hadoop.util.VersionInfo;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 import org.eclipse.jetty.util.ajax.JSON;
 
@@ -171,7 +171,7 @@ public class TestNameNodeMXBean {
       }
       assertEquals(2, statusMap.get("active").size());
       assertEquals(0, statusMap.get("failed").size());
-      
+
       // This will cause the first dir to fail.
       File failedNameDir = new File(nameDirUris.iterator().next());
       assertEquals(0, FileUtil.chmod(

@@ -63,11 +63,13 @@ import org.apache.hadoop.util.DiskChecker.DiskErrorException;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.hadoop.util.Time;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.ObjectReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.ObjectWriter;
 
 /**
  * The underlying volume used to store replica.
@@ -86,7 +88,7 @@ public class FsVolumeImpl implements FsVolumeSpi {
   private final Map<String, BlockPoolSlice> bpSlices
       = new ConcurrentHashMap<String, BlockPoolSlice>();
   private final File currentDir;    // <StorageDirectory>/current
-  private final DF usage;           
+  private final DF usage;
   private final long reserved;
   private CloseableReferenceCount reference = new CloseableReferenceCount();
 
@@ -114,7 +116,7 @@ public class FsVolumeImpl implements FsVolumeSpi {
         DFSConfigKeys.DFS_DATANODE_DU_RESERVED_KEY,
         DFSConfigKeys.DFS_DATANODE_DU_RESERVED_DEFAULT);
     this.reservedForRbw = new AtomicLong(0L);
-    this.currentDir = currentDir; 
+    this.currentDir = currentDir;
     File parent = currentDir.getParentFile();
     this.usage = new DF(parent, conf);
     this.storageType = storageType;
@@ -343,7 +345,7 @@ public class FsVolumeImpl implements FsVolumeSpi {
   public long getReservedForRbw() {
     return reservedForRbw.get();
   }
-    
+
   long getReserved(){
     return reserved;
   }
@@ -360,7 +362,7 @@ public class FsVolumeImpl implements FsVolumeSpi {
   public String getBasePath() {
     return currentDir.getParent();
   }
-  
+
   @Override
   public boolean isTransientStorage() {
     return storageType.isTransient();
@@ -793,7 +795,7 @@ public class FsVolumeImpl implements FsVolumeSpi {
       throws IOException {
     getBlockPoolSlice(bpid).getVolumeMap(volumeMap, ramDiskReplicaMap);
   }
-  
+
   @Override
   public String toString() {
     return currentDir.getAbsolutePath();

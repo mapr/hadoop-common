@@ -34,9 +34,8 @@ import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.TokenIdentifier;
 import org.apache.hadoop.util.DataChecksum;
 import org.apache.hadoop.util.StringUtils;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.ObjectReader;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -148,7 +147,7 @@ public class JsonUtil {
 
   static enum PathType {
     FILE, DIRECTORY, SYMLINK;
-    
+
     static PathType valueOf(HdfsFileStatus status) {
       return status.isDir()? DIRECTORY: status.isSymlink()? SYMLINK: FILE;
     }
@@ -200,7 +199,7 @@ public class JsonUtil {
       return null;
     }
 
-    final Map<?, ?> m = includesType ? 
+    final Map<?, ?> m = includesType ?
         (Map<?, ?>)json.get(FileStatus.class.getSimpleName()) : json;
     final String localName = (String) m.get("pathSuffix");
     final PathType type = PathType.valueOf((String) m.get("type"));
@@ -246,7 +245,7 @@ public class JsonUtil {
     if (m == null) {
       return null;
     }
-    
+
     final String blockPoolId = (String)m.get("blockPoolId");
     final long blockId = ((Number) m.get("blockId")).longValue();
     final long numBytes = ((Number) m.get("numBytes")).longValue();
@@ -254,7 +253,7 @@ public class JsonUtil {
         ((Number) m.get("generationStamp")).longValue();
     return new ExtendedBlock(blockPoolId, blockId, numBytes, generationStamp);
   }
-  
+
   /** Convert a DatanodeInfo to a Json map. */
   static Map<String, Object> toJsonMap(final DatanodeInfo datanodeinfo) {
     if (datanodeinfo == null) {
@@ -417,7 +416,7 @@ public class JsonUtil {
       return array;
     }
   }
-  
+
   /** Convert a LocatedBlock to a Json map. */
   private static Map<String, Object> toJsonMap(final LocatedBlock locatedblock
       ) throws IOException {
@@ -584,7 +583,7 @@ public class JsonUtil {
     final byte[] bytes = StringUtils.hexStringToByte((String)m.get("bytes"));
 
     final DataInputStream in = new DataInputStream(new ByteArrayInputStream(bytes));
-    final DataChecksum.Type crcType = 
+    final DataChecksum.Type crcType =
         MD5MD5CRC32FileChecksum.getCrcTypeFromAlgorithmName(algorithm);
     final MD5MD5CRC32FileChecksum checksum;
 
@@ -681,7 +680,7 @@ public class JsonUtil {
     aclStatusBuilder.addEntries(aclEntryList);
     return aclStatusBuilder.build();
   }
-  
+
   private static Map<String, Object> toJsonMap(final XAttr xAttr,
       final XAttrCodec encoding) throws IOException {
     if (xAttr == null) {
@@ -690,7 +689,7 @@ public class JsonUtil {
  
     final Map<String, Object> m = new TreeMap<String, Object>();
     m.put("name", XAttrHelper.getPrefixName(xAttr));
-    m.put("value", xAttr.getValue() != null ? 
+    m.put("value", xAttr.getValue() != null ?
         XAttrCodec.encodeValue(xAttr.getValue(), encoding) : null);
     return m;
   }
@@ -730,29 +729,29 @@ public class JsonUtil {
     finalMap.put("XAttrNames", ret);
     return mapper.writeValueAsString(finalMap);
   }
-  
-  public static byte[] getXAttr(final Map<?, ?> json, final String name) 
+
+  public static byte[] getXAttr(final Map<?, ?> json, final String name)
       throws IOException {
     if (json == null) {
       return null;
     }
-    
+
     Map<String, byte[]> xAttrs = toXAttrs(json);
     if (xAttrs != null) {
       return xAttrs.get(name);
     }
-    
+
     return null;
   }
 
-  public static Map<String, byte[]> toXAttrs(final Map<?, ?> json) 
+  public static Map<String, byte[]> toXAttrs(final Map<?, ?> json)
       throws IOException {
     if (json == null) {
       return null;
     }
     return toXAttrMap(getList(json, "XAttrs"));
   }
-  
+
   public static List<String> toXAttrNames(final Map<?, ?> json)
       throws IOException {
     if (json == null) {
@@ -788,7 +787,7 @@ public class JsonUtil {
       return xAttrs;
     }
   }
-  
+
   private static byte[] decodeXAttrValue(String value) throws IOException {
     if (value != null) {
       return XAttrCodec.decodeValue(value);
