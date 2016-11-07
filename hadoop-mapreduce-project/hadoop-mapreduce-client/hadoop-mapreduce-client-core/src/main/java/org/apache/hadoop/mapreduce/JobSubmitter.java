@@ -34,6 +34,10 @@ import java.util.Map;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
@@ -63,9 +67,6 @@ import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.TokenIdentifier;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.yarn.api.records.ReservationId;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
 
 import com.google.common.base.Charsets;
 
@@ -175,9 +176,9 @@ class JobSubmitter {
       if (TokenCache.getShuffleSecretKey(job.getCredentials()) == null) {
         KeyGenerator keyGen;
         try {
-         
-          int keyLen = CryptoUtils.isShuffleEncrypted(conf) 
-              ? conf.getInt(MRJobConfig.MR_ENCRYPTED_INTERMEDIATE_DATA_KEY_SIZE_BITS, 
+
+          int keyLen = CryptoUtils.isShuffleEncrypted(conf)
+              ? conf.getInt(MRJobConfig.MR_ENCRYPTED_INTERMEDIATE_DATA_KEY_SIZE_BITS,
                   MRJobConfig.DEFAULT_MR_ENCRYPTED_INTERMEDIATE_DATA_KEY_SIZE_BITS)
               : SHUFFLE_KEY_LENGTH;
           keyGen = KeyGenerator.getInstance(SHUFFLE_KEYGEN_ALGORITHM);
@@ -395,24 +396,19 @@ class JobSubmitter {
       LOG.info("loading user's secret keys from " + tokensFileName);
       String localFileName = new Path(tokensFileName).toUri().getPath();
 
-      boolean json_error = false;
       try {
         // read JSON
         ObjectMapper mapper = new ObjectMapper();
-        Map<String, String> nm = 
+        Map<String, String> nm =
           mapper.readValue(new File(localFileName), Map.class);
 
         for(Map.Entry<String, String> ent: nm.entrySet()) {
           credentials.addSecretKey(new Text(ent.getKey()), ent.getValue()
               .getBytes(Charsets.UTF_8));
         }
-      } catch (JsonMappingException e) {
-        json_error = true;
-      } catch (JsonParseException e) {
-        json_error = true;
-      }
-      if(json_error)
+      } catch (JsonMappingException | JsonParseException e) {
         LOG.warn("couldn't parse Token Cache JSON file with user secret keys");
+      }
     }
   }
 
