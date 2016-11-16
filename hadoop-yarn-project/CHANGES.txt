@@ -96,6 +96,9 @@ Release 2.7.1 - UNRELEASED
 
     YARN-3476. Nodemanager can fail to delete local logs if log aggregation
     fails (Rohith via jlowe)
+    
+    YARN-3415. Non-AM containers can be counted towards amResourceUsage of a
+    Fair Scheduler queue (Zhihai Xu via Sandy Ryza)
 
 Release 2.7.0 - 2015-04-20
 
