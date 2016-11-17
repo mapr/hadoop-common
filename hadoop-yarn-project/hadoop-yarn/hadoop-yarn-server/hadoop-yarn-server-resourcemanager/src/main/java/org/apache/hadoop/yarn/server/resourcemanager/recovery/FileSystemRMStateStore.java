@@ -279,7 +279,14 @@ public class FileSystemRMStateStore extends RMStateStore {
         ApplicationId appId = attemptState.getAttemptId().getApplicationId();
         ApplicationStateData appState = rmState.appState.get(appId);
         assert appState != null;
-        appState.attempts.put(attemptState.getAttemptId(), attemptState);
+        if (appState == null) {
+          LOG.warn("Removing " + appId + " directory as info there is " +
+                  "incomplete and can cause RM restart failure after failover.");
+          checkAndRemovePathWithRetries(getAppDir(rmAppRoot, appId));
+          rmState.appState.remove(appId);
+        } else {
+          appState.attempts.put(attemptState.getAttemptId(), attemptState);
+        }
       }
       LOG.info("Done loading applications from FS state store");
     } catch (Exception e) {
