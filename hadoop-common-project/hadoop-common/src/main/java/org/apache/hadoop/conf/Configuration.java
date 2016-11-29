@@ -18,6 +18,8 @@
 
 package org.apache.hadoop.conf;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.annotations.VisibleForTesting;
 
 import java.io.BufferedInputStream;
@@ -91,8 +93,6 @@ import org.apache.hadoop.security.alias.CredentialProviderFactory;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.StringInterner;
 import org.apache.hadoop.util.StringUtils;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonGenerator;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -103,7 +103,7 @@ import org.xml.sax.SAXException;
 
 import com.google.common.base.Preconditions;
 
-/** 
+/**
  * Provides access to configuration parameters.
  *
  * <h4 id="Resources">Resources</h4>
@@ -168,7 +168,7 @@ import com.google.common.base.Preconditions;
  * will be resolved to another property in this Configuration, while
  * <tt>${<i>user.name</i>}</tt> would then ordinarily be resolved to the value
  * of the System property with that name.
- * By default, warnings will be given to any deprecated configuration 
+ * By default, warnings will be given to any deprecated configuration
  * parameters and these are suppressible by configuring
  * <tt>log4j.logger.org.apache.hadoop.conf.Configuration.deprecation</tt> in
  * log4j.properties file.
@@ -199,7 +199,7 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
     private final Object resource;
     private final String name;
     private final boolean restrictParser;
-    
+
     public Resource(Object resource) {
       this(resource, resource.toString());
     }
@@ -474,9 +474,9 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
         CommonConfigurationKeys.NET_TOPOLOGY_NODE_SWITCH_MAPPING_IMPL_KEY),
       new DeprecationDelta("dfs.df.interval", 
         CommonConfigurationKeys.FS_DF_INTERVAL_KEY),
-      new DeprecationDelta("hadoop.native.lib", 
+      new DeprecationDelta("hadoop.native.lib",
         CommonConfigurationKeys.IO_NATIVE_LIB_AVAILABLE_KEY),
-      new DeprecationDelta("fs.default.name", 
+      new DeprecationDelta("fs.default.name",
         CommonConfigurationKeys.FS_DEFAULT_NAME_KEY),
       new DeprecationDelta("dfs.umaskmode",
         CommonConfigurationKeys.FS_PERMISSIONS_UMASK_KEY),
@@ -1060,7 +1060,7 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
     throw new IllegalStateException("Variable substitution depth too large: " 
                                     + MAX_SUBST + " " + expr);
   }
-  
+
   /**
    * Get the value of the <code>name</code> property, <code>null</code> if
    * no such property exists. If the key is deprecated, it returns the value of
@@ -2870,7 +2870,7 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
       }
     }
   }
-  
+
   private void loadProperty(Properties properties, String name, String attr,
       String value, boolean finalParameter, String[] source) {
     if (value != null || allowNullValueProperties) {
@@ -2902,10 +2902,10 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
     writeXml(new OutputStreamWriter(out, "UTF-8"));
   }
 
-  /** 
+  /**
    * Write out the non-default properties in this configuration to the given
    * {@link Writer}.
-   * 
+   *
    * @param out the writer to write to.
    */
   public void writeXml(Writer out) throws IOException {
@@ -2971,7 +2971,7 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
           }
         }
       }
-      
+
       conf.appendChild(doc.createTextNode("\n"));
     }
     return doc;
@@ -2980,10 +2980,10 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
   /**
    *  Writes out all the parameters and their properties (final and resource) to
    *  the given {@link Writer}
-   *  The format of the output would be 
+   *  The format of the output would be
    *  { "properties" : [ {key1,value1,key1.isFinal,key1.resource}, {key2,value2,
-   *  key2.isFinal,key2.resource}... ] } 
-   *  It does not output the parameters of the configuration object which is 
+   *  key2.isFinal,key2.resource}... ] }
+   *  It does not output the parameters of the configuration object which is
    *  loaded from an input stream.
    * @param out the Writer to write to
    * @throws IOException
@@ -2991,7 +2991,7 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
   public static void dumpConfiguration(Configuration config,
       Writer out) throws IOException {
     JsonFactory dumpFactory = new JsonFactory();
-    JsonGenerator dumpGenerator = dumpFactory.createJsonGenerator(out);
+    JsonGenerator dumpGenerator = dumpFactory.createGenerator(out);
     dumpGenerator.writeStartObject();
     dumpGenerator.writeFieldName("properties");
     dumpGenerator.writeStartArray();
@@ -3000,7 +3000,7 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
       for (Map.Entry<Object,Object> item: config.getProps().entrySet()) {
         dumpGenerator.writeStartObject();
         dumpGenerator.writeStringField("key", (String) item.getKey());
-        dumpGenerator.writeStringField("value", 
+        dumpGenerator.writeStringField("value",
                                        config.get((String) item.getKey()));
         dumpGenerator.writeBooleanField("isFinal",
                                         config.finalParameters.contains(item.getKey()));
@@ -3017,10 +3017,10 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
     dumpGenerator.writeEndObject();
     dumpGenerator.flush();
   }
-  
+
   /**
    * Get the {@link ClassLoader} for this job.
-   * 
+   *
    * @return the correct class loader.
    */
   public ClassLoader getClassLoader() {

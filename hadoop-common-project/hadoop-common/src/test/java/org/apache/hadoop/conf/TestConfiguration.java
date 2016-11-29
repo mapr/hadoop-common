@@ -41,6 +41,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import static java.util.concurrent.TimeUnit.*;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import junit.framework.TestCase;
 import static org.junit.Assert.assertArrayEquals;
 
@@ -57,7 +58,6 @@ import org.apache.hadoop.security.alias.LocalJavaKeyStoreProvider;
 import static org.apache.hadoop.util.PlatformName.IBM_JAVA;
 import static org.junit.Assert.fail;
 
-import org.codehaus.jackson.map.ObjectMapper;
 import org.hamcrest.CoreMatchers;
 import org.junit.Assert;
 
@@ -275,7 +275,7 @@ public class TestConfiguration extends TestCase {
     }
     out.write("</property>\n");
   }
-  
+
   public void testOverlay() throws IOException{
     out=new BufferedWriter(new FileWriter(CONFIG));
     startConfig();
@@ -320,7 +320,7 @@ public class TestConfiguration extends TestCase {
     //two spaces one after "this", one before "contains"
     assertEquals("this  contains a comment", conf.get("my.comment"));
   }
-  
+
   public void testTrim() throws IOException {
     out=new BufferedWriter(new FileWriter(CONFIG));
     startConfig();
@@ -1016,7 +1016,7 @@ public class TestConfiguration extends TestCase {
       this.properties = properties;
     }
   }
-  
+
   static class JsonProperty {
     String key;
     public String getKey() {
@@ -1047,7 +1047,7 @@ public class TestConfiguration extends TestCase {
     boolean isFinal;
     String resource;
   }
-  
+
   public void testGetSetTrimmedNames() throws IOException {
     Configuration conf = new Configuration(false);
     conf.set(" name", "value");
