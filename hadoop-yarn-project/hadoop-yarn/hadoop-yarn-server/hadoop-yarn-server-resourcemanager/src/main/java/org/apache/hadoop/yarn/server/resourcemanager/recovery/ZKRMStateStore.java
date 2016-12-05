@@ -376,7 +376,7 @@ public class ZKRMStateStore extends RMStateStore {
   }
 
   @Override
-  protected synchronized void closeInternal() throws Exception {
+  protected void closeInternal() throws Exception {
     if (verifyActiveStatusThread != null) {
       verifyActiveStatusThread.interrupt();
       verifyActiveStatusThread.join(1000);
@@ -926,8 +926,9 @@ public class ZKRMStateStore extends RMStateStore {
    * Helper method that creates fencing node, executes the passed operations,
    * and deletes the fencing node.
    */
-  private synchronized void doStoreMultiWithRetries(
-      final List<Op> opList) throws Exception {
+  @VisibleForTesting
+  synchronized void doStoreMultiWithRetries(final List<Op> opList)
+      throws Exception {
     final List<Op> execOpList = new ArrayList<Op>(opList.size() + 2);
     execOpList.add(createFencingNodePathOp);
     execOpList.addAll(opList);
