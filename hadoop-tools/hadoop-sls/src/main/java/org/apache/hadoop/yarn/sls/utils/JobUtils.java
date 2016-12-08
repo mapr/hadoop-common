@@ -17,10 +17,11 @@
  */
 package org.apache.hadoop.yarn.sls.utils;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.apache.commons.lang.reflect.FieldUtils;
 import org.apache.hadoop.yarn.sls.appmaster.MRAMSimulator;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.File;
 import java.io.IOException;
