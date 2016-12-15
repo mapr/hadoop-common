@@ -24,9 +24,11 @@ import java.io.InputStreamReader;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.logging.Log;
@@ -45,7 +47,8 @@ import org.apache.hadoop.security.alias.JavaKeyStoreProvider;
 @InterfaceAudience.LimitedPrivate({"HDFS", "MapReduce"})
 @InterfaceStability.Unstable
 abstract public class Shell {
-  
+  private static final Map <Process, Object> CHILD_PROCESSES =
+      Collections.synchronizedMap(new WeakHashMap<Process, Object>());
   public static final Log LOG = LogFactory.getLog(Shell.class);
   
   private static boolean IS_JAVA7_OR_ABOVE =
@@ -503,6 +506,7 @@ abstract public class Shell {
     } else {
       process = builder.start();
     }
+    CHILD_PROCESSES.put(process, null);
 
     if (timeOutInterval > 0) {
       timeOutTimer = new Timer("Shell command timeout");
@@ -597,6 +601,7 @@ abstract public class Shell {
         LOG.warn("Error while closing the error stream", ioe);
       }
       process.destroy();
+      CHILD_PROCESSES.remove(process);
       lastTime = Time.monotonicNow();
     }
   }
@@ -880,6 +885,24 @@ abstract public class Shell {
           p.destroy();
         }
       }
+    }
+  }
+
+  /**
+   * Static method to destroy all running <code>Shell</code> processes
+   * Iterates through a list of all currently running <code>Shell</code>
+   * processes and destroys them one by one. This method is thread safe and
+   * is intended to be used in a shutdown hook.
+   */
+  public static void destroyAllProcesses() {
+    synchronized (CHILD_PROCESSES) {
+      for (Process key : CHILD_PROCESSES.keySet()) {
+        Process process = key;
+        if (key != null) {
+          process.destroy();
+        }
+      }
+      CHILD_PROCESSES.clear();
     }
   }
 }

@@ -17,6 +17,7 @@
  */
 package org.apache.hadoop.util;
 
+import com.google.common.base.Supplier;
 import junit.framework.TestCase;
 
 import java.io.BufferedReader;
@@ -35,6 +36,7 @@ import static org.apache.hadoop.util.Shell.*;
 import org.apache.hadoop.security.alias.JavaKeyStoreProvider;
 
 import org.apache.hadoop.fs.FileUtil;
+import org.apache.hadoop.test.GenericTestUtils;
 import org.junit.Assume;
 import org.junit.Test;
 
@@ -210,5 +212,56 @@ public class TestShell extends TestCase {
     } else {
       assertEquals(2, command.getRunCount());
     }
+  }
+
+  @Test(timeout=120000)
+  public void testShellKillAllProcesses() throws Throwable {
+    Assume.assumeFalse(WINDOWS);
+    StringBuffer sleepCommand = new StringBuffer();
+    sleepCommand.append("sleep 200");
+    String[] shellCmd = {"bash", "-c", sleepCommand.toString()};
+    final ShellCommandExecutor shexc1 = new ShellCommandExecutor(shellCmd);
+    final ShellCommandExecutor shexc2 = new ShellCommandExecutor(shellCmd);
+
+    Thread shellThread1 = new Thread() {
+      @Override
+      public void run() {
+        try {
+          shexc1.execute();
+        } catch(IOException ioe) {
+          //ignore IOException from thread interrupt
+        }
+      }
+    };
+    Thread shellThread2 = new Thread() {
+      @Override
+      public void run() {
+        try {
+          shexc2.execute();
+        } catch(IOException ioe) {
+          //ignore IOException from thread interrupt
+        }
+      }
+    };
+
+    shellThread1.start();
+    shellThread2.start();
+    GenericTestUtils.waitFor(new Supplier<Boolean>() {
+      @Override
+      public Boolean get() {
+        return shexc1.getProcess() != null;
+      }
+    }, 10, 10000);
+
+    GenericTestUtils.waitFor(new Supplier<Boolean>() {
+      @Override
+      public Boolean get() {
+        return shexc2.getProcess() != null;
+      }
+    }, 10, 10000);
+
+    Shell.destroyAllProcesses();
+    shexc1.getProcess().waitFor();
+    shexc2.getProcess().waitFor();
   }
 }
