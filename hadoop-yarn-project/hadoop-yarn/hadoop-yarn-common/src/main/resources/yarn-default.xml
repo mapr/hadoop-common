@@ -177,6 +177,27 @@
   </property>
 
   <property>
+    <description>
+      Max retries allowed to get client token master key.
+      Value should be more than 0.
+      Client token master key for AM can be null during AM's registration
+      in RM. It can happen when AsyncDispatcher is overloaded and LAUNCH event
+      is processed after AM's registration in RM.
+      It won't retry more than it needs.
+    </description>
+    <name>yarn.resourcemanager.am.client-token-master-key.max-retries</name>
+    <value>10</value>
+  </property>
+
+  <property>
+    <description>
+      How often try to get AM's client token master key.
+    </description>
+    <name>yarn.resourcemanager.am.client-token-master-key.retry-interval-ms</name>
+    <value>1000</value>
+  </property>
+
+  <property>
     <description>How often to check that containers are still alive. </description>
     <name>yarn.resourcemanager.container.liveness-monitor.interval-ms</name>
     <value>600000</value>

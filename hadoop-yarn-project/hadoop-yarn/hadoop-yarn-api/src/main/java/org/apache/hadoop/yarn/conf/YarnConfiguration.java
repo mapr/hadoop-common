@@ -303,6 +303,22 @@ public class YarnConfiguration extends Configuration {
   public static final String RM_AM_MAX_ATTEMPTS =
     RM_PREFIX + "am.max-attempts";
   public static final int DEFAULT_RM_AM_MAX_ATTEMPTS = 2;
+
+  /**
+   * Max retries that will be done to get client token master key.
+   * Value should be more than 0.
+   */
+  public static final String RM_AM_MASTER_KEY_MAX_RETRIES =
+          RM_PREFIX + "am.client-token-master-key.max-retries";
+  public static final int DEFAULT_RM_AM_MASTER_KEY_MAX_RETRIES = 10;
+
+  /**
+   * How often try to get AM's client token master key.
+   * Value is in milliseconds
+   */
+  public static final String RM_AM_MASTER_KEY_RETRY_INTERVAL_MS =
+          RM_PREFIX + "am.client-token-master-key.retry-interval-ms";
+  public static final int DEFAULT_RM_AM_MASTER_KEY_RETRY_INTERVAL_MS = 1000;
   
   /** The keytab for the resource manager.*/
   public static final String RM_KEYTAB = 
