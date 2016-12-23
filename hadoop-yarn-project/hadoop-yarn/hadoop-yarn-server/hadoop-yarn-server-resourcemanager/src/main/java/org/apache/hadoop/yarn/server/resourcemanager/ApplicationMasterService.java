@@ -258,8 +258,6 @@ public class ApplicationMasterService extends AbstractService implements
           applicationAttemptId);
       throwApplicationDoesNotExistInCacheException(applicationAttemptId);
     }
-
-    SecretKey masterKey = waitAndGetMasterKey(applicationAttemptId);
     
     // Allow only one thread in AM to do registerApp at a time.
     synchronized (lock) {
@@ -275,6 +273,11 @@ public class ApplicationMasterService extends AbstractService implements
           AuditConstants.REGISTER_AM, "", "ApplicationMasterService", message,
           appID, applicationAttemptId);
         throw new InvalidApplicationMasterRequestException(message);
+      }
+      
+      SecretKey masterKey = null;
+      if (UserGroupInformation.isSecurityEnabled()) {
+        masterKey = waitAndGetMasterKey(applicationAttemptId);
       }
       
       this.amLivelinessMonitor.receivedPing(applicationAttemptId);
