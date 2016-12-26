@@ -99,6 +99,8 @@ import org.apache.hadoop.yarn.server.utils.BuilderUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import javax.crypto.SecretKey;
+
 @SuppressWarnings("unchecked")
 @Private
 public class ApplicationMasterService extends AbstractService implements
@@ -256,7 +258,7 @@ public class ApplicationMasterService extends AbstractService implements
           applicationAttemptId);
       throwApplicationDoesNotExistInCacheException(applicationAttemptId);
     }
-
+    
     // Allow only one thread in AM to do registerApp at a time.
     synchronized (lock) {
       AllocateResponse lastResponse = lock.getAllocateResponse();
@@ -271,6 +273,11 @@ public class ApplicationMasterService extends AbstractService implements
           AuditConstants.REGISTER_AM, "", "ApplicationMasterService", message,
           appID, applicationAttemptId);
         throw new InvalidApplicationMasterRequestException(message);
+      }
+      
+      SecretKey masterKey = null;
+      if (UserGroupInformation.isSecurityEnabled()) {
+        masterKey = waitAndGetMasterKey(applicationAttemptId);
       }
       
       this.amLivelinessMonitor.receivedPing(applicationAttemptId);
@@ -300,9 +307,8 @@ public class ApplicationMasterService extends AbstractService implements
       response.setQueue(app.getQueue());
       if (UserGroupInformation.isSecurityEnabled()) {
         LOG.info("Setting client token master key");
-        response.setClientToAMTokenMasterKey(java.nio.ByteBuffer.wrap(rmContext
-            .getClientToAMTokenSecretManager()
-            .getMasterKey(applicationAttemptId).getEncoded()));        
+        response.setClientToAMTokenMasterKey(java.nio.ByteBuffer.wrap(
+                masterKey.getEncoded()));        
       }
 
       // For work-preserving AM restart, retrieve previous attempts' containers
@@ -340,6 +346,43 @@ public class ApplicationMasterService extends AbstractService implements
 
       return response;
     }
+  }
+  
+  /**
+   * MasterKey can be null in case RMAppAttemptImpl haven't yet 
+   * been processed the LAUNCH event.
+   * We need to wait the masterKey to be set.
+   * Method tries to get MasterKey up to RM_AM_MASTER_KEY_MAX_RETRIES
+   * times with RM_AM_MASTER_KEY_RETRY_INTERVAL_MS seconds interval*/
+  private SecretKey waitAndGetMasterKey(ApplicationAttemptId applicationAttemptId) {
+    Configuration conf = getConfig();
+
+    SecretKey masterKey = null;
+    int maxRetry = conf.getInt(
+            YarnConfiguration.RM_AM_MASTER_KEY_MAX_RETRIES,
+            YarnConfiguration.DEFAULT_RM_AM_MASTER_KEY_MAX_RETRIES);
+    int waitInterval = conf.getInt(
+            YarnConfiguration.RM_AM_MASTER_KEY_RETRY_INTERVAL_MS,
+            YarnConfiguration.DEFAULT_RM_AM_MASTER_KEY_RETRY_INTERVAL_MS);
+    
+    for (int i = 0; i < maxRetry; i++) {
+      masterKey = rmContext
+              .getClientToAMTokenSecretManager()
+              .getMasterKey(applicationAttemptId);
+      if (masterKey != null) {
+        return masterKey;
+      }
+      
+      LOG.warn("Master key is null for attempt " + applicationAttemptId 
+              + " after " + (i + 1) + " try from " + maxRetry);
+      try {
+        Thread.sleep(waitInterval);
+      } catch (InterruptedException e) {
+        LOG.warn("Thread for getting MasterKey was interrupted " +
+                "for attempt " + applicationAttemptId);
+      }
+    }
+    return masterKey;
   }
 
   @Override
