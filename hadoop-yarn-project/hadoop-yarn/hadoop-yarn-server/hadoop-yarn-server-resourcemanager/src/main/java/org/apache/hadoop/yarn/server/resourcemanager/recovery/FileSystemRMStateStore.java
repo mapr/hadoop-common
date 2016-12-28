@@ -577,9 +577,7 @@ public class FileSystemRMStateStore extends RMStateStore {
   // FileSystem related code
   private void checkAndRemovePathWithRetries(final Path deletePath) 
 		  	throws Exception {
-	  if (existsWithRetries(deletePath)) {
-		  deleteFileWithRetries(deletePath);
-	  } else {
+	  if (!existsWithRetries(deletePath) || !deleteFileWithRetries(deletePath)) {
 		  LOG.info("File doesn't exist. Skip deleting the file " + deletePath);
 	  }
   }
@@ -615,12 +613,11 @@ public class FileSystemRMStateStore extends RMStateStore {
     }.runWithRetries();
   }
 
-  private void deleteFileWithRetries(final Path deletePath) throws Exception {
-    new FSAction<Void>() {
+  private boolean deleteFileWithRetries(final Path deletePath) throws Exception {
+    return new FSAction<Boolean>() {
       @Override
-      public Void run() throws Exception {
-        deleteFile(deletePath);
-        return null;
+      public Boolean run() throws Exception {
+        return deleteFile(deletePath);
       }
     }.runWithRetries();
   }
@@ -724,10 +721,8 @@ public class FileSystemRMStateStore extends RMStateStore {
     }
   }
 
-  private void deleteFile(Path deletePath) throws Exception {
-    if(!fs.delete(deletePath, true)) {
-      throw new Exception("Failed to delete " + deletePath);
-    }
+  private Boolean deleteFile(Path deletePath) throws Exception {
+    return fs.delete(deletePath, true);
   }
 
   private byte[] readFile(Path inputPath, long len) throws Exception {
