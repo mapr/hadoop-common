@@ -25,6 +25,7 @@ import org.apache.hadoop.fs.RawLocalFileSystem;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.JobStatus;
+import org.junit.After;
 import org.junit.Test;
 
 import java.io.File;
@@ -37,8 +38,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class TestMRCJCFileOutputCommitter {
-  private static Path outDir = new Path(
-     System.getProperty("test.build.data", "/tmp"), "output");
+  private static String localPathRoot = System.getProperty("test.build.data",
+      "build/test/data");
+  private static Path outDir = new Path(localPathRoot, "output");
 
   // A random task attempt id for testing.
   private static String attempt = "attempt_200707121733_0001_m_000000_0";
@@ -112,12 +114,11 @@ public class TestMRCJCFileOutputCommitter {
     expectedOutput.append(key2).append('\t').append(val2).append("\n");
     String output = UtilsForTests.slurp(expectedFile);
     assertEquals(output, expectedOutput.toString());
-
-    FileUtil.fullyDelete(new File(outDir.toString()));
   }
 
   @Test
   public void testAbort() throws IOException {
+    FileUtil.fullyDelete(new File(outDir.toString()));
     JobConf job = new JobConf();
     setConfForFileOutputCommitter(job);
     JobContext jContext = new JobContextImpl(job, taskID.getJobID());
@@ -152,7 +153,6 @@ public class TestMRCJCFileOutputCommitter {
     assertFalse("job temp dir "+expectedFile+" still exists", expectedFile.exists());
     assertEquals("Output directory not empty", 0, new File(outDir.toString())
         .listFiles().length);
-    FileUtil.fullyDelete(new File(outDir.toString()));
   }
 
   public static class FakeFileSystem extends RawLocalFileSystem {
@@ -222,5 +222,10 @@ public class TestMRCJCFileOutputCommitter {
     assertTrue(th instanceof IOException);
     assertTrue(th.getMessage().contains("fake delete failed"));
     assertTrue("job temp dir does not exists", jobTmpDir.exists());
+  }
+
+  @After
+  public void teardown() {
+    FileUtil.fullyDelete(new File(outDir.toString()));
   }
 }
