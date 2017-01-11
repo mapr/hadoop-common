@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
@@ -134,6 +135,8 @@ public class RMAppImpl implements RMApp, Recoverable {
   private long startTime;
   private long finishTime = 0;
   private long storedFinishTime = 0;
+  private int firstAttemptIdInStateStore = 1;
+  private int nextAttemptId = 1;
   // This field isn't protected by readlock now.
   private volatile RMAppAttempt currentAttempt;
   private String queue;
@@ -731,17 +734,38 @@ public class RMAppImpl implements RMApp, Recoverable {
     this.diagnostics.append(appState.getDiagnostics());
     this.storedFinishTime = appState.getFinishTime();
     this.startTime = appState.getStartTime();
+    // If interval > 0, some attempts might have been deleted.
+    if (submissionContext.getAttemptFailuresValidityInterval() > 0) {
+      this.firstAttemptIdInStateStore = appState.getFirstAttemptId();
+      this.nextAttemptId = firstAttemptIdInStateStore;
+    }
 
-    for(int i=0; i<appState.getAttemptCount(); ++i) {
+    RMAppAttemptImpl preAttempt = null;
+    for (ApplicationAttemptId attemptId :
+        new TreeSet<>(appState.attempts.keySet())) {
       // create attempt
-      createNewAttempt();
+      createNewAttempt(attemptId);
       ((RMAppAttemptImpl)this.currentAttempt).recover(state);
+      // If previous attempt is not in final state, it means we failed to store
+      // its final state. We set it to FAILED now because we could not make sure
+      // about its final state.
+      if (preAttempt != null && preAttempt.getRecoveredFinalState() == null) {
+        preAttempt.setRecoveredFinalState(RMAppAttemptState.FAILED);
+      }
+      preAttempt = (RMAppAttemptImpl)currentAttempt;
+    }
+    if (currentAttempt != null) {
+      nextAttemptId = currentAttempt.getAppAttemptId().getAttemptId() + 1;
     }
   }
 
   private void createNewAttempt() {
     ApplicationAttemptId appAttemptId =
-        ApplicationAttemptId.newInstance(applicationId, attempts.size() + 1);
+        ApplicationAttemptId.newInstance(applicationId, nextAttemptId++);
+    createNewAttempt(appAttemptId);
+  }
+
+  private void createNewAttempt(ApplicationAttemptId appAttemptId) {
     RMAppAttempt attempt =
         new RMAppAttemptImpl(appAttemptId, rmContext, scheduler, masterService,
           submissionContext, conf,
@@ -1208,6 +1232,9 @@ public class RMAppImpl implements RMApp, Recoverable {
               + app.attemptFailuresValidityInterval + " milliseconds " : " ")
           + "is " + numberOfFailure + ". The max attempts is "
           + app.maxAppAttempts);
+
+      removeExcessAttempts(app);
+
       if (!app.submissionContext.getUnmanagedAM()
           && numberOfFailure < app.maxAppAttempts) {
         if (initialState.equals(RMAppState.KILLING)) {
@@ -1242,6 +1269,19 @@ public class RMAppImpl implements RMApp, Recoverable {
           new AttemptFailedFinalStateSavedTransition(), RMAppState.FAILED,
           RMAppState.FAILED);
         return RMAppState.FINAL_SAVING;
+      }
+    }
+
+    private void removeExcessAttempts(RMAppImpl app) {
+      while (app.nextAttemptId - app.firstAttemptIdInStateStore
+          > app.maxAppAttempts) {
+        // attempts' first element is oldest attempt because it is a
+        // LinkedHashMap
+        ApplicationAttemptId attemptId = ApplicationAttemptId.newInstance(
+            app.getApplicationId(), app.firstAttemptIdInStateStore);
+        app.firstAttemptIdInStateStore++;
+        LOG.info("Remove attempt from state store : " + attemptId);
+        app.rmContext.getStateStore().removeApplicationAttempt(attemptId);
       }
     }
   }
@@ -1351,5 +1391,11 @@ public class RMAppImpl implements RMApp, Recoverable {
       tokens.rewind();
     }
     return credentials;
+  }
+
+  @Private
+  @VisibleForTesting
+  public int getNextAttemptId() {
+    return nextAttemptId;
   }
 }
