@@ -282,7 +282,7 @@ public class SecureIOUtils {
       }
     }
     if (!success) {
-      throw new IOException(
+      throw new PermissionNotMatchException(
           "Owner '" + owner + "' for path " + f + " did not match " +
               "expected owner '" + expectedOwner + "'");
     }

@@ -28,6 +28,7 @@ import java.util.Map;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SecureIOUtils;
+import org.apache.hadoop.io.PermissionNotMatchException;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.records.ApplicationAccessType;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -197,20 +198,16 @@ public class ContainerLogsUtils {
     try {
       File file = new File(logFile.toString());
       return SecureIOUtils.openForRead(file, remoteUser, null);
-    } catch (IOException e) {
-      if (e.getMessage().contains(
-        "did not match expected owner '" + remoteUser
-            + "'")) {
-        LOG.error(
-            "Exception reading log file " + logFile, e);
-        throw new IOException("Exception reading log file. User '"
+    } catch (PermissionNotMatchException ex) {
+      LOG.error(
+            "Exception reading log file " + logFile, ex);
+      throw new IOException("Exception reading log file. User '"
             + remoteUser
             + "' doesn't own requested log file : "
-            + logFile.toString(), e);
-      } else {
+            + logFile.toString(), ex);
+    } catch (IOException e) {
         throw new IOException("Exception reading log file. It might be because log "
             + "file was aggregated : " + logFile.toString(), e);
-      }
     }
   }
 
