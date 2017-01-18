@@ -277,14 +277,17 @@ public class SecureIOUtils {
         final String adminsGroupString = "Administrators";
         success = owner.equals(adminsGroupString)
             && Arrays.asList(ugi.getGroupNames()).contains(adminsGroupString);
-      } else {
+      } else if (expectedGroup != null &&
+              !expectedGroup.equals(group)) {
         success = false;
       }
     }
     if (!success) {
       throw new PermissionNotMatchException(
-          "Owner '" + owner + "' for path " + f + " did not match " +
-              "expected owner '" + expectedOwner + "'");
+          "Owner '" + owner + "' with group '" + group + 
+              "' for path " + f + " did not match either " + 
+              "expected owner '" + expectedOwner + "' nor " + 
+              "expected group '" + expectedGroup + "'");
     }
   }
 
