@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SecureIOUtils;
+import org.apache.hadoop.io.PermissionNotMatchException;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.records.ApplicationAccessType;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -67,10 +68,10 @@ public class ContainerLogsUtils {
     if (container != null) {
       checkState(container.getContainerState());
     }
-    
+
     return getContainerLogDirs(containerId, context.getLocalDirsHandler());
   }
-  
+
   static List<File> getContainerLogDirs(ContainerId containerId,
       LocalDirsHandlerService dirsHandler) throws YarnException {
     List<String> logDirs = dirsHandler.getLogDirsForRead();
@@ -91,13 +92,13 @@ public class ContainerLogsUtils {
   public static File getContainerLogFile(ContainerId containerId,
       String fileName, String remoteUser, Context context) throws YarnException {
     Container container = context.getContainers().get(containerId);
-    
+
     Application application = getApplicationForContainer(containerId, context);
     checkAccess(remoteUser, application, context);
     if (container != null) {
       checkState(container.getContainerState());
     }
-    
+
     try {
       LocalDirsHandlerService dirsHandler = context.getLocalDirsHandler();
       String relativeContainerLogDir = ContainerLaunch.getRelativeContainerLogDir(
@@ -164,23 +165,19 @@ public class ContainerLogsUtils {
         .getApplicationId();
     String user = context.getApplications().get(
         applicationId).getUser();
-    
+
     try {
       return SecureIOUtils.openForRead(logFile, user, null);
-    } catch (IOException e) {
-      if (e.getMessage().contains(
-        "did not match expected owner '" + user
-            + "'")) {
-        LOG.error(
-            "Exception reading log file " + logFile.getAbsolutePath(), e);
-        throw new IOException("Exception reading log file. Application submitted by '"
+    } catch (PermissionNotMatchException ex) {
+      LOG.error(
+              "Exception reading log file " + logFile, ex);
+      throw new IOException("Exception reading log file. User '"
             + user
             + "' doesn't own requested log file : "
-            + logFile.getName(), e);
-      } else {
+              + logFile.toString(), ex);
+    } catch (IOException e) {
         throw new IOException("Exception reading log file. It might be because log "
             + "file was aggregated : " + logFile.getName(), e);
-      }
     }
   }
 }
