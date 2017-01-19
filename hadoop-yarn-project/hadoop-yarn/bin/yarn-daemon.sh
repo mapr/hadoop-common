@@ -30,9 +30,9 @@
 
 function waitForPid() {
   # allow process time to write pid to the file
-  rtry=10
   if [ -f $pid ]; then
     cnt=0
+    rtry=5
     while [ ! -s $pid -a $cnt -lt $rtry ]; do
         sleep 1
       cnt=`expr $cnt + 1`
