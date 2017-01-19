@@ -28,6 +28,23 @@
 #   YARN_NICENESS The scheduling priority for daemons. Defaults to 0.
 ##
 
+function waitForPid() {
+  # allow process time to write pid to the file
+  rtry=10
+  if [ -f $pid ]; then
+    cnt=0
+    while [ $cnt -lt $rtry ]; do
+      if [ ! -s $pid ]; then
+        sleep 1
+      else
+        break
+      fi
+      cnt=`expr $cnt + 1`
+    done
+  fi
+}
+
+
 usage="Usage: yarn-daemon.sh [--config <conf-dir>] [--hosts hostlistfile] (start|stop|status) <yarn-command> "
 
 # if no args specified, show usage
@@ -107,6 +124,7 @@ case $startStop in
     [ -w "$YARN_PID_DIR" ] || mkdir -p "$YARN_PID_DIR"
 
     if [ -f $pid ]; then
+      waitForPid
       if kill -0 `cat $pid` > /dev/null 2>&1; then
         echo $command running as process `cat $pid`.  Stop it first.
         exit 1
@@ -133,6 +151,7 @@ case $startStop in
   (stop)
 
     if [ -f $pid ]; then
+      waitForPid
       TARGET_PID=`cat $pid`
       if kill -0 $TARGET_PID > /dev/null 2>&1; then
         echo stopping $command
@@ -153,6 +172,7 @@ case $startStop in
 
   (status)
     if [ -f $pid ]; then
+      waitForPid
       TARGET_PID=`cat $pid`
       if kill -0 $TARGET_PID > /dev/null 2>&1; then
         echo $command is running.
