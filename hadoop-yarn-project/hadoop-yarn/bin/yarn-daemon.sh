@@ -33,15 +33,13 @@ function waitForPid() {
   rtry=10
   if [ -f $pid ]; then
     cnt=0
-    while [ $cnt -lt $rtry ]; do
-      if [ ! -s $pid ]; then
+    while [ ! -s $pid -a $cnt -lt $rtry ]; do
         sleep 1
-      else
-        break
-      fi
       cnt=`expr $cnt + 1`
     done
+    [ -s $pid ] && return 0
   fi
+  return 1
 }
 
 
@@ -123,8 +121,7 @@ case $startStop in
 
     [ -w "$YARN_PID_DIR" ] || mkdir -p "$YARN_PID_DIR"
 
-    if [ -f $pid ]; then
-      waitForPid
+    if waitForPid ; then
       if kill -0 `cat $pid` > /dev/null 2>&1; then
         echo $command running as process `cat $pid`.  Stop it first.
         exit 1
@@ -150,8 +147,7 @@ case $startStop in
           
   (stop)
 
-    if [ -f $pid ]; then
-      waitForPid
+    if waitForPid ; then
       TARGET_PID=`cat $pid`
       if kill -0 $TARGET_PID > /dev/null 2>&1; then
         echo stopping $command
@@ -171,8 +167,7 @@ case $startStop in
     ;;
 
   (status)
-    if [ -f $pid ]; then
-      waitForPid
+    if waitForPid ; then
       TARGET_PID=`cat $pid`
       if kill -0 $TARGET_PID > /dev/null 2>&1; then
         echo $command is running.
