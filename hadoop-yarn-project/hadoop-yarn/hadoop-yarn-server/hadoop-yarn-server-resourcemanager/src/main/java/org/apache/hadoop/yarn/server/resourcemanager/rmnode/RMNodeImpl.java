@@ -852,8 +852,12 @@ public class RMNodeImpl implements RMNode, EventHandler<RMNodeEvent> {
 
   @Override
   public Set<String> getNodeLabels() {
-    LabelManager labelManager = LabelManager.getInstance();
-    return labelManager.getLabelsForNode(node.getName());
+    Set<String> labelsForNode = LabelManager
+            .getInstance()
+            .getLabelsForNode(node.getName());
+    
+    return labelsForNode == null ? 
+            CommonNodeLabelsManager.EMPTY_STRING_SET : labelsForNode;
   }
 
   private void handleContainerStatus(List<ContainerStatus> containerStatuses) {
