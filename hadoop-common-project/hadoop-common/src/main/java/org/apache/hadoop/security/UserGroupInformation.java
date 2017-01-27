@@ -184,7 +184,7 @@ public class UserGroupInformation {
   // mapr_extensibility
   public static final String USER_TICKET_FILE_LOCATION = "MAPR_TICKETFILE_LOCATION";
 
-  private static final String JAVA_SECURITY_AUTH_LOGIN_CONFIG = "java.security.auth.login.config";
+  public static final String JAVA_SECURITY_AUTH_LOGIN_CONFIG = "java.security.auth.login.config";
 
   /** 
    * A method to initialize the fields that depend on a configuration.

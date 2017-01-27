@@ -77,6 +77,8 @@ import org.apache.hadoop.yarn.webapp.util.WebAppUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import static org.apache.hadoop.security.UserGroupInformation.JAVA_SECURITY_AUTH_LOGIN_CONFIG;
+
 /**
  * Embedded Yarn minicluster for testcases that need to interact with a cluster.
  * <p/>
@@ -229,6 +231,7 @@ public class MiniYARNCluster extends CompositeService {
     }
 
     conf.setBoolean(YarnConfiguration.IS_MINI_YARN_CLUSTER, true);
+    conf.set(JAVA_SECURITY_AUTH_LOGIN_CONFIG, System.getProperty(JAVA_SECURITY_AUTH_LOGIN_CONFIG));
     if (resourceManagers.length > 1) {
       conf.setBoolean(YarnConfiguration.RM_HA_ENABLED, true);
       if (conf.get(YarnConfiguration.RM_HA_IDS) == null) {
