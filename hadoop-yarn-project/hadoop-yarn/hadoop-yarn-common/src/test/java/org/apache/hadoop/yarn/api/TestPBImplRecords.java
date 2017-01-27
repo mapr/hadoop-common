@@ -212,6 +212,7 @@ public class TestPBImplRecords {
     generateByNewInstance(StrictPreemptionContract.class);
     generateByNewInstance(PreemptionMessage.class);
     generateByNewInstance(StartContainerRequest.class);
+    generateByNewInstance(NodeToLabelsList.class);
     // genByNewInstance does not apply to QueueInfo, cause
     // it is recursive(has sub queues)
     typeValueCache.put(QueueInfo.class, QueueInfo.newInstance("root", 1.0f,
