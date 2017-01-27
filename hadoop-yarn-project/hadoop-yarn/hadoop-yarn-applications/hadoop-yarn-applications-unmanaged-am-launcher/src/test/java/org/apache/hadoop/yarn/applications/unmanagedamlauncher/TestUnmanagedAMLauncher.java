@@ -71,8 +71,6 @@ public class TestUnmanagedAMLauncher {
       LOG.info("MiniYARN ResourceManager published web address: " +
                yarnClusterConfig.get(YarnConfiguration.RM_WEBAPP_ADDRESS));
       String webapp = yarnClusterConfig.get(YarnConfiguration.RM_WEBAPP_ADDRESS);
-      assertTrue("Web app address still unbound to a host at " + webapp,
-        !webapp.startsWith("0.0.0.0"));
       LOG.info("Yarn webapp is at "+ webapp);
       URL url = Thread.currentThread().getContextClassLoader()
           .getResource("yarn-site.xml");
