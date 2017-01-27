@@ -106,6 +106,8 @@ import org.slf4j.LoggerFactory;
 import static org.apache.hadoop.yarn.server.resourcemanager.resource.TestResourceProfiles.TEST_CONF_RESET_RESOURCE_TYPES;
 import static org.apache.hadoop.security.UserGroupInformation.JAVA_SECURITY_AUTH_LOGIN_CONFIG;
 
+import static org.apache.hadoop.security.UserGroupInformation.JAVA_SECURITY_AUTH_LOGIN_CONFIG;
+
 /**
  * <p>
  * Embedded YARN minicluster for testcases that need to interact with a cluster.
