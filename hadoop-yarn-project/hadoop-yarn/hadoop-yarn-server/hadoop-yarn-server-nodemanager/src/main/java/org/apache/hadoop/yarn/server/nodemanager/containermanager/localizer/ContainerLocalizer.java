@@ -24,11 +24,14 @@ import java.net.InetSocketAddress;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletionService;
@@ -54,6 +57,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.TokenIdentifier;
 import org.apache.hadoop.util.DiskChecker;
+import org.apache.hadoop.util.Shell;
 import org.apache.hadoop.yarn.YarnUncaughtExceptionHandler;
 import org.apache.hadoop.yarn.api.records.LocalResource;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
@@ -74,6 +78,8 @@ import org.apache.hadoop.yarn.util.FSDownload;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+
+import static org.apache.hadoop.util.Shell.getAllShells;
 
 public class ContainerLocalizer {
 
@@ -101,6 +107,9 @@ public class ContainerLocalizer {
   private final RecordFactory recordFactory;
   private final Map<LocalResource,Future<Path>> pendingResources;
   private final String appCacheDirContextName;
+
+  private Set<Thread> localizingThreads =
+      Collections.synchronizedSet(new HashSet<Thread>());
 
   public ContainerLocalizer(FileContext lfs, String user, String appId,
       String localizerId, List<Path> localDirs,
@@ -175,13 +184,14 @@ public class ContainerLocalizer {
       exec = createDownloadThreadPool();
       CompletionService<Path> ecs = createCompletionService(exec);
       localizeFiles(nodeManager, ecs, ugi);
-      return;
     } catch (Throwable e) {
       throw new IOException(e);
     } finally {
       try {
         if (exec != null) {
-          exec.shutdownNow();
+          exec.shutdown();
+          destroyShellProcesses(getAllShells());
+          exec.awaitTermination(10, TimeUnit.SECONDS);
         }
         LocalDirAllocator.removeContext(appCacheDirContextName);
       } finally {
@@ -199,6 +209,30 @@ public class ContainerLocalizer {
     return new ExecutorCompletionService<Path>(exec);
   }
 
+  class FSDownloadWrapper extends FSDownload {
+
+    FSDownloadWrapper(FileContext files, UserGroupInformation ugi,
+        Configuration conf, Path destDirPath, LocalResource resource) {
+      super(files, ugi, conf, destDirPath, resource);
+    }
+
+    @Override
+    public Path call() throws Exception {
+      Thread currentThread = Thread.currentThread();
+      localizingThreads.add(currentThread);
+      try {
+        return doDownloadCall();
+      } finally {
+        localizingThreads.remove(currentThread);
+      }
+    }
+
+    Path doDownloadCall() throws Exception {
+      return super.call();
+    }
+
+  }
+
   Callable<Path> download(Path destDirPath, LocalResource rsrc,
       UserGroupInformation ugi) throws IOException {
     // For private localization FsDownload creates folder in destDirPath. Parent
@@ -207,7 +241,7 @@ public class ContainerLocalizer {
       createParentDirs(destDirPath);
     }
     DiskChecker.checkDir(new File(destDirPath.toUri().getRawPath()));
-    return new FSDownload(lfs, ugi, conf, destDirPath, rsrc);
+    return new FSDownloadWrapper(lfs, ugi, conf, destDirPath, rsrc);
   }
 
   private void createParentDirs(Path destDirPath) throws IOException {
@@ -369,6 +403,7 @@ public class ContainerLocalizer {
 
   public static void main(String[] argv) throws Throwable {
     Thread.setDefaultUncaughtExceptionHandler(new YarnUncaughtExceptionHandler());
+    int nRet = 0;
     // usage: $0 user appId locId host port app_log_dir user_dir [user_dir]*
     // let $x = $x/usercache for $local.dir
     // MKDIR $x/$user/appcache/$appid
@@ -405,7 +440,9 @@ public class ContainerLocalizer {
       // space in both DefaultCE and LCE cases
       e.printStackTrace(System.out);
       LOG.error("Exception in main:", e);
-      System.exit(-1);
+      nRet = -1;
+    } finally {
+      System.exit(nRet);
     }
   }
 
@@ -440,6 +477,14 @@ public class ContainerLocalizer {
     lfs.mkdir(dirPath, perms, false);
     if (!perms.equals(perms.applyUMask(lfs.getUMask()))) {
       lfs.setPermission(dirPath, perms);
+    }
+  }
+
+  private void destroyShellProcesses(Set<Shell> shells) {
+    for (Shell shell : shells) {
+      if(localizingThreads.contains(shell.getWaitingThread())) {
+        shell.getProcess().destroy();
+      }
     }
   }
 }
