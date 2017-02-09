@@ -1266,7 +1266,7 @@
   <property>
     <description>The address of the container manager in the NM.</description>
     <name>yarn.nodemanager.address</name>
-    <value>${yarn.nodemanager.hostname}:0</value>
+    <value>${yarn.nodemanager.hostname}:8099</value>
   </property>
 
   <property>
@@ -2624,7 +2624,7 @@
   <property>
     <description>Enable the node manager to recover after starting</description>
     <name>yarn.nodemanager.recovery.enabled</name>
-    <value>false</value>
+    <value>true</value>
   </property>
 
   <property>
