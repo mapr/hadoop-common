@@ -653,7 +653,7 @@ public class YarnConfiguration extends Configuration {
   
   /** address of node manager IPC.*/
   public static final String NM_ADDRESS = NM_PREFIX + "address";
-  public static final int DEFAULT_NM_PORT = 0;
+  public static final int DEFAULT_NM_PORT = 45454;
   public static final String DEFAULT_NM_ADDRESS = "0.0.0.0:"
       + DEFAULT_NM_PORT;
   
@@ -1162,7 +1162,7 @@ public class YarnConfiguration extends Configuration {
   public static final String NM_RECOVERY_PREFIX = NM_PREFIX + "recovery.";
   public static final String NM_RECOVERY_ENABLED =
       NM_RECOVERY_PREFIX + "enabled";
-  public static final boolean DEFAULT_NM_RECOVERY_ENABLED = false;
+  public static final boolean DEFAULT_NM_RECOVERY_ENABLED = true;
 
   public static final String NM_RECOVERY_DIR = NM_RECOVERY_PREFIX + "dir";
 
