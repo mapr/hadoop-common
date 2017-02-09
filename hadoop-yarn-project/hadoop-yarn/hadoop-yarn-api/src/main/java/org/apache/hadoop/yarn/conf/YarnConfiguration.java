@@ -653,7 +653,7 @@ public class YarnConfiguration extends Configuration {
   
   /** address of node manager IPC.*/
   public static final String NM_ADDRESS = NM_PREFIX + "address";
-  public static final int DEFAULT_NM_PORT = 45454;
+  public static final int DEFAULT_NM_PORT = 8099;
   public static final String DEFAULT_NM_ADDRESS = "0.0.0.0:"
       + DEFAULT_NM_PORT;
   

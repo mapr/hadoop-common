@@ -697,7 +697,7 @@
   <property>
     <description>The address of the container manager in the NM.</description>
     <name>yarn.nodemanager.address</name>
-    <value>${yarn.nodemanager.hostname}:45454</value>
+    <value>${yarn.nodemanager.hostname}:8099</value>
   </property>
 
   <property>
