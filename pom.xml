@@ -512,7 +512,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xs
     <profile>
      <id>maprfs</id>
      <activation>
-      <activeByDefault>true</activeByDefault>
+      <activeByDefault>false</activeByDefault>
      </activation>
      <dependencies>
     <!-- MapR dependencies defined at top level to avoid adding them in multiple pom files -->
