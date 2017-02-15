@@ -78,7 +78,9 @@ public class TestAggregatedLogDeletionService {
 
   private Configuration setupConfiguration(int retainSeconds, int retainCheckIntervalSeconds) {
     Configuration conf = new Configuration();
+    String root = "mockfs://foo/";
     conf.setClass("fs.mockfs.impl", MockFileSystem.class, FileSystem.class);
+    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, root);
     conf.setBoolean(YarnConfiguration.LOG_AGGREGATION_ENABLED, true);
     conf.setInt(YarnConfiguration.LOG_AGGREGATION_RETAIN_SECONDS, retainSeconds);
     conf.setInt(YarnConfiguration.LOG_AGGREGATION_RETAIN_CHECK_INTERVAL_SECONDS,
