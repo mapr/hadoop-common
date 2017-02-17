@@ -1844,6 +1844,11 @@ public class YarnConfiguration extends Configuration {
   public static final String YARN_NODEMANAGER_EXT_TOKEN_LOCALIZER = NM_PREFIX
     + "external.token.localizer";
 
+  public static final String APP_ATTEMPT_DIAGNOSTICS_LIMIT_KC =
+      YARN_PREFIX + "app.attempt.diagnostics.limit.kc";
+
+  public static final int DEFAULT_APP_ATTEMPT_DIAGNOSTICS_LIMIT_KC = 64;
+
   /**
    * Class to instantiate and use for managing external tokens.
    */
