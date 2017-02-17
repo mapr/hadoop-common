@@ -119,4 +119,14 @@ public class RackResolver {
   static DNSToSwitchMapping getDnsToSwitchMapping(){
     return dnsToSwitchMapping;
   }
+
+  /**
+   * Only used by tests
+   */
+  @Private
+  @VisibleForTesting
+  static void reset(){
+    initCalled = false;
+    dnsToSwitchMapping = null;
+  }
 }
