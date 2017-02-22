@@ -54,6 +54,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 import org.apache.hadoop.security.GroupMappingServiceProvider;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.MockApps;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -149,8 +150,53 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     QueueMetrics.clearQueueMetrics();
     DefaultMetricsSystem.shutdown();
   }
+  
+  @Test(timeout = 30000)
+  public void testParallelChildQueuesAccess() throws Throwable {
+    final UserGroupInformation user = UserGroupInformation.getLoginUser();
+    scheduler.init(conf);
+    final List<Throwable> exceptionsFromThreads = new ArrayList<>();
+    
+    Thread.UncaughtExceptionHandler uncaughtExceptionHandler = new Thread.UncaughtExceptionHandler() {
+      public void uncaughtException(Thread th, Throwable ex) {
+        exceptionsFromThreads.add(ex);
+      }
+    };
+    
+    Thread readThread = new Thread(new Runnable() {
+      @Override
+      public void run() {
+        for(int i = 0; i < 1000_000; i++) {
+          scheduler.getQueueManager().getRootQueue().getQueueUserAclInfo(user);
+        }
+      }
+    });
+    readThread.setUncaughtExceptionHandler(uncaughtExceptionHandler);
 
-
+    final FSLeafQueue childQueue = new FSLeafQueue("test", scheduler, null);
+    final FSParentQueue rootQueue = scheduler.getQueueManager().getRootQueue();
+    Thread modifyThread = new Thread(new Runnable() {
+      @Override
+      public void run() {
+        for (int i = 0; i < 1000_000; i++) {
+          rootQueue.addChildQueue(childQueue);
+          rootQueue.removeChildQueue(childQueue);
+        }
+      }
+    });
+    modifyThread.setUncaughtExceptionHandler(uncaughtExceptionHandler);
+    
+    readThread.start();
+    modifyThread.start();
+    
+    readThread.join();
+    modifyThread.join();
+    
+    if (!exceptionsFromThreads.isEmpty()) {
+      throw exceptionsFromThreads.get(0);
+    }
+  }
+  
   @Test (timeout = 30000)
   public void testConfValidation() throws Exception {
     scheduler = new FairScheduler();

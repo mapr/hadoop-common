@@ -49,6 +49,8 @@ Release 2.7.3 - UNRELEASED
     YARN-3655. FairScheduler: potential livelock due to maxAMShare limitation
     and container reservation. (Zhihai Xu via kasha)
 
+    YARN-3762. FairScheduler: CME on FSParentQueue#getQueueUserAclInfo. (kasha)
+
 Release 2.7.1 - UNRELEASED
 
   INCOMPATIBLE CHANGES
