@@ -47,6 +47,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.security.Credentials;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.Shell;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.yarn.api.ApplicationConstants;
@@ -199,6 +200,7 @@ public class ContainerLaunch implements Callable<Integer> {
       }
 
       final String user = container.getUser();
+      final String group = UserGroupInformation.createRemoteUser(user).getPrimaryGroupName();
       // /////////////////////////// Variable expansion
       // Before the container script gets written out.
       List<String> newCmds = new ArrayList<String>(command.size());
@@ -208,7 +210,7 @@ public class ContainerLaunch implements Callable<Integer> {
       Path containerLogDir = null;
       Map<String, String> environment = launchContext.getEnvironment();
       if (TaskLogUtil.isDfsLoggingEnabled(environment)) {
-        containerLogDir = createLogDir(appIdStr, relativeContainerLogDir, user);
+        containerLogDir = createLogDir(appIdStr, relativeContainerLogDir, user, group);
       } else {
         containerLogDir =
             dirsHandler.getLogPathForWrite(relativeContainerLogDir, false);
@@ -861,7 +863,7 @@ public class ContainerLaunch implements Callable<Integer> {
    * @return created container log dir path
    */
   private Path createLogDir(String appIdStr, String relativeContainerLogDir,
-      String user) throws IOException {
+      String user, String group) throws IOException {
 
     FileSystem fs = FileSystem.get(conf);
     Path appLogDir = TaskLogUtil.getDFSLoggingHandler()
@@ -871,30 +873,30 @@ public class ContainerLaunch implements Callable<Integer> {
     // the app master container.
     if (!fs.exists(appLogDir)) {
       FileSystem.mkdirs(fs, appLogDir, APP_LOG_DIR_PERM);
-      fs.setOwner(appLogDir, user, null);
+      fs.setOwner(appLogDir, user, group);
     }
 
     Path containerLogDir = TaskLogUtil.getDFSLoggingHandler()
       .getLogDirForWrite(relativeContainerLogDir);
     FileSystem.mkdirs(fs, containerLogDir, APP_LOG_DIR_PERM);
-    fs.setOwner(containerLogDir, user, null);
+    fs.setOwner(containerLogDir, user, group);
 
     // Create the 3 log files
     createEmptyLogFile(new Path(containerLogDir, ApplicationConstants.STDOUT),
-        user, fs);
+        user, group, fs);
     createEmptyLogFile(new Path(containerLogDir, ApplicationConstants.STDERR),
-        user, fs);
+        user, group, fs);
     createEmptyLogFile(new Path(containerLogDir, ApplicationConstants.SYSLOG),
-        user, fs);
+        user, group, fs);
 
     return containerLogDir;
   }
 
-  private void createEmptyLogFile(Path path, String user, FileSystem fs)
+  private void createEmptyLogFile(Path path, String user, String group, FileSystem fs)
     throws IOException {
 
     fs.createNewFile(path);
-    fs.setOwner(path, user, null);
+    fs.setOwner(path, user, group);
     fs.setPermission(path, APP_LOG_PERM);
   }
 
