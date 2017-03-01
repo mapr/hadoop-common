@@ -54,6 +54,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 import org.apache.hadoop.security.GroupMappingServiceProvider;
+import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.MockApps;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
@@ -5038,5 +5039,54 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     scheduler.fsOpDurations.getMetrics(collector, true);
     assertEquals("Incorrect number of perf metrics", 1,
         collector.getRecords().size());
+  }
+
+  @Test
+  public void testContainerAllocationWithUnresolvedNodeAddress() throws Exception {
+    SecurityUtil.setTokenServiceUseIp(true);
+    final String user = "user1";
+    final String queue = "queue1";
+
+    RMNode node1 =
+            MockNodes.newNodeInfo(1, Resources.createResource(8 * 1024, 8), 1,
+                    "unresolved");
+    RMNode node2 =
+            MockNodes.newNodeInfo(1, Resources.createResource(8 * 1024, 8), 1,
+                    "127.0.0.1");
+
+    scheduler.init(conf);
+    scheduler.start();
+
+    NodeAddedSchedulerEvent nodeEvent1 = new NodeAddedSchedulerEvent(node1);
+    NodeAddedSchedulerEvent nodeEvent2 = new NodeAddedSchedulerEvent(node2);
+
+    scheduler.handle(nodeEvent1);
+    scheduler.handle(nodeEvent2);
+
+    ApplicationAttemptId attId1 =
+            createSchedulingRequest(4096, queue, user, 3);
+    scheduler.update();
+
+    FSAppAttempt app1 = scheduler.getSchedulerApp(attId1);
+
+    NodeUpdateSchedulerEvent updateEvent1 = new NodeUpdateSchedulerEvent(node1);
+    NodeUpdateSchedulerEvent updateEvent2 = new NodeUpdateSchedulerEvent(node2);
+
+    for (int i = 0; i < 3; i++) {
+      List<ResourceRequest> ask1 = new ArrayList<ResourceRequest>();
+      ResourceRequest request1 =
+              createResourceRequest(256, ResourceRequest.ANY, 1, 1, true);
+      ask1.add(request1);
+      scheduler.allocate(attId1, ask1, new ArrayList<ContainerId>(), null, null);
+      scheduler.handle(updateEvent1);
+      scheduler.handle(updateEvent2);
+    }
+
+    Collection<RMContainer> liveContainers = app1.getLiveContainers();
+
+    for (RMContainer liveContainer : liveContainers) {
+      assertTrue("Container assigned to node with unresolved host",
+              !liveContainer.getAllocatedNode().equals(node1.getNodeID()));
+    }
   }
 }

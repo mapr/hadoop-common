@@ -20,6 +20,7 @@ package org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -1072,6 +1073,14 @@ public class CapacityScheduler extends
   private synchronized void allocateContainersToNode(FiCaSchedulerNode node) {
     if (rmContext.isWorkPreservingRecoveryEnabled()
         && !rmContext.isSchedulerReadyForAllocatingContainers()) {
+      return;
+    }
+
+    if(!SchedulerUtils.isNodeAvailable(node.getNodeID())) {
+      // DNS might be down or with incorrect config, skip attempt scheduling
+      // on current node
+      LOG.error("Host is not resolved! Skip container scheduling on this node!",
+              new UnknownHostException(node.getNodeID().getHost()));
       return;
     }
 

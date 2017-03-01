@@ -19,6 +19,7 @@
 package org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair;
 
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
@@ -1128,6 +1129,14 @@ public class FairScheduler extends
   synchronized void attemptScheduling(FSSchedulerNode node) {
     if (rmContext.isWorkPreservingRecoveryEnabled()
         && !rmContext.isSchedulerReadyForAllocatingContainers()) {
+      return;
+    }
+
+    if(!SchedulerUtils.isNodeAvailable(node.getNodeID())) {
+      // DNS might be down or with incorrect config, skip attempt scheduling
+      // on current node
+      LOG.error("Host is not resolved! Skip container scheduling on this node!",
+              new UnknownHostException(node.getNodeID().getHost()));
       return;
     }
 

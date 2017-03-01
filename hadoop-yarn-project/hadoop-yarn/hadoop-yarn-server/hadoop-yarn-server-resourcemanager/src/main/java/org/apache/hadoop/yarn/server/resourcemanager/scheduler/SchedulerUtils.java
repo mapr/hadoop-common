@@ -18,12 +18,14 @@
 package org.apache.hadoop.yarn.server.resourcemanager.scheduler;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
+import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.yarn.api.records.ContainerExitStatus;
 import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.api.records.ContainerState;
@@ -32,6 +34,7 @@ import org.apache.hadoop.yarn.api.records.QueueACL;
 import org.apache.hadoop.yarn.api.records.QueueInfo;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.api.records.ResourceRequest;
+import org.apache.hadoop.yarn.api.records.NodeId;
 import org.apache.hadoop.yarn.exceptions.InvalidResourceRequestException;
 import org.apache.hadoop.yarn.factories.RecordFactory;
 import org.apache.hadoop.yarn.factory.providers.RecordFactoryProvider;
@@ -394,5 +397,20 @@ public class SchedulerUtils {
       return AccessType.SUBMIT_APP;
     }
     return null;
+  }
+
+  /**
+   * This method checks is node address resolved.
+   * When address is unresolved node is not available from RM.
+   * Address might be unresolved when DNS is unavailable or with incorrect configuration
+   *
+   * @param nodeId - node ID
+   * @return true - in case node address resolved
+   *         false - in case node address unresolved
+   */
+  public static boolean isNodeAvailable(NodeId nodeId) {
+    InetSocketAddress addr =
+            NetUtils.createSocketAddrForHost(nodeId.getHost(), nodeId.getPort());
+    return !addr.isUnresolved();
   }
 }

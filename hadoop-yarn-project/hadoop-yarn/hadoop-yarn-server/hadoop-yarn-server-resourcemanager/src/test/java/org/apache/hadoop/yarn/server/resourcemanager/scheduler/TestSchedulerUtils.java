@@ -64,6 +64,7 @@ import org.apache.hadoop.yarn.exceptions.InvalidResourceRequestException;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
 import org.apache.hadoop.yarn.nodelabels.CommonNodeLabelsManager;
 import org.apache.hadoop.yarn.server.resourcemanager.MockNM;
+import org.apache.hadoop.yarn.server.resourcemanager.MockNodes;
 import org.apache.hadoop.yarn.server.resourcemanager.TestAMAuthorization.MockRMWithAMS;
 import org.apache.hadoop.yarn.server.resourcemanager.TestAMAuthorization.MyContainerManager;
 import org.apache.hadoop.yarn.server.resourcemanager.nodelabels.RMNodeLabelsManager;
@@ -71,6 +72,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMApp;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppState;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttempt;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttemptState;
+import org.apache.hadoop.yarn.server.resourcemanager.rmnode.RMNode;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.AppAddedSchedulerEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.AppRemovedSchedulerEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEvent;
@@ -609,9 +611,26 @@ public class TestSchedulerUtils {
           ApplicationId.newInstance(System.currentTimeMillis(), 1), 1), 1), "x");
     Assert.assertEquals(ContainerExitStatus.PREEMPTED, cd.getExitStatus());
   }
+
+  @Test
+  public void testIsNodeAvailable() {
+    RMNode node1 =
+            MockNodes.newNodeInfo(1, Resources.createResource(8 * 1024, 8), 1,
+                    "unresolved");
+    RMNode node2 =
+            MockNodes.newNodeInfo(1, Resources.createResource(8 * 1024, 8), 1,
+                    "127.0.0.1");
+
+    boolean isNode1Available = SchedulerUtils.isNodeAvailable(node1.getNodeID());
+    boolean isNode2Available = SchedulerUtils.isNodeAvailable(node2.getNodeID());
+
+    Assert.assertTrue("Node1 should be unavailable due to unresolved hostname", !isNode1Available);
+    Assert.assertTrue("Node2 should be available", isNode2Available);
+  }
+
   /*
    * Test commented out due to incompatibility with current SchedulerUtils implementation
-   * 
+   *
   @Test (timeout = 30000)
   public void testNormalizeNodeLabelExpression()
       throws IOException {
@@ -624,7 +643,7 @@ public class TestSchedulerUtils {
     when(queueInfo.getDefaultNodeLabelExpression()).thenReturn(" x ");
     when(scheduler.getQueueInfo(any(String.class), anyBoolean(), anyBoolean()))
         .thenReturn(queueInfo);
-    
+
     Resource maxResource = Resources.createResource(
         YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_MB,
         YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES);
@@ -644,7 +663,7 @@ public class TestSchedulerUtils {
       SchedulerUtils.normalizeAndvalidateRequest(resReq, maxResource, "queue",
           scheduler, rmContext);
       Assert.assertTrue(resReq.getNodeLabelExpression().equals("x"));
-      
+
       resReq.setNodeLabelExpression(" y ");
       SchedulerUtils.normalizeAndvalidateRequest(resReq, maxResource, "queue",
           scheduler, rmContext);
