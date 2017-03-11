@@ -844,10 +844,12 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
     }
 
     RMContainer toBePreempted = null;
+    Set<RMContainer> nonEligibleForPreemption = getNonEligibleForPreemptionSet();
     for (RMContainer container : getLiveContainers()) {
       if (!getPreemptionContainers().contains(container) &&
-          (toBePreempted == null ||
-              comparator.compare(toBePreempted, container) > 0)) {
+              !nonEligibleForPreemption.contains(container) &&
+              (toBePreempted == null || 
+                      comparator.compare(toBePreempted, container) > 0)) {
         toBePreempted = container;
       }
     }
