@@ -112,6 +112,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEv
 import org.apache.hadoop.yarn.server.resourcemanager.security.RMContainerTokenSecretManager;
 import org.apache.hadoop.yarn.server.utils.Lock;
 import org.apache.hadoop.yarn.util.resource.DefaultResourceCalculator;
+import org.apache.hadoop.yarn.util.resource.DominantResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.ResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.Resources;
 
@@ -1630,12 +1631,19 @@ public class CapacityScheduler extends
   /** {@inheritDoc} */
   @Override
   public EnumSet<SchedulerResourceTypes> getSchedulingResourceTypes() {
-    if (calculator.getClass().getName()
+    String calculatorName = calculator.getClass().getName();
+    if (calculatorName
       .equals(DefaultResourceCalculator.class.getName())) {
       return EnumSet.of(SchedulerResourceTypes.MEMORY);
     }
-    return EnumSet
-      .of(SchedulerResourceTypes.MEMORY, SchedulerResourceTypes.CPU,  SchedulerResourceTypes.DISK);
+    if (calculatorName
+      .equals(DominantResourceCalculator.class.getName())) {
+      return EnumSet.of(SchedulerResourceTypes.MEMORY, 
+              SchedulerResourceTypes.CPU);
+    }
+    return EnumSet.of(SchedulerResourceTypes.MEMORY, 
+            SchedulerResourceTypes.CPU, 
+            SchedulerResourceTypes.DISK);
   }
   
   @Override
