@@ -1656,8 +1656,83 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     assertEquals(120000, root.getMinSharePreemptionTimeout());
     assertEquals(0.5f, root.getFairSharePreemptionThreshold(), 0.01);
   }
+  
+  
+  @Test(timeout = 5000)
+  public void tesPreemptionOnBlacklistedNodes() throws Exception {
+    conf.setLong(FairSchedulerConfiguration.PREEMPTION_INTERVAL, 5000);
+    conf.setLong(FairSchedulerConfiguration.WAIT_TIME_BEFORE_KILL, 10000);
+    conf.set(FairSchedulerConfiguration.ALLOCATION_FILE + ".allocation.file", ALLOC_FILE);
+    conf.set(FairSchedulerConfiguration.USER_AS_DEFAULT_QUEUE, "false");
 
-  @Test (timeout = 5000)
+    PrintWriter out = new PrintWriter(new FileWriter(ALLOC_FILE));
+    out.println("<?xml version=\"1.0\"?>");
+    out.println("<allocations>");
+    out.println("<queue name=\"queueA\">");
+    out.println("</queue>");
+    out.println("</allocations>");
+    out.close();
+
+    scheduler.init(conf);
+    scheduler.start();
+    scheduler.reinitialize(conf, resourceManager.getRMContext());
+
+    // Create two nodes
+    RMNode node1 =
+            MockNodes.newNodeInfo(1, Resources.createResource( 1 * 1024, 1), 1,
+                    "127.0.0.1");
+    RMNode node2 =
+            MockNodes.newNodeInfo(1, Resources.createResource( 1 * 1024, 1), 2,
+                    "127.0.0.2");
+    scheduler.handle(new NodeAddedSchedulerEvent(node1));
+    scheduler.handle(new NodeAddedSchedulerEvent(node2));
+
+    // Request containers for queueA
+    ApplicationAttemptId appAttemptId1 =
+            createSchedulingRequest(1 * 1024, 1, "queueA", "user1", 2, 1);
+    scheduler.update();
+
+    // Sufficient node check-ins to fully schedule containers
+    NodeUpdateSchedulerEvent nodeUpdate1 = new NodeUpdateSchedulerEvent(node1);
+    NodeUpdateSchedulerEvent nodeUpdate2 = new NodeUpdateSchedulerEvent(node2);
+    scheduler.handle(nodeUpdate1);
+    scheduler.handle(nodeUpdate2);
+
+    assertEquals(2, scheduler.getSchedulerApp(appAttemptId1).getLiveContainers().size());
+
+    // Now new requests arrive from queueB
+    ApplicationAttemptId appAttemptId2 =
+            createSchedulingRequest(1 * 1024, 1, "queueB", "user1", 2, 1);
+    scheduler.update();
+
+    // Mark node1, node2 as blacklisted for appAttemptId1 
+    addNodeToBlackListForApp(node1, appAttemptId1);
+    addNodeToBlackListForApp(node2, appAttemptId1);
+    scheduler.update();
+
+    // We should be able to claw back one container from queueA.
+    HashMap<FSAppAttempt, Resource> toPreempt = new HashMap<FSAppAttempt, Resource>();
+    FSAppAttempt appAttempt1 = scheduler.getSchedulerApp(appAttemptId1);
+    toPreempt.put(appAttempt1, Resources.createResource(1 * 1024));
+
+    scheduler.preemptResources(toPreempt);
+
+    assertTrue("App1 shouldn't have container to be preempted",
+            Collections.disjoint(
+                    scheduler.getSchedulerApp(appAttemptId1).getLiveContainers(),
+                    scheduler.getSchedulerApp(appAttemptId1).getPreemptionContainers()));
+  }
+
+  private void addNodeToBlackListForApp(RMNode node, ApplicationAttemptId id) {
+    FSAppAttempt appAttempt1 = scheduler.getSchedulerApp(id);
+    // Verify the blacklist can be updated independent of requesting containers
+    scheduler.allocate(id, Collections.<ResourceRequest>emptyList(),
+            Collections.<ContainerId>emptyList(),
+            Collections.singletonList(node.getHostName()), null);
+    assertTrue(appAttempt1.isBlacklisted(node.getHostName()));
+  }
+  
+  @Test
   /**
    * Make sure containers are chosen to be preempted in the correct order.
    */
