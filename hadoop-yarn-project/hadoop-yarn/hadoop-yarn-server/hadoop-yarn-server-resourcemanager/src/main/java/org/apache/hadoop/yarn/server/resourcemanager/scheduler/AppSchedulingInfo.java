@@ -87,6 +87,7 @@ public class AppSchedulingInfo {
   
   /* Allocated by scheduler */
   boolean pending = true; // for app metrics
+  private AtomicBoolean userBlacklistChanged = new AtomicBoolean(false);
   
  
   public AppSchedulingInfo(ApplicationAttemptId appAttemptId,
@@ -224,15 +225,26 @@ public class AppSchedulingInfo {
    */
   synchronized public void updateBlacklist(
       List<String> blacklistAdditions, List<String> blacklistRemovals) {
+    boolean changed = false;
     // Add to blacklist
     if (blacklistAdditions != null) {
-      blacklist.addAll(blacklistAdditions);
+      changed = blacklist.addAll(blacklistAdditions);
     }
 
     // Remove from blacklist
     if (blacklistRemovals != null) {
-      blacklist.removeAll(blacklistRemovals);
+      if (blacklist.removeAll(blacklistRemovals)) {
+        changed = true;
+      }
     }
+
+    if(changed) {
+      userBlacklistChanged.set(true);
+    }
+  }
+
+  public boolean getAndResetBlacklistChanged() {
+    return userBlacklistChanged.getAndSet(false);
   }
 
   synchronized public Collection<Priority> getPriorities() {
