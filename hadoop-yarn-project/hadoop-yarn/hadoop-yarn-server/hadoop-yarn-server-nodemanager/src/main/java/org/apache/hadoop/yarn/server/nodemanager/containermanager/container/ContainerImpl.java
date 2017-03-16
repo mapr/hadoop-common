@@ -1157,4 +1157,12 @@ public class ContainerImpl implements Container {
       LocalResourceRequest resource) {
     return container.resourcesUploadPolicies.get(resource);
   }
+
+  @Override
+  public boolean isRecovering() {
+    boolean isRecovering = (
+        recoveredStatus != RecoveredContainerStatus.REQUESTED &&
+        getContainerState() == ContainerState.NEW);
+    return isRecovering;
+  }
 }

@@ -55,4 +55,5 @@ public interface Container extends EventHandler<ContainerEvent> {
 
   String toString();
 
+  boolean isRecovering();
 }
