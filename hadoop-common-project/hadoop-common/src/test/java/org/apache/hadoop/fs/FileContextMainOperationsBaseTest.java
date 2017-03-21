@@ -29,6 +29,7 @@ import org.apache.hadoop.HadoopIllegalArgumentException;
 import org.apache.hadoop.fs.Options.CreateOpts;
 import org.apache.hadoop.fs.Options.Rename;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.security.AccessControlException;
 import org.junit.After;
 import org.junit.Assert;
 import static org.junit.Assert.*;
@@ -249,8 +250,14 @@ public abstract class FileContextMainOperationsBaseTest  {
     } catch (IOException e) {
       // expected
     }
-    Assert.assertFalse(exists(fc, testSubDir));
-    
+
+    try {
+      Assert.assertFalse(exists(fc, testSubDir));
+    } catch (AccessControlException e) {
+      // Expected : HDFS-11132 Checks on paths under file may be rejected by
+      // file missing execute permission.
+    }
+
     Path testDeepSubDir = getTestRootPath(fc, "test/hadoop/file/deep/sub/dir");
     try {
       fc.mkdir(testDeepSubDir, FsPermission.getDefault(), true);
@@ -258,8 +265,14 @@ public abstract class FileContextMainOperationsBaseTest  {
     } catch (IOException e) {
       // expected
     }
-    Assert.assertFalse(exists(fc, testDeepSubDir));
-    
+
+    try {
+      Assert.assertFalse(exists(fc, testDeepSubDir));
+    } catch (AccessControlException e) {
+      // Expected : HDFS-11132 Checks on paths under file may be rejected by
+      // file missing execute permission.
+    }
+
   }
   
   @Test
