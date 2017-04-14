@@ -633,7 +633,7 @@ public abstract class AbstractYarnScheduler
         if (nodeDisks > maxNodeDisks) {
           maxNodeDisks = nodeDisks;
           maximumAllocation.setDisks(Math.min(
-                  configuredMaximumAllocation.getDisks(), maxNodeDisks));
+              configuredMaximumAllocation.getDisks(), maxNodeDisks));
         }
       } else {  // removed node
         if (maxNodeMemory == totalResource.getMemory()) {
@@ -660,7 +660,7 @@ public abstract class AbstractYarnScheduler
               maxNodeVCores = nodeVCores;
             }
             double nodeDisks =
-                    nodeEntry.getValue().getTotalResource().getDisks();
+                nodeEntry.getValue().getTotalResource().getDisks();
             if (nodeDisks > maxNodeDisks) {
               maxNodeDisks = nodeDisks;
             }
@@ -681,7 +681,7 @@ public abstract class AbstractYarnScheduler
             maximumAllocation.setDisks(configuredMaximumAllocation.getDisks());
           } else {
             maximumAllocation.setDisks(
-                    Math.min(configuredMaximumAllocation.getDisks(), maxNodeDisks));
+                Math.min(configuredMaximumAllocation.getDisks(), maxNodeDisks));
           }
         }
       }
