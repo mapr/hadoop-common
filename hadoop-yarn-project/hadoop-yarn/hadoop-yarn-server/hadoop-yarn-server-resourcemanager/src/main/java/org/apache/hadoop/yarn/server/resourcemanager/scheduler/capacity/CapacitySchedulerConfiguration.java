@@ -596,11 +596,11 @@ public class CapacitySchedulerConfiguration extends ReservationSchedulerConfigur
   public Resource getMaximumAllocationPerQueue(String queue) {
     String queuePrefix = getQueuePrefix(queue);
     int maxAllocationMbPerQueue = getInt(queuePrefix + MAXIMUM_ALLOCATION_MB,
-        (int)UNDEFINED);
+        (int) UNDEFINED);
     int maxAllocationVcoresPerQueue = getInt(
-        queuePrefix + MAXIMUM_ALLOCATION_VCORES, (int)UNDEFINED);
+        queuePrefix + MAXIMUM_ALLOCATION_VCORES, (int) UNDEFINED);
     double maxAllocationDisksPerQueue = getDouble(
-            queuePrefix + MAXIMUM_ALLOCATION_DISKS, (double)UNDEFINED);
+        queuePrefix + MAXIMUM_ALLOCATION_DISKS, (double) UNDEFINED);
 
     if (LOG.isDebugEnabled()) {
       LOG.debug("max alloc mb per queue for " + queue + " is "
@@ -608,18 +608,18 @@ public class CapacitySchedulerConfiguration extends ReservationSchedulerConfigur
       LOG.debug("max alloc vcores per queue for " + queue + " is "
           + maxAllocationVcoresPerQueue);
       LOG.debug("max alloc disks per queue for " + queue + " is "
-              + maxAllocationDisksPerQueue);
+          + maxAllocationDisksPerQueue);
     }
     Resource clusterMax = getMaximumAllocation();
-    if (maxAllocationMbPerQueue == (int)UNDEFINED) {
+    if (maxAllocationMbPerQueue == (int) UNDEFINED) {
       LOG.info("max alloc mb per queue for " + queue + " is undefined");
       maxAllocationMbPerQueue = clusterMax.getMemory();
     }
-    if (maxAllocationVcoresPerQueue == (int)UNDEFINED) {
-       LOG.info("max alloc vcore per queue for " + queue + " is undefined");
+    if (maxAllocationVcoresPerQueue == (int) UNDEFINED) {
+      LOG.info("max alloc vcore per queue for " + queue + " is undefined");
       maxAllocationVcoresPerQueue = clusterMax.getVirtualCores();
     }
-    if (maxAllocationDisksPerQueue == (double)UNDEFINED) {
+    if (maxAllocationDisksPerQueue == (double) UNDEFINED) {
       LOG.info("max alloc disks per queue for " + queue + " is undefined");
       maxAllocationDisksPerQueue = clusterMax.getDisks();
     }
@@ -630,9 +630,9 @@ public class CapacitySchedulerConfiguration extends ReservationSchedulerConfigur
         || maxAllocationDisksPerQueue > clusterMax.getDisks()) {
       throw new IllegalArgumentException(
           "Queue maximum allocation cannot be larger than the cluster setting"
-          + " for queue " + queue
-          + " max allocation per queue: " + result
-          + " cluster setting: " + clusterMax);
+              + " for queue " + queue
+              + " max allocation per queue: " + result
+              + " cluster setting: " + clusterMax);
     }
     return result;
   }

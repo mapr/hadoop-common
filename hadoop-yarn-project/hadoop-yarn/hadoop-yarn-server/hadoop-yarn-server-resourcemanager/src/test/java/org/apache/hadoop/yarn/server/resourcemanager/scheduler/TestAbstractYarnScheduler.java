@@ -246,7 +246,7 @@ public class TestAbstractYarnScheduler extends ParameterizedSchedulerTestBase {
     conf.setInt(YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_MB,
         configuredMaxMemory);
     conf.setDouble(YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS,
-            configuredMaxDisks);
+        configuredMaxDisks);
     conf.setLong(
         YarnConfiguration.RM_WORK_PRESERVING_RECOVERY_SCHEDULING_WAIT_MS,
         0);
@@ -452,6 +452,6 @@ public class TestAbstractYarnScheduler extends ParameterizedSchedulerTestBase {
     Assert.assertEquals(expectedMaximumResource.getVirtualCores(),
         schedulerMaximumResourceCapability.getVirtualCores());
     Assert.assertEquals(expectedMaximumResource.getDisks(),
-            schedulerMaximumResourceCapability.getDisks(), 0.01);
+        schedulerMaximumResourceCapability.getDisks(), 0.01);
   }
 }

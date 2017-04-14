@@ -2171,37 +2171,37 @@ public class TestCapacityScheduler {
         YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_MB,
         cs.getMaximumResourceCapability().getMemory());
     assertEquals("max allocation in CS (vcores)",
-            YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES,
-            cs.getMaximumResourceCapability().getVirtualCores());
+        YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES,
+        cs.getMaximumResourceCapability().getVirtualCores());
     assertEquals("max allocation in CS (disks)",
-            YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS,
-            cs.getMaximumResourceCapability().getDisks(), 0.01);
+        YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS,
+        cs.getMaximumResourceCapability().getDisks(), 0.01);
 
     assertEquals("max allocation for A1 (memory)",
         YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_MB,
         conf.getMaximumAllocationPerQueue(A1).getMemory());
     assertEquals("max allocation for A1 (vcores)",
-            YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES,
-            conf.getMaximumAllocationPerQueue(A1).getVirtualCores());
+        YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES,
+        conf.getMaximumAllocationPerQueue(A1).getVirtualCores());
     assertEquals("max allocation for A1 (disks)",
-            YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS,
-            conf.getMaximumAllocationPerQueue(A1).getDisks(), 0.01);
+        YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS,
+        conf.getMaximumAllocationPerQueue(A1).getDisks(), 0.01);
 
     assertEquals("max allocation (memory)",
         YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_MB,
         conf.getMaximumAllocation().getMemory());
     assertEquals("max allocation (vcores)",
-            YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES,
-            conf.getMaximumAllocation().getVirtualCores());
+        YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES,
+        conf.getMaximumAllocation().getVirtualCores());
     assertEquals("max allocation (disks)",
-            YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS,
-            conf.getMaximumAllocation().getDisks(), 0.01);
+        YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS,
+        conf.getMaximumAllocation().getDisks(), 0.01);
 
     CSQueue rootQueue = cs.getRootQueue();
     CSQueue queueA = findQueue(rootQueue, A);
     CSQueue queueA1 = findQueue(queueA, A1);
     assertEquals("queue max allocation (memory)", ((LeafQueue) queueA1)
-        .getMaximumAllocation().getMemory(),
+            .getMaximumAllocation().getMemory(),
         YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_MB);
 
     setMaxAllocMb(conf, A1, YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_MB - 1);
@@ -2218,7 +2218,7 @@ public class TestCapacityScheduler {
 
     assertEquals("queue max allocation (vcores)", ((LeafQueue) queueA1)
             .getMaximumAllocation().getVirtualCores(),
-            YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES);
+        YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES);
     setMaxAllocVcores(conf, A1,
         YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES - 1);
     try {
@@ -2229,20 +2229,20 @@ public class TestCapacityScheduler {
           e.getCause().toString().contains("not be decreased"));
     }
     setMaxAllocVcores(conf, A1,
-            YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES);
+        YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES);
     cs.reinitialize(conf, mockContext);
 
 
     assertEquals("queue max allocation (memory)", ((LeafQueue) queueA1)
             .getMaximumAllocation().getDisks(),
-            YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS, 0.01);
+        YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS, 0.01);
     setMaxAllocDisks(conf, A1, YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS - 0.5);
     try {
       cs.reinitialize(conf, mockContext);
       fail("should have thrown exception (disks)");
     } catch (IOException e) {
       assertTrue("max allocation exception (disks)",
-              e.getCause().toString().contains("not be decreased"));
+          e.getCause().toString().contains("not be decreased"));
     }
   }
 
@@ -2281,17 +2281,17 @@ public class TestCapacityScheduler {
           e.getCause().getMessage().contains("larger than the cluster setting"));
     }
     setMaxAllocVcores(conf, B3,
-            YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES);
+        YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES);
     cs.reinitialize(conf, mockContext);
 
     setMaxAllocDisks(conf, B3,
-            YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS + 1.0);
+        YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS + 1.0);
     try {
       cs.reinitialize(conf, mockContext);
       fail("should have thrown exception (disks)");
     } catch (IOException e) {
       assertTrue("maximum allocation exception (disks)",
-              e.getCause().getMessage().contains("larger than the cluster setting"));
+          e.getCause().getMessage().contains("larger than the cluster setting"));
     }
   }
 
@@ -2308,7 +2308,7 @@ public class TestCapacityScheduler {
     setMaxAllocVcores(conf,
         YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES);
     setMaxAllocDisks(conf,
-            YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS);
+        YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS);
     setMaxAllocMb(conf, A1, 4096);
     setMaxAllocVcores(conf, A1, 2);
     setMaxAllocDisks(conf, A1, 2.0);
@@ -2324,8 +2324,8 @@ public class TestCapacityScheduler {
         YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES,
         cs.getMaximumResourceCapability().getVirtualCores());
     assertEquals("max capability disks in CS",
-            YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS,
-            cs.getMaximumResourceCapability().getDisks(), 0.01);
+        YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS,
+        cs.getMaximumResourceCapability().getDisks(), 0.01);
 
     assertEquals("max allocation MB A1",
         4096,
@@ -2334,8 +2334,8 @@ public class TestCapacityScheduler {
         2,
         conf.getMaximumAllocationPerQueue(A1).getVirtualCores());
     assertEquals("max allocation disks A1",
-            2,
-            conf.getMaximumAllocationPerQueue(A1).getDisks(), 0.01);
+        2,
+        conf.getMaximumAllocationPerQueue(A1).getDisks(), 0.01);
 
     assertEquals("cluster max allocation MB",
         YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_MB,
@@ -2344,8 +2344,8 @@ public class TestCapacityScheduler {
         YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES,
         conf.getMaximumAllocation().getVirtualCores());
     assertEquals("cluster max allocation disks",
-            YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES,
-            conf.getMaximumAllocation().getDisks(), 0.01);
+        YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES,
+        conf.getMaximumAllocation().getDisks(), 0.01);
 
     CSQueue rootQueue = cs.getRootQueue();
     CSQueue queueA = findQueue(rootQueue, A);
@@ -2353,9 +2353,9 @@ public class TestCapacityScheduler {
     assertEquals("queue max allocation (memory)", ((LeafQueue) queueA1)
         .getMaximumAllocation().getMemory(), 4096);
     assertEquals("queue max allocation (vcores)", ((LeafQueue) queueA1)
-            .getMaximumAllocation().getVirtualCores(), 2);
+        .getMaximumAllocation().getVirtualCores(), 2);
     assertEquals("queue max allocation (disks)", ((LeafQueue) queueA1)
-            .getMaximumAllocation().getDisks(), 2.0, 0.01);
+        .getMaximumAllocation().getDisks(), 2.0, 0.01);
 
     setMaxAllocMb(conf, A1, 6144);
     setMaxAllocVcores(conf, A1, 3);
@@ -2368,7 +2368,7 @@ public class TestCapacityScheduler {
     assertEquals("max allocation vcores A1", 3,
         conf.getMaximumAllocationPerQueue(A1).getVirtualCores());
     assertEquals("max allocation disks A1", 3.0,
-            conf.getMaximumAllocationPerQueue(A1).getDisks(), 0.01);
+        conf.getMaximumAllocationPerQueue(A1).getDisks(), 0.01);
 
     assertEquals("max allocation MB cluster",
         YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_MB,
@@ -2377,15 +2377,15 @@ public class TestCapacityScheduler {
         YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES,
         conf.getMaximumAllocation().getVirtualCores());
     assertEquals("max allocation disks cluster",
-            YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS,
-            conf.getMaximumAllocation().getDisks(), 0.01);
+        YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS,
+        conf.getMaximumAllocation().getDisks(), 0.01);
 
     assertEquals("queue max allocation MB", 6144,
         ((LeafQueue) queueA1).getMaximumAllocation().getMemory());
     assertEquals("queue max allocation vcores", 3,
         ((LeafQueue) queueA1).getMaximumAllocation().getVirtualCores());
     assertEquals("queue max allocation disks", 3.0,
-            ((LeafQueue) queueA1).getMaximumAllocation().getDisks(), 0.01);
+        ((LeafQueue) queueA1).getMaximumAllocation().getDisks(), 0.01);
 
     assertEquals("max capability MB cluster",
         YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_MB,
@@ -2394,8 +2394,8 @@ public class TestCapacityScheduler {
         YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES,
         cs.getMaximumResourceCapability().getVirtualCores());
     assertEquals("cluster max capability disks",
-            YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS,
-            cs.getMaximumResourceCapability().getDisks(), 0.01);
+        YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS,
+        cs.getMaximumResourceCapability().getDisks(), 0.01);
   }
 
   @Test
@@ -2423,7 +2423,7 @@ public class TestCapacityScheduler {
     assertEquals("max allocation vcores in CS", 10,
         cs.getMaximumResourceCapability().getVirtualCores());
     assertEquals("max allocation disks in CS", 10.0,
-            cs.getMaximumResourceCapability().getDisks(), 0.01);
+        cs.getMaximumResourceCapability().getDisks(), 0.01);
 
     setMaxAllocMb(conf, 6144);
     try {
@@ -2455,7 +2455,7 @@ public class TestCapacityScheduler {
       fail("should have thrown exception (disks)");
     } catch (IOException e) {
       assertTrue("max allocation exception (disks)",
-              e.getCause().toString().contains("not be decreased"));
+          e.getCause().toString().contains("not be decreased"));
     }
   }
 
@@ -2487,7 +2487,7 @@ public class TestCapacityScheduler {
     assertEquals("max allocation vcores in CS", 10,
         cs.getMaximumResourceCapability().getVirtualCores());
     assertEquals("max allocation disks in CS", 10.0,
-            cs.getMaximumResourceCapability().getDisks(), 0.01);
+        cs.getMaximumResourceCapability().getDisks(), 0.01);
 
     CSQueue rootQueue = cs.getRootQueue();
     CSQueue queueA = findQueue(rootQueue, A);
@@ -2501,21 +2501,21 @@ public class TestCapacityScheduler {
     assertEquals("queue A1 max allocation vcores", 4,
         ((LeafQueue) queueA1).getMaximumAllocation().getVirtualCores());
     assertEquals("queue A1 max allocation disks", 4.0,
-            ((LeafQueue) queueA1).getMaximumAllocation().getDisks(), 0.01);
+        ((LeafQueue) queueA1).getMaximumAllocation().getDisks(), 0.01);
 
     assertEquals("queue A2 max allocation MB", 10240,
         ((LeafQueue) queueA2).getMaximumAllocation().getMemory());
     assertEquals("queue A2 max allocation vcores", 10,
         ((LeafQueue) queueA2).getMaximumAllocation().getVirtualCores());
     assertEquals("queue A2 max allocation disks", 10.0,
-            ((LeafQueue) queueA2).getMaximumAllocation().getDisks(), 0.01);
+        ((LeafQueue) queueA2).getMaximumAllocation().getDisks(), 0.01);
 
     assertEquals("queue B2 max allocation MB", 10240,
         ((LeafQueue) queueB2).getMaximumAllocation().getMemory());
     assertEquals("queue B2 max allocation vcores", 10,
         ((LeafQueue) queueB2).getMaximumAllocation().getVirtualCores());
     assertEquals("queue B2 max allocation disk", 10,
-            ((LeafQueue) queueB2).getMaximumAllocation().getDisks(), 0.01);
+        ((LeafQueue) queueB2).getMaximumAllocation().getDisks(), 0.01);
 
     setMaxAllocMb(conf, 12288);
     setMaxAllocVcores(conf, 12);
@@ -2528,28 +2528,28 @@ public class TestCapacityScheduler {
     assertEquals("max allocation vcores in CS", 12,
         cs.getMaximumResourceCapability().getVirtualCores());
     assertEquals("max allocation disks in CS", 12.0,
-            cs.getMaximumResourceCapability().getDisks(), 0.01);
+        cs.getMaximumResourceCapability().getDisks(), 0.01);
 
     assertEquals("queue A1 max MB allocation", 4096,
         ((LeafQueue) queueA1).getMaximumAllocation().getMemory());
     assertEquals("queue A1 max vcores allocation", 4,
         ((LeafQueue) queueA1).getMaximumAllocation().getVirtualCores());
     assertEquals("queue A1 max disks allocation", 4.0,
-            ((LeafQueue) queueA1).getMaximumAllocation().getDisks(), 0.01);
+        ((LeafQueue) queueA1).getMaximumAllocation().getDisks(), 0.01);
 
     assertEquals("queue A2 max MB allocation", 12288,
         ((LeafQueue) queueA2).getMaximumAllocation().getMemory());
     assertEquals("queue A2 max vcores allocation", 12,
         ((LeafQueue) queueA2).getMaximumAllocation().getVirtualCores());
     assertEquals("queue A2 max disks allocation", 12.0,
-            ((LeafQueue) queueA2).getMaximumAllocation().getDisks(), 0.1);
+        ((LeafQueue) queueA2).getMaximumAllocation().getDisks(), 0.1);
 
     assertEquals("queue B2 max MB allocation", 12288,
         ((LeafQueue) queueB2).getMaximumAllocation().getMemory());
     assertEquals("queue B2 max vcores allocation", 12,
         ((LeafQueue) queueB2).getMaximumAllocation().getVirtualCores());
     assertEquals("queue B2 max disks allocation", 12.0,
-            ((LeafQueue) queueB2).getMaximumAllocation().getDisks(), 0.01);
+        ((LeafQueue) queueB2).getMaximumAllocation().getDisks(), 0.01);
   }
   
   private void waitContainerAllocated(MockAM am, int mem, int nContainer,
@@ -2789,13 +2789,13 @@ public class TestCapacityScheduler {
 
   private void setMaxAllocDisks(Configuration conf, double maxAllocDisks) {
     conf.setDouble(YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS,
-            maxAllocDisks);
+        maxAllocDisks);
   }
 
   private void setMaxAllocDisks(CapacitySchedulerConfiguration conf,
-                                 String queueName, double maxAllocDisks) {
+      String queueName, double maxAllocDisks) {
     String propName = CapacitySchedulerConfiguration.getQueuePrefix(queueName)
-            + CapacitySchedulerConfiguration.MAXIMUM_ALLOCATION_DISKS;
+        + CapacitySchedulerConfiguration.MAXIMUM_ALLOCATION_DISKS;
     conf.setDouble(propName, maxAllocDisks);
   }
 
