@@ -197,9 +197,12 @@ public class ContainerLogsUtils {
 
     try {
       File file = new File(logFile.toString());
-      UserGroupInformation ugi =
-              UserGroupInformation.createRemoteUser(remoteUser);
-      return SecureIOUtils.openForRead(file, remoteUser, ugi.getPrimaryGroupName());
+      String remoteUserPrimGroup = null;
+      if (UserGroupInformation.isSecurityEnabled()) {
+        remoteUserPrimGroup = UserGroupInformation.createRemoteUser(remoteUser)
+                .getPrimaryGroupName();
+      }
+      return SecureIOUtils.openForRead(file, remoteUser, remoteUserPrimGroup);
     } catch (PermissionNotMatchException ex) {
       LOG.error(
             "Exception reading log file " + logFile, ex);
