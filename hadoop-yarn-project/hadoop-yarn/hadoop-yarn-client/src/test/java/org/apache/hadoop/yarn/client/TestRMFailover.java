@@ -21,13 +21,13 @@ package org.apache.hadoop.yarn.client;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import javax.servlet.http.HttpServletResponse;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -285,62 +285,56 @@ public class TestRMFailover extends ClientBaseWithFixes {
     getAdminService(0).transitionToActive(req);
     String rm1Url = "http://0.0.0.0:18088";
     String rm2Url = "http://0.0.0.0:28088";
-    String redirectURL = getRedirectURL(rm2Url);
-    // if uri is null, RMWebAppFilter will append a slash at the trail of the redirection url
-    assertEquals(redirectURL,rm1Url+"/");
+    String header = getHeader("Refresh", rm2Url);
+    assertTrue(header.contains("; url=" + rm1Url));
 
-    redirectURL = getRedirectURL(rm2Url + "/metrics");
-    assertEquals(redirectURL,rm1Url + "/metrics");
+    header = getHeader("Refresh", rm2Url + "/metrics");
+    assertTrue(header.contains("; url=" + rm1Url));
 
-    redirectURL = getRedirectURL(rm2Url + "/jmx");
-    assertEquals(redirectURL,rm1Url + "/jmx");
+    header = getHeader("Refresh", rm2Url + "/jmx");
+    assertTrue(header.contains("; url=" + rm1Url));
 
     // standby RM links /conf, /stacks, /logLevel, /static, /logs,
     // /cluster/cluster as well as webService
     // /ws/v1/cluster/info should not be redirected to active RM
-    redirectURL = getRedirectURL(rm2Url + "/cluster/cluster");
-    assertNull(redirectURL);
+    header = getHeader("Refresh", rm2Url + "/cluster/cluster");
+    assertEquals(null, header);
 
-    redirectURL = getRedirectURL(rm2Url + "/conf");
-    assertNull(redirectURL);
+    header = getHeader("Refresh", rm2Url + "/conf");
+    assertEquals(null, header);
 
-    redirectURL = getRedirectURL(rm2Url + "/stacks");
-    assertNull(redirectURL);
+    header = getHeader("Refresh", rm2Url + "/stacks");
+    assertEquals(null, header);
 
-    redirectURL = getRedirectURL(rm2Url + "/logLevel");
-    assertNull(redirectURL);
+    header = getHeader("Refresh", rm2Url + "/logLevel");
+    assertEquals(null, header);
 
-    redirectURL = getRedirectURL(rm2Url + "/static");
-    assertNull(redirectURL);
+    header = getHeader("Refresh", rm2Url + "/static");
+    assertEquals(null, header);
 
-    redirectURL = getRedirectURL(rm2Url + "/logs");
-    assertNull(redirectURL);
+    header = getHeader("Refresh", rm2Url + "/logs");
+    assertEquals(null, header);
 
-    redirectURL = getRedirectURL(rm2Url + "/ws/v1/cluster/info");
-    assertNull(redirectURL);
+    header = getHeader("Refresh", rm2Url + "/ws/v1/cluster/info");
+    assertEquals(null, header);
 
-    redirectURL = getRedirectURL(rm2Url + "/ws/v1/cluster/apps");
-    assertEquals(redirectURL, rm1Url + "/ws/v1/cluster/apps");
+    header = getHeader("Refresh", rm2Url + "/ws/v1/cluster/apps");
+    assertTrue(header.contains("; url=" + rm1Url));
 
-    redirectURL = getRedirectURL(rm2Url + "/proxy/" + fakeAppId);
-    assertNull(redirectURL);
+    // Due to the limitation of MiniYARNCluster and dispatcher is a singleton,
+    // we couldn't add the test case after explicitFailover();
   }
 
-  // set up http connection with the given url and get the redirection url from the response
-  // return null if the url is not redirected
-  static String getRedirectURL(String url) {
-    String redirectUrl = null;
+  static String getHeader(String field, String url) {
+    String fieldHeader = null;
     try {
-      HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
-      // do not automatically follow the redirection
-      // otherwise we get too many redirections exception
-      conn.setInstanceFollowRedirects(false);
-      if(conn.getResponseCode() == HttpServletResponse.SC_TEMPORARY_REDIRECT)
-        redirectUrl = conn.getHeaderField("Location");
+      Map<String, List<String>> map =
+          new URL(url).openConnection().getHeaderFields();
+      fieldHeader = map.get(field).get(0);
     } catch (Exception e) {
       // throw new RuntimeException(e);
     }
-    return redirectUrl;
+    return fieldHeader;
   }
 
 }
