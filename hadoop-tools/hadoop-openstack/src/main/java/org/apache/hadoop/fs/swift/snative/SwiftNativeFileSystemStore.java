@@ -17,8 +17,9 @@
  */
 package org.apache.hadoop.fs.swift.snative;
 
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpStatus;
+import org.apache.http.Header;
+import org.apache.http.HttpStatus;
+import org.apache.http.message.BasicHeader;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -165,9 +166,9 @@ public class SwiftNativeFileSystemStore {
     }
 
     swiftRestClient.upload(toObjectPath(path),
-            new ByteArrayInputStream(new byte[0]),
-            0,
-            new Header(SwiftProtocolConstants.X_OBJECT_MANIFEST, pathString));
+        new ByteArrayInputStream(new byte[0]),
+        0,
+        new BasicHeader(SwiftProtocolConstants.X_OBJECT_MANIFEST, pathString));
   }
 
   /**
