@@ -70,6 +70,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -480,7 +481,7 @@ public class DataStorage extends Storage {
 
   /**
    * Create physical directory for block pools on the data node
-   * 
+   *
    * @param dataDirs
    *          List of data directories
    * @param conf
@@ -655,8 +656,8 @@ public class DataStorage extends Storage {
    * @throws IOException
    */
   private void doTransition( DataNode datanode,
-                             StorageDirectory sd, 
-                             NamespaceInfo nsInfo, 
+                             StorageDirectory sd,
+                             NamespaceInfo nsInfo,
                              StartupOption startOpt
                              ) throws IOException {
     if (startOpt == StartupOption.ROLLBACK) {
@@ -745,7 +746,7 @@ public class DataStorage extends Storage {
     // update its layout version.
     if (DataNodeLayoutVersion.supports(
         LayoutVersion.Feature.FEDERATION, layoutVersion)) {
-      // The VERSION file is already read in. Override the layoutVersion 
+      // The VERSION file is already read in. Override the layoutVersion
       // field and overwrite the file. The upgrade work is handled by
       // {@link BlockPoolSliceStorage#doUpgrade}
       LOG.info("Updating layout version from " + layoutVersion + " to "
@@ -755,7 +756,7 @@ public class DataStorage extends Storage {
       writeProperties(sd);
       return;
     }
-    
+
     LOG.info("Upgrading storage directory " + sd.getRoot()
              + ".\n   old LV = " + this.getLayoutVersion()
              + "; old CTime = " + this.getCTime()
@@ -783,12 +784,12 @@ public class DataStorage extends Storage {
     
     // 3. Format BP and hard link blocks from previous directory
     File curBpDir = BlockPoolSliceStorage.getBpRoot(nsInfo.getBlockPoolID(), curDir);
-    BlockPoolSliceStorage bpStorage = new BlockPoolSliceStorage(nsInfo.getNamespaceID(), 
+    BlockPoolSliceStorage bpStorage = new BlockPoolSliceStorage(nsInfo.getNamespaceID(),
         nsInfo.getBlockPoolID(), nsInfo.getCTime(), nsInfo.getClusterID());
     bpStorage.format(curDir, nsInfo);
     linkAllBlocks(datanode, tmpDir, bbwDir, new File(curBpDir,
         STORAGE_DIR_CURRENT));
-    
+
     // 4. Write version file under <SD>/current
     layoutVersion = HdfsConstants.DATANODE_LAYOUT_VERSION;
     clusterID = nsInfo.getClusterID();
@@ -981,7 +982,7 @@ public class DataStorage extends Storage {
     } else { // pre-RBW version
       // hardlink finalized blocks in tmpDir
       linkBlocks(datanode, fromDir, new File(toDir, STORAGE_DIR_FINALIZED),
-          diskLayoutVersion, hardLink);      
+          diskLayoutVersion, hardLink);
       if (fromBbwDir.exists()) {
         /*
          * We need to put the 'blocksBeingWritten' from HDFS 1.x into the rbw
@@ -992,7 +993,7 @@ public class DataStorage extends Storage {
         linkBlocks(datanode, fromBbwDir,
             new File(toDir, STORAGE_DIR_RBW), diskLayoutVersion, hardLink);
       }
-    } 
+    }
     LOG.info( hardLink.linkStats.report() );
   }
 
@@ -1053,7 +1054,14 @@ public class DataStorage extends Storage {
     }
     linkWorkers.shutdown();
     for (Future<Void> f : futures) {
-      Futures.get(f, IOException.class);
+      try {
+        f.get();
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        throw new IOException(e);
+      } catch (ExecutionException e) {
+        throw new IOException(e);
+      }
     }
   }
 
@@ -1286,7 +1294,7 @@ public class DataStorage extends Storage {
     String[] otherNames = from.list(new java.io.FilenameFilter() {
         @Override
         public boolean accept(File dir, String name) {
-          return name.startsWith(BLOCK_SUBDIR_PREFIX) 
+          return name.startsWith(BLOCK_SUBDIR_PREFIX)
             || name.startsWith(COPY_FILE_PREFIX);
         }
       });

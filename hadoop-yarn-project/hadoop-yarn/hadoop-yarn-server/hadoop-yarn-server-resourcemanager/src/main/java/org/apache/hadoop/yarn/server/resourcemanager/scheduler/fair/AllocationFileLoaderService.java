@@ -91,7 +91,7 @@ public class AllocationFileLoaderService extends AbstractService {
   public AllocationFileLoaderService() {
     this(new SystemClock());
   }
-  
+
   public AllocationFileLoaderService(Clock clock) {
     super(AllocationFileLoaderService.class.getName());
     this.clock = clock;
@@ -433,7 +433,7 @@ public class AllocationFileLoaderService extends AbstractService {
       Map<FSQueueType, Set<String>> configuredQueues,
       Set<String> reservableQueues,
       Map<String, String> queueLabels,
-      Map<String, Queue.QueueLabelPolicy> queueLabelPolicies) 
+      Map<String, Queue.QueueLabelPolicy> queueLabelPolicies)
       throws AllocationConfigurationException {
     String queueName = element.getAttribute("name").trim();
 
@@ -515,7 +515,7 @@ public class AllocationFileLoaderService extends AbstractService {
           queueLabelPolicies.put(queueName, policy);
         } catch( IllegalArgumentException ie)  {
           LOG.warn("Unknown Label Policy: " + text);
-        }        
+        }
       } else if ("queue".endsWith(field.getTagName()) || 
           "pool".equals(field.getTagName())) {
         loadQueue(queueName, field, minQueueResources, maxQueueResources,
@@ -553,7 +553,7 @@ public class AllocationFileLoaderService extends AbstractService {
               minQueueResources.get(queueName)));
     }
   }
-  
+
   public interface Listener {
     public void onReload(AllocationConfiguration info);
   }

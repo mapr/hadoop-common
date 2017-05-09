@@ -67,7 +67,6 @@ import org.mockito.Mockito;
 import org.mockito.stubbing.Stubber;
 
 import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.MoreExecutors;
 
 /**
  * Functional tests for QuorumJournalManager.
@@ -945,7 +944,7 @@ public class TestQuorumJournalManager {
           protected ExecutorService createSingleThreadExecutor() {
             // Don't parallelize calls to the quorum in the tests.
             // This makes the tests more deterministic.
-            return MoreExecutors.sameThreadExecutor();
+            return new DirectExecutorService();
           }
         };
         

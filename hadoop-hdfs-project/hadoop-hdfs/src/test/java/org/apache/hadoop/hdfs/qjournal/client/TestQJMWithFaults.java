@@ -62,7 +62,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.MoreExecutors;
 
 
 public class TestQJMWithFaults {
@@ -125,7 +124,7 @@ public class TestQJMWithFaults {
     }
     return ret;
   }
-  
+
   /**
    * Sets up two of the nodes to each drop a single RPC, at all
    * possible combinations of RPCs. This may result in the
@@ -184,7 +183,7 @@ public class TestQJMWithFaults {
       }
     }
   }
-  
+
   /**
    * Test case in which three JournalNodes randomly flip flop between
    * up and down states every time they get an RPC.
@@ -383,7 +382,7 @@ public class TestQJMWithFaults {
 
     @Override
     protected ExecutorService createSingleThreadExecutor() {
-      return MoreExecutors.sameThreadExecutor();
+      return new DirectExecutorService();
     }
   }
 

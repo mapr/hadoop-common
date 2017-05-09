@@ -43,7 +43,6 @@ import org.apache.hadoop.yarn.proto.YarnProtos.ReservationIdProto;
 import org.apache.hadoop.yarn.proto.YarnProtos.ResourceProto;
 import org.apache.hadoop.yarn.proto.YarnProtos.ResourceRequestProto;
 
-import com.google.common.base.CharMatcher;
 import com.google.protobuf.TextFormat;
 
 @Private
@@ -273,7 +272,7 @@ extends ApplicationSubmissionContext {
             "maximum allowed length of a tag is " +
             YarnConfiguration.APPLICATION_MAX_TAG_LENGTH);
       }
-      if (!CharMatcher.ASCII.matchesAllOf(tag)) {
+      if (!org.apache.commons.lang3.StringUtils.isAsciiPrintable(tag)) {
         throw new IllegalArgumentException("A tag can only have ASCII " +
             "characters! Invalid tag - " + tag);
       }
@@ -420,7 +419,7 @@ extends ApplicationSubmissionContext {
   private PriorityProto convertToProtoFormat(Priority t) {
     return ((PriorityPBImpl)t).getProto();
   }
-  
+
   private ResourceRequestPBImpl convertFromProtoFormat(ResourceRequestProto p) {
     return new ResourceRequestPBImpl(p);
   }
