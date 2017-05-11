@@ -40,6 +40,9 @@ Release 2.8.0 - UNRELEASED
 
     YARN-3695. ServerProxy (NMProxy, etc.) shouldn't retry forever for non
     network exception. (Raju Bairishetti via jianhe)
+    
+    YARN-5543. ResourceManager SchedulingMonitor could potentially terminate the
+    preemption checker thread. (Min Shen, Jonathan Hung via shv).
 
 Release 2.7.3 - UNRELEASED
 
