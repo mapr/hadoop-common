@@ -53,6 +53,7 @@ import org.apache.hadoop.yarn.server.api.protocolrecords.RefreshServiceAclsReque
 import org.apache.hadoop.yarn.server.api.protocolrecords.RefreshSuperUserGroupsConfigurationRequest;
 import org.apache.hadoop.yarn.server.api.protocolrecords.RefreshUserToGroupsMappingsRequest;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.invocation.InvocationOnMock;
@@ -364,10 +365,8 @@ public class TestRMAdminCLI {
           "yarn rmadmin [-refreshQueues] [-refreshNodes] [-refreshSuper" +
               "UserGroupsConfiguration] [-refreshUserToGroupsMappings] " +
               "[-refreshAdminAcls] [-showLabels] [-refreshLabels] [-refreshServiceAcl] [-getGroup" +
-              " [username]] [[-addToClusterNodeLabels [label1,label2,label3]]" +
-              " [-removeFromClusterNodeLabels [label1,label2,label3]] [-replaceLabelsOnNode " +
-              "[node1[:port]=label1,label2 node2[:port]=label1] [-directlyAccessNodeLabelStore]] " +
-              "[-transitionToActive [--forceactive] <serviceId>] " + 
+              " [username]] " +
+              "[-transitionToActive [--forceactive] <serviceId>] " +
               "[-transitionToStandby <serviceId>] [-failover" +
               " [--forcefence] [--forceactive] <serviceId> <serviceId>] " +
               "[-getServiceState <serviceId>] [-checkHealth <serviceId>] [-help [cmd]]";
@@ -400,6 +399,7 @@ public class TestRMAdminCLI {
   }
   
   @Test
+  @Ignore(value = "Unsupported Apache LBS commands after resolving MAPR-18323")
   public void testAccessLocalNodeLabelManager() throws Exception {
     assertFalse(dummyNodeLabelsManager.getServiceState() == STATE.STOPPED);
     
@@ -426,6 +426,7 @@ public class TestRMAdminCLI {
   }
   
   @Test
+  @Ignore(value = "Unsupported Apache LBS commands after resolving MAPR-18323")
   public void testAccessRemoteNodeLabelManager() throws Exception {
     String[] args =
         { "-addToClusterNodeLabels", "x,y" };
@@ -439,6 +440,7 @@ public class TestRMAdminCLI {
   }
   
   @Test
+  @Ignore(value = "Unsupported Apache LBS commands after resolving MAPR-18323")
   public void testAddToClusterNodeLabels() throws Exception {
     // successfully add labels
     String[] args =
@@ -475,6 +477,7 @@ public class TestRMAdminCLI {
   }
   
   @Test
+  @Ignore(value = "Unsupported Apache LBS commands after resolving MAPR-18323")
   public void testRemoveFromClusterNodeLabels() throws Exception {
     // Successfully remove labels
     dummyNodeLabelsManager.addToCluserNodeLabels(ImmutableSet.of("x", "y"));
@@ -504,6 +507,7 @@ public class TestRMAdminCLI {
   }
   
   @Test
+  @Ignore(value = "Unsupported Apache LBS commands after resolving MAPR-18323")
   public void testReplaceLabelsOnNode() throws Exception {
     // Successfully replace labels
     dummyNodeLabelsManager
@@ -540,6 +544,7 @@ public class TestRMAdminCLI {
   }
   
   @Test
+  @Ignore(value = "Unsupported Apache LBS commands after resolving MAPR-18323")
   public void testReplaceMultipleLabelsOnSingleNode() throws Exception {
     // Successfully replace labels
     dummyNodeLabelsManager.addToCluserNodeLabels(ImmutableSet.of("x", "y"));
