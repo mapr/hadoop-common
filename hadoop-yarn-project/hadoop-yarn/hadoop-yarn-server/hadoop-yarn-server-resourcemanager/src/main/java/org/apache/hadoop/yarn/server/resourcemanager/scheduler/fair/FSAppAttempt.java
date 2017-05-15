@@ -553,8 +553,10 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
       container = createContainer(node, capability, request.getPriority());
     }
 
-    // Can we allocate a container on this node?
-    if (Resources.fitsIn(capability, available)) {
+    // The requested container must fit in queue maximum share
+    // and node capability
+    if (getQueue().fitsInMaxShare(capability) &&
+        Resources.fitsIn(capability, available)) {
       // Inform the application of the new container for this request
       RMContainer allocatedContainer =
           allocate(type, node, request.getPriority(), request, container);
@@ -715,9 +717,7 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
             // The requested container must be able to fit on the node:
             Resources.lessThanOrEqual(RESOURCE_CALCULATOR, null,
                 anyRequest.getCapability(),
-                node.getRMNode().getTotalCapability()) &&
-            // The requested container must fit in queue maximum share:
-            getQueue().fitsInMaxShare(anyRequest.getCapability());
+                node.getRMNode().getTotalCapability());
   }
 
   private boolean isValidReservation(FSSchedulerNode node) {
@@ -758,8 +758,9 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
     // Fail early if the reserved container won't fit.
     // Note that we have an assumption here that
     // there's only one container size per priority.
-    if (Resources.fitsIn(node.getReservedContainer().getReservedResource(),
-        node.getAvailableResource())) {
+    Resource reservedResource = node.getReservedContainer().getReservedResource();
+    if (getQueue().fitsInMaxShare(reservedResource) &&
+        Resources.fitsIn(reservedResource, node.getAvailableResource())) {
       assignContainer(node, true);
     }
     return true;

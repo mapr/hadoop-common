@@ -3084,17 +3084,52 @@ public class TestFairScheduler extends FairSchedulerTestBase {
         .getLiveContainers().size());
   }
 
+  @Test(timeout = 5000)
+  public void testAssignContainerToQueueWithZeroDisks() throws Exception {
+    scheduler.init(conf);
+    scheduler.start();
+    scheduler.reinitialize(conf, resourceManager.getRMContext());
+
+    final String user = "user1";
+    final String fooQueue = "foo";
+
+    scheduler.getAllocationConfiguration().maxQueueResources.put("root."+ fooQueue ,
+        Resource.newInstance(2048, 1, 0.0));
+
+    RMNode node1 =
+        MockNodes
+            .newNodeInfo(1, Resources.createResource(8192, 8), 1, "127.0.0.1");
+
+    NodeAddedSchedulerEvent nodeEvent1 = new NodeAddedSchedulerEvent(node1);
+
+    scheduler.handle(nodeEvent1);
+
+    ApplicationAttemptId attId1 =
+        createSchedulingRequest(1024, fooQueue, user, 1);
+
+    FSAppAttempt app1 = scheduler.getSchedulerApp(attId1);
+
+    scheduler.getQueueManager().getLeafQueue(fooQueue, true)
+        .setPolicy(SchedulingPolicy.parse("fifo"));
+    scheduler.update();
+
+    NodeUpdateSchedulerEvent updateEvent1 = new NodeUpdateSchedulerEvent(node1);
+
+    scheduler.handle(updateEvent1);
+    Assert.assertTrue(app1.getLiveContainers().size() == 1);
+  }
+
   /**
    * Test to verify the behavior of
    * {@link FSQueue#assignContainer(FSSchedulerNode)})
-   * 
+   *
    * Create two queues under root (fifoQueue and fairParent), and two queues
    * under fairParent (fairChild1 and fairChild2). Submit two apps to the
    * fifoQueue and one each to the fairChild* queues, all apps requiring 4
    * containers each of the total 16 container capacity
-   * 
+   *
    * Assert the number of containers for each app after 4, 8, 12 and 16 updates.
-   * 
+   *
    * @throws Exception
    */
   @Test(timeout = 5000)
