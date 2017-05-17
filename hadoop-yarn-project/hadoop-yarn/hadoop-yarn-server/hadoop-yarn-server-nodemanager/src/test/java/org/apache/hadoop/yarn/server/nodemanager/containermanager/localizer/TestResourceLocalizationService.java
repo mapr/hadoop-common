@@ -1774,8 +1774,12 @@ public class TestResourceLocalizationService {
       dispatcher1.getEventHandler().handle(
         createContainerLocalizationEvent(container2,
           LocalResourceVisibility.PRIVATE, req));
+      /*Changed the expected value.
+      Used the DuplicateFetchResourceTransition instead
+      FetchResourceTransition to handle localize event.
+      Bug 14616: Do not localize same resource more than once on a node.*/
       Assert
-        .assertTrue(waitForPrivateDownloadToStart(rls, localizerId2, 1, 200));
+        .assertTrue(waitForPrivateDownloadToStart(rls, localizerId2, 0, 200));
 
       // Retrieving localized resource.
       LocalResourcesTracker tracker =
