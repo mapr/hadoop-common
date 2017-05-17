@@ -124,6 +124,21 @@ public class TestFileInputFormat {
     Assert.assertTrue(otherhostInfo.isOnDisk());
     Assert.assertFalse(otherhostInfo.isInMemory());
   }
+
+  @Test
+  public void testSplitFileWithZeroBlockSize() throws Exception {
+    Configuration conf = getConfiguration();
+    conf.setClass("fs.test.impl",
+      MockFileSystemWithZeroBlockSize.class,
+      MockFileSystem.class);
+    conf.set(org.apache.hadoop.mapreduce.lib.input.FileInputFormat.INPUT_DIR,
+      "test:/a1/a2");
+    JobConf job = new JobConf(conf);
+    TextInputFormat fileInputFormat = new TextInputFormat();
+    fileInputFormat.configure(job);
+    FileSplit[] splits = (FileSplit[]) fileInputFormat.getSplits(job, 1);
+    Assert.assertEquals(2, splits.length);
+  }
   
   @Test
   public void testListStatusSimple() throws IOException {
@@ -256,6 +271,27 @@ public class TestFileInputFormat {
         PathFilter filter) throws FileNotFoundException, IOException {
       ++numListLocatedStatusCalls;
       return super.listLocatedStatus(f, filter);
+    }
+  }
+
+  static class MockFileSystemWithZeroBlockSize extends  MockFileSystem {
+    @Override
+    public FileStatus[] listStatus(Path f) throws FileNotFoundException,
+        IOException {
+      if (f.toString().equals("test:/a1")) {
+        return new FileStatus[] {
+            new FileStatus(0, true, 1, 0, 150,
+                new Path("test:/a1/a2")),
+            new FileStatus(10, false, 1, 0, 150,
+                new Path("test:/a1/file1")) };
+      } else if (f.toString().equals("test:/a1/a2")) {
+        return new FileStatus[] {
+            new FileStatus(10, false, 1, 0, 150,
+                new Path("test:/a1/a2/file2")),
+            new FileStatus(10, false, 1, 0, 150,
+                new Path("test:/a1/a2/file3")) };
+      }
+      return new FileStatus[0];
     }
   }
 }
