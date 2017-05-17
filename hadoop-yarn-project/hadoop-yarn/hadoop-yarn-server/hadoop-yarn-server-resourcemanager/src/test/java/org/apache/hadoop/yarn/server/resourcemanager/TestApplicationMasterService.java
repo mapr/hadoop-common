@@ -286,10 +286,11 @@ public class TestApplicationMasterService {
 
     driver.put(conf, EnumSet.of(SchedulerResourceTypes.MEMORY));
     driver.put(testCapacityDRConf,
-      EnumSet.of(SchedulerResourceTypes.CPU, SchedulerResourceTypes.MEMORY));
-    driver.put(testCapacityDefConf, EnumSet.of(SchedulerResourceTypes.MEMORY));
+      EnumSet.of(SchedulerResourceTypes.CPU, SchedulerResourceTypes.MEMORY, SchedulerResourceTypes.DISK));
+    driver.put(testCapacityDefConf,
+      EnumSet.of(SchedulerResourceTypes.MEMORY, SchedulerResourceTypes.CPU, SchedulerResourceTypes.DISK));
     driver.put(testFairDefConf,
-      EnumSet.of(SchedulerResourceTypes.MEMORY, SchedulerResourceTypes.CPU));
+      EnumSet.of(SchedulerResourceTypes.MEMORY, SchedulerResourceTypes.CPU, SchedulerResourceTypes.DISK));
 
     for (Map.Entry<YarnConfiguration, EnumSet<SchedulerResourceTypes>> entry : driver
       .entrySet()) {
