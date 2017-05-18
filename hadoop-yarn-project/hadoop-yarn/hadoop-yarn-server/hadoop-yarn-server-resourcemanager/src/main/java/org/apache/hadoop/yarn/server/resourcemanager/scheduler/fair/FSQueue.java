@@ -154,6 +154,15 @@ public abstract class FSQueue implements Queue, Schedulable {
     }
     queueInfo.setChildQueues(childQueueInfos);
     queueInfo.setQueueState(QueueState.RUNNING);
+    
+    queueInfo.setQueueLabel((label == null)
+            ? Queue.LABEL_NONE
+            : label.toString());
+
+    queueInfo.setQueueLabelPolicy((labelPolicy == null)
+            ? QueueLabelPolicy.AND.name()
+            : labelPolicy.name());
+
     return queueInfo;
   }
   
