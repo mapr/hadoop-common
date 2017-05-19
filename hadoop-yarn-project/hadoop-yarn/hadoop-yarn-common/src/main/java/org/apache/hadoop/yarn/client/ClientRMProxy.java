@@ -49,7 +49,6 @@ import com.google.common.base.Preconditions;
 @InterfaceStability.Stable
 public class ClientRMProxy<T> extends RMProxy<T>  {
   private static final Log LOG = LogFactory.getLog(ClientRMProxy.class);
-  private static final ClientRMProxy INSTANCE = new ClientRMProxy();
 
   private interface ClientRMProtocols extends ApplicationClientProtocol,
       ApplicationMasterProtocol, ResourceManagerAdministrationProtocol {
@@ -70,7 +69,8 @@ public class ClientRMProxy<T> extends RMProxy<T>  {
    */
   public static <T> T createRMProxy(final Configuration configuration,
       final Class<T> protocol) throws IOException {
-    return createRMProxy(configuration, protocol, INSTANCE);
+    ClientRMProxy<T> clientRMProxy = new ClientRMProxy<>();
+    return createRMProxy(configuration, protocol, clientRMProxy);
   }
 
   private static void setAMRMTokenService(final Configuration conf)
