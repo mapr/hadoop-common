@@ -236,7 +236,8 @@ public class TestClientRMService {
         nodeReports.get(0).getNodeState());
     
     // Check node's label = x
-    Assert.assertTrue(nodeReports.get(0).getNodeLabels().contains("x"));
+    RMNodeLabelsManager nlm = rm.getRMContext().getNodeLabelManager();
+    Assert.assertTrue(nlm.getLabelsOnNode(node.getNodeId()).contains("x"));
 
     // Now make the node unhealthy.
     node.nodeHeartbeat(false);
@@ -257,8 +258,8 @@ public class TestClientRMService {
     Assert.assertEquals(1, nodeReports.size());
     Assert.assertEquals("Node is expected to be unhealthy!", NodeState.UNHEALTHY,
         nodeReports.get(0).getNodeState());
-    
-    Assert.assertTrue(nodeReports.get(0).getNodeLabels().contains("y"));
+
+    Assert.assertTrue(nlm.getLabelsOnNode(node.getNodeId()).contains("y"));
     
     // Remove labels of host1
     map = new HashMap<NodeId, Set<String>>();
