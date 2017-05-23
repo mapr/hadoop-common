@@ -79,6 +79,7 @@ public class TestAggregatedLogFormat {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+    UserGroupInformation.reset();
   }
 
   @Before

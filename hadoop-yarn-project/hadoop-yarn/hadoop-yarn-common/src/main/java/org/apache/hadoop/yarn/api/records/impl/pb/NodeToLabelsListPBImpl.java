@@ -40,6 +40,7 @@ public class NodeToLabelsListPBImpl extends NodeToLabelsList {
 
   public NodeToLabelsListPBImpl(NodeToLabelsListProto proto) {
     this.proto = proto;
+    this.node = proto.getNode();
     viaProto = true;
   }
 

@@ -37,6 +37,7 @@ public abstract class NodeToLabelsList {
   @Unstable
   public static NodeToLabelsList newInstance(String node, List<String> nodeLabel) {
     NodeToLabelsList nodeToLabelsList = Records.newRecord(NodeToLabelsList.class);
+    nodeToLabelsList.setNode(node);
     nodeToLabelsList.setNodeLabel(nodeLabel);
     return nodeToLabelsList;
   }

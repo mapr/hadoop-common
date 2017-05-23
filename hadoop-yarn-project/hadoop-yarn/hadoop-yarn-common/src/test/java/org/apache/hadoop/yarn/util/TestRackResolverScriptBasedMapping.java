@@ -29,6 +29,7 @@ public class TestRackResolverScriptBasedMapping {
 
   @Test
   public void testScriptName() {
+    RackResolver.reset();
     Configuration conf = new Configuration();
     conf
         .setClass(
