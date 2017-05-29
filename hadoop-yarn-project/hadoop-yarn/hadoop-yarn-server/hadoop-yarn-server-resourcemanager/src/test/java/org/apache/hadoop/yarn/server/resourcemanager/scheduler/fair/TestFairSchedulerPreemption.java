@@ -102,9 +102,9 @@ public class TestFairSchedulerPreemption extends FairSchedulerTestBase {
   }
 
   private void registerNodeAndSubmitApp(
-      int memory, int vcores, int appContainers, int appMemory) {
+      int memory, int vcores, double disks, int appContainers, int appMemory) {
     RMNode node1 = MockNodes.newNodeInfo(
-        1, Resources.createResource(memory, vcores), 1, "node1");
+        1, Resources.createResource(memory, vcores, disks), 1, "node1");
     NodeAddedSchedulerEvent nodeEvent1 = new NodeAddedSchedulerEvent(node1);
     scheduler.handle(nodeEvent1);
 
@@ -112,6 +112,8 @@ public class TestFairSchedulerPreemption extends FairSchedulerTestBase {
         memory, scheduler.rootMetrics.getAvailableMB());
     assertEquals("Incorrect amount of resources in the cluster",
         vcores, scheduler.rootMetrics.getAvailableVirtualCores());
+    assertEquals("Incorrect amount of resources in the cluster",
+        disks, scheduler.rootMetrics.getAvailableDisks(), 0.001);
 
     createSchedulingRequest(appMemory, "queueA", "user1", appContainers);
     scheduler.update();
@@ -131,15 +133,15 @@ public class TestFairSchedulerPreemption extends FairSchedulerTestBase {
     out.println("<?xml version=\"1.0\"?>");
     out.println("<allocations>");
     out.println("<queue name=\"default\">");
-    out.println("<maxResources>0mb,0vcores</maxResources>");
+    out.println("<maxResources>0mb,0vcores,0disks</maxResources>");
     out.println("</queue>");
     out.println("<queue name=\"queueA\">");
     out.println("<weight>1</weight>");
-    out.println("<minResources>1024mb,0vcores</minResources>");
+    out.println("<minResources>1024mb,0vcores,0disks</minResources>");
     out.println("</queue>");
     out.println("<queue name=\"queueB\">");
     out.println("<weight>1</weight>");
-    out.println("<minResources>1024mb,0vcores</minResources>");
+    out.println("<minResources>1024mb,0vcores,0disks</minResources>");
     out.println("</queue>");
     out.print("<defaultMinSharePreemptionTimeout>5</defaultMinSharePreemptionTimeout>");
     out.print("<fairSharePreemptionTimeout>10</fairSharePreemptionTimeout>");
@@ -148,7 +150,7 @@ public class TestFairSchedulerPreemption extends FairSchedulerTestBase {
 
     startResourceManager(0f);
     // Create node with 4GB memory and 4 vcores
-    registerNodeAndSubmitApp(4 * 1024, 4, 2, 1024);
+    registerNodeAndSubmitApp(4 * 1024, 4, 1, 2, 1024);
 
     // Verify submitting another request triggers preemption
     createSchedulingRequest(1024, "queueB", "user1", 1, 1);
@@ -164,7 +166,7 @@ public class TestFairSchedulerPreemption extends FairSchedulerTestBase {
 
     startResourceManager(0.8f);
     // Create node with 4GB memory and 4 vcores
-    registerNodeAndSubmitApp(4 * 1024, 4, 3, 1024);
+    registerNodeAndSubmitApp(4 * 1024, 4, 1, 3, 1024);
 
     // Verify submitting another request doesn't trigger preemption
     createSchedulingRequest(1024, "queueB", "user1", 1, 1);
@@ -180,7 +182,7 @@ public class TestFairSchedulerPreemption extends FairSchedulerTestBase {
 
     startResourceManager(0.7f);
     // Create node with 4GB memory and 4 vcores
-    registerNodeAndSubmitApp(4 * 1024, 4, 3, 1024);
+    registerNodeAndSubmitApp(4 * 1024, 4, 1, 3, 1024);
 
     // Verify submitting another request triggers preemption
     createSchedulingRequest(1024, "queueB", "user1", 1, 1);
