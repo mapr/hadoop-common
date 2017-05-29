@@ -3,14 +3,14 @@ Hadoop YARN Change Log
 Release 2.8.0 - UNRELEASED
 
   INCOMPATIBLE CHANGES
-  
+
     YARN-2336. Fair scheduler's REST API returns a missing '[' bracket JSON for
     deep queue tree. (Kenji Kikushima and Akira Ajisaka via ozawa)
 
   NEW FEATURES
 
   IMPROVEMENTS
-  
+
     YARN-1050. Document the Fair Scheduler REST API. (Kenji Kikushima and Roman Shaposhnik via kasha)
 
     MAPREDUCE-6478. Add an option to skip cleanupJob stage or ignore cleanup
@@ -19,7 +19,7 @@ Release 2.8.0 - UNRELEASED
   OPTIMIZATIONS
 
   BUG FIXES
-  
+
     YARN-4546. ResourceManager crash due to scheduling opportunity overflow.
     (Jason Lowe via junping_du)
 
@@ -36,18 +36,21 @@ Release 2.7.3 - UNRELEASED
   BUG FIXES
 
     YARN-4347. Resource manager fails with Null pointer exception. (Jian He via wangda)
-    
+
     YARN-3849. Too much of preemption activity causing continuos killing of containers
     across queues. (Sunil G via wangda)
-    
+
     YARN-4422. Generic AHS sometimes doesn't show started, node, or logs on App page
     (Eric Payne via jeagles)
-    
+
     YARN-4452. NPE when submit Unmanaged application. (Naganarasimha G R via
     junping_du)
 
     YARN-3655. FairScheduler: potential livelock due to maxAMShare limitation
     and container reservation. (Zhihai Xu via kasha)
+
+    YARN-4380. TestResourceLocalizationService.testDownloadingResourcesOnContainerKill
+    fails intermittently. (Varun Saxena via ozawa)
 
 Release 2.7.1 - UNRELEASED
 
@@ -72,7 +75,7 @@ Release 2.7.1 - UNRELEASED
 
     YARN-3697. FairScheduler: ContinuousSchedulingThread can fail to shutdown.
     (Zhihai Xu via kasha)
-    
+
     YARN-3535. Scheduler must re-request container resources when RMContainer transitions
     from ALLOCATED to KILLED. (rohithsharma and peng.zhang via asuresh)
 
@@ -86,26 +89,26 @@ Release 2.7.1 - UNRELEASED
     junping_du)
 
     YARN-3878. AsyncDispatcher can hang while stopping if it is configured for
-    draining events on stop. (Varun Saxena via jianhe) 
+    draining events on stop. (Varun Saxena via jianhe)
 
     YARN-3351. AppMaster tracking URL is broken in HA. (Anubhav Dhoot via kasha)
 
     YARN-4047. ClientRMService getApplications has high scheduler lock contention.
     (Jason Lowe via jianhe)
-    
+
     YARN-4424. Fix deadlock in RMAppImpl. (Jian he via wangda)
 
     YARN-4041. Slow delegation token renewal can severely prolong RM recovery. Contributed by Sunil G
 
     YARN-3476. Nodemanager can fail to delete local logs if log aggregation
     fails (Rohith via jlowe)
-    
+
     YARN-3415. Non-AM containers can be counted towards amResourceUsage of a
     Fair Scheduler queue (Zhihai Xu via Sandy Ryza)
 
     YARN-3480. Remove attempts that are beyond max-attempt limit from state
     store. (Jun Gong via jianhe)
-    
+
     YARN-4497. RM might fail to restart when recovering apps whose attempts are missing.
     (Jun Gong via rohithsharmaks)
 Release 2.7.0 - 2015-04-20
@@ -322,7 +325,7 @@ Release 2.7.0 - 2015-04-20
     YARN-3098. Created common QueueCapacities class in Capacity Scheduler to
     track capacities-by-labels of queues. (Wangda Tan via jianhe)
 
-    YARN-3075. NodeLabelsManager implementation to retrieve label to node 
+    YARN-3075. NodeLabelsManager implementation to retrieve label to node
     mapping (Varun Saxena via wangda)
 
     YARN-1393. SLS: Add how-to-use instructions. (Wei Yan via kasha)
@@ -476,8 +479,8 @@ Release 2.7.0 - 2015-04-20
 
     YARN-3614 FileSystemRMStateStore throw exception when failed to remove
     application, that cause resourcemanager to crash
-  
-    YARN-3485. FairScheduler headroom calculation doesn't consider 
+
+    YARN-3485. FairScheduler headroom calculation doesn't consider
     maxResources for Fifo and FairShare policies. (kasha)
 
     YARN-4256. YARN fair scheduler vcores with decimal values. Contributed by Jun Gong
@@ -611,7 +614,7 @@ Release 2.7.0 - 2015-04-20
     YARN-2931. PublicLocalizer may fail until directory is initialized by
     LocalizeRunner. (Anubhav Dhoot via kasha)
 
-    YARN-2910. FSLeafQueue can throw ConcurrentModificationException. 
+    YARN-2910. FSLeafQueue can throw ConcurrentModificationException.
     (Wilfred Spiegelenburg via kasha)
 
     YARN-2930. Fixed TestRMRestart#testRMRestartRecoveringNodeLabelManager
@@ -623,7 +626,7 @@ Release 2.7.0 - 2015-04-20
     YARN-2917. Fixed potential deadlock when system.exit is called in AsyncDispatcher
     (Rohith Sharmaks via jianhe)
 
-    YARN-2243. Order of arguments for Preconditions.checkNotNull() is wrong in 
+    YARN-2243. Order of arguments for Preconditions.checkNotNull() is wrong in
     SchedulerApplicationAttempt ctor. (devaraj)
 
     YARN-2912 Jersey Tests failing with port in use. (varun saxena via stevel)
@@ -643,7 +646,7 @@ Release 2.7.0 - 2015-04-20
     YARN-2964. RM prematurely cancels tokens for jobs that submit jobs (oozie)
     (Jian He via jlowe)
 
-    YARN-2675. containersKilled metrics is not updated when the container is killed 
+    YARN-2675. containersKilled metrics is not updated when the container is killed
     during localization. (Zhihai Xu via kasha)
 
     YARN-2952. Fixed incorrect version check in StateStore. (Rohith Sharmaks
@@ -662,7 +665,7 @@ Release 2.7.0 - 2015-04-20
     YARN-2340. Fixed NPE when queue is stopped during RM restart.
     (Rohith Sharmaks via jianhe)
 
-    YARN-2940. Fix new findbugs warnings in rest of the hadoop-yarn components. (Li Lu 
+    YARN-2940. Fix new findbugs warnings in rest of the hadoop-yarn components. (Li Lu
     via junping_du)
 
     YARN-2937. Fixed new findbugs warnings in hadoop-yarn-nodemanager. (Varun Saxena
@@ -810,7 +813,7 @@ Release 2.7.0 - 2015-04-20
     http(s)://proxy addr:port/proxy/<appId> to avoid duplicate sections. (Devaraj
     K via zjshen)
 
-    YARN-3160. Fix non-atomic operation on nodeUpdateQueue in RMNodeImpl. 
+    YARN-3160. Fix non-atomic operation on nodeUpdateQueue in RMNodeImpl.
     (Chengbing Liu via junping_du)
 
     YARN-3074. Nodemanager dies when localizer runner tries to write to a full
@@ -864,7 +867,7 @@ Release 2.7.0 - 2015-04-20
     YARN-3239. WebAppProxy does not support a final tracking url which has
     query fragments and params (Jian He via jlowe)
 
-    YARN-3256. TestClientToAMTokens#testClientTokenRace is not running against 
+    YARN-3256. TestClientToAMTokens#testClientTokenRace is not running against
     all Schedulers even when using ParameterizedSchedulerTestBase. 
     (Anubhav Dhoot via devaraj)
 
@@ -877,10 +880,10 @@ Release 2.7.0 - 2015-04-20
     YARN-3131. YarnClientImpl should check FAILED and KILLED state in
     submitApplication (Chang Li via jlowe)
     
-    YARN-3231. FairScheduler: Changing queueMaxRunningApps interferes with pending 
+    YARN-3231. FairScheduler: Changing queueMaxRunningApps interferes with pending
     jobs. (Siqi Li via kasha)
 
-    YARN-3242. Asynchrony in ZK-close can lead to ZKRMStateStore watcher receiving 
+    YARN-3242. Asynchrony in ZK-close can lead to ZKRMStateStore watcher receiving
     events for old client. (Zhihai Xu via kasha)
 
     YARN-3227. Timeline renew delegation token fails when RM user's TGT is expired
@@ -912,7 +915,7 @@ Release 2.7.0 - 2015-04-20
     YARN-3171. Sort by Application id, AppAttempt and ContainerID doesn't work
     in ATS / RM web ui. (Naganarasimha G R via xgong)
 
-    YARN-1453. [JDK8] Fix Javadoc errors caused by incorrect or illegal tags in 
+    YARN-1453. [JDK8] Fix Javadoc errors caused by incorrect or illegal tags in
     doc comments. (Akira AJISAKA, Andrew Purtell, and Allen Wittenauer via ozawa)
 
     YARN-3349. Treat all exceptions as failure in
