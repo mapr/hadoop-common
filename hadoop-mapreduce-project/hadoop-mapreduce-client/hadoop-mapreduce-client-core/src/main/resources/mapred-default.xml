@@ -1978,6 +1978,11 @@
   <value>0.0.0.0:19888</value>
   <description>MapReduce JobHistory Server Web UI host:port</description>
 </property>
+<property>
+  <name>mapreduce.jobhistory.webapp.https.address</name>
+  <value>0.0.0.0:19890</value>
+  <description>MapReduce JobHistory Server Secure Web UI host:port</description>
+</property>
 
 <property>
   <name>mapreduce.jobhistory.keytab</name>
