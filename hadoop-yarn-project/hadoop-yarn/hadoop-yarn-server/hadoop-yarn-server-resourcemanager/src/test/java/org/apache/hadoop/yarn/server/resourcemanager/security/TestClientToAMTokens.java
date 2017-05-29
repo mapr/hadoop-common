@@ -18,6 +18,9 @@
 
 package org.apache.hadoop.yarn.server.resourcemanager.security;
 
+import org.apache.hadoop.fs.CommonConfigurationKeys;
+import org.apache.hadoop.security.User;
+import org.apache.hadoop.security.rpcauth.KerberosAuthMethod;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.server.resourcemanager
     .ParameterizedSchedulerTestBase;
@@ -180,6 +183,10 @@ public class TestClientToAMTokens extends ParameterizedSchedulerTestBase {
   public void testClientToAMTokens() throws Exception {
     conf.set(CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION,
       "kerberos");
+    conf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+      User.class.getName());
+    conf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+      KerberosAuthMethod.class.getName());
     UserGroupInformation.setConfiguration(conf);
 
     ContainerManagementProtocol containerManager =
@@ -421,6 +428,10 @@ public class TestClientToAMTokens extends ParameterizedSchedulerTestBase {
 
     conf.set(CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION,
       "kerberos");
+    conf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+      User.class.getName());
+    conf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+      KerberosAuthMethod.class.getName());
     UserGroupInformation.setConfiguration(conf);
 
     ContainerManagementProtocol containerManager =
