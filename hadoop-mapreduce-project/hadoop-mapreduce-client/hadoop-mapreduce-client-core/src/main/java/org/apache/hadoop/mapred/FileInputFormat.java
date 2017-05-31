@@ -388,8 +388,7 @@ public abstract class FileInputFormat<K, V> implements InputFormat<K, V> {
 
   protected long computeSplitSize(long goalSize, long minSize,
                                        long blockSize) {
-    return Math.max(minSize, blockSize == 0 ? goalSize
-                                             : Math.min(goalSize, blockSize));
+    return Math.max(minSize, Math.min(goalSize, blockSize));
   }
 
   protected int getBlockIndex(BlockLocation[] blkLocations, 
