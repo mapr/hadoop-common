@@ -46,6 +46,8 @@ Release 2.7.5
     TestRefreshUserMappings.testRefreshSuperUserGroupsConfiguration
     test failure. (Rakesh R via kihwal)
 
+    HDFS-5042. Completed files lost after power failure. (vinayakumarb via kihwal)
+
 Release 2.7.0 - 2015-04-20
 
   INCOMPATIBLE CHANGES
