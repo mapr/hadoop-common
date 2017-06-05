@@ -122,6 +122,9 @@ Release 2.8.0 - UNRELEASED
     YARN-4643. Container recovery is broken with delegating container runtime
         (Sidharta Seethana via jlowe)
 
+    YARN-1471. The SLS simulator is not running the preemption policy
+    for CapacityScheduler (Carlo Curino via cdouglas) Backport by Ye Zhou.
+
 Release 2.7.3 - 2016-08-25
 
   INCOMPATIBLE CHANGES
