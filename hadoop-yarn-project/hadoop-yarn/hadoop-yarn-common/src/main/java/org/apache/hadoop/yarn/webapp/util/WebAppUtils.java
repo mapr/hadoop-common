@@ -410,23 +410,21 @@ public class WebAppUtils {
   /**
    * Load the SSL keystore / truststore into the HttpServer builder.
    * @param builder the HttpServer2.Builder to populate with ssl config
-   * @param sslConf the Configuration instance to use during loading of SSL conf
+   * @param conf the Configuration instance to load custom SSL config from
+   *
+   * @return HttpServer2.Builder instance (passed in as the first parameter)
+   *         after loading SSL stores
    */
   public static HttpServer2.Builder loadSslConfiguration(
-      HttpServer2.Builder builder, Configuration sslConf) {
+      HttpServer2.Builder builder, Configuration conf) {
 
-    boolean loadResource = false;
-    if (sslConf == null) {
-      sslConf = new Configuration(false);
-      loadResource = true;
-    } else {
-      loadResource = (sslConf.get("ssl.server.keystore.location") == null);
+    Configuration sslConf = new Configuration(false);
+
+    sslConf.addResource(YarnConfiguration.YARN_SSL_SERVER_RESOURCE_DEFAULT);
+    if (conf != null) {
+      sslConf.addResource(conf);
     }
     boolean needsClientAuth = YarnConfiguration.YARN_SSL_CLIENT_HTTPS_NEED_AUTH_DEFAULT;
-    if (loadResource) {
-      sslConf.addResource(YarnConfiguration.YARN_SSL_SERVER_RESOURCE_DEFAULT);
-    }
-
     return builder
         .needsClientAuth(needsClientAuth)
         .keyPassword(getPassword(sslConf, WEB_APP_KEY_PASSWORD_KEY))

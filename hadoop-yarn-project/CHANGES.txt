@@ -58,6 +58,9 @@ Release 2.7.3 - UNRELEASED
     
     YARN-4760. proxy redirect to history server uses wrong URL (Eric Badger
     via jlowe)
+    
+    YARN-4562. YARN WebApp ignores the configuration passed to it for keystore
+    settings (Sergey Shelukhin via vvasudev)
 
 Release 2.7.1 - UNRELEASED
 
