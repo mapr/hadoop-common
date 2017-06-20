@@ -21,7 +21,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.text.MessageFormat;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Set;
@@ -67,7 +66,8 @@ import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.server.resourcemanager.ResourceManager;
 import org.apache.hadoop.yarn.server.utils.BuilderUtils;
 import org.apache.hadoop.yarn.sls.utils.SLSUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Private
 @Unstable
@@ -103,7 +103,7 @@ public class SLSRunner {
           new HashMap<String, Object>();
 
   // logger
-  public final static Logger LOG = Logger.getLogger(SLSRunner.class);
+  public final static Logger LOG = LoggerFactory.getLogger(SLSRunner.class);
 
   // input traces, input-rumen or input-sls
   private boolean isSLS;
@@ -246,13 +246,12 @@ public class SLSRunner {
       if (numRunningNodes == numNMs) {
         break;
       }
-      LOG.info(MessageFormat.format("SLSRunner is waiting for all " +
-              "nodes RUNNING. {0} of {1} NMs initialized.",
-              numRunningNodes, numNMs));
+      LOG.info("SLSRunner is waiting for all nodes RUNNING. {} of {} NMs initialized.",
+              numRunningNodes, numNMs);
       Thread.sleep(1000);
     }
-    LOG.info(MessageFormat.format("SLSRunner takes {0} ms to launch all nodes.",
-            (System.currentTimeMillis() - startTimeMS)));
+    LOG.info("SLSRunner takes {} ms to launch all nodes.",
+            (System.currentTimeMillis() - startTimeMS));
   }
 
   @SuppressWarnings("unchecked")
@@ -444,14 +443,14 @@ public class SLSRunner {
     if (printSimulation) {
       // node
       LOG.info("------------------------------------");
-      LOG.info(MessageFormat.format("# nodes = {0}, # racks = {1}, capacity " +
-              "of each node {2} MB memory, {3} vcores and {4} disks.",
-              numNMs, numRacks, nmMemoryMB, nmVCores, nmDisks));
+      LOG.info("# nodes = {}, # racks = {}, capacity " +
+              "of each node {} MB memory, {} vcores and {} disks.",
+              numNMs, numRacks, nmMemoryMB, nmVCores, nmDisks);
       LOG.info("------------------------------------");
       // job
-      LOG.info(MessageFormat.format("# applications = {0}, # total " +
-              "tasks = {1}, average # tasks per application = {2}",
-              numAMs, numTasks, (int)(Math.ceil((numTasks + 0.0) / numAMs))));
+      LOG.info("# applications = {}, # total tasks = {}, " +
+                      "average # tasks per application = {}",
+              numAMs, numTasks, (int)(Math.ceil((numTasks + 0.0) / numAMs)));
       LOG.info("JobId\tQueue\tAMType\tDuration\t#Tasks");
       for (Map.Entry<String, AMSimulator> entry : amMap.entrySet()) {
         AMSimulator am = entry.getValue();
@@ -460,13 +459,13 @@ public class SLSRunner {
       }
       LOG.info("------------------------------------");
       // queue
-      LOG.info(MessageFormat.format("number of queues = {0}  average " +
-              "number of apps = {1}", queueAppNumMap.size(),
-              (int)(Math.ceil((numAMs + 0.0) / queueAppNumMap.size()))));
+      LOG.info("number of queues = {}  average number of apps = {}",
+              queueAppNumMap.size(),
+              (int)(Math.ceil((numAMs + 0.0) / queueAppNumMap.size())));
       LOG.info("------------------------------------");
       // runtime
-      LOG.info(MessageFormat.format("estimated simulation time is {0}" +
-              " seconds", (long)(Math.ceil(maxRuntime / 1000.0))));
+      LOG.info("estimated simulation time is {} seconds",
+              (long)(Math.ceil(maxRuntime / 1000.0)));
       LOG.info("------------------------------------");
     }
     // package these information in the simulateInfoMap used by other places

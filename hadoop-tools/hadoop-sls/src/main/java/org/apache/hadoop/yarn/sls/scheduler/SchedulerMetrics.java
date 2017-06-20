@@ -40,20 +40,20 @@ public abstract class SchedulerMetrics {
   protected MetricRegistry metrics;
   protected Set<String> appTrackedMetrics;
   protected Set<String> queueTrackedMetrics;
-  
+
   public SchedulerMetrics() {
     appTrackedMetrics = new HashSet<String>();
     appTrackedMetrics.add("live.containers");
     appTrackedMetrics.add("reserved.containers");
     queueTrackedMetrics = new HashSet<String>();
   }
-  
+
   public void init(ResourceScheduler scheduler, MetricRegistry metrics) {
     this.scheduler = scheduler;
     this.trackedQueues = new HashSet<String>();
     this.metrics = metrics;
   }
-  
+
   public void trackApp(final ApplicationAttemptId appAttemptId,
                        String oldAppId) {
     metrics.register("variable.app." + oldAppId + ".live.containers",
@@ -75,7 +75,7 @@ public abstract class SchedulerMetrics {
       }
     );
   }
-  
+
   public void untrackApp(ApplicationAttemptId appAttemptId,
       String oldAppId) {
     for (String m : appTrackedMetrics) {
