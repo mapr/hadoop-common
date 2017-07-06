@@ -332,6 +332,14 @@
     <name>yarn.resourcemanager.state-store.max-completed-applications</name>
     <value>${yarn.resourcemanager.max-completed-applications}</value>
   </property>
+  
+  <property>
+    <description>Whether RM should remove corrupted files with app state data
+      from RM FS state store during their loading or not.
+    </description>
+    <name>yarn.resourcemanager.fs.state-store.remove-corrupted-data</name>
+    <value>false</value>
+  </property>
 
   <property>
     <description>Host:Port of the ZooKeeper server to be used by the RM. This

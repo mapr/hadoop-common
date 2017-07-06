@@ -578,6 +578,15 @@ public class YarnConfiguration extends Configuration {
   public static final int DEFAULT_RM_STATE_STORE_MAX_COMPLETED_APPLICATIONS =
       DEFAULT_RM_MAX_COMPLETED_APPLICATIONS;
 
+  /**
+   * Whether RM should remove corrupted files with app state data
+   * from RM FS state store during their loading or not.
+   */
+  public static final String FS_RM_STATE_STORE_REMOVE_CORRUPTED_DATA =
+      RM_PREFIX + "fs.state-store.remove-corrupted-data";
+  public static final boolean DEFAULT_FS_RM_STATE_STORE_REMOVE_CORRUPTED_DATA =
+      false;
+
   /** Default application name */
   public static final String DEFAULT_APPLICATION_NAME = "N/A";
 
