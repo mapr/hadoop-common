@@ -54,7 +54,6 @@ import javax.net.SocketFactory;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.impl.Log4JLogger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
@@ -70,8 +69,8 @@ import org.apache.hadoop.ipc.Server.Connection;
 import org.apache.hadoop.ipc.protobuf.RpcHeaderProtos.RpcResponseHeaderProto;
 import org.apache.hadoop.net.ConnectTimeoutException;
 import org.apache.hadoop.net.NetUtils;
+import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.util.StringUtils;
-import org.apache.log4j.Level;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
@@ -82,6 +81,7 @@ import org.mockito.stubbing.Answer;
 
 import com.google.common.primitives.Bytes;
 import com.google.common.primitives.Ints;
+import org.slf4j.event.Level;
 
 /** Unit tests for IPC. */
 public class TestIPC {
@@ -768,7 +768,7 @@ public class TestIPC {
 
   @Test(timeout=30000)
   public void testConnectionIdleTimeouts() throws Exception {
-    ((Log4JLogger)Server.LOG).getLogger().setLevel(Level.DEBUG);
+    GenericTestUtils.setLogLevel(Server.LOG, Level.DEBUG);
     final int maxIdle = 1000;
     final int cleanupInterval = maxIdle*3/4; // stagger cleanups
     final int killMax = 3;

@@ -21,7 +21,9 @@ package org.apache.hadoop.test;
 import org.junit.Test;
 
 import com.google.common.base.Supplier;
+import org.slf4j.event.Level;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 public class TestGenericTestUtils extends GenericTestUtils {
@@ -107,5 +109,13 @@ public class TestGenericTestUtils extends GenericTestUtils {
     } catch (IllegalArgumentException e) {
       assertExceptionContains(GenericTestUtils.ERROR_INVALID_ARGUMENT, e);
     }
+  }
+
+  @Test
+  public void testToLevel() throws Throwable {
+    assertEquals(Level.INFO, toLevel("INFO"));
+    assertEquals(Level.DEBUG, toLevel("NonExistLevel"));
+    assertEquals(Level.INFO, toLevel("INFO", Level.TRACE));
+    assertEquals(Level.TRACE, toLevel("NonExistLevel", Level.TRACE));
   }
 }

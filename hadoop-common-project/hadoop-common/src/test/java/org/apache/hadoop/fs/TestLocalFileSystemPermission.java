@@ -21,6 +21,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.permission.*;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.Shell;
+import org.slf4j.event.Level;
 
 import java.io.*;
 import java.util.*;

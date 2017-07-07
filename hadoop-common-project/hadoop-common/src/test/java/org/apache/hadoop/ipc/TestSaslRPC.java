@@ -71,7 +71,6 @@ import javax.security.sasl.SaslServer;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.impl.Log4JLogger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
@@ -94,11 +93,11 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod;
 import org.apache.hadoop.security.token.SecretManager;
 import org.apache.hadoop.security.token.SecretManager.InvalidToken;
+import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.TokenIdentifier;
 import org.apache.hadoop.security.token.TokenInfo;
 import org.apache.hadoop.security.token.TokenSelector;
-import org.apache.log4j.Level;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -106,6 +105,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.slf4j.event.Level;
 
 /** Unit tests for using Sasl over RPC. */
 @RunWith(Parameterized.class)
@@ -138,7 +138,7 @@ public class TestSaslRPC {
     this.expectedQop = expectedQop;
     this.saslPropertiesResolver = saslPropertiesResolver;
   }
-  
+
   private static final String ADDRESS = "0.0.0.0";
 
   public static final Log LOG =
@@ -205,19 +205,19 @@ public class TestSaslRPC {
   }
 
   static {
-    ((Log4JLogger) Client.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger) Server.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger) SaslRpcClient.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger) SaslRpcServer.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger) SaslInputStream.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger) SecurityUtil.LOG).getLogger().setLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(Client.LOG, Level.TRACE);
+    GenericTestUtils.setLogLevel(Server.LOG, Level.TRACE);
+    GenericTestUtils.setLogLevel(SaslRpcClient.LOG, Level.TRACE);
+    GenericTestUtils.setLogLevel(SaslRpcServer.LOG, Level.TRACE);
+    GenericTestUtils.setLogLevel(SaslInputStream.LOG, Level.TRACE);
+    GenericTestUtils.setLogLevel(SecurityUtil.LOG, Level.TRACE);
   }
 
   public static class TestTokenIdentifier extends TokenIdentifier {
     private Text tokenid;
     private Text realUser;
     final static Text KIND_NAME = new Text("test.token");
-    
+
     public TestTokenIdentifier() {
       this(new Text(), new Text());
     }
@@ -255,7 +255,7 @@ public class TestSaslRPC {
       realUser.write(out);
     }
   }
-  
+
   public static class TestTokenSecretManager extends
       SecretManager<TestTokenIdentifier> {
     @Override
@@ -264,17 +264,17 @@ public class TestSaslRPC {
     }
 
     @Override
-    public byte[] retrievePassword(TestTokenIdentifier id) 
+    public byte[] retrievePassword(TestTokenIdentifier id)
         throws InvalidToken {
       return id.getBytes();
     }
-    
+
     @Override
     public TestTokenIdentifier createIdentifier() {
       return new TestTokenIdentifier();
     }
   }
-  
+
   public static class BadTokenSecretManager extends TestTokenSecretManager {
 
     @Override
@@ -302,7 +302,7 @@ public class TestSaslRPC {
       return null;
     }
   }
-  
+
   @KerberosInfo(
       serverPrincipal = SERVER_PRINCIPAL_KEY)
   @TokenInfo(TestTokenSelector.class)
@@ -366,7 +366,7 @@ public class TestSaslRPC {
     public TokenInfo getTokenInfo(Class<?> protocol, Configuration conf) {
       return new TokenInfo() {
         @Override
-        public Class<? extends TokenSelector<? extends 
+        public Class<? extends TokenSelector<? extends
             TokenIdentifier>> value() {
           return TestTokenSelector.class;
         }
@@ -445,7 +445,7 @@ public class TestSaslRPC {
       assertEquals(TOKEN, authMethod);
       //QOP must be auth
       assertEquals(expectedQop.saslQop,
-                   RPC.getConnectionIdForProxy(proxy).getSaslQop());            
+                   RPC.getConnectionIdForProxy(proxy).getSaslQop());
       proxy.ping();
     } finally {
       server.stop();
@@ -454,7 +454,7 @@ public class TestSaslRPC {
       }
     }
   }
-  
+
   @Test
   public void testPingInterval() throws Exception {
     Configuration newConf = new Configuration(conf);
@@ -1007,7 +1007,7 @@ public class TestSaslRPC {
         .setInstance(new TestSaslImpl()).setBindAddress(ADDRESS).setPort(0)
         .setNumHandlers(5).setVerbose(true)
         .setSecretManager(serverSm)
-        .build();      
+        .build();
         server.start();
         return server;
       }
@@ -1057,14 +1057,14 @@ public class TestSaslRPC {
           try {
             proxy = RPC.getProxy(TestSaslProtocol.class,
                 TestSaslProtocol.versionID, addr, clientConf);
-            
+
             proxy.ping();
             // make sure the other side thinks we are who we said we are!!!
             assertEquals(clientUgi.getUserName(), proxy.getAuthUser());
             AuthenticationMethod authMethod = proxy.getAuthMethod();
             // verify sasl completed with correct QOP
             assertEquals((authMethod != AuthenticationMethod.SIMPLE) ? expectedQop.saslQop : null,
-                         RPC.getConnectionIdForProxy(proxy).getSaslQop());            
+                         RPC.getConnectionIdForProxy(proxy).getSaslQop());
             return authMethod.toString();
           } finally {
             if (proxy != null) {

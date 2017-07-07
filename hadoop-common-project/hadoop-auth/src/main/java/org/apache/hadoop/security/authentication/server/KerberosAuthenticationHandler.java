@@ -65,7 +65,7 @@ import static org.apache.hadoop.util.PlatformName.IBM_JAVA;
  * </ul>
  */
 public class KerberosAuthenticationHandler implements AuthenticationHandler {
-  private static Logger LOG = LoggerFactory.getLogger(KerberosAuthenticationHandler.class);
+  public static final Logger LOG = LoggerFactory.getLogger(KerberosAuthenticationHandler.class);
 
   /**
    * Kerberos context configuration for the JDK GSS library.

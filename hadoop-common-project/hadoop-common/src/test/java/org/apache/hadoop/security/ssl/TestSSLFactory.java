@@ -23,7 +23,6 @@ import static org.junit.Assert.assertEquals;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.security.alias.CredentialProvider;
 import org.apache.hadoop.security.alias.CredentialProviderFactory;
 import org.apache.hadoop.security.alias.JavaKeyStoreProvider;
 import org.junit.After;
@@ -42,7 +41,6 @@ import java.util.Collections;
 import java.util.Map;
 
 public class TestSSLFactory {
-
   private static final String BASEDIR =
     System.getProperty("test.build.dir", "target/test-dir") + "/" +
     TestSSLFactory.class.getSimpleName();
