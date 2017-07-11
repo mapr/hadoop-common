@@ -1,5 +1,7 @@
 Hadoop Change Log
 
+    HADOOP-14586. StringIndexOutOfBoundsException breaks org.apache.hadoop.util.Shell on 2.7.x with Java 9. (Uwe Schindler via shv)
+
     HADOOP-11843. Make setting up the build environment easier.
     (Niels Basjes via cnauroth)
 
@@ -4924,7 +4926,7 @@ Release 0.23.1 - 2012-02-17
 
    HADOOP-7841. Run tests with non-secure random. (tlipcon)
 
-    HADOOP-7851. Configuration.getClasses() never returns the default value. 
+    HADOOP-7851. Configuration.getClasses() never returns the default value.
                  (Uma Maheswara Rao G via amarrk)
 
    HADOOP-7787. Make source tarball use conventional name.
