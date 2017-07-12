@@ -866,6 +866,22 @@ for ldap providers in the same way as above does.
 </property>
 
 <property>
+  <description>The maximum number of entries the FileSystem 
+    cache may contain
+  </description>
+  <name>fs.cache.entries.max-size</name>
+  <value>10000</value>
+</property>
+
+<property>
+  <description>The length of time after an entry is last accessed 
+    that it should be automatically removed from the FileSystem cache
+  </description>
+  <name>fs.cache.entries.expire-after-access-ms</name>
+  <value>60000</value>
+</property>
+
+<property>
   <name>io.seqfile.compress.blocksize</name>
   <value>1000000</value>
   <description>The minimum block size for compression in block compressed 

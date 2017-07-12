@@ -41,8 +41,12 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
@@ -2693,8 +2697,30 @@ public abstract class FileSystem extends Configured implements Closeable {
   /** Caching FileSystem objects */
   static class Cache {
     private final ClientFinalizer clientFinalizer = new ClientFinalizer();
+    
+    private final Configuration conf = new Configuration();
+    
+    private final int FS_CACHE_ENTRIES_MAX_SIZE = conf.getInt(
+      CommonConfigurationKeys.FS_CACHE_ENTRIES_MAX_SIZE,
+      CommonConfigurationKeys.DEFAULT_FS_CACHE_ENTRIES_MAX_SIZE);
 
-    private final Map<Key, FileSystem> map = new HashMap<Key, FileSystem>();
+    private final int FS_CACHE_ENTRIES_EXPIRE_AFTER_ACCESS_MS = conf.getInt(
+      CommonConfigurationKeys.FS_CACHE_ENTRIES_EXPIRE_AFTER_ACCESS_MS,
+      CommonConfigurationKeys.DEFAULT_FS_CACHE_ENTRIES_EXPIRE_AFTER_ACCESS_MS);
+    
+     private final Map<Key, FileSystem> map = CacheBuilder.newBuilder()
+      .maximumSize(FS_CACHE_ENTRIES_MAX_SIZE)
+      .expireAfterAccess(FS_CACHE_ENTRIES_EXPIRE_AFTER_ACCESS_MS, TimeUnit.MILLISECONDS)
+      .removalListener(new RemovalListener<Key, FileSystem>() {
+        @Override
+        public void onRemoval(RemovalNotification<Key, FileSystem> removal) {
+          removal.getValue().processDeleteOnExit();
+          toAutoClose.remove(removal.getKey());
+        }
+      })
+      .build()
+      .asMap();
+    
     private final Set<Key> toAutoClose = new HashSet<Key>();
 
     /** A variable that makes all objects in the cache unique */

@@ -21,6 +21,7 @@ package org.apache.hadoop.fs;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
 import java.security.PrivilegedExceptionAction;
 import java.util.Arrays;
 import java.util.Collections;
@@ -518,6 +519,27 @@ public class TestFileSystem extends TestCase {
 
       runTestCache(0);
     }
+  }
+
+  public void testFsLruCache() throws Exception {
+    final int cacheSize =
+      CommonConfigurationKeys.DEFAULT_FS_CACHE_ENTRIES_MAX_SIZE;
+    for (int i = 0; i < cacheSize * 2; i++) {
+      UserGroupInformation ugi = UserGroupInformation.createRemoteUser("test");
+      ugi.doAs(new PrivilegedExceptionAction<FileSystem>() {
+        public FileSystem run() throws IOException {
+          return FileSystem.get(conf);
+        }
+      });
+    }
+
+    FileSystem.Cache cache = FileSystem.CACHE;
+    Class clazz = cache.getClass();
+    Field field = clazz.getDeclaredField("map");
+    field.setAccessible(true);
+    Map<FileSystem.Cache.Key, FileSystem> map =
+      (Map<FileSystem.Cache.Key, FileSystem>) field.get(cache);
+    assertTrue(map.size() <= cacheSize);
   }
   
   static void runTestCache(int port) throws Exception {
