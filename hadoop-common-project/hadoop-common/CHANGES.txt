@@ -2,6 +2,12 @@ Hadoop Change Log
 
     HADOOP-12304. Applications using FileContext fail with the default file
     system configured to be wasb/s3/etc. (cnauroth)
+    
+    HADOOP-11859. PseudoAuthenticationHandler fails with httpcomponents v4.4.
+    (Eugene Koifman via jitendra)
+    
+    HADOOP-13362. DefaultMetricsSystem leaks the source name when a source
+    unregisters (Junping Du via jlowe)
 
 Release 2.7.0 - 2015-04-20
 

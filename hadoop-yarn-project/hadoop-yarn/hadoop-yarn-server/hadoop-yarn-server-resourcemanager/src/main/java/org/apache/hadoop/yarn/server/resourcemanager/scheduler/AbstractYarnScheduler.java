@@ -21,12 +21,15 @@ package org.apache.hadoop.yarn.server.resourcemanager.scheduler;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.classification.InterfaceAudience.Private;
+import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
@@ -67,6 +70,8 @@ import com.google.common.util.concurrent.SettableFuture;
 
 
 @SuppressWarnings("unchecked")
+@Private
+@Unstable
 public abstract class AbstractYarnScheduler
     <T extends SchedulerApplicationAttempt, N extends SchedulerNode>
     extends AbstractService implements ResourceScheduler {
@@ -84,6 +89,7 @@ public abstract class AbstractYarnScheduler
   private Resource configuredMaximumAllocation;
   private int maxNodeMemory = -1;
   private int maxNodeVCores = -1;
+  private double maxNodeDisks = -1.0;
   private final ReadLock maxAllocReadLock;
   private final WriteLock maxAllocWriteLock;
 
@@ -91,7 +97,12 @@ public abstract class AbstractYarnScheduler
   private long configuredMaximumAllocationWaitTime;
 
   protected RMContext rmContext;
-  protected Map<ApplicationId, SchedulerApplication<T>> applications;
+  
+  /*
+   * All schedulers which are inheriting AbstractYarnScheduler should use
+   * concurrent version of 'applications' map.
+   */
+  protected ConcurrentMap<ApplicationId, SchedulerApplication<T>> applications;
   protected int nmExpireInterval;
 
   protected final static List<Container> EMPTY_CONTAINER_LIST =
@@ -123,13 +134,16 @@ public abstract class AbstractYarnScheduler
     super.serviceInit(conf);
   }
 
-  public synchronized List<Container> getTransferredContainers(
+  public List<Container> getTransferredContainers(
       ApplicationAttemptId currentAttempt) {
     ApplicationId appId = currentAttempt.getApplicationId();
     SchedulerApplication<T> app = applications.get(appId);
     List<Container> containerList = new ArrayList<Container>();
     RMApp appImpl = this.rmContext.getRMApps().get(appId);
     if (appImpl.getApplicationSubmissionContext().getUnmanagedAM()) {
+      return containerList;
+    }
+    if (app == null) {
       return containerList;
     }
     Collection<RMContainer> liveContainers =
@@ -148,6 +162,21 @@ public abstract class AbstractYarnScheduler
   public Map<ApplicationId, SchedulerApplication<T>>
       getSchedulerApplications() {
     return applications;
+  }
+
+  /**
+   * Add blacklisted NodeIds to the list that is passed.
+   *
+   * @param app application attempt.
+   * @param blacklistNodeIdList the list to store blacklisted NodeIds.
+   */
+  public void addBlacklistedNodeIdsToList(SchedulerApplicationAttempt app,
+      List<NodeId> blacklistNodeIdList) {
+    for (Map.Entry<NodeId, N> nodeEntry : nodes.entrySet()) {
+      if (SchedulerAppUtils.isBlacklisted(app, nodeEntry.getValue(), LOG)) {
+        blacklistNodeIdList.add(nodeEntry.getKey());
+      }
+    }
   }
 
   @Override
@@ -600,6 +629,12 @@ public abstract class AbstractYarnScheduler
           maximumAllocation.setVirtualCores(Math.min(
               configuredMaximumAllocation.getVirtualCores(), maxNodeVCores));
         }
+        double nodeDisks = totalResource.getDisks();
+        if (nodeDisks > maxNodeDisks) {
+          maxNodeDisks = nodeDisks;
+          maximumAllocation.setDisks(Math.min(
+              configuredMaximumAllocation.getDisks(), maxNodeDisks));
+        }
       } else {  // removed node
         if (maxNodeMemory == totalResource.getMemory()) {
           maxNodeMemory = -1;
@@ -607,9 +642,12 @@ public abstract class AbstractYarnScheduler
         if (maxNodeVCores == totalResource.getVirtualCores()) {
           maxNodeVCores = -1;
         }
+        if (maxNodeDisks == totalResource.getDisks()) {
+          maxNodeDisks = -1;
+        }
         // We only have to iterate through the nodes if the current max memory
         // or vcores was equal to the removed node's
-        if (maxNodeMemory == -1 || maxNodeVCores == -1) {
+        if (maxNodeMemory == -1 || maxNodeVCores == -1 || maxNodeDisks == -1.0) {
           for (Map.Entry<NodeId, N> nodeEntry : nodes.entrySet()) {
             int nodeMemory =
                 nodeEntry.getValue().getTotalResource().getMemory();
@@ -620,6 +658,11 @@ public abstract class AbstractYarnScheduler
                 nodeEntry.getValue().getTotalResource().getVirtualCores();
             if (nodeVCores > maxNodeVCores) {
               maxNodeVCores = nodeVCores;
+            }
+            double nodeDisks =
+                nodeEntry.getValue().getTotalResource().getDisks();
+            if (nodeDisks > maxNodeDisks) {
+              maxNodeDisks = nodeDisks;
             }
           }
           if (maxNodeMemory == -1) {  // no nodes
@@ -633,6 +676,12 @@ public abstract class AbstractYarnScheduler
           } else {
             maximumAllocation.setVirtualCores(
                 Math.min(configuredMaximumAllocation.getVirtualCores(), maxNodeVCores));
+          }
+          if (maxNodeDisks == -1.0) {  // no nodes
+            maximumAllocation.setDisks(configuredMaximumAllocation.getDisks());
+          } else {
+            maximumAllocation.setDisks(
+                Math.min(configuredMaximumAllocation.getDisks(), maxNodeDisks));
           }
         }
       }
@@ -653,7 +702,11 @@ public abstract class AbstractYarnScheduler
       if (maxNodeVCores != -1) {
         maxVcores = Math.min(maxVcores, maxNodeVCores);
       }
-      maximumAllocation = Resources.createResource(maxMemory, maxVcores);
+      double maxDisks = newMaxAlloc.getDisks();
+      if (maxNodeDisks != -1.0) {
+        maxDisks = Math.min(maxVcores, maxNodeDisks);
+      }
+      maximumAllocation = Resources.createResource(maxMemory, maxVcores, maxDisks);
     } finally {
       maxAllocWriteLock.unlock();
     }

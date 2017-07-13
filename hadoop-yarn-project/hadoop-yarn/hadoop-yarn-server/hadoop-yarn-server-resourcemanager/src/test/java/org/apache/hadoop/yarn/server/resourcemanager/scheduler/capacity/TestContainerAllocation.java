@@ -19,6 +19,7 @@
 package org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -55,6 +56,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerStat
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerAppReport;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.YarnScheduler;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.fica.FiCaSchedulerApp;
 import org.apache.hadoop.yarn.server.resourcemanager.security.RMContainerTokenSecretManager;
 import org.apache.hadoop.yarn.server.utils.BuilderUtils;
 import org.junit.Assert;
@@ -185,34 +187,44 @@ public class TestContainerAllocation {
   }
 
   @Test
-  public void testNormalContainerAllocationWhenDNSUnavailable() throws Exception{
+  public void testContainerAllocationWithUnresolvedNodeAddress() throws Exception{
+
+    SecurityUtilTestHelper.setTokenServiceUseIp(true);
+
     MockRM rm1 = new MockRM(conf);
     rm1.start();
     MockNM nm1 = rm1.registerNode("unknownhost:1234", 8000);
+    MockNM nm2 = rm1.registerNode("127.0.0.1:1234", 8000);
     RMApp app1 = rm1.submitApp(200);
-    MockAM am1 = MockRM.launchAndRegisterAM(app1, rm1, nm1);
+    MockAM am1 = MockRM.launchAndRegisterAM(app1, rm1, nm2);
 
     // request a container.
-    am1.allocate("127.0.0.1", 1024, 1, new ArrayList<ContainerId>());
+    am1.allocate("127.0.0.1", 1024, 2, new ArrayList<ContainerId>());
     ContainerId containerId2 =
-        ContainerId.newContainerId(am1.getApplicationAttemptId(), 2);
-    rm1.waitForState(nm1, containerId2, RMContainerState.ALLOCATED);
+            ContainerId.newContainerId(am1.getApplicationAttemptId(), 2);
+    ContainerId containerId3 =
+            ContainerId.newContainerId(am1.getApplicationAttemptId(), 3);
 
-    // acquire the container.
-    SecurityUtilTestHelper.setTokenServiceUseIp(true);
-    List<Container> containers =
-        am1.allocate(new ArrayList<ResourceRequest>(),
-          new ArrayList<ContainerId>()).getAllocatedContainers();
-    // not able to fetch the container;
-    Assert.assertEquals(0, containers.size());
+    // try to assign container to unresolved node
+    // container assignment should be skipped
+    rm1.waitForContainerAllocated(nm1, containerId2);
+    rm1.waitForContainerAllocated(nm1, containerId3);
+    // then try to assign container to correct node
+    // should be assigned
+    rm1.waitForContainerAllocated(nm2, containerId2);
+    rm1.waitForContainerAllocated(nm2, containerId3);
 
-    SecurityUtilTestHelper.setTokenServiceUseIp(false);
-    containers =
-        am1.allocate(new ArrayList<ResourceRequest>(),
-          new ArrayList<ContainerId>()).getAllocatedContainers();
-    // should be able to fetch the container;
-    Assert.assertEquals(1, containers.size());
+
+    CapacityScheduler scheduler = (CapacityScheduler) rm1.getResourceScheduler();
+    FiCaSchedulerApp schedulerApp = scheduler.getApplicationAttempt(am1.getApplicationAttemptId());
+
+    Collection<RMContainer> containers = schedulerApp.getLiveContainers();
+
+    for (RMContainer container : containers) {
+      Assert.assertTrue("Container assigned to node with unresolved host", nm2.getNodeId().equals(container.getAllocatedNode()));
+    }
   }
+
 
   // This is to test whether LogAggregationContext is passed into
   // container tokens correctly

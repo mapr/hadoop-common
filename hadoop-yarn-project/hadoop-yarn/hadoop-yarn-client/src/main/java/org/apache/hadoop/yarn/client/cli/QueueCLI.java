@@ -22,7 +22,6 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.text.DecimalFormat;
-import java.util.Set;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
@@ -134,22 +133,9 @@ public class QueueCLI extends YarnCLI {
     writer.println(df.format(queueInfo.getCurrentCapacity() * 100) + "%");
     writer.print("\tMaximum Capacity : ");
     writer.println(df.format(queueInfo.getMaximumCapacity() * 100) + "%");
-    writer.print("\tDefault Node Label expression : ");
-    if (null != queueInfo.getDefaultNodeLabelExpression()) {
-      writer.println(queueInfo.getDefaultNodeLabelExpression());
-    } else {
-      writer.println();
-    }
-
-    Set<String> nodeLabels = queueInfo.getAccessibleNodeLabels();
-    StringBuilder labelList = new StringBuilder();
-    writer.print("\tAccessible Node Labels : ");
-    for (String nodeLabel : nodeLabels) {
-      if (labelList.length() > 0) {
-        labelList.append(',');
-      }
-      labelList.append(nodeLabel);
-    }
-    writer.println(labelList.toString());
+    writer.print("\tLabel : ");
+    writer.println(queueInfo.getQueueLabel());
+    writer.print("\tLabel Policy : ");
+    writer.println(queueInfo.getQueueLabelPolicy());
   }
 }

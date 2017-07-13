@@ -4,12 +4,20 @@ Hadoop MapReduce Change Log
 
     MAPREDUCE-6213. NullPointerException caused by job history server addr not
     resolvable. (Peng Zhang via harsh)
+    
+    MAPREDUCE-4785. TestMRApp occasionally fails (haibochen via rkanter)
 
     MAPREDUCE-5649. Reduce cannot use more than 2G memory for the final merge
     (Gera Shegalov via jlowe)
 
     MAPREDUCE-6549. multibyte delimiters with LineRecordReader cause
     duplicate records (wilfreds via rkanter)
+    
+    MAPREDUCE-5817. Mappers get rescheduled on node transition even after all
+    reducers are completed. (Sangjin Lee via kasha)
+    
+    MAPREDUCE-6513. Job got hanged forever when one NM unstable for some
+    time. Contributed by Varun Saxena & Wangda Tan
 
     MAPREDUCE-5948. org.apache.hadoop.mapred.LineRecordReader does not handle
     multibyte record delimiters well (Vinayakumar B, Rushabh Shah, and Akira

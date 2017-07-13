@@ -277,7 +277,7 @@
     in terms of virtual CPU cores. Requests higher than this will throw a
     InvalidResourceRequestException.</description>
     <name>yarn.scheduler.maximum-allocation-vcores</name>
-    <value>32</value>
+    <value>4</value>
   </property>
 
   <property>
@@ -331,6 +331,14 @@
     </description>
     <name>yarn.resourcemanager.state-store.max-completed-applications</name>
     <value>${yarn.resourcemanager.max-completed-applications}</value>
+  </property>
+  
+  <property>
+    <description>Whether RM should remove corrupted files with app state data
+      from RM FS state store during their loading or not.
+    </description>
+    <name>yarn.resourcemanager.fs.state-store.remove-corrupted-data</name>
+    <value>false</value>
   </property>
 
   <property>
@@ -697,7 +705,7 @@
   <property>
     <description>The address of the container manager in the NM.</description>
     <name>yarn.nodemanager.address</name>
-    <value>${yarn.nodemanager.hostname}:0</value>
+    <value>${yarn.nodemanager.hostname}:8099</value>
   </property>
 
   <property>
@@ -1194,7 +1202,7 @@
   <property>
     <description>Enable the node manager to recover after starting</description>
     <name>yarn.nodemanager.recovery.enabled</name>
-    <value>false</value>
+    <value>true</value>
   </property>
 
   <property>
@@ -1202,6 +1210,14 @@
     store state when recovery is enabled.</description>
     <name>yarn.nodemanager.recovery.dir</name>
     <value>${hadoop.tmp.dir}/yarn-nm-recovery</value>
+  </property>
+
+  <property>
+    <description>
+    The delay time ms to unregister container metrics after completion.
+    </description>
+    <name>yarn.nodemanager.container-metrics.unregister-delay-ms</name>
+    <value>10000</value>
   </property>
 
   <!--Docker configuration-->

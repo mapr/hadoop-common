@@ -154,6 +154,15 @@ public abstract class FSQueue implements Queue, Schedulable {
     }
     queueInfo.setChildQueues(childQueueInfos);
     queueInfo.setQueueState(QueueState.RUNNING);
+    
+    queueInfo.setQueueLabel((label == null)
+            ? Queue.LABEL_NONE
+            : label.toString());
+
+    queueInfo.setQueueLabelPolicy((labelPolicy == null)
+            ? QueueLabelPolicy.AND.name()
+            : labelPolicy.name());
+
     return queueInfo;
   }
   
@@ -265,7 +274,7 @@ public abstract class FSQueue implements Queue, Schedulable {
    * @return true if check passes (can assign) or false otherwise
    */
   protected boolean assignContainerPreCheck(FSSchedulerNode node) {
-    if (!Resources.fitsInWithoutEqual(getResourceUsage(),
+    if (!Resources.fitsIn(getResourceUsage(),
         scheduler.getAllocationConfiguration().getMaxResources(getName()))
         || node.getReservedContainer() != null) {
       return false;

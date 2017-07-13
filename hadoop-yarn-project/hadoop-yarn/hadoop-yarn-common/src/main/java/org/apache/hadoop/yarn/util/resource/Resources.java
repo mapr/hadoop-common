@@ -302,10 +302,4 @@ public class Resources {
     return createResource(Math.max(lhs.getMemory(), rhs.getMemory()),
         Math.max(lhs.getVirtualCores(), rhs.getVirtualCores()));
   }
-
-  public static boolean fitsInWithoutEqual(Resource smaller, Resource bigger) {
-     return smaller.getMemory() < bigger.getMemory() &&
-         smaller.getVirtualCores() < bigger.getVirtualCores() &&
-         smaller.getDisks() < bigger.getDisks();
-  }
 }

@@ -1264,11 +1264,11 @@ public class TestYarnCLI {
   @Test
   public void testGetQueueInfo() throws Exception {
     QueueCLI cli = createAndGetQueueCLI();
-    Set<String> nodeLabels = new HashSet<String>();
-    nodeLabels.add("GPU");
-    nodeLabels.add("JDK_7");
+    String label = "LabelA";
+    String labelPolicy = "AND";
     QueueInfo queueInfo = QueueInfo.newInstance("queueA", 0.4f, 0.8f, 0.5f,
-        null, null, QueueState.RUNNING, nodeLabels, "GPU");
+        null, null, QueueState.RUNNING, null, null,
+        label, labelPolicy);
     when(client.getQueueInfo(any(String.class))).thenReturn(queueInfo);
     int result = cli.run(new String[] { "-status", "queueA" });
     assertEquals(0, result);
@@ -1281,8 +1281,8 @@ public class TestYarnCLI {
     pw.println("\tCapacity : " + "40.0%");
     pw.println("\tCurrent Capacity : " + "50.0%");
     pw.println("\tMaximum Capacity : " + "80.0%");
-    pw.println("\tDefault Node Label expression : " + "GPU");
-    pw.println("\tAccessible Node Labels : " + "JDK_7,GPU");
+    pw.println("\tLabel : " + "LabelA");
+    pw.println("\tLabel Policy : " + "AND");
     pw.close();
     String queueInfoStr = baos.toString("UTF-8");
     Assert.assertEquals(queueInfoStr, sysOutStream.toString());
@@ -1292,7 +1292,8 @@ public class TestYarnCLI {
   public void testGetQueueInfoWithEmptyNodeLabel() throws Exception {
     QueueCLI cli = createAndGetQueueCLI();
     QueueInfo queueInfo = QueueInfo.newInstance("queueA", 0.4f, 0.8f, 0.5f,
-        null, null, QueueState.RUNNING, null, null);
+            null, null, QueueState.RUNNING, null, null,
+            null, null);
     when(client.getQueueInfo(any(String.class))).thenReturn(queueInfo);
     int result = cli.run(new String[] { "-status", "queueA" });
     assertEquals(0, result);
@@ -1305,8 +1306,8 @@ public class TestYarnCLI {
     pw.println("\tCapacity : " + "40.0%");
     pw.println("\tCurrent Capacity : " + "50.0%");
     pw.println("\tMaximum Capacity : " + "80.0%");
-    pw.println("\tDefault Node Label expression : ");
-    pw.println("\tAccessible Node Labels : ");
+    pw.println("\tLabel : null");
+    pw.println("\tLabel Policy : null");
     pw.close();
     String queueInfoStr = baos.toString("UTF-8");
     Assert.assertEquals(queueInfoStr, sysOutStream.toString());

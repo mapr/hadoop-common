@@ -1736,6 +1736,14 @@
 </property>
 
 <property>
+  <name>yarn.app.mapreduce.am.webapp.port-range</name>
+  <value></value>
+  <description>Range of ports that the MapReduce AM can use for its webapp when binding.
+    Leave blank if you want all possible ports.
+    For example 50000-50050,50100-50200</description>
+</property>
+
+<property>
   <name>yarn.app.mapreduce.am.job.committer.cancel-timeout</name>
   <value>60000</value>
   <description>The amount of time in milliseconds to wait for the output
@@ -1969,6 +1977,11 @@
   <name>mapreduce.jobhistory.webapp.address</name>
   <value>0.0.0.0:19888</value>
   <description>MapReduce JobHistory Server Web UI host:port</description>
+</property>
+<property>
+  <name>mapreduce.jobhistory.webapp.https.address</name>
+  <value>0.0.0.0:19890</value>
+  <description>MapReduce JobHistory Server Secure Web UI host:port</description>
 </property>
 
 <property>

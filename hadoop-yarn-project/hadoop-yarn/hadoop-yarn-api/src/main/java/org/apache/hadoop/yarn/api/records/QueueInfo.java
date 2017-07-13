@@ -69,6 +69,22 @@ public abstract class QueueInfo {
     return queueInfo;
   }
 
+  @Private
+  @Unstable
+  public static QueueInfo newInstance(String queueName, float capacity,
+      float maximumCapacity, float currentCapacity,
+      List<QueueInfo> childQueues, List<ApplicationReport> applications,
+      QueueState queueState, Set<String> accessibleNodeLabels,
+      String defaultNodeLabelExpression, String label, String labelPolicy) {
+
+    QueueInfo queueInfo = QueueInfo.newInstance(queueName, capacity, maximumCapacity, currentCapacity,
+        childQueues, applications, queueState, accessibleNodeLabels, defaultNodeLabelExpression);
+    queueInfo.setQueueLabel(label);
+    queueInfo.setQueueLabelPolicy(labelPolicy);
+
+    return queueInfo;
+  }
+
   /**
    * Get the <em>name</em> of the queue.
    * @return <em>name</em> of the queue

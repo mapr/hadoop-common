@@ -54,6 +54,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 import org.apache.hadoop.security.GroupMappingServiceProvider;
+import org.apache.hadoop.security.SecurityUtil;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.MockApps;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -86,12 +88,14 @@ import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppState;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttemptImpl;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttemptState;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainer;
+import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerEventType;
 import org.apache.hadoop.yarn.server.resourcemanager.rmnode.RMNode;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.AbstractYarnScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.QueueMetrics;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicationAttempt;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerNode;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.TestSchedulerUtils;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerUtils;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.AppAddedSchedulerEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.AppAttemptAddedSchedulerEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.AppAttemptRemovedSchedulerEvent;
@@ -149,8 +153,53 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     QueueMetrics.clearQueueMetrics();
     DefaultMetricsSystem.shutdown();
   }
+  
+  @Test(timeout = 30000)
+  public void testParallelChildQueuesAccess() throws Throwable {
+    final UserGroupInformation user = UserGroupInformation.getLoginUser();
+    scheduler.init(conf);
+    final List<Throwable> exceptionsFromThreads = new ArrayList<>();
+    
+    Thread.UncaughtExceptionHandler uncaughtExceptionHandler = new Thread.UncaughtExceptionHandler() {
+      public void uncaughtException(Thread th, Throwable ex) {
+        exceptionsFromThreads.add(ex);
+      }
+    };
+    
+    Thread readThread = new Thread(new Runnable() {
+      @Override
+      public void run() {
+        for(int i = 0; i < 1000_000; i++) {
+          scheduler.getQueueManager().getRootQueue().getQueueUserAclInfo(user);
+        }
+      }
+    });
+    readThread.setUncaughtExceptionHandler(uncaughtExceptionHandler);
 
-
+    final FSLeafQueue childQueue = new FSLeafQueue("test", scheduler, null);
+    final FSParentQueue rootQueue = scheduler.getQueueManager().getRootQueue();
+    Thread modifyThread = new Thread(new Runnable() {
+      @Override
+      public void run() {
+        for (int i = 0; i < 1000_000; i++) {
+          rootQueue.addChildQueue(childQueue);
+          rootQueue.removeChildQueue(childQueue);
+        }
+      }
+    });
+    modifyThread.setUncaughtExceptionHandler(uncaughtExceptionHandler);
+    
+    readThread.start();
+    modifyThread.start();
+    
+    readThread.join();
+    modifyThread.join();
+    
+    if (!exceptionsFromThreads.isEmpty()) {
+      throw exceptionsFromThreads.get(0);
+    }
+  }
+  
   @Test (timeout = 30000)
   public void testConfValidation() throws Exception {
     scheduler = new FairScheduler();
@@ -1610,8 +1659,83 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     assertEquals(120000, root.getMinSharePreemptionTimeout());
     assertEquals(0.5f, root.getFairSharePreemptionThreshold(), 0.01);
   }
+  
+  
+  @Test(timeout = 5000)
+  public void tesPreemptionOnBlacklistedNodes() throws Exception {
+    conf.setLong(FairSchedulerConfiguration.PREEMPTION_INTERVAL, 5000);
+    conf.setLong(FairSchedulerConfiguration.WAIT_TIME_BEFORE_KILL, 10000);
+    conf.set(FairSchedulerConfiguration.ALLOCATION_FILE + ".allocation.file", ALLOC_FILE);
+    conf.set(FairSchedulerConfiguration.USER_AS_DEFAULT_QUEUE, "false");
 
-  @Test (timeout = 5000)
+    PrintWriter out = new PrintWriter(new FileWriter(ALLOC_FILE));
+    out.println("<?xml version=\"1.0\"?>");
+    out.println("<allocations>");
+    out.println("<queue name=\"queueA\">");
+    out.println("</queue>");
+    out.println("</allocations>");
+    out.close();
+
+    scheduler.init(conf);
+    scheduler.start();
+    scheduler.reinitialize(conf, resourceManager.getRMContext());
+
+    // Create two nodes
+    RMNode node1 =
+            MockNodes.newNodeInfo(1, Resources.createResource( 1 * 1024, 1), 1,
+                    "127.0.0.1");
+    RMNode node2 =
+            MockNodes.newNodeInfo(1, Resources.createResource( 1 * 1024, 1), 2,
+                    "127.0.0.2");
+    scheduler.handle(new NodeAddedSchedulerEvent(node1));
+    scheduler.handle(new NodeAddedSchedulerEvent(node2));
+
+    // Request containers for queueA
+    ApplicationAttemptId appAttemptId1 =
+            createSchedulingRequest(1 * 1024, 1, "queueA", "user1", 2, 1);
+    scheduler.update();
+
+    // Sufficient node check-ins to fully schedule containers
+    NodeUpdateSchedulerEvent nodeUpdate1 = new NodeUpdateSchedulerEvent(node1);
+    NodeUpdateSchedulerEvent nodeUpdate2 = new NodeUpdateSchedulerEvent(node2);
+    scheduler.handle(nodeUpdate1);
+    scheduler.handle(nodeUpdate2);
+
+    assertEquals(2, scheduler.getSchedulerApp(appAttemptId1).getLiveContainers().size());
+
+    // Now new requests arrive from queueB
+    ApplicationAttemptId appAttemptId2 =
+            createSchedulingRequest(1 * 1024, 1, "queueB", "user1", 2, 1);
+    scheduler.update();
+
+    // Mark node1, node2 as blacklisted for appAttemptId1 
+    addNodeToBlackListForApp(node1, appAttemptId1);
+    addNodeToBlackListForApp(node2, appAttemptId1);
+    scheduler.update();
+
+    // We should be able to claw back one container from queueA.
+    HashMap<FSAppAttempt, Resource> toPreempt = new HashMap<FSAppAttempt, Resource>();
+    FSAppAttempt appAttempt1 = scheduler.getSchedulerApp(appAttemptId1);
+    toPreempt.put(appAttempt1, Resources.createResource(1 * 1024));
+
+    scheduler.preemptResources(toPreempt);
+
+    assertTrue("App1 shouldn't have container to be preempted",
+            Collections.disjoint(
+                    scheduler.getSchedulerApp(appAttemptId1).getLiveContainers(),
+                    scheduler.getSchedulerApp(appAttemptId1).getPreemptionContainers()));
+  }
+
+  private void addNodeToBlackListForApp(RMNode node, ApplicationAttemptId id) {
+    FSAppAttempt appAttempt1 = scheduler.getSchedulerApp(id);
+    // Verify the blacklist can be updated independent of requesting containers
+    scheduler.allocate(id, Collections.<ResourceRequest>emptyList(),
+            Collections.<ContainerId>emptyList(),
+            Collections.singletonList(node.getHostName()), null);
+    assertTrue(appAttempt1.isBlacklisted(node.getHostName()));
+  }
+  
+  @Test
   /**
    * Make sure containers are chosen to be preempted in the correct order.
    */
@@ -2960,17 +3084,52 @@ public class TestFairScheduler extends FairSchedulerTestBase {
         .getLiveContainers().size());
   }
 
+  @Test(timeout = 5000)
+  public void testAssignContainerToQueueWithZeroDisks() throws Exception {
+    scheduler.init(conf);
+    scheduler.start();
+    scheduler.reinitialize(conf, resourceManager.getRMContext());
+
+    final String user = "user1";
+    final String fooQueue = "foo";
+
+    scheduler.getAllocationConfiguration().maxQueueResources.put("root."+ fooQueue ,
+        Resource.newInstance(2048, 1, 0.0));
+
+    RMNode node1 =
+        MockNodes
+            .newNodeInfo(1, Resources.createResource(8192, 8), 1, "127.0.0.1");
+
+    NodeAddedSchedulerEvent nodeEvent1 = new NodeAddedSchedulerEvent(node1);
+
+    scheduler.handle(nodeEvent1);
+
+    ApplicationAttemptId attId1 =
+        createSchedulingRequest(1024, fooQueue, user, 1);
+
+    FSAppAttempt app1 = scheduler.getSchedulerApp(attId1);
+
+    scheduler.getQueueManager().getLeafQueue(fooQueue, true)
+        .setPolicy(SchedulingPolicy.parse("fifo"));
+    scheduler.update();
+
+    NodeUpdateSchedulerEvent updateEvent1 = new NodeUpdateSchedulerEvent(node1);
+
+    scheduler.handle(updateEvent1);
+    Assert.assertTrue(app1.getLiveContainers().size() == 1);
+  }
+
   /**
    * Test to verify the behavior of
    * {@link FSQueue#assignContainer(FSSchedulerNode)})
-   * 
+   *
    * Create two queues under root (fifoQueue and fairParent), and two queues
    * under fairParent (fairChild1 and fairChild2). Submit two apps to the
    * fifoQueue and one each to the fairChild* queues, all apps requiring 4
    * containers each of the total 16 container capacity
-   * 
+   *
    * Assert the number of containers for each app after 4, 8, 12 and 16 updates.
-   * 
+   *
    * @throws Exception
    */
   @Test(timeout = 5000)
@@ -3564,7 +3723,58 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     verifyAppRunnable(attId5, false);
     verifyQueueNumRunnable("queue1", 2, 1);
   }
-  
+
+  @Test
+  public void testMultipleCompletedEvent() throws Exception {
+    // Set up a fair scheduler
+    conf.set(FairSchedulerConfiguration.ALLOCATION_FILE, ALLOC_FILE);
+
+    PrintWriter out = new PrintWriter(new FileWriter(ALLOC_FILE));
+    out.println("<?xml version=\"1.0\"?>");
+    out.println("<allocations>");
+    out.println("<queue name=\"queue1\">");
+    out.println("<maxAMShare>0.2</maxAMShare>");
+    out.println("</queue>");
+    out.println("</allocations>");
+    out.close();
+
+    scheduler.init(conf);
+    scheduler.start();
+    scheduler.reinitialize(conf, resourceManager.getRMContext());
+
+    // Create a node
+    RMNode node =
+            MockNodes.newNodeInfo(1, Resources.createResource(20480, 20),
+                    0, "127.0.0.1");
+    NodeAddedSchedulerEvent nodeEvent = new NodeAddedSchedulerEvent(node);
+    NodeUpdateSchedulerEvent updateEvent = new NodeUpdateSchedulerEvent(node);
+    scheduler.handle(nodeEvent);
+    scheduler.update();
+
+    // Launch an app
+    ApplicationAttemptId attId1 = createAppAttemptId(1, 1);
+    createApplicationWithAMResource(
+            attId1, "queue1", "user1",
+            Resource.newInstance(1024, 1));
+    createSchedulingRequestExistingApplication(
+            1024, 1,
+            RMAppAttemptImpl.AM_CONTAINER_PRIORITY.getPriority(), attId1);
+    FSAppAttempt app1 = scheduler.getSchedulerApp(attId1);
+    scheduler.update();
+    scheduler.handle(updateEvent);
+
+    RMContainer container = app1.getLiveContainersMap().
+            values().iterator().next();
+    scheduler.completedContainer(container, SchedulerUtils
+            .createAbnormalContainerStatus(container.getContainerId(),
+                    SchedulerUtils.LOST_CONTAINER), RMContainerEventType.KILL);
+    scheduler.completedContainer(container, SchedulerUtils
+                    .createAbnormalContainerStatus(container.getContainerId(),
+                            SchedulerUtils.COMPLETED_APPLICATION),
+            RMContainerEventType.FINISHED);
+    assertEquals(Resources.none(), app1.getResourceUsage());
+  }
+
   @Test
   public void testQueueMaxAMShare() throws Exception {
     conf.set(FairSchedulerConfiguration.ALLOCATION_FILE, ALLOC_FILE);
@@ -4917,5 +5127,54 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     scheduler.fsOpDurations.getMetrics(collector, true);
     assertEquals("Incorrect number of perf metrics", 1,
         collector.getRecords().size());
+  }
+
+  @Test
+  public void testContainerAllocationWithUnresolvedNodeAddress() throws Exception {
+    SecurityUtil.setTokenServiceUseIp(true);
+    final String user = "user1";
+    final String queue = "queue1";
+
+    RMNode node1 =
+            MockNodes.newNodeInfo(1, Resources.createResource(8 * 1024, 8), 1,
+                    "unresolved");
+    RMNode node2 =
+            MockNodes.newNodeInfo(1, Resources.createResource(8 * 1024, 8), 1,
+                    "127.0.0.1");
+
+    scheduler.init(conf);
+    scheduler.start();
+
+    NodeAddedSchedulerEvent nodeEvent1 = new NodeAddedSchedulerEvent(node1);
+    NodeAddedSchedulerEvent nodeEvent2 = new NodeAddedSchedulerEvent(node2);
+
+    scheduler.handle(nodeEvent1);
+    scheduler.handle(nodeEvent2);
+
+    ApplicationAttemptId attId1 =
+            createSchedulingRequest(4096, queue, user, 3);
+    scheduler.update();
+
+    FSAppAttempt app1 = scheduler.getSchedulerApp(attId1);
+
+    NodeUpdateSchedulerEvent updateEvent1 = new NodeUpdateSchedulerEvent(node1);
+    NodeUpdateSchedulerEvent updateEvent2 = new NodeUpdateSchedulerEvent(node2);
+
+    for (int i = 0; i < 3; i++) {
+      List<ResourceRequest> ask1 = new ArrayList<ResourceRequest>();
+      ResourceRequest request1 =
+              createResourceRequest(256, ResourceRequest.ANY, 1, 1, true);
+      ask1.add(request1);
+      scheduler.allocate(attId1, ask1, new ArrayList<ContainerId>(), null, null);
+      scheduler.handle(updateEvent1);
+      scheduler.handle(updateEvent2);
+    }
+
+    Collection<RMContainer> liveContainers = app1.getLiveContainers();
+
+    for (RMContainer liveContainer : liveContainers) {
+      assertTrue("Container assigned to node with unresolved host",
+              !liveContainer.getAllocatedNode().equals(node1.getNodeID()));
+    }
   }
 }

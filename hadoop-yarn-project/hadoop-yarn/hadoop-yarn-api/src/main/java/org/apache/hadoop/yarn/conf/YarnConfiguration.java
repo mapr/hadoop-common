@@ -578,6 +578,15 @@ public class YarnConfiguration extends Configuration {
   public static final int DEFAULT_RM_STATE_STORE_MAX_COMPLETED_APPLICATIONS =
       DEFAULT_RM_MAX_COMPLETED_APPLICATIONS;
 
+  /**
+   * Whether RM should remove corrupted files with app state data
+   * from RM FS state store during their loading or not.
+   */
+  public static final String FS_RM_STATE_STORE_REMOVE_CORRUPTED_DATA =
+      RM_PREFIX + "fs.state-store.remove-corrupted-data";
+  public static final boolean DEFAULT_FS_RM_STATE_STORE_REMOVE_CORRUPTED_DATA =
+      false;
+
   /** Default application name */
   public static final String DEFAULT_APPLICATION_NAME = "N/A";
 
@@ -653,7 +662,7 @@ public class YarnConfiguration extends Configuration {
   
   /** address of node manager IPC.*/
   public static final String NM_ADDRESS = NM_PREFIX + "address";
-  public static final int DEFAULT_NM_PORT = 0;
+  public static final int DEFAULT_NM_PORT = 8099;
   public static final String DEFAULT_NM_ADDRESS = "0.0.0.0:"
       + DEFAULT_NM_PORT;
   
@@ -933,7 +942,15 @@ public class YarnConfiguration extends Configuration {
       NM_PREFIX + "container-metrics.period-ms";
   @Private
   public static final int DEFAULT_NM_CONTAINER_METRICS_PERIOD_MS = -1;
-  
+
+  /** The delay time ms to unregister container metrics after completion. */
+  @Private
+  public static final String NM_CONTAINER_METRICS_UNREGISTER_DELAY_MS =
+      NM_PREFIX + "container-metrics.unregister-delay-ms";
+  @Private
+  public static final int DEFAULT_NM_CONTAINER_METRICS_UNREGISTER_DELAY_MS =
+      10000;
+
   /** Prefix for all node manager disk health checker configs. */
   private static final String NM_DISK_HEALTH_CHECK_PREFIX =
       "yarn.nodemanager.disk-health-checker.";
@@ -1162,7 +1179,7 @@ public class YarnConfiguration extends Configuration {
   public static final String NM_RECOVERY_PREFIX = NM_PREFIX + "recovery.";
   public static final String NM_RECOVERY_ENABLED =
       NM_RECOVERY_PREFIX + "enabled";
-  public static final boolean DEFAULT_NM_RECOVERY_ENABLED = false;
+  public static final boolean DEFAULT_NM_RECOVERY_ENABLED = true;
 
   public static final String NM_RECOVERY_DIR = NM_RECOVERY_PREFIX + "dir";
 

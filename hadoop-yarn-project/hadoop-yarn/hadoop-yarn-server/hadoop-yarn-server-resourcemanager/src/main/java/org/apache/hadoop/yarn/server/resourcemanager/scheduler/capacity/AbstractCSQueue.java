@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import net.java.dev.eval.Expression;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -43,6 +44,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.QueueMetrics;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceLimits;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceUsage;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerUtils;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
 import org.apache.hadoop.yarn.util.resource.ResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.Resources;
 
@@ -301,6 +303,17 @@ public abstract class AbstractCSQueue implements CSQueue {
     queueInfo.setQueueState(state);
     queueInfo.setDefaultNodeLabelExpression(defaultLabelExpression);
     queueInfo.setCurrentCapacity(getUsedCapacity());
+
+    Expression label = getLabel();
+    queueInfo.setQueueLabel((label == null)
+        ? Queue.LABEL_NONE
+        : label.toString());
+
+    QueueLabelPolicy labelPolicy = getLabelPolicy();
+    queueInfo.setQueueLabelPolicy((labelPolicy == null)
+        ? QueueLabelPolicy.AND.name()
+        : labelPolicy.name());
+
     return queueInfo;
   }
   

@@ -16,16 +16,15 @@ Release 2.8.0 - UNRELEASED
     MAPREDUCE-6478. Add an option to skip cleanupJob stage or ignore cleanup
     failure during commitJob. (Junping Du via wangda)
 
+    YARN-3967. Fetch the application report from the AHS if the RM does not know about it.
+    (Mit Desai via xgong)
+
   OPTIMIZATIONS
 
   BUG FIXES
 
     YARN-4546. ResourceManager crash due to scheduling opportunity overflow.
     (Jason Lowe via junping_du)
-
-    YARN-4717. TestResourceLocalizationService.testPublicResourceInitializesLocalDir
-    fails Intermittently due to IllegalArgumentException from cleanup
-    (Daniel Templeton via rkanter)
 
 Release 2.7.3 - UNRELEASED
 
@@ -53,8 +52,15 @@ Release 2.7.3 - UNRELEASED
     YARN-3655. FairScheduler: potential livelock due to maxAMShare limitation
     and container reservation. (Zhihai Xu via kasha)
 
-    YARN-4380. TestResourceLocalizationService.testDownloadingResourcesOnContainerKill
-    fails intermittently. (Varun Saxena via ozawa)
+    YARN-3762. FairScheduler: CME on FSParentQueue#getQueueUserAclInfo. (kasha)
+
+    YARN-3582. NPE in WebAppProxyServlet. (jian he via xgong)
+    
+    YARN-4760. proxy redirect to history server uses wrong URL (Eric Badger
+    via jlowe)
+    
+    YARN-4562. YARN WebApp ignores the configuration passed to it for keystore
+    settings (Sergey Shelukhin via vvasudev)
 
 Release 2.7.1 - UNRELEASED
 
@@ -85,15 +91,18 @@ Release 2.7.1 - UNRELEASED
 
     YARN-4180. AMLauncher does not retry on failures when talking to NM.
     (adhoot)
+    
+    YARN-3975. WebAppProxyServlet should not redirect to RM page if AHS is
+    enabled (Mit Desai via jlowe)
 
     YARN-2902. Killing a container that is localizing can orphan resources in
     the DOWNLOADING state (Varun Saxena via jlowe)
 
-    YARN-4354. Public resource localization fails with NPE. (Jason Lowe via 
+    YARN-4354. Public resource localization fails with NPE. (Jason Lowe via
     junping_du)
-    
-    YARN-3602. TestResourceLocalizationService.testPublicResourceInitializesLocalDir
-    fails Intermittently due to IOException from cleanup. (zhihai xu via xgong)
+
+    YARN-3619. ContainerMetrics unregisters during getMetrics and leads to
+    ConcurrentModificationException (Zhihai Xu via jlowe)
 
     YARN-3878. AsyncDispatcher can hang while stopping if it is configured for
     draining events on stop. (Varun Saxena via jianhe)
@@ -500,6 +509,8 @@ Release 2.7.0 - 2015-04-20
 
     YARN-3675. FairScheduler: RM quits when node removal races with
     continuous-scheduling on the same node. (Anubhav Dhoot via kasha)
+
+    YARN-3601. Fix UT TestRMFailover.testRMWebAppRedirect. (Weiwei Yang via xgong)
 
     YARN-3585. NodeManager cannot exit on SHUTDOWN event triggered and NM
     recovery is enabled (Rohith Sharmaks via jlowe)

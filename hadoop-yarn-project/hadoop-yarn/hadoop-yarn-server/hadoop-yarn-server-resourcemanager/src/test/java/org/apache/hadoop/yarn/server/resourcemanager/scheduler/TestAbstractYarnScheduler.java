@@ -234,9 +234,10 @@ public class TestAbstractYarnScheduler extends ParameterizedSchedulerTestBase {
   @Test
   public void testUpdateMaxAllocationUsesTotal() throws IOException {
     final int configuredMaxVCores = 20;
+    final double configuredMaxDisks = 20.0;
     final int configuredMaxMemory = 10 * 1024;
     Resource configuredMaximumResource = Resource.newInstance
-        (configuredMaxMemory, configuredMaxVCores);
+        (configuredMaxMemory, configuredMaxVCores, configuredMaxDisks);
 
     configureScheduler();
     YarnConfiguration conf = getConf();
@@ -244,6 +245,8 @@ public class TestAbstractYarnScheduler extends ParameterizedSchedulerTestBase {
         configuredMaxVCores);
     conf.setInt(YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_MB,
         configuredMaxMemory);
+    conf.setDouble(YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS,
+        configuredMaxDisks);
     conf.setLong(
         YarnConfiguration.RM_WORK_PRESERVING_RECOVERY_SCHEDULING_WAIT_MS,
         0);
@@ -254,9 +257,9 @@ public class TestAbstractYarnScheduler extends ParameterizedSchedulerTestBase {
       AbstractYarnScheduler scheduler = (AbstractYarnScheduler) rm
           .getResourceScheduler();
 
-      Resource emptyResource = Resource.newInstance(0, 0);
-      Resource fullResource1 = Resource.newInstance(1024, 5);
-      Resource fullResource2 = Resource.newInstance(2048, 10);
+      Resource emptyResource = Resource.newInstance(0, 0, 0);
+      Resource fullResource1 = Resource.newInstance(1024, 5, 5.0);
+      Resource fullResource2 = Resource.newInstance(2048, 10, 10.0);
 
       SchedulerNode mockNode1 = mock(SchedulerNode.class);
       when(mockNode1.getNodeID()).thenReturn(NodeId.newInstance("foo", 8080));
@@ -296,8 +299,9 @@ public class TestAbstractYarnScheduler extends ParameterizedSchedulerTestBase {
   public void testMaxAllocationAfterUpdateNodeResource() throws IOException {
     final int configuredMaxVCores = 20;
     final int configuredMaxMemory = 10 * 1024;
+    final double configuredMaxDisks = 20.0;
     Resource configuredMaximumResource = Resource.newInstance
-        (configuredMaxMemory, configuredMaxVCores);
+        (configuredMaxMemory, configuredMaxVCores, configuredMaxDisks);
 
     configureScheduler();
     YarnConfiguration conf = getConf();
@@ -305,6 +309,8 @@ public class TestAbstractYarnScheduler extends ParameterizedSchedulerTestBase {
         configuredMaxVCores);
     conf.setInt(YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_MB,
         configuredMaxMemory);
+    conf.setDouble(YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS,
+            configuredMaxDisks);
     conf.setLong(
         YarnConfiguration.RM_WORK_PRESERVING_RECOVERY_SCHEDULING_WAIT_MS,
         0);
@@ -316,10 +322,10 @@ public class TestAbstractYarnScheduler extends ParameterizedSchedulerTestBase {
           .getResourceScheduler();
       verifyMaximumResourceCapability(configuredMaximumResource, scheduler);
 
-      Resource resource1 = Resource.newInstance(2048, 5);
-      Resource resource2 = Resource.newInstance(4096, 10);
-      Resource resource3 = Resource.newInstance(512, 1);
-      Resource resource4 = Resource.newInstance(1024, 2);
+      Resource resource1 = Resource.newInstance(2048, 5, 5.0);
+      Resource resource2 = Resource.newInstance(4096, 10, 10.0);
+      Resource resource3 = Resource.newInstance(512, 1, 1.0);
+      Resource resource4 = Resource.newInstance(1024, 2, 2.0);
 
       RMNode node1 = MockNodes.newNodeInfo(
           0, resource1, 1, "127.0.0.2");
@@ -445,5 +451,7 @@ public class TestAbstractYarnScheduler extends ParameterizedSchedulerTestBase {
         schedulerMaximumResourceCapability.getMemory());
     Assert.assertEquals(expectedMaximumResource.getVirtualCores(),
         schedulerMaximumResourceCapability.getVirtualCores());
+    Assert.assertEquals(expectedMaximumResource.getDisks(),
+        schedulerMaximumResourceCapability.getDisks(), 0.01);
   }
 }

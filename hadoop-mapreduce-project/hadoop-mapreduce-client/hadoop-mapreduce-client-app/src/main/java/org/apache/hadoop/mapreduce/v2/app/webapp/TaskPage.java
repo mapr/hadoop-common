@@ -169,8 +169,8 @@ public class TaskPage extends AppView {
               .append(ta.getId())
               .append("');>Kill</a>");
           }
-          attemptsTableData.append("\"],\n");
         }
+        attemptsTableData.append("\"],\n");
       }
       //Remove the last comma and close off the array of arrays
       if(attemptsTableData.charAt(attemptsTableData.length() - 2) == ',') {

@@ -25,6 +25,10 @@
     <name>mapreduce.jobhistory.webapp.address</name>
     <value>__HS_IP__:19888</value>
   </property>
+  <property>
+    <name>mapreduce.jobhistory.webapp.https.address</name>
+    <value>__HS_IP__:19890</value>
+  </property>
   <!--
   <property>
     <name>mapreduce.framework.name</name>

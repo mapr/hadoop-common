@@ -20,6 +20,7 @@ package org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -112,6 +113,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEv
 import org.apache.hadoop.yarn.server.resourcemanager.security.RMContainerTokenSecretManager;
 import org.apache.hadoop.yarn.server.utils.Lock;
 import org.apache.hadoop.yarn.util.resource.DefaultResourceCalculator;
+import org.apache.hadoop.yarn.util.resource.DominantResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.ResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.Resources;
 
@@ -1074,6 +1076,14 @@ public class CapacityScheduler extends
       return;
     }
 
+    if(!SchedulerUtils.isNodeAvailable(node.getNodeID())) {
+      // DNS might be down or with incorrect config, skip attempt scheduling
+      // on current node
+      LOG.error("Host is not resolved! Skip container scheduling on this node!",
+              new UnknownHostException(node.getNodeID().getHost()));
+      return;
+    }
+
     // Assign new containers...
     // 1. Check for reserved applications
     // 2. Schedule if there are no reservations
@@ -1630,12 +1640,19 @@ public class CapacityScheduler extends
   /** {@inheritDoc} */
   @Override
   public EnumSet<SchedulerResourceTypes> getSchedulingResourceTypes() {
-    if (calculator.getClass().getName()
+    String calculatorName = calculator.getClass().getName();
+    if (calculatorName
       .equals(DefaultResourceCalculator.class.getName())) {
       return EnumSet.of(SchedulerResourceTypes.MEMORY);
     }
-    return EnumSet
-      .of(SchedulerResourceTypes.MEMORY, SchedulerResourceTypes.CPU,  SchedulerResourceTypes.DISK);
+    if (calculatorName
+      .equals(DominantResourceCalculator.class.getName())) {
+      return EnumSet.of(SchedulerResourceTypes.MEMORY, 
+              SchedulerResourceTypes.CPU);
+    }
+    return EnumSet.of(SchedulerResourceTypes.MEMORY, 
+            SchedulerResourceTypes.CPU, 
+            SchedulerResourceTypes.DISK);
   }
   
   @Override

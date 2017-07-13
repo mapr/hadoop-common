@@ -445,6 +445,7 @@ public class AllocationFileLoaderService extends AbstractService {
         new HashMap<QueueACL, AccessControlList>();
     NodeList fields = element.getChildNodes();
     boolean isLeaf = true;
+    boolean isReservable = false;
 
     for (int j = 0; j < fields.getLength(); j++) {
       Node fieldNode = fields.item(j);
@@ -497,7 +498,7 @@ public class AllocationFileLoaderService extends AbstractService {
         String text = ((Text)field.getFirstChild()).getData();
         acls.put(QueueACL.ADMINISTER_QUEUE, new AccessControlList(text));
       } else if ("reservation".equals(field.getTagName())) {
-        isLeaf = false;
+        isReservable = true;
         reservableQueues.add(queueName);
         configuredQueues.get(FSQueueType.PARENT).add(queueName);
       } else if ("label".equals(field.getTagName())) {
@@ -522,19 +523,17 @@ public class AllocationFileLoaderService extends AbstractService {
         isLeaf = false;
       }
     }
-    if (isLeaf) {
-      // if a leaf in the alloc file is marked as type='parent'
-      // then store it under 'parent'
-      if ("parent".equals(element.getAttribute("type"))) {
-        configuredQueues.get(FSQueueType.PARENT).add(queueName);
-      } else {
-        configuredQueues.get(FSQueueType.LEAF).add(queueName);
-      }
+
+    // if a leaf in the alloc file is marked as type='parent'
+    // then store it as a parent queue
+    if (isLeaf && !"parent".equals(element.getAttribute("type"))) {
+      configuredQueues.get(FSQueueType.LEAF).add(queueName);
     } else {
-      if ("parent".equals(element.getAttribute("type"))) {
-        throw new AllocationConfigurationException("Both <reservation> and " +
-            "type=\"parent\" found for queue " + queueName + " which is " +
-            "unsupported");
+      if (isReservable) {
+        throw new AllocationConfigurationException("The configuration settings"
+            + " for " + queueName + " are invalid. A queue element that "
+            + "contains child queue elements or that has the type='parent' "
+            + "attribute cannot also include a reservation element.");
       }
       configuredQueues.get(FSQueueType.PARENT).add(queueName);
     }

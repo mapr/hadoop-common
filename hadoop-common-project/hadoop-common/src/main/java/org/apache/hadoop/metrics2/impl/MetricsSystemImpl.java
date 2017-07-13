@@ -255,6 +255,7 @@ public class MetricsSystemImpl extends MetricsSystem implements MetricsSource {
     if (namedCallbacks.containsKey(name)) {
       namedCallbacks.remove(name);
     }
+    DefaultMetricsSystem.removeSourceName(name);
   }
 
   synchronized
@@ -398,7 +399,8 @@ public class MetricsSystemImpl extends MetricsSystem implements MetricsSource {
    * Sample all the sources for a snapshot of metrics/tags
    * @return  the metrics buffer containing the snapshot
    */
-  synchronized MetricsBuffer sampleMetrics() {
+  @VisibleForTesting
+  public synchronized MetricsBuffer sampleMetrics() {
     collector.clear();
     MetricsBufferBuilder bufferBuilder = new MetricsBufferBuilder();
 

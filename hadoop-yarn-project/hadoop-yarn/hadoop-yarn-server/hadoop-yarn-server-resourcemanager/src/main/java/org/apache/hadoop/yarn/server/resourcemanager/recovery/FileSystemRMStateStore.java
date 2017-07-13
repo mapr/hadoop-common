@@ -45,6 +45,7 @@ import org.apache.hadoop.security.token.delegation.DelegationKey;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.apache.hadoop.yarn.exceptions.InvalidApplicationStateException;
 import org.apache.hadoop.yarn.proto.YarnServerCommonProtos.VersionProto;
 import org.apache.hadoop.yarn.proto.YarnServerResourceManagerRecoveryProtos.AMRMTokenSecretManagerStateProto;
 import org.apache.hadoop.yarn.proto.YarnServerResourceManagerRecoveryProtos.ApplicationAttemptStateDataProto;
@@ -244,30 +245,51 @@ public class FileSystemRMStateStore extends RMStateStore {
           }
           byte[] childData = readFileWithRetries(childNodeStatus.getPath(),
               childNodeStatus.getLen());
-          if (childNodeName.startsWith(ApplicationId.appIdStrPrefix)) {
-            // application
-            if (LOG.isDebugEnabled()) {
-              LOG.debug("Loading application from node: " + childNodeName);
+          try {
+            if (childNodeName.startsWith(ApplicationId.appIdStrPrefix)) {
+              // application
+              if (LOG.isDebugEnabled()) {
+                LOG.debug("Loading application from node: " + childNodeName);
+              }
+              ApplicationStateDataPBImpl appState =
+                  new ApplicationStateDataPBImpl(
+                    ApplicationStateDataProto.parseFrom(childData));
+              ApplicationId appId =
+                  appState.getApplicationSubmissionContext().getApplicationId();
+              rmState.appState.put(appId, appState);
+            } else if (childNodeName
+              .startsWith(ApplicationAttemptId.appAttemptIdStrPrefix)) {
+              // attempt
+              if (LOG.isDebugEnabled()) {
+                LOG.debug("Loading application attempt from node: "
+                    + childNodeName);
+              }
+              ApplicationAttemptStateDataPBImpl attemptState =
+                  new ApplicationAttemptStateDataPBImpl(
+                    ApplicationAttemptStateDataProto.parseFrom(childData));
+              attempts.add(attemptState);
+            } else {
+              LOG.info("Unknown child node with name: " + childNodeName);
             }
-            ApplicationStateDataPBImpl appState =
-                new ApplicationStateDataPBImpl(
-                  ApplicationStateDataProto.parseFrom(childData));
-            ApplicationId appId =
-                appState.getApplicationSubmissionContext().getApplicationId();
-            rmState.appState.put(appId, appState);
-          } else if (childNodeName
-            .startsWith(ApplicationAttemptId.appAttemptIdStrPrefix)) {
-            // attempt
-            if (LOG.isDebugEnabled()) {
-              LOG.debug("Loading application attempt from node: "
-                  + childNodeName);
+          } catch (InvalidProtocolBufferException ex) {
+            boolean brokenDataShouldBeRemoved = getConfig()
+                .getBoolean(YarnConfiguration.FS_RM_STATE_STORE_REMOVE_CORRUPTED_DATA,
+                    YarnConfiguration.DEFAULT_FS_RM_STATE_STORE_REMOVE_CORRUPTED_DATA);
+            if (brokenDataShouldBeRemoved) {
+              LOG.warn("Removing broken " + appDir.getPath()
+                  + " app directory as its data is corrupted"
+                  + " and can cause RM restart failure after failover.", ex);
+              checkAndRemovePathWithRetries(appDir.getPath());
+              break;
+            } else {
+              String errorMessage = "Application's state file "
+                  + childNodeStatus.getPath()
+                  + " contains corrupted data which leads to RM crash."
+                  + " Remove the directory with corrupted data"
+                  + " to start RM successfully without recovering broken"
+                  + " application.";
+              throw new InvalidApplicationStateException(errorMessage, ex);
             }
-            ApplicationAttemptStateDataPBImpl attemptState =
-                new ApplicationAttemptStateDataPBImpl(
-                  ApplicationAttemptStateDataProto.parseFrom(childData));
-            attempts.add(attemptState);
-          } else {
-            LOG.info("Unknown child node with name: " + childNodeName);
           }
         }
       }

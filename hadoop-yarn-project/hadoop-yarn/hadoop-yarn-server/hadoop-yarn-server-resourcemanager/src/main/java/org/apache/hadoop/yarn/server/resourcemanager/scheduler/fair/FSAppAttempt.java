@@ -20,6 +20,7 @@ package org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -53,6 +54,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ActiveUsersManage
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.NodeType;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.QueueMetrics;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicationAttempt;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerNode;
 import org.apache.hadoop.yarn.server.utils.BuilderUtils;
 import org.apache.hadoop.yarn.util.resource.DefaultResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.Resources;
@@ -80,6 +82,7 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
   private final Map<RMContainer, Long> preemptionMap = new HashMap<RMContainer, Long>();
   final Set<RMContainer> noneligibleForPreemptionSet = new HashSet<RMContainer>();
 
+  private List<NodeId> blacklistNodeIds = new ArrayList<NodeId>();
   /**
    * Delay scheduling: We often want to prioritize scheduling of node-local
    * containers over rack-local or off-switch containers. To achieve this
@@ -120,6 +123,13 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
     
     Container container = rmContainer.getContainer();
     ContainerId containerId = container.getId();
+
+    // Remove from the list of containers
+    if (liveContainers.remove(containerId) == null) {
+      LOG.info("Additional complete request on completed container " +
+              rmContainer.getContainerId());
+      return;
+    }
     
     // Remove from the list of newly allocated containers if found
     newlyAllocatedContainers.remove(rmContainer);
@@ -133,9 +143,6 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
         );
     LOG.info("Completed container: " + rmContainer.getContainerId() + 
         " in state: " + rmContainer.getState() + " event:" + event);
-    
-    // Remove from the list of containers
-    liveContainers.remove(rmContainer.getContainerId());
 
     RMAuditLogger.logSuccess(getUser(), 
         AuditConstants.RELEASE_CONTAINER, "SchedulerApp", 
@@ -173,6 +180,27 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
         + priority + "; currentReservation " + currentReservation);
   }
 
+  private void subtractResourcesOnBlacklistedNodes(
+      Resource availableResources) {
+    if (appSchedulingInfo.getAndResetBlacklistChanged()) {
+      blacklistNodeIds.clear();
+      scheduler.addBlacklistedNodeIdsToList(this, blacklistNodeIds);
+    }
+    for (NodeId nodeId: blacklistNodeIds) {
+      SchedulerNode node = scheduler.getSchedulerNode(nodeId);
+      if (node != null) {
+        Resources.subtractFrom(availableResources,
+            node.getAvailableResource());
+      }
+    }
+    if (availableResources.getMemory() < 0) {
+      availableResources.setMemory(0);
+    }
+    if (availableResources.getVirtualCores() < 0) {
+      availableResources.setVirtualCores(0);
+    }
+  }
+
   /**
    * Headroom depends on resources in the cluster, current usage of the
    * queue, queue's fair-share and queue's max-resources.
@@ -190,6 +218,8 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
 
     Resource clusterAvailableResources =
         Resources.subtract(clusterResource, clusterUsage);
+    subtractResourcesOnBlacklistedNodes(clusterAvailableResources);
+
     Resource queueMaxAvailableResources =
         Resources.subtract(queue.getMaxShare(), queueUsage);
     Resource maxAvailableResource = Resources.componentwiseMin(
@@ -523,8 +553,10 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
       container = createContainer(node, capability, request.getPriority());
     }
 
-    // Can we allocate a container on this node?
-    if (Resources.fitsIn(capability, available)) {
+    // The requested container must fit in queue maximum share
+    // and node capability
+    if (getQueue().fitsInMaxShare(capability) &&
+        Resources.fitsIn(capability, available)) {
       // Inform the application of the new container for this request
       RMContainer allocatedContainer =
           allocate(type, node, request.getPriority(), request, container);
@@ -685,9 +717,7 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
             // The requested container must be able to fit on the node:
             Resources.lessThanOrEqual(RESOURCE_CALCULATOR, null,
                 anyRequest.getCapability(),
-                node.getRMNode().getTotalCapability()) &&
-            // The requested container must fit in queue maximum share:
-            getQueue().fitsInMaxShare(anyRequest.getCapability());
+                node.getRMNode().getTotalCapability());
   }
 
   private boolean isValidReservation(FSSchedulerNode node) {
@@ -728,8 +758,9 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
     // Fail early if the reserved container won't fit.
     // Note that we have an assumption here that
     // there's only one container size per priority.
-    if (Resources.fitsIn(node.getReservedContainer().getReservedResource(),
-        node.getAvailableResource())) {
+    Resource reservedResource = node.getReservedContainer().getReservedResource();
+    if (getQueue().fitsInMaxShare(reservedResource) &&
+        Resources.fitsIn(reservedResource, node.getAvailableResource())) {
       assignContainer(node, true);
     }
     return true;
@@ -844,10 +875,12 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
     }
 
     RMContainer toBePreempted = null;
+    Set<RMContainer> nonEligibleForPreemption = getNonEligibleForPreemptionSet();
     for (RMContainer container : getLiveContainers()) {
       if (!getPreemptionContainers().contains(container) &&
-          (toBePreempted == null ||
-              comparator.compare(toBePreempted, container) > 0)) {
+              !nonEligibleForPreemption.contains(container) &&
+              (toBePreempted == null || 
+                      comparator.compare(toBePreempted, container) > 0)) {
         toBePreempted = container;
       }
     }
