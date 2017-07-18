@@ -19,8 +19,6 @@
 package org.apache.hadoop.metrics2.util;
 
 import com.google.common.collect.Maps;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.metrics2.AbstractMetric;
@@ -32,6 +30,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A metrics cache for sinks that don't support sparse updates.
@@ -39,7 +39,7 @@ import java.util.StringJoiner;
 @InterfaceAudience.Public
 @InterfaceStability.Evolving
 public class MetricsCache {
-  static final Log LOG = LogFactory.getLog(MetricsCache.class);
+  static final Logger LOG = LoggerFactory.getLogger(MetricsCache.class);
   static final int MAX_RECS_PER_NAME_DEFAULT = 1000;
 
   private final Map<String, RecordCache> map = Maps.newHashMap();

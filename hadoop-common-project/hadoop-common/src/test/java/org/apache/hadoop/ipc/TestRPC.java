@@ -80,6 +80,8 @@ import org.apache.hadoop.test.MockitoUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.event.Level;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.DescriptorProtos;
 import com.google.protobuf.DescriptorProtos.EnumDescriptorProto;
@@ -89,10 +91,10 @@ import com.google.protobuf.DescriptorProtos.EnumDescriptorProto;
 public class TestRPC {
   private static final String ADDRESS = "0.0.0.0";
 
-  public static final Log LOG =
-    LogFactory.getLog(TestRPC.class);
+  public static final Logger LOG = LoggerFactory.getLogger(TestRPC.class);
 
   private static Configuration conf;
+
 
   @Before
   public void setupConf() {
@@ -930,7 +932,7 @@ public class TestRPC {
               error.set(e);
             }
 
-            LOG.error(e);
+            LOG.error(e.toString());
           } finally {
             latch.countDown();
           }

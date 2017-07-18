@@ -30,10 +30,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Public;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
+import org.apache.hadoop.fs.FileUtil;
+import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A {@link URLClassLoader} for application isolation. Classes from the
@@ -55,8 +57,8 @@ public class ApplicationClassLoader extends URLClassLoader {
   private static final String SYSTEM_CLASSES_DEFAULT_KEY =
       "system.classes.default";
 
-  private static final Log LOG =
-    LogFactory.getLog(ApplicationClassLoader.class.getName());
+  private static final Logger LOG =
+      LoggerFactory.getLogger(ApplicationClassLoader.class.getName());
 
   private static final FilenameFilter JAR_FILENAME_FILTER =
     new FilenameFilter() {
@@ -190,7 +192,7 @@ public class ApplicationClassLoader extends URLClassLoader {
         }
       } catch (ClassNotFoundException e) {
         if (LOG.isDebugEnabled()) {
-          LOG.debug(e);
+          LOG.debug(e.toString());
         }
         ex = e;
       }

@@ -18,10 +18,10 @@
 
 package org.apache.hadoop.net;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -48,7 +48,7 @@ import javax.naming.directory.InitialDirContext;
 @InterfaceStability.Unstable
 public class DNS {
 
-  private static final Log LOG = LogFactory.getLog(DNS.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DNS.class);
 
   /**
    * The cached hostname -initially null.

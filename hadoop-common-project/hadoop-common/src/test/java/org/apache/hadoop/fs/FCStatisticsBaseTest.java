@@ -37,7 +37,7 @@ import static org.apache.hadoop.fs.FileContextTestHelper.*;
  * </p>
  */
 public abstract class FCStatisticsBaseTest {
-  
+
   static protected int blockSize = 512;
   static protected int numBlocks = 1;
   
@@ -61,7 +61,7 @@ public abstract class FCStatisticsBaseTest {
     stats.incrementWriteOps(123);
     Assert.assertEquals(123, stats.getWriteOps());
     Assert.assertEquals(123L, stats.getNumWriteOps());
-    
+
     Thread thread = new Thread() {
       @Override
       public void run() {

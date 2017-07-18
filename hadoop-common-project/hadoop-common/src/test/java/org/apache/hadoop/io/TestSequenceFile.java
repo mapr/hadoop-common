@@ -22,8 +22,6 @@ import java.io.*;
 import java.util.*;
 import junit.framework.TestCase;
 
-import org.apache.commons.logging.*;
-
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.io.SequenceFile.CompressionType;
 import org.apache.hadoop.io.SequenceFile.Metadata;
@@ -33,14 +31,17 @@ import org.apache.hadoop.io.serializer.avro.AvroReflectSerialization;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.conf.*;
 import org.mockito.Mockito;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /** Support for flat files of binary key/value pairs. */
 public class TestSequenceFile extends TestCase {
-  private static final Log LOG = LogFactory.getLog(TestSequenceFile.class);
+  private static final Logger LOG =
+          LoggerFactory.getLogger(TestSequenceFile.class);
 
   private Configuration conf = new Configuration();
-  
+
   public TestSequenceFile() { }
 
   public TestSequenceFile(String name) { super(name); }
@@ -51,15 +52,15 @@ public class TestSequenceFile extends TestCase {
     compressedSeqFileTest(new DefaultCodec());
     LOG.info("Successfully tested SequenceFile with DefaultCodec");
   }
-  
+
   public void compressedSeqFileTest(CompressionCodec codec) throws Exception {
     int count = 1024 * 10;
     int megabytes = 1;
     int factor = 5;
     Path file = new Path(System.getProperty("test.build.data",".")+"/test.seq");
-    Path recordCompressedFile = 
+    Path recordCompressedFile =
       new Path(System.getProperty("test.build.data",".")+"/test.rc.seq");
-    Path blockCompressedFile = 
+    Path blockCompressedFile =
       new Path(System.getProperty("test.build.data",".")+"/test.bc.seq");
  
     int seed = new Random().nextInt();
@@ -316,9 +317,9 @@ public class TestSequenceFile extends TestCase {
     Path file = new Path(System.getProperty("test.build.data",".")+"/test.seq.metadata");
     Path sortedFile =
       new Path(System.getProperty("test.build.data",".")+"/test.sorted.seq.metadata");
-    Path recordCompressedFile = 
+    Path recordCompressedFile =
       new Path(System.getProperty("test.build.data",".")+"/test.rc.seq.metadata");
-    Path blockCompressedFile = 
+    Path blockCompressedFile =
       new Path(System.getProperty("test.build.data",".")+"/test.bc.seq.metadata");
  
     FileSystem fs = FileSystem.getLocal(conf);
@@ -371,7 +372,7 @@ public class TestSequenceFile extends TestCase {
     LOG.info("Successfully tested SequenceFile with metadata");
   }
   
-  
+
   private SequenceFile.Metadata readMetadata(FileSystem fs, Path file)
     throws IOException {
     LOG.info("reading file: " + file.toString());

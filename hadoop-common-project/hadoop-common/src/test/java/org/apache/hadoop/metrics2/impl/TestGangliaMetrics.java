@@ -30,8 +30,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.metrics2.AbstractMetric;
 import org.apache.hadoop.metrics2.MetricsRecord;
 import org.apache.hadoop.metrics2.MetricsTag;
@@ -46,9 +44,12 @@ import org.apache.hadoop.metrics2.sink.ganglia.GangliaSink30;
 import org.apache.hadoop.metrics2.sink.ganglia.GangliaSink31;
 import org.apache.hadoop.metrics2.sink.ganglia.GangliaMetricsTestHelper;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TestGangliaMetrics {
-  public static final Log LOG = LogFactory.getLog(TestMetricsSystemImpl.class);
+  public static final Logger LOG =
+          LoggerFactory.getLogger(TestMetricsSystemImpl.class);
   private final String[] expectedMetrics =
     { "test.s1rec.C1",
       "test.s1rec.G1",

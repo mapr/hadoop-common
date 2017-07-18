@@ -71,8 +71,6 @@ import javax.security.sasl.SaslException;
 import javax.security.sasl.SaslServer;
 
 import org.apache.commons.io.Charsets;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability;
@@ -131,6 +129,8 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.CodedOutputStream;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** An abstract IPC service.  IPC calls take a single {@link Writable} as a
  * parameter, and return a {@link Writable} as their value.  A service runs on
@@ -256,9 +256,9 @@ public abstract class Server {
   }
   
 
-  public static final Log LOG = LogFactory.getLog(Server.class);
-  public static final Log AUDITLOG = 
-    LogFactory.getLog("SecurityLogger."+Server.class.getName());
+  public static final Logger LOG = LoggerFactory.getLogger(Server.class);
+  public static final Logger AUDITLOG =
+      LoggerFactory.getLogger("SecurityLogger."+Server.class.getName());
   private static final String AUTH_FAILED_FOR = "Auth failed for ";
   private static final String AUTH_SUCCESSFUL_FOR = "Auth successful for ";
   
@@ -683,7 +683,7 @@ public abstract class Server {
           } catch (IOException ex) {
             LOG.error("Error in Reader", ex);
           } catch (Throwable re) {
-            LOG.fatal("Bug in read selector!", re);
+            LOG.error("Bug in read selector!", re);
             ExitUtil.terminate(1, "Bug in read selector!");
           }
         }
@@ -2165,7 +2165,7 @@ public abstract class Server {
                 StringUtils.stringifyException(e));
           }
         } finally {
-          IOUtils.cleanup(LOG, traceScope);
+          IOUtils.cleanupWithLogger(LOG, traceScope);
         }
       }
       LOG.debug(Thread.currentThread().getName() + ": exiting");

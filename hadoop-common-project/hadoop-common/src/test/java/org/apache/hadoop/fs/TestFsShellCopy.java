@@ -29,7 +29,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class TestFsShellCopy {  
+public class TestFsShellCopy {
   static Configuration conf;
   static FsShell shell; 
   static LocalFileSystem lfs;
@@ -44,7 +44,7 @@ public class TestFsShellCopy {
         System.getProperty("test.build.data","test/build/data"),
         "testShellCopy"));
     
-    lfs.mkdirs(testRootDir);    
+    lfs.mkdirs(testRootDir);
     srcPath = new Path(testRootDir, "srcFile");
     dstPath = new Path(testRootDir, "dstFile");
   }
@@ -98,7 +98,7 @@ public class TestFsShellCopy {
   private void shellRun(int n, String ... args) throws Exception {
     assertEquals(n, shell.run(args));
   }
-  
+
   @Test
   public void testCopyFileFromLocal() throws Exception {
     Path testRoot = new Path(testRootDir, "testPutFile");
@@ -325,7 +325,7 @@ public class TestFsShellCopy {
     Path df3 = new Path(d, "df3");
     
     createFile(f1, f2, f3, df1, df2, df3);
-    
+
     int exit;
     // one file, kind of silly
     exit = shell.run(new String[]{
@@ -484,7 +484,7 @@ public class TestFsShellCopy {
     shellRun(0, "-get", srcPath.toString(), winDstFile);
     checkPath(dstPath, false);
   }
-  
+
   private void createFile(Path ... paths) throws IOException {
     for (Path path : paths) {
       FSDataOutputStream out = lfs.create(path);
@@ -492,7 +492,7 @@ public class TestFsShellCopy {
       out.close();
     }
   }
-  
+
   private String readFile(String out) throws IOException {
     Path path = new Path(out);
     FileStatus stat = lfs.getFileStatus(path);

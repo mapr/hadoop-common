@@ -34,8 +34,6 @@ import java.util.ServiceLoader;
 import javax.security.auth.kerberos.KerberosPrincipal;
 import javax.security.auth.kerberos.KerberosTicket;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
@@ -49,7 +47,8 @@ import org.apache.hadoop.security.token.TokenInfo;
 import org.apache.hadoop.util.StringUtils;
 import org.xbill.DNS.Name;
 import org.xbill.DNS.ResolverConfig;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.net.InetAddresses;
@@ -57,7 +56,7 @@ import com.google.common.net.InetAddresses;
 @InterfaceAudience.LimitedPrivate({"HDFS", "MapReduce"})
 @InterfaceStability.Evolving
 public class SecurityUtil {
-  public static final Log LOG = LogFactory.getLog(SecurityUtil.class);
+  public static final Logger LOG = LoggerFactory.getLogger(SecurityUtil.class);
   public static final String HOSTNAME_PATTERN = "_HOST";
   public static final String FAILED_TO_GET_UGI_MSG_HEADER = 
       "Failed to obtain user group information:";
@@ -402,7 +401,7 @@ public class SecurityUtil {
       try { 
         ugi = UserGroupInformation.getLoginUser();
       } catch (IOException e) {
-        LOG.fatal("Exception while getting login user", e);
+        LOG.error("Exception while getting login user", e);
         e.printStackTrace();
         Runtime.getRuntime().exit(-1);
       }

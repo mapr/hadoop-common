@@ -76,8 +76,6 @@ import javax.xml.transform.stream.StreamResult;
 
 import com.google.common.base.Charsets;
 import org.apache.commons.collections.map.UnmodifiableMap;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.fs.FileSystem;
@@ -94,6 +92,8 @@ import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.StringInterner;
 import org.apache.hadoop.util.StringUtils;
 import org.w3c.dom.DOMException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -177,11 +177,11 @@ import com.google.common.base.Preconditions;
 @InterfaceStability.Stable
 public class Configuration implements Iterable<Map.Entry<String,String>>,
                                       Writable {
-  private static final Log LOG =
-    LogFactory.getLog(Configuration.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(Configuration.class);
 
-  private static final Log LOG_DEPRECATION =
-    LogFactory.getLog("org.apache.hadoop.conf.Configuration.deprecation");
+  private static final Logger LOG_DEPRECATION = LoggerFactory.getLogger(
+          "org.apache.hadoop.conf.Configuration.deprecation");
 
   private boolean quietmode = true;
 
@@ -296,7 +296,7 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
    * the key most recently
    */
   private Map<String, String[]> updatingResource;
- 
+
   /**
    * Class to keep the information about the keys which replace the deprecated
    * ones.
@@ -717,7 +717,7 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
     addDefaultResource("core-site.xml");
 
   }
-  
+
   private Properties properties;
   private Properties overlay;
   private ClassLoader classLoader;
@@ -780,7 +780,7 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
     this.loadDefaults = other.loadDefaults;
     setQuietMode(other.getQuietMode());
   }
-  
+
   /**
    * Add a default resource. Resources are loaded in the order of the resources 
    * added.
@@ -2687,7 +2687,7 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
       for (String resource : defaultResources) {
         loadResource(properties, new Resource(resource, false), quiet);
       }
-    
+
       //support the hadoop-site.xml as a deprecated case
       if(getResource("hadoop-site.xml")!=null) {
         loadResource(properties, new Resource("hadoop-site.xml", false), quiet);
@@ -2707,8 +2707,8 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
     try {
       Object resource = wrapper.getResource();
       name = wrapper.getName();
-      
-      DocumentBuilderFactory docBuilderFactory 
+
+      DocumentBuilderFactory docBuilderFactory
         = DocumentBuilderFactory.newInstance();
       //ignore all comments inside the xml file
       docBuilderFactory.setIgnoringComments(true);
@@ -2730,7 +2730,7 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
       Document doc = null;
       Element root = null;
       boolean returnCachedProperties = false;
-      
+
       if (resource instanceof URL) {                  // an URL resource
         doc = parse(builder, (URL)resource);
       } else if (resource instanceof String) {        // a CLASSPATH resource
@@ -2778,7 +2778,7 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
         toAddTo = new Properties();
       }
       if (!"configuration".equals(root.getTagName()))
-        LOG.fatal("bad conf file: top-level element not <configuration>");
+        LOG.error("bad conf file: top-level element not <configuration>");
       NodeList props = root.getChildNodes();
       DeprecationContext deprecations = deprecationContext.get();
       for (int i = 0; i < props.getLength(); i++) {
@@ -2823,7 +2823,7 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
                 ((Text)field.getFirstChild()).getData()));
         }
         source.add(name);
-        
+
         // Ignore this parameter if it has already been marked as 'final'
         if (attr != null) {
           if (deprecations.getDeprecatedKeyMap().containsKey(attr)) {
@@ -2831,34 +2831,34 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
                 deprecations.getDeprecatedKeyMap().get(attr);
             keyInfo.clearAccessed();
             for (String key:keyInfo.newKeys) {
-              // update new keys with deprecated key's value 
-              loadProperty(toAddTo, name, key, value, finalParameter, 
+              // update new keys with deprecated key's value
+              loadProperty(toAddTo, name, key, value, finalParameter,
                   source.toArray(new String[source.size()]));
             }
           }
           else {
-            loadProperty(toAddTo, name, attr, value, finalParameter, 
+            loadProperty(toAddTo, name, attr, value, finalParameter,
                 source.toArray(new String[source.size()]));
           }
         }
       }
-      
+
       if (returnCachedProperties) {
         overlay(properties, toAddTo);
         return new Resource(toAddTo, name, wrapper.isParserRestricted());
       }
       return null;
     } catch (IOException e) {
-      LOG.fatal("error parsing conf " + name, e);
+      LOG.error("error parsing conf " + name, e);
       throw new RuntimeException(e);
     } catch (DOMException e) {
-      LOG.fatal("error parsing conf " + name, e);
+      LOG.error("error parsing conf " + name, e);
       throw new RuntimeException(e);
     } catch (SAXException e) {
-      LOG.fatal("error parsing conf " + name, e);
+      LOG.error("error parsing conf " + name, e);
       throw new RuntimeException(e);
     } catch (ParserConfigurationException e) {
-      LOG.fatal("error parsing conf " + name , e);
+      LOG.error("error parsing conf " + name , e);
       throw new RuntimeException(e);
     }
   }

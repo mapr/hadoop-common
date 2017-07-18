@@ -17,14 +17,14 @@
  */
 package org.apache.hadoop.fs;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.util.LineReader;
 import org.apache.hadoop.util.Progressable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -49,7 +49,8 @@ import java.util.*;
 
 public class HarFileSystem extends FileSystem {
 
-  private static final Log LOG = LogFactory.getLog(HarFileSystem.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(HarFileSystem.class);
 
   public static final String METADATA_CACHE_ENTRIES_KEY = "fs.har.metadatacache.entries";
   public static final int METADATA_CACHE_ENTRIES_DEFAULT = 10;
@@ -1171,7 +1172,7 @@ public class HarFileSystem extends FileSystem {
         LOG.warn("Encountered exception ", ioe);
         throw ioe;
       } finally {
-        IOUtils.cleanup(LOG, lin, in);
+        IOUtils.cleanupWithLogger(LOG, lin, in);
       }
 
       FSDataInputStream aIn = fs.open(archiveIndexPath);
@@ -1196,7 +1197,7 @@ public class HarFileSystem extends FileSystem {
           }
         }
       } finally {
-        IOUtils.cleanup(LOG, aIn);
+        IOUtils.cleanupWithLogger(LOG, aIn);
       }
     }
   }

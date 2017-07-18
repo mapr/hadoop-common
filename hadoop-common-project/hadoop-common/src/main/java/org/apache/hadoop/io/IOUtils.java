@@ -30,8 +30,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
 
+import org.apache.commons.logging.Log;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
@@ -53,7 +53,7 @@ public class IOUtils {
    * @param close whether or not close the InputStream and 
    * OutputStream at the end. The streams are closed in the finally clause.  
    */
-  public static void copyBytes(InputStream in, OutputStream out, int buffSize, boolean close)
+  public static void copyBytes(InputStream in, OutputStream out, int buffSize, boolean close) 
     throws IOException {
     try {
       copyBytes(in, out, buffSize);

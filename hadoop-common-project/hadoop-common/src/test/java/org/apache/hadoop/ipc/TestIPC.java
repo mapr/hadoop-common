@@ -52,8 +52,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.net.SocketFactory;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
@@ -81,12 +79,13 @@ import org.mockito.stubbing.Answer;
 
 import com.google.common.primitives.Bytes;
 import com.google.common.primitives.Ints;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
 /** Unit tests for IPC. */
 public class TestIPC {
-  public static final Log LOG =
-    LogFactory.getLog(TestIPC.class);
+  public static final Logger LOG = LoggerFactory.getLogger(TestIPC.class);
   
   private static Configuration conf;
   final static private int PING_INTERVAL = 1000;
@@ -122,10 +121,10 @@ public class TestIPC {
     public TestServer(int handlerCount, boolean sleep) throws IOException {
       this(handlerCount, sleep, LongWritable.class, null);
     }
-    
+
     public TestServer(int handlerCount, boolean sleep,
         Class<? extends Writable> paramClass,
-        Class<? extends Writable> responseClass) 
+        Class<? extends Writable> responseClass)
       throws IOException {
       super(ADDRESS, 0, paramClass, handlerCount, conf);
       this.sleep = sleep;
@@ -176,12 +175,12 @@ public class TestIPC {
           LongWritable value =
             (LongWritable)client.call(param, server, null, null, 0, conf);
           if (!param.equals(value)) {
-            LOG.fatal("Call failed!");
+            LOG.error("Call failed!");
             failed = true;
             break;
           }
         } catch (Exception e) {
-          LOG.fatal("Caught: " + StringUtils.stringifyException(e));
+          LOG.error("Caught: " + StringUtils.stringifyException(e));
           failed = true;
         }
       }
@@ -204,7 +203,7 @@ public class TestIPC {
       this.server = server;
       this.total = total;
     }
-    
+
     @Override
     public Object invoke(Object proxy, Method method, Object[] args)
         throws Throwable {
@@ -226,7 +225,7 @@ public class TestIPC {
       return null;
     }
   }
-  
+
   @Test(timeout=60000)
   public void testSerial() throws IOException, InterruptedException {
     internalTestSerial(3, false, 2, 5, 100);
@@ -701,7 +700,7 @@ public class TestIPC {
             client.call(new LongWritable(Thread.currentThread().getId()),
                 addr, null, null, 60000, conf);
           } catch (Throwable e) {
-            LOG.error(e);
+            LOG.error(e.toString());
             failures.incrementAndGet();
             return;
           } finally {
@@ -721,7 +720,7 @@ public class TestIPC {
         // let first reader block in a call
         server.firstCallLatch.await();
       } else if (i <= callQ) {
-        // let subsequent readers jam the callq, will happen immediately 
+        // let subsequent readers jam the callq, will happen immediately
         while (server.getCallQueueLen() != i) {
           Thread.sleep(1);
         }
@@ -800,7 +799,7 @@ public class TestIPC {
               callBarrier.await();
             }
           } catch (Throwable t) {
-            LOG.error(t);
+            LOG.error(t.toString());
             error.set(true); 
           } 
         }
@@ -823,7 +822,7 @@ public class TestIPC {
               callReturned.countDown();
               Thread.sleep(10000);
             } catch (IOException e) {
-              LOG.error(e);
+              LOG.error(e.toString());
             } catch (InterruptedException e) {
             }
           }
@@ -872,7 +871,7 @@ public class TestIPC {
       }
     }
   }
-  
+
   /**
    * Make a call from a client and verify if header info is changed in server side
    */
@@ -925,7 +924,7 @@ public class TestIPC {
     assertTrue("Leaked " + (endFds - startFds) + " file descriptors",
         endFds - startFds < 20);
   }
-  
+
   private long countOpenFileDescriptors() {
     return FD_DIR.list().length;
   }
@@ -1065,7 +1064,7 @@ public class TestIPC {
       server.stop();
     }
   }
-  
+
   /**
    * Test if the rpc server gets the default retry count (0) from client.
    */
@@ -1256,7 +1255,7 @@ public class TestIPC {
           .createSocket();
     }
   }
-  
+
   private void doIpcVersionTest(
       byte[] requestData,
       byte[] expectedResponse) throws IOException {

@@ -38,8 +38,6 @@ import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.util.Shell;
@@ -50,9 +48,11 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TestFileUtil {
-  private static final Log LOG = LogFactory.getLog(TestFileUtil.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TestFileUtil.class);
 
   private static final String TEST_ROOT_DIR = System.getProperty(
       "test.build.data", "/tmp") + "/fu";

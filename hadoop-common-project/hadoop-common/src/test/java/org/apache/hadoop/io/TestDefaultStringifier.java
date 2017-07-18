@@ -23,14 +23,15 @@ import java.util.Random;
 
 import junit.framework.TestCase;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 
 public class TestDefaultStringifier extends TestCase {
 
   private static Configuration conf = new Configuration();
-  private static final Log LOG = LogFactory.getLog(TestDefaultStringifier.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(TestDefaultStringifier.class);
 
   private char[] alphabet = "abcdefghijklmnopqrstuvwxyz".toCharArray();
 

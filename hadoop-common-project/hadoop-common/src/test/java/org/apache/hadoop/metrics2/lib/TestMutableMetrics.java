@@ -36,12 +36,16 @@ import java.util.Map.Entry;
 import org.apache.hadoop.metrics2.MetricsRecordBuilder;
 import org.apache.hadoop.metrics2.util.Quantile;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Test metrics record builder interface and mutable metrics
  */
 public class TestMutableMetrics {
 
+  private static final Logger LOG =
+      LoggerFactory.getLogger(TestMutableMetrics.class);
   private final double EPSILON = 1e-42;
 
   /**

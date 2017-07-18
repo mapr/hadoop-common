@@ -31,12 +31,12 @@ import java.util.Map.Entry;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.ipc.RemoteException;
 import org.apache.hadoop.ipc.RetriableException;
 import org.apache.hadoop.ipc.StandbyException;
 import org.apache.hadoop.net.ConnectTimeoutException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>
@@ -45,7 +45,7 @@ import org.apache.hadoop.net.ConnectTimeoutException;
  */
 public class RetryPolicies {
   
-  public static final Log LOG = LogFactory.getLog(RetryPolicies.class);
+  public static final Logger LOG = LoggerFactory.getLogger(RetryPolicies.class);
   
   private static ThreadLocal<Random> RANDOM = new ThreadLocal<Random>() {
     @Override
@@ -53,7 +53,7 @@ public class RetryPolicies {
       return new Random();
     }
   };
-  
+
   /**
    * <p>
    * Try once, and fail by re-throwing the exception.
@@ -167,7 +167,7 @@ public class RetryPolicies {
     return new FailoverOnNetworkExceptionRetry(fallbackPolicy, maxFailovers,
         maxRetries, delayMillis, maxDelayBase);
   }
-  
+
   static class TryOnceThenFail implements RetryPolicy {
     @Override
     public RetryAction shouldRetry(Exception e, int retries, int failovers,
@@ -175,7 +175,7 @@ public class RetryPolicies {
       return RetryAction.FAIL;
     }
   }
-  
+
   static class RetryForever implements RetryPolicy {
     @Override
     public RetryAction shouldRetry(Exception e, int retries, int failovers,
@@ -221,9 +221,9 @@ public class RetryPolicies {
       return new RetryAction(RetryAction.RetryDecision.RETRY,
           timeUnit.toMillis(calculateSleepTime(retries)));
     }
-    
+
     protected abstract long calculateSleepTime(int retries);
-    
+
     @Override
     public int hashCode() {
       return toString().hashCode();
@@ -259,18 +259,18 @@ public class RetryPolicies {
       return sleepTime;
     }
   }
-  
+
   static class RetryUpToMaximumTimeWithFixedSleep extends RetryUpToMaximumCountWithFixedSleep {
     public RetryUpToMaximumTimeWithFixedSleep(long maxTime, long sleepTime, TimeUnit timeUnit) {
       super((int) (maxTime / sleepTime), sleepTime, timeUnit);
     }
   }
-  
+
   static class RetryUpToMaximumCountWithProportionalSleep extends RetryLimited {
     public RetryUpToMaximumCountWithProportionalSleep(int maxRetries, long sleepTime, TimeUnit timeUnit) {
       super(maxRetries, sleepTime, timeUnit);
     }
-    
+
     @Override
     protected long calculateSleepTime(int retries) {
       return sleepTime * (retries + 1);
@@ -607,7 +607,7 @@ public class RetryPolicies {
         return new RetryAction(RetryAction.RetryDecision.FAIL, 0, "retries ("
             + retries + ") exceeded maximum allowed (" + maxRetries + ")");
       }
-      
+
       if (e instanceof ConnectException ||
           e instanceof NoRouteToHostException ||
           e instanceof UnknownHostException ||

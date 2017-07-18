@@ -23,9 +23,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.metrics.ContextFactory;
@@ -33,12 +30,15 @@ import org.apache.hadoop.metrics.MetricsContext;
 import org.apache.hadoop.metrics.MetricsRecord;
 import org.apache.hadoop.metrics.MetricsUtil;
 import org.apache.hadoop.metrics.Updater;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @InterfaceAudience.Public
 @InterfaceStability.Evolving
 public class CompositeContext extends AbstractMetricsContext {
 
-  private static final Log LOG = LogFactory.getLog(CompositeContext.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(CompositeContext.class);
   private static final String ARITY_LABEL = "arity";
   private static final String SUB_FMT = "%s.sub%d";
   private final ArrayList<MetricsContext> subctxt =

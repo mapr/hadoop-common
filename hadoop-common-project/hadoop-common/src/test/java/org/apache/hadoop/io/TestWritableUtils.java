@@ -20,13 +20,14 @@ package org.apache.hadoop.io;
 
 import java.io.IOException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import junit.framework.TestCase;
 
 public class TestWritableUtils extends TestCase {
-  private static final Log LOG = LogFactory.getLog(TestWritableUtils.class);
+  private static final Logger LOG =
+          LoggerFactory.getLogger(TestWritableUtils.class);
 
   public static void testValue(int val, int vintlen) throws IOException {
     DataOutputBuffer buf = new DataOutputBuffer();
@@ -44,7 +45,7 @@ public class TestWritableUtils extends TestCase {
     assertEquals(vintlen, WritableUtils.getVIntSize(val));
     assertEquals(vintlen, WritableUtils.decodeVIntSize(buf.getData()[0]));
   }
-  
+
   public static void testReadInRange(long val, int lower,
       int upper, boolean expectSuccess) throws IOException {
     DataOutputBuffer buf = new DataOutputBuffer();

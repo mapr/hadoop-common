@@ -22,21 +22,22 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.alias.CredentialProviderFactory;
 import org.apache.hadoop.security.alias.JavaKeyStoreProvider;
 import org.apache.hadoop.security.alias.LocalJavaKeyStoreProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Utility methods for both key and credential provider APIs.
  *
  */
 public final class ProviderUtils {
-  private static final Log LOG = LogFactory.getLog(ProviderUtils.class);
+  private static final Logger LOG =
+          LoggerFactory.getLogger(ProviderUtils.class);
 
   /**
    * Hidden ctor to ensure that this utility class isn't

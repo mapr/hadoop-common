@@ -116,7 +116,7 @@ public class TestServer {
       socket.close();
     }
   }
-  
+
   @Test
   public void testExceptionsHandler() {
     Server.ExceptionsHandler handler = new Server.ExceptionsHandler();

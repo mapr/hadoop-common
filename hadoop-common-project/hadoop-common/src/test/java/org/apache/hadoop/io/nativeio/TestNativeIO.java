@@ -44,8 +44,6 @@ import static org.junit.Assume.*;
 import static org.junit.Assert.*;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.FileSystem;
@@ -54,9 +52,11 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.NativeCodeLoader;
 import org.apache.hadoop.util.Time;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TestNativeIO {
-  static final Log LOG = LogFactory.getLog(TestNativeIO.class);
+  static final Logger LOG = LoggerFactory.getLogger(TestNativeIO.class);
 
   static final File TEST_DIR = new File(
     System.getProperty("test.build.data"), "testnativeio");
@@ -652,8 +652,8 @@ public class TestNativeIO {
       NativeIO.copyFileUnbuffered(srcFile, dstFile);
       Assert.assertEquals(srcFile.length(), dstFile.length());
     } finally {
-      IOUtils.cleanup(LOG, channel);
-      IOUtils.cleanup(LOG, raSrcFile);
+      IOUtils.cleanupWithLogger(LOG, channel);
+      IOUtils.cleanupWithLogger(LOG, raSrcFile);
       FileUtils.deleteQuietly(TEST_DIR);
     }
   }

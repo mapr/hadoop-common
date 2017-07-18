@@ -32,8 +32,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.io.BytesWritable;
@@ -43,6 +41,8 @@ import org.apache.hadoop.ipc.Server.Call;
 import org.apache.hadoop.net.NetUtils;
 import org.junit.Assert;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This test provokes partial writes in the server, which is 
@@ -50,8 +50,8 @@ import org.junit.Test;
  */
 public class TestIPCServerResponder {
 
-  public static final Log LOG = 
-            LogFactory.getLog(TestIPCServerResponder.class);
+  public static final Logger LOG =
+      LoggerFactory.getLogger(TestIPCServerResponder.class);
 
   private static Configuration conf = new Configuration();
 
@@ -116,7 +116,7 @@ public class TestIPCServerResponder {
           client.call(param, address);
           Thread.sleep(RANDOM.nextInt(20));
         } catch (Exception e) {
-          LOG.fatal("Caught Exception", e);
+          LOG.error("Caught Exception", e);
           failed = true;
         }
       }

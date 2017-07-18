@@ -23,19 +23,19 @@ import java.net.InetAddress;
 
 import javax.naming.NameNotFoundException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.util.Time;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Test host name and IP resolution and caching.
  */
 public class TestDNS {
 
-  private static final Log LOG = LogFactory.getLog(TestDNS.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TestDNS.class);
   private static final String DEFAULT = "default";
 
   /**

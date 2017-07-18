@@ -41,8 +41,6 @@ import java.util.zip.ZipFile;
 import org.apache.commons.collections.map.CaseInsensitiveMap;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
@@ -55,6 +53,8 @@ import org.apache.hadoop.maprfs.AbstractMapRFileSystem;
 import org.apache.hadoop.util.Shell;
 import org.apache.hadoop.util.Shell.ShellCommandExecutor;
 import org.apache.hadoop.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A collection of file-processing util methods
@@ -63,7 +63,7 @@ import org.apache.hadoop.util.StringUtils;
 @InterfaceStability.Evolving
 public class FileUtil {
 
-  private static final Log LOG = LogFactory.getLog(FileUtil.class);
+  private static final Logger LOG = LoggerFactory.getLogger(FileUtil.class);
 
   /* The error code is defined in winutils to indicate insufficient
    * privilege to create symbolic links. This value need to keep in
@@ -717,7 +717,7 @@ public class FileUtil {
         entry = tis.getNextTarEntry();
       }
     } finally {
-      IOUtils.cleanup(LOG, tis, inputStream);
+      IOUtils.cleanupWithLogger(LOG, tis, inputStream);
     }
   }
   
@@ -1375,7 +1375,7 @@ public class FileUtil {
       bos = new BufferedOutputStream(fos);
       jos = new JarOutputStream(bos, jarManifest);
     } finally {
-      IOUtils.cleanup(LOG, jos, bos, fos);
+      IOUtils.cleanupWithLogger(LOG, jos, bos, fos);
     }
     String[] jarCp = {classPathJar.getCanonicalPath(),
                         unexpandedWildcardClasspath.toString()};

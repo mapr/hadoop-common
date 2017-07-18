@@ -17,8 +17,6 @@
  */
 package org.apache.hadoop.http;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.http.HttpServer2.QuotingInputFilter.RequestQuoter;
@@ -36,6 +34,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.internal.util.reflection.Whitebox;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -66,7 +66,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 public class TestHttpServer extends HttpServerFunctionalTest {
-  static final Log LOG = LogFactory.getLog(TestHttpServer.class);
+  static final Logger LOG = LoggerFactory.getLogger(TestHttpServer.class);
   private static HttpServer2 server;
   private static final int MAX_THREADS = 10;
   

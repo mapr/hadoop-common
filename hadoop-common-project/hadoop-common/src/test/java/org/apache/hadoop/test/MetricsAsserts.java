@@ -33,8 +33,6 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatcher;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.metrics2.MetricsInfo;
 import org.apache.hadoop.metrics2.MetricsCollector;
 import org.apache.hadoop.metrics2.MetricsSource;
@@ -43,6 +41,8 @@ import org.apache.hadoop.metrics2.MetricsSystem;
 import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 import org.apache.hadoop.metrics2.lib.MutableQuantiles;
 import org.apache.hadoop.metrics2.util.Quantile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.apache.hadoop.metrics2.lib.Interns.*;
 
@@ -51,7 +51,7 @@ import static org.apache.hadoop.metrics2.lib.Interns.*;
  */
 public class MetricsAsserts {
 
-  final static Log LOG = LogFactory.getLog(MetricsAsserts.class);
+  final static Logger LOG = LoggerFactory.getLogger(MetricsAsserts.class);
   private static final double EPSILON = 0.00001;
 
   public static MetricsSystem mockMetricsSystem() {

@@ -18,10 +18,11 @@
 
 package org.apache.hadoop.security.ssl;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
@@ -44,8 +45,8 @@ import java.util.concurrent.atomic.AtomicReference;
 public final class ReloadingX509TrustManager
   implements X509TrustManager, Runnable {
 
-  private static final Log LOG =
-    LogFactory.getLog(ReloadingX509TrustManager.class);
+  static final Logger LOG =
+          LoggerFactory.getLogger(ReloadingX509TrustManager.class);
 
   private String type;
   private File file;

@@ -23,22 +23,23 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Abstracts queue operations for different blocking queues.
  */
 public class CallQueueManager<E> {
-  public static final Log LOG = LogFactory.getLog(CallQueueManager.class);
+  public static final Logger LOG =
+          LoggerFactory.getLogger(CallQueueManager.class);
 
   @SuppressWarnings("unchecked")
   static <E> Class<? extends BlockingQueue<E>> convertQueueClass(
       Class<?> queneClass, Class<E> elementClass) {
     return (Class<? extends BlockingQueue<E>>)queneClass;
   }
-  
+
   // Atomic refs point to active callQueue
   // We have two so we can better control swapping
   private final AtomicReference<BlockingQueue<E>> putRef;

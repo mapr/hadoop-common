@@ -22,23 +22,25 @@ import java.io.*;
 
 import junit.framework.TestCase;
 
-import org.apache.commons.logging.*;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.io.SequenceFile.CompressionType;
 import org.apache.hadoop.util.Progressable;
 import org.apache.hadoop.conf.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Support for flat files of binary key/value pairs. */
 public class TestArrayFile extends TestCase {
-  private static final Log LOG = LogFactory.getLog(TestArrayFile.class);
+  private static final Logger LOG =
+          LoggerFactory.getLogger(TestArrayFile.class);
   
   private static final Path TEST_DIR = new Path(
       System.getProperty("test.build.data", "/tmp"),
       TestMapFile.class.getSimpleName());
   private static String TEST_FILE = new Path(TEST_DIR, "test.array").toString();
 
-  public TestArrayFile(String name) { 
-    super(name); 
+  public TestArrayFile(String name) {
+    super(name);
   }
 
   public void testArrayFile() throws Exception {

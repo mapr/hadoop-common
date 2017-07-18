@@ -32,10 +32,6 @@ import javax.security.sasl.Sasl;
 import javax.security.sasl.SaslException;
 import javax.security.sasl.SaslServer;
 import javax.security.sasl.SaslServerFactory;
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.io.Charsets;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
@@ -48,14 +44,15 @@ import org.apache.hadoop.security.rpcauth.RpcAuthRegistry;
 import org.apache.hadoop.security.token.SecretManager;
 import org.apache.hadoop.security.token.SecretManager.InvalidToken;
 import org.apache.hadoop.security.token.TokenIdentifier;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 /**
  * A utility class for dealing with SASL on RPC server
  */
 @InterfaceAudience.LimitedPrivate({"HDFS", "MapReduce"})
 @InterfaceStability.Evolving
 public class SaslRpcServer {
-  public static final Log LOG = LogFactory.getLog(SaslRpcServer.class);
+  public static final Logger LOG = LoggerFactory.getLogger(SaslRpcServer.class);
   public static final String SASL_DEFAULT_REALM = "default";
   public static final String SASL_AUTH_SECRET_MANAGER = "org.apache.hadoop.auth.secret.manager";
   public static final String SASL_KERBEROS_PRINCIPAL = "org.apache.hadoop.auth.kerberos.principal";

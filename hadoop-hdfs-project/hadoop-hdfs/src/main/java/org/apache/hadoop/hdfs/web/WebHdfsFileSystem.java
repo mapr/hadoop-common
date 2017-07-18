@@ -89,9 +89,9 @@ import com.google.common.collect.Lists;
 /** A FileSystem for HDFS over the web. */
 public class WebHdfsFileSystem extends FileSystem
     implements DelegationTokenRenewer.Renewable, TokenAspect.TokenManagementDelegator {
-  public static final Logger LOG = LoggerFactory
-          .getLogger(WebHdfsFileSystem.class);
-   /** File System URI: {SCHEME}://namenode:port/path/to/file */
+  public static final Logger LOG =
+          LoggerFactory.getLogger(WebHdfsFileSystem.class);
+  /** File System URI: {SCHEME}://namenode:port/path/to/file */
   public static final String SCHEME = "webhdfs";
   /** WebHdfs version. */
   public static final int VERSION = 1;
@@ -382,10 +382,10 @@ public class WebHdfsFileSystem extends FileSystem
 
   /**
    * Covert an exception to an IOException.
-   *
+   * 
    * For a non-IOException, wrap it with IOException.
    * For a RemoteException, unwrap it.
-   * For an IOException which is not a RemoteException, return it.
+   * For an IOException which is not a RemoteException, return it. 
    */
   private static IOException toIOException(Exception e) {
     if (!(e instanceof IOException)) {
@@ -1381,7 +1381,7 @@ public class WebHdfsFileSystem extends FileSystem
         new TokenArgumentParam(token.encodeToUrlString())
     ).run();
   }
-
+  
   @Override
   public BlockLocation[] getFileBlockLocations(final FileStatus status,
       final long offset, final long length) throws IOException {
@@ -1392,7 +1392,7 @@ public class WebHdfsFileSystem extends FileSystem
   }
 
   @Override
-  public BlockLocation[] getFileBlockLocations(final Path p,
+  public BlockLocation[] getFileBlockLocations(final Path p, 
       final long offset, final long length) throws IOException {
     statistics.incrementReadOps(1);
 
@@ -1421,7 +1421,7 @@ public class WebHdfsFileSystem extends FileSystem
     return new FsPathResponseRunner<ContentSummary>(op, p) {
       @Override
       ContentSummary decodeResponse(Map<?,?> json) {
-        return JsonUtil.toContentSummary(json);
+        return JsonUtil.toContentSummary(json);        
       }
     }.run();
   }
@@ -1430,7 +1430,7 @@ public class WebHdfsFileSystem extends FileSystem
   public MD5MD5CRC32FileChecksum getFileChecksum(final Path p
       ) throws IOException {
     statistics.incrementReadOps(1);
-
+  
     final HttpOpParam.Op op = GetOpParam.Op.GETFILECHECKSUM;
     return new FsPathResponseRunner<MD5MD5CRC32FileChecksum>(op, p) {
       @Override

@@ -17,8 +17,8 @@
  */
 package org.apache.hadoop.util;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,7 +41,8 @@ public class ShutdownHookManager {
 
   private static final ShutdownHookManager MGR = new ShutdownHookManager();
 
-  private static final Log LOG = LogFactory.getLog(ShutdownHookManager.class);
+  private static final Logger LOG =
+          LoggerFactory.getLogger(ShutdownHookManager.class);
 
   static {
     Runtime.getRuntime().addShutdownHook(

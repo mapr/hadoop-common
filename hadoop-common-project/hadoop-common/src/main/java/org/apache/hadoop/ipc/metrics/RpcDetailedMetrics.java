@@ -17,14 +17,14 @@
  */
 package org.apache.hadoop.ipc.metrics;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.metrics2.annotation.Metric;
 import org.apache.hadoop.metrics2.annotation.Metrics;
 import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 import org.apache.hadoop.metrics2.lib.MetricsRegistry;
 import org.apache.hadoop.metrics2.lib.MutableRates;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class is for maintaining RPC method related statistics
@@ -36,7 +36,7 @@ public class RpcDetailedMetrics {
 
   @Metric MutableRates rates;
 
-  static final Log LOG = LogFactory.getLog(RpcDetailedMetrics.class);
+  static final Logger LOG = LoggerFactory.getLogger(RpcDetailedMetrics.class);
   final MetricsRegistry registry;
   final String name;
 
@@ -44,7 +44,7 @@ public class RpcDetailedMetrics {
     name = "RpcDetailedActivityForPort"+ port;
     registry = new MetricsRegistry("rpcdetailed")
         .tag("port", "RPC port", String.valueOf(port));
-    LOG.debug(registry.info());
+    LOG.debug(registry.info().toString());
   }
 
   public String name() { return name; }

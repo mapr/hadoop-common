@@ -29,12 +29,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.hamcrest.CoreMatchers.*;
 
@@ -43,7 +43,7 @@ import static org.hamcrest.CoreMatchers.*;
  */
 public class TestWinUtils {
 
-  private static final Log LOG = LogFactory.getLog(TestWinUtils.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TestWinUtils.class);
   private static File TEST_DIR = new File(System.getProperty("test.build.data",
       "/tmp"), TestWinUtils.class.getSimpleName());
 
@@ -538,7 +538,7 @@ public class TestWinUtils {
     
     assertFalse(proof.exists());
     
-    Shell.execCommand(Shell.WINUTILS, "task", "create", "testTaskCreate" + testNumber, 
+    Shell.execCommand(Shell.WINUTILS, "task", "create", "testTaskCreate" + testNumber,
         batch.getAbsolutePath());
     
     assertTrue(proof.exists());

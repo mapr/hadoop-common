@@ -40,8 +40,6 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 
 import org.apache.commons.configuration.SubsetConfiguration;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.metrics2.MetricsException;
 import static org.apache.hadoop.test.MoreAsserts.*;
 
@@ -59,13 +57,16 @@ import org.apache.hadoop.metrics2.lib.MutableRate;
 import org.apache.hadoop.metrics2.lib.MutableGaugeLong;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Test the MetricsSystemImpl class
  */
 @RunWith(MockitoJUnitRunner.class)
 public class TestMetricsSystemImpl {
-  private static final Log LOG = LogFactory.getLog(TestMetricsSystemImpl.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(TestMetricsSystemImpl.class);
   
   static { DefaultMetricsSystem.setMiniClusterMode(true); }
   
@@ -76,7 +77,7 @@ public class TestMetricsSystemImpl {
   public static class TestSink implements MetricsSink {
 
     @Override public void putMetrics(MetricsRecord record) {
-      LOG.debug(record);
+      LOG.debug(record.toString());
     }
 
     @Override public void flush() {}
@@ -418,7 +419,7 @@ public class TestMetricsSystemImpl {
   }
 
   private void checkMetricsRecords(List<MetricsRecord> recs) {
-    LOG.debug(recs);
+    LOG.debug(recs.toString());
     MetricsRecord r = recs.get(0);
     assertEquals("name", "s1rec", r.name());
     assertEquals("tags", new MetricsTag[] {

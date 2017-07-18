@@ -29,7 +29,9 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.DiskChecker.DiskErrorException;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
-import org.apache.hadoop.conf.Configuration; 
+import org.apache.hadoop.conf.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** An implementation of a round-robin scheme for disk allocation for creating
  * files. The way it works is that it is kept track what disk was last
@@ -244,8 +246,8 @@ public class LocalDirAllocator {
   
   private static class AllocatorPerContext {
 
-    private final Log LOG =
-      LogFactory.getLog(AllocatorPerContext.class);
+    private static final Logger LOG =
+        LoggerFactory.getLogger(AllocatorPerContext.class);
 
     private int dirNumLastAccessed;
     private Random dirIndexRandomizer = new Random();
@@ -262,7 +264,7 @@ public class LocalDirAllocator {
     /** This method gets called everytime before any read/write to make sure
      * that any change to localDirs is reflected immediately.
      */
-    private synchronized void confChanged(Configuration conf) 
+    private synchronized void confChanged(Configuration conf)
         throws IOException {
       String newLocalDirs = conf.get(contextCfgItemName);
       if (!newLocalDirs.equals(savedLocalDirs)) {
@@ -300,13 +302,13 @@ public class LocalDirAllocator {
         localDirs = dirs.toArray(new String[dirs.size()]);
         dirDF = dfList.toArray(new DF[dirs.size()]);
         savedLocalDirs = newLocalDirs;
-        
-        // randomize the first disk picked in the round-robin selection 
+
+        // randomize the first disk picked in the round-robin selection
         dirNumLastAccessed = dirIndexRandomizer.nextInt(dirs.size());
       }
     }
 
-    private Path createPath(String path, 
+    private Path createPath(String path,
         boolean checkWrite) throws IOException {
       Path file = new Path(new Path(localDirs[dirNumLastAccessed]),
                                     path);
@@ -339,7 +341,7 @@ public class LocalDirAllocator {
      *  If size is not known, use roulette selection -- pick directories
      *  with probability proportional to their available space.
      */
-    public synchronized Path getLocalPathForWrite(String pathStr, long size, 
+    public synchronized Path getLocalPathForWrite(String pathStr, long size,
         Configuration conf, boolean checkWrite) throws IOException {
       confChanged(conf);
       int numDirs = localDirs.length;
@@ -391,9 +393,9 @@ public class LocalDirAllocator {
             returnPath = createPath(pathStr, checkWrite);
           }
           dirNumLastAccessed++;
-          dirNumLastAccessed = dirNumLastAccessed % numDirs; 
+          dirNumLastAccessed = dirNumLastAccessed % numDirs;
           numDirsSearched++;
-        } 
+        }
       }
       if (returnPath != null) {
         return returnPath;
@@ -428,7 +430,7 @@ public class LocalDirAllocator {
      *  configured dirs for the file's existence and return the complete
      *  path to the file when we find one 
      */
-    public synchronized Path getLocalPathToRead(String pathStr, 
+    public synchronized Path getLocalPathToRead(String pathStr,
         Configuration conf) throws IOException {
       confChanged(conf);
       int numDirs = localDirs.length;

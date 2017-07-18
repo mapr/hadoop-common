@@ -69,8 +69,6 @@ import javax.security.sasl.SaslException;
 import javax.security.sasl.SaslServer;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
@@ -105,6 +103,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
 /** Unit tests for using Sasl over RPC. */
@@ -141,9 +141,8 @@ public class TestSaslRPC {
 
   private static final String ADDRESS = "0.0.0.0";
 
-  public static final Log LOG =
-    LogFactory.getLog(TestSaslRPC.class);
-  
+  public static final Logger LOG = LoggerFactory.getLogger(TestSaslRPC.class);
+
   static final String ERROR_MESSAGE = "Token is invalid";
   static final String SERVER_PRINCIPAL_KEY = "test.ipc.server.principal";
   static final String SERVER_KEYTAB_KEY = "test.ipc.server.keytab";

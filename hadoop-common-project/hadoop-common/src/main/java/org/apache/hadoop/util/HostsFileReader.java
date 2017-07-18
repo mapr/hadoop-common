@@ -23,13 +23,13 @@ import java.util.Set;
 import java.util.HashSet;
 
 import org.apache.commons.io.Charsets;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-// Keeps track of which datanodes/tasktrackers are allowed to connect to the 
+// Keeps track of which datanodes/tasktrackers are allowed to connect to the
 // namenode/jobtracker.
 @InterfaceAudience.LimitedPrivate({"HDFS", "MapReduce"})
 @InterfaceStability.Unstable
@@ -38,10 +38,11 @@ public class HostsFileReader {
   private Set<String> excludes;
   private String includesFile;
   private String excludesFile;
-  
-  private static final Log LOG = LogFactory.getLog(HostsFileReader.class);
 
-  public HostsFileReader(String inFile, 
+  private static final Logger LOG =
+      LoggerFactory.getLogger(HostsFileReader.class);
+
+  public HostsFileReader(String inFile,
                          String exFile) throws IOException {
     includes = new HashSet<String>();
     excludes = new HashSet<String>();
@@ -165,7 +166,7 @@ public class HostsFileReader {
     LOG.info("Setting the includes file to " + includesFile);
     this.includesFile = includesFile;
   }
-  
+
   public synchronized void setExcludesFile(String excludesFile) {
     LOG.info("Setting the excludes file to " + excludesFile);
     this.excludesFile = excludesFile;
