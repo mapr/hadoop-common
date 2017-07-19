@@ -419,6 +419,7 @@ public class FairScheduler extends
         updateResourceToPreempt(container, toPreempt, preemptMapping.get(container));
       } else {
         warnedIter.remove();
+        preemptMapping.remove(container);
       }
     }
 
