@@ -2697,34 +2697,58 @@ public abstract class FileSystem extends Configured implements Closeable {
   /** Caching FileSystem objects */
   static class Cache {
     private final ClientFinalizer clientFinalizer = new ClientFinalizer();
-    
-    private final Configuration conf = new Configuration();
-    
-    private final int FS_CACHE_ENTRIES_MAX_SIZE = conf.getInt(
-      CommonConfigurationKeys.FS_CACHE_ENTRIES_MAX_SIZE,
-      CommonConfigurationKeys.DEFAULT_FS_CACHE_ENTRIES_MAX_SIZE);
 
-    private final int FS_CACHE_ENTRIES_EXPIRE_AFTER_ACCESS_MS = conf.getInt(
-      CommonConfigurationKeys.FS_CACHE_ENTRIES_EXPIRE_AFTER_ACCESS_MS,
-      CommonConfigurationKeys.DEFAULT_FS_CACHE_ENTRIES_EXPIRE_AFTER_ACCESS_MS);
+    Configuration conf = new Configuration();
     
-     private final Map<Key, FileSystem> map = CacheBuilder.newBuilder()
-      .maximumSize(FS_CACHE_ENTRIES_MAX_SIZE)
-      .expireAfterAccess(FS_CACHE_ENTRIES_EXPIRE_AFTER_ACCESS_MS, TimeUnit.MILLISECONDS)
-      .removalListener(new RemovalListener<Key, FileSystem>() {
-        @Override
-        public void onRemoval(RemovalNotification<Key, FileSystem> removal) {
-          removal.getValue().processDeleteOnExit();
-          toAutoClose.remove(removal.getKey());
-        }
-      })
-      .build()
-      .asMap();
-    
+    private final Map<Key, FileSystem> map = getCacheMap(conf);
     private final Set<Key> toAutoClose = new HashSet<Key>();
 
     /** A variable that makes all objects in the cache unique */
     private static AtomicLong unique = new AtomicLong(1);
+    
+    private Map<Key, FileSystem> getCacheMap(Configuration conf) {
+      Map<Key, FileSystem> map;
+
+      boolean isFsLruEnable = conf.getBoolean(
+        CommonConfigurationKeys.FS_CACHE_LRU_ENABLE,
+        CommonConfigurationKeys.DEFAULT_FS_CACHE_LRU_ENABLE);
+
+      //Enable/Disable LRU cache only for current process
+      String property = System.getProperty(CommonConfigurationKeys.FS_CACHE_LRU_ENABLE);
+      isFsLruEnable = property == null ? isFsLruEnable : Boolean.parseBoolean(property);
+
+      if (isFsLruEnable) {
+        map = createLruCacheMap(conf);
+      } else {
+        map = new HashMap<>();
+      }
+
+      return map;
+    }
+    
+    private Map<Key, FileSystem> createLruCacheMap(Configuration conf) {
+      final int FS_CACHE_LRU_ENTRIES_MAX_SIZE = conf.getInt(
+        CommonConfigurationKeys.FS_CACHE_LRU_ENTRIES_MAX_SIZE,
+        CommonConfigurationKeys.DEFAULT_FS_CACHE_LRU_ENTRIES_MAX_SIZE);
+
+      final int FS_CACHE_LRU_ENTRIES_EXPIRE_AFTER_ACCESS_MS = conf.getInt(
+        CommonConfigurationKeys.FS_CACHE_LRU_ENTRIES_EXPIRE_AFTER_ACCESS_MS,
+        CommonConfigurationKeys.DEFAULT_FS_CACHE_LRU_ENTRIES_EXPIRE_AFTER_ACCESS_MS);
+
+      Map<Key, FileSystem> map = CacheBuilder.newBuilder()
+        .maximumSize(FS_CACHE_LRU_ENTRIES_MAX_SIZE)
+        .expireAfterAccess(FS_CACHE_LRU_ENTRIES_EXPIRE_AFTER_ACCESS_MS, TimeUnit.MILLISECONDS)
+        .removalListener(new RemovalListener<Key, FileSystem>() {
+          @Override
+          public void onRemoval(RemovalNotification<Key, FileSystem> removal) {
+            toAutoClose.remove(removal.getKey());
+          }
+        })
+        .build()
+        .asMap();
+
+      return map;
+    }
 
     FileSystem get(URI uri, Configuration conf) throws IOException{
       Key key = new Key(uri, conf);

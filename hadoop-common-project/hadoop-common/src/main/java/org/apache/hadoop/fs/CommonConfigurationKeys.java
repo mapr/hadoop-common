@@ -44,21 +44,23 @@ public class CommonConfigurationKeys extends CommonConfigurationKeysPublic {
     "fs.permissions.umask-mode";
   /** Default value for FS_PERMISSIONS_UMASK_KEY */
   public static final int     FS_PERMISSIONS_UMASK_DEFAULT = 0022;
-  
-  /**
-   * The maximum number of entries the FileSystem cache may contain
-   */
-  public static final String FS_CACHE_ENTRIES_MAX_SIZE =
-    "fs.cache.entries.max-size";
-  public static final int DEFAULT_FS_CACHE_ENTRIES_MAX_SIZE = 10000;
+
+  /** Enable/Disable LRU cache for the FileSystem entries*/
+  public static final String FS_CACHE_LRU_ENABLE = "fs.cache.lru.enable";
+  public static final boolean DEFAULT_FS_CACHE_LRU_ENABLE = false;
+
+  /** The maximum number of entries the FileSystem cache may contain*/
+  public static final String FS_CACHE_LRU_ENTRIES_MAX_SIZE =
+    "fs.cache.lru.entries.max-size";
+  public static final int DEFAULT_FS_CACHE_LRU_ENTRIES_MAX_SIZE = 10000;
 
   /**
    * The length of time after an entry is last accessed that it should be
    * automatically removed from the FileSystem cache
    */
-  public static final String FS_CACHE_ENTRIES_EXPIRE_AFTER_ACCESS_MS =
-    "fs.cache.entries.expire-after-access-ms";
-  public static int DEFAULT_FS_CACHE_ENTRIES_EXPIRE_AFTER_ACCESS_MS =
+  public static final String FS_CACHE_LRU_ENTRIES_EXPIRE_AFTER_ACCESS_MS =
+    "fs.cache.lru.entries.expire-after-access-ms";
+  public static int DEFAULT_FS_CACHE_LRU_ENTRIES_EXPIRE_AFTER_ACCESS_MS =
     60 * 1000; //1 min
   
   /** How often does RPC client send pings to RPC server */

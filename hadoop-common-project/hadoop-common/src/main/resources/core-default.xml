@@ -866,10 +866,16 @@ for ldap providers in the same way as above does.
 </property>
 
 <property>
+  <description>Enable/Disable LRU cache for the FileSystem entries</description>
+  <name>fs.cache.lru.enable</name>
+  <value>false</value>
+</property>
+
+<property>
   <description>The maximum number of entries the FileSystem 
     cache may contain
   </description>
-  <name>fs.cache.entries.max-size</name>
+  <name>fs.cache.lru.entries.max-size</name>
   <value>10000</value>
 </property>
 
@@ -877,7 +883,7 @@ for ldap providers in the same way as above does.
   <description>The length of time after an entry is last accessed 
     that it should be automatically removed from the FileSystem cache
   </description>
-  <name>fs.cache.entries.expire-after-access-ms</name>
+  <name>fs.cache.lru.entries.expire-after-access-ms</name>
   <value>60000</value>
 </property>
 
