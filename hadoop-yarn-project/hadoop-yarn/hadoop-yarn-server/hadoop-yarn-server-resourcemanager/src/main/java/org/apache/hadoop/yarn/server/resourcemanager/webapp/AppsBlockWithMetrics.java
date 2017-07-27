@@ -26,7 +26,7 @@ import org.apache.hadoop.yarn.webapp.view.HtmlBlock;
  */
 class AppsBlockWithMetrics extends HtmlBlock {
   @Override public void render(Block html) {
-    html._(MetricsOverviewTable.class);
-    html._(AppsBlock.class);
+    html.__(MetricsOverviewTable.class);
+    html.__(AppsBlock.class);
   }
 }

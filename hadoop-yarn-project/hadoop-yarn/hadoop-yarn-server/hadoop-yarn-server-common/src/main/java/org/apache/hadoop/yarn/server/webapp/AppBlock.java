@@ -49,9 +49,10 @@ import org.apache.hadoop.yarn.server.webapp.dao.ContainerInfo;
 import org.apache.hadoop.yarn.util.Apps;
 import org.apache.hadoop.yarn.util.Times;
 import org.apache.hadoop.yarn.webapp.YarnWebParams;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet.TABLE;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet.TBODY;
+import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet;
+import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet.TABLE;
+import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet.TBODY;
+import org.apache.hadoop.yarn.webapp.util.WebAppUtils;
 import org.apache.hadoop.yarn.webapp.view.HtmlBlock;
 import org.apache.hadoop.yarn.webapp.view.InfoBlock;
 
@@ -115,7 +116,7 @@ public class AppBlock extends HtmlBlock {
     } catch (Exception e) {
       String message = "Failed to read the application " + appID + ".";
       LOG.error(message, e);
-      html.p()._(message)._();
+      html.p().__(message).__();
       return;
     }
 
@@ -141,8 +142,8 @@ public class AppBlock extends HtmlBlock {
       // Application Kill
       html.div()
         .button()
-          .$onclick("confirmAction()").b("Kill Application")._()
-          ._();
+          .$onclick("confirmAction()").b("Kill Application").__()
+          .__();
 
       StringBuilder script = new StringBuilder();
       script.append("function confirmAction() {")
@@ -164,26 +165,26 @@ public class AppBlock extends HtmlBlock {
           .append(" }")
           .append("}");
 
-      html.script().$type("text/javascript")._(script.toString())._();
+      html.script().$type("text/javascript").__(script.toString()).__();
     }
 
     info("Application Overview")
-      ._("User:", app.getUser())
-      ._("Name:", app.getName())
-      ._("Application Type:", app.getType())
-      ._("Application Tags:",
+      .__("User:", app.getUser())
+      .__("Name:", app.getName())
+      .__("Application Type:", app.getType())
+      .__("Application Tags:",
         app.getApplicationTags() == null ? "" : app.getApplicationTags())
-      ._("YarnApplicationState:",
+      .__("YarnApplicationState:",
         app.getAppState() == null ? UNAVAILABLE : clarifyAppState(app
           .getAppState()))
-      ._("FinalStatus Reported by AM:",
+      .__("FinalStatus Reported by AM:",
         clairfyAppFinalStatus(app.getFinalAppStatus()))
-      ._("Started:", Times.format(app.getStartedTime()))
-      ._(
+      .__("Started:", Times.format(app.getStartedTime()))
+      .__(
         "Elapsed:",
         StringUtils.formatTime(Times.elapsed(app.getStartedTime(),
           app.getFinishedTime())))
-      ._("Tracking URL:",
+      .__("Tracking URL:",
         app.getTrackingUrl() == null || app.getTrackingUrl() == UNAVAILABLE
             ? null : root_url(app.getTrackingUrl()),
         app.getTrackingUrl() == null || app.getTrackingUrl() == UNAVAILABLE
@@ -191,7 +192,7 @@ public class AppBlock extends HtmlBlock {
                 || app.getAppState() == YarnApplicationState.FAILED
                 || app.getAppState() == YarnApplicationState.KILLED ? "History"
                 : "ApplicationMaster")
-      ._("Diagnostics:",
+      .__("Diagnostics:",
           app.getDiagnosticsInfo() == null ? "" : app.getDiagnosticsInfo());
 
     Collection<ApplicationAttemptReport> attempts;
@@ -215,13 +216,13 @@ public class AppBlock extends HtmlBlock {
       String message =
           "Failed to read the attempts of the application " + appID + ".";
       LOG.error(message, e);
-      html.p()._(message)._();
+      html.p().__(message).__();
       return;
     }
 
     createApplicationMetricsTable(html);
 
-    html._(InfoBlock.class);
+    html.__(InfoBlock.class);
 
     // Application Attempt Table
     createApplicationAttemptTable(html, attempts);
@@ -232,7 +233,7 @@ public class AppBlock extends HtmlBlock {
     TBODY<TABLE<Hamlet>> tbody =
         html.table("#attempts").thead().tr().th(".id", "Attempt ID")
           .th(".started", "Started").th(".node", "Node").th(".logs", "Logs")
-          ._()._().tbody();
+          .__().__().tbody();
 
     StringBuilder attemptsTableData = new StringBuilder("[\n");
     for (final ApplicationAttemptReport appAttemptReport : attempts) {
@@ -269,7 +270,7 @@ public class AppBlock extends HtmlBlock {
             "Failed to read the AM container of the application attempt "
                 + appAttemptReport.getApplicationAttemptId() + ".";
         LOG.error(message, e);
-        html.p()._(message)._();
+        html.p().__(message).__();
         return;
       }
       long startTime = 0L;
@@ -305,9 +306,9 @@ public class AppBlock extends HtmlBlock {
     }
     attemptsTableData.append("]");
     html.script().$type("text/javascript")
-      ._("var attemptsTableData=" + attemptsTableData)._();
+      .__("var attemptsTableData=" + attemptsTableData).__();
 
-    tbody._()._();
+    tbody.__().__();
   }
 
   private String clarifyAppState(YarnApplicationState state) {

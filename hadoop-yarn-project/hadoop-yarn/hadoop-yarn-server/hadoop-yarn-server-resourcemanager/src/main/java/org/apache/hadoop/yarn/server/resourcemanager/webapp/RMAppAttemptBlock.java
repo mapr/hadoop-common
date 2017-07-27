@@ -35,10 +35,10 @@ import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttemptM
 import org.apache.hadoop.yarn.server.resourcemanager.webapp.dao.AppInfo;
 import org.apache.hadoop.yarn.server.webapp.AppAttemptBlock;
 import org.apache.hadoop.yarn.util.resource.Resources;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet.DIV;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet.TABLE;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet.TBODY;
+import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet;
+import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet.DIV;
+import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet.TABLE;
+import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet.TBODY;
 import org.apache.hadoop.yarn.webapp.util.WebAppUtils;
 import org.apache.hadoop.yarn.webapp.view.InfoBlock;
 import com.google.inject.Inject;
@@ -74,7 +74,7 @@ public class RMAppAttemptBlock extends AppAttemptBlock{
           .th(".totalResource", "Capability")
           .th(".numContainers", "NumContainers")
           .th(".relaxLocality", "RelaxLocality")
-          .th(".nodeLabelExpression", "NodeLabelExpression")._()._().tbody();
+          .th(".nodeLabelExpression", "NodeLabelExpression").__().__().tbody();
 
     Resource totalResource = Resource.newInstance(0, 0);
     if (app.getResourceRequests() != null) {
@@ -90,7 +90,7 @@ public class RMAppAttemptBlock extends AppAttemptBlock{
           .td(String.valueOf(request.getNumContainers()))
           .td(String.valueOf(request.getRelaxLocality()))
           .td(request.getNodeLabelExpression() == null ? "N/A" : request
-              .getNodeLabelExpression())._();
+              .getNodeLabelExpression()).__();
         if (request.getResourceName().equals(ResourceRequest.ANY)) {
           Resources.addTo(totalResource,
             Resources.multiply(request.getCapability(),
@@ -99,8 +99,8 @@ public class RMAppAttemptBlock extends AppAttemptBlock{
       }
     }
     html.div().$class("totalResourceRequests")
-      .h3("Total Outstanding Resource Requests: " + totalResource)._();
-    tbody._()._();
+      .h3("Total Outstanding Resource Requests: " + totalResource).__();
+    tbody.__().__();
   }
 
   private void createContainerLocalityTable(Block html) {
@@ -128,7 +128,7 @@ public class RMAppAttemptBlock extends AppAttemptBlock{
         th(_TH, "Node Local Request").
         th(_TH, "Rack Local Request").
         th(_TH, "Off Switch Request").
-      _();
+        __();
 
     String[] containersType =
         { "Num Node Local Containers (satisfied by)", "Num Rack Local Containers (satisfied by)",
@@ -138,10 +138,10 @@ public class RMAppAttemptBlock extends AppAttemptBlock{
       table.tr((odd = !odd) ? _ODD : _EVEN).td(containersType[i])
         .td(String.valueOf(attemptMetrics.getLocalityStatistics()[i][0]))
         .td(i == 0 ? "" : String.valueOf(attemptMetrics.getLocalityStatistics()[i][1]))
-        .td(i <= 1 ? "" : String.valueOf(attemptMetrics.getLocalityStatistics()[i][2]))._();
+        .td(i <= 1 ? "" : String.valueOf(attemptMetrics.getLocalityStatistics()[i][2])).__();
     }
-    table._();
-    div._();
+    table.__();
+    div.__();
   }
 
   private boolean isApplicationInFinalState(YarnApplicationAttemptState state) {
@@ -157,12 +157,12 @@ public class RMAppAttemptBlock extends AppAttemptBlock{
       if (!isApplicationInFinalState(YarnApplicationAttemptState
           .valueOf(attempt.getAppAttemptState().toString()))) {
         RMAppAttemptMetrics metrics = attempt.getRMAppAttemptMetrics();
-        DIV<Hamlet> pdiv = html._(InfoBlock.class).div(_INFO_WRAP);
+        DIV<Hamlet> pdiv = html.__(InfoBlock.class).div(_INFO_WRAP);
         info("Application Attempt Overview").clear();
-        info("Application Attempt Metrics")._(
+        info("Application Attempt Metrics").__(
           "Application Attempt Headroom : ", metrics == null ? "N/A" :
             metrics.getApplicationAttemptHeadroom());
-        pdiv._();
+        pdiv.__();
       }
     }
   }

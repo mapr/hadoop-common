@@ -43,8 +43,8 @@ import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.apache.hadoop.yarn.webapp.NotFoundException;
 import org.apache.hadoop.yarn.webapp.SubView;
 import org.apache.hadoop.yarn.webapp.YarnWebParams;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet.PRE;
+import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet;
+import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet.PRE;
 import org.apache.hadoop.yarn.webapp.view.HtmlBlock;
 
 import com.google.inject.Inject;
@@ -53,7 +53,7 @@ public class ContainerLogsPage extends NMView {
   
   public static final String REDIRECT_URL = "redirect.url";
   
-  @Override protected void preHead(Page.HTML<_> html) {
+  @Override protected void preHead(Page.HTML<__> html) {
     String redirectUrl = $(REDIRECT_URL);
     if (redirectUrl == null || redirectUrl.isEmpty()) {
       set(TITLE, join("Logs for ", $(CONTAINER_ID)));
@@ -162,10 +162,10 @@ public class ContainerLogsPage extends NMView {
         try {
           long toRead = end - start;
           if (toRead < length) {
-            html.p()._("Showing " + toRead + " bytes. Click ")
+            html.p().__("Showing " + toRead + " bytes. Click ")
                 .a(url("containerlogs", $(CONTAINER_ID), $(APP_OWNER), 
                     logFile.getName(), "?start=0"), "here").
-                    _(" for full log")._();
+                __(" for full log").__();
           }
           
           IOUtils.skipFully(logByteStream, start);
@@ -180,12 +180,12 @@ public class ContainerLogsPage extends NMView {
 
           while ((len = reader.read(cbuf, 0, currentToRead)) > 0
               && toRead > 0) {
-            pre._(new String(cbuf, 0, len));
+            pre.__(new String(cbuf, 0, len));
             toRead = toRead - len;
             currentToRead = toRead > bufferSize ? bufferSize : (int) toRead;
           }
 
-          pre._();
+          pre.__();
           reader.close();
 
         } catch (IOException e) {
@@ -226,7 +226,7 @@ public class ContainerLogsPage extends NMView {
                 .a(url("containerlogs", $(CONTAINER_ID), $(APP_OWNER),
                     logName, "?start=-4096"),
                     logName + " : Total file length is "
-                        + length + " bytes.")._();
+                        + length + " bytes.").__();
           }
         }
       }

@@ -25,10 +25,10 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.hadoop.mapreduce.v2.app.AppContext;
 import org.apache.hadoop.mapreduce.v2.app.job.Job;
 import org.apache.hadoop.mapreduce.v2.hs.webapp.dao.JobInfo;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet.TABLE;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet.TBODY;
-import org.apache.hadoop.yarn.webapp.hamlet.HamletSpec.InputType;
+import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet;
+import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet.TABLE;
+import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet.TBODY;
+import org.apache.hadoop.yarn.webapp.hamlet2.HamletSpec.InputType;
 import org.apache.hadoop.yarn.webapp.view.HtmlBlock;
 
 import com.google.inject.Inject;
@@ -66,7 +66,7 @@ public class HsJobsBlock extends HtmlBlock {
             th("Maps Total").
             th("Maps Completed").
             th("Reduces Total").
-            th("Reduces Completed")._()._().
+            th("Reduces Completed").__().__().
         tbody();
     LOG.info("Getting list of all Jobs.");
     // Write all the data into a JavaScript array of arrays for JQuery
@@ -99,24 +99,24 @@ public class HsJobsBlock extends HtmlBlock {
     }
     jobsTableData.append("]");
     html.script().$type("text/javascript").
-    _("var jobsTableData=" + jobsTableData)._();
-    tbody._().
+        __("var jobsTableData=" + jobsTableData).__();
+    tbody.__().
     tfoot().
       tr().
-        th().input("search_init").$type(InputType.text).$name("submit_time").$value("Submit Time")._()._().
-        th().input("search_init").$type(InputType.text).$name("start_time").$value("Start Time")._()._().
-        th().input("search_init").$type(InputType.text).$name("finish_time").$value("Finish Time")._()._().
-        th().input("search_init").$type(InputType.text).$name("start_time").$value("Job ID")._()._().
-        th().input("search_init").$type(InputType.text).$name("start_time").$value("Name")._()._().
-        th().input("search_init").$type(InputType.text).$name("start_time").$value("User")._()._().
-        th().input("search_init").$type(InputType.text).$name("start_time").$value("Queue")._()._().
-        th().input("search_init").$type(InputType.text).$name("start_time").$value("State")._()._().
-        th().input("search_init").$type(InputType.text).$name("start_time").$value("Maps Total")._()._().
-        th().input("search_init").$type(InputType.text).$name("start_time").$value("Maps Completed")._()._().
-        th().input("search_init").$type(InputType.text).$name("start_time").$value("Reduces Total")._()._().
-        th().input("search_init").$type(InputType.text).$name("start_time").$value("Reduces Completed")._()._().
-        _().
-      _().
-    _();
+        th().input("search_init").$type(InputType.text).$name("submit_time").$value("Submit Time").__().__().
+        th().input("search_init").$type(InputType.text).$name("start_time").$value("Start Time").__().__().
+        th().input("search_init").$type(InputType.text).$name("finish_time").$value("Finish Time").__().__().
+        th().input("search_init").$type(InputType.text).$name("start_time").$value("Job ID").__().__().
+        th().input("search_init").$type(InputType.text).$name("start_time").$value("Name").__().__().
+        th().input("search_init").$type(InputType.text).$name("start_time").$value("User").__().__().
+        th().input("search_init").$type(InputType.text).$name("start_time").$value("Queue").__().__().
+        th().input("search_init").$type(InputType.text).$name("start_time").$value("State").__().__().
+        th().input("search_init").$type(InputType.text).$name("start_time").$value("Maps Total").__().__().
+        th().input("search_init").$type(InputType.text).$name("start_time").$value("Maps Completed").__().__().
+        th().input("search_init").$type(InputType.text).$name("start_time").$value("Reduces Total").__().__().
+        th().input("search_init").$type(InputType.text).$name("start_time").$value("Reduces Completed").__().__().
+        __().
+      __().
+    __();
   }
 }

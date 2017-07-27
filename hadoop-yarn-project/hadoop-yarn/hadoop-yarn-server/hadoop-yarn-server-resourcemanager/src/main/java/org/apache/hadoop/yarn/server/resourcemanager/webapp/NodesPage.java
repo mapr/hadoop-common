@@ -37,10 +37,10 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceScheduler
 import org.apache.hadoop.yarn.server.resourcemanager.webapp.dao.NodeInfo;
 import org.apache.hadoop.yarn.util.Times;
 import org.apache.hadoop.yarn.webapp.SubView;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet.TABLE;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet.TBODY;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet.TR;
+import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet;
+import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet.TABLE;
+import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet.TBODY;
+import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet.TR;
 import org.apache.hadoop.yarn.webapp.view.HtmlBlock;
 
 import com.google.inject.Inject;
@@ -59,7 +59,7 @@ class NodesPage extends RmView {
 
     @Override
     protected void render(Block html) {
-      html._(MetricsOverviewTable.class);
+      html.__(MetricsOverviewTable.class);
 
       ResourceScheduler sched = rm.getResourceScheduler();
       String type = $(NODE_STATE);
@@ -75,7 +75,7 @@ class NodesPage extends RmView {
               .th(".mem", "Mem Avail").th(".vcores", "VCores Used")
               .th(".vcores", "VCores Avail").th(".disk", "Disk Used")
               .th(".disk", "Disk Avail")
-              .th(".nodeManagerVersion", "Version")._()._().tbody();
+              .th(".nodeManagerVersion", "Version").__().__().tbody();
       NodeState stateFilter = null;
       if (type != null && !type.isEmpty()) {
         stateFilter = NodeState.valueOf(StringUtils.toUpperCase(type));
@@ -129,31 +129,31 @@ class NodesPage extends RmView {
             tbody.tr().td(StringUtils.join(",", info.getNodeLabels()))
                 .td(info.getRack()).td(info.getState()).td(info.getNodeId());
         if (isInactive) {
-          row.td()._("N/A")._();
+          row.td().__("N/A").__();
         } else {
           String httpAddress = info.getNodeHTTPAddress();
-          row.td().a("//" + httpAddress, httpAddress)._();
+          row.td().a("//" + httpAddress, httpAddress).__();
         }
-        row.td().br().$title(String.valueOf(info.getLastHealthUpdate()))._()
-            ._(Times.format(info.getLastHealthUpdate()))._()
+        row.td().br().$title(String.valueOf(info.getLastHealthUpdate())).__()
+            .__(Times.format(info.getLastHealthUpdate())).__()
             .td(info.getHealthReport())
             .td(String.valueOf(info.getNumContainers())).td().br()
-            .$title(String.valueOf(usedMemory))._()
-            ._(StringUtils.byteDesc(usedMemory * BYTES_IN_MB))._().td().br()
-            .$title(String.valueOf(availableMemory))._()
-            ._(StringUtils.byteDesc(availableMemory * BYTES_IN_MB))._()
+            .$title(String.valueOf(usedMemory)).__()
+            .__(StringUtils.byteDesc(usedMemory * BYTES_IN_MB)).__().td().br()
+            .$title(String.valueOf(availableMemory)).__()
+            .__(StringUtils.byteDesc(availableMemory * BYTES_IN_MB)).__()
             .td(String.valueOf(info.getUsedVirtualCores()))
             .td(String.valueOf(info.getAvailableVirtualCores()))
             .td(StringUtils.format("%.2f", usedDisk))
             .td(StringUtils.format("%.2f", availableDisk))
-            .td(ni.getNodeManagerVersion())._();
+            .td(ni.getNodeManagerVersion()).__();
       }
-      tbody._()._();
+      tbody.__().__();
     }
   }
 
   @Override
-  protected void preHead(Page.HTML<_> html) {
+  protected void preHead(Page.HTML<__> html) {
     commonPreHead(html);
     String type = $(NODE_STATE);
     String title = "Nodes of the cluster";

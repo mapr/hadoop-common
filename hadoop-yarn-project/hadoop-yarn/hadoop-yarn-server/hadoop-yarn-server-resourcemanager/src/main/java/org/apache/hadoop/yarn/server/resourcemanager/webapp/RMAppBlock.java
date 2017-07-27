@@ -34,10 +34,10 @@ import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttemptM
 import org.apache.hadoop.yarn.server.resourcemanager.webapp.dao.AppAttemptInfo;
 import org.apache.hadoop.yarn.server.webapp.AppBlock;
 import org.apache.hadoop.yarn.util.resource.Resources;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet.DIV;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet.TABLE;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet.TBODY;
+import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet;
+import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet.DIV;
+import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet.TABLE;
+import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet.TBODY;
 import org.apache.hadoop.yarn.webapp.util.WebAppUtils;
 import org.apache.hadoop.yarn.webapp.view.InfoBlock;
 
@@ -80,27 +80,27 @@ public class RMAppBlock extends AppBlock{
         attemptMetrics == null ? 0 : attemptMetrics
           .getNumNonAMContainersPreempted();
     DIV<Hamlet> pdiv = html.
-        _(InfoBlock.class).
+        __(InfoBlock.class).
         div(_INFO_WRAP);
     info("Application Overview").clear();
     info("Application Metrics")
-        ._("Total Resource Preempted:",
+        .__("Total Resource Preempted:",
           appMetrics == null ? "N/A" : appMetrics.getResourcePreempted())
-        ._("Total Number of Non-AM Containers Preempted:",
+        .__("Total Number of Non-AM Containers Preempted:",
           appMetrics == null ? "N/A"
               : appMetrics.getNumNonAMContainersPreempted())
-        ._("Total Number of AM Containers Preempted:",
+        .__("Total Number of AM Containers Preempted:",
           appMetrics == null ? "N/A"
               : appMetrics.getNumAMContainersPreempted())
-        ._("Resource Preempted from Current Attempt:",
+        .__("Resource Preempted from Current Attempt:",
           attemptResourcePreempted)
-        ._("Number of Non-AM Containers Preempted from Current Attempt:",
+        .__("Number of Non-AM Containers Preempted from Current Attempt:",
           attemptNumNonAMContainerPreempted)
-        ._("Aggregate Resource Allocation:",
+        .__("Aggregate Resource Allocation:",
           String.format("%d MB-seconds, %d vcore-seconds",
               appMetrics == null ? "N/A" : appMetrics.getMemorySeconds(),
               appMetrics == null ? "N/A" : appMetrics.getVcoreSeconds()));
-    pdiv._();
+    pdiv.__();
   }
 
   @Override
@@ -109,7 +109,7 @@ public class RMAppBlock extends AppBlock{
     TBODY<TABLE<Hamlet>> tbody =
         html.table("#attempts").thead().tr().th(".id", "Attempt ID")
           .th(".started", "Started").th(".node", "Node").th(".logs", "Logs")
-          ._()._().tbody();
+          .__().__().tbody();
     RMApp rmApp = this.rm.getRMContext().getRMApps().get(this.appID);
     if (rmApp == null) {
       return;
@@ -151,8 +151,8 @@ public class RMAppBlock extends AppBlock{
     }
     attemptsTableData.append("]");
     html.script().$type("text/javascript")
-      ._("var attemptsTableData=" + attemptsTableData)._();
+      .__("var attemptsTableData=" + attemptsTableData).__();
 
-    tbody._()._();
+    tbody.__().__();
   }
 }

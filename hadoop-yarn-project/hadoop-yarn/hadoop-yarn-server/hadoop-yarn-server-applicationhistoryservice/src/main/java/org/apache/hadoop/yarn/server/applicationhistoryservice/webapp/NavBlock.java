@@ -34,18 +34,18 @@ public class NavBlock extends HtmlBlock {
                             li().a(url("apps",
                                 YarnApplicationState.FINISHED.toString()),
                                 YarnApplicationState.FINISHED.toString()).
-                            _().
+        __().
                             li().a(url("apps",
                                 YarnApplicationState.FAILED.toString()),
                                 YarnApplicationState.FAILED.toString()).
-                            _().
+        __().
                             li().a(url("apps",
                                 YarnApplicationState.KILLED.toString()),
                                 YarnApplicationState.KILLED.toString()).
-                            _().
-                        _().
-                    _().
-                _().
-            _();
+                            __().
+                        __().
+                    __().
+                __().
+            __();
   }
 }

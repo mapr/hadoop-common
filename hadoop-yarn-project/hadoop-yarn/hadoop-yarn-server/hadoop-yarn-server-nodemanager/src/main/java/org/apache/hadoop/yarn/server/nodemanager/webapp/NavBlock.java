@@ -41,25 +41,25 @@ public class NavBlock extends HtmlBlock implements YarnWebParams {
         WebAppUtils.getResolvedRemoteRMWebAppURLWithScheme(this.conf);
 	  html
       .div("#nav")
-      .h3()._("ResourceManager")._()
+      .h3().__("ResourceManager").__()
         .ul()
-          .li().a(RMWebAppURL, "RM Home")._()._()
-      .h3()._("NodeManager")._() // TODO: Problem if no header like this
+          .li().a(RMWebAppURL, "RM Home").__().__()
+      .h3().__("NodeManager").__() // TODO: Problem if no header like this
         .ul()
           .li()
-            .a(url("node"), "Node Information")._()
+            .a(url("node"), "Node Information").__()
           .li()
             .a(url("allApplications"), "List of Applications")
-            ._()
+            .__()
           .li()
-            .a(url("allContainers"), "List of Containers")._()
-        ._()
+            .a(url("allContainers"), "List of Containers").__()
+        .__()
       .h3("Tools")
         .ul()
-          .li().a("/conf", "Configuration")._()
-          .li().a("/logs", "Local logs")._()
-          .li().a("/stacks", "Server stacks")._()
-          .li().a("/jmx?qry=Hadoop:*", "Server metrics")._()._()._();
+          .li().a("/conf", "Configuration").__()
+          .li().a("/logs", "Local logs").__()
+          .li().a("/stacks", "Server stacks").__()
+          .li().a("/jmx?qry=Hadoop:*", "Server metrics").__().__().__();
   }
 
 }

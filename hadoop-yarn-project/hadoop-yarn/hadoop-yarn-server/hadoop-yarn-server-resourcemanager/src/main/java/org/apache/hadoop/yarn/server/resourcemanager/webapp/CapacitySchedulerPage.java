@@ -34,12 +34,12 @@ import org.apache.hadoop.yarn.server.resourcemanager.webapp.dao.ResourceInfo;
 import org.apache.hadoop.yarn.server.webapp.AppsBlock;
 import org.apache.hadoop.yarn.webapp.ResponseInfo;
 import org.apache.hadoop.yarn.webapp.SubView;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet.DIV;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet.LI;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet.TABLE;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet.TBODY;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet.UL;
+import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet;
+import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet.DIV;
+import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet.LI;
+import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet.TABLE;
+import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet.TBODY;
+import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet.UL;
 import org.apache.hadoop.yarn.webapp.view.HtmlBlock;
 import org.apache.hadoop.yarn.webapp.view.InfoBlock;
 
@@ -73,28 +73,28 @@ class CapacitySchedulerPage extends RmView {
     protected void render(Block html) {
 
       ResponseInfo ri = info("\'" + lqinfo.getQueuePath().substring(5) + "\' Queue Status").
-          _("Queue State:", lqinfo.getQueueState()).
-          _("Used Capacity:", percent(lqinfo.getUsedCapacity() / 100)).
-          _("Absolute Used Capacity:", percent(lqinfo.getAbsoluteUsedCapacity() / 100)).
-          _("Absolute Capacity:", percent(lqinfo.getAbsoluteCapacity() / 100)).
-          _("Absolute Max Capacity:", percent(lqinfo.getAbsoluteMaxCapacity() / 100)).
-          _("Used Resources:", lqinfo.getResourcesUsed().toString()).
-          _("Num Schedulable Applications:", Integer.toString(lqinfo.getNumActiveApplications())).
-          _("Num Non-Schedulable Applications:", Integer.toString(lqinfo.getNumPendingApplications())).
-          _("Num Containers:", Integer.toString(lqinfo.getNumContainers())).
-          _("Queue Label:", lqinfo.getLabel()).
-          _("Queue Label Policy:", lqinfo.getLabelPolicy()).
-          _("Max Applications:", Integer.toString(lqinfo.getMaxApplications())).
-          _("Max Applications Per User:", Integer.toString(lqinfo.getMaxApplicationsPerUser())).
-          _("Max Application Master Resources:", lqinfo.getAMResourceLimit().toString()).
-          _("Used Application Master Resources:", lqinfo.getUsedAMResource().toString()).
-          _("Max Application Master Resources Per User:", lqinfo.getUserAMResourceLimit().toString()).
-          _("Configured Capacity:", percent(lqinfo.getCapacity() / 100)).
-          _("Configured Max Capacity:", percent(lqinfo.getMaxCapacity() / 100)).
-          _("Configured Minimum User Limit Percent:", Integer.toString(lqinfo.getUserLimit()) + "%").
-          _("Configured User Limit Factor:", String.format("%.1f", lqinfo.getUserLimitFactor())).
-          _("Accessible Node Labels:", StringUtils.join(",", lqinfo.getNodeLabels())).
-          _("Preemption:", lqinfo.getPreemptionDisabled() ? "disabled" : "enabled");
+          __("Queue State:", lqinfo.getQueueState()).
+          __("Used Capacity:", percent(lqinfo.getUsedCapacity() / 100)).
+          __("Absolute Used Capacity:", percent(lqinfo.getAbsoluteUsedCapacity() / 100)).
+          __("Absolute Capacity:", percent(lqinfo.getAbsoluteCapacity() / 100)).
+          __("Absolute Max Capacity:", percent(lqinfo.getAbsoluteMaxCapacity() / 100)).
+          __("Used Resources:", lqinfo.getResourcesUsed().toString()).
+          __("Num Schedulable Applications:", Integer.toString(lqinfo.getNumActiveApplications())).
+          __("Num Non-Schedulable Applications:", Integer.toString(lqinfo.getNumPendingApplications())).
+          __("Num Containers:", Integer.toString(lqinfo.getNumContainers())).
+          __("Queue Label:", lqinfo.getLabel()).
+          __("Queue Label Policy:", lqinfo.getLabelPolicy()).
+          __("Max Applications:", Integer.toString(lqinfo.getMaxApplications())).
+          __("Max Applications Per User:", Integer.toString(lqinfo.getMaxApplicationsPerUser())).
+          __("Max Application Master Resources:", lqinfo.getAMResourceLimit().toString()).
+          __("Used Application Master Resources:", lqinfo.getUsedAMResource().toString()).
+          __("Max Application Master Resources Per User:", lqinfo.getUserAMResourceLimit().toString()).
+          __("Configured Capacity:", percent(lqinfo.getCapacity() / 100)).
+          __("Configured Max Capacity:", percent(lqinfo.getMaxCapacity() / 100)).
+          __("Configured Minimum User Limit Percent:", Integer.toString(lqinfo.getUserLimit()) + "%").
+          __("Configured User Limit Factor:", String.format("%.1f", lqinfo.getUserLimitFactor())).
+          __("Accessible Node Labels:", StringUtils.join(",", lqinfo.getNodeLabels())).
+          __("Preemption:", lqinfo.getPreemptionDisabled() ? "disabled" : "enabled");
 
       html.__(InfoBlock.class);
 
@@ -116,13 +116,13 @@ class CapacitySchedulerPage extends RmView {
     protected void render(Block html) {
       TBODY<TABLE<Hamlet>> tbody =
           html.table("#userinfo").thead().$class("ui-widget-header").tr().th()
-              .$class("ui-state-default")._("User Name")._().th()
-              .$class("ui-state-default")._("Max Resource")._().th()
-              .$class("ui-state-default")._("Used Resource")._().th()
-              .$class("ui-state-default")._("Max AM Resource")._().th()
-              .$class("ui-state-default")._("Used AM Resource")._().th()
-              .$class("ui-state-default")._("Schedulable Apps")._().th()
-              .$class("ui-state-default")._("Non-Schedulable Apps")._()._()._()
+              .$class("ui-state-default").__("User Name").__().th()
+              .$class("ui-state-default").__("Max Resource").__().th()
+              .$class("ui-state-default").__("Used Resource").__().th()
+              .$class("ui-state-default").__("Max AM Resource").__().th()
+              .$class("ui-state-default").__("Used AM Resource").__().th()
+              .$class("ui-state-default").__("Schedulable Apps").__().th()
+              .$class("ui-state-default").__("Non-Schedulable Apps").__().__().__()
               .tbody();
 
       ArrayList<UserInfo> users = lqinfo.getUsers().getUsersList();
@@ -133,11 +133,11 @@ class CapacitySchedulerPage extends RmView {
             .td(lqinfo.getUserAMResourceLimit().toString())
             .td(userInfo.getAMResourcesUsed().toString())
             .td(Integer.toString(userInfo.getNumActiveApplications()))
-            .td(Integer.toString(userInfo.getNumPendingApplications()))._();
+            .td(Integer.toString(userInfo.getNumPendingApplications())).__();
       }
 
-      html.div().$class("usersinfo").h5("Active Users Info")._();
-      tbody._()._();
+      html.div().$class("usersinfo").h5("Active Users Info").__();
+      tbody.__().__();
     }
   }
 
@@ -164,25 +164,25 @@ class CapacitySchedulerPage extends RmView {
             a(_Q).$style(width(absMaxCap * Q_MAX_WIDTH)).
               $title(join("Absolute Capacity:", percent(absCap))).
               span().$style(join(Q_GIVEN, ";font-size:1px;", width(absCap/absMaxCap))).
-                _('.')._().
+            __('.').__().
               span().$style(join(width(absUsedCap/absMaxCap),
                 ";font-size:1px;left:0%;", absUsedCap > absCap ? Q_OVER : Q_UNDER)).
-                _('.')._().
-              span(".q", info.getQueuePath().substring(5))._().
+                __('.').__().
+              span(".q", info.getQueuePath().substring(5)).__().
             span().$class("qstats").$style(left(Q_STATS_POS)).
-              _(join(percent(used), " used"))._();
+            __(join(percent(used), " used")).__();
 
         csqinfo.qinfo = info;
         if (info.getQueues() == null) {
-          li.ul("#lq").li()._(LeafQueueInfoBlock.class)._()._();
-          li.ul("#lq").li()._(QueueUsersInfoBlock.class)._()._();
+          li.ul("#lq").li().__(LeafQueueInfoBlock.class).__().__();
+          li.ul("#lq").li().__(QueueUsersInfoBlock.class).__().__();
         } else {
-          li._(QueueBlock.class);
+          li.__(QueueBlock.class);
         }
-        li._();
+        li.__();
       }
 
-      ul._();
+      ul.__();
     }
   }
 
@@ -197,19 +197,19 @@ class CapacitySchedulerPage extends RmView {
 
     @Override
     public void render(Block html) {
-      html._(MetricsOverviewTable.class);
+      html.__(MetricsOverviewTable.class);
       UL<DIV<DIV<Hamlet>>> ul = html.
         div("#cs-wrapper.ui-widget").
           div(".ui-widget-header.ui-corner-top").
-            _("Application Queues")._().
+          __("Application Queues").__().
           div("#cs.ui-widget-content.ui-corner-bottom").
             ul();
       if (cs == null) {
         ul.
           li().
             a(_Q).$style(width(Q_MAX_WIDTH)).
-              span().$style(Q_END)._("100% ")._().
-              span(".q", "default")._()._();
+              span().$style(Q_END).__("100% ").__().
+              span(".q", "default").__().__();
       } else {
         CSQueue root = cs.getRootQueue();
         CapacitySchedulerInfo sinfo = new CapacitySchedulerInfo(root);
@@ -219,46 +219,46 @@ class CapacitySchedulerPage extends RmView {
         float used = sinfo.getUsedCapacity() / 100;
         ul.
           li().$style("margin-bottom: 1em").
-            span().$style("font-weight: bold")._("Legend:")._().
+            span().$style("font-weight: bold").__("Legend:").__().
             span().$class("qlegend ui-corner-all").$style(Q_GIVEN).
-              _("Capacity")._().
+            __("Capacity").__().
             span().$class("qlegend ui-corner-all").$style(Q_UNDER).
-              _("Used")._().
+            __("Used").__().
             span().$class("qlegend ui-corner-all").$style(Q_OVER).
-              _("Used (over capacity)")._().
+            __("Used (over capacity)").__().
             span().$class("qlegend ui-corner-all ui-state-default").
-              _("Max Capacity")._().
-          _().
+              __("Max Capacity").__().
+          __().
           li().
             a(_Q).$style(width(Q_MAX_WIDTH)).
               span().$style(join(width(used), ";left:0%;",
-                  used > 1 ? Q_OVER : Q_UNDER))._(".")._().
-              span(".q", "root")._().
+                  used > 1 ? Q_OVER : Q_UNDER)).__(".").__().
+              span(".q", "root").__().
             span().$class("qstats").$style(left(Q_STATS_POS)).
-              _(join(percent(used), " used"))._().
-            _(QueueBlock.class)._();
+              __(join(percent(used), " used")).__().
+            __(QueueBlock.class).__();
       }
-      ul._()._().
+      ul.__().__().
       script().$type("text/javascript").
-          _("$('#cs').hide();")._()._().
-      _(AppsBlock.class);
+          __("$('#cs').hide();").__().__().
+      __(AppsBlock.class);
     }
   }
 
-  @Override protected void postHead(Page.HTML<_> html) {
+  @Override protected void postHead(Page.HTML<__> html) {
     html.
       style().$type("text/css").
-        _("#cs { padding: 0.5em 0 1em 0; margin-bottom: 1em; position: relative }",
+        __("#cs { padding: 0.5em 0 1em 0; margin-bottom: 1em; position: relative }",
           "#cs ul { list-style: none }",
           "#cs a { font-weight: normal; margin: 2px; position: relative }",
           "#cs a span { font-weight: normal; font-size: 80% }",
           "#cs-wrapper .ui-widget-header { padding: 0.2em 0.5em }",
           ".qstats { font-weight: normal; font-size: 80%; position: absolute }",
           ".qlegend { font-weight: normal; padding: 0 1em; margin: 1em }",
-          "table.info tr th {width: 50%}")._(). // to center info table
+          "table.info tr th {width: 50%}").__(). // to center info table
       script("/static/jt/jquery.jstree.js").
       script().$type("text/javascript").
-        _("$(function() {",
+        __("$(function() {",
           "  $('#cs a span').addClass('ui-corner-all').css('position', 'absolute');",
           "  $('#cs').bind('loaded.jstree', function (e, data) {",
           "    var callback = { call:reopenQueryNodes }",
@@ -278,8 +278,8 @@ class CapacitySchedulerPage extends RmView {
           "    $('#apps').dataTable().fnFilter(q, 4, true);",
           "  });",
           "  $('#cs').show();",
-          "});")._().
-      _(SchedulerPageUtil.QueueBlockUtil.class);
+          "});").__().
+        __(SchedulerPageUtil.QueueBlockUtil.class);
   }
 
   @Override protected Class<? extends SubView> content() {

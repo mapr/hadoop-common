@@ -24,8 +24,8 @@ import org.apache.hadoop.yarn.server.resourcemanager.webapp.dao.ClusterMetricsIn
 import org.apache.hadoop.yarn.server.resourcemanager.webapp.dao.SchedulerInfo;
 import org.apache.hadoop.yarn.server.resourcemanager.webapp.dao.UserMetricsInfo;
 
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet.DIV;
+import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet;
+import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet.DIV;
 import org.apache.hadoop.yarn.webapp.view.HtmlBlock;
 
 import com.google.inject.Inject;
@@ -53,7 +53,7 @@ public class MetricsOverviewTable extends HtmlBlock {
     //CSS in the correct spot
     html.style(".metrics {margin-bottom:5px}"); 
     
-    ClusterMetricsInfo clusterMetrics = 
+    ClusterMetricsInfo clusterMetrics =
  new ClusterMetricsInfo(this.rm);
     
     DIV<Hamlet> div = html.div().$class("metrics");
@@ -62,27 +62,27 @@ public class MetricsOverviewTable extends HtmlBlock {
     table("#metricsoverview").
     thead().$class("ui-widget-header").
       tr().
-        th().$class("ui-state-default")._("Apps Submitted")._().
-        th().$class("ui-state-default")._("Apps Pending")._().
-        th().$class("ui-state-default")._("Apps Running")._().
-        th().$class("ui-state-default")._("Apps Completed")._().
-        th().$class("ui-state-default")._("Containers Running")._().
-        th().$class("ui-state-default")._("Memory Used")._().
-        th().$class("ui-state-default")._("Memory Total")._().
-        th().$class("ui-state-default")._("Memory Reserved")._().
-        th().$class("ui-state-default")._("VCores Used")._().
-        th().$class("ui-state-default")._("VCores Total")._().
-        th().$class("ui-state-default")._("VCores Reserved")._().
-        th().$class("ui-state-default")._("Disks Used")._().
-        th().$class("ui-state-default")._("Disks Total")._().        
-        th().$class("ui-state-default")._("Disks Reserved")._().
-        th().$class("ui-state-default")._("Active Nodes")._().
-        th().$class("ui-state-default")._("Decommissioned Nodes")._().
-        th().$class("ui-state-default")._("Lost Nodes")._().
-        th().$class("ui-state-default")._("Unhealthy Nodes")._().
-        th().$class("ui-state-default")._("Rebooted Nodes")._().
-      _().
-    _().
+        th().$class("ui-state-default").__("Apps Submitted").__().
+        th().$class("ui-state-default").__("Apps Pending").__().
+        th().$class("ui-state-default").__("Apps Running").__().
+        th().$class("ui-state-default").__("Apps Completed").__().
+        th().$class("ui-state-default").__("Containers Running").__().
+        th().$class("ui-state-default").__("Memory Used").__().
+        th().$class("ui-state-default").__("Memory Total").__().
+        th().$class("ui-state-default").__("Memory Reserved").__().
+        th().$class("ui-state-default").__("VCores Used").__().
+        th().$class("ui-state-default").__("VCores Total").__().
+        th().$class("ui-state-default").__("VCores Reserved").__().
+        th().$class("ui-state-default").__("Disks Used").__().
+        th().$class("ui-state-default").__("Disks Total").__().
+        th().$class("ui-state-default").__("Disks Reserved").__().
+        th().$class("ui-state-default").__("Active Nodes").__().
+        th().$class("ui-state-default").__("Decommissioned Nodes").__().
+        th().$class("ui-state-default").__("Lost Nodes").__().
+        th().$class("ui-state-default").__("Unhealthy Nodes").__().
+        th().$class("ui-state-default").__("Rebooted Nodes").__().
+      __().
+    __().
     tbody().$class("ui-widget-content").
       tr().
         td(String.valueOf(clusterMetrics.getAppsSubmitted())).
@@ -104,14 +104,14 @@ public class MetricsOverviewTable extends HtmlBlock {
         td(String.valueOf(clusterMetrics.getAllocatedDisks())).
         td(String.valueOf(clusterMetrics.getTotalDisks())).
         td(String.valueOf(clusterMetrics.getReservedDisks())).
-        td().a(url("nodes"),String.valueOf(clusterMetrics.getActiveNodes()))._().
-        td().a(url("nodes/decommissioned"),String.valueOf(clusterMetrics.getDecommissionedNodes()))._().
-        td().a(url("nodes/lost"),String.valueOf(clusterMetrics.getLostNodes()))._().
-        td().a(url("nodes/unhealthy"),String.valueOf(clusterMetrics.getUnhealthyNodes()))._().
-        td().a(url("nodes/rebooted"),String.valueOf(clusterMetrics.getRebootedNodes()))._().
-      _().
-    _()._();
-    
+        td().a(url("nodes"),String.valueOf(clusterMetrics.getActiveNodes())).__().
+        td().a(url("nodes/decommissioned"),String.valueOf(clusterMetrics.getDecommissionedNodes())).__().
+        td().a(url("nodes/lost"),String.valueOf(clusterMetrics.getLostNodes())).__().
+        td().a(url("nodes/unhealthy"),String.valueOf(clusterMetrics.getUnhealthyNodes())).__().
+        td().a(url("nodes/rebooted"),String.valueOf(clusterMetrics.getRebootedNodes())).__().
+      __().
+    __().__();
+
     String user = request().getRemoteUser();
     if (user != null) {
       UserMetricsInfo userMetrics = new UserMetricsInfo(this.rm, user);
@@ -120,21 +120,21 @@ public class MetricsOverviewTable extends HtmlBlock {
         table("#usermetricsoverview").
         thead().$class("ui-widget-header").
           tr().
-            th().$class("ui-state-default")._("Apps Submitted")._().
-            th().$class("ui-state-default")._("Apps Pending")._().
-            th().$class("ui-state-default")._("Apps Running")._().
-            th().$class("ui-state-default")._("Apps Completed")._().
-            th().$class("ui-state-default")._("Containers Running")._().
-            th().$class("ui-state-default")._("Containers Pending")._().
-            th().$class("ui-state-default")._("Containers Reserved")._().
-            th().$class("ui-state-default")._("Memory Used")._().
-            th().$class("ui-state-default")._("Memory Pending")._().
-            th().$class("ui-state-default")._("Memory Reserved")._().
-            th().$class("ui-state-default")._("VCores Used")._().
-            th().$class("ui-state-default")._("VCores Pending")._().
-            th().$class("ui-state-default")._("VCores Reserved")._().
-          _().
-        _().
+            th().$class("ui-state-default").__("Apps Submitted").__().
+            th().$class("ui-state-default").__("Apps Pending").__().
+            th().$class("ui-state-default").__("Apps Running").__().
+            th().$class("ui-state-default").__("Apps Completed").__().
+            th().$class("ui-state-default").__("Containers Running").__().
+            th().$class("ui-state-default").__("Containers Pending").__().
+            th().$class("ui-state-default").__("Containers Reserved").__().
+            th().$class("ui-state-default").__("Memory Used").__().
+            th().$class("ui-state-default").__("Memory Pending").__().
+            th().$class("ui-state-default").__("Memory Reserved").__().
+            th().$class("ui-state-default").__("VCores Used").__().
+            th().$class("ui-state-default").__("VCores Pending").__().
+            th().$class("ui-state-default").__("VCores Reserved").__().
+            __().
+            __().
         tbody().$class("ui-widget-content").
           tr().
             td(String.valueOf(userMetrics.getAppsSubmitted())).
@@ -155,8 +155,8 @@ public class MetricsOverviewTable extends HtmlBlock {
             td(String.valueOf(userMetrics.getAllocatedVirtualCores())).
             td(String.valueOf(userMetrics.getPendingVirtualCores())).
             td(String.valueOf(userMetrics.getReservedVirtualCores())).
-          _().
-        _()._();
+            __().
+            __().__();
         
       }
     }
@@ -167,21 +167,21 @@ public class MetricsOverviewTable extends HtmlBlock {
     table("#schedulermetricsoverview").
     thead().$class("ui-widget-header").
       tr().
-        th().$class("ui-state-default")._("Scheduler Type")._().
-        th().$class("ui-state-default")._("Scheduling Resource Type")._().
-        th().$class("ui-state-default")._("Minimum Allocation")._().
-        th().$class("ui-state-default")._("Maximum Allocation")._().
-      _().
-    _().
+        th().$class("ui-state-default").__("Scheduler Type").__().
+        th().$class("ui-state-default").__("Scheduling Resource Type").__().
+        th().$class("ui-state-default").__("Minimum Allocation").__().
+        th().$class("ui-state-default").__("Maximum Allocation").__().
+      __().
+    __().
     tbody().$class("ui-widget-content").
       tr().
         td(String.valueOf(schedulerInfo.getSchedulerType())).
         td(String.valueOf(schedulerInfo.getSchedulerResourceTypes())).
         td(schedulerInfo.getMinAllocation().toString()).
         td(schedulerInfo.getMaxAllocation().toString()).
-      _().
-    _()._();
+      __().
+    __().__();
 
-    div._();
+    div.__();
   }
 }

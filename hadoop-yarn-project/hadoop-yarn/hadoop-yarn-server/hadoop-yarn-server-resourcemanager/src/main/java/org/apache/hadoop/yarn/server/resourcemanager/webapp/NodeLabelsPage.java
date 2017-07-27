@@ -24,10 +24,10 @@ import org.apache.hadoop.yarn.api.records.NodeToLabelsList;
 import org.apache.hadoop.yarn.server.resourcemanager.ResourceManager;
 import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManager;
 import org.apache.hadoop.yarn.webapp.SubView;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet.TABLE;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet.TBODY;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet.TR;
+import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet;
+import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet.TABLE;
+import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet.TBODY;
+import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet.TR;
 import org.apache.hadoop.yarn.webapp.view.HtmlBlock;
 
 import com.google.inject.Inject;
@@ -52,14 +52,14 @@ public class NodeLabelsPage extends RmView {
 
       Map<String, Integer> labelNumNodesMap = getLabelNumNodesMap(labelsForAllNodes);
 
-      html.div().$class("labelnumnodes").h3("Label and num nodes")._();
+      html.div().$class("labelnumnodes").h3("Label and num nodes").__();
 
       TBODY<TABLE<Hamlet>> labelNodes = html.table("#labelnodes").
           thead().$class("ui-widget-header").
           tr().
-          th().$class("ui-state-default")._("Label")._().
-          th().$class("ui-state-default")._("Num nodes")._().
-          _()._().
+          th().$class("ui-state-default").__("Label").__().
+          th().$class("ui-state-default").__("Num nodes").__().
+          __().__().
           tbody().$class("ui-widget-content");
 
       for (Map.Entry<String, Integer> e : labelNumNodesMap.entrySet()) {
@@ -67,22 +67,22 @@ public class NodeLabelsPage extends RmView {
             labelNodes.tr().td(e.getKey());
 
         if (e.getValue() == null) {
-          row.td("0")._();
+          row.td("0").__();
         } else {
-          row.td(String.valueOf(e.getValue()))._();
+          row.td(String.valueOf(e.getValue())).__();
         }
       }
-      labelNodes._()._();
+      labelNodes.__().__();
 
 
-      html.div().$class("nodelabelsdata").h3("Node labels")._();
+      html.div().$class("nodelabelsdata").h3("Node labels").__();
 
       TBODY<TABLE<Hamlet>> nodeLabels = html.table("#nodelabels").
           thead().
           tr().
           th(".node", "Node").
           th(".labels", "Node Labels").
-          _()._().
+          __().__().
           tbody();
 
       for (NodeToLabelsList ntl : labelsForAllNodes) {
@@ -90,12 +90,12 @@ public class NodeLabelsPage extends RmView {
             nodeLabels.tr().td(ntl.getNode());
 
         if (ntl.getNodeLabel() == null || ntl.getNodeLabel().isEmpty()) {
-          row.td("No labels")._();
+          row.td("No labels").__();
         } else {
-          row.td(ntl.getNodeLabel().toString())._();
+          row.td(ntl.getNodeLabel().toString()).__();
         }
       }
-      nodeLabels._()._();
+      nodeLabels.__().__();
     }
 
     private Map<String, Integer> getLabelNumNodesMap(List<NodeToLabelsList> labelsForAllNodes) {
@@ -117,7 +117,7 @@ public class NodeLabelsPage extends RmView {
     }
   }
 
-  @Override protected void preHead(Page.HTML<_> html) {
+  @Override protected void preHead(Page.HTML<__> html) {
     commonPreHead(html);
     String title = "Node labels of the cluster";
     setTitle(title);
