@@ -1,5 +1,8 @@
 Hadoop Change Log
 
+    HADOOP-14702. Fix formatting issue and regression caused by conversion from
+    APT to Markdown. (Doris Gu via iwasakims)
+
     HADOOP-13442. Optimize UGI group lookups. (Daryn Sharp via kihwal, shv)
 
     HADOOP-11613. Remove commons-httpclient dependency from hadoop-azure.
