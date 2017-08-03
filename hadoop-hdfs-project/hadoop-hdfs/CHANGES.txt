@@ -19,6 +19,9 @@ Release 2.8.0
 
     HDFS-10984. Expose nntop output as metrics. (Siddharth Wagle via xyao, zhz)
 
+    HDFS-12131. Add some of the FSNamesystem JMX values as metrics.
+    (Erik Krogen via wang, shv)
+
   OPTIMIZATIONS
 
     HDFS-8026. Trace FSOutputSummer#writeChecksumChunks rather than

@@ -143,6 +143,8 @@ public class MiniDFSCluster {
   public static final String HDFS_MINIDFS_BASEDIR = "hdfs.minidfs.basedir";
   public static final String  DFS_NAMENODE_SAFEMODE_EXTENSION_TESTING_KEY
       = DFS_NAMENODE_SAFEMODE_EXTENSION_KEY + ".testing";
+  public static final String  DFS_NAMENODE_DECOMMISSION_INTERVAL_TESTING_KEY
+      = DFS_NAMENODE_DECOMMISSION_INTERVAL_KEY + ".testing";
 
   /**
    * System property to be set while running the tests. The value of this
@@ -853,7 +855,9 @@ public class MiniDFSCluster {
       int safemodeExtension = conf.getInt(
           DFS_NAMENODE_SAFEMODE_EXTENSION_TESTING_KEY, 0);
       conf.setInt(DFS_NAMENODE_SAFEMODE_EXTENSION_KEY, safemodeExtension);
-      conf.setInt(DFS_NAMENODE_DECOMMISSION_INTERVAL_KEY, 3); // 3 second
+      int decommissionInterval = conf.getInt(
+          DFS_NAMENODE_DECOMMISSION_INTERVAL_TESTING_KEY, 3);
+      conf.setInt(DFS_NAMENODE_DECOMMISSION_INTERVAL_KEY, decommissionInterval);
       conf.setClass(NET_TOPOLOGY_NODE_SWITCH_MAPPING_IMPL_KEY,
                      StaticMapping.class, DNSToSwitchMapping.class);
 
