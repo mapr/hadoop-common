@@ -29,8 +29,6 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Public;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.conf.Configuration;
@@ -73,6 +71,8 @@ import org.apache.hadoop.yarn.server.applicationhistoryservice.records.impl.pb.C
 import org.apache.hadoop.yarn.util.ConverterUtils;
 
 import com.google.protobuf.InvalidProtocolBufferException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * File system implementation of {@link ApplicationHistoryStore}. In this
@@ -88,8 +88,8 @@ import com.google.protobuf.InvalidProtocolBufferException;
 public class FileSystemApplicationHistoryStore extends AbstractService
     implements ApplicationHistoryStore {
 
-  private static final Log LOG = LogFactory
-    .getLog(FileSystemApplicationHistoryStore.class);
+  private static final Logger LOG = LoggerFactory
+      .getLogger(FileSystemApplicationHistoryStore.class);
 
   private static final String ROOT_DIR_NAME = "ApplicationHistoryDataRoot";
   private static final int MIN_BLOCK_SIZE = 256 * 1024;
@@ -145,7 +145,7 @@ public class FileSystemApplicationHistoryStore extends AbstractService
       }
       outstandingWriters.clear();
     } finally {
-      IOUtils.cleanup(LOG, fs);
+      IOUtils.cleanupWithLogger(LOG, fs);
     }
     super.serviceStop();
   }
@@ -231,7 +231,7 @@ public class FileSystemApplicationHistoryStore extends AbstractService
         HistoryFileReader.Entry entry = hfReader.next();
         if (entry.key.id.startsWith(
             ConverterUtils.APPLICATION_ATTEMPT_PREFIX)) {
-          ApplicationAttemptId appAttemptId = 
+          ApplicationAttemptId appAttemptId =
               ConverterUtils.toApplicationAttemptId(entry.key.id);
           if (appAttemptId.getApplicationId().equals(appId)) {
             ApplicationAttemptHistoryData historyData = 
@@ -713,12 +713,12 @@ public class FileSystemApplicationHistoryStore extends AbstractService
     }
 
     public void reset() throws IOException {
-      IOUtils.cleanup(LOG, scanner);
+      IOUtils.cleanupWithLogger(LOG, scanner);
       scanner = reader.createScanner();
     }
 
     public void close() {
-      IOUtils.cleanup(LOG, scanner, reader, fsdis);
+      IOUtils.cleanupWithLogger(LOG, scanner, reader, fsdis);
     }
 
   }
@@ -743,7 +743,7 @@ public class FileSystemApplicationHistoryStore extends AbstractService
     }
 
     public synchronized void close() {
-      IOUtils.cleanup(LOG, writer, fsdos);
+      IOUtils.cleanupWithLogger(LOG, writer, fsdos);
     }
 
     public synchronized void writeHistoryData(HistoryDataKey key, byte[] value)
@@ -753,13 +753,13 @@ public class FileSystemApplicationHistoryStore extends AbstractService
         dos = writer.prepareAppendKey(-1);
         key.write(dos);
       } finally {
-        IOUtils.cleanup(LOG, dos);
+        IOUtils.cleanupWithLogger(LOG, dos);
       }
       try {
         dos = writer.prepareAppendValue(value.length);
         dos.write(value);
       } finally {
-        IOUtils.cleanup(LOG, dos);
+        IOUtils.cleanupWithLogger(LOG, dos);
       }
     }
 
