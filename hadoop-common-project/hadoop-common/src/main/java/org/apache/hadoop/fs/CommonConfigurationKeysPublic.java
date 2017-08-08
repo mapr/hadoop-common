@@ -284,6 +284,9 @@ public class CommonConfigurationKeysPublic {
   public static final String HADOOP_SECURITY_JAVA_SECURITY_JAR_PATH =
       "hadoop.security.java.security.login.config.jar.path";
 
+  public static final String HADOOP_HTTP_AUTHENTICATION_TYPE =
+    "hadoop.http.authentication.type";
+
   @Deprecated
   /** Only used by HttpServer. */
   public static final String HADOOP_SSL_ENABLED_KEY = "hadoop.ssl.enabled";
