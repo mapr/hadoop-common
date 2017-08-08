@@ -95,8 +95,8 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.AbstractYarnSched
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.QueueMetrics;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicationAttempt;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerNode;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.TestSchedulerUtils;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerUtils;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.TestSchedulerUtils;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.AppAddedSchedulerEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.AppAttemptAddedSchedulerEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.AppAttemptRemovedSchedulerEvent;
@@ -3843,8 +3843,8 @@ public class TestFairScheduler extends FairSchedulerTestBase {
 
     // Create a node
     RMNode node =
-            MockNodes.newNodeInfo(1, Resources.createResource(20480, 20),
-                    0, "127.0.0.1");
+        MockNodes.newNodeInfo(1, Resources.createResource(20480, 20),
+            0, "127.0.0.1");
     NodeAddedSchedulerEvent nodeEvent = new NodeAddedSchedulerEvent(node);
     NodeUpdateSchedulerEvent updateEvent = new NodeUpdateSchedulerEvent(node);
     scheduler.handle(nodeEvent);
@@ -3853,24 +3853,24 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     // Launch an app
     ApplicationAttemptId attId1 = createAppAttemptId(1, 1);
     createApplicationWithAMResource(
-            attId1, "queue1", "user1",
-            Resource.newInstance(1024, 1));
+        attId1, "queue1", "user1",
+        Resource.newInstance(1024, 1));
     createSchedulingRequestExistingApplication(
-            1024, 1,
-            RMAppAttemptImpl.AM_CONTAINER_PRIORITY.getPriority(), attId1);
+        1024, 1,
+        RMAppAttemptImpl.AM_CONTAINER_PRIORITY.getPriority(), attId1);
     FSAppAttempt app1 = scheduler.getSchedulerApp(attId1);
     scheduler.update();
     scheduler.handle(updateEvent);
 
     RMContainer container = app1.getLiveContainersMap().
-            values().iterator().next();
+        values().iterator().next();
     scheduler.completedContainer(container, SchedulerUtils
-            .createAbnormalContainerStatus(container.getContainerId(),
-                    SchedulerUtils.LOST_CONTAINER), RMContainerEventType.KILL);
+        .createAbnormalContainerStatus(container.getContainerId(),
+            SchedulerUtils.LOST_CONTAINER), RMContainerEventType.KILL);
     scheduler.completedContainer(container, SchedulerUtils
-                    .createAbnormalContainerStatus(container.getContainerId(),
-                            SchedulerUtils.COMPLETED_APPLICATION),
-            RMContainerEventType.FINISHED);
+        .createAbnormalContainerStatus(container.getContainerId(),
+            SchedulerUtils.COMPLETED_APPLICATION),
+        RMContainerEventType.FINISHED);
     assertEquals(Resources.none(), app1.getResourceUsage());
   }
 

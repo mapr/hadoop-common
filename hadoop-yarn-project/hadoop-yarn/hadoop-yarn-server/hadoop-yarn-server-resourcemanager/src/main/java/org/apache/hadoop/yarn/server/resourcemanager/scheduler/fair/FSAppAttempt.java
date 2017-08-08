@@ -127,13 +127,13 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
     // Remove from the list of containers
     if (liveContainers.remove(containerId) == null) {
       LOG.info("Additional complete request on completed container " +
-              rmContainer.getContainerId());
+        rmContainer.getContainerId());
       return;
     }
-    
+
     // Remove from the list of newly allocated containers if found
     newlyAllocatedContainers.remove(rmContainer);
-    
+
     // Inform the container
     rmContainer.handle(
         new RMContainerFinishedEvent(
