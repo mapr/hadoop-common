@@ -34,6 +34,9 @@ Release 2.8.0
 
 Release 2.7.5
 
+    HDFS-12157. Do fsyncDirectory(..) outside of FSDataset lock.
+    (Vinayakumar B. via kihwal)
+
     HDFS-8797. WebHdfsFileSystem creates too many connections for pread. (jing9)
 
     HDFS-8829. Make SO_RCVBUF and SO_SNDBUF size configurable for
