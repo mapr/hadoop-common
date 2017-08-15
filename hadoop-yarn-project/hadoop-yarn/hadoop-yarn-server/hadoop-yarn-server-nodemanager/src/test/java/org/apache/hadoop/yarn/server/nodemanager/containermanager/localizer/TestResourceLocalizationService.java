@@ -63,6 +63,7 @@ import java.util.Set;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.hadoop.fs.Options;
 import org.junit.Assert;
@@ -190,7 +191,11 @@ public class TestResourceLocalizationService {
   @After
   public void cleanup() throws IOException {
     conf = null;
-    FileUtils.deleteDirectory(new File(basedir.toString()));
+    try {
+      FileUtils.deleteDirectory(new File(basedir.toString()));
+    } catch (IOException | IllegalArgumentException e) {
+      // ignore
+    }
   }
   
   @Test
@@ -942,7 +947,7 @@ public class TestResourceLocalizationService {
       String appStr = ConverterUtils.toString(appId);
       String ctnrStr = c.getContainerId().toString();
       ArgumentCaptor<Path> tokenPathCaptor = ArgumentCaptor.forClass(Path.class);
-      verify(exec).startLocalizer(tokenPathCaptor.capture(), null, null,
+      verify(exec).startLocalizer(tokenPathCaptor.capture(), (Path) eq(null), (String) eq(null),
           isA(InetSocketAddress.class), eq("user0"), eq(appStr), eq(ctnrStr),
           isA(LocalDirsHandlerService.class));
       Path localizationTokenPath = tokenPathCaptor.getValue();
@@ -1091,17 +1096,24 @@ public class TestResourceLocalizationService {
 
   private static class DummyExecutor extends DefaultContainerExecutor {
     private volatile boolean stopLocalization = false;
+    private AtomicInteger numLocalizers = new AtomicInteger(0);
     @Override
     public void startLocalizer(Path nmPrivateContainerTokensPath,
                                Path nmPrivateExtTokensPath, String extTokensEnvVar,
                                InetSocketAddress nmAddr, String user, String appId, String locId,
                                LocalDirsHandlerService dirsHandler)
         throws IOException, InterruptedException {
+      numLocalizers.incrementAndGet();
       while (!stopLocalization) {
         Thread.yield();
       }
     }
-    void setStopLocalization() {
+    private void waitForLocalizers(int num) {
+      while (numLocalizers.intValue() < num) {
+        Thread.yield();
+      }
+    }
+    private void setStopLocalization() {
       stopLocalization = true;
     }
   }
@@ -1244,6 +1256,12 @@ public class TestResourceLocalizationService {
       spyService.handle(new ContainerLocalizationRequestEvent(c2, rsrcs1));
 
       dispatcher.await();
+      // Wait for localizers of both container c1 and c2 to begin.
+      //Bug 14616: Do not localize same resource more than once on a node.
+      //Therefore, only one container will localized.
+      exec.waitForLocalizers(1);
+      LocalizerRunner locC1 =
+          spyService.getLocalizerRunner(c1.getContainerId().toString());
       final String containerIdStr = c1.getContainerId().toString();
       // Heartbeats from container localizer
       LocalResourceStatus rsrc1success = mock(LocalResourceStatus.class);
@@ -1311,6 +1329,10 @@ public class TestResourceLocalizationService {
       Set<Path> paths =
           Sets.newHashSet(new Path(locPath1), new Path(locPath1 + "_tmp"),
               new Path(locPath2), new Path(locPath2 + "_tmp"));
+      // Wait for localizer runner thread for container c1 to finish.
+      while (locC1.getState() != Thread.State.TERMINATED) {
+        Thread.sleep(50);
+      }
       // Verify if downloading resources were submitted for deletion.
       verify(delService).delete(eq(user),
           (Path) eq(null), argThat(new DownloadingPathsMatcher(paths)));
@@ -1756,8 +1778,12 @@ public class TestResourceLocalizationService {
       dispatcher1.getEventHandler().handle(
         createContainerLocalizationEvent(container2,
           LocalResourceVisibility.PRIVATE, req));
+      /*Changed the expected value.
+      Used the DuplicateFetchResourceTransition instead
+      FetchResourceTransition to handle localize event.
+      Bug 14616: Do not localize same resource more than once on a node.*/
       Assert
-        .assertTrue(waitForPrivateDownloadToStart(rls, localizerId2, 1, 200));
+        .assertTrue(waitForPrivateDownloadToStart(rls, localizerId2, 0, 200));
 
       // Retrieving localized resource.
       LocalResourcesTracker tracker =

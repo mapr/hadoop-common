@@ -107,10 +107,10 @@ public class TestFSLeafQueue extends FairSchedulerTestBase {
     out.println("<?xml version=\"1.0\"?>");
     out.println("<allocations>");
     out.println("<queue name=\"queueA\">");
-    out.println("<minResources>2048mb,0vcores</minResources>");
+    out.println("<minResources>2048mb,0vcores,0disks</minResources>");
     out.println("</queue>");
     out.println("<queue name=\"queueB\">");
-    out.println("<minResources>2048mb,0vcores</minResources>");
+    out.println("<minResources>2048mb,0vcores,0disks</minResources>");
     out.println("</queue>");
     out.println("</allocations>");
     out.close();

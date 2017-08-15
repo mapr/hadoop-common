@@ -121,13 +121,15 @@ public class TestLocalResourcesTrackerImpl {
       tracker.handle(req11Event);
 
       // Localize R1 for C2
+      // Bug 14616: Do not localize same resource more than once on a node.
+      // Therefore, the event will not be handled.
       tracker.handle(req12Event);
 
       // Localize R2 for C1
       tracker.handle(req21Event);
 
       dispatcher.await();
-      verify(localizerEventHandler, times(3)).handle(
+      verify(localizerEventHandler, times(2)).handle(
           any(LocalizerResourceRequestEvent.class));
       // Verify refCount for R1 is 2
       Assert.assertEquals(2, lr1.getRefCount());

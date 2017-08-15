@@ -119,7 +119,7 @@ public class TestTimelineWebServices extends JerseyTestBase {
           PseudoAuthenticationHandler.ANONYMOUS_ALLOWED)).thenReturn("true");
       ServletContext context = mock(ServletContext.class);
       when(filterConfig.getServletContext()).thenReturn(context);
-      Enumeration<Object> names = mock(Enumeration.class);
+      Enumeration<String> names = mock(Enumeration.class);
       when(names.hasMoreElements()).thenReturn(true, true, true, false);
       when(names.nextElement()).thenReturn(
           AuthenticationFilter.AUTH_TYPE,

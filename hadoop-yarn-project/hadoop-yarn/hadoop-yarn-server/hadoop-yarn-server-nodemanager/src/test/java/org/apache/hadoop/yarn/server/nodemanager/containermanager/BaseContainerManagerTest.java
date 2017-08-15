@@ -227,6 +227,15 @@ public abstract class BaseContainerManagerTest {
             ByteBuffer.wrap("AuxServiceMetaData2".getBytes()));
         return serviceData;
       }
+
+      @Override
+      public Map<String, ByteBuffer> getAuxServiceMetaData(ContainerId cId) {
+        Map<String, ByteBuffer> serviceData = new HashMap<>();
+        serviceData.put("AuxService1", ByteBuffer.wrap("AuxServiceMetaData1".getBytes()));
+        serviceData.put("AuxService2", ByteBuffer.wrap("AuxServiceMetaData2".getBytes()));
+
+        return serviceData;
+      }
     };
   }
 

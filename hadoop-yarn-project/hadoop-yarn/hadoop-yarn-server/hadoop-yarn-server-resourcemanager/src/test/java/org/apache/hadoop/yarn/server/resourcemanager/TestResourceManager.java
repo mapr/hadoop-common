@@ -27,10 +27,13 @@ import java.util.Collection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.http.lib.StaticUserWebFilter;
 import org.apache.hadoop.net.NetworkTopology;
 import org.apache.hadoop.security.AuthenticationFilterInitializer;
+import org.apache.hadoop.security.User;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.rpcauth.KerberosAuthMethod;
 import org.apache.hadoop.yarn.api.records.Priority;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.api.records.ResourceRequest;
@@ -265,6 +268,10 @@ public class TestResourceManager {
       conf.set(filterInitializerConfKey, filterInitializer);
       conf.set("hadoop.security.authentication", "kerberos");
       conf.set("hadoop.http.authentication.type", "kerberos");
+      conf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+        User.class.getName());
+      conf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+        KerberosAuthMethod.class.getName());
       try {
         try {
           UserGroupInformation.setConfiguration(conf);

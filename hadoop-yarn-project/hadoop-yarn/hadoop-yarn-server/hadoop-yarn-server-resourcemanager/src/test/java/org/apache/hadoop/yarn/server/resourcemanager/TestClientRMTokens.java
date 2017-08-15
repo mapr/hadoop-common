@@ -37,8 +37,11 @@ import java.security.PrivilegedAction;
 import java.security.PrivilegedExceptionAction;
 
 import com.google.protobuf.InvalidProtocolBufferException;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.net.NetUtils;
+import org.apache.hadoop.security.User;
+import org.apache.hadoop.security.rpcauth.KerberosAuthMethod;
 import org.apache.hadoop.security.token.delegation.TestDelegationToken.TestDelegationTokenIdentifier;
 import org.apache.hadoop.yarn.server.resourcemanager.recovery.records.RMDelegationTokenIdentifierData;
 import org.junit.Assert;
@@ -95,6 +98,10 @@ public class TestClientRMTokens {
     conf.set(YarnConfiguration.RM_PRINCIPAL, "testuser/localhost@apache.org");
 
     conf.set(CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION, "kerberos");
+    conf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+      User.class.getName());
+    conf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+      KerberosAuthMethod.class.getName());
     UserGroupInformation.setConfiguration(conf);
     
     ResourceScheduler scheduler = createMockScheduler(conf);

@@ -20,6 +20,9 @@ package org.apache.hadoop.yarn.server;
 
 import java.io.IOException;
 
+import org.apache.hadoop.fs.CommonConfigurationKeys;
+import org.apache.hadoop.security.User;
+import org.apache.hadoop.security.rpcauth.KerberosAuthMethod;
 import org.junit.Assert;
 
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
@@ -45,6 +48,10 @@ public class TestRMNMSecretKeys {
     // validating RM NM keys for secured environment
     conf.set(CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION,
         "kerberos");
+    conf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+            User.class.getName());
+    conf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+            KerberosAuthMethod.class.getName());
     UserGroupInformation.setConfiguration(conf);
     validateRMNMKeyExchange(conf);
   }

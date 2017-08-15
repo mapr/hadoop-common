@@ -105,7 +105,7 @@ public class TestLocalizedResource {
       LocalizerEventMatcher matchesL1Req =
         new LocalizerEventMatcher(container1, creds1, vis1,
             LocalizerEventType.REQUEST_RESOURCE_LOCALIZATION);
-      verify(localizerBus).handle(argThat(matchesL1Req));
+      verify(localizerBus, never()).handle(argThat(matchesL1Req));
 
       // Release C0 container localization, verify no notification
       local.handle(new ResourceReleaseEvent(rsrcA, container0));
@@ -142,7 +142,7 @@ public class TestLocalizedResource {
       LocalizerEventMatcher matchesL3Req =
         new LocalizerEventMatcher(container3, creds3, vis3,
             LocalizerEventType.REQUEST_RESOURCE_LOCALIZATION);
-      verify(localizerBus).handle(argThat(matchesL3Req));
+      verify(localizerBus, never()).handle(argThat(matchesL3Req));
 
       // Successful localization. verify notification C2, C3
       Path locA = new Path("file:///cache/rsrcA");

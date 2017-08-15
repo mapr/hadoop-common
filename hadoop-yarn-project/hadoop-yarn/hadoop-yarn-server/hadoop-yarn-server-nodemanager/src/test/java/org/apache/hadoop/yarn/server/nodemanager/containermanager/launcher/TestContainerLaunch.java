@@ -424,7 +424,7 @@ public class TestContainerLaunch extends BaseContainerManagerTest {
     	  + processStartFile);
       fileWriter.println("@echo " + Environment.HOME.$() + ">> "
           + processStartFile);
-      for (String serviceName : containerManager.getAuxServiceMetaData()
+      for (String serviceName : containerManager.getAuxServiceMetaData(cId)
           .keySet()) {
         fileWriter.println("@echo %" + AuxiliaryServiceHelper.NM_AUX_SERVICE
             + serviceName + "%>> "
@@ -452,7 +452,7 @@ public class TestContainerLaunch extends BaseContainerManagerTest {
           + processStartFile);
       fileWriter.write("\necho $" + Environment.HOME.name() + " >> "
           + processStartFile);
-      for (String serviceName : containerManager.getAuxServiceMetaData()
+      for (String serviceName : containerManager.getAuxServiceMetaData(cId)
           .keySet()) {
         fileWriter.write("\necho $" + AuxiliaryServiceHelper.NM_AUX_SERVICE
             + serviceName + " >> "
@@ -542,9 +542,9 @@ public class TestContainerLaunch extends BaseContainerManagerTest {
               YarnConfiguration.DEFAULT_NM_USER_HOME_DIR),
         reader.readLine());
 
-    for (String serviceName : containerManager.getAuxServiceMetaData().keySet()) {
+    for (String serviceName : containerManager.getAuxServiceMetaData(cId).keySet()) {
       Assert.assertEquals(
-          containerManager.getAuxServiceMetaData().get(serviceName),
+          containerManager.getAuxServiceMetaData(cId).get(serviceName),
           ByteBuffer.wrap(Base64.decodeBase64(reader.readLine().getBytes())));
     }
 

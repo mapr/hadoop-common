@@ -35,8 +35,10 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.minikdc.MiniKdc;
+import org.apache.hadoop.security.User;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.KerberosTestUtils;
+import org.apache.hadoop.security.rpcauth.KerberosAuthMethod;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.server.resourcemanager.MockRM;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMApp;
@@ -87,6 +89,10 @@ public class TestRMWebappAuthentication {
     kerberosConf.setBoolean(YarnConfiguration.YARN_ACL_ENABLE, true);
     kerberosConf.set(
       CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION, "kerberos");
+    kerberosConf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+      User.class.getName());
+    kerberosConf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+      KerberosAuthMethod.class.getName());
     kerberosConf.set(YarnConfiguration.RM_KEYTAB,
       httpSpnegoKeytabFile.getAbsolutePath());
     kerberosConf.setBoolean("mockrm.webapp.enabled", true);

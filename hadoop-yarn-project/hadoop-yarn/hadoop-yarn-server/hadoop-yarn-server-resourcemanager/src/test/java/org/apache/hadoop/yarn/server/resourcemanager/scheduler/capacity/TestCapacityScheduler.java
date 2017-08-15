@@ -245,13 +245,13 @@ public class TestCapacityScheduler {
     String host_0 = "host_0";
     org.apache.hadoop.yarn.server.resourcemanager.NodeManager nm_0 = 
       registerNode(host_0, 1234, 2345, NetworkTopology.DEFAULT_RACK, 
-          Resources.createResource(4 * GB, 1));
+          Resources.createResource(4 * GB, 2));
     
     // Register node2
     String host_1 = "host_1";
     org.apache.hadoop.yarn.server.resourcemanager.NodeManager nm_1 = 
       registerNode(host_1, 1234, 2345, NetworkTopology.DEFAULT_RACK, 
-          Resources.createResource(2 * GB, 1));
+          Resources.createResource(2 * GB, 2));
 
     // ResourceRequest priorities
     Priority priority_0 = 
@@ -1299,13 +1299,13 @@ public class TestCapacityScheduler {
     String host_0 = "host_0";
     NodeManager nm_0 =
         registerNode(host_0, 1234, 2345, NetworkTopology.DEFAULT_RACK,
-            Resources.createResource(4 * GB, 1));
+            Resources.createResource(4 * GB, 3));
 
     // Register node2
     String host_1 = "host_1";
     NodeManager nm_1 =
         registerNode(host_1, 1234, 2345, NetworkTopology.DEFAULT_RACK,
-            Resources.createResource(2 * GB, 1));
+            Resources.createResource(2 * GB, 2));
 
     // ResourceRequest priorities
     Priority priority_0 =
@@ -1597,13 +1597,13 @@ public class TestCapacityScheduler {
     String host_0 = "host_0";
     NodeManager nm_0 =
         registerNode(host_0, 1234, 2345, NetworkTopology.DEFAULT_RACK,
-            Resources.createResource(5 * GB, 1));
+            Resources.createResource(5 * GB, 2));
 
     // Register node2
     String host_1 = "host_1";
     NodeManager nm_1 =
         registerNode(host_1, 1234, 2345, NetworkTopology.DEFAULT_RACK,
-            Resources.createResource(5 * GB, 1));
+            Resources.createResource(5 * GB, 2));
 
     // ResourceRequest priorities
     Priority priority_0 =
@@ -2760,6 +2760,33 @@ public class TestCapacityScheduler {
         .getUser(userName).getPendingApplications());
     Assert.assertEquals("User Active applications should be 1", 1, queueA
         .getUser(userName).getActiveApplications());
+    rm.stop();
+  }
+
+  // Test verifies AM Used resource for LeafQueue when AM ResourceRequest is
+  // lesser than minimumAllocation
+  @Test(timeout = 30000)
+  public void testAMUsedResource() throws Exception {
+    MockRM rm = setUpMove();
+    Configuration conf = rm.getConfig();
+    int minAllocMb =
+        conf.getInt(YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_MB,
+            YarnConfiguration.DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_MB);
+    int amMemory = 50;
+    assertTrue("AM memory is greater than or equql to minAllocation",
+        amMemory < minAllocMb);
+    Resource minAllocResource = Resource.newInstance(minAllocMb, 1);
+    String queueName = "a1";
+    RMApp rmApp = rm.submitApp(amMemory, "app-1", "user_0", null, queueName);
+       
+    assertEquals("RMApp does not containes minimum allocation",
+        minAllocResource, rmApp.getAMResourceRequest().getCapability());
+    
+    ResourceScheduler scheduler = rm.getRMContext().getScheduler();
+    LeafQueue queueA =
+        (LeafQueue) ((CapacityScheduler) scheduler).getQueue(queueName);
+    assertEquals("Minimum Resource for AM is incorrect", minAllocResource,
+        queueA.getUser("user_0").getResourceUsage().getAMUsed());
     rm.stop();
   }
 

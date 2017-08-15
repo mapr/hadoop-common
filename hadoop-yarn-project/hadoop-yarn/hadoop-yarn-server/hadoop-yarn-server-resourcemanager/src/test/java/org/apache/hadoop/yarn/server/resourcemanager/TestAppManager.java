@@ -67,6 +67,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceScheduler
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.YarnScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.security.ClientToAMTokenSecretManagerInRM;
 import org.apache.hadoop.yarn.server.security.ApplicationACLsManager;
+import org.apache.hadoop.yarn.util.resource.ResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.Resources;
 import org.junit.After;
 import org.junit.Before;
@@ -592,7 +593,7 @@ public class TestAppManager{
     Assert.assertTrue(msg.contains("vcoreSeconds=64"));
     Assert.assertTrue(msg.contains("preemptedAMContainers=1"));
     Assert.assertTrue(msg.contains("preemptedNonAMContainers=10"));
-    Assert.assertTrue(msg.contains("preemptedResources=<memory:1234\\, vCores:56>"));
+    Assert.assertTrue(msg.contains("preemptedResources=<memory:1234\\, vCores:56\\, disks:0.0>"));
     Assert.assertTrue(msg.contains("applicationType=MAPREDUCE"));
  }
 
@@ -604,6 +605,10 @@ public class TestAppManager{
     when(scheduler.getMaximumResourceCapability()).thenReturn(
         Resources.createResource(
             YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_MB));
+
+    ResourceCalculator rs = mock(ResourceCalculator.class);
+    when(scheduler.getResourceCalculator()).thenReturn(rs);
+
     return scheduler;
   }
 
