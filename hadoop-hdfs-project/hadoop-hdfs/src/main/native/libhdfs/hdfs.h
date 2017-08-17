@@ -1024,18 +1024,20 @@ extern  "C" {
                        int nameLen, char *value, int valueLen);
     
     /**
-     * hdfsGetXattr - Get Extended attributes values from a file
-
-     * @param fs The configured filesystem handle.
-     * @param path the path to the file
-     * @param name the name of Xattr
-     * @param value the expected value
-     * @param valLen the expected valueLen
-     * @return 0 on success else -1 with proper errno set
-     */
+    * hdfsGetXattr - Get Extended attributes values from a file
+    
+    * @param fs The configured filesystem handle.
+    * @param path the path to the file
+    * @param name the name of Xattr
+    * @param val the expected value of Xattr
+    * @param size the size of buffer
+    * @return the current size of the named Xattr on success or 
+    *         if NULL buffer with size 0 is passed as parameter 
+    *         else -1 with proper errno set
+    */
     LIBHDFS_EXTERNAL
-    int hdfsGetXattr(hdfsFS fs, const char* path, const char *name,
-                      char **val, int *valLen);
+    ssize_t hdfsGetXattr(hdfsFS fs, const char* path, const char *name, 
+                           char *val, size_t size);
 
 #ifdef __cplusplus
 }
