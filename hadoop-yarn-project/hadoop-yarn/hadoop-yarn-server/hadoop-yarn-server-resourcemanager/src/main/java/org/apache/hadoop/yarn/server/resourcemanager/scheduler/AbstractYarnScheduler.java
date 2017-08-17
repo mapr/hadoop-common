@@ -286,6 +286,7 @@ public abstract class AbstractYarnScheduler
     application.containerLaunchedOnNode(containerId, node.getNodeID());
   }
 
+  // TODO: Rename it to getCurrentApplicationAttempt
   public T getApplicationAttempt(ApplicationAttemptId applicationAttemptId) {
     SchedulerApplication<T> app =
         applications.get(applicationAttemptId.getApplicationId());
