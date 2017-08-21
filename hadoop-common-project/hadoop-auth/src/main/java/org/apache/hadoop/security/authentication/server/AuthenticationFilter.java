@@ -196,7 +196,7 @@ public class AuthenticationFilter implements Filter {
   protected String configPrefix;
 
   /**
-   * <p>Initializes the authentication filter and signer secret provider.<p/>
+   * <p>Initializes the authentication filter and signer secret provider.</p>
    * It instantiates and initializes the specified {@link
    * AuthenticationHandler}.
    *
