@@ -595,7 +595,9 @@ public class ResourceLocalizationService extends CompositeService
     // app
 
     ExternalTokenLocalizer extTokenLocalizer = ExternalTokenLocalizerFactory.get();
-    extTokenLocalizer.cleanup(appId);
+    if (extTokenLocalizer != null) {
+      extTokenLocalizer.cleanup(appId);
+    }
     dispatcher.getEventHandler().handle(new ApplicationEvent(
           application.getAppId(),
           ApplicationEventType.APPLICATION_RESOURCES_CLEANEDUP));
