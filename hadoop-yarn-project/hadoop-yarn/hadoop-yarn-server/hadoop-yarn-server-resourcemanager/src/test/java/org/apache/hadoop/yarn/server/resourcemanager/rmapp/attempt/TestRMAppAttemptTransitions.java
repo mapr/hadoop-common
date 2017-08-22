@@ -525,12 +525,9 @@ public class TestRMAppAttemptTransitions {
     verifyApplicationAttemptFinished(RMAppAttemptState.FAILED);
   }
 
-  /**
-   * {@link RMAppAttemptState#LAUNCH}
-   */
-  private void testAppAttemptLaunchedState(Container container) {
-    assertEquals(RMAppAttemptState.LAUNCHED, 
-        applicationAttempt.getAppAttemptState());
+  private void testAppAttemptLaunchedState(Container container,
+                                                RMAppAttemptState state) {
+    assertEquals(state, applicationAttempt.getAppAttemptState());
     assertEquals(container, applicationAttempt.getMasterContainer());
     if (UserGroupInformation.isSecurityEnabled()) {
       // ClientTokenMasterKey has been registered in SecretManager, it's able to
@@ -689,13 +686,18 @@ public class TestRMAppAttemptTransitions {
   }
   
   private void launchApplicationAttempt(Container container) {
+    launchApplicationAttempt(container, RMAppAttemptState.LAUNCHED);
+  }
+
+  private void launchApplicationAttempt(Container container,
+                                        RMAppAttemptState state) {
     applicationAttempt.handle(
-        new RMAppAttemptEvent(applicationAttempt.getAppAttemptId(), 
+        new RMAppAttemptEvent(applicationAttempt.getAppAttemptId(),
             RMAppAttemptEventType.LAUNCHED));
 
-    testAppAttemptLaunchedState(container);    
+    testAppAttemptLaunchedState(container, state);
   }
-  
+
   private void runApplicationAttempt(Container container,
       String host, 
       int rpcPort, 
@@ -726,7 +728,7 @@ public class TestRMAppAttemptTransitions {
     when(submissionContext.getUnmanagedAM()).thenReturn(true);
     // submit AM and check it goes to LAUNCHED state
     scheduleApplicationAttempt();
-    testAppAttemptLaunchedState(null);
+    testAppAttemptLaunchedState(null, RMAppAttemptState.LAUNCHED);
     verify(amLivelinessMonitor, times(1)).register(
         applicationAttempt.getAppAttemptId());
 
@@ -933,7 +935,15 @@ public class TestRMAppAttemptTransitions {
         applicationAttempt.createApplicationAttemptState());
     testAppAttemptFailedState(amContainer, diagnostics);
   }
-  
+
+  @Test(timeout = 10000)
+  public void testAllocatedToRunning() {
+    Container amContainer = allocateApplicationAttempt();
+    // Register attempt event arrives before launched attempt event
+    runApplicationAttempt(amContainer, "host", 8042, "oldtrackingurl", false);
+    launchApplicationAttempt(amContainer, RMAppAttemptState.RUNNING);
+  }
+
   @Test(timeout = 10000)
   public void testLaunchedAtFinalSaving() {
     Container amContainer = allocateApplicationAttempt();
