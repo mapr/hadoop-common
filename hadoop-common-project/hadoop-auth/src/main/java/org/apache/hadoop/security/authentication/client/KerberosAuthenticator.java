@@ -121,7 +121,6 @@ public class KerberosAuthenticator implements Authenticator {
   }
   
   private URL url;
-  private HttpURLConnection conn;
   private Base64 base64;
   private ConnectionConfigurator connConfigurator;
 
@@ -156,10 +155,7 @@ public class KerberosAuthenticator implements Authenticator {
     if (!token.isSet()) {
       this.url = url;
       base64 = new Base64(0);
-      conn = (HttpURLConnection) url.openConnection();
-      if (connConfigurator != null) {
-        conn = connConfigurator.configure(conn);
-      }
+      HttpURLConnection conn = token.openConnection(url, connConfigurator);
       conn.setRequestMethod(AUTH_HTTP_METHOD);
       conn.connect();
       
@@ -174,7 +170,7 @@ public class KerberosAuthenticator implements Authenticator {
         }
         needFallback = true;
       }
-      if (!needFallback && isNegotiate()) {
+      if (!needFallback && isNegotiate(conn)) {
         LOG.debug("Performing our own SPNEGO sequence.");
         doSpnegoSequence(token);
       } else {
@@ -223,7 +219,7 @@ public class KerberosAuthenticator implements Authenticator {
   /*
   * Indicates if the response is starting a SPNEGO negotiation.
   */
-  private boolean isNegotiate() throws IOException {
+  private boolean isNegotiate(HttpURLConnection conn) throws IOException {
     boolean negotiate = false;
     if (conn.getResponseCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
       String authHeader = conn.getHeaderField(WWW_AUTHENTICATE);
@@ -241,7 +237,8 @@ public class KerberosAuthenticator implements Authenticator {
    * @throws IOException if an IO error occurred.
    * @throws AuthenticationException if an authentication error occurred.
    */
-  private void doSpnegoSequence(AuthenticatedURL.Token token) throws IOException, AuthenticationException {
+  private void doSpnegoSequence(final AuthenticatedURL.Token token)
+      throws IOException, AuthenticationException {
     try {
       AccessControlContext context = AccessController.getContext();
       Subject subject = Subject.getSubject(context);
@@ -282,13 +279,15 @@ public class KerberosAuthenticator implements Authenticator {
 
             // Loop while the context is still not established
             while (!established) {
+              HttpURLConnection conn =
+                  token.openConnection(url, connConfigurator);
               outToken = gssContext.initSecContext(inToken, 0, inToken.length);
               if (outToken != null) {
-                sendToken(outToken);
+                sendToken(conn, outToken);
               }
 
               if (!gssContext.isEstablished()) {
-                inToken = readToken();
+                inToken = readToken(conn);
               } else {
                 established = true;
               }
@@ -311,18 +310,14 @@ public class KerberosAuthenticator implements Authenticator {
     } catch (LoginException ex) {
       throw new AuthenticationException(ex);
     }
-    AuthenticatedURL.extractToken(conn, token);
   }
 
   /*
   * Sends the Kerberos token to the server.
   */
-  private void sendToken(byte[] outToken) throws IOException {
+  private void sendToken(HttpURLConnection conn, byte[] outToken)
+      throws IOException {
     String token = base64.encodeToString(outToken);
-    conn = (HttpURLConnection) url.openConnection();
-    if (connConfigurator != null) {
-      conn = connConfigurator.configure(conn);
-    }
     conn.setRequestMethod(AUTH_HTTP_METHOD);
     conn.setRequestProperty(AUTHORIZATION, NEGOTIATE + " " + token);
     conn.connect();
@@ -331,7 +326,8 @@ public class KerberosAuthenticator implements Authenticator {
   /*
   * Retrieves the Kerberos token returned by the server.
   */
-  private byte[] readToken() throws IOException, AuthenticationException {
+  private byte[] readToken(HttpURLConnection conn)
+      throws IOException, AuthenticationException {
     int status = conn.getResponseCode();
     if (status == HttpURLConnection.HTTP_OK || status == HttpURLConnection.HTTP_UNAUTHORIZED) {
       String authHeader = conn.getHeaderField(WWW_AUTHENTICATE);
