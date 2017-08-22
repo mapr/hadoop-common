@@ -2,6 +2,9 @@ Hadoop MapReduce Change Log
 
   BUG FIXES
 
+    MAPREDUCE-6931. Remove TestDFSIO "Total Throughput" calculation.
+    (Dennis Huo via shv)
+
     MAPREDUCE-6750. Fix TestHSAdminServer#testRefreshSuperUserGroups
     (Kihwal Lee via Varun Saxena)
 
