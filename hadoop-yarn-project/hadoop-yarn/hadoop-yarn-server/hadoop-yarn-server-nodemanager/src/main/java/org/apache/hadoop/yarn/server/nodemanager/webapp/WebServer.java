@@ -19,9 +19,9 @@
 package org.apache.hadoop.yarn.server.nodemanager.webapp;
 
 import static org.apache.hadoop.yarn.util.StringHelper.pajoin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.http.HttpConfig;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
@@ -38,7 +38,8 @@ import org.apache.hadoop.yarn.webapp.util.WebAppUtils;
 
 public class WebServer extends AbstractService {
 
-  private static final Log LOG = LogFactory.getLog(WebServer.class);
+  private static final Logger LOG =
+       LoggerFactory.getLogger(WebServer.class);
 
   private final Context nmContext;
   private final NMWebApp nmWebApp;
@@ -58,7 +59,7 @@ public class WebServer extends AbstractService {
     String bindAddress = WebAppUtils.getWebAppBindURL(getConfig(),
                           YarnConfiguration.NM_BIND_HOST,
                           WebAppUtils.getNMWebAppURLWithoutScheme(getConfig()));
-    
+
     LOG.info("Instantiating NMWebApp at " + bindAddress);
     try {
       this.webApp =

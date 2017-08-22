@@ -31,10 +31,10 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -59,7 +59,7 @@ import org.apache.hadoop.yarn.util.ConverterUtils;
 
 public abstract class ContainerExecutor implements Configurable {
 
-  private static final Log LOG = LogFactory.getLog(ContainerExecutor.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ContainerExecutor.class);
   final public static FsPermission TASK_LAUNCH_SCRIPT_PERMISSION =
     FsPermission.createImmutable((short) 0700);
 
@@ -83,30 +83,30 @@ public abstract class ContainerExecutor implements Configurable {
   }
 
   /**
-   * Run the executor initialization steps. 
+   * Run the executor initialization steps.
    * Verify that the necessary configs, permissions are in place.
    * @throws IOException
    */
   public abstract void init() throws IOException;
 
   /**
-   * On Windows the ContainerLaunch creates a temporary special jar manifest of 
-   * other jars to workaround the CLASSPATH length. In a  secure cluster this 
-   * jar must be localized so that the container has access to it. 
+   * On Windows the ContainerLaunch creates a temporary special jar manifest of
+   * other jars to workaround the CLASSPATH length. In a  secure cluster this
+   * jar must be localized so that the container has access to it.
    * This function localizes on-demand the jar.
-   * 
+   *
    * @param classPathJar
    * @param owner
    * @throws IOException
    */
-  public Path localizeClasspathJar(Path classPathJar, Path pwd, String owner) 
+  public Path localizeClasspathJar(Path classPathJar, Path pwd, String owner)
       throws IOException {
-    // Non-secure executor simply use the classpath created 
+    // Non-secure executor simply use the classpath created
     // in the NM fprivate folder
     return classPathJar;
   }
-  
-  
+
+
   /**
    * Prepare the environment for containers in this application to execute.
    * <pre>
@@ -171,7 +171,7 @@ public abstract class ContainerExecutor implements Configurable {
    * @param ctx encapsulates information necessary to reacquire container
    * @return The exit code of the pre-existing container
    * @throws IOException
-   * @throws InterruptedException 
+   * @throws InterruptedException
    */
   public int reacquireContainer(ContainerReacquisitionContext ctx)
       throws IOException, InterruptedException {
@@ -213,9 +213,9 @@ public abstract class ContainerExecutor implements Configurable {
         LOG.info(containerId + " was deactivated");
         return ExitCode.TERMINATED.getExitCode();
       }
-      
+
       Thread.sleep(sleepMsec);
-      
+
       msecLeft -= sleepMsec;
     }
     if (msecLeft < 0) {
@@ -296,7 +296,7 @@ public abstract class ContainerExecutor implements Configurable {
    * The constants for the signals.
    */
   public enum Signal {
-    NULL(0, "NULL"), QUIT(3, "SIGQUIT"), 
+    NULL(0, "NULL"), QUIT(3, "SIGQUIT"),
     KILL(9, "SIGKILL"), TERM(15, "SIGTERM");
     private final int value;
     private final String str;
@@ -340,27 +340,27 @@ public abstract class ContainerExecutor implements Configurable {
       String userName, Path pidFile, Configuration conf) {
     return getRunCommand(command, groupId, userName, pidFile, conf, null);
   }
-  
-  /** 
+
+  /**
    *  Return a command to execute the given command in OS shell.
    *  On Windows, the passed in groupId can be used to launch
    *  and associate the given groupId in a process group. On
-   *  non-Windows, groupId is ignored. 
+   *  non-Windows, groupId is ignored.
    */
   protected String[] getRunCommand(String command, String groupId,
       String userName, Path pidFile, Configuration conf, Resource resource) {
     boolean containerSchedPriorityIsSet = false;
-    int containerSchedPriorityAdjustment = 
+    int containerSchedPriorityAdjustment =
         YarnConfiguration.DEFAULT_NM_CONTAINER_EXECUTOR_SCHED_PRIORITY;
 
-    if (conf.get(YarnConfiguration.NM_CONTAINER_EXECUTOR_SCHED_PRIORITY) != 
+    if (conf.get(YarnConfiguration.NM_CONTAINER_EXECUTOR_SCHED_PRIORITY) !=
         null) {
       containerSchedPriorityIsSet = true;
-      containerSchedPriorityAdjustment = conf 
-          .getInt(YarnConfiguration.NM_CONTAINER_EXECUTOR_SCHED_PRIORITY, 
+      containerSchedPriorityAdjustment = conf
+          .getInt(YarnConfiguration.NM_CONTAINER_EXECUTOR_SCHED_PRIORITY,
           YarnConfiguration.DEFAULT_NM_CONTAINER_EXECUTOR_SCHED_PRIORITY);
     }
-  
+
     if (Shell.WINDOWS) {
       int cpuRate = -1;
       int memory = -1;
@@ -419,7 +419,7 @@ public abstract class ContainerExecutor implements Configurable {
 
   /**
    * Mark the container as active
-   * 
+   *
    * @param containerId
    *          the ContainerId
    * @param pidFilePath
@@ -451,7 +451,7 @@ public abstract class ContainerExecutor implements Configurable {
 
   /**
    * Get the process-identifier for the container
-   * 
+   *
    * @param containerID
    * @return the processid of the container if it has already launched,
    *         otherwise return null

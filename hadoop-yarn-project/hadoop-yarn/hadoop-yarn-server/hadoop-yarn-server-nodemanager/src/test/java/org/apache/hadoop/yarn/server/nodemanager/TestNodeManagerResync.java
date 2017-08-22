@@ -548,7 +548,7 @@ public class TestNodeManagerResync {
       }
     }
   }
-  
+
   class TestNodeManager3 extends NodeManager {
 
     private int registrationCount = 0;

@@ -19,6 +19,8 @@
 package org.apache.hadoop.yarn.server.nodemanager;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -34,8 +36,6 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileContext;
@@ -54,7 +54,10 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 public class DeletionService extends AbstractService {
-  static final Log LOG = LogFactory.getLog(DeletionService.class);
+
+  private static final Logger LOG =
+       LoggerFactory.getLogger(DeletionService.class);
+
   private int debugDelay;
   private final ContainerExecutor exec;
   private ScheduledThreadPoolExecutor sched;
@@ -81,7 +84,7 @@ public class DeletionService extends AbstractService {
     this.debugDelay = 0;
     this.stateStore = stateStore;
   }
-  
+
   /**
    * Delete the path(s) as this user.
    * @param user The user to delete as, or the JVM user if null
@@ -101,14 +104,14 @@ public class DeletionService extends AbstractService {
       sched.schedule(task, debugDelay, TimeUnit.SECONDS);
     }
   }
-  
+
   public void scheduleFileDeletionTask(FileDeletionTask fileDeletionTask) {
     if (debugDelay != -1) {
       recordDeletionTaskInStateStore(fileDeletionTask);
       sched.schedule(fileDeletionTask, debugDelay, TimeUnit.SECONDS);
     }
   }
-  
+
   @Override
   protected void serviceInit(Configuration conf) throws Exception {
     ThreadFactory tf = new ThreadFactoryBuilder()
@@ -170,7 +173,7 @@ public class DeletionService extends AbstractService {
     // the dependent task fails then it will be marked as false in
     // fileDeletionTaskFinished().
     private boolean success;
-    
+
     private FileDeletionTask(DeletionService delService, String user,
         Path subDir, List<Path> baseDirs) {
       this(INVALID_TASK_ID, delService, user, subDir, baseDirs);
@@ -187,44 +190,44 @@ public class DeletionService extends AbstractService {
       this.numberOfPendingPredecessorTasks = new AtomicInteger(0);
       success = true;
     }
-    
+
     /**
      * increments and returns pending predecessor task count
      */
     public int incrementAndGetPendingPredecessorTasks() {
       return numberOfPendingPredecessorTasks.incrementAndGet();
     }
-    
+
     /**
      * decrements and returns pending predecessor task count
      */
     public int decrementAndGetPendingPredecessorTasks() {
       return numberOfPendingPredecessorTasks.decrementAndGet();
     }
-    
+
     @VisibleForTesting
     public String getUser() {
       return this.user;
     }
-    
+
     @VisibleForTesting
     public Path getSubDir() {
       return this.subDir;
     }
-    
+
     @VisibleForTesting
     public List<Path> getBaseDirs() {
       return this.baseDirs;
     }
-    
+
     public synchronized void setSuccess(boolean success) {
       this.success = success;
     }
-    
+
     public synchronized boolean getSucess() {
       return this.success;
     }
-    
+
     public synchronized FileDeletionTask[] getSuccessorTasks() {
       FileDeletionTask[] successors =
           new FileDeletionTask[successorTaskSet.size()];
@@ -234,7 +237,7 @@ public class DeletionService extends AbstractService {
     @Override
     public void run() {
       if (LOG.isDebugEnabled()) {
-        LOG.debug(this);
+        LOG.debug(this.toString());
       }
       boolean error = false;
       if (null == user) {
@@ -282,7 +285,7 @@ public class DeletionService extends AbstractService {
         }
       }
       if (error) {
-        setSuccess(!error);        
+        setSuccess(!error);
       }
       fileDeletionTaskFinished();
     }
@@ -303,7 +306,7 @@ public class DeletionService extends AbstractService {
       }
       return sb.toString();
     }
-    
+
     /**
      * If there is a task dependency between say tasks 1,2,3 such that
      * task2 and task3 can be started only after task1 then we should define
@@ -317,12 +320,12 @@ public class DeletionService extends AbstractService {
         successorTask.incrementAndGetPendingPredecessorTasks();
       }
     }
-    
+
     /*
      * This is called when
      * 1) Current file deletion task ran and finished.
      * 2) This can be even directly called by predecessor task if one of the
-     * dependent tasks of it has failed marking its success = false.  
+     * dependent tasks of it has failed marking its success = false.
      */
     private synchronized void fileDeletionTaskFinished() {
       try {
@@ -349,12 +352,12 @@ public class DeletionService extends AbstractService {
       }
     }
   }
-  
+
   /**
    * Helper method to create file deletion task. To be used only if we need
    * a way to define dependencies between deletion tasks.
    * @param user user on whose behalf this task is suppose to run
-   * @param subDir sub directory as required in 
+   * @param subDir sub directory as required in
    * {@link DeletionService#delete(String, Path, Path...)}
    * @param baseDirs base directories as required in
    * {@link DeletionService#delete(String, Path, Path...)}

@@ -25,9 +25,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -76,7 +76,7 @@ public class NodeManager extends CompositeService
    */
   public static final int SHUTDOWN_HOOK_PRIORITY = 30;
 
-  private static final Log LOG = LogFactory.getLog(NodeManager.class);
+  private static final Logger LOG = LoggerFactory.getLogger(NodeManager.class);
   protected final NodeManagerMetrics metrics = NodeManagerMetrics.create();
   private ApplicationACLsManager aclsManager;
   private NodeHealthCheckerService nodeHealthChecker;
@@ -85,7 +85,7 @@ public class NodeManager extends CompositeService
   private AsyncDispatcher dispatcher;
   private ContainerManagerImpl containerManager;
   private NodeStatusUpdater nodeStatusUpdater;
-  private static CompositeServiceShutdownHook nodeManagerShutdownHook; 
+  private static CompositeServiceShutdownHook nodeManagerShutdownHook;
   private NMStateStoreService nmStore = null;
   
   private AtomicBoolean isStopping = new AtomicBoolean(false);
@@ -225,7 +225,7 @@ public class NodeManager extends CompositeService
 
     this.context = createNMContext(containerTokenSecretManager,
         nmTokenSecretManager, nmStore);
-    
+
     nodeStatusUpdater =
         createNodeStatusUpdater(context, dispatcher, nodeHealthChecker);
 
@@ -246,13 +246,13 @@ public class NodeManager extends CompositeService
     dispatcher.register(ContainerManagerEventType.class, containerManager);
     dispatcher.register(NodeManagerEventType.class, this);
     addService(dispatcher);
-    
+
     DefaultMetricsSystem.initialize("NodeManager");
 
     // StatusUpdater should be added last so that it get started last 
     // so that we make sure everything is up before registering with RM. 
     addService(nodeStatusUpdater);
-    
+
     super.serviceInit(conf);
     // TODO add local dirs to del
   }
@@ -316,7 +316,7 @@ public class NodeManager extends CompositeService
           ((NodeStatusUpdaterImpl) nodeStatusUpdater)
             .rebootNodeStatusUpdaterAndRegisterWithRM();
         } catch (YarnRuntimeException e) {
-          LOG.fatal("Error while rebooting NodeStatusUpdater.", e);
+          LOG.error("Error while rebooting NodeStatusUpdater.", e);
           shutDown();
         }
       }
@@ -476,7 +476,7 @@ public class NodeManager extends CompositeService
       this.init(conf);
       this.start();
     } catch (Throwable t) {
-      LOG.fatal("Error starting NodeManager", t);
+      LOG.error("Error starting NodeManager", t);
       System.exit(-1);
     }
   }

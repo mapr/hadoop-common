@@ -32,8 +32,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.RandomStringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fs.FileContext;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -43,7 +43,7 @@ import org.apache.hadoop.util.DiskChecker;
  * Manages a list of local storage directories.
  */
 class DirectoryCollection {
-  private static final Log LOG = LogFactory.getLog(DirectoryCollection.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DirectoryCollection.class);
 
   public enum DiskErrorCause {
     DISK_FULL, OTHER
@@ -78,7 +78,7 @@ class DirectoryCollection {
   private List<String> fullDirs;
 
   private int numFailures;
-  
+
   private float diskUtilizationPercentageCutoff;
   private long diskUtilizationSpaceCutoff;
 
@@ -139,7 +139,7 @@ class DirectoryCollection {
    *          dir to be marked as good
    * 
    */
-  public DirectoryCollection(String[] dirs, 
+  public DirectoryCollection(String[] dirs,
       float utilizationPercentageCutOff,
       long utilizationSpaceCutOff) {
     localDirs = new CopyOnWriteArrayList<String>(dirs);
@@ -368,7 +368,7 @@ class DirectoryCollection {
       }
     }
   }
-  
+
   public float getDiskUtilizationPercentageCutoff() {
     return diskUtilizationPercentageCutoff;
   }

@@ -31,7 +31,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileContext;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.UnsupportedFileSystemException;
@@ -83,6 +82,7 @@ import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.LoggerFactory;
 
 public class TestContainerManager extends BaseContainerManagerTest {
 
@@ -91,9 +91,9 @@ public class TestContainerManager extends BaseContainerManagerTest {
   }
 
   static {
-    LOG = LogFactory.getLog(TestContainerManager.class);
+    LOG = LoggerFactory.getLogger(TestContainerManager.class);
   }
-  
+
   @Override
   @Before
   public void setup() throws IOException {
@@ -107,7 +107,7 @@ public class TestContainerManager extends BaseContainerManagerTest {
     ContainerId containerId = ContainerId.newContainerId(appAttemptId, id);
     return containerId;
   }
-  
+
   @Override
   protected ContainerManagerImpl
       createContainerManager(DeletionService delSrvc) {
@@ -141,7 +141,7 @@ public class TestContainerManager extends BaseContainerManagerTest {
       }
     };
   }
-  
+
   @Test
   public void testContainerManagerInitialization() throws IOException {
 
@@ -425,7 +425,7 @@ public class TestContainerManager extends BaseContainerManagerTest {
     containerIds.add(cId);
     GetContainerStatusesRequest gcsRequest =
         GetContainerStatusesRequest.newInstance(containerIds);
-	  ContainerStatus containerStatus = 
+	  ContainerStatus containerStatus =
 			  containerManager.getContainerStatuses(gcsRequest).getContainerStatuses().get(0);
 
 	  // Verify exit status matches exit state of script
@@ -454,7 +454,7 @@ public class TestContainerManager extends BaseContainerManagerTest {
 	  // and verify exit code returned 
 	  testContainerLaunchAndExit(exitCode);	  
   }
-  
+
   @Test
   public void testLocalFilesCleanup() throws InterruptedException,
       IOException, YarnException {

@@ -19,6 +19,8 @@ package org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer;
 
 import static org.apache.hadoop.fs.CreateFlag.CREATE;
 import static org.apache.hadoop.fs.CreateFlag.OVERWRITE;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.DataOutputStream;
 import java.io.File;
@@ -49,8 +51,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
@@ -144,7 +144,8 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 public class ResourceLocalizationService extends CompositeService
     implements EventHandler<LocalizationEvent>, LocalizationProtocol {
 
-  private static final Log LOG = LogFactory.getLog(ResourceLocalizationService.class);
+  private static final Logger LOG =
+       LoggerFactory.getLogger(ResourceLocalizationService.class);
   public static final String NM_PRIVATE_DIR = "nmPrivate";
   public static final FsPermission NM_PRIVATE_PERM = new FsPermission((short) 0700);
 

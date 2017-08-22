@@ -228,7 +228,7 @@ public class NMWebServices {
     } catch (IllegalArgumentException ex) {
       return Response.status(Status.BAD_REQUEST).build();
     }
-    
+
     org.apache.hadoop.fs.Path logFile = null;
     try {
       logFile = ContainerLogsUtils.getContainerLogFile(

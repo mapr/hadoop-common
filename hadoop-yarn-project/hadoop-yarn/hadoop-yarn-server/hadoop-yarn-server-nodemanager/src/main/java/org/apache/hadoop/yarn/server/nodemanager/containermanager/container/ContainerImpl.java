@@ -31,9 +31,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.Credentials;
@@ -101,7 +101,7 @@ public class ContainerImpl implements Container {
   /** The NM-wide configuration - not specific to this container */
   private final Configuration daemonConf;
 
-  private static final Log LOG = LogFactory.getLog(ContainerImpl.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ContainerImpl.class);
   private final Map<LocalResourceRequest,List<String>> pendingResources =
     new HashMap<LocalResourceRequest,List<String>>();
   private final Map<Path,List<String>> localizedResources =
@@ -247,7 +247,7 @@ public class ContainerImpl implements Container {
         ContainerEventType.KILL_CONTAINER, new KillTransition())
     .addTransition(ContainerState.RUNNING, ContainerState.EXITED_WITH_FAILURE,
         ContainerEventType.CONTAINER_KILLED_ON_REQUEST,
-        new KilledExternallyTransition()) 
+        new KilledExternallyTransition())
 
     // From CONTAINER_EXITED_WITH_SUCCESS State
     .addTransition(ContainerState.EXITED_WITH_SUCCESS, ContainerState.DONE,
@@ -518,7 +518,7 @@ public class ContainerImpl implements Container {
   @SuppressWarnings("unchecked") // dispatcher not typed
   public void cleanup() {
     Map<LocalResourceVisibility, Collection<LocalResourceRequest>> rsrc =
-      new HashMap<LocalResourceVisibility, 
+      new HashMap<LocalResourceVisibility,
                   Collection<LocalResourceRequest>>();
     if (!publicRsrcs.isEmpty()) {
       rsrc.put(LocalResourceVisibility.PUBLIC, publicRsrcs);
@@ -548,7 +548,7 @@ public class ContainerImpl implements Container {
    * message.
    * 
    * If there are resources to localize, sends a
-   * ContainerLocalizationRequest (INIT_CONTAINER_RESOURCES) 
+   * ContainerLocalizationRequest (INIT_CONTAINER_RESOURCES)
    * to the ResourceLocalizationManager and enters LOCALIZING state.
    * 
    * If there are no resources to localize, sends LAUNCH_CONTAINER event
@@ -640,7 +640,7 @@ public class ContainerImpl implements Container {
           return ContainerState.LOCALIZATION_FAILED;
         }
         Map<LocalResourceVisibility, Collection<LocalResourceRequest>> req =
-            new HashMap<LocalResourceVisibility, 
+            new HashMap<LocalResourceVisibility,
                         Collection<LocalResourceRequest>>();
         if (!container.publicRsrcs.isEmpty()) {
           req.put(LocalResourceVisibility.PUBLIC, container.publicRsrcs);
@@ -651,7 +651,7 @@ public class ContainerImpl implements Container {
         if (!container.appRsrcs.isEmpty()) {
           req.put(LocalResourceVisibility.APPLICATION, container.appRsrcs);
         }
-        
+
         container.dispatcher.getEventHandler().handle(
               new ContainerLocalizationRequestEvent(container, req));
         return ContainerState.LOCALIZING;
@@ -964,9 +964,9 @@ public class ContainerImpl implements Container {
     public void transition(ContainerImpl container, ContainerEvent event) {
       container.metrics.releaseContainer(container.resource);
       container.sendFinishedEvents();
-      //if the current state is NEW it means the CONTAINER_INIT was never 
+      //if the current state is NEW it means the CONTAINER_INIT was never
       // sent for the event, thus no need to send the CONTAINER_STOP
-      if (container.getCurrentState() 
+      if (container.getCurrentState()
           != org.apache.hadoop.yarn.api.records.ContainerState.NEW) {
         container.dispatcher.getEventHandler().handle(new AuxServicesEvent
             (AuxServicesEventType.CONTAINER_STOP, container));

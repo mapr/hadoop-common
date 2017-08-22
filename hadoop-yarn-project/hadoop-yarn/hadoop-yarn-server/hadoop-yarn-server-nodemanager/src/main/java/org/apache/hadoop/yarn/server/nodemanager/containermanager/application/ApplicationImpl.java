@@ -25,9 +25,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.yarn.api.records.ApplicationAccessType;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -73,7 +73,8 @@ public class ApplicationImpl implements Application {
   private final WriteLock writeLock;
   private final Context context;
 
-  private static final Log LOG = LogFactory.getLog(ApplicationImpl.class);
+  private static final Logger LOG =
+       LoggerFactory.getLogger(ApplicationImpl.class);
 
   private LogAggregationContext logAggregationContext;
 
@@ -208,7 +209,7 @@ public class ApplicationImpl implements Application {
                   ApplicationEventType.APPLICATION_LOG_HANDLING_FINISHED,
                   ApplicationEventType.APPLICATION_INITED,
                   ApplicationEventType.FINISH_APPLICATION))
-           
+
            // Transitions from FINISHED state
            .addTransition(ApplicationState.FINISHED,
                ApplicationState.FINISHED,
@@ -219,7 +220,7 @@ public class ApplicationImpl implements Application {
                   ApplicationEventType.APPLICATION_LOG_HANDLING_INITED,
                   ApplicationEventType.APPLICATION_LOG_HANDLING_FAILED,
                   ApplicationEventType.FINISH_APPLICATION))
-               
+
            // create the topology tables
            .installTopology();
 
@@ -243,7 +244,7 @@ public class ApplicationImpl implements Application {
       app.dispatcher.getEventHandler().handle(
           new LogHandlerAppStartedEvent(app.appId, app.user,
               app.credentials, ContainerLogsRetentionPolicy.ALL_CONTAINERS,
-              app.applicationACLs, app.logAggregationContext)); 
+              app.applicationACLs, app.logAggregationContext));
     }
   }
 

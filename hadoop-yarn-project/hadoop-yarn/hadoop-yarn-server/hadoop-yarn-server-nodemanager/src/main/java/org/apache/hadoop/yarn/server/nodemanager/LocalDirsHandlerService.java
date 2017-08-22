@@ -26,9 +26,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileContext;
 import org.apache.hadoop.fs.LocalDirAllocator;
@@ -46,7 +46,8 @@ import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
  */
 public class LocalDirsHandlerService extends AbstractService {
 
-  private static Log LOG = LogFactory.getLog(LocalDirsHandlerService.class);
+  private static final Logger LOG =
+       LoggerFactory.getLogger(LocalDirsHandlerService.class);
 
   /** Timer used to schedule disk health monitoring code execution */
   private Timer dirsHandlerScheduler;
@@ -459,7 +460,7 @@ public class LocalDirsHandlerService extends AbstractService {
   public Path getLogPathToRead(String pathStr) throws IOException {
     return logDirsAllocator.getLocalPathToRead(pathStr, getConfig());
   }
-  
+
   public static String[] validatePaths(String[] paths) {
     ArrayList<String> validPaths = new ArrayList<String>();
     for (int i = 0; i < paths.length; ++i) {

@@ -34,7 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.UnsupportedFileSystemException;
@@ -73,6 +72,7 @@ import org.apache.hadoop.yarn.util.TestProcfsBasedProcessTree;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.LoggerFactory;
 
 public class TestContainersMonitor extends BaseContainerManagerTest {
 
@@ -81,7 +81,7 @@ public class TestContainersMonitor extends BaseContainerManagerTest {
   }
 
   static {
-    LOG = LogFactory.getLog(TestContainersMonitor.class);
+    LOG = LoggerFactory.getLogger(TestContainersMonitor.class);
   }
   @Before
   public void setup() throws IOException {

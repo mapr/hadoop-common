@@ -20,6 +20,8 @@ package org.apache.hadoop.yarn.server.nodemanager;
 
 import static org.apache.hadoop.fs.CreateFlag.CREATE;
 import static org.apache.hadoop.fs.CreateFlag.OVERWRITE;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.DataOutputStream;
 import java.io.File;
@@ -34,8 +36,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.math.RandomUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.fs.FileContext;
 import org.apache.hadoop.fs.Path;
@@ -67,8 +67,8 @@ import com.google.common.base.Optional;
 
 public class DefaultContainerExecutor extends ContainerExecutor {
 
-  private static final Log LOG = LogFactory
-      .getLog(DefaultContainerExecutor.class);
+  private static final Logger LOG =
+       LoggerFactory.getLogger(DefaultContainerExecutor.class);
 
   private static final int WIN_MAX_PATH = 260;
 
@@ -325,7 +325,7 @@ public class DefaultContainerExecutor extends ContainerExecutor {
         pout = new PrintStream(out, false, "UTF-8");
         writeLocalWrapperScript(launchDst, pidFile, pout);
       } finally {
-        IOUtils.cleanup(LOG, pout, out);
+        IOUtils.cleanupWithLogger(LOG, pout, out);
       }
     }
 
@@ -387,7 +387,7 @@ public class DefaultContainerExecutor extends ContainerExecutor {
         pout.println(exec + " /bin/bash \"" +
             launchDst.toUri().getPath().toString() + "\"");
       } finally {
-        IOUtils.cleanup(LOG, pout, out);
+        IOUtils.cleanupWithLogger(LOG, pout, out);
       }
       lfs.setPermission(sessionScriptPath,
           ContainerExecutor.TASK_LAUNCH_SCRIPT_PERMISSION);

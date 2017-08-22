@@ -25,8 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.util.StringUtils.TraditionalBinaryPrefix;
@@ -47,8 +47,8 @@ import com.google.common.base.Preconditions;
 public class ContainersMonitorImpl extends AbstractService implements
     ContainersMonitor {
 
-  final static Log LOG = LogFactory
-      .getLog(ContainersMonitorImpl.class);
+  private final static Logger LOG =
+       LoggerFactory.getLogger(ContainersMonitorImpl.class);
 
   private long monitoringInterval;
   private MonitoringThread monitoringThread;

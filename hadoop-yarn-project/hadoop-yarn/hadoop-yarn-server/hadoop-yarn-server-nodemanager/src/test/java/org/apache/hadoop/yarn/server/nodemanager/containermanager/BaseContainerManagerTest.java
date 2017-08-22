@@ -29,8 +29,8 @@ import java.util.Map;
 import org.apache.hadoop.yarn.server.nodemanager.executor.DeletionAsUserContext;
 import org.junit.Assert;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileContext;
 import org.apache.hadoop.fs.Path;
@@ -99,8 +99,8 @@ public abstract class BaseContainerManagerTest {
     tmpDir = new File("target", this.getClass().getSimpleName() + "-tmpDir");
   }
 
-  protected static Log LOG = LogFactory
-      .getLog(BaseContainerManagerTest.class);
+  protected static Logger LOG =
+       LoggerFactory.getLogger(BaseContainerManagerTest.class);
 
   protected static final int HTTP_PORT = 5412;
   protected Configuration conf = new YarnConfiguration();
@@ -212,7 +212,7 @@ public abstract class BaseContainerManagerTest {
             ContainerTokenIdentifier containerTokenIdentifier) throws YarnException {
           // do nothing
         }
-      
+
       @Override
         protected void updateNMTokenIdentifier(
             NMTokenIdentifier nmTokenIdentifier) throws InvalidToken {
@@ -246,7 +246,7 @@ public abstract class BaseContainerManagerTest {
       public void delete(String user, Path subDir, Path... baseDirs) {
         // Don't do any deletions.
         LOG.info("Psuedo delete: user - " + user + ", subDir - " + subDir
-            + ", baseDirs - " + baseDirs); 
+            + ", baseDirs - " + baseDirs);
       };
     };
   }

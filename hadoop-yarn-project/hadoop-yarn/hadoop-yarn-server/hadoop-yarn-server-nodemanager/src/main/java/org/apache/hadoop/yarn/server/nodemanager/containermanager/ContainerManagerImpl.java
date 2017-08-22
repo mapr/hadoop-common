@@ -38,8 +38,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
@@ -153,7 +153,8 @@ public class ContainerManagerImpl extends CompositeService implements
    */
   private static final int SHUTDOWN_CLEANUP_SLOP_MS = 1000;
 
-  private static final Log LOG = LogFactory.getLog(ContainerManagerImpl.class);
+  private static final Logger LOG =
+       LoggerFactory.getLogger(ContainerManagerImpl.class);
 
   final Context context;
   private final ContainersMonitor containersMonitor;
@@ -220,7 +221,7 @@ public class ContainerManagerImpl extends CompositeService implements
     dispatcher.register(AuxServicesEventType.class, auxiliaryServices);
     dispatcher.register(ContainersMonitorEventType.class, containersMonitor);
     dispatcher.register(ContainersLauncherEventType.class, containersLauncher);
-    
+
     addService(dispatcher);
 
     this.containerStuckProcessor = new Thread(new containerStuckProcessor());
@@ -801,7 +802,7 @@ public class ContainerManagerImpl extends CompositeService implements
         throw RPCUtil.getRemoteException(e);
       }
     }
-    
+
     return StartContainersResponse.newInstance(getAuxServiceMetaData(anyContainerid),
       succeededContainers, failedContainers);
   }
@@ -857,14 +858,14 @@ public class ContainerManagerImpl extends CompositeService implements
      * here instead of RPC layer because at the time of opening/authenticating
      * the connection it doesn't know what all RPC calls user will make on it.
      * Also new NMToken is issued only at startContainer (once it gets renewed).
-     * 
+     *
      * 2) It should validate containerToken. Need to check below things. a) It
      * is signed by correct master key (part of retrieve password). b) It
      * belongs to correct Node Manager (part of retrieve password). c) It has
      * correct RMIdentifier. d) It is not expired.
      */
     authorizeStartRequest(nmTokenIdentifier, containerTokenIdentifier);
- 
+
     if (containerTokenIdentifier.getRMIdentifier() != nodeStatusUpdater
         .getRMIdentifier()) {
         // Is the container coming from unknown RM
@@ -885,7 +886,7 @@ public class ContainerManagerImpl extends CompositeService implements
     ContainerLaunchContext launchContext = request.getContainerLaunchContext();
 
     Map<String, ByteBuffer> serviceData = getAuxServiceMetaData(containerId);
-    if (launchContext.getServiceData()!=null && 
+    if (launchContext.getServiceData()!=null &&
         !launchContext.getServiceData().isEmpty()) {
       for (Map.Entry<String, ByteBuffer> meta : launchContext.getServiceData()
           .entrySet()) {
@@ -1258,7 +1259,7 @@ public class ContainerManagerImpl extends CompositeService implements
   public boolean getBlockNewContainerRequestsStatus() {
     return this.blockNewContainerRequests.get();
   }
-  
+
   @Override
   public void stateChanged(Service service) {
     // TODO Auto-generated method stub
@@ -1271,7 +1272,7 @@ public class ContainerManagerImpl extends CompositeService implements
   public Map<String, ByteBuffer> getAuxServiceMetaData() {
     return this.auxiliaryServices.getMetaData();
   }
-  
+
   public Map<String, ByteBuffer> getAuxServiceMetaData(ContainerId cId) {
     return this.auxiliaryServices.getMetaData(
         new ContainerInitializationContext(null, cId, null));

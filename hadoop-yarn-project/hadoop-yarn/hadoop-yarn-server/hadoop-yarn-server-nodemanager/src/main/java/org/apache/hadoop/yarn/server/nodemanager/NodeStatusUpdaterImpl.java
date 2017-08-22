@@ -33,9 +33,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.DataInputByteBuffer;
@@ -98,7 +98,7 @@ public class NodeStatusUpdaterImpl extends AbstractService implements
 
   private static final double ZERO_LIMIT = 0.01;
 
-  private static final Log LOG = LogFactory.getLog(NodeStatusUpdaterImpl.class);
+  private static final Logger LOG = LoggerFactory.getLogger(NodeStatusUpdaterImpl.class);
 
   private final Object heartbeatMonitor = new Object();
 
@@ -186,7 +186,7 @@ public class NodeStatusUpdaterImpl extends AbstractService implements
     this.minimumResourceManagerVersion = conf.get(
         YarnConfiguration.NM_RESOURCEMANAGER_MINIMUM_VERSION,
         YarnConfiguration.DEFAULT_NM_RESOURCEMANAGER_MINIMUM_VERSION);
-    
+
     // Default duration to track stopped containers on nodemanager is 10Min.
     // This should not be assigned very large value as it will remember all the
     // containers stopped during that time.
@@ -424,7 +424,7 @@ public class NodeStatusUpdaterImpl extends AbstractService implements
     }
     return containerStatuses;
   }
-  
+
   private List<ApplicationId> getRunningApplications() {
     List<ApplicationId> runningApplications = new ArrayList<ApplicationId>();
     runningApplications.addAll(this.context.getApplications().keySet());
@@ -716,7 +716,7 @@ public class NodeStatusUpdaterImpl extends AbstractService implements
           // Will be non-null only on roll-over on RM side
           context.getContainerTokenSecretManager().setMasterKey(updatedMasterKey);
         }
-        
+
         updatedMasterKey = response.getNMTokenMasterKey();
         if (updatedMasterKey != null) {
           context.getNMTokenSecretManager().setMasterKey(updatedMasterKey);

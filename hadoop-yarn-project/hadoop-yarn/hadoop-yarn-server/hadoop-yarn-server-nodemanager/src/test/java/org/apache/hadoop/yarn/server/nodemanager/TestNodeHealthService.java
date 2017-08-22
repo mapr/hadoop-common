@@ -23,9 +23,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.TimerTask;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileContext;
 import org.apache.hadoop.fs.FileUtil;
@@ -42,8 +42,8 @@ import org.junit.Test;
 
 public class TestNodeHealthService {
 
-  private static volatile Log LOG = LogFactory
-      .getLog(TestNodeHealthService.class);
+  private static volatile Logger LOG =
+       LoggerFactory.getLogger(TestNodeHealthService.class);
 
   protected static File testRootDir = new File("target",
       TestNodeHealthService.class.getName() + "-localDir").getAbsoluteFile();
@@ -169,7 +169,7 @@ public class TestNodeHealthService {
         .getIsNodeHealthy());
     Assert.assertTrue("Node health status reported healthy", healthStatus
         .getHealthReport().equals(nodeHealthChecker.getHealthReport()));
-    
+
     // Check unhealthy to healthy transitions.
     writeNodeHealthScriptFile(normalScript, true);
     timerTask.run();

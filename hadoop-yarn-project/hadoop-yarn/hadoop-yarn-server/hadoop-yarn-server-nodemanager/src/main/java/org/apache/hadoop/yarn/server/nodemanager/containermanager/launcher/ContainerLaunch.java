@@ -22,6 +22,8 @@ import static org.apache.hadoop.fs.CreateFlag.CREATE;
 import static org.apache.hadoop.fs.CreateFlag.OVERWRITE;
 import static org.apache.hadoop.yarn.conf.YarnConfiguration.LIBJVM_SO_PATH_DEFAULT;
 import static org.apache.hadoop.yarn.conf.YarnConfiguration.LIBJVM_SO_PATH;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.DataOutputStream;
 import java.io.File;
@@ -38,8 +40,6 @@ import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileContext;
@@ -93,7 +93,8 @@ import com.google.common.annotations.VisibleForTesting;
 
 public class ContainerLaunch implements Callable<Integer> {
 
-  private static final Log LOG = LogFactory.getLog(ContainerLaunch.class);
+  private static final Logger LOG =
+       LoggerFactory.getLogger(ContainerLaunch.class);
 
   public static final String CONTAINER_SCRIPT =
     Shell.appendScriptExtension("launch_container");
@@ -263,7 +264,7 @@ public class ContainerLaunch implements Callable<Integer> {
                   + Path.SEPARATOR
                   + String.format(ContainerLocalizer.TOKEN_FILE_NAME_FMT,
                       containerIdStr));
-      Path nmPrivateClasspathJarDir = 
+      Path nmPrivateClasspathJarDir =
           dirsHandler.getLocalPathForWrite(
               getContainerPrivateDir(appIdStr, containerIdStr));
       DataOutputStream containerScriptOutStream = null;
@@ -279,7 +280,7 @@ public class ContainerLaunch implements Callable<Integer> {
 
       String pidFileSubpath = getPidFileSubpath(appIdStr, containerIdStr);
 
-      // pid file should be in nm private dir so that it is not 
+      // pid file should be in nm private dir so that it is not
       // accessible by users
       pidFilePath = dirsHandler.getLocalPathForWrite(pidFileSubpath);
       List<String> localDirs = dirsHandler.getLocalDirs();
@@ -320,8 +321,8 @@ public class ContainerLaunch implements Callable<Integer> {
 
         // Set the token location too.
         environment.put(
-            ApplicationConstants.CONTAINER_TOKEN_FILE_ENV_NAME, 
-            new Path(containerWorkDir, 
+            ApplicationConstants.CONTAINER_TOKEN_FILE_ENV_NAME,
+            new Path(containerWorkDir,
                 FINAL_CONTAINER_TOKENS_FILE).toUri().getPath());
 
         // Add the native libraries to LD_LIBRARY_PATH. This is currently being
@@ -351,7 +352,8 @@ public class ContainerLaunch implements Callable<Integer> {
         creds.writeTokenStorageToStream(tokensOutStream);
         // /////////// End of writing out container-tokens
       } finally {
-        IOUtils.cleanup(LOG, containerScriptOutStream, tokensOutStream);
+        IOUtils.cleanupWithLogger(LOG, containerScriptOutStream,
+            tokensOutStream);
       }
 
       // LaunchContainer is a blocking call. We are here almost means the
@@ -463,7 +465,7 @@ public class ContainerLaunch implements Callable<Integer> {
   @SuppressWarnings("unchecked")
   private void handleContainerExitWithFailure(ContainerId containerID, int ret,
       Path containerLogDir, StringBuilder diagnosticInfo) {
-    LOG.warn(diagnosticInfo);
+    LOG.warn(diagnosticInfo.toString());
 
     String errorFileNamePattern =
         conf.get(YarnConfiguration.NM_CONTAINER_STDERR_PATTERN,
@@ -523,7 +525,7 @@ public class ContainerLaunch implements Callable<Integer> {
     } catch (IOException e) {
       LOG.error("Failed to get tail of the container's error log file", e);
     } finally {
-      IOUtils.cleanup(LOG, errorFileIS);
+      IOUtils.cleanupWithLogger(LOG, errorFileIS);
     }
 
     this.dispatcher.getEventHandler()
@@ -925,7 +927,7 @@ public class ContainerLaunch implements Callable<Integer> {
     // TODO: Remove Windows check and use this approach on all platforms after
     // additional testing.  See YARN-358.
     if (Shell.WINDOWS) {
-      
+
       String inputClassPath = environment.get(Environment.CLASSPATH.name());
       if (inputClassPath != null && !inputClassPath.isEmpty()) {
         StringBuilder newClassPath = new StringBuilder(inputClassPath);
@@ -967,7 +969,7 @@ public class ContainerLaunch implements Callable<Integer> {
         Map<String, String> mergedEnv = new HashMap<String, String>(
           System.getenv());
         mergedEnv.putAll(environment);
-        
+
         // this is hacky and temporary - it's to preserve the windows secure
         // behavior but enable non-secure windows to properly build the class
         // path for access to job.jar/lib/xyz and friends (see YARN-2803)
@@ -975,7 +977,7 @@ public class ContainerLaunch implements Callable<Integer> {
         if (exec instanceof WindowsSecureContainerExecutor) {
           jarDir = nmPrivateClasspathJarDir;
         } else {
-          jarDir = pwd; 
+          jarDir = pwd;
         }
         String[] jarCp = FileUtil.createJarWithClassPath(
           newClassPath.toString(), jarDir, pwd, mergedEnv);
