@@ -324,8 +324,10 @@ abstract public class Command extends Configured {
         displayError(e);
       }
     }
-    out.println(output.toString().trim());
-    output.delete(0, output.length());
+    if (output.length() > 0) {
+      out.print(output.toString());
+      output.delete(0, output.length());
+    }
   }
 
   /**
