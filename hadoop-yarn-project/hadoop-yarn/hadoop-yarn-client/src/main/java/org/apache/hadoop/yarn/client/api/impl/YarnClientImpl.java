@@ -37,6 +37,7 @@ import org.apache.hadoop.io.DataInputByteBuffer;
 import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.ipc.RPC;
+import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -104,6 +105,7 @@ import org.apache.hadoop.yarn.client.api.AHSClient;
 import org.apache.hadoop.yarn.client.api.TimelineClient;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.client.api.YarnClientApplication;
+import org.apache.hadoop.yarn.conf.HAUtil;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.ApplicationIdNotProvidedException;
 import org.apache.hadoop.yarn.exceptions.ApplicationNotFoundException;
@@ -368,10 +370,18 @@ public class YarnClientImpl extends YarnClient {
     String rmPrincipal = conf.get(YarnConfiguration.RM_PRINCIPAL);
     String renewer = null;
     if (rmPrincipal != null && rmPrincipal.length() > 0) {
-      String rmHost = conf.getSocketAddr(
+      String rmHost;
+      if (HAUtil.isCustomRMHAEnabled(conf)) {
+        rmHost = NetUtils.createSocketAddr(HAUtil.getCurrentRMAddress(conf,
+          YarnConfiguration.RM_ADDRESS,
+          YarnConfiguration.DEFAULT_RM_ADDRESS,
+          YarnConfiguration.DEFAULT_RM_PORT)).getHostName();
+      } else {
+        rmHost = conf.getSocketAddr(
           YarnConfiguration.RM_ADDRESS,
           YarnConfiguration.DEFAULT_RM_ADDRESS,
           YarnConfiguration.DEFAULT_RM_PORT).getHostName();
+      }
       renewer = SecurityUtil.getServerPrincipal(rmPrincipal, rmHost);
     }
     return renewer;
