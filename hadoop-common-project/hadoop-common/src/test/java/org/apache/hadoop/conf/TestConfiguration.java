@@ -29,6 +29,7 @@ import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -45,13 +46,20 @@ import static org.junit.Assert.assertArrayEquals;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration.IntegerRanges;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.net.NetUtils;
+import org.apache.hadoop.security.alias.CredentialProvider;
+import org.apache.hadoop.security.alias.CredentialProviderFactory;
+import org.apache.hadoop.security.alias.LocalJavaKeyStoreProvider;
+
 import static org.apache.hadoop.util.PlatformName.IBM_JAVA;
 import static org.junit.Assert.fail;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import org.hamcrest.CoreMatchers;
+import org.junit.Assert;
 
 public class TestConfiguration extends TestCase {
 
@@ -1353,6 +1361,60 @@ public class TestConfiguration extends TestCase {
     }
     // If this test completes without going into infinite loop,
     // it's expected behaviour.
+  }
+
+  public void testGetPasswordDeprecatedKeyStored() throws Exception {
+    final String oldKey = "test.password.old.key";
+    final String newKey = "test.password.new.key";
+    final String password = "MyPasswordForDeprecatedKey";
+
+    final File tmpDir = new File(System.getProperty("test.build.data", "/tmp"));
+    tmpDir.mkdirs();
+    final String ourUrl = new URI(LocalJavaKeyStoreProvider.SCHEME_NAME,
+        "file",  new File(tmpDir, "test.jks").toString(), null).toString();
+
+    conf = new Configuration(false);
+    conf.set(CredentialProviderFactory.CREDENTIAL_PROVIDER_PATH, ourUrl);
+    CredentialProvider provider =
+        CredentialProviderFactory.getProviders(conf).get(0);
+    provider.createCredentialEntry(oldKey, password.toCharArray());
+    provider.flush();
+
+    Configuration.addDeprecation(oldKey, newKey);
+
+    Assert.assertThat(conf.getPassword(newKey),
+        CoreMatchers.is(password.toCharArray()));
+    Assert.assertThat(conf.getPassword(oldKey),
+        CoreMatchers.is(password.toCharArray()));
+
+    FileUtil.fullyDelete(tmpDir);
+  }
+
+  public void testGetPasswordByDeprecatedKey() throws Exception {
+    final String oldKey = "test.password.old.key";
+    final String newKey = "test.password.new.key";
+    final String password = "MyPasswordForDeprecatedKey";
+
+    final File tmpDir = new File(System.getProperty("test.build.data", "/tmp"));
+    tmpDir.mkdirs();
+    final String ourUrl = new URI(LocalJavaKeyStoreProvider.SCHEME_NAME,
+        "file",  new File(tmpDir, "test.jks").toString(), null).toString();
+
+    conf = new Configuration(false);
+    conf.set(CredentialProviderFactory.CREDENTIAL_PROVIDER_PATH, ourUrl);
+    CredentialProvider provider =
+        CredentialProviderFactory.getProviders(conf).get(0);
+    provider.createCredentialEntry(newKey, password.toCharArray());
+    provider.flush();
+
+    Configuration.addDeprecation(oldKey, newKey);
+
+    Assert.assertThat(conf.getPassword(newKey),
+        CoreMatchers.is(password.toCharArray()));
+    Assert.assertThat(conf.getPassword(oldKey),
+        CoreMatchers.is(password.toCharArray()));
+
+    FileUtil.fullyDelete(tmpDir);
   }
 
   public static void main(String[] argv) throws Exception {
