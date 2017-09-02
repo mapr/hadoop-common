@@ -1036,7 +1036,7 @@ extern  "C" {
     *         else -1 with proper errno set
     */
     LIBHDFS_EXTERNAL
-    ssize_t hdfsGetXattr(hdfsFS fs, const char* path, const char *name, 
+    int hdfsGetXattr(hdfsFS fs, const char* path, const char *name, 
                            char *val, size_t size);
 
 #ifdef __cplusplus
