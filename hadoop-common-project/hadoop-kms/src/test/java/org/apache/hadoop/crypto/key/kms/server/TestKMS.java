@@ -19,7 +19,7 @@ package org.apache.hadoop.crypto.key.kms.server;
 
 import org.apache.curator.test.TestingServer;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.crypto.key.kms.server.KeyAuthorizationKeyProvider;
+import org.apache.hadoop.crypto.key.KeyProviderFactory;
 import org.apache.hadoop.crypto.key.KeyProvider;
 import org.apache.hadoop.crypto.key.KeyProvider.KeyVersion;
 import org.apache.hadoop.crypto.key.KeyProvider.Options;
@@ -30,7 +30,6 @@ import org.apache.hadoop.crypto.key.KeyProviderDelegationTokenExtension;
 import org.apache.hadoop.crypto.key.kms.KMSClientProvider;
 import org.apache.hadoop.crypto.key.kms.LoadBalancingKMSClientProvider;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.Text;
 import org.apache.hadoop.minikdc.MiniKdc;
 import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.security.SecurityUtil;
@@ -38,16 +37,20 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.apache.hadoop.security.ssl.KeyStoreTestUtil;
 import org.apache.hadoop.security.token.Token;
+import org.apache.hadoop.test.GenericTestUtils;
+import org.apache.log4j.Level;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.security.auth.Subject;
 import javax.security.auth.kerberos.KerberosPrincipal;
 import javax.security.auth.login.AppConfigurationEntry;
-import javax.security.auth.login.LoginContext;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -59,26 +62,28 @@ import java.net.ServerSocket;
 import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URL;
-import java.security.Principal;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
 public class TestKMS {
+  private static final Logger LOG = LoggerFactory.getLogger(TestKMS.class);
+
+  @Rule
+  public final Timeout testTimeout = new Timeout(180000);
 
   @Before
   public void cleanUp() {
     // resetting kerberos security
     Configuration conf = new Configuration();
     UserGroupInformation.setConfiguration(conf);
+    GenericTestUtils.setLogLevel(LOG, Level.INFO);
   }
 
   public static File getTestDir() throws Exception {
@@ -246,26 +251,18 @@ public class TestKMS {
     if (kdc != null) {
       kdc.stop();
     }
+    UserGroupInformation.setShouldRenewImmediatelyForTests(false);
+    UserGroupInformation.reset();
   }
 
   private <T> T doAs(String user, final PrivilegedExceptionAction<T> action)
       throws Exception {
-    Set<Principal> principals = new HashSet<Principal>();
-    principals.add(new KerberosPrincipal(user));
-
-    //client login
-    Subject subject = new Subject(false, principals,
-        new HashSet<Object>(), new HashSet<Object>());
-    LoginContext loginContext = new LoginContext("", subject, null,
-        KerberosConfiguration.createClientConfig(user, keytab));
+    UserGroupInformation.loginUserFromKeytab(user, keytab.getAbsolutePath());
+    UserGroupInformation ugi = UserGroupInformation.getLoginUser();
     try {
-      loginContext.login();
-      subject = loginContext.getSubject();
-      UserGroupInformation ugi =
-          UserGroupInformation.getUGIFromSubject(subject);
       return ugi.doAs(action);
     } finally {
-      loginContext.logout();
+      ugi.logoutUserFromKeytab();
     }
   }
 
@@ -392,6 +389,42 @@ public class TestKMS {
   @Test
   public void testStartStopHttpsKerberos() throws Exception {
     testStartStop(true, true);
+  }
+
+  @Test(timeout = 30000)
+  public void testSpecialKeyNames() throws Exception {
+    final String specialKey = "key %^[\n{]}|\"<>\\";
+    Configuration conf = new Configuration();
+    conf.set("hadoop.security.authentication", "kerberos");
+    UserGroupInformation.setConfiguration(conf);
+    File confDir = getTestDir();
+    conf = createBaseKMSConf(confDir);
+    conf.set(KeyAuthorizationKeyProvider.KEY_ACL + specialKey + ".ALL", "*");
+    writeConf(confDir, conf);
+
+    runServer(null, null, confDir, new KMSCallable<Void>() {
+      @Override
+      public Void call() throws Exception {
+        Configuration conf = new Configuration();
+        URI uri = createKMSUri(getKMSUrl());
+        KeyProvider kp = createProvider(uri, conf);
+        Assert.assertTrue(kp.getKeys().isEmpty());
+        Assert.assertEquals(0, kp.getKeysMetadata().length);
+
+        KeyProvider.Options options = new KeyProvider.Options(conf);
+        options.setCipher("AES/CTR/NoPadding");
+        options.setBitLength(128);
+        options.setDescription("l1");
+        LOG.info("Creating key with name '{}'", specialKey);
+
+        KeyProvider.KeyVersion kv0 = kp.createKey(specialKey, options);
+        Assert.assertNotNull(kv0);
+        Assert.assertEquals(specialKey, kv0.getName());
+        Assert.assertNotNull(kv0.getVersionName());
+        Assert.assertNotNull(kv0.getMaterial());
+        return null;
+      }
+    });
   }
 
   @Test
@@ -620,20 +653,6 @@ public class TestKMS {
         meta = kp.getMetadata("k5");
         Assert.assertEquals("d", meta.getDescription());
         Assert.assertEquals(attributes, meta.getAttributes());
-
-        // test delegation token retrieval
-        KeyProviderDelegationTokenExtension kpdte =
-            KeyProviderDelegationTokenExtension.
-                createKeyProviderDelegationTokenExtension(kp);
-        Credentials credentials = new Credentials();
-        kpdte.addDelegationTokens("foo", credentials);
-        Assert.assertEquals(1, credentials.getAllTokens().size());
-        InetSocketAddress kmsAddr = new InetSocketAddress(getKMSUrl().getHost(),
-            getKMSUrl().getPort());
-
-        Assert.assertEquals(new Text("kms-dt"), credentials.getToken(
-            SecurityUtil.buildTokenService(kmsAddr)).getKind());
-
 
         // test rollover draining
         KeyProviderCryptoExtension kpce = KeyProviderCryptoExtension.
@@ -1699,6 +1718,144 @@ public class TestKMS {
           }
         });
 
+        return null;
+      }
+    });
+  }
+
+  @Test
+  public void testDelegationTokensOpsSimple() throws Exception {
+    final Configuration conf = new Configuration();
+    testDelegationTokensOps(conf, false);
+  }
+
+  @Test
+  public void testDelegationTokensOpsKerberized() throws Exception {
+    final Configuration conf = new Configuration();
+    conf.set("hadoop.security.authentication", "kerberos");
+    testDelegationTokensOps(conf, true);
+  }
+
+  private void testDelegationTokensOps(Configuration conf,
+      final boolean useKrb) throws Exception {
+    UserGroupInformation.setConfiguration(conf);
+    File confDir = getTestDir();
+    conf = createBaseKMSConf(confDir);
+    if (useKrb) {
+      conf.set("hadoop.kms.authentication.type", "kerberos");
+      conf.set("hadoop.kms.authentication.kerberos.keytab",
+          keytab.getAbsolutePath());
+      conf.set("hadoop.kms.authentication.kerberos.principal",
+          "HTTP/localhost");
+      conf.set("hadoop.kms.authentication.kerberos.name.rules", "DEFAULT");
+    }
+    writeConf(confDir, conf);
+
+    runServer(null, null, confDir, new KMSCallable<Void>() {
+      @Override
+      public Void call() throws Exception {
+        final Configuration clientConf = new Configuration();
+        final URI uri = createKMSUri(getKMSUrl());
+        clientConf.set(KeyProviderFactory.KEY_PROVIDER_PATH,
+            createKMSUri(getKMSUrl()).toString());
+
+        doAs("client", new PrivilegedExceptionAction<Void>() {
+          @Override
+          public Void run() throws Exception {
+            KeyProvider kp = createProvider(uri, clientConf);
+            // test delegation token retrieval
+            KeyProviderDelegationTokenExtension kpdte =
+                KeyProviderDelegationTokenExtension.
+                    createKeyProviderDelegationTokenExtension(kp);
+            final Credentials credentials = new Credentials();
+            final Token<?>[] tokens =
+                kpdte.addDelegationTokens("client1", credentials);
+            Assert.assertEquals(1, credentials.getAllTokens().size());
+            InetSocketAddress kmsAddr =
+                new InetSocketAddress(getKMSUrl().getHost(),
+                    getKMSUrl().getPort());
+            Assert.assertEquals(KMSClientProvider.TOKEN_KIND,
+                credentials.getToken(SecurityUtil.buildTokenService(kmsAddr)).
+                    getKind());
+
+            // Test non-renewer user cannot renew.
+            for (Token<?> token : tokens) {
+              if (!(token.getKind().equals(KMSClientProvider.TOKEN_KIND))) {
+                LOG.info("Skipping token {}", token);
+                continue;
+              }
+              LOG.info("Got dt for " + uri + "; " + token);
+              try {
+                token.renew(clientConf);
+                Assert.fail("client should not be allowed to renew token with"
+                    + "renewer=client1");
+              } catch (Exception e) {
+                GenericTestUtils.assertExceptionContains(
+                    "tries to renew a token with renewer", e);
+              }
+            }
+
+            final UserGroupInformation otherUgi;
+            if (useKrb) {
+              UserGroupInformation
+                  .loginUserFromKeytab("client1", keytab.getAbsolutePath());
+              otherUgi = UserGroupInformation.getLoginUser();
+            } else {
+              otherUgi = UserGroupInformation.createUserForTesting("client1",
+                  new String[] {"other group"});
+            }
+            try {
+              // test delegation token renewal via renewer
+              otherUgi.doAs(new PrivilegedExceptionAction<Void>() {
+                @Override
+                public Void run() throws Exception {
+                  boolean renewed = false;
+                  for (Token<?> token : tokens) {
+                    if (!(token.getKind()
+                        .equals(KMSClientProvider.TOKEN_KIND))) {
+                      LOG.info("Skipping token {}", token);
+                      continue;
+                    }
+                    LOG.info("Got dt for " + uri + "; " + token);
+                    long tokenLife = token.renew(clientConf);
+                    LOG.info("Renewed token of kind {}, new lifetime:{}",
+                        token.getKind(), tokenLife);
+                    Thread.sleep(100);
+                    long newTokenLife = token.renew(clientConf);
+                    LOG.info("Renewed token of kind {}, new lifetime:{}",
+                        token.getKind(), newTokenLife);
+                    Assert.assertTrue(newTokenLife > tokenLife);
+                    renewed = true;
+                  }
+                  Assert.assertTrue(renewed);
+
+                  // test delegation token cancellation
+                  for (Token<?> token : tokens) {
+                    if (!(token.getKind()
+                        .equals(KMSClientProvider.TOKEN_KIND))) {
+                      LOG.info("Skipping token {}", token);
+                      continue;
+                    }
+                    LOG.info("Got dt for " + uri + "; " + token);
+                    token.cancel(clientConf);
+                    LOG.info("Cancelled token of kind {}", token.getKind());
+                    try {
+                      token.renew(clientConf);
+                      Assert
+                          .fail("should not be able to renew a canceled token");
+                    } catch (Exception e) {
+                      LOG.info("Expected exception when renewing token", e);
+                    }
+                  }
+                  return null;
+                }
+              });
+              return null;
+            } finally {
+              otherUgi.logoutUserFromKeytab();
+            }
+          }
+        });
         return null;
       }
     });

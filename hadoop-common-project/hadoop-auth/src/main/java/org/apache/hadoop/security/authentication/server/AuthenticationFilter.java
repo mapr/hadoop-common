@@ -42,13 +42,10 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
- * <p>The {@link AuthenticationFilter} enables protecting web application
+ * The {@link AuthenticationFilter} enables protecting web application
  * resources with different (pluggable)
  * authentication mechanisms and signer secret providers.
- * </p>
  * <p>
- * Out of the box it provides 2 authentication mechanisms: Pseudo and Kerberos SPNEGO.
- * </p>
  * Additional authentication mechanisms are supported via the {@link AuthenticationHandler} interface.
  * <p>
  * This filter delegates to the configured authentication handler for authentication and once it obtains an
@@ -78,7 +75,6 @@ import java.util.*;
  * {@link AuthenticationFilter} will take all the properties that start with the prefix #PREFIX#, it will remove
  * the prefix from it and it will pass them to the the authentication handler for initialization. Properties that do
  * not start with the prefix will not be passed to the authentication handler initialization.
- * </p>
  * <p>
  * Out of the box it provides 3 signer secret provider implementations:
  * "string", "random", and "zookeeper"
@@ -112,16 +108,6 @@ import java.util.*;
  * <p>
  * The "zookeeper" implementation has additional configuration properties that
  * must be specified; see {@link ZKSignerSecretProvider} for details.
- * </p>
- * For subclasses of AuthenticationFilter that want additional control over the
- * SignerSecretProvider, they can use the following attribute set in the
- * ServletContext:
- * <ul>
- * <li>signer.secret.provider.object: A SignerSecretProvider implementation can
- * be passed here that will be used instead of the signer.secret.provider
- * configuration property. Note that the class should already be
- * initialized.</li>
- * </ul>
  */
 
 @InterfaceAudience.Private
@@ -259,7 +245,7 @@ public class AuthenticationFilter implements Filter {
     }
 
   }
- 
+
   protected void initializeSecretProvider(FilterConfig filterConfig)
       throws ServletException {
     secretProvider = (SignerSecretProvider) filterConfig.getServletContext().
@@ -319,7 +305,7 @@ public class AuthenticationFilter implements Filter {
     }
     return provider;
   }
- 
+
   /**
    * Returns the configuration properties of the {@link AuthenticationFilter}
    * without the prefix. The returned properties are the same that the

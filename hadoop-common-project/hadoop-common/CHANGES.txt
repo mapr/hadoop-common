@@ -1,11 +1,13 @@
 Hadoop Change Log
 
+HADOOP-12682. Fix TestKMS#testKMSRestart* failure. Contributed by Wei-Chiu Chuang.
+
     HADOOP-12304. Applications using FileContext fail with the default file
     system configured to be wasb/s3/etc. (cnauroth)
-    
+
     HADOOP-11859. PseudoAuthenticationHandler fails with httpcomponents v4.4.
     (Eugene Koifman via jitendra)
-    
+
     HADOOP-13362. DefaultMetricsSystem leaks the source name when a source
     unregisters (Junping Du via jlowe)
 
@@ -109,7 +111,7 @@ Release 2.7.0 - 2015-04-20
     HADOOP-11422. Check CryptoCodec is AES-CTR for Crypto input/output stream
     (Yi Liu via Colin P. McCabe)
 
-    HADOOP-11213. Typos in html pages: SecureMode and EncryptedShuffle. 
+    HADOOP-11213. Typos in html pages: SecureMode and EncryptedShuffle.
     (Wei Yan via kasha)
 
     HADOOP-11395. Add site documentation for Azure Storage FileSystem
@@ -200,7 +202,7 @@ Release 2.7.0 - 2015-04-20
     HADOOP-10140. Specification of HADOOP_CONF_DIR via the environment in
     hadoop_config.cmd. (Kiran Kumar M R via cnauroth)
 
-    HADOOP-11543. Improve help message for hadoop/yarn command. (Brahma 
+    HADOOP-11543. Improve help message for hadoop/yarn command. (Brahma
     Reddy Battula via ozawa).
 
     HADOOP-11586. Update use of Iterator to Iterable in
@@ -294,12 +296,12 @@ Release 2.7.0 - 2015-04-20
     HADOOP-11488. Difference in default connection timeout for S3A FS
     (Daisuke Kobayashi via harsh)
 
-    HADOOP-11256. Some site docs have inconsistent appearance (Masatake 
+    HADOOP-11256. Some site docs have inconsistent appearance (Masatake
     Iwasaki via aw)
 
     HADOOP-11318. Update the document for hadoop fs -stat (aajisaka)
 
-    HADOOP 11400. GraphiteSink does not reconnect to Graphite after 'broken pipe' 
+    HADOOP 11400. GraphiteSink does not reconnect to Graphite after 'broken pipe'
     (Kamil Gorlo via raviprak)
 
     HADOOP-11236. NFS: Fix javadoc warning in RpcProgram.java (Abhiraj Butala via harsh)
@@ -500,7 +502,7 @@ Release 2.7.0 - 2015-04-20
     implementations. (Yi Liu via Colin P. McCabe)
 
     HADOOP-11446. S3AOutputStream should use shared thread pool to
-    avoid OutOfMemoryError. (Ted Yu via stevel)	
+    avoid OutOfMemoryError. (Ted Yu via stevel)
 
     HADOOP-11459. Fix recent findbugs in ActiveStandbyElector, NetUtils
     and ShellBasedIdMapping (vinayakumarb)
@@ -515,7 +517,7 @@ Release 2.7.0 - 2015-04-20
     HTTPS is enabled. (Benoy Antony via wheat9)
 
     HADOOP-10542 Potential null pointer dereference in Jets3tFileSystemStore
-    retrieveBlock(). (Ted Yu via stevel)	
+    retrieveBlock(). (Ted Yu via stevel)
 
     HADOOP-10668. TestZKFailoverControllerStress#testExpireBackAndForth
     occasionally fails. (Ming Ma via cnauroth)
@@ -529,7 +531,7 @@ Release 2.7.0 - 2015-04-20
     HADOOP-11500. InputStream is left unclosed in ApplicationClassLoader.
     (Ted Yu via ozawa)
 
-    HADOOP-11008. Remove duplicated description about proxy-user in site 
+    HADOOP-11008. Remove duplicated description about proxy-user in site
     documents (Masatake Iwasaki via aw)
 
     HADOOP-11493. Fix some typos in kms-acls.xml description.
@@ -573,7 +575,7 @@ Release 2.7.0 - 2015-04-20
     HADOOP-11529. Fix findbugs warnings in hadoop-archives.
     (Masatake Iwasaki via wheat9)
 
-    HADOOP-11546. Checkstyle failing: Unable to instantiate 
+    HADOOP-11546. Checkstyle failing: Unable to instantiate
     DoubleCheckedLockingCheck. (ozawa)
 
     HADOOP-11548. checknative should display a nicer error message when openssl
@@ -585,7 +587,7 @@ Release 2.7.0 - 2015-04-20
     HADOOP-11549. flaky test detection tool failed to handle special control
     characters in test result. (Yongjun Zhang via aajisaka)
 
-    HADOOP-10062. race condition in MetricsSystemImpl#publishMetricsNow that 
+    HADOOP-10062. race condition in MetricsSystemImpl#publishMetricsNow that
     causes incorrect results. (Sangjin Lee via junping_du)
 
     HADOOP-11526. Memory leak in Bzip2Compressor and Bzip2Decompressor.
@@ -600,7 +602,7 @@ Release 2.7.0 - 2015-04-20
     HADOOP-11587. TestMapFile#testMainMethodMapFile creates test files in
     hadoop-common project root. (Xiaoyu Yao via wheat9)
 
-    HADOOP-11497. Fix typo in ClusterSetup.html#Hadoop_Startup(Christian 
+    HADOOP-11497. Fix typo in ClusterSetup.html#Hadoop_Startup(Christian
     Winkler via ozawa).
 
     HADOOP-11467. KerberosAuthenticator can connect to a non-secure cluster.
@@ -615,7 +617,7 @@ Release 2.7.0 - 2015-04-20
     HADOOP-11295. RPC Server Reader thread can't shutdown if RPCCallQueue is
     full. (Ming Ma via kihwal)
 
-    HADOOP-11599. Client#getTimeout should use IPC_CLIENT_PING_DEFAULT when 
+    HADOOP-11599. Client#getTimeout should use IPC_CLIENT_PING_DEFAULT when
     IPC_CLIENT_PING_KEY is not configured. (zhihai xu via ozawa)
 
     HADOOP-11545. ArrayIndexOutOfBoundsException is thrown with "hadoop
@@ -685,7 +687,7 @@ Release 2.7.0 - 2015-04-20
     HADOOP-11710. Make CryptoOutputStream behave like DFSOutputStream wrt
     synchronization. (Sean Busbey via yliu)
 
-    HADOOP-11558. Fix dead links to doc of hadoop-tools. (Jean-Pierre 
+    HADOOP-11558. Fix dead links to doc of hadoop-tools. (Jean-Pierre
     Matsumoto via ozawa)
 
     HADOOP-11638. OpensslSecureRandom.c pthreads_thread_id should support FreeBSD
@@ -730,7 +732,7 @@ Release 2.7.0 - 2015-04-20
 
     HADOOP-11787. OpensslSecureRandom.c pthread_threadid_np usage signature is
     wrong on 32-bit Mac. (Kiran Kumar M R via cnauroth)
-    
+
     HADOOP-11757. NFS gateway should shutdown when it can't start UDP or TCP
     server (brandonli)
 
