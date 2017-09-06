@@ -26,6 +26,9 @@ Release 2.8.0 - UNRELEASED
     YARN-4546. ResourceManager crash due to scheduling opportunity overflow.
     (Jason Lowe via junping_du)
 
+    YARN-4392. ApplicationCreatedEvent event time resets after RM restart/failover.
+    (Naganarasimha G R and Xuan Gong via xgong)
+
 Release 2.7.3 - UNRELEASED
 
   INCOMPATIBLE CHANGES
@@ -55,10 +58,10 @@ Release 2.7.3 - UNRELEASED
     YARN-3762. FairScheduler: CME on FSParentQueue#getQueueUserAclInfo. (kasha)
 
     YARN-3582. NPE in WebAppProxyServlet. (jian he via xgong)
-    
+
     YARN-4760. proxy redirect to history server uses wrong URL (Eric Badger
     via jlowe)
-    
+
     YARN-4562. YARN WebApp ignores the configuration passed to it for keystore
     settings (Sergey Shelukhin via vvasudev)
 
@@ -91,7 +94,7 @@ Release 2.7.1 - UNRELEASED
 
     YARN-4180. AMLauncher does not retry on failures when talking to NM.
     (adhoot)
-    
+
     YARN-3975. WebAppProxyServlet should not redirect to RM page if AHS is
     enabled (Mit Desai via jlowe)
 
