@@ -184,10 +184,6 @@ public class ResourceSchedulerWrapper
       @Override
       public void run() {
         try {
-          if (metricsLogBW != null)  {
-            metricsLogBW.write("]");
-            metricsLogBW.close();
-          }
           if (web != null) {
             web.stop();
           }
@@ -263,7 +259,8 @@ public class ResourceSchedulerWrapper
           RMContainer rmc = app.getLiveContainers().iterator().next();
           updateQueueMetrics(queue,
                   rmc.getContainer().getResource().getMemory(),
-                  rmc.getContainer().getResource().getVirtualCores());
+                  rmc.getContainer().getResource().getVirtualCores(),
+                  rmc.getContainer().getResource().getDisks());
         }
       }
 
@@ -315,12 +312,14 @@ public class ResourceSchedulerWrapper
             appQueueMap.get(containerId.getApplicationAttemptId()
               .getApplicationId());
         int releasedMemory = 0, releasedVCores = 0;
+        double releasedDisks = 0.0;
         if (status.getExitStatus() == ContainerExitStatus.SUCCESS) {
           for (RMContainer rmc : app.getLiveContainers()) {
             if (rmc.getContainerId() == containerId) {
               releasedMemory += rmc.getContainer().getResource().getMemory();
               releasedVCores += rmc.getContainer()
                       .getResource().getVirtualCores();
+              releasedDisks += rmc.getContainer().getResource().getDisks();
               break;
             }
           }
@@ -329,11 +328,12 @@ public class ResourceSchedulerWrapper
             Resource preResource = preemptionContainerMap.get(containerId);
             releasedMemory += preResource.getMemory();
             releasedVCores += preResource.getVirtualCores();
+            releasedDisks += preResource.getDisks();
             preemptionContainerMap.remove(containerId);
           }
         }
         // update queue counters
-        updateQueueMetrics(queue, releasedMemory, releasedVCores);
+        updateQueueMetrics(queue, releasedMemory, releasedVCores, releasedDisks);
       }
     }
   }
@@ -343,8 +343,8 @@ public class ResourceSchedulerWrapper
                         List<ResourceRequest> resourceRequests,
                         List<ContainerId> containerIds) throws IOException {
     // update queue information
-    Resource pendingResource = Resources.createResource(0, 0);
-    Resource allocatedResource = Resources.createResource(0, 0);
+    Resource pendingResource = Resources.createResource(0, 0, 0.0);
+    Resource allocatedResource = Resources.createResource(0, 0, 0.0);
     String queueName = appQueueMap.get(attemptId.getApplicationId());
     // container requested
     for (ResourceRequest request : resourceRequests) {
@@ -416,11 +416,15 @@ public class ResourceSchedulerWrapper
     String names[] = new String[]{
             "counter.queue." + queueName + ".pending.memory",
             "counter.queue." + queueName + ".pending.cores",
+            "counter.queue." + queueName + ".pending.disks",
             "counter.queue." + queueName + ".allocated.memory",
-            "counter.queue." + queueName + ".allocated.cores"};
+            "counter.queue." + queueName + ".allocated.cores",
+            "counter.queue." + queueName + ".allocated.disks"};
     int values[] = new int[]{pendingResource.getMemory(),
             pendingResource.getVirtualCores(),
-            allocatedResource.getMemory(), allocatedResource.getVirtualCores()};
+            (int) (pendingResource.getDisks()*100),
+            allocatedResource.getMemory(), allocatedResource.getVirtualCores(),
+            (int) (allocatedResource.getDisks()*100)};
     for (int i = names.length - 1; i >= 0; i --) {
       if (! counterMap.containsKey(names[i])) {
         metrics.counter(names[i]);
@@ -443,6 +447,11 @@ public class ResourceSchedulerWrapper
     // close job runtime writer
     if (jobRuntimeLogBW != null) {
       jobRuntimeLogBW.close();
+    }
+    if (metricsLogBW != null)  {
+      metricsLogBW.write("]");
+      metricsLogBW.close();
+      metricsLogBW = null;
     }
     // shut pool
     if (pool != null)  pool.shutdown();
@@ -548,6 +557,18 @@ public class ResourceSchedulerWrapper
         }
       }
     );
+    metrics.register("variable.cluster.allocated.disks",
+      new Gauge<Double>() {
+        @Override
+        public Double getValue() {
+          if(scheduler == null || scheduler.getRootQueueMetrics() == null) {
+            return 0.0;
+          } else {
+            return scheduler.getRootQueueMetrics().getAllocatedDisks();
+          }
+        }
+      }
+    );
     metrics.register("variable.cluster.available.memory",
       new Gauge<Integer>() {
         @Override
@@ -571,6 +592,18 @@ public class ResourceSchedulerWrapper
           }
         }
       }
+    );
+    metrics.register("variable.cluster.available.disks",
+            new Gauge<Double>() {
+              @Override
+              public Double getValue() {
+                if(scheduler == null || scheduler.getRootQueueMetrics() == null) {
+                  return 0.0;
+                } else {
+                  return scheduler.getRootQueueMetrics().getAvailableDisks();
+                }
+              }
+            }
     );
   }
 
@@ -742,7 +775,7 @@ public class ResourceSchedulerWrapper
   }
 
   private void updateQueueMetrics(String queue,
-                                  int releasedMemory, int releasedVCores) {
+                                  int releasedMemory, int releasedVCores, double releasedDisks) {
     // update queue counters
     SortedMap<String, Counter> counterMap = metrics.getCounters();
     if (releasedMemory != 0) {
@@ -760,6 +793,14 @@ public class ResourceSchedulerWrapper
         counterMap = metrics.getCounters();
       }
       counterMap.get(name).inc(-releasedVCores);
+    }
+    if (releasedDisks != 0) {
+      String name = "counter.queue." + queue + ".allocated.disks";
+      if (! counterMap.containsKey(name)) {
+        metrics.counter(name);
+        counterMap = metrics.getCounters();
+      }
+      counterMap.get(name).inc((long) (-releasedDisks*100));
     }
   }
 

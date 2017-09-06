@@ -23,15 +23,13 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.server.resourcemanager.ResourceManager;
 import org.apache.hadoop.yarn.server.utils.BuilderUtils;
 import org.apache.hadoop.yarn.sls.conf.SLSConfiguration;
+import org.apache.hadoop.yarn.sls.scheduler.ResourceSchedulerWrapper;
 import org.apache.hadoop.yarn.util.resource.Resources;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 
 public class TestNMSimulator {
   private final int GB = 1024;
-  private ResourceManager rm;
+  private static ResourceManager rm;
   private YarnConfiguration conf;
 
   @Before
@@ -47,11 +45,18 @@ public class TestNMSimulator {
     rm.start();
   }
 
+  @AfterClass
+  public static void afterClass() throws Exception {
+    ResourceSchedulerWrapper resourceScheduler = (ResourceSchedulerWrapper) rm.getResourceScheduler();
+    rm.stop();
+    resourceScheduler.serviceStop();
+  }
+
   @Test
   public void testNMSimulator() throws Exception {
     // Register one node
     NMSimulator node1 = new NMSimulator();
-    node1.init("rack1/node1", GB * 10, 10, 0, 1000, rm);
+    node1.init("rack1/node1", GB * 10, 10, 1.0, 0, 1000, rm);
     node1.middleStep();
 
     int numClusterNodes = rm.getResourceScheduler().getNumClusterNodes();

@@ -74,18 +74,19 @@ public class SLSRunner {
   private String[] inputTraces;
   private Configuration conf;
   private Map<String, Integer> queueAppNumMap;
-  
+
   // NM simulator
   private HashMap<NodeId, NMSimulator> nmMap;
   private int nmMemoryMB, nmVCores;
+  private double nmDisks;
   private String nodeFile;
-  
+
   // AM simulator
   private int AM_ID;
   private Map<String, AMSimulator> amMap;
   private Set<String> trackedApps;
   private Map<String, Class> amClassMap;
-  private static int remainingApps = 0;
+  private static volatile int remainingApps = 0;
 
   // metrics
   private String metricsOutputDir;
@@ -94,7 +95,7 @@ public class SLSRunner {
   // other simulation information
   private int numNMs, numRacks, numAMs, numTasks;
   private long maxRuntime;
-  public final static Map<String, Object> simulateInfoMap =
+  public static Map<String, Object> simulateInfoMap =
           new HashMap<String, Object>();
 
   // logger
@@ -102,7 +103,9 @@ public class SLSRunner {
 
   // input traces, input-rumen or input-sls
   private boolean isSLS;
-  
+
+  static SLSRunner sls;
+
   public SLSRunner(boolean isSLS, String inputTraces[], String nodeFile,
                    String outputDir, Set<String> trackedApps,
                    boolean printsimulation)
@@ -113,18 +116,21 @@ public class SLSRunner {
     this.trackedApps = trackedApps;
     this.printSimulation = printsimulation;
     metricsOutputDir = outputDir;
-    
+
+    runner = new TaskRunner();
+    remainingApps = 0;
+
     nmMap = new HashMap<NodeId, NMSimulator>();
     queueAppNumMap = new HashMap<String, Integer>();
     amMap = new HashMap<String, AMSimulator>();
     amClassMap = new HashMap<String, Class>();
-    
+
     // runner configuration
     conf = new Configuration(false);
     conf.addResource("sls-runner.xml");
     // runner
-    int poolSize = conf.getInt(SLSConfiguration.RUNNER_POOL_SIZE, 
-                                SLSConfiguration.RUNNER_POOL_SIZE_DEFAULT); 
+    int poolSize = conf.getInt(SLSConfiguration.RUNNER_POOL_SIZE,
+                                SLSConfiguration.RUNNER_POOL_SIZE_DEFAULT);
     SLSRunner.runner.setQueueSize(poolSize);
     // <AMType, Class> map
     for (Map.Entry e : conf) {
@@ -135,7 +141,7 @@ public class SLSRunner {
       }
     }
   }
-  
+
   public void start() throws Exception {
     // start resource manager
     startRM();
@@ -155,7 +161,7 @@ public class SLSRunner {
     // starting the runner once everything is ready to go,
     runner.start();
   }
-  
+
   private void startRM() throws IOException, ClassNotFoundException {
     Configuration rmConf = new YarnConfiguration();
     String schedulerClass = rmConf.get(YarnConfiguration.RM_SCHEDULER);
@@ -174,6 +180,8 @@ public class SLSRunner {
             SLSConfiguration.NM_MEMORY_MB_DEFAULT);
     nmVCores = conf.getInt(SLSConfiguration.NM_VCORES,
             SLSConfiguration.NM_VCORES_DEFAULT);
+    nmDisks = conf.getDouble(SLSConfiguration.NM_DISKS,
+            SLSConfiguration.NM_DISKS_DEFAULT);
     int heartbeatInterval = conf.getInt(
             SLSConfiguration.NM_HEARTBEAT_INTERVAL_MS,
             SLSConfiguration.NM_HEARTBEAT_INTERVAL_MS_DEFAULT);
@@ -199,7 +207,7 @@ public class SLSRunner {
     for (String hostName : nodeSet) {
       // we randomize the heartbeat start time from zero to 1 interval
       NMSimulator nm = new NMSimulator();
-      nm.init(hostName, nmMemoryMB, nmVCores, 
+      nm.init(hostName, nmMemoryMB, nmVCores, nmDisks,
           random.nextInt(heartbeatInterval), heartbeatInterval, rm);
       nmMap.put(nm.getNode().getNodeID(), nm);
       runner.schedule(nm);
@@ -240,8 +248,10 @@ public class SLSRunner {
             SLSConfiguration.CONTAINER_MEMORY_MB_DEFAULT);
     int containerVCores = conf.getInt(SLSConfiguration.CONTAINER_VCORES,
             SLSConfiguration.CONTAINER_VCORES_DEFAULT);
+    double containerDisks = conf.getDouble(SLSConfiguration.CONTAINER_DISKS,
+            SLSConfiguration.CONTAINER_DISKS_DEFAULT);
     Resource containerResource =
-            BuilderUtils.newResource(containerMemoryMB, containerVCores);
+            BuilderUtils.newResource(containerMemoryMB, containerVCores, containerDisks);
 
     // application workload
     if (isSLS) {
@@ -412,14 +422,14 @@ public class SLSRunner {
       }
     }
   }
-  
+
   private void printSimulationInfo() {
     if (printSimulation) {
       // node
       LOG.info("------------------------------------");
       LOG.info(MessageFormat.format("# nodes = {0}, # racks = {1}, capacity " +
-              "of each node {2} MB memory and {3} vcores.",
-              numNMs, numRacks, nmMemoryMB, nmVCores));
+              "of each node {2} MB memory, {3} vcores and {4} disks.",
+              numNMs, numRacks, nmMemoryMB, nmVCores, nmDisks));
       LOG.info("------------------------------------");
       // job
       LOG.info(MessageFormat.format("# applications = {0}, # total " +
@@ -428,7 +438,7 @@ public class SLSRunner {
       LOG.info("JobId\tQueue\tAMType\tDuration\t#Tasks");
       for (Map.Entry<String, AMSimulator> entry : amMap.entrySet()) {
         AMSimulator am = entry.getValue();
-        LOG.info(entry.getKey() + "\t" + am.getQueue() + "\t" + am.getAMType() 
+        LOG.info(entry.getKey() + "\t" + am.getQueue() + "\t" + am.getAMType()
             + "\t" + am.getDuration() + "\t" + am.getNumTasks());
       }
       LOG.info("------------------------------------");
@@ -447,6 +457,7 @@ public class SLSRunner {
     simulateInfoMap.put("Number of nodes", numNMs);
     simulateInfoMap.put("Node memory (MB)", nmMemoryMB);
     simulateInfoMap.put("Node VCores", nmVCores);
+    simulateInfoMap.put("Node disks", nmDisks);
     simulateInfoMap.put("Number of applications", numAMs);
     simulateInfoMap.put("Number of tasks", numTasks);
     simulateInfoMap.put("Average tasks per applicaion",
@@ -471,7 +482,7 @@ public class SLSRunner {
 
     if (remainingApps == 0) {
       LOG.info("SLSRunner tears down.");
-      System.exit(0);
+      runner.stop();
     }
   }
 
@@ -485,14 +496,14 @@ public class SLSRunner {
             "jobs to be tracked during simulating");
     options.addOption("printsimulation", false,
             "print out simulation information");
-    
+
     CommandLineParser parser = new GnuParser();
     CommandLine cmd = parser.parse(options, args);
 
     String inputRumen = cmd.getOptionValue("inputrumen");
     String inputSLS = cmd.getOptionValue("inputsls");
     String output = cmd.getOptionValue("output");
-    
+
     if ((inputRumen == null && inputSLS == null) || output == null) {
       System.err.println();
       System.err.println("ERROR: Missing input or output file");
@@ -523,7 +534,7 @@ public class SLSRunner {
 
     boolean isSLS = inputSLS != null;
     String inputFiles[] = isSLS ? inputSLS.split(",") : inputRumen.split(",");
-    SLSRunner sls = new SLSRunner(isSLS, inputFiles, nodeFile, output,
+    sls = new SLSRunner(isSLS, inputFiles, nodeFile, output,
         trackedJobSet, cmd.hasOption("printsimulation"));
     sls.start();
   }

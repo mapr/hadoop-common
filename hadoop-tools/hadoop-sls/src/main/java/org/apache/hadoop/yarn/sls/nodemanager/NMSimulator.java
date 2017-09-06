@@ -75,8 +75,8 @@ public class NMSimulator extends TaskRunner.Task {
   // heart beat response id
   private int RESPONSE_ID = 1;
   private final static Logger LOG = Logger.getLogger(NMSimulator.class);
-  
-  public void init(String nodeIdStr, int memory, int cores,
+
+  public void init(String nodeIdStr, int memory, int cores, double disks,
           int dispatchTime, int heartBeatInterval, ResourceManager rm)
           throws IOException, YarnException {
     super.init(dispatchTime, dispatchTime + 1000000L * heartBeatInterval,
@@ -84,7 +84,7 @@ public class NMSimulator extends TaskRunner.Task {
     // create resource
     String rackHostName[] = SLSUtils.getRackHostName(nodeIdStr);
     this.node = NodeInfo.newNodeInfo(rackHostName[0], rackHostName[1], 
-                  BuilderUtils.newResource(memory, cores));
+                  BuilderUtils.newResource(memory, cores, disks));
     this.rm = rm;
     // init data structures
     completedContainerList =

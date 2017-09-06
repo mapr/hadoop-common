@@ -22,17 +22,15 @@ import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.server.resourcemanager.ResourceManager;
 import org.apache.hadoop.yarn.sls.conf.SLSConfiguration;
 import org.apache.hadoop.yarn.sls.scheduler.ContainerSimulator;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.apache.hadoop.yarn.sls.scheduler.ResourceSchedulerWrapper;
+import org.junit.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class TestAMSimulator {
-  private ResourceManager rm;
+  private static ResourceManager rm;
   private YarnConfiguration conf;
 
   @Before
@@ -46,6 +44,13 @@ public class TestAMSimulator {
     rm = new ResourceManager();
     rm.init(conf);
     rm.start();
+  }
+
+  @AfterClass
+  public static void afterClass() throws Exception {
+    ResourceSchedulerWrapper resourceScheduler = (ResourceSchedulerWrapper) rm.getResourceScheduler();
+    rm.stop();
+    resourceScheduler.serviceStop();
   }
 
   class MockAMSimulator extends AMSimulator {

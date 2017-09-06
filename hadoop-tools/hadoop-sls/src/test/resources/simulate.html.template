@@ -48,8 +48,13 @@
     </div>
     <div class="row">
       <div class="divborder span8" style="margin-left:50px" id="area7"></div>
-      <div class="span8" id="area8"></div>
-    </div><br/><br/>
+      <div class="divborder span8" id="area8"></div>
+    </div>
+    <div class="row">
+      <div class="divborder span8" style="margin-left:50px" id="area9"></div>
+      <div class="span8" id="area10"></div>
+    </div>
+    <br/><br/>
 
     <script>
       var basetime = 0;
@@ -73,10 +78,12 @@
       legends[1] = [''jvm.free.memory'', ''jvm.max.memory'', ''jvm.total.memory''];
       legends[2] = [''cluster.allocated.memory'', ''cluster.available.memory''];
       legends[3] = [''cluster.allocated.vcores'', ''cluster.available.vcores''];
-      legends[4] = [];
+      legends[4] = [''cluster.allocated.disks'', ''cluster.available.disks''];
       legends[5] = [];
+      legends[6] = [];
+      legends[7] = [];
       {0}
-      legends[6] = [''scheduler.allocate.timecost'',
+      legends[8] = [''scheduler.allocate.timecost'',
                     ''scheduler.handle-NODE_ADDED.timecost'',
                     ''scheduler.handle-NODE_REMOVED.timecost'',
                     ''scheduler.handle-NODE_UPDATE.timecost'',
@@ -89,24 +96,28 @@
       titles[1] = ''JVM memory'';
       titles[2] = ''Cluster allocated & available memory'';
       titles[3] = ''Cluster allocated & available vcores'';
-      titles[4] = ''Queue allocated memory'';
-      titles[5] = ''Queue allocated vcores'';
-      titles[6] = ''Scheduler allocate & handle operation timecost'';
+      titles[4] = ''Cluster allocated & available disks'';
+      titles[5] = ''Queue allocated memory'';
+      titles[6] = ''Queue allocated vcores'';
+      titles[7] = ''Queue allocated disks'';
+      titles[8] = ''Scheduler allocate & handle operation timecost'';
 
       // ylabels
       yLabels[0] = ''Number'';
       yLabels[1] = ''Memory (GB)'';
       yLabels[2] = ''Memory (GB)'';
       yLabels[3] = ''Number'';
-      yLabels[4] = ''Memory (GB)'';
-      yLabels[5] = ''Number'';
-      yLabels[6] = ''Timecost (ms)'';
+      yLabels[4] = ''Number'';
+      yLabels[5] = ''Memory (GB)'';
+      yLabels[6] = ''Number'';
+      yLabels[7] = ''Number'';
+      yLabels[8] = ''Timecost (ms)'';
 
       // is area?
-      isAreas = [0, 0, 0, 0, 1, 1, 0];
+      isAreas = [0, 0, 0, 0, 0, 1, 1, 1, 0];
 
       // draw all charts
-      for (var i = 0; i < 7; i ++) '{'
+      for (var i = 0; i < 9; i ++) '{'
         drawEachChart(i);
       '}'
 
@@ -174,7 +185,7 @@
           data.push(point);
 
           // clear old
-          for (var i = 0; i < 7; i ++) '{'
+          for (var i = 0; i < 9; i ++) '{'
             svgs[i].selectAll(''g.tick'').remove();
             svgs[i].selectAll(''g'').remove();
             var color = d3.scale.category10();
