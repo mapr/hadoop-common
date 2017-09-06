@@ -32,6 +32,10 @@
     <value>10</value>
   </property>
   <property>
+    <name>yarn.sls.nm.disks</name>
+    <value>4.0</value>
+  </property>
+  <property>
     <name>yarn.sls.nm.heartbeat.interval.ms</name>
     <value>1000</value>
   </property>
@@ -54,6 +58,10 @@
   <property>
     <name>yarn.sls.container.vcores</name>
     <value>1</value>
+  </property>
+  <property>
+    <name>yarn.sls.container.disks</name>
+    <value>1.0</value>
   </property>
 
   <!--  metrics  -->

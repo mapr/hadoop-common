@@ -40,6 +40,7 @@ public class TestSLSWebApp {
     SLSRunner.simulateInfoMap.put("Number of nodes", 100);
     SLSRunner.simulateInfoMap.put("Node memory (MB)", 1024);
     SLSRunner.simulateInfoMap.put("Node VCores", 1);
+    SLSRunner.simulateInfoMap.put("Node disks", 1.0);
     SLSRunner.simulateInfoMap.put("Number of applications", 100);
     SLSRunner.simulateInfoMap.put("Number of tasks", 1000);
     SLSRunner.simulateInfoMap.put("Average tasks per applicaion", 10);
@@ -81,10 +82,12 @@ public class TestSLSWebApp {
     String queueInfo = "";
     int i = 0;
     for (String queue : queues) {
-      queueInfo += "legends[4][" + i + "] = 'queue" + queue
-              + ".allocated.memory'";
       queueInfo += "legends[5][" + i + "] = 'queue" + queue
+              + ".allocated.memory'";
+      queueInfo += "legends[6][" + i + "] = 'queue" + queue
               + ".allocated.vcores'";
+      queueInfo += "legends[7][" + i + "] = 'queue" + queue
+              + ".allocated.disks'";
       i ++;
     }
     String simulateInfo = MessageFormat.format(simulateTemplate,
