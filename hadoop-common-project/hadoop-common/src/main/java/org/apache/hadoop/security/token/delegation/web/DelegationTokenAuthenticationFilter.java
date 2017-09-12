@@ -186,7 +186,7 @@ public class DelegationTokenAuthenticationFilter
     Class<?> clazz = getMaprDelegationTokenAuthenticationHandler();
 
     if (handler instanceof MultiMechsAuthenticationHandler ||
-        handler.getClass().isAssignableFrom(clazz)) {
+      clazz != null && handler.getClass().isAssignableFrom(clazz)) {
       setHandlerAuthMethod(SaslRpcServer.AuthMethod.KERBEROS);
     }
 
@@ -205,6 +205,7 @@ public class DelegationTokenAuthenticationFilter
           .loadClass(MAPR_HANDLER);
     } catch (ClassNotFoundException e) {
       LOG.error("Unable to load class " + MAPR_HANDLER, e);
+      return null;
     }
     return clazz;
   }
