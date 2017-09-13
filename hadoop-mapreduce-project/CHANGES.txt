@@ -2,6 +2,9 @@ Hadoop MapReduce Change Log
 
   BUG FIXES
 
+    MAPREDUCE-6957. shuffle hangs after a node manager connection timeout.
+    (Jooseong Kim via jlowe)
+
     MAPREDUCE-6931. Remove TestDFSIO "Total Throughput" calculation.
     (Dennis Huo via shv)
 
