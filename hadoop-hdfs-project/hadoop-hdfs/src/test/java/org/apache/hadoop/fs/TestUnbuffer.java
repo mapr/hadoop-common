@@ -28,11 +28,17 @@ import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.PeerCache;
 import org.apache.hadoop.io.IOUtils;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.mockito.Mockito;
 
 public class TestUnbuffer {
   private static final Log LOG =
       LogFactory.getLog(TestUnbuffer.class.getName());
+
+  @Rule
+  public ExpectedException exception = ExpectedException.none();
 
   /**
    * Test that calling Unbuffer closes sockets.
@@ -123,5 +129,20 @@ public class TestUnbuffer {
         cluster.shutdown();
       }
     }
+  }
+
+  /**
+   * Test unbuffer method which throws an Exception with class name included.
+   */
+  @Test
+  public void testUnbufferException() {
+    FSInputStream in = Mockito.mock(FSInputStream.class);
+    FSDataInputStream fs = new FSDataInputStream(in);
+
+    exception.expect(UnsupportedOperationException.class);
+    exception.expectMessage("this stream " + in.getClass().getName()
+        + " does not support unbuffering");
+
+    fs.unbuffer();
   }
 }
