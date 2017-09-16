@@ -717,7 +717,9 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
             // The requested container must be able to fit on the node:
             Resources.lessThanOrEqual(RESOURCE_CALCULATOR, null,
                 anyRequest.getCapability(),
-                node.getRMNode().getTotalCapability());
+                node.getRMNode().getTotalCapability()) &&
+            // The requested container must fit in queue maximum share:
+            getQueue().fitsInMaxShare(anyRequest.getCapability());
   }
 
   private boolean isValidReservation(FSSchedulerNode node) {
