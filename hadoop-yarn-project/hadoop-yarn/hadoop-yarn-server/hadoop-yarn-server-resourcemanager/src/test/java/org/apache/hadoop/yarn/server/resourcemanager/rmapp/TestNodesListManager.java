@@ -24,6 +24,7 @@ import static org.mockito.Mockito.spy;
 
 import java.util.ArrayList;
 
+import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ContainerState;
 import org.apache.hadoop.yarn.api.records.Resource;
@@ -52,6 +53,8 @@ import org.mockito.ArgumentMatcher;
 public class TestNodesListManager {
   // To hold list of application for which event was received
   ArrayList<ApplicationId> applist = new ArrayList<ApplicationId>();
+  
+  private static final String HOST = "127.0.0.1";
 
   @Test(timeout = 300000)
   public void testNodeUsableEvent() throws Exception {
@@ -67,6 +70,7 @@ public class TestNodesListManager {
     };
     rm.start();
     MockNM nm1 = rm.registerNode("h1:1234", 28000);
+    NetUtils.addStaticResolution("h1", HOST);
     NodesListManager nodesListManager = rm.getNodesListManager();
     Resource clusterResource = Resource.newInstance(28000, 8);
     RMNode rmnode = MockNodes.newNodeInfo(1, clusterResource);

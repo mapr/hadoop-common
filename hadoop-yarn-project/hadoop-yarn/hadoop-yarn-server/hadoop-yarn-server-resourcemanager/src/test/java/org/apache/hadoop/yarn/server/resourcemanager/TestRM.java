@@ -18,7 +18,9 @@
 
 package org.apache.hadoop.yarn.server.resourcemanager;
 
+import org.apache.hadoop.net.NetUtils;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doAnswer;
@@ -90,6 +92,8 @@ public class TestRM extends ParameterizedSchedulerTestBase {
   private final static int WAIT_SLEEP_MS = 100;
 
   private YarnConfiguration conf;
+  
+  private final static String HOST = "127.0.0.1";
 
   public TestRM(SchedulerType type) {
     super(type);
@@ -105,6 +109,12 @@ public class TestRM extends ParameterizedSchedulerTestBase {
     ClusterMetrics.destroy();
     QueueMetrics.clearQueueMetrics();
     DefaultMetricsSystem.shutdown();
+  }
+  
+  @BeforeClass
+  public static void beforeClass() {
+    NetUtils.addStaticResolution("h1", HOST);
+    NetUtils.addStaticResolution("h2", HOST);
   }
 
   @Test

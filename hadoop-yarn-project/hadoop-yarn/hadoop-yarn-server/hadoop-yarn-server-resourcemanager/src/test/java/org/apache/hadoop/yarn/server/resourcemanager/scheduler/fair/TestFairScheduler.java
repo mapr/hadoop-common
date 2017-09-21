@@ -54,6 +54,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
+import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.GroupMappingServiceProvider;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -122,6 +123,8 @@ import com.google.common.collect.Sets;
 public class TestFairScheduler extends FairSchedulerTestBase {
   private final static String ALLOC_FILE =
       new File(TEST_DIR, "test-queues").getAbsolutePath();
+  
+  private final static String STATIC_HOST = "127.0.0.1";
 
   @Before
   public void setUp() throws IOException {
@@ -701,6 +704,7 @@ public class TestFairScheduler extends FairSchedulerTestBase {
 
     // Add a node
     RMNode node1 = MockNodes.newNodeInfo(1, Resources.createResource(1024));
+    NetUtils.addStaticResolution(node1.getHostName(), STATIC_HOST);
     NodeAddedSchedulerEvent nodeEvent1 = new NodeAddedSchedulerEvent(node1);
     scheduler.handle(nodeEvent1);
 
@@ -720,6 +724,7 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     
     // Now another node checks in with capacity
     RMNode node2 = MockNodes.newNodeInfo(1, Resources.createResource(1024));
+    NetUtils.addStaticResolution(node2.getHostName(), STATIC_HOST);
     NodeAddedSchedulerEvent nodeEvent2 = new NodeAddedSchedulerEvent(node2);
     NodeUpdateSchedulerEvent updateEvent2 = new NodeUpdateSchedulerEvent(node2);
     scheduler.handle(nodeEvent2);
@@ -1939,6 +1944,7 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     // Add a node of 8G
     RMNode node1 = MockNodes.newNodeInfo(1,
         Resources.createResource(8 * 1024, 8), 1, "127.0.0.1");
+    NetUtils.addStaticResolution(node1.getHostName(), STATIC_HOST);
     NodeAddedSchedulerEvent nodeEvent1 = new NodeAddedSchedulerEvent(node1);
     scheduler.handle(nodeEvent1);
 
@@ -3565,6 +3571,7 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     scheduler.reinitialize(conf, resourceManager.getRMContext());
 
     RMNode node = MockNodes.newNodeInfo(1, BuilderUtils.newResource(8192, 5));
+    NetUtils.addStaticResolution(node.getHostName(), STATIC_HOST);
     NodeAddedSchedulerEvent nodeEvent = new NodeAddedSchedulerEvent(node);
     scheduler.handle(nodeEvent);
 
@@ -5001,6 +5008,7 @@ public class TestFairScheduler extends FairSchedulerTestBase {
         createSchedulingRequest(1024, 1, "queue1", "user1", 3);
     ApplicationId appId = appAttId.getApplicationId();
     RMNode node = MockNodes.newNodeInfo(1, Resources.createResource(1024));
+    NetUtils.addStaticResolution(node.getHostName(), STATIC_HOST);
     NodeAddedSchedulerEvent nodeEvent = new NodeAddedSchedulerEvent(node);
     NodeUpdateSchedulerEvent updateEvent = new NodeUpdateSchedulerEvent(node);
     scheduler.handle(nodeEvent);
@@ -5104,6 +5112,7 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     ApplicationAttemptId appAttId =
         createSchedulingRequest(1024, 1, "queue1", "user1", 3);
     RMNode node = MockNodes.newNodeInfo(1, Resources.createResource(2048, 2));
+    NetUtils.addStaticResolution(node.getHostName(), STATIC_HOST);
     NodeAddedSchedulerEvent nodeEvent = new NodeAddedSchedulerEvent(node);
     NodeUpdateSchedulerEvent updateEvent = new NodeUpdateSchedulerEvent(node);
     scheduler.handle(nodeEvent);
