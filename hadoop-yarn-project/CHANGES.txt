@@ -87,6 +87,10 @@ Release 2.8.0 - UNRELEASED
 
   BUG FIXES
 
+    YARN-5195. RM intermittently crashed with NPE while handling
+    APP_ATTEMPT_REMOVED event when async-scheduling enabled in
+    CapacityScheduler. (sandflee and Jonathan Hung via jlowe)
+
     YARN-4546. ResourceManager crash due to scheduling opportunity overflow.
     (Jason Lowe via junping_du)
 
