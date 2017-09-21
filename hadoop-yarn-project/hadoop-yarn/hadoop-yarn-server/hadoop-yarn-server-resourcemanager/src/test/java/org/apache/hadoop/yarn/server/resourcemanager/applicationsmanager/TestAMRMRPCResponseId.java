@@ -20,6 +20,7 @@ package org.apache.hadoop.yarn.server.resourcemanager.applicationsmanager;
 
 import java.security.PrivilegedExceptionAction;
 
+import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateResponse;
@@ -41,6 +42,7 @@ public class TestAMRMRPCResponseId {
 
   private MockRM rm;
   ApplicationMasterService amService = null;
+  private final static String HOST = "127.0.0.1";
 
   @Before
   public void setUp() {
@@ -76,7 +78,8 @@ public class TestAMRMRPCResponseId {
   public void testARRMResponseId() throws Exception {
 
     MockNM nm1 = rm.registerNode("h1:1234", 5000);
-
+    NetUtils.addStaticResolution("h1", HOST);
+    
     RMApp app = rm.submitApp(2000);
 
     // Trigger the scheduling so the AM gets 'launched'

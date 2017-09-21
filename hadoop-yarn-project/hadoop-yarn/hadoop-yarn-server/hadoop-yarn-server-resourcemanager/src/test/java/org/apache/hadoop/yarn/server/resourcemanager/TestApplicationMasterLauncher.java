@@ -28,6 +28,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.yarn.api.ApplicationConstants;
 import org.apache.hadoop.yarn.api.ContainerManagementProtocol;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateResponse;
@@ -75,6 +76,8 @@ public class TestApplicationMasterLauncher {
 
   private static final Log LOG = LogFactory
       .getLog(TestApplicationMasterLauncher.class);
+  
+  private static final String HOST = "127.0.0.1";
 
   private static final class MyContainerManagerImpl implements
       ContainerManagementProtocol {
@@ -257,6 +260,7 @@ public class TestApplicationMasterLauncher {
     MockRM rm = new MockRM();
     rm.start();
     MockNM nm1 = rm.registerNode("h1:1234", 5000);
+    NetUtils.addStaticResolution("h1", HOST);
     RMApp app = rm.submitApp(2000);
     // kick the scheduling
     nm1.nodeHeartbeat(true);

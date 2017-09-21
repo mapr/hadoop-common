@@ -40,6 +40,7 @@ import java.util.concurrent.CyclicBarrier;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.net.NetworkTopology;
 import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -129,6 +130,7 @@ import org.apache.hadoop.yarn.util.resource.Resources;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -151,7 +153,9 @@ public class TestCapacityScheduler {
   private static float B1_CAPACITY = 79.2f;
   private static float B2_CAPACITY = 0.8f;
   private static float B3_CAPACITY = 20;
-
+ 
+  private static final String HOST = "127.0.0.1";
+  
   private ResourceManager resourceManager = null;
   private RMContext mockContext;
   
@@ -187,6 +191,11 @@ public class TestCapacityScheduler {
     }
   }
 
+  @BeforeClass
+  public static void beforeClass() {
+    NetUtils.addStaticResolution("host_0", HOST);
+    NetUtils.addStaticResolution("host_1", HOST);
+  }
 
   @Test (timeout = 30000)
   public void testConfValidation() throws Exception {

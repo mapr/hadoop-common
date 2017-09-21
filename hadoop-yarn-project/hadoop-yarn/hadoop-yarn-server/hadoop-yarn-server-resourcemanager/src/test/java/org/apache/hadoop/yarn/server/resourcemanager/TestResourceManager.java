@@ -29,6 +29,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.http.lib.StaticUserWebFilter;
+import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.net.NetworkTopology;
 import org.apache.hadoop.security.AuthenticationFilterInitializer;
 import org.apache.hadoop.security.User;
@@ -50,12 +51,15 @@ import org.apache.hadoop.yarn.util.resource.Resources;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class TestResourceManager {
   private static final Log LOG = LogFactory.getLog(TestResourceManager.class);
   
   private ResourceManager resourceManager = null;
+  
+  private static final String HOST = "127.0.0.1";
   
   @Before
   public void setUp() throws Exception {
@@ -69,6 +73,12 @@ public class TestResourceManager {
 
   @After
   public void tearDown() throws Exception {
+  }
+  
+  @BeforeClass
+  public static void beforeClass() {
+    NetUtils.addStaticResolution("host1", HOST);
+    NetUtils.addStaticResolution("host2", HOST);
   }
 
   private org.apache.hadoop.yarn.server.resourcemanager.NodeManager

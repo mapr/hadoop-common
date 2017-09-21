@@ -38,6 +38,7 @@ import java.util.Set;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
+import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.security.User;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -107,6 +108,8 @@ public class TestWorkPreservingRMRestart extends ParameterizedSchedulerTestBase 
   private YarnConfiguration conf;
   MockRM rm1 = null;
   MockRM rm2 = null;
+  
+  private static final String HOST = "127.0.0.1";
 
   public TestWorkPreservingRMRestart(SchedulerType type) {
     super(type);
@@ -791,6 +794,7 @@ public class TestWorkPreservingRMRestart extends ParameterizedSchedulerTestBase 
     memStore.init(conf);
     rm1 = new MockRM(conf, memStore);
     MockNM nm1 = new MockNM("h1:1234", 15120, rm1.getResourceTrackerService());
+    NetUtils.addStaticResolution("h1", HOST);
     nm1.registerNode();
     rm1.start();
 

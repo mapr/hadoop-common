@@ -26,6 +26,7 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.SecurityUtilTestHelper;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateResponse;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
@@ -61,6 +62,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.security.RMContainerTokenSe
 import org.apache.hadoop.yarn.server.utils.BuilderUtils;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
@@ -78,6 +80,8 @@ public class TestContainerAllocation {
   
   RMNodeLabelsManager mgr;
 
+  private static final String HOST = "127.0.0.1";
+
   @Before
   public void setUp() throws Exception {
     conf = new YarnConfiguration();
@@ -85,6 +89,15 @@ public class TestContainerAllocation {
       ResourceScheduler.class);
     mgr = new NullRMNodeLabelsManager();
     mgr.init(conf);
+  }
+  
+  @BeforeClass
+  public static void beforeClass() {
+    NetUtils.addStaticResolution("h1", HOST);
+    NetUtils.addStaticResolution("h2", HOST);
+    NetUtils.addStaticResolution("h3", HOST);
+    NetUtils.addStaticResolution("h4", HOST);
+    NetUtils.addStaticResolution("h5", HOST);
   }
 
   @Test(timeout = 3000000)
