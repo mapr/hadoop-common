@@ -74,7 +74,7 @@ public class TeraOutputFormat extends FileOutputFormat<Text,Text> {
       out.write(key.getBytes(), 0, key.getLength());
       out.write(value.getBytes(), 0, value.getLength());
     }
-    
+
     public void close(TaskAttemptContext context) throws IOException {
       if (finalSync) {
         out.sync();
