@@ -303,7 +303,7 @@ public class FSDirectory implements Closeable {
     return namesystem;
   }
 
-  private BlockManager getBlockManager() {
+  BlockManager getBlockManager() {
     return getFSNamesystem().getBlockManager();
   }
 

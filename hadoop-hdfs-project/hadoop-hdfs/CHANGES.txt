@@ -54,6 +54,8 @@ Release 2.7.5
 
     HDFS-5042. Completed files lost after power failure. (vinayakumarb via kihwal)
 
+    HDFS-8865. Improve quota initialization performance. (kihwal)
+
 Release 2.7.0 - 2015-04-20
 
   INCOMPATIBLE CHANGES
