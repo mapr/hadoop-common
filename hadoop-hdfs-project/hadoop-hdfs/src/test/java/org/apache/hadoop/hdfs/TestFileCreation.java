@@ -51,8 +51,6 @@ import java.net.UnknownHostException;
 import java.security.PrivilegedExceptionAction;
 import java.util.EnumSet;
 
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.impl.Log4JLogger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.CreateFlag;
@@ -89,9 +87,9 @@ import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.util.Time;
-import org.apache.log4j.Level;
 import org.junit.Assert;
 import org.junit.Test;
+import org.slf4j.event.Level;
 
 /**
  * This class tests various cases during file creation.
@@ -100,10 +98,9 @@ public class TestFileCreation {
   static final String DIR = "/" + TestFileCreation.class.getSimpleName() + "/";
 
   {
-    //((Log4JLogger)DataNode.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger)LeaseManager.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger)LogFactory.getLog(FSNamesystem.class)).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger)DFSClient.LOG).getLogger().setLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(LeaseManager.LOG, Level.TRACE);
+    GenericTestUtils.setLogLevel(FSNamesystem.LOG, Level.TRACE);
+    GenericTestUtils.setLogLevel(DFSClient.LOG, Level.TRACE);
   }
   private static final String RPC_DETAILED_METRICS =
       "RpcDetailedActivityForPort";
@@ -833,7 +830,7 @@ public class TestFileCreation {
           expectedException != null
               && expectedException instanceof FileNotFoundException);
 
-      EnumSet<CreateFlag> overwriteFlag = 
+      EnumSet<CreateFlag> overwriteFlag =
         EnumSet.of(CreateFlag.CREATE, CreateFlag.OVERWRITE);
       // Overwrite a file in root dir, should succeed
       out = createNonRecursive(fs, path, 1, overwriteFlag);
@@ -878,7 +875,7 @@ public class TestFileCreation {
             CommonConfigurationKeys.IO_FILE_BUFFER_SIZE_KEY, 4096), (short) repl,  blockSize, null);
     return stm;
   }
-  
+
 
 /**
  * Test that file data becomes available before file is closed.

@@ -26,7 +26,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Random;
 
-import org.apache.commons.logging.impl.Log4JLogger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -45,8 +44,8 @@ import org.apache.hadoop.hdfs.server.namenode.NameNode;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.test.PathUtils;
-import org.apache.log4j.Level;
 import org.junit.Test;
+import org.slf4j.event.Level;
 
 /**
  * A JUnit test for checking if restarting DFS preserves the
@@ -54,8 +53,8 @@ import org.junit.Test;
  */
 public class TestPersistBlocks {
   static {
-    ((Log4JLogger)FSImage.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger)FSNamesystem.LOG).getLogger().setLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(FSImage.LOG, Level.TRACE);
+    GenericTestUtils.setLogLevel(FSNamesystem.LOG, Level.TRACE);
   }
   
   private static final int BLOCK_SIZE = 4096;
@@ -74,7 +73,7 @@ public class TestPersistBlocks {
     rand.nextBytes(DATA_BEFORE_RESTART);
     rand.nextBytes(DATA_AFTER_RESTART);
   }
-  
+
   /** check if DFS remains in proper condition after a restart */
   @Test
   public void testRestartDfs() throws Exception {

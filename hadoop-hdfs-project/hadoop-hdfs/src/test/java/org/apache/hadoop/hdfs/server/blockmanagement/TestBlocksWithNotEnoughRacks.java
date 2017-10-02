@@ -25,7 +25,6 @@ import java.util.ArrayList;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.impl.Log4JLogger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileSystem;
@@ -39,14 +38,17 @@ import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
 import org.apache.hadoop.hdfs.server.datanode.DataNode;
 import org.apache.hadoop.hdfs.server.namenode.FSNamesystem;
 import org.apache.hadoop.hdfs.server.namenode.NameNodeAdapter;
-import org.apache.log4j.Level;
+import org.apache.hadoop.test.GenericTestUtils;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 
 public class TestBlocksWithNotEnoughRacks {
-  public static final Log LOG = LogFactory.getLog(TestBlocksWithNotEnoughRacks.class);
+  public static final Logger LOG = LoggerFactory.getLogger(TestBlocksWithNotEnoughRacks.class);
   static {
-    ((Log4JLogger)LogFactory.getLog(FSNamesystem.class)).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger)LOG).getLogger().setLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(FSNamesystem.LOG, Level.TRACE);
+    GenericTestUtils.setLogLevel(LOG, Level.TRACE);
   }
 
   /*
@@ -356,7 +358,7 @@ public class TestBlocksWithNotEnoughRacks {
 
       // The block gets re-replicated to another datanode so it has a 
       // sufficient # replicas, but not across racks, so there should
-      // be 1 rack, and 1 needed replica (even though there are 2 hosts 
+      // be 1 rack, and 1 needed replica (even though there are 2 hosts
       // available and only 2 replicas required).
       DFSTestUtil.waitForReplication(cluster, b, 1, REPLICATION_FACTOR, 1);
 

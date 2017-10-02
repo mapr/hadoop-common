@@ -296,6 +296,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import org.slf4j.LoggerFactory;
 
 /***************************************************
  * FSNamesystem does the actual bookkeeping work for the
@@ -313,7 +314,7 @@ import com.google.common.collect.Lists;
 @Metrics(context="dfs")
 public class FSNamesystem implements Namesystem, FSNamesystemMBean,
   NameNodeMXBean {
-  public static final Log LOG = LogFactory.getLog(FSNamesystem.class);
+  public static final org.slf4j.Logger LOG = LoggerFactory.getLogger(FSNamesystem.class);
 
   private static final ThreadLocal<StringBuilder> auditBuffer =
     new ThreadLocal<StringBuilder>() {
@@ -715,7 +716,7 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
     if (provider == null) {
       LOG.info("No KeyProvider found.");
     } else {
-      LOG.info("Found KeyProvider: " + provider.toString());
+      LOG.info("Found KeyProvider: {}", provider.toString());
     }
     if (conf.getBoolean(DFS_NAMENODE_AUDIT_LOG_ASYNC_KEY,
                         DFS_NAMENODE_AUDIT_LOG_ASYNC_DEFAULT)) {
@@ -782,7 +783,7 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
           conf.getBoolean(DFS_ENCRYPT_DATA_TRANSFER_KEY, DFS_ENCRYPT_DATA_TRANSFER_DEFAULT),
           conf.getLong(FS_TRASH_INTERVAL_KEY, FS_TRASH_INTERVAL_DEFAULT),
           checksumType);
-      
+
       this.maxFsObjects = conf.getLong(DFS_NAMENODE_MAX_OBJECTS_KEY, 
                                        DFS_NAMENODE_MAX_OBJECTS_DEFAULT);
 
@@ -1560,8 +1561,8 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
         stopStandbyServices();
       } catch (IOException ie) {
       } finally {
-        IOUtils.cleanup(LOG, dir);
-        IOUtils.cleanup(LOG, fsImage);
+        IOUtils.cleanupWithLogger(LOG, dir);
+        IOUtils.cleanupWithLogger(LOG, fsImage);
       }
     }
   }
@@ -2301,7 +2302,7 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
    */
   HdfsFileStatus startFile(String src, PermissionStatus permissions,
       String holder, String clientMachine, EnumSet<CreateFlag> flag,
-      boolean createParent, short replication, long blockSize, 
+      boolean createParent, short replication, long blockSize,
       CryptoProtocolVersion[] supportedVersions, boolean logRetryCache)
       throws AccessControlException, SafeModeException,
       FileAlreadyExistsException, UnresolvedLinkException,
@@ -4792,7 +4793,7 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
         getEditLog().getCurSegmentTxId() + 1;
     }
   }
-  
+
   @Metric({"LastWrittenTransactionId", "Transaction ID written to the edit log"})
   public long getLastWrittenTransactionId() {
     return getEditLog().getLastWrittenTxId();
@@ -4984,10 +4985,10 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
       // if it is disabled - enable it and vice versa.
       if(arg.equals("check"))
         return getFSImage().getStorage().getRestoreFailedStorage();
-      
+
       boolean val = arg.equals("true");  // false if not
       getFSImage().getStorage().setRestoreFailedStorage(val);
-      
+
       return val;
     } finally {
       writeUnlock();
@@ -5963,7 +5964,7 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
       return 0;
     }
   }
-  
+
   @Metric
   public int getBlockCapacity() {
     return blockManager.getCapacity();
@@ -6233,7 +6234,7 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
         String[] storageIDs = blocks[i].getStorageIDs();
         for (int j = 0; j < nodes.length; j++) {
           blockManager.findAndMarkBlockAsCorrupt(blk, nodes[j],
-              storageIDs == null ? null: storageIDs[j], 
+              storageIDs == null ? null: storageIDs[j],
               "client machine reported it");
         }
       }

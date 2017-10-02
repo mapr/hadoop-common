@@ -35,7 +35,7 @@ import org.apache.commons.logging.Log;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.util.ChunkedArrayList;
+import org.slf4j.Logger;
 
 /**
  * An utility class for I/O related functionality. 
@@ -53,7 +53,7 @@ public class IOUtils {
    * @param close whether or not close the InputStream and 
    * OutputStream at the end. The streams are closed in the finally clause.  
    */
-  public static void copyBytes(InputStream in, OutputStream out, int buffSize, boolean close) 
+  public static void copyBytes(InputStream in, OutputStream out, int buffSize, boolean close)
     throws IOException {
     try {
       copyBytes(in, out, buffSize);
@@ -229,20 +229,23 @@ public class IOUtils {
       amt -= ret;
     }
   }
-  
+
   /**
-   * Close the Closeable objects and <b>ignore</b> any {@link IOException} or 
+   * Close the Closeable objects and <b>ignore</b> any {@link Throwable} or
    * null pointers. Must only be used for cleanup in exception handlers.
    *
    * @param log the log to record problems to at debug level. Can be null.
    * @param closeables the objects to close
+   * @deprecated use {@link #cleanupWithLogger(Logger, java.io.Closeable...)}
+   * instead
    */
+  @Deprecated
   public static void cleanup(Log log, java.io.Closeable... closeables) {
     for (java.io.Closeable c : closeables) {
       if (c != null) {
         try {
           c.close();
-        } catch(IOException e) {
+        } catch(Throwable e) {
           if (log != null && log.isDebugEnabled()) {
             log.debug("Exception in closing " + c, e);
           }
@@ -252,15 +255,39 @@ public class IOUtils {
   }
 
   /**
-   * Closes the stream ignoring {@link IOException}.
+   * Close the Closeable objects and <b>ignore</b> any {@link Throwable} or
+   * null pointers. Must only be used for cleanup in exception handlers.
+   *
+   * @param logger the log to record problems to at debug level. Can be null.
+   * @param closeables the objects to close
+   */
+  public static void cleanupWithLogger(Logger logger,
+      java.io.Closeable... closeables) {
+    for (java.io.Closeable c : closeables) {
+      if (c != null) {
+        try {
+          c.close();
+        } catch (Throwable e) {
+          if (logger != null) {
+            logger.debug("Exception in closing {}", c, e);
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Closes the stream ignoring {@link Throwable}.
    * Must only be called in cleaning up from exception handlers.
    *
    * @param stream the Stream to close
    */
   public static void closeStream(java.io.Closeable stream) {
-    cleanup(null, stream);
+    if (stream != null) {
+      cleanupWithLogger(null, stream);
+    }
   }
-  
+
   /**
    * Closes the socket ignoring {@link IOException}
    *

@@ -57,7 +57,7 @@ import com.google.common.collect.Sets;
 public abstract class GenericTestUtils {
 
   private static final AtomicInteger sequence = new AtomicInteger();
-  
+
   /**
    * Error string used in {@link GenericTestUtils#waitFor(Supplier, int, int)}.
    */
@@ -66,20 +66,33 @@ public abstract class GenericTestUtils {
   public static final String ERROR_INVALID_ARGUMENT =
       "Total wait time should be greater than check interval time";
 
+  /**
+   * @deprecated use {@link #disableLog(org.slf4j.Logger)} instead
+   */
+  @Deprecated
   @SuppressWarnings("unchecked")
   public static void disableLog(Log log) {
     // We expect that commons-logging is a wrapper around Log4j.
     disableLog((Log4JLogger) log);
   }
 
+  @Deprecated
   public static Logger toLog4j(org.slf4j.Logger logger) {
     return LogManager.getLogger(logger.getName());
   }
 
+  /**
+   * @deprecated use {@link #disableLog(org.slf4j.Logger)} instead
+   */
+  @Deprecated
   public static void disableLog(Log4JLogger log) {
     log.getLogger().setLevel(Level.OFF);
   }
 
+  /**
+   * @deprecated use {@link #disableLog(org.slf4j.Logger)} instead
+   */
+  @Deprecated
   public static void disableLog(Logger logger) {
     logger.setLevel(Level.OFF);
   }
@@ -88,24 +101,79 @@ public abstract class GenericTestUtils {
     disableLog(toLog4j(logger));
   }
 
+  /**
+   * @deprecated
+   * use {@link #setLogLevel(org.slf4j.Logger, org.slf4j.event.Level)} instead
+   */
+  @Deprecated
   @SuppressWarnings("unchecked")
   public static void setLogLevel(Log log, Level level) {
     // We expect that commons-logging is a wrapper around Log4j.
     setLogLevel((Log4JLogger) log, level);
   }
 
+  /**
+   * A helper used in log4j2 migration to accept legacy
+   * org.apache.commons.logging apis.
+   * <p>
+   * And will be removed after migration.
+   *
+   * @param log   a log
+   * @param level level to be set
+   */
+  @Deprecated
+  public static void setLogLevel(Log log, org.slf4j.event.Level level) {
+    setLogLevel(log, Level.toLevel(level.toString()));
+  }
+
+  /**
+   * @deprecated
+   * use {@link #setLogLevel(org.slf4j.Logger, org.slf4j.event.Level)} instead
+   */
+  @Deprecated
   public static void setLogLevel(Log4JLogger log, Level level) {
     log.getLogger().setLevel(level);
   }
 
+  /**
+   * @deprecated
+   * use {@link #setLogLevel(org.slf4j.Logger, org.slf4j.event.Level)} instead
+   */
+  @Deprecated
   public static void setLogLevel(Logger logger, Level level) {
     logger.setLevel(level);
   }
 
+  /**
+   * @deprecated
+   * use {@link #setLogLevel(org.slf4j.Logger, org.slf4j.event.Level)} instead
+   */
+  @Deprecated
   public static void setLogLevel(org.slf4j.Logger logger, Level level) {
     setLogLevel(toLog4j(logger), level);
   }
 
+  public static void setLogLevel(org.slf4j.Logger logger,
+                                 org.slf4j.event.Level level) {
+    setLogLevel(toLog4j(logger), Level.toLevel(level.toString()));
+  }
+
+  public static void setRootLogLevel(org.slf4j.event.Level level) {
+    setLogLevel(LogManager.getRootLogger(), Level.toLevel(level.toString()));
+  }
+
+  public static org.slf4j.event.Level toLevel(String level) {
+    return toLevel(level, org.slf4j.event.Level.DEBUG);
+  }
+
+  public static org.slf4j.event.Level toLevel(
+      String level, org.slf4j.event.Level defaultLevel) {
+    try {
+      return org.slf4j.event.Level.valueOf(level);
+    } catch (IllegalArgumentException e) {
+      return defaultLevel;
+    }
+  }
   /**
    * Extracts the name of the method where the invocation has happened
    * @return String name of the invoking method
@@ -121,14 +189,14 @@ public abstract class GenericTestUtils {
   public static int uniqueSequenceId() {
     return sequence.incrementAndGet();
   }
-  
+
   /**
    * Assert that a given file exists.
    */
   public static void assertExists(File f) {
     Assert.assertTrue("File " + f + " should exist", f.exists());
   }
-    
+
   /**
    * List all of the files in 'dir' that match the regex 'pattern'.
    * Then check that this list is identical to 'expectedMatches'.
@@ -136,7 +204,7 @@ public abstract class GenericTestUtils {
    */
   public static void assertGlobEquals(File dir, String pattern,
       String ... expectedMatches) throws IOException {
-    
+
     Set<String> found = Sets.newTreeSet();
     for (File f : FileUtil.listFiles(dir)) {
       if (f.getName().matches(pattern)) {
@@ -168,7 +236,7 @@ public abstract class GenericTestUtils {
     Assert.assertTrue(
         "Expected to find '" + string + "' but got unexpected exception:"
         + StringUtils.stringifyException(t), msg.contains(string));
-  }  
+  }
 
   public static void waitFor(Supplier<Boolean> check,
       int checkEveryMillis, int waitForMillis)
@@ -180,26 +248,28 @@ public abstract class GenericTestUtils {
       if (result) {
         return;
       }
-      
+
       Thread.sleep(checkEveryMillis);
     } while (Time.now() - st < waitForMillis);
-    
+
     throw new TimeoutException("Timed out waiting for condition. " +
         "Thread diagnostics:\n" +
         TimedOutTestsListener.buildThreadDiagnosticString());
   }
-  
+
   public static class LogCapturer {
     private StringWriter sw = new StringWriter();
     private WriterAppender appender;
     private Logger logger;
-    
+
     public static LogCapturer captureLogs(Log l) {
       Logger logger = ((Log4JLogger)l).getLogger();
-      LogCapturer c = new LogCapturer(logger);
-      return c;
+      return new LogCapturer(logger);
     }
-    
+
+    public static LogCapturer captureLogs(org.slf4j.Logger logger) {
+      return new LogCapturer(toLog4j(logger));
+    }
 
     private LogCapturer(Logger logger) {
       this.logger = logger;
@@ -207,18 +277,18 @@ public abstract class GenericTestUtils {
       WriterAppender wa = new WriterAppender(layout, sw);
       logger.addAppender(wa);
     }
-    
+
     public String getOutput() {
       return sw.toString();
     }
-    
+
     public void stopCapturing() {
       logger.removeAppender(appender);
 
     }
   }
-  
-  
+
+
   /**
    * Mockito answer helper that triggers one latch as soon as the
    * method is called, then waits on another before continuing.

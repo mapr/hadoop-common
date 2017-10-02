@@ -27,8 +27,6 @@ import java.io.IOException;
 import java.util.Random;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.impl.Log4JLogger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileContext;
@@ -44,18 +42,19 @@ import org.apache.hadoop.hdfs.server.namenode.NameNode;
 import org.apache.hadoop.hdfs.web.HftpFileSystem;
 import org.apache.hadoop.ipc.RemoteException;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.log4j.Level;
+import org.apache.hadoop.test.GenericTestUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.event.Level;
 
 /**
  * This class tests the FileStatus API.
  */
 public class TestFileStatus {
   {
-    ((Log4JLogger)LogFactory.getLog(FSNamesystem.class)).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger)FileSystem.LOG).getLogger().setLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(FSNamesystem.LOG, Level.TRACE);
+    GenericTestUtils.setLogLevel(FileSystem.LOG, Level.TRACE);
   }
 
   static final long seed = 0xDEADBEEFL;
@@ -66,7 +65,7 @@ public class TestFileStatus {
   private static MiniDFSCluster cluster;
   private static FileSystem fs;
   private static FileContext fc;
-  private static HftpFileSystem hftpfs; 
+  private static HftpFileSystem hftpfs;
   private static DFSClient dfsClient;
   private static Path file1;
   
@@ -113,7 +112,7 @@ public class TestFileStatus {
     Path path = new Path("/");
     assertTrue("/ should be a directory", 
                fs.getFileStatus(path).isDirectory());
-    
+
     // Make sure getFileInfo returns null for files which do not exist
     HdfsFileStatus fileInfo = dfsClient.getFileInfo("/noSuchFile");
     assertEquals("Non-existant file should result in null", null, fileInfo);
@@ -133,7 +132,7 @@ public class TestFileStatus {
       dfsClient.getFileInfo("non-absolute");
       fail("getFileInfo for a non-absolute path did not throw IOException");
     } catch (RemoteException re) {
-      assertTrue("Wrong exception for invalid file name", 
+      assertTrue("Wrong exception for invalid file name",
           re.toString().contains("Invalid file name"));
     }
   }
@@ -149,7 +148,7 @@ public class TestFileStatus {
     assertEquals(blockSize, status.getBlockSize());
     assertEquals(1, status.getReplication());
     assertEquals(fileSize, status.getLen());
-    assertEquals(file1.makeQualified(fs.getUri(), 
+    assertEquals(file1.makeQualified(fs.getUri(),
         fs.getWorkingDirectory()).toString(), 
         status.getPath().toString());
   }
@@ -164,10 +163,10 @@ public class TestFileStatus {
     assertEquals(blockSize, status.getBlockSize());
     assertEquals(1, status.getReplication());
     assertEquals(fileSize, status.getLen());
-    assertEquals(file1.makeQualified(fs.getUri(), 
+    assertEquals(file1.makeQualified(fs.getUri(),
         fs.getWorkingDirectory()).toString(), 
         status.getPath().toString());
-    
+
     RemoteIterator<FileStatus> itor = fc.listStatus(file1);
     status = itor.next();
     assertEquals(stats[0], status);
@@ -212,7 +211,7 @@ public class TestFileStatus {
     FileStatus status = fs.getFileStatus(dir);
     assertTrue(dir + " should be a directory", status.isDirectory());
     assertTrue(dir + " should be zero size ", status.getLen() == 0);
-    assertEquals(dir.makeQualified(fs.getUri(), 
+    assertEquals(dir.makeQualified(fs.getUri(),
         fs.getWorkingDirectory()).toString(), 
         status.getPath().toString());
     
@@ -223,7 +222,7 @@ public class TestFileStatus {
         0, fs.getContentSummary(dir).getLength());
     assertEquals(dir + " should be zero size using hftp",
         0, hftpfs.getContentSummary(dir).getLength());
-    
+
     RemoteIterator<FileStatus> itor = fc.listStatus(dir);
     assertFalse(dir + " should be empty", itor.hasNext());
 
@@ -253,9 +252,9 @@ public class TestFileStatus {
     final int expected = blockSize/2;  
     assertEquals(dir + " size should be " + expected, 
         expected, fs.getContentSummary(dir).getLength());
-    assertEquals(dir + " size should be " + expected + " using hftp", 
+    assertEquals(dir + " size should be " + expected + " using hftp",
         expected, hftpfs.getContentSummary(dir).getLength());
-    
+
     // Test listStatus on a non-empty directory
     stats = fs.listStatus(dir);
     assertEquals(dir + " should have two entries", 2, stats.length);
@@ -316,7 +315,7 @@ public class TestFileStatus {
     assertEquals(dir5.toString(), itor.next().getPath().toString());
     assertEquals(file2.toString(), itor.next().getPath().toString());
     assertEquals(file3.toString(), itor.next().getPath().toString());
-    assertFalse(itor.hasNext());      
+    assertFalse(itor.hasNext());
 
     itor = fs.listStatusIterator(dir);
     assertEquals(dir3.toString(), itor.next().getPath().toString());
@@ -326,7 +325,7 @@ public class TestFileStatus {
     assertEquals(file3.toString(), itor.next().getPath().toString());
     assertFalse(itor.hasNext());
 
-    { //test permission error on hftp 
+    { //test permission error on hftp
       fs.setPermission(dir, new FsPermission((short)0));
       try {
         final String username = UserGroupInformation.getCurrentUser().getShortUserName() + "1";
