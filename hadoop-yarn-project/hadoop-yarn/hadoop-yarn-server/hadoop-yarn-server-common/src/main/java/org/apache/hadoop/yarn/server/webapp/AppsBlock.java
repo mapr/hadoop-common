@@ -28,8 +28,6 @@ import java.util.Collection;
 import java.util.EnumSet;
 
 import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.ApplicationBaseProtocol;
 import org.apache.hadoop.yarn.api.protocolrecords.GetApplicationsRequest;
@@ -42,10 +40,12 @@ import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet.TBODY;
 import org.apache.hadoop.yarn.webapp.view.HtmlBlock;
 
 import com.google.inject.Inject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AppsBlock extends HtmlBlock {
 
-  private static final Log LOG = LogFactory.getLog(AppsBlock.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AppsBlock.class);
   protected ApplicationBaseProtocol appBaseProt;
 
   @Inject
