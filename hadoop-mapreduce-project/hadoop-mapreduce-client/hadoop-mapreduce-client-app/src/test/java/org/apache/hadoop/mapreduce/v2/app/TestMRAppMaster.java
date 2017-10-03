@@ -34,8 +34,6 @@ import java.util.Map;
 import org.junit.Assert;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileContext;
 import org.apache.hadoop.fs.FileSystem;
@@ -69,22 +67,23 @@ import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.event.EventHandler;
 import org.apache.hadoop.yarn.security.AMRMTokenIdentifier;
 import org.apache.hadoop.yarn.util.ConverterUtils;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.slf4j.event.Level;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.apache.hadoop.test.GenericTestUtils;
 
 public class TestMRAppMaster {
-  private static final Log LOG = LogFactory.getLog(TestMRAppMaster.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TestMRAppMaster.class);
   static String stagingDir = "staging/";
   private static FileContext localFS = null;
   private static final File testDir = new File("target",
     TestMRAppMaster.class.getName() + "-tmpDir").getAbsoluteFile();
-  
+
   @BeforeClass
   public static void setup() throws AccessControlException,
       FileNotFoundException, IllegalArgumentException, IOException {
@@ -96,7 +95,7 @@ public class TestMRAppMaster {
     localFS.delete(new Path(testDir.getAbsolutePath()), true);
     testDir.mkdir();
   }
-  
+
   @Before
   public void cleanup() throws IOException {
     File dir = new File(stagingDir);
@@ -105,13 +104,13 @@ public class TestMRAppMaster {
     }
     dir.mkdirs();
   }
-  
+
   @Test
   public void testMRAppMasterForDifferentUser() throws IOException,
       InterruptedException {
     String applicationAttemptIdStr = "appattempt_1317529182569_0004_000001";
     String containerIdStr = "container_1317529182569_0004_000001_1";
-    
+
     String userName = "TestAppMasterUser";
     ApplicationAttemptId applicationAttemptId = ConverterUtils
         .toApplicationAttemptId(applicationAttemptIdStr);
@@ -166,7 +165,7 @@ public class TestMRAppMaster {
     // verify the final status is FAILED
     verifyFailedStatus((MRAppMasterTest)appMaster, "FAILED");
   }
-  
+
   @Test
   public void testMRAppMasterSuccessLock() throws IOException,
       InterruptedException {
@@ -204,7 +203,7 @@ public class TestMRAppMaster {
     // verify the final status is SUCCEEDED
     verifyFailedStatus((MRAppMasterTest)appMaster, "SUCCEEDED");
   }
-  
+
   @Test
   public void testMRAppMasterFailLock() throws IOException,
       InterruptedException {
@@ -242,7 +241,7 @@ public class TestMRAppMaster {
     // verify the final status is FAILED
     verifyFailedStatus((MRAppMasterTest)appMaster, "FAILED");
   }
-  
+
   @Test
   public void testMRAppMasterMissingStaging() throws IOException,
       InterruptedException {
@@ -259,7 +258,7 @@ public class TestMRAppMaster {
     if(dir.exists()) {
       FileUtils.deleteDirectory(dir);
     }
-    
+
     ContainerId containerId = ConverterUtils.toContainerId(containerIdStr);
     MRAppMaster appMaster =
         new MRAppMasterTest(applicationAttemptId, containerId, "host", -1, -1,
@@ -346,8 +345,7 @@ public class TestMRAppMaster {
   @Test
   public void testMRAppMasterCredentials() throws Exception {
 
-    Logger rootLogger = LogManager.getRootLogger();
-    rootLogger.setLevel(Level.DEBUG);
+    GenericTestUtils.setRootLogLevel(Level.DEBUG);
 
     // Simulate credentials passed to AM via client->RM->NM
     Credentials credentials = new Credentials();
@@ -365,7 +363,7 @@ public class TestMRAppMaster {
         new Token<AMRMTokenIdentifier>(identifier, password,
             AMRMTokenIdentifier.KIND_NAME, appTokenService);
     credentials.addToken(appTokenService, appToken);
-    
+
     Text keyAlias = new Text("mySecretKeyAlias");
     credentials.addSecretKey(keyAlias, "mySecretKey".getBytes());
     Token<? extends TokenIdentifier> storedToken =
@@ -426,7 +424,7 @@ public class TestMRAppMaster {
     Assert.assertEquals(storedToken, confCredentials.getToken(tokenAlias));
     Assert.assertEquals("mySecretKey",
       new String(confCredentials.getSecretKey(keyAlias)));
-    
+
     // Verify the AM's ugi - app token should be present
     Credentials ugiCredentials = appMaster.getUgi().getCredentials();
     Assert.assertEquals(1, ugiCredentials.numberOfSecretKeys());
@@ -488,7 +486,7 @@ class MRAppMasterTest extends MRAppMaster {
     }
     this.conf = conf;
   }
-  
+
   @Override
   protected ContainerAllocator createContainerAllocator(
       final ClientService clientService, final AppContext context) {
@@ -525,7 +523,7 @@ class MRAppMasterTest extends MRAppMaster {
   public Credentials getCredentials() {
     return super.getCredentials();
   }
-  
+
   public UserGroupInformation getUgi() {
     return currentUser;
   }

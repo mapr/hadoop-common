@@ -23,8 +23,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.MRJobConfig;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskAttemptId;
@@ -34,6 +32,8 @@ import org.apache.hadoop.mapreduce.v2.app.job.event.TaskAttemptEventType;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.yarn.event.EventHandler;
 import org.apache.hadoop.yarn.util.Clock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -61,7 +61,8 @@ public class TaskHeartbeatHandler extends AbstractService {
     }
   }
   
-  private static final Log LOG = LogFactory.getLog(TaskHeartbeatHandler.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(TaskHeartbeatHandler.class);
   
   //thread which runs periodically to see the last time since a heartbeat is
   //received from a task.
@@ -140,7 +141,7 @@ public class TaskHeartbeatHandler extends AbstractService {
 
         while (iterator.hasNext()) {
           Map.Entry<TaskAttemptId, ReportTime> entry = iterator.next();
-          boolean taskTimedOut = (taskTimeOut > 0) && 
+          boolean taskTimedOut = (taskTimeOut > 0) &&
               (currentTime > (entry.getValue().getLastProgress() + taskTimeOut));
            
           if(taskTimedOut) {

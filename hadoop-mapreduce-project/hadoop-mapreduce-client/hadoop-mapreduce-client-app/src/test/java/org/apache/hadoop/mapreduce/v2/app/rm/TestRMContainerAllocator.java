@@ -45,8 +45,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.MRJobConfig;
@@ -138,12 +136,14 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.base.Supplier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("unchecked")
 public class TestRMContainerAllocator {
 
-  static final Log LOG = LogFactory
-      .getLog(TestRMContainerAllocator.class);
+  static final Logger LOG = LoggerFactory
+      .getLogger(TestRMContainerAllocator.class);
   static final RecordFactory recordFactory = RecordFactoryProvider
       .getRecordFactory(null);
 
@@ -243,7 +243,7 @@ public class TestRMContainerAllocator {
     // check that the assigned container requests are cancelled
     assigned = allocator.schedule();
     dispatcher.await();
-    Assert.assertEquals(5, rm.getMyFifoScheduler().lastAsk.size());    
+    Assert.assertEquals(5, rm.getMyFifoScheduler().lastAsk.size());
   }
   
   @Test 
@@ -1015,7 +1015,7 @@ public class TestRMContainerAllocator {
         .getAppAttemptId();
     rm.sendAMLaunched(appAttemptId);
     dispatcher.await();
-    
+
     JobId jobId = MRBuilderUtils.newJobId(appAttemptId.getApplicationId(), 0);
     Job mockJob = mock(Job.class);
     MyContainerAllocator allocator = new MyContainerAllocator(rm, conf,
@@ -1060,7 +1060,7 @@ public class TestRMContainerAllocator {
     nm1.nodeHeartbeat(false);
     nm2.nodeHeartbeat(false);
     dispatcher.await();
-    
+
     // schedule response returns updated nodes
     assigned = allocator.schedule();
     dispatcher.await();
@@ -1554,7 +1554,7 @@ public class TestRMContainerAllocator {
     @Override
     public synchronized Allocation allocate(
         ApplicationAttemptId applicationAttemptId, List<ResourceRequest> ask,
-        List<ContainerId> release, 
+        List<ContainerId> release,
         List<String> blacklistAdditions, List<String> blacklistRemovals) {
       List<ResourceRequest> askCopy = new ArrayList<ResourceRequest>();
       for (ResourceRequest req : ask) {
@@ -1568,7 +1568,7 @@ public class TestRMContainerAllocator {
       lastBlacklistAdditions = blacklistAdditions;
       lastBlacklistRemovals = blacklistRemovals;
       Allocation allocation = super.allocate(
-          applicationAttemptId, askCopy, release, blacklistAdditions, 
+          applicationAttemptId, askCopy, release, blacklistAdditions,
         blacklistRemovals);
       if (forceResourceLimit != null) {
         // Test wants to force the non-default resource limit

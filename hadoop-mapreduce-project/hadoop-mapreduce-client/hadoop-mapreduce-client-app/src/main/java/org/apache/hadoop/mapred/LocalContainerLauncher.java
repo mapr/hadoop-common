@@ -32,8 +32,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FSError;
 import org.apache.hadoop.fs.FileContext;
 import org.apache.hadoop.fs.FileStatus;
@@ -66,6 +64,8 @@ import org.apache.hadoop.yarn.api.ApplicationConstants.Environment;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Runs the container task locally in a thread.
@@ -76,7 +76,8 @@ public class LocalContainerLauncher extends AbstractService implements
     ContainerLauncher {
 
   private static final File curDir = new File(".");
-  private static final Log LOG = LogFactory.getLog(LocalContainerLauncher.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(LocalContainerLauncher.class);
 
   private FileContext curFC = null;
   private final HashSet<File> localizedFiles;
@@ -319,7 +320,7 @@ public class LocalContainerLauncher extends AbstractService implements
         // if umbilical itself barfs (in error-handler of runSubMap()),
         // we're pretty much hosed, so do what YarnChild main() does
         // (i.e., exit clumsily--but can never happen, so no worries!)
-        LOG.fatal("oopsie...  this can never happen: "
+        LOG.error("oopsie...  this can never happen: "
             + StringUtils.stringifyException(ioe));
         ExitUtil.terminate(-1);
       } finally {
@@ -419,7 +420,7 @@ public class LocalContainerLauncher extends AbstractService implements
         }
 
       } catch (FSError e) {
-        LOG.fatal("FSError from child", e);
+        LOG.error("FSError from child", e);
         // umbilical:  MRAppMaster creates (taskAttemptListener), passes to us
         if (!ShutdownHookManager.get().isShutdownInProgress()) {
           umbilical.fsError(classicAttemptID, e.getMessage());
@@ -444,7 +445,7 @@ public class LocalContainerLauncher extends AbstractService implements
         throw new RuntimeException();
 
       } catch (Throwable throwable) {
-        LOG.fatal("Error running local (uberized) 'child' : "
+        LOG.error("Error running local (uberized) 'child' : "
             + StringUtils.stringifyException(throwable));
         if (!ShutdownHookManager.get().isShutdownInProgress()) {
           Throwable tCause = throwable.getCause();

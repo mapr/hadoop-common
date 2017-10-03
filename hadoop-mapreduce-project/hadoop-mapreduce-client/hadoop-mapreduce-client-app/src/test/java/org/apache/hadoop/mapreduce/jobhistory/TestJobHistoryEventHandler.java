@@ -34,8 +34,6 @@ import java.util.HashMap;
 
 import org.junit.Assert;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.fs.FileContext;
@@ -81,11 +79,14 @@ import org.mockito.Mockito;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class TestJobHistoryEventHandler {
 
 
-  private static final Log LOG = LogFactory
-      .getLog(TestJobHistoryEventHandler.class);
+  private static final Logger LOG = LoggerFactory
+      .getLogger(TestJobHistoryEventHandler.class);
   private static MiniDFSCluster dfsCluster = null;
   private static String coreSitePath;
 

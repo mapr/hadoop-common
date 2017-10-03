@@ -35,8 +35,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -144,6 +142,8 @@ import org.apache.hadoop.yarn.util.SystemClock;
 import org.apache.log4j.LogManager;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The Map-Reduce Application Master.
@@ -166,7 +166,7 @@ import com.google.common.annotations.VisibleForTesting;
 @SuppressWarnings("rawtypes")
 public class MRAppMaster extends CompositeService {
 
-  private static final Log LOG = LogFactory.getLog(MRAppMaster.class);
+  private static final Logger LOG = LoggerFactory.getLogger(MRAppMaster.class);
 
   /**
    * Priority of the MRAppMaster shutdown hook.
@@ -315,7 +315,7 @@ public class MRAppMaster extends CompositeService {
         errorHappenedShutDown = true;
         forcedState = JobStateInternal.ERROR;
         shutDownMessage = "Staging dir does not exist " + stagingDir;
-        LOG.fatal(shutDownMessage);
+        LOG.error(shutDownMessage);
       } else if (commitStarted) {
         //A commit was started so this is the last time, we just need to know
         // what result we will use to notify, and how we will unregister
@@ -1484,7 +1484,7 @@ public class MRAppMaster extends CompositeService {
       conf.set(MRJobConfig.USER_NAME, jobUserName);
       initAndStartAppMaster(appMaster, conf, jobUserName);
     } catch (Throwable t) {
-      LOG.fatal("Error starting MRAppMaster", t);
+      LOG.error("Error starting MRAppMaster", t);
       ExitUtil.terminate(1, t);
     }
   }
@@ -1531,10 +1531,7 @@ public class MRAppMaster extends CompositeService {
     // them
     Credentials credentials =
         UserGroupInformation.getCurrentUser().getCredentials();
-    LOG.info("Executing with tokens:");
-    for (Token<?> token : credentials.getAllTokens()) {
-      LOG.info(token);
-    }
+    LOG.info("Executing with tokens: {}", credentials.getAllTokens());
     
     UserGroupInformation appMasterUgi = UserGroupInformation
         .createRemoteUser(jobUserName);

@@ -30,8 +30,6 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.MRJobConfig;
@@ -53,6 +51,8 @@ import org.apache.hadoop.yarn.factory.providers.RecordFactoryProvider;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.yarn.util.resource.Resources;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -60,7 +60,8 @@ import org.apache.hadoop.yarn.util.resource.Resources;
  */
 public abstract class RMContainerRequestor extends RMCommunicator {
   
-  private static final Log LOG = LogFactory.getLog(RMContainerRequestor.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(RMContainerRequestor.class);
   private static final ResourceRequestComparator RESOURCE_REQUEST_COMPARATOR =
       new ResourceRequestComparator();
 

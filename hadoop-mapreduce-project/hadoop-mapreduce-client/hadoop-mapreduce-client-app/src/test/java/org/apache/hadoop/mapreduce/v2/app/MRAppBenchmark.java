@@ -52,10 +52,9 @@ import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 import org.apache.hadoop.yarn.factories.RecordFactory;
 import org.apache.hadoop.yarn.factory.providers.RecordFactoryProvider;
 import org.apache.hadoop.yarn.util.Records;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 import org.junit.Test;
+import org.slf4j.event.Level;
+import org.apache.hadoop.test.GenericTestUtils;
 
 public class MRAppBenchmark {
 
@@ -65,8 +64,7 @@ public class MRAppBenchmark {
    * Runs memory and time benchmark with Mock MRApp.
    */
   public void run(MRApp app) throws Exception {
-    Logger rootLogger = LogManager.getRootLogger();
-    rootLogger.setLevel(Level.WARN);
+    GenericTestUtils.setRootLogLevel(Level.WARN);
     long startTime = System.currentTimeMillis();
     Job job = app.submit(new Configuration());
     while (!job.getReport().getJobState().equals(JobState.SUCCEEDED)) {
