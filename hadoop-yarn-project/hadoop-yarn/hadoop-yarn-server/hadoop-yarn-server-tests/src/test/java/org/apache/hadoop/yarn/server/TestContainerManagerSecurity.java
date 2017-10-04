@@ -29,8 +29,6 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
@@ -84,6 +82,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteStreams;
@@ -91,7 +91,7 @@ import com.google.common.io.ByteStreams;
 @RunWith(Parameterized.class)
 public class TestContainerManagerSecurity extends KerberosSecurityTestcase {
 
-  static Log LOG = LogFactory.getLog(TestContainerManagerSecurity.class);
+  static Logger LOG = LoggerFactory.getLogger(TestContainerManagerSecurity.class);
   static final RecordFactory recordFactory = RecordFactoryProvider
       .getRecordFactory(null);
   private static MiniYARNCluster yarnCluster;
