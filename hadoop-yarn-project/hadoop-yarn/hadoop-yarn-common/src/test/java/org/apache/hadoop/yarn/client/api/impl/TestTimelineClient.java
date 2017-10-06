@@ -35,6 +35,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.rpcauth.KerberosAuthMethod;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.delegation.AbstractDelegationTokenSecretManager;
+import org.apache.hadoop.security.token.delegation.web.KerberosDelegationTokenAuthenticator;
 import org.apache.hadoop.yarn.api.records.timeline.TimelineDomain;
 import org.apache.hadoop.yarn.api.records.timeline.TimelineEntities;
 import org.apache.hadoop.yarn.api.records.timeline.TimelineEntity;
@@ -365,6 +366,7 @@ public class TestTimelineClient {
       YarnConfiguration conf) {
     TimelineClientImpl client =
         spy((TimelineClientImpl) TimelineClient.createTimelineClient());
+    when(client.getMaprDelegationTokenAuthenticator()).thenReturn(new KerberosDelegationTokenAuthenticator());
     client.init(conf);
     client.start();
     return client;
