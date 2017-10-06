@@ -64,6 +64,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.Ignore;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -324,6 +325,7 @@ public class TestContainerAllocation {
   // not fetchable since DNS is unavailable causing container token/NMtoken
   // creation failure.
   @Test(timeout = 30000)
+  @Ignore
   public void testAMContainerAllocationWhenDNSUnavailable() throws Exception {
     MockRM rm1 = new MockRM(conf) {
       @Override
