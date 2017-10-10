@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.commons.math3.util.Precision;
 import org.apache.hadoop.yarn.api.records.Resource;
 
 @XmlRootElement
@@ -54,7 +55,7 @@ public class ResourceInfo {
 
   @Override
   public String toString() {
-    return "<memory:" + memory + ", vCores:" + vCores + ", disks:" + disks +">";
+    return "<memory:" + memory + ", vCores:" + vCores + ", disks:" + Precision.round(disks, 2) +">";
   }
 
   public void setMemory(int memory) {

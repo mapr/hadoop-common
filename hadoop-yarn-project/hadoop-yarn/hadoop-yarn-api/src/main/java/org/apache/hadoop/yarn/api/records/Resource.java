@@ -18,6 +18,7 @@
 
 package org.apache.hadoop.yarn.api.records;
 
+import org.apache.commons.math3.util.Precision;
 import org.apache.hadoop.classification.InterfaceAudience.Public;
 import org.apache.hadoop.classification.InterfaceStability.Evolving;
 import org.apache.hadoop.classification.InterfaceStability.Stable;
@@ -159,7 +160,7 @@ public abstract class Resource implements Comparable<Resource> {
 
   @Override
   public String toString() {
-    return "<memory:" + getMemory() + ", vCores:" + getVirtualCores() + ", disks:" + getDisks() + ">";
+    return "<memory:" + getMemory() + ", vCores:" + getVirtualCores() + ", disks:" + Precision.round(getDisks(), 2) + ">";
   }
 
   public static int getAbsIntValue(double dValue) {

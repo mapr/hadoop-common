@@ -21,6 +21,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.commons.math3.util.Precision;
 import org.apache.hadoop.yarn.server.resourcemanager.ClusterMetrics;
 import org.apache.hadoop.yarn.server.resourcemanager.ResourceManager;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.QueueMetrics;
@@ -155,15 +156,15 @@ public class ClusterMetricsInfo {
   }
 
   public double getReservedDisks() {
-    return this.reservedDisks;
+    return Precision.round(this.reservedDisks, 2);
   }
 
   public double getAvailableDisks() {
-    return this.availableDisks;
+    return Precision.round(this.availableDisks, 2);
   }
 
   public double getAllocatedDisks() {
-    return this.allocatedDisks;
+    return Precision.round(this.allocatedDisks, 2);
   }
 
   public int getContainersAllocated() {
@@ -187,7 +188,7 @@ public class ClusterMetricsInfo {
   }
 
   public double getTotalDisks() {
-    return this.totalDisks;
+    return Precision.round(this.totalDisks, 2);
   }
 
   public int getTotalNodes() {
