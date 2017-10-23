@@ -31,8 +31,6 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.UnresolvedLinkException;
@@ -43,6 +41,8 @@ import org.apache.hadoop.util.Daemon;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * LeaseManager does the lease housekeeping for writing on files.   
@@ -68,8 +68,8 @@ import com.google.common.base.Preconditions;
  */
 @InterfaceAudience.Private
 public class LeaseManager {
-  public static final Log LOG = LogFactory.getLog(LeaseManager.class);
-
+  public static final Logger LOG = LoggerFactory.getLogger(LeaseManager.class
+      .getName());
   private final FSNamesystem fsnamesystem;
 
   private long softLimit = HdfsConstants.LEASE_SOFTLIMIT_PERIOD;
@@ -83,7 +83,7 @@ public class LeaseManager {
   // Set of: Lease
   private final NavigableSet<Lease> sortedLeases = new TreeSet<Lease>();
 
-  // 
+  //
   // Map path names to leases. It is protected by the sortedLeases lock.
   // The map stores pathnames in lexicographical order.
   //
@@ -129,7 +129,7 @@ public class LeaseManager {
         }
       }
     }
-    LOG.info("Number of blocks under construction: " + numUCBlocks);
+    LOG.info("Number of blocks under construction: {}", numUCBlocks);
     return numUCBlocks;
   }
 
@@ -147,7 +147,7 @@ public class LeaseManager {
     }
     return count;
   }
-  
+
   /**
    * Adds (or re-adds) the lease for the specified file.
    */
@@ -172,14 +172,14 @@ public class LeaseManager {
     sortedLeasesByPath.remove(src);
     if (!lease.removePath(src)) {
       if (LOG.isDebugEnabled()) {
-        LOG.debug(src + " not found in lease.paths (=" + lease.paths + ")");
+        LOG.debug("{} not found in lease.paths (={})", src, lease.paths);
       }
     }
 
     if (!lease.hasPath()) {
       leases.remove(lease.holder);
       if (!sortedLeases.remove(lease)) {
-        LOG.error(lease + " not found in sortedLeases");
+        LOG.error("{} not found in sortedLeases", lease);
       }
     }
   }
@@ -192,8 +192,7 @@ public class LeaseManager {
     if (lease != null) {
       removeLease(lease, src);
     } else {
-      LOG.warn("Removing non-existent lease! holder=" + holder +
-          " src=" + src);
+      LOG.warn("Removing non-existent lease! holder={} src={}", holder, src);
     }
   }
 
@@ -281,7 +280,7 @@ public class LeaseManager {
       return "[Lease.  Holder: " + holder
           + ", pendingcreates: " + paths.size() + "]";
     }
-  
+
     @Override
     public int compareTo(Lease o) {
       Lease l1 = this;
@@ -296,7 +295,7 @@ public class LeaseManager {
         return l1.holder.compareTo(l2.holder);
       }
     }
-  
+
     @Override
     public boolean equals(Object o) {
       if (!(o instanceof Lease)) {
@@ -309,7 +308,7 @@ public class LeaseManager {
       }
       return false;
     }
-  
+
     @Override
     public int hashCode() {
       return holder.hashCode();
@@ -327,7 +326,7 @@ public class LeaseManager {
       paths.remove(oldpath);
       paths.add(newpath);
     }
-    
+
     @VisibleForTesting
     long getLastUpdate() {
       return lastUpdate;
@@ -363,7 +362,7 @@ public class LeaseManager {
         LOG.debug(LeaseManager.class.getSimpleName()
             + ".removeLeaseWithPrefixPath: entry=" + entry);
       }
-      removeLease(entry.getValue(), entry.getKey());    
+      removeLease(entry.getValue(), entry.getKey());
     }
   }
 
@@ -375,7 +374,7 @@ public class LeaseManager {
 
     final Map<String, Lease> entries = new HashMap<String, Lease>();
     int srclen = prefix.length();
-    
+
     // prefix may ended with '/'
     if (prefix.charAt(srclen - 1) == Path.SEPARATOR_CHAR) {
       srclen -= 1;
@@ -427,7 +426,7 @@ public class LeaseManager {
           Thread.sleep(HdfsServerConstants.NAMENODE_LEASE_RECHECK_INTERVAL);
         } catch(InterruptedException ie) {
           if (LOG.isDebugEnabled()) {
-            LOG.debug(name + " is interrupted", ie);
+            LOG.debug("{} is interrupted", name, ie);
           }
         }
       }
@@ -447,12 +446,12 @@ public class LeaseManager {
         Preconditions.checkState(node.isUnderConstruction());
         inodes.put(p, node);
       } catch (IOException ioe) {
-        LOG.error(ioe);
+        LOG.error(ioe.toString());
       }
     }
     return inodes;
   }
-  
+
   /** Check the leases beginning from the oldest.
    *  @return true is sync is needed.
    */
@@ -470,10 +469,10 @@ public class LeaseManager {
         break;
       }
 
-      LOG.info(leaseToCheck + " has expired hard limit");
+      LOG.info("{} has expired hard limit", leaseToCheck);
 
       final List<String> removing = new ArrayList<String>();
-      // need to create a copy of the oldest lease paths, because 
+      // need to create a copy of the oldest lease paths, because
       // internalReleaseLease() removes paths corresponding to empty files,
       // i.e. it needs to modify the collection being iterated over
       // causing ConcurrentModificationException
@@ -487,9 +486,9 @@ public class LeaseManager {
               iip, HdfsServerConstants.NAMENODE_LEASE_HOLDER);
           if (LOG.isDebugEnabled()) {
             if (completed) {
-              LOG.debug("Lease recovery for " + p + " is complete. File closed.");
+              LOG.debug("Lease recovery for {} is complete. File closed.", p);
             } else {
-              LOG.debug("Started block recovery " + p + " lease " + leaseToCheck);
+              LOG.debug("Started block recovery {} lease {}", p, leaseToCheck);
             }
           }
           // If a lease recovery happened, we need to sync later.
@@ -497,8 +496,8 @@ public class LeaseManager {
             needSync = true;
           }
         } catch (IOException e) {
-          LOG.error("Cannot release the path " + p + " in the lease "
-              + leaseToCheck, e);
+          LOG.error("Cannot release the path {} in the lease {}", p,
+                  leaseToCheck, e);
           removing.add(p);
         }
       }
