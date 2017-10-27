@@ -30,8 +30,6 @@ import java.util.zip.ZipEntry;
 import org.junit.Assert;
 import junit.framework.TestCase;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -51,6 +49,8 @@ import org.apache.hadoop.mapreduce.lib.output.NullOutputFormat;
 import org.apache.hadoop.mapreduce.server.jobtracker.JTConfig;
 import org.junit.Test;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 /**
  * Tests the use of the
  * {@link org.apache.hadoop.mapreduce.filecache.DistributedCache} within the
@@ -82,8 +82,8 @@ public class TestMRWithDistributedCache extends TestCase {
     }
   }
 
-  private static final Log LOG =
-    LogFactory.getLog(TestMRWithDistributedCache.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(TestMRWithDistributedCache.class);
   
   private static class DistributedCacheChecker {
 

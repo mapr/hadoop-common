@@ -36,8 +36,6 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
@@ -71,13 +69,19 @@ import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.yarn.api.records.NodeToLabelsList;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 /** Implements MapReduce locally, in-process, for debugging. */
 @InterfaceAudience.Private
 @InterfaceStability.Unstable
 public class LocalJobRunner implements ClientProtocol {
-  public static final Log LOG =
-    LogFactory.getLog(LocalJobRunner.class);
+  public static final Logger LOG =
+      LoggerFactory.getLogger(LocalJobRunner.class);
+
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
 
   /** The maximum number of map tasks to run in parallel in LocalJobRunner */
   public static final String LOCAL_MAX_MAPS =
@@ -572,7 +576,7 @@ public class LocalJobRunner implements ClientProtocol {
         } else {
           this.status.setRunState(JobStatus.FAILED);
         }
-        LOG.warn(id, t);
+        LOG.warn(id.toString(), t);
 
         JobEndNotifier.localRunnerNotification(job, status);
 
@@ -672,7 +676,7 @@ public class LocalJobRunner implements ClientProtocol {
     public void reportDiagnosticInfo(TaskAttemptID taskid, String trace) {
       // Ignore for now
     }
-    
+
     public void reportNextRecordRange(TaskAttemptID taskid, 
         SortedRanges.Range range) throws IOException {
       LOG.info("Task " + taskid + " reportedNextRecordRange " + range);
@@ -681,12 +685,12 @@ public class LocalJobRunner implements ClientProtocol {
     public boolean ping(TaskAttemptID taskid) throws IOException {
       return true;
     }
-    
+
     public boolean canCommit(TaskAttemptID taskid) 
     throws IOException {
       return true;
     }
-    
+
     public void done(TaskAttemptID taskId) throws IOException {
       int taskIndex = mapIds.indexOf(taskId);
       if (taskIndex >= 0) {                       // mapping
@@ -698,24 +702,24 @@ public class LocalJobRunner implements ClientProtocol {
 
     public synchronized void fsError(TaskAttemptID taskId, String message) 
     throws IOException {
-      LOG.fatal("FSError: "+ message + "from task: " + taskId);
+      LOG.error(FATAL, "FSError: "+ message + "from task: " + taskId);
     }
 
     public void shuffleError(TaskAttemptID taskId, String message) throws IOException {
-      LOG.fatal("shuffleError: "+ message + "from task: " + taskId);
+      LOG.error(FATAL, "shuffleError: "+ message + "from task: " + taskId);
     }
     
     public synchronized void fatalError(TaskAttemptID taskId, String msg) 
     throws IOException {
-      LOG.fatal("Fatal: "+ msg + "from task: " + taskId);
+      LOG.error(FATAL, "Fatal: "+ msg + "from task: " + taskId);
     }
-    
+
     public MapTaskCompletionEventsUpdate getMapCompletionEvents(JobID jobId, 
         int fromEventId, int maxLocs, TaskAttemptID id) throws IOException {
       return new MapTaskCompletionEventsUpdate(
         org.apache.hadoop.mapred.TaskCompletionEvent.EMPTY_ARRAY, false);
     }
-    
+
   }
 
   public LocalJobRunner(Configuration conf) throws IOException {

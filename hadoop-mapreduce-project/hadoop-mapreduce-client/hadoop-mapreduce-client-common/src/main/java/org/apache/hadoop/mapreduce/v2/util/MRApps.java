@@ -34,8 +34,6 @@ import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceAudience.Public;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
@@ -73,6 +71,8 @@ import org.apache.hadoop.yarn.util.Apps;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.apache.hadoop.yarn.util.TaskLogUtil;
 import org.apache.log4j.RollingFileAppender;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Helper class for MR applications
@@ -80,7 +80,7 @@ import org.apache.log4j.RollingFileAppender;
 @Private
 @Unstable
 public class MRApps extends Apps {
-  public static final Log LOG = LogFactory.getLog(MRApps.class);
+  public static final Logger LOG = LoggerFactory.getLogger(MRApps.class);
 
   public static String toString(JobId jid) {
     return jid.toString();
@@ -242,7 +242,7 @@ public class MRApps extends Apps {
     boolean userClassesTakesPrecedence = 
       conf.getBoolean(MRJobConfig.MAPREDUCE_JOB_USER_CLASSPATH_FIRST, false);
 
-    String classpathEnvVar = 
+    String classpathEnvVar =
       conf.getBoolean(MRJobConfig.MAPREDUCE_JOB_CLASSLOADER, false)
         ? Environment.APP_CLASSPATH.name() : Environment.CLASSPATH.name();
 
@@ -470,23 +470,23 @@ public class MRApps extends Apps {
   }
 
   @SuppressWarnings("deprecation")
-  public static void setupDistributedCache( 
-      Configuration conf, 
-      Map<String, LocalResource> localResources) 
+  public static void setupDistributedCache(
+      Configuration conf,
+      Map<String, LocalResource> localResources)
   throws IOException {
-    
+
     // Cache archives
-    parseDistributedCacheArtifacts(conf, localResources,  
-        LocalResourceType.ARCHIVE, 
-        DistributedCache.getCacheArchives(conf), 
+    parseDistributedCacheArtifacts(conf, localResources,
+        LocalResourceType.ARCHIVE,
+        DistributedCache.getCacheArchives(conf),
         DistributedCache.getArchiveTimestamps(conf),
-        getFileSizes(conf, MRJobConfig.CACHE_ARCHIVES_SIZES), 
+        getFileSizes(conf, MRJobConfig.CACHE_ARCHIVES_SIZES),
         DistributedCache.getArchiveVisibilities(conf));
     
     // Cache files
-    parseDistributedCacheArtifacts(conf, 
-        localResources,  
-        LocalResourceType.FILE, 
+    parseDistributedCacheArtifacts(conf,
+        localResources,
+        LocalResourceType.FILE,
         DistributedCache.getCacheFiles(conf),
         DistributedCache.getFileTimestamps(conf),
         getFileSizes(conf, MRJobConfig.CACHE_FILES_SIZES),
@@ -556,7 +556,7 @@ public class MRApps extends Apps {
     }
     return "cache file (" + MRJobConfig.CACHE_FILES + ") ";
   }
-  
+
   private static String toString(org.apache.hadoop.yarn.api.records.URL url) {
     StringBuffer b = new StringBuffer();
     b.append(url.getScheme()).append("://").append(url.getHost());
@@ -566,9 +566,9 @@ public class MRApps extends Apps {
     b.append(url.getFile());
     return b.toString();
   }
-  
+
   // TODO - Move this to MR!
-  // Use TaskDistributedCacheManager.CacheFiles.makeCacheFiles(URI[], 
+  // Use TaskDistributedCacheManager.CacheFiles.makeCacheFiles(URI[],
   // long[], boolean[], Path[], FileType)
   @SuppressWarnings("deprecation")
   private static void parseDistributedCacheArtifacts(
@@ -589,7 +589,7 @@ public class MRApps extends Apps {
             " #visibilities=" + visibilities.length
             );
       }
-      
+
       for (int i = 0; i < uris.length; ++i) {
         URI u = uris[i];
         Path p = new Path(u);
@@ -605,13 +605,13 @@ public class MRApps extends Apps {
         }
         String linkName = name.toUri().getPath();
         LocalResource orig = localResources.get(linkName);
-        org.apache.hadoop.yarn.api.records.URL url = 
+        org.apache.hadoop.yarn.api.records.URL url =
           ConverterUtils.getYarnUrlFromURI(p.toUri());
         if(orig != null && !orig.getResource().equals(url)) {
           LOG.warn(
-              getResourceDescription(orig.getType()) + 
-              toString(orig.getResource()) + " conflicts with " + 
-              getResourceDescription(type) + toString(url) + 
+              getResourceDescription(orig.getType()) +
+              toString(orig.getResource()) + " conflicts with " +
+              getResourceDescription(type) + toString(url) +
               " This will be an error in Hadoop 2.0");
           continue;
         }
@@ -622,7 +622,7 @@ public class MRApps extends Apps {
       }
     }
   }
-  
+
   // TODO - Move this to MR!
   private static long[] getFileSizes(Configuration conf, String key) {
     String[] strs = conf.getStrings(key);

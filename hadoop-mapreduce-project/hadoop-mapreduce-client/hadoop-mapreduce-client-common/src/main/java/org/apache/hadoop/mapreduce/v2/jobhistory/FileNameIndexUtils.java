@@ -23,22 +23,23 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import org.apache.hadoop.mapreduce.JobID;
 import org.apache.hadoop.mapreduce.TypeConverter;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class FileNameIndexUtils {
 
   static final int JOB_NAME_TRIM_LENGTH = 50;
-  
+
   // Sanitize job history file for predictable parsing
   static final String DELIMITER = "-";
   static final String DELIMITER_ESCAPE = "%2D";
-  
-  private static final Log LOG = LogFactory.getLog(FileNameIndexUtils.class);
+
+  private static final Logger LOG =
+      LoggerFactory.getLogger(FileNameIndexUtils.class);
 
   // Job history file names need to be backwards compatible
   // Only append new elements to the end of this list
@@ -64,35 +65,35 @@ public class FileNameIndexUtils {
     //JobId
     sb.append(escapeDelimiters(TypeConverter.fromYarn(indexInfo.getJobId()).toString()));
     sb.append(DELIMITER);
-    
+
     //SubmitTime
     sb.append(indexInfo.getSubmitTime());
     sb.append(DELIMITER);
-    
+
     //UserName
     sb.append(escapeDelimiters(getUserName(indexInfo)));
     sb.append(DELIMITER);
-    
+
     //JobName
     sb.append(escapeDelimiters(trimJobName(getJobName(indexInfo))));
     sb.append(DELIMITER);
-    
+
     //FinishTime
     sb.append(indexInfo.getFinishTime());
     sb.append(DELIMITER);
-    
+
     //NumMaps
     sb.append(indexInfo.getNumMaps());
     sb.append(DELIMITER);
-    
+
     //NumReduces
     sb.append(indexInfo.getNumReduces());
     sb.append(DELIMITER);
-    
+
     //JobStatus
     sb.append(indexInfo.getJobStatus());
     sb.append(DELIMITER);
-    
+
     //QueueName
     sb.append(escapeDelimiters(getQueueName(indexInfo)));
     sb.append(DELIMITER);
@@ -103,7 +104,7 @@ public class FileNameIndexUtils {
     sb.append(JobHistoryUtils.JOB_HISTORY_FILE_EXTENSION);
     return encodeJobHistoryFileName(sb.toString());
   }
-  
+
   /**
    * Parses the provided job history file name to construct a
    * JobIndexInfo object which is returned.
@@ -114,9 +115,9 @@ public class FileNameIndexUtils {
   public static JobIndexInfo getIndexInfo(String jhFileName) throws IOException {
     String fileName = jhFileName.substring(0, jhFileName.indexOf(JobHistoryUtils.JOB_HISTORY_FILE_EXTENSION));
     JobIndexInfo indexInfo = new JobIndexInfo();
-    
+
     String[] jobDetails = fileName.split(DELIMITER);
-    
+
     JobID oldJobId = JobID.forName(decodeJobHistoryFileName(jobDetails[JOB_ID_INDEX]));
     JobId jobId = TypeConverter.toYarn(oldJobId);
     indexInfo.setJobId(jobId);
@@ -182,13 +183,13 @@ public class FileNameIndexUtils {
       LOG.warn("Parsing job history file with partial data encoded into name: "
           + jhFileName);
     }
-    
+
     return indexInfo;
   }
 
   
   /**
-   * Helper function to encode the URL of the filename of the job-history 
+   * Helper function to encode the URL of the filename of the job-history
    * log file.
    * 
    * @param logFileName file name of the job-history file
@@ -223,9 +224,9 @@ public class FileNameIndexUtils {
 
     return encodedFileName;
   }
-  
+
   /**
-   * Helper function to decode the URL of the filename of the job-history 
+   * Helper function to decode the URL of the filename of the job-history
    * log file.
    * 
    * @param logFileName file name of the job-history file
@@ -245,7 +246,7 @@ public class FileNameIndexUtils {
     }
     return decodedFileName;
   }
-  
+
   static String nonOccursString(String logFileName) {
     int adHocIndex = 0;
 
@@ -257,11 +258,11 @@ public class FileNameIndexUtils {
 
     return unfoundString + "q";
   }
-  
+
   private static String getUserName(JobIndexInfo indexInfo) {
     return getNonEmptyString(indexInfo.getUser());
   }
-  
+
   private static String getJobName(JobIndexInfo indexInfo) {
     return getNonEmptyString(indexInfo.getJobName());
   }
@@ -278,7 +279,7 @@ public class FileNameIndexUtils {
     }
     return in;
   }
-  
+
   private static String escapeDelimiters(String escapee) {
     return escapee.replaceAll(DELIMITER, DELIMITER_ESCAPE);
   }
