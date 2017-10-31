@@ -34,8 +34,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
@@ -78,6 +76,8 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.apache.hadoop.yarn.util.timeline.TimelineUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Client for Distributed Shell application submission to YARN.
@@ -114,7 +114,8 @@ import org.apache.hadoop.yarn.util.timeline.TimelineUtils;
 @InterfaceStability.Unstable
 public class Client {
 
-  private static final Log LOG = LogFactory.getLog(Client.class);
+  private static final Logger LOG =
+          LoggerFactory.getLogger(Client.class);
   
   // Configuration
   private Configuration conf;
@@ -147,7 +148,7 @@ public class Client {
   private int shellCmdPriority = 0;
 
   // Amt of memory to request for container in which shell script will be executed
-  private int containerMemory = 10; 
+  private int containerMemory = 10;
   // Amt. of virtual cores to request for container in which shell script will be executed
   private int containerVirtualCores = 1;
   // No. of containers in which the shell script needs to be executed
@@ -220,7 +221,7 @@ public class Client {
       }
       result = client.run();
     } catch (Throwable t) {
-      LOG.fatal("Error running Client", t);
+      LOG.error("Error running Client", t);
       System.exit(1);
     }
     if (result) {
@@ -412,7 +413,7 @@ public class Client {
     containerMemory = Integer.parseInt(cliParser.getOptionValue("container_memory", "10"));
     containerVirtualCores = Integer.parseInt(cliParser.getOptionValue("container_vcores", "1"));
     numContainers = Integer.parseInt(cliParser.getOptionValue("num_containers", "1"));
-    
+
 
     if (containerMemory < 0 || containerVirtualCores < 0 || numContainers < 1) {
       throw new IllegalArgumentException("Invalid no. of containers or container memory/vcores specified,"
@@ -654,7 +655,7 @@ public class Client {
 
     for (Map.Entry<String, String> entry : shellEnv.entrySet()) {
       vargs.add("--shell_env " + entry.getKey() + "=" + entry.getValue());
-    }			
+    }
     if (debugFlag) {
       vargs.add("--debug");
     }
@@ -668,7 +669,7 @@ public class Client {
       command.append(str).append(" ");
     }
 
-    LOG.info("Completed setting up app master command " + command.toString());	   
+    LOG.info("Completed setting up app master command " + command.toString());
     List<String> commands = new ArrayList<String>();
     commands.add(command.toString());		
 
@@ -677,7 +678,7 @@ public class Client {
       localResources, env, commands, null, null, null);
 
     // Set up resource type requirements
-    // For now, both memory and vcores are supported, so we set memory and 
+    // For now, both memory and vcores are supported, so we set memory and
     // vcores requirements
     Resource capability = Resource.newInstance(amMemory, amVCores);
     appContext.setResource(capability);

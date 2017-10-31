@@ -33,8 +33,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileContext;
 import org.apache.hadoop.fs.Path;
@@ -53,13 +51,15 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TestDistributedShell {
 
-  private static final Log LOG =
-      LogFactory.getLog(TestDistributedShell.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(TestDistributedShell.class);
 
-  protected MiniYARNCluster yarnCluster = null;  
+  protected MiniYARNCluster yarnCluster = null;
   protected YarnConfiguration conf = null;
   private static final int NUM_NMS = 1;
 
@@ -74,7 +74,7 @@ public class TestDistributedShell {
   protected void setupInternal(int numNodeManager) throws Exception {
 
     LOG.info("Starting up YARN cluster");
-    
+
     conf = new YarnConfiguration();
     conf.setInt(YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_MB, 128);
     conf.set("yarn.log.dir", "target");
@@ -90,9 +90,9 @@ public class TestDistributedShell {
       yarnCluster.init(conf);
       
       yarnCluster.start();
-      
+
       waitForNMsToRegister();
-      
+
       URL url = Thread.currentThread().getContextClassLoader().getResource("yarn-site.xml");
       if (url == null) {
         throw new RuntimeException("Could not find 'yarn-site.xml' dummy file in classpath");
@@ -138,7 +138,7 @@ public class TestDistributedShell {
                 .get("yarn.timeline-service.leveldb-timeline-store.path")),
             true);
   }
-  
+
   @Test(timeout=90000)
   public void testDSShellWithDomain() throws Exception {
     testDSShell(true);
@@ -478,11 +478,11 @@ public class TestDistributedShell {
     };
 
     //Before run the DS, the default the log level is INFO
-    final Log LOG_Client =
-        LogFactory.getLog(Client.class);
+    final Logger LOG_Client =
+        LoggerFactory.getLogger(Client.class);
     Assert.assertTrue(LOG_Client.isInfoEnabled());
     Assert.assertFalse(LOG_Client.isDebugEnabled());
-    final Log LOG_AM = LogFactory.getLog(ApplicationMaster.class);
+    final Logger LOG_AM = LoggerFactory.getLogger(ApplicationMaster.class);
     Assert.assertTrue(LOG_AM.isInfoEnabled());
     Assert.assertFalse(LOG_AM.isDebugEnabled());
 

@@ -44,8 +44,6 @@ import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability;
@@ -100,6 +98,8 @@ import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.apache.log4j.LogManager;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * An ApplicationMaster for executing shell commands on a set of launched
@@ -166,7 +166,8 @@ import com.google.common.annotations.VisibleForTesting;
 @InterfaceStability.Unstable
 public class ApplicationMaster {
 
-  private static final Log LOG = LogFactory.getLog(ApplicationMaster.class);
+  private static final Logger LOG = LoggerFactory
+      .getLogger(ApplicationMaster.class);
 
   @VisibleForTesting
   @Private
@@ -292,7 +293,7 @@ public class ApplicationMaster {
       appMaster.run();
       result = appMaster.finish();
     } catch (Throwable t) {
-      LOG.fatal("Error running ApplicationMaster", t);
+      LOG.error("Error running ApplicationMaster", t);
       LogManager.shutdown();
       ExitUtil.terminate(1, t);
     }
@@ -331,7 +332,7 @@ public class ApplicationMaster {
     } catch (IOException e) {
       e.printStackTrace();
     } finally {
-      IOUtils.cleanup(LOG, buf);
+      IOUtils.cleanupWithLogger(LOG, buf);
     }
   }
 
@@ -531,7 +532,7 @@ public class ApplicationMaster {
     LOG.info("Executing with tokens:");
     while (iter.hasNext()) {
       Token<?> token = iter.next();
-      LOG.info(token);
+      LOG.info(token.toString());
       if (token.getKind().equals(AMRMTokenIdentifier.KIND_NAME)) {
         iter.remove();
       }
@@ -686,7 +687,7 @@ public class ApplicationMaster {
     FinalApplicationStatus appStatus;
     String appMessage = null;
     boolean success = true;
-    if (numFailedContainers.get() == 0 && 
+    if (numFailedContainers.get() == 0 &&
         numCompletedContainers.get() == numTotalContainers) {
       appStatus = FinalApplicationStatus.SUCCEEDED;
     } else {
@@ -715,7 +716,7 @@ public class ApplicationMaster {
 
     return success;
   }
-  
+
   private class RMCallbackHandler implements AMRMClientAsync.CallbackHandler {
     @SuppressWarnings("unchecked")
     @Override
@@ -761,7 +762,7 @@ public class ApplicationMaster {
               timelineClient, containerStatus, domainId, appSubmitterUgi);
         }
       }
-      
+
       // ask for more containers if any failed
       int askCount = numTotalContainers - numRequestedContainers.get();
       numRequestedContainers.addAndGet(askCount);
@@ -1078,7 +1079,7 @@ public class ApplicationMaster {
       org.apache.commons.io.IOUtils.closeQuietly(ds);
     }
   }
-  
+
   private static void publishContainerStartEvent(
       final TimelineClient timelineClient, Container container, String domainId,
       UserGroupInformation ugi) {
