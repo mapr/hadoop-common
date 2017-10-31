@@ -30,8 +30,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.conf.Configuration;
@@ -121,12 +119,15 @@ import org.apache.hadoop.yarn.util.Records;
 import org.apache.hadoop.yarn.util.timeline.TimelineUtils;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Private
 @Unstable
 public class YarnClientImpl extends YarnClient {
 
-  private static final Log LOG = LogFactory.getLog(YarnClientImpl.class);
+  private static final Logger LOG = LoggerFactory
+          .getLogger(YarnClientImpl.class);
 
   protected ApplicationClientProtocol rmClient;
   protected long submitPollIntervalMillis;

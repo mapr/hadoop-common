@@ -90,7 +90,7 @@ public class TestNMClient {
     String hostname = InetAddress.getLocalHost().getHostName();
     NetUtils.addStaticResolution(hostname, InetAddress.getLocalHost().getHostAddress());
   }
-  
+
   @Before
   public void setup() throws YarnException, IOException {
     // start minicluster
@@ -395,7 +395,7 @@ public class TestNMClient {
           assertEquals(container.getId(), status.getContainerId());
           assertTrue("" + index + ": " + status.getDiagnostics(),
               status.getDiagnostics().contains(diagnostics));
-          
+
           assertTrue("Exit Statuses are supposed to be in: " + exitStatuses +
               ", but the actual exit status code is: " + status.getExitStatus(),
               exitStatuses.contains(status.getExitStatus()));

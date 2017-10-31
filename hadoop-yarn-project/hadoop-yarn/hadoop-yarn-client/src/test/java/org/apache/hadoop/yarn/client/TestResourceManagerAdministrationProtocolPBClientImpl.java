@@ -20,8 +20,6 @@ package org.apache.hadoop.yarn.client;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.Service.STATE;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
@@ -47,6 +45,8 @@ import org.apache.hadoop.yarn.server.resourcemanager.ResourceManager;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.*;
 
@@ -55,8 +55,8 @@ import static org.junit.Assert.*;
  */
 public class TestResourceManagerAdministrationProtocolPBClientImpl {
   private static ResourceManager resourceManager;
-  private static final Log LOG = LogFactory
-          .getLog(TestResourceManagerAdministrationProtocolPBClientImpl.class);
+  private static final Logger LOG = LoggerFactory
+          .getLogger(TestResourceManagerAdministrationProtocolPBClientImpl.class);
   private final RecordFactory recordFactory = RecordFactoryProvider
           .getRecordFactory(null);
 

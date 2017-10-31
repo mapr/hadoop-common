@@ -25,8 +25,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceAudience.Public;
 import org.apache.hadoop.classification.InterfaceStability.Stable;
@@ -46,6 +44,8 @@ import org.apache.hadoop.yarn.client.api.impl.AMRMClientImpl;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>AMRMClientAsync</code> handles communication with the ResourceManager
@@ -60,7 +60,7 @@ import com.google.common.annotations.VisibleForTesting;
  *   public void onContainersAllocated(List<Container> containers) {
  *     [run tasks on the containers]
  *   }
- *   
+ *
  *   public void onContainersCompleted(List<ContainerStatus> statuses) {
  *     [update progress, check whether app is done]
  *   }
@@ -94,7 +94,8 @@ import com.google.common.annotations.VisibleForTesting;
 @Stable
 public abstract class AMRMClientAsync<T extends ContainerRequest> 
 extends AbstractService {
-  private static final Log LOG = LogFactory.getLog(AMRMClientAsync.class);
+  private static final Logger LOG =
+          LoggerFactory.getLogger(AMRMClientAsync.class);
   
   protected final AMRMClient<T> client;
   protected final CallbackHandler handler;
@@ -104,13 +105,13 @@ extends AbstractService {
       createAMRMClientAsync(int intervalMs, CallbackHandler callbackHandler) {
     return new AMRMClientAsyncImpl<T>(intervalMs, callbackHandler);
   }
-  
+
   public static <T extends ContainerRequest> AMRMClientAsync<T>
       createAMRMClientAsync(AMRMClient<T> client, int intervalMs,
           CallbackHandler callbackHandler) {
     return new AMRMClientAsyncImpl<T>(client, intervalMs, callbackHandler);
   }
-  
+
   protected AMRMClientAsync(int intervalMs, CallbackHandler callbackHandler) {
     this(new AMRMClientImpl<T>(), intervalMs, callbackHandler);
   }
@@ -265,36 +266,36 @@ extends AbstractService {
   }
 
   public interface CallbackHandler {
-    
+
     /**
      * Called when the ResourceManager responds to a heartbeat with completed
      * containers. If the response contains both completed containers and
      * allocated containers, this will be called before containersAllocated.
      */
     public void onContainersCompleted(List<ContainerStatus> statuses);
-    
+
     /**
      * Called when the ResourceManager responds to a heartbeat with allocated
      * containers. If the response containers both completed containers and
      * allocated containers, this will be called after containersCompleted.
      */
     public void onContainersAllocated(List<Container> containers);
-    
+
     /**
      * Called when the ResourceManager wants the ApplicationMaster to shutdown
      * for being out of sync etc. The ApplicationMaster should not unregister
      * with the RM unless the ApplicationMaster wants to be the last attempt.
      */
     public void onShutdownRequest();
-    
+
     /**
      * Called when nodes tracked by the ResourceManager have changed in health,
      * availability etc.
      */
     public void onNodesUpdated(List<NodeReport> updatedNodes);
-    
+
     public float getProgress();
-    
+
     /**
      * Called when error comes from RM communications as well as from errors in
      * the callback itself from the app. Calling

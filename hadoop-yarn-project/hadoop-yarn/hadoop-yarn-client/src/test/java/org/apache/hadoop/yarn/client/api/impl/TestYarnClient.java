@@ -120,12 +120,11 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.Capacity
 import org.apache.hadoop.yarn.util.Clock;
 import org.apache.hadoop.yarn.util.Records;
 import org.apache.hadoop.yarn.util.UTCClock;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.event.Level;
+import org.apache.hadoop.test.GenericTestUtils;
 
 public class TestYarnClient {
 
@@ -278,8 +277,7 @@ public class TestYarnClient {
 
   @Test(timeout = 30000)
   public void testApplicationType() throws Exception {
-    Logger rootLogger = LogManager.getRootLogger();
-    rootLogger.setLevel(Level.DEBUG);
+    GenericTestUtils.setRootLogLevel(Level.DEBUG);
     MockRM rm = new MockRM();
     rm.start();
     RMApp app = rm.submitApp(2000);
@@ -294,8 +292,7 @@ public class TestYarnClient {
 
   @Test(timeout = 30000)
   public void testApplicationTypeLimit() throws Exception {
-    Logger rootLogger = LogManager.getRootLogger();
-    rootLogger.setLevel(Level.DEBUG);
+    GenericTestUtils.setRootLogLevel(Level.DEBUG);
     MockRM rm = new MockRM();
     rm.start();
     RMApp app1 =
@@ -548,9 +545,9 @@ public class TestYarnClient {
 
         when(rmClient.getLabelsToNodes(any(GetLabelsToNodesRequest.class)))
             .thenReturn(mockLabelsToNodesResponse);
-        
+
         historyClient = mock(AHSClient.class);
-        
+
       } catch (YarnException e) {
         Assert.fail("Exception is not expected.");
       } catch (IOException e) {
@@ -943,7 +940,7 @@ public class TestYarnClient {
 
     return appId;
   }
-  
+
   private void waitTillAccepted(YarnClient rmClient, ApplicationId appId)
     throws Exception {
     try {
@@ -951,7 +948,7 @@ public class TestYarnClient {
       ApplicationReport report = rmClient.getApplicationReport(appId);
       while (YarnApplicationState.ACCEPTED != report.getYarnApplicationState()) {
         if (System.currentTimeMillis() - start > 20 * 1000) {
-          throw new Exception("App '" + appId + 
+          throw new Exception("App '" + appId +
             "' time out, failed to reach ACCEPTED state");
         }
         Thread.sleep(200);
