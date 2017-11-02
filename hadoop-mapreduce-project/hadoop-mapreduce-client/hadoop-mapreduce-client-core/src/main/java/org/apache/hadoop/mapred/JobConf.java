@@ -22,8 +22,6 @@ package org.apache.hadoop.mapred;
 import java.io.IOException;
 import java.util.regex.Pattern;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability;
@@ -50,7 +48,8 @@ import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.util.ClassUtil;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.Tool;
-import org.apache.log4j.Level;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** 
  * A map/reduce job configuration.
@@ -113,7 +112,7 @@ import org.apache.log4j.Level;
 @InterfaceStability.Stable
 public class JobConf extends Configuration {
 
-  private static final Log LOG = LogFactory.getLog(JobConf.class);
+  private static final Logger LOG = LoggerFactory.getLogger(JobConf.class);
 
   static{
     ConfigUtil.loadResources();
@@ -247,9 +246,9 @@ public class JobConf extends Configuration {
    */
   public static final String MAPRED_REDUCE_TASK_JAVA_OPTS = 
     JobContext.REDUCE_JAVA_OPTS;
-  
+
   public static final String DEFAULT_MAPRED_TASK_JAVA_OPTS = "-Xmx200m";
-  
+
   /**
    * @deprecated
    * Configuration key to set the maximum virtual memory available to the child
@@ -1329,9 +1328,9 @@ public class JobConf extends Configuration {
   public void setNumMapTasks(int n) { setInt(JobContext.NUM_MAPS, n); }
 
   /**
-   * Get configured the number of reduce tasks for this job. Defaults to 
+   * Get configured the number of reduce tasks for this job. Defaults to
    * <code>1</code>.
-   * 
+   *
    * @return the number of reduce tasks for this job.
    */
   public int getNumReduceTasks() { return getInt(JobContext.NUM_REDUCES, 1); }
@@ -1342,7 +1341,7 @@ public class JobConf extends Configuration {
    * <b id="NoOfReduces">How many reduces?</b>
    * 
    * <p>The right number of reduces seems to be <code>0.95</code> or 
-   * <code>1.75</code> multiplied by (&lt;<i>no. of nodes</i>&gt; * 
+   * <code>1.75</code> multiplied by (&lt;<i>no. of nodes</i>&gt; *
    * <a href="{@docRoot}/../mapred-default.html#mapreduce.tasktracker.reduce.tasks.maximum">
    * mapreduce.tasktracker.reduce.tasks.maximum</a>).
    * </p>
@@ -1548,16 +1547,16 @@ public class JobConf extends Configuration {
   
   /**
    * Set {@link JobPriority} for this job.
-   * 
+   *
    * @param prio the {@link JobPriority} for this job.
    */
   public void setJobPriority(JobPriority prio) {
     set(JobContext.PRIORITY, prio.toString());
   }
-  
+
   /**
    * Get the {@link JobPriority} for this job.
-   * 
+   *
    * @return the {@link JobPriority} for this job.
    */
   public JobPriority getJobPriority() {
@@ -1565,7 +1564,7 @@ public class JobConf extends Configuration {
     if(prio == null) {
       return JobPriority.NORMAL;
     }
-    
+
     return JobPriority.valueOf(prio);
   }
 
@@ -2013,7 +2012,7 @@ public class JobConf extends Configuration {
       LOG.warn(JobConf.deprecatedString(JobConf.MAPRED_REDUCE_TASK_ULIMIT));
     }
   }
-  
+
 
 }
 

@@ -25,8 +25,8 @@ import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -47,12 +47,13 @@ import com.google.common.annotations.VisibleForTesting;
 @InterfaceAudience.Private
 @InterfaceStability.Unstable
 class OnDiskMapOutput<K, V> extends MapOutput<K, V> {
-  private static final Log LOG = LogFactory.getLog(OnDiskMapOutput.class);
+  private static final Logger LOG =
+          LoggerFactory.getLogger(OnDiskMapOutput.class);
   private final FileSystem fs;
   private final Path tmpOutputPath;
   private final Path outputPath;
   private final MergeManagerImpl<K, V> merger;
-  private final OutputStream disk; 
+  private final OutputStream disk;
   private long compressedSize;
   private final Configuration conf;
 
@@ -117,7 +118,7 @@ class OnDiskMapOutput<K, V> extends MapOutput<K, V> {
       disk.close();
     } catch (IOException ioe) {
       // Close the streams
-      IOUtils.cleanup(LOG, input, disk);
+      IOUtils.cleanupWithLogger(LOG, input, disk);
 
       // Re-throw
       throw ioe;

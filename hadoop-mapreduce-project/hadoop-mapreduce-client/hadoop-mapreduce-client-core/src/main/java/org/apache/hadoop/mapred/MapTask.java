@@ -32,8 +32,6 @@ import java.util.List;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -75,6 +73,8 @@ import org.apache.hadoop.util.QuickSort;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.StringInterner;
 import org.apache.hadoop.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** A Map task. */
 @InterfaceAudience.LimitedPrivate({"MapReduce"})
@@ -94,7 +94,8 @@ public class MapTask extends Task {
 
   private TaskSplitIndex splitMetaInfo = new TaskSplitIndex();
 
-  private static final Log LOG = LogFactory.getLog(MapTask.class.getName());
+  private static final Logger LOG =
+      LoggerFactory.getLogger(MapTask.class.getName());
 
   private Progress mapPhase;
   private Progress sortPhase;

@@ -35,8 +35,6 @@ import java.util.concurrent.DelayQueue;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.io.IntWritable;
@@ -50,6 +48,10 @@ import org.apache.hadoop.mapreduce.TaskID;
 import org.apache.hadoop.mapreduce.task.reduce.MapHost.State;
 import org.apache.hadoop.util.Progress;
 import org.apache.hadoop.util.Time;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 @InterfaceAudience.Private
 @InterfaceStability.Unstable
@@ -60,7 +62,10 @@ public class ShuffleSchedulerImpl<K,V> implements ShuffleScheduler<K,V> {
     }
   };
 
-  private static final Log LOG = LogFactory.getLog(ShuffleSchedulerImpl.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(ShuffleSchedulerImpl.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
+
   private static final int MAX_MAPS_AT_ONCE = 20;
   private static final long INITIAL_PENALTY = 10000;
   private static final float PENALTY_GROWTH_RATE = 1.3f;
@@ -297,7 +302,7 @@ public class ShuffleSchedulerImpl<K,V> implements ShuffleScheduler<K,V> {
 
     failedShuffleCounter.increment(1);
   }
-  
+
   public void reportLocalError(IOException ioe) {
     try {
       LOG.error("Shuffle failed : local error on this node: "
@@ -360,7 +365,7 @@ public class ShuffleSchedulerImpl<K,V> implements ShuffleScheduler<K,V> {
         failureCounts.size() == (totalMaps - doneMaps))
         && !reducerHealthy
         && (!reducerProgressedEnough || reducerStalled)) {
-      LOG.fatal("Shuffle failed with too many fetch failures " +
+      LOG.error(FATAL,"Shuffle failed with too many fetch failures " +
       "and insufficient progress!");
       String errorMsg = "Exceeded MAX_FAILED_UNIQUE_FETCHES; bailing-out.";
       reporter.reportException(new IOException(errorMsg));

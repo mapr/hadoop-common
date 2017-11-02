@@ -35,8 +35,6 @@ import java.util.Set;
 import javax.crypto.SecretKey;
 import javax.net.ssl.HttpsURLConnection;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.mapred.Counters;
 import org.apache.hadoop.mapred.JobConf;
@@ -49,12 +47,14 @@ import org.apache.hadoop.mapreduce.CryptoUtils;
 import org.apache.hadoop.security.ssl.SSLFactory;
 import org.apache.hadoop.util.Time;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 
 class Fetcher<K,V> extends Thread {
   
-  private static final Log LOG = LogFactory.getLog(Fetcher.class);
+  private static final Logger LOG = LoggerFactory.getLogger(Fetcher.class);
   
   /** Number of ms before timing out a copy */
   private static final int DEFAULT_STALLED_COPY_TIMEOUT = 3 * 60 * 1000;
@@ -324,7 +324,7 @@ class Fetcher<K,V> extends Thread {
     if (input == null) {
       return;
     }
-    
+
     try {
       // Loop through available map-outputs and fetch them
       // On any error, faildTasks is not null and we exit
@@ -364,7 +364,7 @@ class Fetcher<K,V> extends Thread {
       input = null;
     } finally {
       if (input != null) {
-        IOUtils.cleanup(LOG, input);
+        IOUtils.cleanupWithLogger(LOG, input);
         input = null;
       }
       for (TaskAttemptID left : remaining) {

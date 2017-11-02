@@ -21,8 +21,6 @@ package org.apache.hadoop.mapreduce.lib.output;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability;
@@ -39,6 +37,8 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** An {@link OutputCommitter} that commits files specified 
  * in job output directory i.e. ${mapreduce.output.fileoutputformat.outputdir}.
@@ -46,7 +46,8 @@ import com.google.common.annotations.VisibleForTesting;
 @InterfaceAudience.Public
 @InterfaceStability.Stable
 public class FileOutputCommitter extends OutputCommitter {
-  private static final Log LOG = LogFactory.getLog(FileOutputCommitter.class);
+  private static final Logger LOG =
+          LoggerFactory.getLogger(FileOutputCommitter.class);
 
   /** 
    * Name of directory where pending data is placed.  Data that has not been
@@ -71,7 +72,7 @@ public class FileOutputCommitter extends OutputCommitter {
       "mapreduce.fileoutputcommitter.cleanup.skipped";
   public static final boolean
       FILEOUTPUTCOMMITTER_CLEANUP_SKIPPED_DEFAULT = false;
-  
+
   // Ignore exceptions in cleanup _temporary folder under job's output directory
   public static final String FILEOUTPUTCOMMITTER_CLEANUP_FAILURES_IGNORED =
       "mapreduce.fileoutputcommitter.cleanup-failures.ignored";
@@ -84,7 +85,7 @@ public class FileOutputCommitter extends OutputCommitter {
 
   // default value to be 1 to keep consistent with previous behavior
   public static final int FILEOUTPUTCOMMITTER_FAILURE_ATTEMPTS_DEFAULT = 1;
-  
+
   private Path outputPath = null;
   private Path workPath = null;
   private final int algorithmVersion;
@@ -124,21 +125,21 @@ public class FileOutputCommitter extends OutputCommitter {
     if (algorithmVersion != 1 && algorithmVersion != 2) {
       throw new IOException("Only 1 or 2 algorithm version is supported");
     }
-  
+
     // if skip cleanup
     skipCleanup = conf.getBoolean(
         FILEOUTPUTCOMMITTER_CLEANUP_SKIPPED,
         FILEOUTPUTCOMMITTER_CLEANUP_SKIPPED_DEFAULT);
-    
+
     // if ignore failures in cleanup
     ignoreCleanupFailures = conf.getBoolean(
         FILEOUTPUTCOMMITTER_CLEANUP_FAILURES_IGNORED,
         FILEOUTPUTCOMMITTER_CLEANUP_FAILURES_IGNORED_DEFAULT);
-    
+
     LOG.info("FileOutputCommitter skip cleanup _temporary folders under " +
         "output directory:" + skipCleanup + ", ignore cleanup failures: " +
         ignoreCleanupFailures);
-    
+
     if (outputPath != null) {
       FileSystem fs = outputPath.getFileSystem(context.getConfiguration());
       this.outputPath = fs.makeQualified(outputPath);
@@ -392,7 +393,7 @@ public class FileOutputCommitter extends OutputCommitter {
           mergePaths(fs, stat, finalOutput);
         }
       }
-  
+
       if (skipCleanup) {
         LOG.info("Skip cleanup the _temporary folders under job's output " +
             "directory in commitJob.");
@@ -648,7 +649,7 @@ public class FileOutputCommitter extends OutputCommitter {
   public boolean isRecoverySupported() {
     return true;
   }
-  
+
   @Override
   public boolean isCommitJobRepeatable(JobContext context) throws IOException {
     return algorithmVersion == 2;

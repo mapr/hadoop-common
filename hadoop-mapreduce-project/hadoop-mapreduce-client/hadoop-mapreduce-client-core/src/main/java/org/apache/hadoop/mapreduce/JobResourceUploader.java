@@ -24,8 +24,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
@@ -35,11 +33,14 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.mapreduce.filecache.ClientDistributedCacheManager;
 import org.apache.hadoop.mapreduce.filecache.DistributedCache;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @InterfaceAudience.Private
 @InterfaceStability.Unstable
 class JobResourceUploader {
-  protected static final Log LOG = LogFactory.getLog(JobResourceUploader.class);
+  protected static final Logger LOG =
+          LoggerFactory.getLogger(JobResourceUploader.class);
   private FileSystem jtFs;
 
   JobResourceUploader(FileSystem submitFs) {
@@ -49,7 +50,7 @@ class JobResourceUploader {
   /**
    * Upload and configure files, libjars, jobjars, and archives pertaining to
    * the passed job.
-   * 
+   *
    * @param job the job containing the files to be uploaded
    * @param submitJobDir the submission directory of the job
    * @throws IOException

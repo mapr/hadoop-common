@@ -27,8 +27,6 @@ import java.util.List;
 import java.util.ServiceLoader;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
@@ -45,6 +43,8 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.SecretManager.InvalidToken;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.yarn.api.records.NodeToLabelsList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Provides a way to access information about the map/reduce cluster.
@@ -55,7 +55,7 @@ public class Cluster {
   
   @InterfaceStability.Evolving
   public static enum JobTrackerStatus {INITIALIZING, RUNNING};
-  
+
   private ClientProtocolProvider clientProtocolProvider;
   private ClientProtocol client;
   private UserGroupInformation ugi;
@@ -64,11 +64,12 @@ public class Cluster {
   private Path sysDir = null;
   private Path stagingAreaDir = null;
   private Path jobHistoryDir = null;
-  private static final Log LOG = LogFactory.getLog(Cluster.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(Cluster.class);
 
   private static ServiceLoader<ClientProtocolProvider> frameworkLoader =
       ServiceLoader.load(ClientProtocolProvider.class);
-  
+
   static {
     ConfigUtil.loadResources();
   }
@@ -91,7 +92,7 @@ public class Cluster {
       for (ClientProtocolProvider provider : frameworkLoader) {
         LOG.debug("Trying ClientProtocolProvider : "
             + provider.getClass().getName());
-        ClientProtocol clientProtocol = null; 
+        ClientProtocol clientProtocol = null;
         try {
           if (jobTrackAddr == null) {
             clientProtocol = provider.create(conf);
@@ -110,7 +111,7 @@ public class Cluster {
             LOG.debug("Cannot pick " + provider.getClass().getName()
                 + " as the ClientProtocolProvider - returned null protocol");
           }
-        } 
+        }
         catch (Exception e) {
           LOG.info("Failed to use " + provider.getClass().getName()
               + " due to error: " + ExceptionUtils.getRootCauseMessage(e));

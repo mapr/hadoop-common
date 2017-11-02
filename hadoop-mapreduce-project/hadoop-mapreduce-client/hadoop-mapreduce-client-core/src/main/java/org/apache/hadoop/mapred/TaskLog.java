@@ -35,8 +35,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -57,6 +55,7 @@ import org.apache.hadoop.yarn.util.TaskLogUtil;
 import org.apache.log4j.Appender;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
 
@@ -67,8 +66,8 @@ import com.google.common.base.Charsets;
  */
 @InterfaceAudience.Private
 public class TaskLog {
-  private static final Log LOG =
-    LogFactory.getLog(TaskLog.class);
+  private static final org.slf4j.Logger LOG =
+      LoggerFactory.getLogger(TaskLog.class);
 
   static final String USERLOGS_DIR_NAME = "userlogs";
 
@@ -157,7 +156,7 @@ public class TaskLog {
       fis.close();
       fis = null;
     } finally {
-      IOUtils.cleanup(LOG, fis);
+      IOUtils.cleanupWithLogger(LOG, fis);
     }
     return l;
   }
@@ -232,7 +231,7 @@ public class TaskLog {
       bos.close();
       bos = null;
     } finally {
-      IOUtils.cleanup(LOG, dos, bos);
+      IOUtils.cleanupWithLogger(LOG, dos, bos);
     }
 
     File indexFile = getIndexFile(currentTaskid, isCleanup);

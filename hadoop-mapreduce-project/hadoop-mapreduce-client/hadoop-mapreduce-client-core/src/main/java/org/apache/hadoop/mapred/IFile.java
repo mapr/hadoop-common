@@ -49,8 +49,8 @@ import org.apache.hadoop.io.serializer.SerializationFactory;
 import org.apache.hadoop.io.serializer.Serializer;
 import org.apache.hadoop.mapreduce.MRConfig;
 import org.apache.hadoop.util.ReflectionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>IFile</code> is the simple &lt;key-len, value-len, key, value&gt; format
@@ -62,12 +62,12 @@ import org.apache.commons.logging.LogFactory;
 @InterfaceAudience.Private
 @InterfaceStability.Unstable
 public class IFile {
-  private static final Log LOG = LogFactory.getLog(IFile.class);
-  private static final Map<Class<?>, Constructor<?>> CONSTRUCTOR_CACHE = 
+  private static final Logger LOG = LoggerFactory.getLogger(IFile.class);
+  private static final Map<Class<?>, Constructor<?>> CONSTRUCTOR_CACHE =
       new ConcurrentHashMap<Class<?>, Constructor<?>>();
   public static final int EOF_MARKER = -1; // End of File Marker
   
-  private static <T> Constructor<T> constructor(Class<T> theClass, Class<?>... parameterTypes) {    
+  private static <T> Constructor<T> constructor(Class<T> theClass, Class<?>... parameterTypes) {
     try {
       Constructor<T> meth = (Constructor<T>) CONSTRUCTOR_CACHE.get(theClass);
       if (meth == null) {
@@ -75,12 +75,12 @@ public class IFile {
         meth.setAccessible(true);
         CONSTRUCTOR_CACHE.put(theClass, meth);
       }
-      return meth;      
+      return meth;
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
   }
-  
+
   private static <T> T newInstance(Constructor<T> meth, Object ...params) {
     T result;
     try {
@@ -90,7 +90,7 @@ public class IFile {
     }
     return result;
   }
-  
+
   /**
    * <code>IFile.Writer</code> to write out intermediate map-outputs. 
    */
@@ -114,7 +114,7 @@ public class IFile {
     private final Counters.Counter writtenRecordsCounter;
     private final boolean flushOnClose;
     IFileOutputStream checksumOut;
-    
+
 
     Class<K> keyClass;
     Class<V> valueClass;
@@ -214,7 +214,7 @@ public class IFile {
         // Write the checksum
        // checksumOut.finish();
       }
-      
+
       compressedBytesWritten = rawOut.getPos() - start;
 
       if (compressOutput) {
@@ -403,7 +403,7 @@ public class IFile {
       this.fileLength = length;
       this.rawIn = in;
       this.startOffset = (in != null) ? in.getPos() : 0;
-      
+
       if (conf != null) {
         bufferSize = conf.getInt("io.file.buffer.size", DEFAULT_BUFFER_SIZE);
       }

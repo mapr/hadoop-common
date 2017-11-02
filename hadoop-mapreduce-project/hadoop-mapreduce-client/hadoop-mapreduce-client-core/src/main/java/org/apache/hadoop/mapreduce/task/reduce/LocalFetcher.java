@@ -25,8 +25,6 @@ import java.util.Set;
 
 import javax.crypto.SecretKey;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -37,6 +35,8 @@ import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.SpillRecord;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.mapreduce.CryptoUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * LocalFetcher is used by LocalJobRunner to perform a local filesystem
@@ -44,7 +44,7 @@ import org.apache.hadoop.mapreduce.CryptoUtils;
  */
 class LocalFetcher<K,V> extends Fetcher<K, V> {
 
-  private static final Log LOG = LogFactory.getLog(LocalFetcher.class);
+  private static final Logger LOG = LoggerFactory.getLogger(LocalFetcher.class);
 
   private static final MapHost LOCALHOST = new MapHost("local", "local");
 

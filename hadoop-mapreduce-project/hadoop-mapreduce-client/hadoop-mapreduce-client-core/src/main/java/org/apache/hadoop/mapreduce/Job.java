@@ -22,8 +22,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.security.PrivilegedExceptionAction;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
@@ -39,6 +37,8 @@ import org.apache.hadoop.mapreduce.task.JobContextImpl;
 import org.apache.hadoop.mapreduce.util.ConfigUtil;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.yarn.api.records.ReservationId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The job submitter's view of the Job.
@@ -75,8 +75,8 @@ import org.apache.hadoop.yarn.api.records.ReservationId;
  */
 @InterfaceAudience.Public
 @InterfaceStability.Evolving
-public class Job extends JobContextImpl implements JobContext {  
-  private static final Log LOG = LogFactory.getLog(Job.class);
+public class Job extends JobContextImpl implements JobContext {
+  private static final Logger LOG = LoggerFactory.getLogger(Job.class);
 
   @InterfaceStability.Evolving
   public static enum JobState {DEFINE, RUNNING};
@@ -653,7 +653,7 @@ public class Job extends JobContextImpl implements JobContext {
    * @param priority the new priority for the job.
    * @throws IOException
    */
-  public void setPriority(JobPriority priority) 
+  public void setPriority(JobPriority priority)
       throws IOException, InterruptedException {
     if (state == JobState.DEFINE) {
       conf.setJobPriority(
@@ -1513,5 +1513,5 @@ public class Job extends JobContextImpl implements JobContext {
   public void setReservationId(ReservationId reservationId) {
     this.reservationId = reservationId;
   }
-  
+
 }

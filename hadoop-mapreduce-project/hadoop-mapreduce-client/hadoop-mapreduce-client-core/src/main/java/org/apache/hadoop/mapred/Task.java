@@ -34,8 +34,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.crypto.SecretKey;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configurable;
@@ -70,6 +68,10 @@ import org.apache.hadoop.util.ShutdownHookManager;
 import org.apache.hadoop.util.StringInterner;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.classification.MapRModified;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 /**
  * Base class for tasks.
@@ -77,8 +79,9 @@ import org.apache.hadoop.classification.MapRModified;
 @InterfaceAudience.LimitedPrivate({"MapReduce"})
 @InterfaceStability.Unstable
 abstract public class Task implements Writable, Configurable {
-  private static final Log LOG =
-    LogFactory.getLog(Task.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(Task.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
 
   public static String MERGED_OUTPUT_PREFIX = ".merged";
   public static final long DEFAULT_COMBINE_RECORDS_BEFORE_PROGRESS = 10000;
@@ -87,7 +90,7 @@ abstract public class Task implements Writable, Configurable {
    * @deprecated Provided for compatibility. Use {@link TaskCounter} instead.
    */
   @Deprecated
-  public static enum Counter { 
+  public static enum Counter {
     MAP_INPUT_RECORDS, 
     MAP_OUTPUT_RECORDS,
     MAP_SKIPPED_RECORDS,
@@ -324,7 +327,7 @@ abstract public class Task implements Writable, Configurable {
    */
   protected void reportFatalError(TaskAttemptID id, Throwable throwable, 
                                   String logMsg) {
-    LOG.fatal(logMsg);
+    LOG.error(FATAL, logMsg);
     
     if (ShutdownHookManager.get().isShutdownInProgress()) {
       return;
@@ -337,7 +340,7 @@ abstract public class Task implements Writable, Configurable {
     try {
       umbilical.fatalError(id, cause);
     } catch (IOException ioe) {
-      LOG.fatal("Failed to contact the tasktracker", ioe);
+      LOG.error(FATAL,"Failed to contact the tasktracker", ioe);
       System.exit(-1);
     }
   }
@@ -626,7 +629,7 @@ abstract public class Task implements Writable, Configurable {
      * Using AtomicBoolean since we need an atomic read & reset method. 
      */  
     private AtomicBoolean progressFlag = new AtomicBoolean(false);
-    
+
     TaskReporter(Progress taskProgress,
                  TaskUmbilicalProtocol umbilical) {
       this.umbilical = umbilical;
@@ -703,11 +706,11 @@ abstract public class Task implements Writable, Configurable {
       } else {
         return split;
       }
-    }  
-    /** 
-     * The communication thread handles communication with the parent (Task Tracker). 
-     * It sends progress updates if progress has been made or if the task needs to 
-     * let the parent know that it's alive. It also pings the parent to see if it's alive. 
+    }
+    /**
+     * The communication thread handles communication with the parent (Task Tracker).
+     * It sends progress updates if progress has been made or if the task needs to
+     * let the parent know that it's alive. It also pings the parent to see if it's alive.
      */
     public void run() {
       final int MAX_RETRIES = 3;
@@ -735,7 +738,7 @@ abstract public class Task implements Writable, Configurable {
             // we need to send progress update
             updateCounters();
             taskStatus.statusUpdate(taskProgress.get(),
-                                    taskProgress.toString(), 
+                                    taskProgress.toString(),
                                     counters);
             taskFound = umbilical.statusUpdate(taskId, taskStatus);
             taskStatus.clearStatus();
@@ -753,9 +756,9 @@ abstract public class Task implements Writable, Configurable {
             System.exit(66);
           }
 
-          sendProgress = resetProgressFlag(); 
+          sendProgress = resetProgressFlag();
           remainingRetries = MAX_RETRIES;
-        } 
+        }
         catch (Throwable t) {
           LOG.info("Communication exception: " + StringUtils.stringifyException(t));
           remainingRetries -=1;
@@ -1286,7 +1289,7 @@ abstract public class Task implements Writable, Configurable {
     } else {
       this.conf = new JobConf(conf);
     }
-    
+
     this.mapOutputFile = ReflectionUtils.newInstance(
         conf.getClass(MRConfig.TASK_LOCAL_OUTPUT_CLASS,
           MROutputFiles.class, MapOutputFile.class), conf);

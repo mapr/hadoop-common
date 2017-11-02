@@ -28,8 +28,6 @@ import java.util.Random;
 
 import org.junit.Assert;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.mapred.Counters.Counter;
 import org.apache.hadoop.mapred.Counters.CountersExceededException;
 import org.apache.hadoop.mapred.Counters.Group;
@@ -40,6 +38,8 @@ import org.apache.hadoop.mapreduce.TaskCounter;
 import org.apache.hadoop.mapreduce.counters.FrameworkCounterGroup;
 import org.apache.hadoop.mapreduce.counters.CounterGroupFactory.FrameworkGroupFactory;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * TestCounters checks the sanity and recoverability of {@code Counters}
@@ -47,7 +47,7 @@ import org.junit.Test;
 public class TestCounters {
   enum myCounters {TEST1, TEST2};
   private static final long MAX_VALUE = 10;
-  private static final Log LOG = LogFactory.getLog(TestCounters.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TestCounters.class);
   
   static final Enum<?> FRAMEWORK_COUNTER = TaskCounter.CPU_MILLISECONDS;
   static final long FRAMEWORK_COUNTER_VALUE = 8;

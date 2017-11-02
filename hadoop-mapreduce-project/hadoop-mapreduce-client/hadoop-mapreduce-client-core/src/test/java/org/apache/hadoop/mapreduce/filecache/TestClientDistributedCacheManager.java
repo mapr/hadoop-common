@@ -23,8 +23,6 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -38,10 +36,12 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TestClientDistributedCacheManager {
-  private static final Log LOG = LogFactory.getLog(
-      TestClientDistributedCacheManager.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(TestClientDistributedCacheManager.class);
   
   private static final String TEST_ROOT_DIR = 
       new File(System.getProperty("test.build.data", "/tmp")).toURI()

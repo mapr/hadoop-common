@@ -32,8 +32,6 @@ import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
@@ -62,6 +60,8 @@ import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.hadoop.yarn.api.records.NodeToLabelsList;
 import org.apache.hadoop.yarn.logaggregation.LogCLIHelpers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
 
@@ -71,13 +71,13 @@ import com.google.common.base.Charsets;
 @InterfaceAudience.Public
 @InterfaceStability.Stable
 public class CLI extends Configured implements Tool {
-  private static final Log LOG = LogFactory.getLog(CLI.class);
+  private static final Logger LOG = LoggerFactory.getLogger(CLI.class);
   protected Cluster cluster;
   private static final Set<String> taskTypes = new HashSet<String>(
       Arrays.asList("MAP", "REDUCE"));
   private final Set<String> taskStates = new HashSet<String>(Arrays.asList(
       "running", "completed", "pending", "failed", "killed"));
- 
+
   public CLI() {
   }
   
@@ -160,7 +160,7 @@ public class CLI extends Configured implements Tool {
       }
       jobid = argv[1];
       try {
-        jp = JobPriority.valueOf(argv[2]); 
+        jp = JobPriority.valueOf(argv[2]);
       } catch (IllegalArgumentException iae) {
         LOG.info(iae);
         displayUsage(cmd);
@@ -468,7 +468,7 @@ public class CLI extends Configured implements Tool {
         } catch (IOException e) {
           if (e instanceof RemoteException) {
             throw e;
-          } 
+          }
           System.out.println(e.getMessage());
         }
       }
@@ -529,7 +529,7 @@ public class CLI extends Configured implements Tool {
     } else if ("-set-priority".equals(cmd)) {
       System.err.println(prefix + "[" + cmd + " <job-id> <priority>]. " +
           "Valid values for priorities are: " 
-          + jobPriorityValues); 
+          + jobPriorityValues);
     } else if ("-list-active-trackers".equals(cmd)) {
       System.err.println(prefix + "[" + cmd + "]");
     } else if ("-list-blacklisted-trackers".equals(cmd)) {
@@ -546,7 +546,7 @@ public class CLI extends Configured implements Tool {
     } else if ("-logs".equals(cmd)) {
       System.err.println(prefix + "[" + cmd +
           " <job-id> <task-attempt-id>]. " +
-          " <task-attempt-id> is optional to get task attempt logs.");      
+          " <task-attempt-id> is optional to get task attempt logs.");
     } else {
       System.err.printf(prefix + "<command> <args>%n");
       System.err.printf("\t[-submit <job-file>]%n");
@@ -778,7 +778,7 @@ public class CLI extends Configured implements Tool {
       int neededMem = job.getNeededMem();
       writer.printf(dataPattern,
           job.getJobID().toString(), job.getState(), job.getStartTime(),
-          job.getUsername(), job.getQueue(), 
+          job.getUsername(), job.getQueue(),
           job.getPriority().name(),
           numUsedSlots < 0 ? UNAVAILABLE : numUsedSlots,
           numReservedSlots < 0 ? UNAVAILABLE : numReservedSlots,

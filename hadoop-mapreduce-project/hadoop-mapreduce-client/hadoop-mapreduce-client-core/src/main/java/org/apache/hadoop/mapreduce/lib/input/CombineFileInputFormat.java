@@ -30,8 +30,6 @@ import java.util.Set;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
@@ -53,6 +51,8 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.net.NodeBase;
 import org.apache.hadoop.net.NetworkTopology;
 import org.apache.hadoop.util.PriorityQueue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashMultiset;
@@ -86,7 +86,8 @@ import com.google.common.collect.Multiset;
 public abstract class CombineFileInputFormat<K, V>
   extends FileInputFormat<K, V> {
   
-  private static final Log LOG = LogFactory.getLog(CombineFileInputFormat.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(CombineFileInputFormat.class);
   
   public static final String SPLIT_MINSIZE_PERNODE = 
     "mapreduce.input.fileinputformat.split.minsize.per.node";
@@ -339,7 +340,7 @@ public abstract class CombineFileInputFormat<K, V>
     ArrayList<OneBlockInfo> validBlocks = new ArrayList<OneBlockInfo>();
     long curSplitSize = 0;
     int curBlockNum = 0;
-    
+
     int totalNodes = nodeToBlocks.size();
     long totalLength = totLength;
 
@@ -573,7 +574,7 @@ public abstract class CombineFileInputFormat<K, V>
                                Configuration conf) {
 
     // Track total byte contributions for each host
-    final HashMap<String, HostCounter> hostCounterMap = 
+    final HashMap<String, HostCounter> hostCounterMap =
       new HashMap<String, HostCounter>();
 
     // create an input split
