@@ -117,4 +117,9 @@ public class TestCryptoStreamsForLocalFS extends CryptoStreamsTestBase {
   @Test(timeout=1000)
   public void testSeekToNewSource() throws Exception {
   }
+
+  @Ignore("Local file input stream does not support unbuffer")
+  @Override
+  @Test
+  public void testUnbuffer() throws Exception {}
 }
