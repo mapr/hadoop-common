@@ -162,7 +162,7 @@ public class CLI extends Configured implements Tool {
       try {
         jp = JobPriority.valueOf(argv[2]);
       } catch (IllegalArgumentException iae) {
-        LOG.info(iae);
+        LOG.info(iae.toString());
         displayUsage(cmd);
         return exitCode;
       }

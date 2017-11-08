@@ -31,8 +31,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobACLsManager;
@@ -63,6 +61,8 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.AccessControlList;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 import org.apache.hadoop.yarn.util.Records;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -70,8 +70,8 @@ import org.apache.hadoop.yarn.util.Records;
  * Data from job history file is loaded lazily.
  */
 public class CompletedJob implements org.apache.hadoop.mapreduce.v2.app.job.Job {
-  
-  static final Log LOG = LogFactory.getLog(CompletedJob.class);
+
+  static final Logger LOG = LoggerFactory.getLogger(CompletedJob.class);
   private final Configuration conf;
   private final JobId jobId; //Can be picked from JobInfo with a conversion.
   private final String user; //Can be picked up from JobInfo

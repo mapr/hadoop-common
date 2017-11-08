@@ -115,7 +115,7 @@ class InMemoryMapOutput<K, V> extends MapOutput<K, V> {
 
     } catch (IOException ioe) {
       // Close the streams
-      IOUtils.cleanup(LOG, input);
+      IOUtils.cleanupWithLogger(LOG, input);
 
       // Re-throw
       throw ioe;
