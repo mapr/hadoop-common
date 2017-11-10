@@ -1439,7 +1439,7 @@
   <property>
     <description>Client policy for whether timeline operations are non-fatal</description>
     <name>yarn.timeline-service.client.best-effort</name>
-    <value>false</value>
+    <value>true</value>
   </property>
 
   <property>
