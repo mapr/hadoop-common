@@ -19,8 +19,6 @@
 package org.apache.hadoop.yarn.conf;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.HadoopIllegalArgumentException;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
@@ -29,10 +27,12 @@ import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @InterfaceAudience.Private
 public class HAUtil {
-  private static Log LOG = LogFactory.getLog(HAUtil.class);
+  private static Logger LOG = LoggerFactory.getLogger(HAUtil.class);
 
   public static final String BAD_CONFIG_MESSAGE_PREFIX =
     "Invalid configuration! ";
@@ -70,10 +70,10 @@ public class HAUtil {
       CustomRMAddressFinder finder = RMAddressFinderLoader.getInstance().getCustomRMAddressFinder(conf);
       if ( finder != null ) {
         return finder.getRMAddress(conf, address, defaultAddr, defaultPort);
-      } 
+      }
       return defaultAddr;
     }
-    
+
     public static boolean isAutomaticFailoverEnabled(Configuration conf) {
     return conf.getBoolean(YarnConfiguration.AUTO_FAILOVER_ENABLED,
         YarnConfiguration.DEFAULT_AUTO_FAILOVER_ENABLED);
@@ -270,9 +270,9 @@ public class HAUtil {
     String confKey = getConfKeyForRMInstance(prefix, conf);
     String retVal = conf.getTrimmed(confKey);
     if (LOG.isTraceEnabled()) {
-      LOG.trace("getConfValueForRMInstance: prefix = " + prefix +
-          "; confKey being looked up = " + confKey +
-          "; value being set to = " + retVal);
+      LOG.trace("getConfValueForRMInstance: prefix = {};" +
+          " confKey being looked up = {};" +
+          " value being set to = {}", prefix, confKey, retVal);
     }
     return retVal;
   }
