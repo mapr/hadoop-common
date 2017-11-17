@@ -19,6 +19,8 @@ package org.apache.hadoop.mapreduce.task.reduce;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
@@ -255,7 +257,9 @@ public class TestDirectShuffleMergeManager {
     jobConf.set("mapred.ifile.inputstream", "org.apache.hadoop.mapred.MapRIFileInputStream");
     jobConf.set("fs.file.impl","org.apache.hadoop.fs.LocalFileSystem");
 
-    MapOutputFile mapOutputFile = new MapRFsOutputFile();
+    MapOutputFile mapOutputFile = mock(MapOutputFile.class);
+    doNothing().when(mapOutputFile).setConf(any(JobConf.class));
+
     FileSystem fs = FileSystem.getLocal(jobConf);
     DirectShuffleMergeManagerImpl<IntWritable, IntWritable> manager =
       new DirectShuffleMergeManagerImpl<IntWritable, IntWritable>(null, jobConf, fs, null
