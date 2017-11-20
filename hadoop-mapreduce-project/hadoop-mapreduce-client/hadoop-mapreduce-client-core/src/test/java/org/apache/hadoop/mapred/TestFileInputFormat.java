@@ -215,11 +215,12 @@ public class TestFileInputFormat {
     @Override
     public FileStatus[] listStatus(Path f) throws FileNotFoundException,
         IOException {
-      if (f.toString().equals("test:/a1")) {
+      String path = f.toString();
+      if (path.equals("test:/a1") || path.equals("test:///a1")) {
         return new FileStatus[] {
             new FileStatus(0, true, 1, 150, 150, new Path("test:/a1/a2")),
             new FileStatus(10, false, 1, 150, 150, new Path("test:/a1/file1")) };
-      } else if (f.toString().equals("test:/a1/a2")) {
+      } else if (path.equals("test:/a1/a2") || path.equals("test:///a1/a2")) {
         return new FileStatus[] {
             new FileStatus(10, false, 1, 150, 150,
                 new Path("test:/a1/a2/file2")),
