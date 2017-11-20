@@ -24,8 +24,8 @@ import java.security.PrivilegedAction;
 import java.security.PrivilegedExceptionAction;
 import java.util.Collection;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
@@ -59,7 +59,7 @@ import com.google.common.base.Preconditions;
 @InterfaceAudience.Private
 @InterfaceStability.Evolving
 public class EditLogTailer {
-  public static final Log LOG = LogFactory.getLog(EditLogTailer.class);
+  public static final Logger LOG = LoggerFactory.getLogger(EditLogTailer.class);
   
   private final EditLogTailerThread tailerThread;
   
@@ -338,7 +338,7 @@ public class EditLogTailer {
           // interrupter should have already set shouldRun to false
           continue;
         } catch (Throwable t) {
-          LOG.fatal("Unknown error encountered while tailing edits. " +
+          LOG.error("Unknown error encountered while tailing edits. " +
               "Shutting down standby NN.", t);
           terminate(1, t);
         }

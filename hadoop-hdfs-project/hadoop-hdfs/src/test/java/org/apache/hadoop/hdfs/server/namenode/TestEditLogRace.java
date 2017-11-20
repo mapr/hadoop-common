@@ -30,9 +30,6 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.impl.Log4JLogger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -47,8 +44,11 @@ import org.apache.hadoop.hdfs.server.common.Storage.StorageDirectory;
 import org.apache.hadoop.hdfs.server.namenode.JournalSet.JournalAndStream;
 import org.apache.hadoop.hdfs.server.namenode.NNStorage.NameNodeDirType;
 import org.apache.hadoop.hdfs.server.protocol.NamenodeProtocols;
+import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.util.Time;
-import org.apache.log4j.Level;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -59,10 +59,10 @@ import org.mockito.stubbing.Answer;
  */
 public class TestEditLogRace {
   static {
-    ((Log4JLogger)FSEditLog.LOG).getLogger().setLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(FSEditLog.LOG, Level.DEBUG);
   }
 
-  private static final Log LOG = LogFactory.getLog(TestEditLogRace.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TestEditLogRace.class);
 
   private static final String NAME_DIR =
     MiniDFSCluster.getBaseDirectory() + "name1";
@@ -95,7 +95,7 @@ public class TestEditLogRace {
    * time for an fsync() or enterSafeMode().
    */
   private static final int BLOCK_TIME = 10;
-  
+
   //
   // an object that does a bunch of transactions
   //
@@ -325,7 +325,7 @@ public class TestEditLogRace {
     conf.set(DFSConfigKeys.DFS_NAMENODE_HTTP_ADDRESS_KEY, "0.0.0.0:0");
     conf.set(DFSConfigKeys.DFS_NAMENODE_NAME_DIR_KEY, NAME_DIR);
     conf.set(DFSConfigKeys.DFS_NAMENODE_EDITS_DIR_KEY, NAME_DIR);
-    conf.setBoolean(DFSConfigKeys.DFS_PERMISSIONS_ENABLED_KEY, false); 
+    conf.setBoolean(DFSConfigKeys.DFS_PERMISSIONS_ENABLED_KEY, false);
     return conf;
   }
 
@@ -378,7 +378,7 @@ public class TestEditLogRace {
                 true);
             LOG.info("mkdirs complete");
           } catch (Throwable ioe) {
-            LOG.fatal("Got exception", ioe);
+            LOG.error("Got exception", ioe);
             deferredException.set(ioe);
             waitToEnterFlush.countDown();
           }
@@ -463,7 +463,7 @@ public class TestEditLogRace {
       final AtomicReference<Throwable> deferredException =
           new AtomicReference<Throwable>();
       final CountDownLatch waitToEnterSync = new CountDownLatch(1);
-      
+
       final Thread doAnEditThread = new Thread() {
         @Override
         public void run() {
@@ -474,13 +474,13 @@ public class TestEditLogRace {
                 true);
             LOG.info("mkdirs complete");
           } catch (Throwable ioe) {
-            LOG.fatal("Got exception", ioe);
+            LOG.error("Got exception", ioe);
             deferredException.set(ioe);
             waitToEnterSync.countDown();
           }
         }
       };
-      
+
       Answer<Void> blockingSync = new Answer<Void>() {
         @Override
         public Void answer(InvocationOnMock invocation) throws Throwable {
@@ -498,7 +498,7 @@ public class TestEditLogRace {
         }
       };
       doAnswer(blockingSync).when(editLog).logSync();
-      
+
       doAnEditThread.start();
       LOG.info("Main thread: waiting to just before logSync...");
       waitToEnterSync.await();
@@ -506,7 +506,7 @@ public class TestEditLogRace {
       LOG.info("Main thread: detected that logSync about to be called.");
       LOG.info("Trying to enter safe mode.");
       LOG.info("This should block for " + BLOCK_TIME + "sec, since we have pending edits");
-      
+
       long st = Time.now();
       namesystem.setSafeMode(SafeModeAction.SAFEMODE_ENTER);
       long et = Time.now();

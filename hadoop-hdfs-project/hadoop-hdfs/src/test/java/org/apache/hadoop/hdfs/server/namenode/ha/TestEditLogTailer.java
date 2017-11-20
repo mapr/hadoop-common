@@ -23,7 +23,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 
-import org.apache.commons.logging.impl.Log4JLogger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.fs.permission.PermissionStatus;
@@ -33,28 +32,25 @@ import org.apache.hadoop.hdfs.HAUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.MiniDFSNNTopology;
-import org.apache.hadoop.hdfs.server.namenode.FSImage;
-import org.apache.hadoop.hdfs.server.namenode.NNStorage;
-import org.apache.hadoop.hdfs.server.namenode.NameNode;
-import org.apache.hadoop.hdfs.server.namenode.NameNodeAdapter;
+import org.apache.hadoop.hdfs.server.namenode.*;
 import org.apache.hadoop.test.GenericTestUtils;
-import org.apache.log4j.Level;
 import org.junit.Test;
 
 import com.google.common.base.Supplier;
 
 public class TestEditLogTailer {
-  
+
   private static final String DIR_PREFIX = "/dir";
   private static final int DIRS_TO_MAKE = 20;
   static final long SLEEP_TIME = 1000;
   static final long NN_LAG_TIMEOUT = 10 * 1000;
   
   static {
-    ((Log4JLogger)FSImage.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger)EditLogTailer.LOG).getLogger().setLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(FSImage.LOG, org.slf4j.event.Level.DEBUG);
+    GenericTestUtils.setLogLevel(FSEditLog.LOG, org.slf4j.event.Level.DEBUG);
+    GenericTestUtils.setLogLevel(EditLogTailer.LOG, org.slf4j.event.Level.DEBUG);
   }
-  
+
   @Test
   public void testTailer() throws IOException, InterruptedException,
       ServiceFailedException {
@@ -113,14 +109,14 @@ public class TestEditLogTailer {
   public void testNN1TriggersLogRolls() throws Exception {
     testStandbyTriggersLogRolls(1);
   }
-  
+
   private static void testStandbyTriggersLogRolls(int activeIndex)
       throws Exception {
     Configuration conf = new Configuration();
     // Roll every 1s
     conf.setInt(DFSConfigKeys.DFS_HA_LOGROLL_PERIOD_KEY, 1);
     conf.setInt(DFSConfigKeys.DFS_HA_TAILEDITS_PERIOD_KEY, 1);
-    
+
     // Have to specify IPC ports so the NNs can talk to each other.
     MiniDFSNNTopology topology = new MiniDFSNNTopology()
       .addNameservice(new MiniDFSNNTopology.NSConf("ns1")
@@ -149,7 +145,7 @@ public class TestEditLogTailer {
     File sharedDir = new File(sharedUri.getPath(), "current");
     final File expectedLog = new File(sharedDir,
         NNStorage.getInProgressEditsFileName(startTxId));
-    
+
     GenericTestUtils.waitFor(new Supplier<Boolean>() {
       @Override
       public Boolean get() {
