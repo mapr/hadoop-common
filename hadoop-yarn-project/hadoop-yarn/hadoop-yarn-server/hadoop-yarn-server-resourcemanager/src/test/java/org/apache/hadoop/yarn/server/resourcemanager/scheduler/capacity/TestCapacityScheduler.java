@@ -2686,7 +2686,7 @@ public class TestCapacityScheduler {
         attemptMetric.getApplicationAttemptHeadroom());
 
     // Add a node to cluster
-    Resource newResource = Resource.newInstance(4 * GB, 1, 1.0);
+    Resource newResource = Resource.newInstance(4 * GB, 0, 0);
     RMNode node = MockNodes.newNodeInfo(0, newResource, 1, "127.0.0.1");
     cs.handle(new NodeAddedSchedulerEvent(node));
 
