@@ -50,6 +50,7 @@ import org.apache.hadoop.yarn.util.SystemClock;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -69,17 +70,12 @@ public class TestHistoryFileManager {
     coreSitePath = "." + File.separator + "target" + File.separator +
             "test-classes" + File.separator + "core-site.xml";
     Configuration conf = new HdfsConfiguration();
-    Configuration conf2 = new HdfsConfiguration();
     dfsCluster = new MiniDFSCluster.Builder(conf).build();
-    conf2.set(MiniDFSCluster.HDFS_MINIDFS_BASEDIR,
-            conf.get(MiniDFSCluster.HDFS_MINIDFS_BASEDIR) + "_2");
-    dfsCluster2 = new MiniDFSCluster.Builder(conf2).build();
   }
 
   @AfterClass
   public static void cleanUpClass() throws Exception {
     dfsCluster.shutdown();
-    dfsCluster2.shutdown();
   }
 
   @After
@@ -119,6 +115,7 @@ public class TestHistoryFileManager {
     testTryCreateHistoryDirs(dfsCluster.getConfiguration(0), true);
   }
 
+  @Ignore("Only one cluster can be existing at any point of time (See MiniDFSCluster#build())")
   @Test
   public void testCreateDirsWithAdditionalFileSystem() throws Exception {
     dfsCluster.getFileSystem().setSafeMode(
