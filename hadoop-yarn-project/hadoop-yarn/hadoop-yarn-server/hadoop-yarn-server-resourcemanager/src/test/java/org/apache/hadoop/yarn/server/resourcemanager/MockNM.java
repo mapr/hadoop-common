@@ -50,6 +50,7 @@ public class MockNM {
   private NodeId nodeId;
   private final int memory;
   private final int vCores;
+  private final double discs;
   private ResourceTrackerService resourceTracker;
   private int httpPort = 2;
   private MasterKey currentContainerTokenMasterKey;
@@ -64,15 +65,34 @@ public class MockNM {
         resourceTracker);
   }
 
-  public MockNM(String nodeIdStr, int memory, int vcores,
-      ResourceTrackerService resourceTracker) {
-    this(nodeIdStr, memory, vcores, resourceTracker, YarnVersionInfo.getVersion());
+  public MockNM(String nodeIdStr, int memory, double discs, ResourceTrackerService resourceTracker) {
+    // scale vcores based on the requested memory
+    this(nodeIdStr, memory,
+            Math.max(1, (memory * YarnConfiguration.DEFAULT_NM_VCORES) /
+                    YarnConfiguration.DEFAULT_NM_PMEM_MB), discs,
+            resourceTracker);
   }
 
   public MockNM(String nodeIdStr, int memory, int vcores,
+      ResourceTrackerService resourceTracker) {
+    this(nodeIdStr, memory, vcores, 0, resourceTracker, YarnVersionInfo.getVersion());
+  }
+
+  public MockNM(String nodeIdStr, int memory, int vcores, double discs,
+                ResourceTrackerService resourceTracker) {
+    this(nodeIdStr, memory, vcores, discs, resourceTracker, YarnVersionInfo.getVersion());
+  }
+
+  public MockNM(String nodeIdStr, int memory, int vcores,
+                ResourceTrackerService resourceTracker, String version) {
+    this(nodeIdStr, memory, vcores, 0, resourceTracker, version);
+  }
+
+  public MockNM(String nodeIdStr, int memory, int vcores, double discs,
       ResourceTrackerService resourceTracker, String version) {
     this.memory = memory;
     this.vCores = vcores;
+    this.discs = discs;
     this.resourceTracker = resourceTracker;
     this.version = version;
     String[] splits = nodeIdStr.split(":");
@@ -119,7 +139,7 @@ public class MockNM {
         RegisterNodeManagerRequest.class);
     req.setNodeId(nodeId);
     req.setHttpPort(httpPort);
-    Resource resource = BuilderUtils.newResource(memory, vCores);
+    Resource resource = BuilderUtils.newResource(memory, vCores, discs);
     req.setResource(resource);
     req.setContainerStatuses(containerReports);
     req.setNMVersion(version);

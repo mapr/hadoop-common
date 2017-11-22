@@ -127,7 +127,7 @@ public class MockAM {
 
   public void addRequests(String[] hosts, int memory, int priority,
       int containers) throws Exception {
-    requests.addAll(createReq(hosts, memory, priority, containers));
+    requests.addAll(createReq(hosts, memory, 0, 0, priority, containers));
   }
 
   public AllocateResponse schedule() throws Exception {
@@ -144,53 +144,68 @@ public class MockAM {
   public AllocateResponse allocate(
       String host, int memory, int numContainers,
       List<ContainerId> releases) throws Exception {
-    return allocate(host, memory, numContainers, releases, null);
+    return allocate(host, memory, 0, 0, numContainers, releases, null);
   }
   
   public AllocateResponse allocate(
       String host, int memory, int numContainers,
       List<ContainerId> releases, String labelExpression) throws Exception {
     List<ResourceRequest> reqs =
-        createReq(new String[] { host }, memory, 1, numContainers,
+        createReq(new String[] { host }, memory, 0, 0,1, numContainers,
+            labelExpression);
+    return allocate(reqs, releases);
+  }
+
+  public AllocateResponse allocate(
+      String host, int memory, int vCores, double discs, int numContainers,
+      List<ContainerId> releases) throws Exception {
+    return allocate(host, memory, vCores, discs,numContainers, releases, null);
+  }
+
+  public AllocateResponse allocate(
+      String host, int memory, int vCores, double discs, int numContainers,
+      List<ContainerId> releases, String labelExpression) throws Exception {
+    List<ResourceRequest> reqs =
+        createReq(new String[] { host }, memory, vCores, discs,1, numContainers,
             labelExpression);
     return allocate(reqs, releases);
   }
   
-  public List<ResourceRequest> createReq(String[] hosts, int memory, int priority,
-      int containers) throws Exception {
-    return createReq(hosts, memory, priority, containers, null);
+  public List<ResourceRequest> createReq(String[] hosts, int memory, int vCores, double discs,
+      int priority, int containers) throws Exception {
+    return createReq(hosts, memory, vCores, discs, priority, containers, null);
   }
 
-  public List<ResourceRequest> createReq(String[] hosts, int memory, int priority,
-      int containers, String labelExpression) throws Exception {
+  public List<ResourceRequest> createReq(String[] hosts, int memory, int vCores, double discs,
+      int priority, int containers, String labelExpression) throws Exception {
     List<ResourceRequest> reqs = new ArrayList<ResourceRequest>();
     for (String host : hosts) {
       // only add host/rack request when asked host isn't ANY
       if (!host.equals(ResourceRequest.ANY)) {
         ResourceRequest hostReq =
-            createResourceReq(host, memory, priority, containers,
+            createResourceReq(host, memory, vCores, discs,priority, containers,
                 labelExpression);
         reqs.add(hostReq);
         ResourceRequest rackReq =
-            createResourceReq("/default-rack", memory, priority, containers,
+            createResourceReq("/default-rack", memory, vCores, discs, priority, containers,
                 labelExpression);
         reqs.add(rackReq);
       }
     }
 
     ResourceRequest offRackReq = createResourceReq(ResourceRequest.ANY, memory,
-        priority, containers, labelExpression);
+        vCores, discs, priority, containers, labelExpression);
     reqs.add(offRackReq);
     return reqs;
   }
-  
-  public ResourceRequest createResourceReq(String resource, int memory, int priority,
-      int containers) throws Exception {
-    return createResourceReq(resource, memory, priority, containers, null);
-  }
 
   public ResourceRequest createResourceReq(String resource, int memory, int priority,
-      int containers, String labelExpression) throws Exception {
+      int containers) throws Exception {
+    return createResourceReq(resource, memory, 0, 0, priority, containers, null);
+  }
+
+  public ResourceRequest createResourceReq(String resource, int memory, int vCores, double discs,
+      int priority, int containers, String labelExpression) throws Exception {
     ResourceRequest req = Records.newRecord(ResourceRequest.class);
     req.setResourceName(resource);
     req.setNumContainers(containers);
@@ -199,6 +214,8 @@ public class MockAM {
     req.setPriority(pri);
     Resource capability = Records.newRecord(Resource.class);
     capability.setMemory(memory);
+    capability.setVirtualCores(vCores);
+    capability.setDisks(discs);
     req.setCapability(capability);
     if (labelExpression != null) {
      req.setNodeLabelExpression(labelExpression); 
@@ -290,9 +307,14 @@ public class MockAM {
   }
   
   public List<Container> allocateAndWaitForContainers(int nContainer,
-      int memory, MockNM nm) throws Exception {
+    int memory, MockNM nm) throws Exception {
+    return allocateAndWaitForContainers(nContainer, memory, 0, 0,  nm);
+  }
+
+  public List<Container> allocateAndWaitForContainers(int nContainer,
+      int memory, int vCores, double discs, MockNM nm) throws Exception {
     // AM request for containers
-    allocate("ANY", memory, nContainer, null);
+    allocate("ANY", memory, vCores, discs, nContainer, null);
     // kick the scheduler
     nm.nodeHeartbeat(true);
     List<Container> conts =
