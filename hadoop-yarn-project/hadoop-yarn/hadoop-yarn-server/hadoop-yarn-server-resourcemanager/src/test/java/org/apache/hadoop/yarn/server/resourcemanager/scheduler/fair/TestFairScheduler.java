@@ -1859,6 +1859,8 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     clock.tick(15);
 
     // Trigger a kill by insisting we want containers back
+    toPreempt.put(appAttempt2, Resources.createResource(1 * 1024));
+    toPreempt.put(appAttempt4, Resources.createResource(1 * 1024));
     scheduler.preemptResources(toPreempt);
 
     // At this point the containers should have been killed (since we are not simulating AM)
@@ -1883,6 +1885,8 @@ public class TestFairScheduler extends FairSchedulerTestBase {
         "preempted.", set.isEmpty());
 
     // Trigger a kill by insisting we want containers back
+    toPreempt.put(appAttempt2, Resources.createResource(1 * 1024));
+    toPreempt.put(appAttempt4, Resources.createResource(1 * 1024));
     scheduler.preemptResources(toPreempt);
 
     // Pretend 15 seconds have passed
@@ -1892,6 +1896,8 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     // For queueA (fifo), continue preempting from app2.
     // For queueB (fair), even app4 has a lowest priority container with p=4, it
     // still preempts from app3 as app3 is most over fair share.
+    toPreempt.put(appAttempt2, Resources.createResource(1 * 1024));
+    toPreempt.put(appAttempt4, Resources.createResource(1 * 1024));
     scheduler.preemptResources(toPreempt);
 
     assertEquals(2, scheduler.getSchedulerApp(app1).getLiveContainers().size());
