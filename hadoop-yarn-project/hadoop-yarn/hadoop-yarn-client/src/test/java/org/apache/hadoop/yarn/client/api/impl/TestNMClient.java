@@ -88,7 +88,7 @@ public class TestNMClient {
   @BeforeClass
   public static void beforeClass() throws UnknownHostException {
     String hostname = InetAddress.getLocalHost().getHostName();
-    NetUtils.addStaticResolution(hostname, "127.0.0.1");
+    NetUtils.addStaticResolution(hostname, InetAddress.getLocalHost().getHostAddress());
   }
   
   @Before
