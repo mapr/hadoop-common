@@ -1280,7 +1280,9 @@ public class TestRMContainerAllocator {
 
   private MockNM registerNodeManager(int i, MyResourceManager rm,
       DrainDispatcher dispatcher) throws Exception {
-    MockNM nm = rm.registerNode("h" + (i + 1) + ":1234", 10240);
+    String nodeName = "h" + (i + 1);
+    MockNM nm = rm.registerNode(nodeName + ":1234", 10240);
+    NetUtils.addStaticResolution(nodeName, "127.0.0.1");
     dispatcher.await();
     return nm;
   }
