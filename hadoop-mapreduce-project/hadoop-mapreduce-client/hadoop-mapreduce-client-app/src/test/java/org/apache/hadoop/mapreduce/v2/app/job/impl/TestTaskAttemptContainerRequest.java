@@ -27,6 +27,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.hadoop.fs.CommonConfigurationKeys;
+import org.apache.hadoop.security.User;
+import org.apache.hadoop.security.rpcauth.KerberosAuthMethod;
 import org.junit.Assert;
 
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
@@ -92,6 +95,10 @@ public class TestTaskAttemptContainerRequest {
 
     // setup UGI for security so tokens and keys are preserved
     jobConf.set(CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION, "kerberos");
+    jobConf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+      User.class.getName());
+    jobConf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+      KerberosAuthMethod.class.getName());
     UserGroupInformation.setConfiguration(jobConf);
 
     Credentials credentials = new Credentials();
