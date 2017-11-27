@@ -447,6 +447,7 @@ public class TestJobHistoryEventHandler {
   public void testTimelineEventHandling() throws Exception {
     TestParams t = new TestParams(false);
     Configuration conf = new YarnConfiguration();
+    conf.setBoolean(YarnConfiguration.NM_RECOVERY_ENABLED, false);
     conf.setBoolean(YarnConfiguration.TIMELINE_SERVICE_ENABLED, true);
     conf.setBoolean(MRJobConfig.MAPREDUCE_JOB_EMIT_TIMELINE_DATA, true);
     JHEvenHandlerForTest jheh = new JHEvenHandlerForTest(t.mockAppContext, 0);
