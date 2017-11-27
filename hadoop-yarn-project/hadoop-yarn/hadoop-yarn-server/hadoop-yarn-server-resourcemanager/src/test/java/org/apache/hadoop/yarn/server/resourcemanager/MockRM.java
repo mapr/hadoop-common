@@ -446,6 +446,12 @@ public class MockRM extends ResourceManager {
     return nm;
   }
 
+  public MockNM registerNode(String nodeIdStr, int memory, double disks) throws Exception {
+    MockNM nm = new MockNM(nodeIdStr, memory, disks, getResourceTrackerService());
+    nm.registerNode();
+    return nm;
+  }
+
   public MockNM registerNode(String nodeIdStr, int memory, int vCores)
       throws Exception {
     MockNM nm =

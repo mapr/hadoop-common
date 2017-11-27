@@ -207,8 +207,8 @@ public class TestContainerAllocation {
 
     MockRM rm1 = new MockRM(conf);
     rm1.start();
-    MockNM nm1 = rm1.registerNode("unknownhost:1234", 8000);
-    MockNM nm2 = rm1.registerNode("127.0.0.1:1234", 8000);
+    MockNM nm1 = rm1.registerNode("unknownhost:1234", 8000,0.0);
+    MockNM nm2 = rm1.registerNode("127.0.0.1:1234", 8000,0.0);
     RMApp app1 = rm1.submitApp(200);
     MockAM am1 = MockRM.launchAndRegisterAM(app1, rm1, nm2);
 
