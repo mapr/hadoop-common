@@ -39,7 +39,6 @@ public class TestFairSchedulerConfiguration {
         parseResourceConfigValue("2vcores,1024mb,1disks"));
     assertEquals(BuilderUtils.newResource(1024, 2, 1),
         parseResourceConfigValue("1024mb,2vcores,1disks"));
-    //This case is't supported by the disks parser
     assertEquals(BuilderUtils.newResource(1024, 2, 1),
         parseResourceConfigValue("1024   mb, 2    vcores, 1  disks"));
     assertEquals(BuilderUtils.newResource(1024, 2, 1),
@@ -48,12 +47,8 @@ public class TestFairSchedulerConfiguration {
         parseResourceConfigValue("  1024 mb, 2 vcores  ,  1 disks  "));
     assertEquals(BuilderUtils.newResource(1024, 2, 1.3),
         parseResourceConfigValue("  1024.3 mb, 2.35 vcores  , 1.3 disks"));
-    //This case is't supported by the disks parser
     assertEquals(BuilderUtils.newResource(1024, 2, 1),
         parseResourceConfigValue("  1024. mb, 2. vcores  , 1. disks"));
-
-    //Maybe we should replace the regex "(\\d+(\\.\\d+)?) ?" on "(\\d+(\\.\\d*)?)\\s*"
-    //in FairSchedulerConfiguration#findResourceDouble()
   }
   
   @Test(expected = AllocationConfigurationException.class)
