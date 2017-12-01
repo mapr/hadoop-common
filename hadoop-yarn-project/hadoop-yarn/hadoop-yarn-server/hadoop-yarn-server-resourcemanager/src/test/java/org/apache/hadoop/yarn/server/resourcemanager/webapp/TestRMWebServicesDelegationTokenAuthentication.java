@@ -78,6 +78,8 @@ public class TestRMWebServicesDelegationTokenAuthentication {
     TestRMWebServicesDelegationTokenAuthentication.class.getName() + "-root");
   private static File httpSpnegoKeytabFile = new File(
     KerberosTestUtils.getKeytabFile());
+  private static final String SUN_SECURITY_KRB5_RCACHE_KEY =
+      "sun.security.krb5.rcache";
 
   private static String httpSpnegoPrincipal = KerberosTestUtils
     .getServerPrincipal();
@@ -85,7 +87,7 @@ public class TestRMWebServicesDelegationTokenAuthentication {
   private static boolean miniKDCStarted = false;
   private static MiniKdc testMiniKDC;
   private static MockRM rm;
-
+  private static String sunSecurityKrb5RcacheValue;
 
   String delegationTokenHeader;
 
@@ -100,6 +102,11 @@ public class TestRMWebServicesDelegationTokenAuthentication {
   @BeforeClass
   public static void setUp() {
     try {
+      // Disabling kerberos replay cache to avoid "Request is a replay" errors
+      // caused by frequent webservice calls
+      sunSecurityKrb5RcacheValue =
+          System.getProperty(SUN_SECURITY_KRB5_RCACHE_KEY);
+      System.setProperty(SUN_SECURITY_KRB5_RCACHE_KEY, "none");
       testMiniKDC = new MiniKdc(MiniKdc.createConf(), testRootDir);
       setupKDC();
       setupAndStartRM();
@@ -115,6 +122,12 @@ public class TestRMWebServicesDelegationTokenAuthentication {
     }
     if (rm != null) {
       rm.stop();
+    }
+    if (sunSecurityKrb5RcacheValue == null) {
+      System.clearProperty(SUN_SECURITY_KRB5_RCACHE_KEY);
+    } else {
+      System.setProperty(SUN_SECURITY_KRB5_RCACHE_KEY,
+          sunSecurityKrb5RcacheValue);
     }
   }
 
