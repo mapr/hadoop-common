@@ -59,6 +59,9 @@ Release 2.7.5
 
     HDFS-8865. Improve quota initialization performance. (kihwal)
 
+    HDFS-12638. Delete copy-on-truncate block along with the original block,
+    when deleting a file being truncated. (shv)
+
 Release 2.7.0 - 2015-04-20
 
   INCOMPATIBLE CHANGES
