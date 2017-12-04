@@ -18,6 +18,11 @@
 
 package org.apache.hadoop.yarn.sls;
 
+import org.apache.commons.lang.reflect.FieldUtils;
+import org.apache.hadoop.yarn.server.resourcemanager.ResourceManager;
+import org.apache.hadoop.yarn.sls.scheduler.ResourceSchedulerWrapper;
+import org.apache.hadoop.yarn.sls.web.SLSWebApp;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -28,6 +33,18 @@ import java.util.List;
 import java.util.UUID;
 
 public class TestSLSRunner {
+
+  @AfterClass
+  public static void afterClass() throws Exception {
+    SLSRunner slsRunner = (SLSRunner) FieldUtils.readStaticField(SLSRunner.class, "sls", true);
+    ResourceManager rm = (ResourceManager) FieldUtils.readDeclaredField(slsRunner, "rm", true);
+    ResourceSchedulerWrapper resourceScheduler = (ResourceSchedulerWrapper) rm.getResourceScheduler();
+    SLSWebApp web = (SLSWebApp) FieldUtils.readDeclaredField(resourceScheduler, "web", true);
+
+    rm.stop();
+    resourceScheduler.serviceStop();
+    web.stop();
+  }
 
   @Test
   @SuppressWarnings("all")

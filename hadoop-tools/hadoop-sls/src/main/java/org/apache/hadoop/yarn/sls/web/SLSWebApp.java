@@ -65,13 +65,16 @@ public class SLSWebApp extends HttpServlet {
   private transient Gauge numRunningContainersGauge;
   private transient Gauge allocatedMemoryGauge;
   private transient Gauge allocatedVCoresGauge;
+  private transient Gauge allocatedDisksGauge;
   private transient Gauge availableMemoryGauge;
   private transient Gauge availableVCoresGauge;
+  private transient Gauge availableDisksGauge;
   private transient Histogram allocateTimecostHistogram;
   private transient Histogram handleTimecostHistogram;
   private Map<SchedulerEventType, Histogram> handleOperTimecostHistogramMap;
   private Map<String, Counter> queueAllocatedMemoryCounterMap;
   private Map<String, Counter> queueAllocatedVCoresCounterMap;
+  private Map<String, Counter> queueAllocatedDisksCounterMap;
   private int port;
   private int ajaxUpdateTimeMS = 1000;
   // html page templates
@@ -101,6 +104,7 @@ public class SLSWebApp extends HttpServlet {
             new HashMap<SchedulerEventType, Histogram>();
     queueAllocatedMemoryCounterMap = new HashMap<String, Counter>();
     queueAllocatedVCoresCounterMap = new HashMap<String, Counter>();
+    queueAllocatedDisksCounterMap = new HashMap<String, Counter>();
     schedulerMetrics = wrapper.getSchedulerMetrics();
     port = metricsAddressPort;
   }
@@ -217,10 +221,12 @@ public class SLSWebApp extends HttpServlet {
 
     int i = 0;
     for (String queue : queues) {
-      queueInfo.append("legends[4][").append(i).append("] = 'queue.")
-              .append(queue).append(".allocated.memory';");
       queueInfo.append("legends[5][").append(i).append("] = 'queue.")
+              .append(queue).append(".allocated.memory';");
+      queueInfo.append("legends[6][").append(i).append("] = 'queue.")
               .append(queue).append(".allocated.vcores';");
+      queueInfo.append("legends[7][").append(i).append("] = 'queue.")
+              .append(queue).append(".allocated.disks';");
       i ++;
     }
 
@@ -337,8 +343,8 @@ public class SLSWebApp extends HttpServlet {
             numRunningContainersGauge.getValue().toString();
 
     // cluster available/allocate resource
-    double allocatedMemoryGB, allocatedVCoresGB,
-            availableMemoryGB, availableVCoresGB;
+    double allocatedMemoryGB, allocatedVCoresGB, allocatedDisks,
+            availableMemoryGB, availableVCoresGB, availableDisks;
     if (allocatedMemoryGauge == null &&
             metrics.getGauges()
                     .containsKey("variable.cluster.allocated.memory")) {
@@ -350,6 +356,12 @@ public class SLSWebApp extends HttpServlet {
                     .containsKey("variable.cluster.allocated.vcores")) {
       allocatedVCoresGauge = metrics.getGauges()
               .get("variable.cluster.allocated.vcores");
+    }
+    if (allocatedDisksGauge == null &&
+            metrics.getGauges()
+                    .containsKey("variable.cluster.allocated.disks")) {
+      allocatedDisksGauge = metrics.getGauges()
+              .get("variable.cluster.allocated.disks");
     }
     if (availableMemoryGauge == null &&
             metrics.getGauges()
@@ -363,14 +375,24 @@ public class SLSWebApp extends HttpServlet {
       availableVCoresGauge = metrics.getGauges()
               .get("variable.cluster.available.vcores");
     }
+    if (availableDisksGauge == null &&
+            metrics.getGauges()
+                    .containsKey("variable.cluster.available.disks")) {
+      availableDisksGauge = metrics.getGauges()
+              .get("variable.cluster.available.disks");
+    }
     allocatedMemoryGB = allocatedMemoryGauge == null ? 0 :
             Double.parseDouble(allocatedMemoryGauge.getValue().toString())/1024;
     allocatedVCoresGB = allocatedVCoresGauge == null ? 0 :
             Double.parseDouble(allocatedVCoresGauge.getValue().toString());
+    allocatedDisks = allocatedDisksGauge == null ? 0 :
+            Double.parseDouble(allocatedDisksGauge.getValue().toString());
     availableMemoryGB = availableMemoryGauge == null ? 0 :
             Double.parseDouble(availableMemoryGauge.getValue().toString())/1024;
     availableVCoresGB = availableVCoresGauge == null ? 0 :
             Double.parseDouble(availableVCoresGauge.getValue().toString());
+    availableDisks = availableDisksGauge == null ? 0 :
+            Double.parseDouble(availableDisksGauge.getValue().toString());
 
     // scheduler operation
     double allocateTimecost, handleTimecost;
@@ -408,6 +430,7 @@ public class SLSWebApp extends HttpServlet {
     // allocated resource for each queue
     Map<String, Double> queueAllocatedMemoryMap = new HashMap<String, Double>();
     Map<String, Long> queueAllocatedVCoresMap = new HashMap<String, Long>();
+    Map<String, Double> queueAllocatedDisksMap = new HashMap<String, Double>();
     for (String queue : wrapper.getQueueSet()) {
       // memory
       String key = "counter.queue." + queue + ".allocated.memory";
@@ -432,6 +455,17 @@ public class SLSWebApp extends HttpServlet {
               queueAllocatedVCoresCounterMap.containsKey(queue) ?
                       queueAllocatedVCoresCounterMap.get(queue).getCount(): 0;
       queueAllocatedVCoresMap.put(queue, queueAllocatedVCores);
+      // disks
+      key = "counter.queue." + queue + ".allocated.disks";
+      if (!queueAllocatedDisksCounterMap.containsKey(queue) &&
+              metrics.getCounters().containsKey(key)) {
+        queueAllocatedDisksCounterMap.put(
+                queue, metrics.getCounters().get(key));
+      }
+      double queueAllocatedDisks =
+              queueAllocatedDisksCounterMap.containsKey(queue) ?
+                      queueAllocatedDisksCounterMap.get(queue).getCount()/100.0: 0;
+      queueAllocatedDisksMap.put(queue, queueAllocatedDisks);
     }
 
     // package results
@@ -445,14 +479,18 @@ public class SLSWebApp extends HttpServlet {
             .append(",\"running.containers\":").append(numRunningContainers)
             .append(",\"cluster.allocated.memory\":").append(allocatedMemoryGB)
             .append(",\"cluster.allocated.vcores\":").append(allocatedVCoresGB)
+            .append(",\"cluster.allocated.disks\":").append(allocatedDisks)
             .append(",\"cluster.available.memory\":").append(availableMemoryGB)
-            .append(",\"cluster.available.vcores\":").append(availableVCoresGB);
+            .append(",\"cluster.available.vcores\":").append(availableVCoresGB)
+            .append(",\"cluster.available.disks\":").append(availableDisks);
 
     for (String queue : wrapper.getQueueSet()) {
       sb.append(",\"queue.").append(queue).append(".allocated.memory\":")
               .append(queueAllocatedMemoryMap.get(queue));
       sb.append(",\"queue.").append(queue).append(".allocated.vcores\":")
               .append(queueAllocatedVCoresMap.get(queue));
+      sb.append(",\"queue.").append(queue).append(".allocated.disks\":")
+              .append(queueAllocatedDisksMap.get(queue));
     }
     // scheduler allocate & handle
     sb.append(",\"scheduler.allocate.timecost\":").append(allocateTimecost);

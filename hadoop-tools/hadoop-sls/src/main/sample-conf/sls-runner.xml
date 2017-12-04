@@ -21,7 +21,7 @@
     <name>yarn.sls.runner.pool.size</name>
     <value>100</value>
   </property>
-  
+
   <!-- Nodes configuration -->
   <property>
     <name>yarn.sls.nm.memory.mb</name>
@@ -32,10 +32,14 @@
     <value>10</value>
   </property>
   <property>
+    <name>yarn.sls.nm.disks</name>
+    <value>1.0</value>
+  </property>
+  <property>
     <name>yarn.sls.nm.heartbeat.interval.ms</name>
     <value>1000</value>
   </property>
-  
+
   <!-- Apps configuration -->
   <property>
     <name>yarn.sls.am.heartbeat.interval.ms</name>
@@ -54,6 +58,10 @@
   <property>
     <name>yarn.sls.container.vcores</name>
     <value>1</value>
+  </property>
+  <property>
+    <name>yarn.sls.container.disks</name>
+    <value>0.1</value>
   </property>
 
   <!--  metrics  -->
@@ -77,5 +85,5 @@
     <name>org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacityScheduler</name>
     <value>org.apache.hadoop.yarn.sls.scheduler.CapacitySchedulerMetrics</value>
   </property>
-  
+
 </configuration>

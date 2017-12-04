@@ -134,4 +134,35 @@ public class SLSUtils {
     }
     return nodeSet;
   }
+
+  /**
+   * generate configuration for NM, AM and pool size to be used in sls-runner.xml
+   */
+  public static Set<String> generateSlsRunnerConfiguration(int nmMemory, int nmVCores, double nmDisks,
+                                                           int amMemory, int amVCores, double amDisks,
+                                                           int slsRunnerPoolSize) {
+    Set<String> slsProperties = new HashSet<>();
+    slsProperties.add(SchedulerUtils.generateProperty(
+            "yarn.sls.nm.memory.mb",
+            String.valueOf(nmMemory)));
+    slsProperties.add(SchedulerUtils.generateProperty(
+            "yarn.sls.nm.vcores",
+            String.valueOf(nmVCores)));
+    slsProperties.add(SchedulerUtils.generateProperty(
+            "yarn.sls.nm.disks",
+            String.valueOf(nmDisks)));
+    slsProperties.add(SchedulerUtils.generateProperty(
+            "yarn.sls.container.memory.mb",
+            String.valueOf(amMemory)));
+    slsProperties.add(SchedulerUtils.generateProperty(
+            "yarn.sls.container.vcores",
+            String.valueOf(amVCores)));
+    slsProperties.add(SchedulerUtils.generateProperty(
+            "yarn.sls.container.disks",
+            String.valueOf(amDisks)));
+    slsProperties.add(SchedulerUtils.generateProperty(
+            "yarn.sls.runner.pool.size",
+            String.valueOf(slsRunnerPoolSize)));
+    return slsProperties;
+  }
 }

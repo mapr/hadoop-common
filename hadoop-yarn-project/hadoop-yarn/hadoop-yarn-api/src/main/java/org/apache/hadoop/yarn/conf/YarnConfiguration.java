@@ -1542,7 +1542,7 @@ public class YarnConfiguration extends Configuration {
       TIMELINE_SERVICE_CLIENT_PREFIX + "best-effort";
 
   public static final boolean
-      DEFAULT_TIMELINE_SERVICE_CLIENT_BEST_EFFORT = false;
+      DEFAULT_TIMELINE_SERVICE_CLIENT_BEST_EFFORT = true;
 
   /** Flag to enable recovery of timeline service */
   public static final String TIMELINE_SERVICE_RECOVERY_ENABLED =

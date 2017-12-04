@@ -18,7 +18,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xs
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.hadoop</groupId>
   <artifactId>hadoop-main</artifactId>
-  <version>2.7.0-mapr-1506-SNAPSHOT</version>
+  <version>2.7.0-mapr-1710-SNAPSHOT</version>
   <description>Apache Hadoop Main</description>
   <name>Apache Hadoop Main</name>
   <packaging>pom</packaging>
@@ -86,7 +86,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xs
     <distMgmtStagingId>apache.staging.https</distMgmtStagingId>
     <distMgmtStagingName>Apache Release Distribution Repository</distMgmtStagingName>
     <!-- mapr_fix -->
-    <mapr.version>4.0.2-mapr-SNAPSHOT</mapr.version>
+    <mapr.version>6.0.0-mapr-SNAPSHOT</mapr.version>
     <distMgmtStagingUrl>${env.MAPR_MAVEN_REPO}</distMgmtStagingUrl>
 
     <!-- platform encoding override -->

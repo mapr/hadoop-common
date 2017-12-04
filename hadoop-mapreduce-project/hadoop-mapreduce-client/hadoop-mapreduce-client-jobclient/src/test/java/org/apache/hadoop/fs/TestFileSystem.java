@@ -21,6 +21,7 @@ package org.apache.hadoop.fs;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.Method;
 import java.security.PrivilegedExceptionAction;
 import java.util.Arrays;
 import java.util.Collections;
@@ -33,6 +34,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.util.concurrent.atomic.AtomicLong;
 
 import junit.framework.TestCase;
 
@@ -518,6 +520,46 @@ public class TestFileSystem extends TestCase {
 
       runTestCache(0);
     }
+  }
+
+  public void testFsLruCache() throws Exception {
+    //Enable LRU cache
+    conf.setBoolean(CommonConfigurationKeys.FS_CACHE_LRU_ENABLE, true);
+
+    final int cacheSize = conf.getInt(
+      CommonConfigurationKeys.FS_CACHE_LRU_ENTRIES_MAX_SIZE,
+      CommonConfigurationKeys.DEFAULT_FS_CACHE_LRU_ENTRIES_MAX_SIZE);
+
+    FileSystem.Cache cache = FileSystem.CACHE;
+    Method method = cache.getClass().getDeclaredMethod("getCacheMap", Configuration.class);
+    method.setAccessible(true);
+
+    FileSystem fs = FileSystem.get(conf);
+    URI uri = new Path("file:///test").toUri();
+    Map<FileSystem.Cache.Key, FileSystem> cacheLru = (Map<FileSystem.Cache.Key, FileSystem>)method.invoke(cache, conf);
+    AtomicLong unique = new AtomicLong(0);
+
+    int entriesNumber = cacheSize * 2;
+    for (int i = 0; i < entriesNumber; i++) {
+      FileSystem.Cache.Key key = new FileSystem.Cache.Key(uri, conf, unique.getAndIncrement());
+      cacheLru.put(key, fs);
+    }
+
+    // We should get number of entries which don't exceed 
+    // the maximum number of entries the FileSystem cache may contain
+    assertTrue(cacheLru.size() <= cacheSize);
+
+    //Disable LRU cache
+    conf.setBoolean(CommonConfigurationKeys.FS_CACHE_LRU_ENABLE, false);
+    cacheLru = (Map<FileSystem.Cache.Key, FileSystem>)method.invoke(cache, conf);
+
+    for (int i = 0; i < entriesNumber; i++) {
+      FileSystem.Cache.Key key = new FileSystem.Cache.Key(uri, conf, unique.getAndIncrement());
+      cacheLru.put(key, fs);
+    }
+
+    //The cache should contain all added entries
+    assertEquals(entriesNumber, cacheLru.size());
   }
   
   static void runTestCache(int port) throws Exception {

@@ -57,6 +57,7 @@ abstract public class Command extends Configured {
   protected boolean recursive = false;
   private int depth = 0;
   protected ArrayList<Exception> exceptions = new ArrayList<Exception>();
+  protected StringBuilder output = new StringBuilder();
 
   private static final Log LOG = LogFactory.getLog(Command.class);
 
@@ -322,6 +323,10 @@ abstract public class Command extends Configured {
       } catch (IOException e) {
         displayError(e);
       }
+    }
+    if (output.length() > 0) {
+      out.print(output.toString());
+      output.delete(0, output.length());
     }
   }
 

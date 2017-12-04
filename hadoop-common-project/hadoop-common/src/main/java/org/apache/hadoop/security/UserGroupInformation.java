@@ -103,7 +103,7 @@ public class UserGroupInformation {
    * @param immediate true if we should login without waiting for ticket window
    */
   @VisibleForTesting
-  static void setShouldRenewImmediatelyForTests(boolean immediate) {
+  public static void setShouldRenewImmediatelyForTests(boolean immediate) {
     shouldRenewImmediatelyForTests = immediate;
   }
 
@@ -748,7 +748,7 @@ public class UserGroupInformation {
       loginUser.spawnAutoRenewalThreadForUserCreds();
     } catch (LoginException le) {
       LOG.debug("failure to login", le);
-      throw new IOException("failure to login: " + le.getMessage(), le);
+      throw new IOException("failure to login: " + le, le);
     }
     if (LOG.isDebugEnabled()) {
       LOG.debug("UGI loginUser:"+loginUser);
@@ -910,6 +910,43 @@ public class UserGroupInformation {
     LOG.info("Login successful for user " + keytabPrincipal
         + " using keytab file " + keytabFile);
   }
+
+  /**
+   * Log the current user out who previously logged in using keytab.
+   * This method assumes that the user logged in by calling
+   * {@link #loginUserFromKeytab(String, String)}.
+   *
+   * @throws IOException if a failure occurred in logout, or if the user did
+   * not log in by invoking loginUserFromKeyTab() before.
+   */
+  @InterfaceAudience.Public
+  @InterfaceStability.Evolving
+  public void logoutUserFromKeytab() throws IOException {
+    if (!isSecurityEnabled() ||
+        user.getAuthenticationMethod() != AuthenticationMethod.KERBEROS) {
+      return;
+    }
+    LoginContext login = getLogin();
+    if (login == null || keytabFile == null) {
+      throw new IOException("loginUserFromKeytab must be done first");
+    }
+
+    try {
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("Initiating logout for " + getUserName());
+      }
+      synchronized (UserGroupInformation.class) {
+        login.logout();
+      }
+    } catch (LoginException le) {
+      throw new IOException("Logout failure for " + user + " from keytab " +
+          keytabFile + ": " + le,
+          le);
+    }
+
+    LOG.info("Logout successful for user " + keytabPrincipal
+        + " using keytab file " + keytabFile);
+  }
   
   /**
    * Re-login a user from keytab if TGT is expired or is close to expiry.
@@ -991,7 +1028,7 @@ public class UserGroupInformation {
         metrics.loginFailure.add(Time.now() - start);
       }
       throw new IOException("Login failure for " + keytabPrincipal + 
-          " from keytab " + keytabFile, le);
+          " from keytab " + keytabFile + ": " + le, le);
     } 
   }
 
@@ -1035,7 +1072,8 @@ public class UserGroupInformation {
       login.login();
       setLogin(login);
     } catch (LoginException le) {
-      throw new IOException("Login failure for " + getUserName(), le);
+      throw new IOException("Login failure for " + getUserName() + ": " + le,
+          le);
     } 
   }
 
@@ -1082,7 +1120,7 @@ public class UserGroupInformation {
         metrics.loginFailure.add(Time.now() - start);
       }
       throw new IOException("Login failure for " + user + " from keytab " + 
-                            path, le);
+                            path + ": " + le, le);
     } finally {
       if(oldKeytabFile != null) keytabFile = oldKeytabFile;
       if(oldKeytabPrincipal != null) keytabPrincipal = oldKeytabPrincipal;
@@ -1598,7 +1636,10 @@ public class UserGroupInformation {
       if (LOG.isDebugEnabled()) {
         LOG.debug("PrivilegedActionException as:" + this + " cause:" + cause);
       }
-      if (cause instanceof IOException) {
+      if (cause == null) {
+        throw new RuntimeException("PrivilegedActionException with no " +
+                "underlying cause. UGI [" + this + "]" +": " + pae, pae);
+      } else if (cause instanceof IOException) {
         throw (IOException) cause;
       } else if (cause instanceof Error) {
         throw (Error) cause;

@@ -158,6 +158,8 @@ public class KerberosAuthHandler extends MultiMechsAuthenticationHandler {
     else {
       throw new AuthenticationException(ex.getException());
     }
+  } catch (Exception e) {
+    throw new AuthenticationException("Authorization is failed, please check your config files settings", e);
   }
   return token;
 }

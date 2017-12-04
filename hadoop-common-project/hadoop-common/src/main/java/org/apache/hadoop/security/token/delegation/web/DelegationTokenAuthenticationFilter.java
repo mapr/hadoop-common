@@ -19,6 +19,8 @@ package org.apache.hadoop.security.token.delegation.web;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
@@ -29,6 +31,7 @@ import org.apache.hadoop.security.authentication.server.AuthenticationFilter;
 import org.apache.hadoop.security.authentication.server.AuthenticationHandler;
 import org.apache.hadoop.security.authentication.server.AuthenticationToken;
 import org.apache.hadoop.security.authentication.server.KerberosAuthenticationHandler;
+import org.apache.hadoop.security.authentication.server.MultiMechsAuthenticationHandler;
 import org.apache.hadoop.security.authentication.server.PseudoAuthenticationHandler;
 import org.apache.hadoop.security.authentication.util.ZKSignerSecretProvider;
 import org.apache.hadoop.security.authorize.AuthorizationException;
@@ -76,6 +79,8 @@ import java.util.Properties;
 @InterfaceStability.Evolving
 public class DelegationTokenAuthenticationFilter
     extends AuthenticationFilter {
+
+  private static final Log LOG = LogFactory.getLog(DelegationTokenAuthenticationFilter.class);
 
   private static final String APPLICATION_JSON_MIME = "application/json";
   private static final String ERROR_EXCEPTION_JSON = "exception";
@@ -130,7 +135,7 @@ public class DelegationTokenAuthenticationFilter
    * Returns the proxyuser configuration. All returned properties must start
    * with <code>proxyuser.</code>'
    * <p/>
-   * Subclasses may override this method if the proxyuser configuration is 
+   * Subclasses may override this method if the proxyuser configuration is
    * read from other place than the filter init parameters.
    *
    * @param filterConfig filter configuration object
@@ -178,9 +183,31 @@ public class DelegationTokenAuthenticationFilter
       setHandlerAuthMethod(SaslRpcServer.AuthMethod.KERBEROS);
     }
 
+    Class<?> clazz = getMaprDelegationTokenAuthenticationHandler();
+
+    if (handler instanceof MultiMechsAuthenticationHandler ||
+      clazz != null && handler.getClass().isAssignableFrom(clazz)) {
+      setHandlerAuthMethod(SaslRpcServer.AuthMethod.KERBEROS);
+    }
+
     // proxyuser configuration
     Configuration conf = getProxyuserConfiguration(filterConfig);
     ProxyUsers.refreshSuperUserGroupsConfiguration(conf, PROXYUSER_PREFIX);
+  }
+
+  private Class<?> getMaprDelegationTokenAuthenticationHandler() {
+    final String MAPR_HANDLER =  "com.mapr.security.maprauth.MaprDelegationTokenAuthenticationHandler";
+    Class<? extends DelegationTokenAuthenticationHandler> clazz = null;
+    try {
+      clazz = (Class<? extends DelegationTokenAuthenticationHandler>)
+        Thread.currentThread()
+          .getContextClassLoader()
+          .loadClass(MAPR_HANDLER);
+    } catch (ClassNotFoundException e) {
+      LOG.error("Unable to load class " + MAPR_HANDLER, e);
+      return null;
+    }
+    return clazz;
   }
 
   @Override

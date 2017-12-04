@@ -30,19 +30,19 @@
   </user>
   <userMaxAppsDefault>1000</userMaxAppsDefault>
   <queue name="sls_queue_1">
-    <minResources>1024 mb, 1 vcores</minResources>
+    <minResources>1024 mb, 1 vcores, 0.0 disks</minResources>
     <schedulingMode>fair</schedulingMode>
     <weight>0.25</weight>
     <minSharePreemptionTimeout>2</minSharePreemptionTimeout>
   </queue>
   <queue name="sls_queue_2">
-    <minResources>1024 mb, 1 vcores</minResources>
+    <minResources>1024 mb, 1 vcores, 0.0 disks</minResources>
     <schedulingMode>fair</schedulingMode>
     <weight>0.25</weight>
     <minSharePreemptionTimeout>2</minSharePreemptionTimeout>
   </queue>
   <queue name="sls_queue_3">
-    <minResources>1024 mb, 1 vcores</minResources>
+    <minResources>1024 mb, 1 vcores, 0.0 disks</minResources>
     <weight>0.5</weight>
     <schedulingMode>fair</schedulingMode>
     <minSharePreemptionTimeout>2</minSharePreemptionTimeout>

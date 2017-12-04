@@ -86,7 +86,12 @@
 
 <div class="row">
   <div class="divborder span8" style="margin-left:50px" id="area7"></div>
-  <div class="span7" id="area8"></div>
+  <div class="divborder span8" id="area8"></div>
+</div>
+
+<div class="row">
+  <div class="divborder span8" style="margin-left:50px" id="area9"></div>
+  <div class="span8" id="area10"></div>
 </div>
 <p>&nbsp;</p>
 <script>
@@ -114,7 +119,7 @@ queueNames[numQueues] = j;
 numQueues ++;
 }
 }
-numQueues /= 2;
+numQueues /= 3;
 
 // create graph
 $.getJSON(filepath, function(data) {
@@ -131,15 +136,22 @@ legends = ["cluster.allocated.memory", "cluster.available.memory"];
 drawEachChart("#area3", data, legends, "Cluster allocated & available memory", "Memory (GB)", 0, 0);
 legends = ["cluster.allocated.vcores", "cluster.available.vcores"];
 drawEachChart("#area4", data, legends, "Cluster allocated & available vcores", "Number", 0, 0);
+legends = ["cluster.allocated.disks", "cluster.available.disks"];
+drawEachChart("#area8", data, legends, "Cluster allocated & available disks", "Number", 0, 0);
 
+legends = [];
 for (var i = 0; i < numQueues; i ++) {
-legends[i] = queueNames[i * 2];
+legends[i] = queueNames[i * 3];
 }
 drawEachChart("#area5", data, legends, "Queue allocated memory", "Memory (GB)", 1, 100);
 for (var i = 0; i < numQueues; i ++) {
-legends[i] = queueNames[i * 2 + 1];
+legends[i] = queueNames[i * 3 + 1];
 }
 drawEachChart("#area6", data, legends, "Queue allocated vcores", "VCores", 1, 90);
+for (var i = 0; i < numQueues; i ++) {
+legends[i] = queueNames[i * 3 + 2];
+}
+drawEachChart("#area9", data, legends, "Queue allocated disks", "Disks", 1, 90);
 
 legends = [
 "scheduler.allocate.timecost",

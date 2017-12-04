@@ -359,7 +359,7 @@ public class RMAppImpl implements RMApp, Recoverable {
                                                                  stateMachine;
 
   private static final int DUMMY_APPLICATION_ATTEMPT_NUMBER = -1;
-  
+
   public RMAppImpl(ApplicationId applicationId, RMContext rmContext,
       Configuration config, String name, String user, String queue,
       ApplicationSubmissionContext submissionContext, YarnScheduler scheduler,
@@ -413,9 +413,6 @@ public class RMAppImpl implements RMApp, Recoverable {
     this.writeLock = lock.writeLock();
 
     this.stateMachine = stateMachineFactory.make(this);
-
-    rmContext.getRMApplicationHistoryWriter().applicationStarted(this);
-    rmContext.getSystemMetricsPublisher().appCreated(this, startTime);
   }
 
   @Override
@@ -614,7 +611,7 @@ public class RMAppImpl implements RMApp, Recoverable {
           this.name, host, rpcPort, clientToAMToken,
           createApplicationState(), diags,
           trackingUrl, this.startTime, this.finishTime, finishState,
-          appUsageReport, origTrackingUrl, progress, this.applicationType, 
+          appUsageReport, origTrackingUrl, progress, this.applicationType,
           amrmToken, applicationTags);
     } finally {
       this.readLock.unlock();
@@ -740,6 +737,10 @@ public class RMAppImpl implements RMApp, Recoverable {
       this.nextAttemptId = firstAttemptIdInStateStore;
     }
 
+    // send the ATS create Event during RM recovery.
+    // NOTE: it could be duplicated with events sent before RM get restarted.
+    sendATSCreateEvent();
+
     RMAppAttemptImpl preAttempt = null;
     for (ApplicationAttemptId attemptId :
         new TreeSet<>(appState.attempts.keySet())) {
@@ -806,7 +807,7 @@ public class RMAppImpl implements RMApp, Recoverable {
           nodeUpdateEvent.getNode());
     };
   }
-  
+
   private static final class AppRunningOnNodeTransition extends RMAppTransition {
     public void transition(RMAppImpl app, RMAppEvent event) {
       RMAppRunningOnNodeEvent nodeAddedEvent = (RMAppRunningOnNodeEvent) event;
@@ -840,7 +841,7 @@ public class RMAppImpl implements RMApp, Recoverable {
         moveEvent.getResult().setException(ex);
         return;
       }
-      
+
       // TODO: Write out change to state store (YARN-1558)
       // Also take care of RM failover
       moveEvent.getResult().set(null);
@@ -929,6 +930,8 @@ public class RMAppImpl implements RMApp, Recoverable {
       app.handler.handle(new AppAddedSchedulerEvent(app.applicationId,
         app.submissionContext.getQueue(), app.user,
         app.submissionContext.getReservationID()));
+      // send the ATS create Event
+      app.sendATSCreateEvent();
     }
   }
 
@@ -1397,5 +1400,10 @@ public class RMAppImpl implements RMApp, Recoverable {
   @VisibleForTesting
   public int getNextAttemptId() {
     return nextAttemptId;
+  }
+
+  private void sendATSCreateEvent() {
+    rmContext.getRMApplicationHistoryWriter().applicationStarted(this);
+    rmContext.getSystemMetricsPublisher().appCreated(this, this.startTime);
   }
 }

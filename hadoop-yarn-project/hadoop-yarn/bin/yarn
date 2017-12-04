@@ -287,6 +287,8 @@ elif [ "$COMMAND" = "historyserver" ] ; then
   fi
 elif [ "$COMMAND" = "timelineserver" ] ; then
   CLASSPATH=${CLASSPATH}:$YARN_CONF_DIR/timelineserver-config/log4j.properties
+  CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/JPam-1.1.jar
+   
   CLASS='org.apache.hadoop.yarn.server.applicationhistoryservice.ApplicationHistoryServer'
   YARN_OPTS="$YARN_OPTS $YARN_TIMELINESERVER_OPTS"
   if [ "$YARN_TIMELINESERVER_HEAPSIZE" != "" ]; then

@@ -219,31 +219,60 @@ public class HistoryFileManager extends AbstractService {
         // keeping the cache size exactly at the maximum.
         Iterator<JobId> keys = cache.navigableKeySet().iterator();
         long cutoff = System.currentTimeMillis() - maxAge;
-        while(cache.size() > maxSize && keys.hasNext()) {
+
+        // MAPREDUCE-6436: In order to reduce the number of logs written
+        // in case of a lot of move pending histories.
+        JobId firstInIntermediateKey = null;
+        int inIntermediateCount = 0;
+        JobId firstMoveFailedKey = null;
+        int moveFailedCount = 0;
+
+        while (cache.size() > maxSize && keys.hasNext()) {
           JobId key = keys.next();
           HistoryFileInfo firstValue = cache.get(key);
-          if(firstValue != null) {
-            synchronized(firstValue) {
-              if (firstValue.isMovePending()) {
-                if(firstValue.didMoveFail() && 
-                    firstValue.jobIndexInfo.getFinishTime() <= cutoff) {
-                  cache.remove(key);
-                  //Now lets try to delete it
-                  try {
-                    firstValue.delete();
-                  } catch (IOException e) {
-                    LOG.error("Error while trying to delete history files" +
-                    		" that could not be moved to done.", e);
-                  }
-                } else {
-                  LOG.warn("Waiting to remove " + key
-                      + " from JobListCache because it is not in done yet.");
+          if (firstValue != null) {
+            if (firstValue.isMovePending()) {
+              if (firstValue.didMoveFail() &&
+                  firstValue.jobIndexInfo.getFinishTime() <= cutoff) {
+                cache.remove(key);
+                // Now lets try to delete it
+                try {
+                  firstValue.delete();
+                } catch (IOException e) {
+                  LOG.error("Error while trying to delete history files" +
+                      " that could not be moved to done.", e);
                 }
               } else {
-                cache.remove(key);
+                if (firstValue.didMoveFail()) {
+                  if (moveFailedCount == 0) {
+                    firstMoveFailedKey = key;
+                  }
+                  moveFailedCount += 1;
+                } else {
+                  if (inIntermediateCount == 0) {
+                    firstInIntermediateKey = key;
+                  }
+                  inIntermediateCount += 1;
+                }
               }
+            } else {
+              cache.remove(key);
             }
           }
+        }
+        // Log output only for first jobhisotry in pendings to restrict
+        // the total number of logs.
+        if (inIntermediateCount > 0) {
+          LOG.warn("Waiting to remove IN_INTERMEDIATE state histories " +
+                  "(e.g. " + firstInIntermediateKey + ") from JobListCache " +
+                  "because it is not in done yet. Total count is " +
+                  inIntermediateCount + ".");
+        }
+        if (moveFailedCount > 0) {
+          LOG.warn("Waiting to remove MOVE_FAILED state histories " +
+                  "(e.g. " + firstMoveFailedKey + ") from JobListCache " +
+                  "because it is not in done yet. Total count is " +
+                  moveFailedCount + ".");
         }
       }
       return old;
@@ -301,10 +330,11 @@ public class HistoryFileManager extends AbstractService {
     private Path confFile;
     private Path summaryFile;
     private JobIndexInfo jobIndexInfo;
-    private HistoryInfoState state;
+    private volatile HistoryInfoState state;
 
-    private HistoryFileInfo(Path historyFile, Path confFile, Path summaryFile,
-        JobIndexInfo jobIndexInfo, boolean isInDone) {
+    @VisibleForTesting
+    protected HistoryFileInfo(Path historyFile, Path confFile,
+        Path summaryFile, JobIndexInfo jobIndexInfo, boolean isInDone) {
       this.historyFile = historyFile;
       this.confFile = confFile;
       this.summaryFile = summaryFile;
@@ -314,20 +344,20 @@ public class HistoryFileManager extends AbstractService {
     }
 
     @VisibleForTesting
-    synchronized boolean isMovePending() {
+    boolean isMovePending() {
       return state == HistoryInfoState.IN_INTERMEDIATE
           || state == HistoryInfoState.MOVE_FAILED;
     }
 
     @VisibleForTesting
-    synchronized boolean didMoveFail() {
+    boolean didMoveFail() {
       return state == HistoryInfoState.MOVE_FAILED;
     }
-    
+
     /**
      * @return true if the files backed by this were deleted.
      */
-    public synchronized boolean isDeleted() {
+    public boolean isDeleted() {
       return state == HistoryInfoState.DELETED;
     }
 
@@ -337,7 +367,8 @@ public class HistoryFileManager extends AbstractService {
              + " historyFile = " + historyFile;
     }
 
-    private synchronized void moveToDone() throws IOException {
+    @VisibleForTesting
+    synchronized void moveToDone() throws IOException {
       if (LOG.isDebugEnabled()) {
         LOG.debug("moveToDone: " + historyFile);
       }
@@ -368,7 +399,8 @@ public class HistoryFileManager extends AbstractService {
           paths.add(confFile);
         }
 
-        if (summaryFile == null) {
+        if (summaryFile == null || !intermediateDoneDirFc.util().exists(
+            summaryFile)) {
           LOG.info("No summary file for job: " + jobId);
         } else {
           String jobSummaryString = getJobSummary(intermediateDoneDirFc,
@@ -518,12 +550,15 @@ public class HistoryFileManager extends AbstractService {
     int numMoveThreads = conf.getInt(
         JHAdminConfig.MR_HISTORY_MOVE_THREAD_COUNT,
         JHAdminConfig.DEFAULT_MR_HISTORY_MOVE_THREAD_COUNT);
+    moveToDoneExecutor = createMoveToDoneThreadPool(numMoveThreads);
+    super.serviceInit(conf);
+  }
+
+  protected ThreadPoolExecutor createMoveToDoneThreadPool(int numMoveThreads) {
     ThreadFactory tf = new ThreadFactoryBuilder().setNameFormat(
         "MoveIntermediateToDone Thread #%d").build();
-    moveToDoneExecutor = new ThreadPoolExecutor(numMoveThreads, numMoveThreads,
+    return new ThreadPoolExecutor(numMoveThreads, numMoveThreads,
         1, TimeUnit.HOURS, new LinkedBlockingQueue<Runnable>(), tf);
-
-    super.serviceInit(conf);
   }
 
   @VisibleForTesting
@@ -659,6 +694,13 @@ public class HistoryFileManager extends AbstractService {
     }
   }
 
+  protected HistoryFileInfo createHistoryFileInfo(Path historyFile,
+      Path confFile, Path summaryFile, JobIndexInfo jobIndexInfo,
+      boolean isInDone) {
+    return new HistoryFileInfo(
+        historyFile, confFile, summaryFile, jobIndexInfo, isInDone);
+  }
+
   /**
    * Populates index data structures. Should only be called at initialization
    * times.
@@ -733,24 +775,29 @@ public class HistoryFileManager extends AbstractService {
           .getIntermediateConfFileName(jobIndexInfo.getJobId());
       String summaryFileName = JobHistoryUtils
           .getIntermediateSummaryFileName(jobIndexInfo.getJobId());
-      HistoryFileInfo fileInfo = new HistoryFileInfo(fs.getPath(), new Path(fs
+      HistoryFileInfo fileInfo = createHistoryFileInfo(fs.getPath(), new Path(fs
           .getPath().getParent(), confFileName), new Path(fs.getPath()
           .getParent(), summaryFileName), jobIndexInfo, true);
       jobListCache.addIfAbsent(fileInfo);
     }
   }
 
-  private static List<FileStatus> scanDirectory(Path path, FileContext fc,
+  @VisibleForTesting
+  protected static List<FileStatus> scanDirectory(Path path, FileContext fc,
       PathFilter pathFilter) throws IOException {
     path = fc.makeQualified(path);
     List<FileStatus> jhStatusList = new ArrayList<FileStatus>();
-    RemoteIterator<FileStatus> fileStatusIter = fc.listStatus(path);
-    while (fileStatusIter.hasNext()) {
-      FileStatus fileStatus = fileStatusIter.next();
-      Path filePath = fileStatus.getPath();
-      if (fileStatus.isFile() && pathFilter.accept(filePath)) {
-        jhStatusList.add(fileStatus);
+    try {
+      RemoteIterator<FileStatus> fileStatusIter = fc.listStatus(path);
+      while (fileStatusIter.hasNext()) {
+        FileStatus fileStatus = fileStatusIter.next();
+        Path filePath = fileStatus.getPath();
+        if (fileStatus.isFile() && pathFilter.accept(filePath)) {
+          jhStatusList.add(fileStatus);
+        }
       }
+    } catch (FileNotFoundException fe) {
+      LOG.error("Error while scanning directory " + path, fe);
     }
     return jhStatusList;
   }
@@ -826,7 +873,7 @@ public class HistoryFileManager extends AbstractService {
           .getIntermediateConfFileName(jobIndexInfo.getJobId());
       String summaryFileName = JobHistoryUtils
           .getIntermediateSummaryFileName(jobIndexInfo.getJobId());
-      HistoryFileInfo fileInfo = new HistoryFileInfo(fs.getPath(), new Path(fs
+      HistoryFileInfo fileInfo = createHistoryFileInfo(fs.getPath(), new Path(fs
           .getPath().getParent(), confFileName), new Path(fs.getPath()
           .getParent(), summaryFileName), jobIndexInfo, false);
 
@@ -886,7 +933,7 @@ public class HistoryFileManager extends AbstractService {
             .getIntermediateConfFileName(jobIndexInfo.getJobId());
         String summaryFileName = JobHistoryUtils
             .getIntermediateSummaryFileName(jobIndexInfo.getJobId());
-        HistoryFileInfo fileInfo = new HistoryFileInfo(fs.getPath(), new Path(
+        HistoryFileInfo fileInfo = createHistoryFileInfo(fs.getPath(), new Path(
             fs.getPath().getParent(), confFileName), new Path(fs.getPath()
             .getParent(), summaryFileName), jobIndexInfo, true);
         return fileInfo;
@@ -1044,7 +1091,7 @@ public class HistoryFileManager extends AbstractService {
             String confFileName = JobHistoryUtils
                 .getIntermediateConfFileName(jobIndexInfo.getJobId());
 
-            fileInfo = new HistoryFileInfo(historyFile.getPath(), new Path(
+            fileInfo = createHistoryFileInfo(historyFile.getPath(), new Path(
                 historyFile.getPath().getParent(), confFileName), null,
                 jobIndexInfo, true);
           }

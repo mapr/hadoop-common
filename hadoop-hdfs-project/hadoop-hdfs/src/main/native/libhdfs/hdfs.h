@@ -1007,6 +1007,36 @@ extern  "C" {
      */
     LIBHDFS_EXTERNAL
     void hadoopRzBufferFree(hdfsFile file, struct hadoopRzBuffer *buffer);
+    
+    /**
+    * hdfsSetXattr - Set Extended attribute to a file
+
+    * @param fs The configured filesystem handle.
+    * @param path the path to the file
+    * @param name the name of Xattr
+    * @param nameLen the name length of Xattr
+    * @param value the value to set to Xatttr
+    * @param valueLen the length of value
+    * @return 0 on success else -1 with proper errno set
+    */
+    LIBHDFS_EXTERNAL
+    int hdfsSetXattr(hdfsFS fs, const char* path, const char *name,
+                       int nameLen, char *value, int valueLen);
+    
+    /**
+    * hdfsGetXattr - Get Extended attributes values from a file
+    
+    * @param fs The configured filesystem handle.
+    * @param path the path to the file
+    * @param name the name of Xattr
+    * @param val the expected value of Xattr
+    * @param size the size of buffer
+    * @return the current size of the value of named Xattr on success
+    *         else -1 with proper errno set
+    */
+    LIBHDFS_EXTERNAL
+    int hdfsGetXattr(hdfsFS fs, const char* path, const char *name, 
+                           char *val, size_t size);
 
 #ifdef __cplusplus
 }

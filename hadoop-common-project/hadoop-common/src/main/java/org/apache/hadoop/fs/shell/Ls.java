@@ -116,7 +116,7 @@ class Ls extends FsCommand {
         dateFormat.format(new Date(stat.getModificationTime())),
         item
     );
-    out.println(line);
+    output.append(line).append("\n");
   }
 
   /**

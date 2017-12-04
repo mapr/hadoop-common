@@ -53,7 +53,6 @@ import org.apache.hadoop.security.ssl.SSLFactory;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.delegation.web.DelegationTokenAuthenticatedURL;
 import org.apache.hadoop.security.token.delegation.web.DelegationTokenAuthenticator;
-import org.apache.hadoop.security.token.delegation.web.KerberosDelegationTokenAuthenticator;
 import org.apache.hadoop.security.token.delegation.web.PseudoDelegationTokenAuthenticator;
 import org.apache.hadoop.yarn.api.records.timeline.TimelineDomain;
 import org.apache.hadoop.yarn.api.records.timeline.TimelineDomains;
@@ -268,7 +267,7 @@ public class TimelineClientImpl extends TimelineClient {
     cc.getClasses().add(YarnJacksonJaxbJsonProvider.class);
     connConfigurator = newConnConfigurator(conf);
     if (UserGroupInformation.isSecurityEnabled()) {
-      authenticator = new KerberosDelegationTokenAuthenticator();
+      authenticator = getMaprDelegationTokenAuthenticator();
     } else {
       authenticator = new PseudoDelegationTokenAuthenticator();
     }
@@ -295,6 +294,30 @@ public class TimelineClientImpl extends TimelineClient {
     }
     LOG.info("Timeline service address: " + resURI);
     super.serviceInit(conf);
+  }
+
+  private DelegationTokenAuthenticator getMaprDelegationTokenAuthenticator() {
+    final String MAPR_AUTHENTICATOR =  "com.mapr.security.maprauth.MaprDelegationTokenAuthenticator";
+    Class<? extends DelegationTokenAuthenticator> clazz;
+    try {
+      clazz =
+        (Class<? extends DelegationTokenAuthenticator>)
+          Thread.currentThread()
+            .getContextClassLoader()
+            .loadClass(MAPR_AUTHENTICATOR);
+    } catch (ClassNotFoundException e) {
+      LOG.error("Unable to load class " + MAPR_AUTHENTICATOR, e);
+      return null;
+    }
+
+    try {
+      authenticator = clazz.newInstance();
+    } catch (InstantiationException e) {
+      LOG.error("Unable to instantiate class " + MAPR_AUTHENTICATOR, e);
+    } catch (IllegalAccessException e) {
+      LOG.error("Unable to init class " + MAPR_AUTHENTICATOR, e);
+    }
+    return authenticator;
   }
 
   @Override
