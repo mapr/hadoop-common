@@ -136,7 +136,7 @@ public class TestNodeManagerReboot {
     StartContainerRequest scRequest =
         StartContainerRequest.newInstance(containerLaunchContext,
           TestContainerManager.createContainerToken(
-            cId, 0, nodeId, destinationFile, nm.getNMContext()
+            cId, 0, nodeId, System.getProperty("user.name"), nm.getNMContext()
               .getContainerTokenSecretManager()));
     List<StartContainerRequest> list = new ArrayList<StartContainerRequest>();
     list.add(scRequest);
