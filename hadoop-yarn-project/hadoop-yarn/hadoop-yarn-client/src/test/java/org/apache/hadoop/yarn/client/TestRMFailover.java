@@ -25,7 +25,9 @@ import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.InetAddress;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Map;
 
@@ -35,6 +37,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ha.ClientBaseWithFixes;
 import org.apache.hadoop.ha.HAServiceProtocol;
 import org.apache.hadoop.ha.HAServiceProtocol.HAServiceState;
+import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.service.Service.STATE;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.client.api.YarnClient;
@@ -48,6 +51,7 @@ import org.apache.hadoop.yarn.server.webproxy.WebAppProxyServer;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class TestRMFailover extends ClientBaseWithFixes {
@@ -86,6 +90,12 @@ public class TestRMFailover extends ClientBaseWithFixes {
         (base + YarnConfiguration.DEFAULT_RM_WEBAPP_HTTPS_PORT));
   }
 
+  @BeforeClass
+  public static void beforeClass() throws UnknownHostException {
+    String hostname = InetAddress.getLocalHost().getHostName();
+    NetUtils.addStaticResolution(hostname, "127.0.0.1");
+  }
+  
   @Before
   public void setup() throws IOException {
     fakeAppId = ApplicationId.newInstance(System.currentTimeMillis(), 0);
@@ -99,6 +109,7 @@ public class TestRMFailover extends ClientBaseWithFixes {
 
     conf.setBoolean(YarnConfiguration.YARN_MINICLUSTER_FIXED_PORTS, true);
     conf.setBoolean(YarnConfiguration.YARN_MINICLUSTER_USE_RPC, true);
+    conf.setBoolean(YarnConfiguration.NM_RECOVERY_ENABLED, false);
 
     cluster = new MiniYARNCluster(TestRMFailover.class.getName(), 2, 1, 1, 1);
   }

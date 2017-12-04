@@ -153,7 +153,8 @@ public class TestDiskFailures {
     // If 2 out of the total 4 local-dirs fail OR if 2 Out of the total 4
     // log-dirs fail, then the node's health status should become unhealthy.
     conf.setFloat(YarnConfiguration.NM_MIN_HEALTHY_DISKS_FRACTION, 0.60F);
-
+    conf.setBoolean(YarnConfiguration.NM_RECOVERY_ENABLED, false);
+    
     if (yarnCluster != null) {
       yarnCluster.stop();
       FileUtil.fullyDelete(localFSDirBase);

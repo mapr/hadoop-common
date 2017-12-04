@@ -157,6 +157,7 @@ public class TestAuxServices {
         ServiceB.class, Service.class);
     conf.setInt("A.expected.init", 1);
     conf.setInt("B.expected.stop", 1);
+    conf.setBoolean(YarnConfiguration.NM_RECOVERY_ENABLED, false);
     final AuxServices aux = new AuxServices();
     aux.init(conf);
     aux.start();
@@ -220,6 +221,7 @@ public class TestAuxServices {
         ServiceA.class, Service.class);
     conf.setClass(String.format(YarnConfiguration.NM_AUX_SERVICE_FMT, "Bsrv"),
         ServiceB.class, Service.class);
+    conf.setBoolean(YarnConfiguration.NM_RECOVERY_ENABLED, false);
     final AuxServices aux = new AuxServices();
     aux.init(conf);
 
@@ -251,6 +253,7 @@ public class TestAuxServices {
         ServiceA.class, Service.class);
     conf.setClass(String.format(YarnConfiguration.NM_AUX_SERVICE_FMT, "Bsrv"),
         ServiceB.class, Service.class);
+    conf.setBoolean(YarnConfiguration.NM_RECOVERY_ENABLED, false);
     final AuxServices aux = new AuxServices();
     aux.init(conf);
 
@@ -288,6 +291,7 @@ public class TestAuxServices {
         ServiceA.class, Service.class);
     conf.setClass(String.format(YarnConfiguration.NM_AUX_SERVICE_FMT, "Bsrv"),
         ServiceB.class, Service.class);
+    conf.setBoolean(YarnConfiguration.NM_RECOVERY_ENABLED, false);
     final AuxServices aux = new AuxServices();
     aux.init(conf);
     aux.start();
@@ -308,6 +312,7 @@ public class TestAuxServices {
         ServiceA.class, Service.class);
     conf.setClass(String.format(YarnConfiguration.NM_AUX_SERVICE_FMT, "Bsrv_2"),
         ServiceB.class, Service.class);
+    conf.setBoolean(YarnConfiguration.NM_RECOVERY_ENABLED, false);
     try {
       aux.init(conf);
     } catch (Exception ex) {

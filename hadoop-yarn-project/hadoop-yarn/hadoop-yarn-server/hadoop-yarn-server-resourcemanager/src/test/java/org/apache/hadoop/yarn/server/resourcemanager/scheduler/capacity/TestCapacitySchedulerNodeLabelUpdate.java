@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.api.records.NodeId;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
@@ -36,6 +37,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerStat
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceScheduler;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
@@ -48,6 +50,15 @@ public class TestCapacitySchedulerNodeLabelUpdate {
   private YarnConfiguration conf;
   
   RMNodeLabelsManager mgr;
+
+  private static final String HOST = "127.0.0.1";
+
+  @BeforeClass
+  public static void beforeClass() {
+    NetUtils.addStaticResolution("h1", HOST);
+    NetUtils.addStaticResolution("h2", HOST);
+    NetUtils.addStaticResolution("h3", HOST);
+  }
 
   @Before
   public void setUp() throws Exception {
