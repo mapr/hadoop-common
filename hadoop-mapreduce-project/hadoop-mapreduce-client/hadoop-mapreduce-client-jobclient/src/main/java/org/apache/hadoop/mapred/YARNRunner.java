@@ -28,8 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileContext;
@@ -89,6 +87,8 @@ import org.apache.hadoop.yarn.security.client.RMDelegationTokenSelector;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.apache.hadoop.yarn.util.DFSLoggingHandler;
 import org.apache.hadoop.yarn.util.TaskLogUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -98,7 +98,7 @@ import com.google.common.annotations.VisibleForTesting;
 @SuppressWarnings("unchecked")
 public class YARNRunner implements ClientProtocol {
 
-  private static final Log LOG = LogFactory.getLog(YARNRunner.class);
+  private static final Logger LOG = LoggerFactory.getLogger(YARNRunner.class);
 
   private final RecordFactory recordFactory = RecordFactoryProvider.getRecordFactory(null);
   private ResourceMgrDelegate resMgrDelegate;
@@ -301,7 +301,7 @@ public class YARNRunner implements ClientProtocol {
   throws IOException, InterruptedException {
     
     addHistoryToken(ts);
-    
+
     // Construct necessary information to start the MR AM
     ApplicationSubmissionContext appContext =
       createApplicationSubmissionContext(conf, jobSubmitDir, ts);
@@ -385,7 +385,7 @@ public class YARNRunner implements ClientProtocol {
           FileContext.getFileContext(jobJarPath.toUri(), jobConf),
           jobJarPath,
           LocalResourceType.PATTERN);
-      String pattern = conf.getPattern(JobContext.JAR_UNPACK_PATTERN, 
+      String pattern = conf.getPattern(JobContext.JAR_UNPACK_PATTERN,
           JobConf.UNPACK_JAR_PATTERN_DEFAULT).pattern();
       rc.setPattern(pattern);
       localResources.put(MRJobConfig.JOB_JAR, rc);
@@ -425,13 +425,13 @@ public class YARNRunner implements ClientProtocol {
     MRApps.addLog4jSystemProperties(null, vargs, conf);
 
     // Check for Java Lib Path usage in MAP and REDUCE configs
-    warnForJavaLibPath(conf.get(MRJobConfig.MAP_JAVA_OPTS,""), "map", 
+    warnForJavaLibPath(conf.get(MRJobConfig.MAP_JAVA_OPTS,""), "map",
         MRJobConfig.MAP_JAVA_OPTS, MRJobConfig.MAP_ENV);
-    warnForJavaLibPath(conf.get(MRJobConfig.MAPRED_MAP_ADMIN_JAVA_OPTS,""), "map", 
+    warnForJavaLibPath(conf.get(MRJobConfig.MAPRED_MAP_ADMIN_JAVA_OPTS,""), "map",
         MRJobConfig.MAPRED_MAP_ADMIN_JAVA_OPTS, MRJobConfig.MAPRED_ADMIN_USER_ENV);
-    warnForJavaLibPath(conf.get(MRJobConfig.REDUCE_JAVA_OPTS,""), "reduce", 
+    warnForJavaLibPath(conf.get(MRJobConfig.REDUCE_JAVA_OPTS,""), "reduce",
         MRJobConfig.REDUCE_JAVA_OPTS, MRJobConfig.REDUCE_ENV);
-    warnForJavaLibPath(conf.get(MRJobConfig.MAPRED_REDUCE_ADMIN_JAVA_OPTS,""), "reduce", 
+    warnForJavaLibPath(conf.get(MRJobConfig.MAPRED_REDUCE_ADMIN_JAVA_OPTS,""), "reduce",
         MRJobConfig.MAPRED_REDUCE_ADMIN_JAVA_OPTS, MRJobConfig.MAPRED_ADMIN_USER_ENV);
 
     // Add AM admin command opts before user command opts
@@ -508,11 +508,11 @@ public class YARNRunner implements ClientProtocol {
         MRApps.crossPlatformifyMREnv(conf, Environment.PWD), conf);
 
     // Setup the environment variables for Admin first
-    MRApps.setEnvFromInputString(environment, 
+    MRApps.setEnvFromInputString(environment,
         conf.get(MRJobConfig.MR_AM_ADMIN_USER_ENV,
             MRJobConfig.DEFAULT_MR_AM_ADMIN_USER_ENV), conf);
     // Setup the environment variables (LD_LIBRARY_PATH, etc)
-    MRApps.setEnvFromInputString(environment, 
+    MRApps.setEnvFromInputString(environment,
         conf.get(MRJobConfig.MR_AM_ENV), conf);
 
     // Parse distributed cache

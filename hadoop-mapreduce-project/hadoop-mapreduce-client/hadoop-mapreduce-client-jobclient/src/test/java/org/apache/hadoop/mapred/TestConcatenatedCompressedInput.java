@@ -40,12 +40,13 @@ import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Ignore
 public class TestConcatenatedCompressedInput {
-  private static final Log LOG =
-    LogFactory.getLog(TestConcatenatedCompressedInput.class.getName());
+  private static final Logger LOG =
+      LoggerFactory.getLogger(TestConcatenatedCompressedInput.class);
   private static int MAX_LENGTH = 10000;
   private static JobConf defaultConf = new JobConf();
   private static FileSystem localFs = null;

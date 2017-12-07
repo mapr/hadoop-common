@@ -42,8 +42,6 @@ import java.security.PrivilegedExceptionAction;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.FileContext;
@@ -103,7 +101,7 @@ import org.apache.hadoop.yarn.security.client.RMDelegationTokenIdentifier;
 import org.apache.hadoop.yarn.util.Records;
 import org.apache.log4j.Appender;
 import org.apache.log4j.Layout;
-import org.apache.log4j.Logger;
+import org.apache.log4j.Level;
 import org.apache.log4j.SimpleLayout;
 import org.apache.log4j.WriterAppender;
 import org.junit.After;
@@ -111,13 +109,16 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Test YarnRunner and make sure the client side plugin works
  * fine
  */
 public class TestYARNRunner {
-  private static final Log LOG = LogFactory.getLog(TestYARNRunner.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(TestYARNRunner.class);
   private static final RecordFactory recordFactory = RecordFactoryProvider.getRecordFactory(null);
 
   // prefix before <LOG_DIR>/profile.out
@@ -472,7 +473,7 @@ public class TestYARNRunner {
     int adminPos = -1;
     int userIndex = 0;
     int userPos = -1;
-    
+
     for(String command : commands) {
       if(command != null) {
         assertFalse("Profiler should be disabled by default",
@@ -488,7 +489,7 @@ public class TestYARNRunner {
       
       index++;
     }
-    
+
     // Check both admin java opts and user java opts are in the commands
     assertTrue("AM admin command opts not in the commands.", adminPos > 0);
     assertTrue("AM user command opts not in the commands.", userPos > 0);
@@ -502,7 +503,8 @@ public class TestYARNRunner {
   }
   @Test(timeout=20000)
   public void testWarnCommandOpts() throws Exception {
-    Logger logger = Logger.getLogger(YARNRunner.class);
+    org.apache.log4j.Logger logger =
+        org.apache.log4j.Logger.getLogger(YARNRunner.class);
     
     ByteArrayOutputStream bout = new ByteArrayOutputStream();
     Layout layout = new SimpleLayout();

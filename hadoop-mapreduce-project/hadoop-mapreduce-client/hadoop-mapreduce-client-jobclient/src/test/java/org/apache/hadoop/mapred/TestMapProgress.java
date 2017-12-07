@@ -23,8 +23,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BytesWritable;
@@ -43,6 +41,9 @@ import org.apache.hadoop.mapreduce.split.JobSplit.TaskSplitIndex;
 import org.apache.hadoop.mapreduce.split.JobSplit.TaskSplitMetaInfo;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -60,7 +61,8 @@ import static org.junit.Assert.assertTrue;
  *  validated here.
  */
 public class TestMapProgress {
-  public static final Log LOG = LogFactory.getLog(TestMapProgress.class);
+  public static final Logger LOG =
+      LoggerFactory.getLogger(TestMapProgress.class);
   private static String TEST_ROOT_DIR;
   static {
     String root = new File(System.getProperty("test.build.data", "/tmp"))

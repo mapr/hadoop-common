@@ -31,9 +31,6 @@ import java.net.InetAddress;
 import java.text.SimpleDateFormat;
 import java.util.Iterator;
 
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 
@@ -57,6 +54,8 @@ import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.Reducer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This program executes a specified operation that applies load to 
@@ -78,19 +77,19 @@ import org.apache.hadoop.mapred.Reducer;
  */
 
 public class NNBench {
-  private static final Log LOG = LogFactory.getLog(
-          "org.apache.hadoop.hdfs.NNBench");
+  private static final Logger LOG = LoggerFactory
+          .getLogger("org.apache.hadoop.hdfs.NNBench");
   
   protected static String CONTROL_DIR_NAME = "control";
   protected static String OUTPUT_DIR_NAME = "output";
   protected static String DATA_DIR_NAME = "data";
   protected static final String DEFAULT_RES_FILE_NAME = "NNBench_results.log";
   protected static final String NNBENCH_VERSION = "NameNode Benchmark 0.4";
-  
+
   public static String operation = "none";
   public static long numberOfMaps = 1l; // default is 1
   public static long numberOfReduces = 1l; // default is 1
-  public static long startTime = 
+  public static long startTime =
           System.currentTimeMillis() + (120 * 1000); // default is 'now' + 2min
   public static long blockSize = 1l; // default is 1
   public static int bytesToWrite = 0; // default is 0
@@ -99,7 +98,7 @@ public class NNBench {
   public static short replicationFactorPerFile = 1; // default is 1
   public static String baseDir = "/benchmarks/NNBench";  // default
   public static boolean readFileAfterOpen = false; // default is to not read
-  
+
   // Supported operations
   private static final String OP_CREATE_WRITE = "create_write";
   private static final String OP_OPEN_READ = "open_read";
@@ -112,7 +111,7 @@ public class NNBench {
           new SimpleDateFormat("yyyy-MM-dd' 'HH:mm:ss','S");
 
   private static Configuration config = new Configuration();
-  
+
   /**
    * Clean up the files before a test run
    * 
@@ -147,7 +146,7 @@ public class NNBench {
 
       SequenceFile.Writer writer = null;
       try {
-        writer = SequenceFile.createWriter(tempFS, config, filePath, Text.class, 
+        writer = SequenceFile.createWriter(tempFS, config, filePath, Text.class,
                 LongWritable.class, CompressionType.NONE);
         writer.append(new Text(strFileName), new LongWritable(0l));
       } finally {
@@ -292,7 +291,7 @@ public class NNBench {
     config.setInt("test.nnbench.bytestowrite", bytesToWrite);
     config.setLong("test.nnbench.bytesperchecksum", bytesPerChecksum);
     config.setLong("test.nnbench.numberoffiles", numberOfFiles);
-    config.setInt("test.nnbench.replicationfactor", 
+    config.setInt("test.nnbench.replicationfactor",
             (int) replicationFactorPerFile);
     config.set("test.nnbench.basedir", baseDir);
     config.setBoolean("test.nnbench.readFileAfterOpen", readFileAfterOpen);
@@ -304,7 +303,7 @@ public class NNBench {
   
   /**
    * Analyze the results
-   * 
+   *
    * @throws IOException on error
    */
   private static void analyzeResults() throws IOException {
@@ -327,12 +326,12 @@ public class NNBench {
     
     long mapStartTimeTPmS = 0l;
     long mapEndTimeTPmS = 0l;
-    
+
     String resultTPSLine1 = null;
     String resultTPSLine2 = null;
     String resultALLine1 = null;
     String resultALLine2 = null;
-    
+
     String line;
     while((line = lines.readLine()) != null) {
       StringTokenizer tokens = new StringTokenizer(line, " \t\n\r\f%;");
@@ -376,7 +375,7 @@ public class NNBench {
     double AverageExecutionTime = (totalTimeTPmS == 0) ?
         (double) successfulFileOps : 
         (double) totalTimeTPmS / successfulFileOps;
-            
+
     if (operation.equals(OP_CREATE_WRITE)) {
       // For create/write/close, it is treated as two transactions,
       // since a file create from a client perspective involves create and close
@@ -445,14 +444,14 @@ public class NNBench {
 
     PrintStream res = new PrintStream(new FileOutputStream(
             new File(DEFAULT_RES_FILE_NAME), true));
-    
+
     // Write to a file and also dump to log
     for(int i = 0; i < resultLines.length; i++) {
       LOG.info(resultLines[i]);
       res.println(resultLines[i]);
     }
   }
-  
+
   /**
    * Run the test
    * 
@@ -567,7 +566,7 @@ public class NNBench {
 
     // Parse the inputs
     parseInputs(args);
-    
+
     // Validate inputs
     validateInputs();
     
@@ -602,7 +601,7 @@ public class NNBench {
     String op = null;
     boolean readFile = false;
     final int MAX_OPERATION_EXCEPTIONS = 1000;
-    
+
     // Data to collect from the operation
     int numOfExceptions = 0;
     long startTimeAL = 0l;
@@ -627,7 +626,7 @@ public class NNBench {
       } catch(Exception e) {
         throw new RuntimeException("Cannot get file system.", e);
       }
-      
+
       try {
         hostName = InetAddress.getLocalHost().getHostName();
       } catch(Exception e) {
@@ -779,7 +778,7 @@ public class NNBench {
           } catch (IOException e) {
             LOG.info("Exception recorded in op: " +
                     "Create/Write/Close");
- 
+
             numOfExceptions++;
           }
         }
