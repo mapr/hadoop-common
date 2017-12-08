@@ -5,6 +5,26 @@ Hadoop MapReduce Change Log
     MAPREDUCE-6957. shuffle hangs after a node manager connection timeout.
     (Jooseong Kim via jlowe)
 
+    MAPREDUCE-5124. AM lacks flow control for task events. (Peter Bacsko via
+    jlowe)
+
+Release 2.7.5 - UNRELEASED
+
+  INCOMPATIBLE CHANGES
+
+  NEW FEATURES
+
+  IMPROVEMENTS
+
+    MAPREDUCE-6937. Backport MAPREDUCE-6870 to branch-2 while preserving
+    compatibility. (Peter Bacsko via Haibo Chen)
+
+    MAPREDUCE-6975. Logging task counters. (Prabhu Joseph via Naganarasimha)
+
+  OPTIMIZATIONS
+
+  BUG FIXES
+
     MAPREDUCE-6931. Remove TestDFSIO "Total Throughput" calculation.
     (Dennis Huo via shv)
 
