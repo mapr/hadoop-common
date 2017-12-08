@@ -27,6 +27,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
@@ -46,6 +48,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.DataInputByteBuffer;
 import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -121,9 +124,16 @@ import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class TestYarnClient {
+ 
+  @BeforeClass
+  public static void beforeClass() throws UnknownHostException {
+    String hostname = InetAddress.getLocalHost().getHostName();
+    NetUtils.addStaticResolution(hostname, "127.0.0.1");
+  }
 
   @Test
   public void test() {
@@ -204,8 +214,10 @@ public class TestYarnClient {
     MiniYARNCluster cluster = new MiniYARNCluster("testMRAMTokens", 1, 1, 1);
     YarnClient rmClient = null;
     try {
-      cluster.init(new YarnConfiguration());
-	     cluster.start();
+      YarnConfiguration conf = new YarnConfiguration();
+      conf.setBoolean(YarnConfiguration.NM_RECOVERY_ENABLED, false);
+      cluster.init(conf);
+      cluster.start();
       final Configuration yarnConf = cluster.getConfig();
       rmClient = YarnClient.createYarnClient();
       rmClient.init(yarnConf);
@@ -836,7 +848,9 @@ public class TestYarnClient {
     MiniYARNCluster cluster = new MiniYARNCluster("testMRAMTokens", 1, 1, 1);
     YarnClient rmClient = null;
     try {
-      cluster.init(new YarnConfiguration());
+      YarnConfiguration conf = new YarnConfiguration();
+      conf.setBoolean(YarnConfiguration.NM_RECOVERY_ENABLED, false);
+      cluster.init(conf);
       cluster.start();
       final Configuration yarnConf = cluster.getConfig();
       rmClient = YarnClient.createYarnClient();
@@ -1126,6 +1140,7 @@ public class TestYarnClient {
     conf.setClass(YarnConfiguration.RM_SCHEDULER, CapacityScheduler.class,
         ResourceScheduler.class);
     conf.setBoolean(YarnConfiguration.RM_RESERVATION_SYSTEM_ENABLE, true);
+    conf.setBoolean(YarnConfiguration.NM_RECOVERY_ENABLED, false);
     MiniYARNCluster cluster =
         new MiniYARNCluster("testReservationAPIs", 2, 1, 1);
     YarnClient client = null;

@@ -25,6 +25,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
@@ -33,6 +35,7 @@ import java.util.TreeSet;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.DataOutputBuffer;
+import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.service.Service.STATE;
@@ -68,6 +71,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttemptS
 import org.apache.hadoop.yarn.util.Records;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class TestNMClient {
@@ -80,11 +84,18 @@ public class TestNMClient {
   ApplicationAttemptId attemptId = null;
   int nodeCount = 3;
   NMTokenCache nmTokenCache = null;
+
+  @BeforeClass
+  public static void beforeClass() throws UnknownHostException {
+    String hostname = InetAddress.getLocalHost().getHostName();
+    NetUtils.addStaticResolution(hostname, InetAddress.getLocalHost().getHostAddress());
+  }
   
   @Before
   public void setup() throws YarnException, IOException {
     // start minicluster
     conf = new YarnConfiguration();
+    conf.setBoolean(YarnConfiguration.NM_RECOVERY_ENABLED, false);
     yarnCluster =
         new MiniYARNCluster(TestAMRMClient.class.getName(), nodeCount, 1, 1);
     yarnCluster.init(conf);

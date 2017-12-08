@@ -26,6 +26,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
@@ -40,6 +41,7 @@ import java.util.TreeSet;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -119,6 +121,8 @@ public class TestAMRMClient {
   
   @BeforeClass
   public static void setup() throws Exception {
+    String hostname = InetAddress.getLocalHost().getHostName();
+    NetUtils.addStaticResolution(hostname, "127.0.0.1");
     // start minicluster
     conf = new YarnConfiguration();
     conf.setLong(
@@ -127,6 +131,7 @@ public class TestAMRMClient {
     conf.setLong(YarnConfiguration.RM_AM_EXPIRY_INTERVAL_MS, am_expire_ms);
     conf.setInt(YarnConfiguration.RM_NM_HEARTBEAT_INTERVAL_MS, 100);
     conf.setLong(YarnConfiguration.NM_LOG_RETAIN_SECONDS, 1);
+    conf.setBoolean(YarnConfiguration.NM_RECOVERY_ENABLED, false);
     yarnCluster = new MiniYARNCluster(TestAMRMClient.class.getName(), nodeCount, 1, 1);
     yarnCluster.init(conf);
     yarnCluster.start();

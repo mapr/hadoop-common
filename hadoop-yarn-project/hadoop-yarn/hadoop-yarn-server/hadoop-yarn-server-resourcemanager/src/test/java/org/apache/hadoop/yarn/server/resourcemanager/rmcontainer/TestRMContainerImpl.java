@@ -33,6 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.Container;
@@ -62,6 +63,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceScheduler
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerUtils;
 import org.apache.hadoop.yarn.server.utils.BuilderUtils;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Matchers;
@@ -69,6 +71,12 @@ import org.mockito.Mockito;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class TestRMContainerImpl {
+  private static final String HOST = "127.0.0.1";
+
+  @BeforeClass
+  public static void beforeClass() {
+    NetUtils.addStaticResolution("unknownhost", HOST);
+  }
 
   @Test
   public void testReleaseWhileRunning() {

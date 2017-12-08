@@ -18,6 +18,7 @@
 package org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.server.resourcemanager.MockNodes;
@@ -43,6 +44,7 @@ import static org.junit.Assert.assertTrue;
 public class TestFairSchedulerPreemption extends FairSchedulerTestBase {
   private final static String ALLOC_FILE = new File(TEST_DIR,
       TestFairSchedulerPreemption.class.getName() + ".xml").getAbsolutePath();
+  private final static String STATIC_HOST = "127.0.0.1";
 
   private MockClock clock;
 
@@ -105,6 +107,7 @@ public class TestFairSchedulerPreemption extends FairSchedulerTestBase {
       int memory, int vcores, double disks, int appContainers, int appMemory) {
     RMNode node1 = MockNodes.newNodeInfo(
         1, Resources.createResource(memory, vcores, disks), 1, "node1");
+    NetUtils.addStaticResolution(node1.getHostName(), STATIC_HOST);
     NodeAddedSchedulerEvent nodeEvent1 = new NodeAddedSchedulerEvent(node1);
     scheduler.handle(nodeEvent1);
 

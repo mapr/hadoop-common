@@ -296,7 +296,8 @@ public class TimelineClientImpl extends TimelineClient {
     super.serviceInit(conf);
   }
 
-  private DelegationTokenAuthenticator getMaprDelegationTokenAuthenticator() {
+  @VisibleForTesting
+  protected DelegationTokenAuthenticator getMaprDelegationTokenAuthenticator() {
     final String MAPR_AUTHENTICATOR =  "com.mapr.security.maprauth.MaprDelegationTokenAuthenticator";
     Class<? extends DelegationTokenAuthenticator> clazz;
     try {

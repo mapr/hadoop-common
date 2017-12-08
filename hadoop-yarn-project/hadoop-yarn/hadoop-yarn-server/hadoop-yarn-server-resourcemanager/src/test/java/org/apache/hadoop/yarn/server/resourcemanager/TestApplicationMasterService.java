@@ -23,7 +23,7 @@ import org.apache.hadoop.yarn.proto.YarnServiceProtos.SchedulerResourceTypes;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacityScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.FairScheduler;
-import org.apache.hadoop.yarn.util.resource.DominantResourceCalculator;
+import org.apache.hadoop.yarn.util.resource.DiskBasedResourceCalculator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -273,7 +273,7 @@ public class TestApplicationMasterService {
 
     CapacitySchedulerConfiguration csconf =
         new CapacitySchedulerConfiguration();
-    csconf.setResourceComparator(DominantResourceCalculator.class);
+    csconf.setResourceComparator(DiskBasedResourceCalculator.class);
     YarnConfiguration testCapacityDRConf = new YarnConfiguration(csconf);
     testCapacityDRConf.setClass(YarnConfiguration.RM_SCHEDULER,
       CapacityScheduler.class, ResourceScheduler.class);

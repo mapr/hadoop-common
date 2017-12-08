@@ -283,7 +283,7 @@ public class FairSchedulerConfiguration extends Configuration {
 
   private static double findResourceDouble(String val, String units)
     throws AllocationConfigurationException {
-    Pattern pattern = Pattern.compile("(\\d+(\\.\\d+)?) ?" + units);
+    Pattern pattern = Pattern.compile("(\\d+(\\.\\d*)?)\\s*" + units);
     Matcher matcher = pattern.matcher(val);
     if (!matcher.find()) {
       throw new AllocationConfigurationException("Missing resource: " + units);

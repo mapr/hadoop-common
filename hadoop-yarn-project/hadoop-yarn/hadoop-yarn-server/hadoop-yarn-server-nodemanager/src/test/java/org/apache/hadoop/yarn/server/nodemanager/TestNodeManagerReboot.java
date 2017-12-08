@@ -322,6 +322,7 @@ public class TestNodeManagerReboot {
       conf.set(YarnConfiguration.NM_LOCALIZER_ADDRESS, "127.0.0.1:12346");
       conf.set(YarnConfiguration.NM_LOG_DIRS, logsDir.getAbsolutePath());
       conf.set(YarnConfiguration.NM_LOCAL_DIRS, nmLocalDir.getAbsolutePath());
+      conf.set(YarnConfiguration.NM_RECOVERY_ENABLED, "false");
       conf.setLong(YarnConfiguration.NM_LOG_RETAIN_SECONDS, 1);
       return conf;
     }

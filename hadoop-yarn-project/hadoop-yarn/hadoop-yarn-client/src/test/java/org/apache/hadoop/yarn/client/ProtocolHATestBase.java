@@ -18,9 +18,11 @@
 
 package org.apache.hadoop.yarn.client;
 
+import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.yarn.api.protocolrecords.FinishApplicationMasterRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.FinishApplicationMasterResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.RegisterApplicationMasterRequest;
@@ -290,8 +292,12 @@ public abstract class ProtocolHATestBase extends ClientBaseWithFixes {
   protected void startHACluster(int numOfNMs, boolean overrideClientRMService,
       boolean overrideRTS, boolean overrideApplicationMasterService)
       throws Exception {
+    String hostname = InetAddress.getLocalHost().getHostName();
+    NetUtils.addStaticResolution(hostname, "127.0.0.1");
+    
     conf.setBoolean(YarnConfiguration.RECOVERY_ENABLED, true);
     conf.setBoolean(YarnConfiguration.AUTO_FAILOVER_ENABLED, false);
+    conf.setBoolean(YarnConfiguration.NM_RECOVERY_ENABLED, false);
     cluster =
         new MiniYARNClusterForHATesting(TestRMFailover.class.getName(), 2,
             numOfNMs, 1, 1, false, overrideClientRMService, overrideRTS,

@@ -1044,7 +1044,7 @@ public class TestCapacityScheduler {
 
     // start NM
     MockNM nm1 =
-        new MockNM("127.0.0.1:1234", 15120, rm1.getResourceTrackerService());
+        new MockNM("127.0.0.1:1234", 15120, 7.0, rm1.getResourceTrackerService());
     nm1.registerNode();
 
     // create app and launch the AM
@@ -1058,7 +1058,7 @@ public class TestCapacityScheduler {
 
     // allocate some containers and launch them
     List<Container> allocatedContainers =
-        am0.allocateAndWaitForContainers(3, CONTAINER_MEMORY, nm1);
+        am0.allocateAndWaitForContainers(3,  CONTAINER_MEMORY, 1, 0.5, nm1);
 
     // kill the 3 containers
     for (Container c : allocatedContainers) {
@@ -1067,8 +1067,8 @@ public class TestCapacityScheduler {
 
     // check values
     waitForAppPreemptionInfo(app0,
-        Resource.newInstance(CONTAINER_MEMORY * 3, 3), 0, 3,
-        Resource.newInstance(CONTAINER_MEMORY * 3, 3), false, 3);
+        Resource.newInstance(CONTAINER_MEMORY * 3, 3, 1.5), 0, 3,
+        Resource.newInstance(CONTAINER_MEMORY * 3, 3, 1.5), false, 3);
 
     // kill app0-attempt0 AM container
     cs.killContainer(schedulerAppAttempt.getRMContainer(app0
@@ -1079,8 +1079,8 @@ public class TestCapacityScheduler {
 
     // check values
     waitForAppPreemptionInfo(app0,
-        Resource.newInstance(CONTAINER_MEMORY * 4, 4), 1, 3,
-        Resource.newInstance(0, 0), false, 0);
+        Resource.newInstance(CONTAINER_MEMORY * 4, 4, 1.5), 1, 3,
+        Resource.newInstance(0, 0, 0), false, 0);
 
     // launch app0-attempt1
     MockAM am1 = launchAM(app0, rm1, nm1);
@@ -1090,15 +1090,15 @@ public class TestCapacityScheduler {
 
     // allocate some containers and launch them
     allocatedContainers =
-        am1.allocateAndWaitForContainers(3, CONTAINER_MEMORY, nm1);
+        am1.allocateAndWaitForContainers(3, CONTAINER_MEMORY, 1, 0.5, nm1);
     for (Container c : allocatedContainers) {
       cs.killContainer(schedulerAppAttempt.getRMContainer(c.getId()));
     }
 
     // check values
     waitForAppPreemptionInfo(app0,
-        Resource.newInstance(CONTAINER_MEMORY * 7, 7), 1, 6,
-        Resource.newInstance(CONTAINER_MEMORY * 3, 3), false, 3);
+        Resource.newInstance(CONTAINER_MEMORY * 7, 7, 3.0), 1, 6,
+        Resource.newInstance(CONTAINER_MEMORY * 3, 3, 1.5), false, 3);
 
     rm1.stop();
   }
@@ -2686,7 +2686,7 @@ public class TestCapacityScheduler {
         attemptMetric.getApplicationAttemptHeadroom());
 
     // Add a node to cluster
-    Resource newResource = Resource.newInstance(4 * GB, 1, 1.0);
+    Resource newResource = Resource.newInstance(4 * GB, 0, 0);
     RMNode node = MockNodes.newNodeInfo(0, newResource, 1, "127.0.0.1");
     cs.handle(new NodeAddedSchedulerEvent(node));
 

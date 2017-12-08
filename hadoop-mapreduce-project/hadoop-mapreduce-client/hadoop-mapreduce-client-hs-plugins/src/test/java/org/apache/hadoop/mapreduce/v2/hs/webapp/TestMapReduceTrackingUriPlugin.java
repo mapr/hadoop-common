@@ -33,6 +33,7 @@ public class TestMapReduceTrackingUriPlugin {
   public void testProducesHistoryServerUriForAppId() throws URISyntaxException {
     final String historyAddress = "example.net:424242";
     YarnConfiguration conf = new YarnConfiguration();
+    conf.setBoolean(JHAdminConfig.MR_HISTORY_WEBAPP_IS_ALL_IFACES, false);
     conf.set(JHAdminConfig.MR_HISTORY_WEBAPP_ADDRESS, historyAddress);
     MapReduceTrackingUriPlugin plugin = new MapReduceTrackingUriPlugin();
     plugin.setConf(conf);

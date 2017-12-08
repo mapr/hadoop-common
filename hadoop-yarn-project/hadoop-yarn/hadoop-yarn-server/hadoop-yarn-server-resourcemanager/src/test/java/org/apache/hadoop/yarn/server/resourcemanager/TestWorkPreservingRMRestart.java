@@ -160,7 +160,7 @@ public class TestWorkPreservingRMRestart extends ParameterizedSchedulerTestBase 
     rm1 = new MockRM(conf, memStore);
     rm1.start();
     MockNM nm1 =
-        new MockNM("127.0.0.1:1234", 8192, rm1.getResourceTrackerService());
+        new MockNM("127.0.0.1:1234", 8192, 0.0, rm1.getResourceTrackerService());
     nm1.registerNode();
     RMApp app1 = rm1.submitApp(200);
     MockAM am1 = MockRM.launchAndRegisterAM(app1, rm1, nm1);

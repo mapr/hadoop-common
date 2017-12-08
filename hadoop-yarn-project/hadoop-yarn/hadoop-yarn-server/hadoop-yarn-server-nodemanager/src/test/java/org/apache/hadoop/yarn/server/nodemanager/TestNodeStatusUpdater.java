@@ -839,7 +839,8 @@ public class TestNodeStatusUpdater {
     YarnConfiguration conf = new YarnConfiguration();
     conf.set(
         NodeStatusUpdaterImpl.YARN_NODEMANAGER_DURATION_TO_TRACK_STOPPED_CONTAINERS,
-        "10000");                                                             
+        "10000");
+    conf.setBoolean(YarnConfiguration.NM_RECOVERY_ENABLED, false);
     nm.init(conf);                                                            
     NodeStatusUpdaterImpl nodeStatusUpdater =                                 
         (NodeStatusUpdaterImpl) nm.getNodeStatusUpdater();                    
@@ -876,6 +877,7 @@ public class TestNodeStatusUpdater {
         NodeStatusUpdaterImpl
             .YARN_NODEMANAGER_DURATION_TO_TRACK_STOPPED_CONTAINERS,
         "10000");
+    conf.setBoolean(YarnConfiguration.NM_RECOVERY_ENABLED, false);
     nm.init(conf);
     NodeStatusUpdaterImpl nodeStatusUpdater =
         (NodeStatusUpdaterImpl) nm.getNodeStatusUpdater();
@@ -957,6 +959,7 @@ public class TestNodeStatusUpdater {
     conf.set(NodeStatusUpdaterImpl
             .YARN_NODEMANAGER_DURATION_TO_TRACK_STOPPED_CONTAINERS,
         "1000000");
+    conf.setBoolean(YarnConfiguration.NM_RECOVERY_ENABLED, false);
     nm.init(conf);
 
     NodeStatusUpdaterImpl nodeStatusUpdater =
@@ -1645,6 +1648,7 @@ public class TestNodeStatusUpdater {
       remoteLogsDir.getAbsolutePath());
     conf.set(YarnConfiguration.NM_LOCAL_DIRS, nmLocalDir.getAbsolutePath());
     conf.setLong(YarnConfiguration.NM_LOG_RETAIN_SECONDS, 1);
+    conf.setBoolean(YarnConfiguration.NM_RECOVERY_ENABLED, false);
     return conf;
   }
 

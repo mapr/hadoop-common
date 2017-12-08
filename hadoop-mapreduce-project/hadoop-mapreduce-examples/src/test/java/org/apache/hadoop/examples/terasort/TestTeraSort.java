@@ -95,8 +95,8 @@ public class TestTeraSort extends HadoopTestCase {
     try {
       runTeraSort(createJobConf(), SORT_INPUT_PATH, SORT_OUTPUT_PATH);
       fail("Terasort output overwritten!");
-    } catch (FileAlreadyExistsException fae) {
-      LOG.info("Expected exception: ", fae);
+    } catch (IOException e) {
+      LOG.info("Expected exception: ", e);
     }
 
     // Run tera-validator to check if sort worked correctly

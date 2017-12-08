@@ -19,6 +19,9 @@ Release 2.8.0 - UNRELEASED
     YARN-3967. Fetch the application report from the AHS if the RM does not know about it.
     (Mit Desai via xgong)
 
+    YARN-4145. Make RMHATestBase abstract so its not run when running all
+    tests under that namespace (adhoot via rkanter)
+
   OPTIMIZATIONS
 
   BUG FIXES
@@ -58,6 +61,9 @@ Release 2.7.3 - UNRELEASED
     YARN-3762. FairScheduler: CME on FSParentQueue#getQueueUserAclInfo. (kasha)
 
     YARN-3582. NPE in WebAppProxyServlet. (jian he via xgong)
+
+    YARN-3580. [JDK8] TestClientRMService.testGetLabelsToNodes fails. (Robert Kanter
+    via junping_du)
 
     YARN-4760. proxy redirect to history server uses wrong URL (Eric Badger
     via jlowe)
