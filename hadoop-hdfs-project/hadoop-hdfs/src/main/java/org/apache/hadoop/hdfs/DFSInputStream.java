@@ -58,6 +58,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.HasEnhancedByteBufferAccess;
 import org.apache.hadoop.fs.ReadOption;
 import org.apache.hadoop.fs.StorageType;
+import org.apache.hadoop.fs.StreamCapabilities;
 import org.apache.hadoop.fs.UnresolvedLinkException;
 import org.apache.hadoop.hdfs.client.impl.DfsClientConf;
 import org.apache.hadoop.hdfs.protocol.ClientDatanodeProtocol;
@@ -78,6 +79,7 @@ import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.token.SecretManager.InvalidToken;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.util.IdentityHashStore;
+import org.apache.hadoop.util.StringUtils;
 import org.apache.htrace.core.SpanId;
 import org.apache.htrace.core.TraceScope;
 import org.apache.htrace.core.Tracer;
@@ -91,7 +93,7 @@ import com.google.common.annotations.VisibleForTesting;
 @InterfaceAudience.Private
 public class DFSInputStream extends FSInputStream
 implements ByteBufferReadable, CanSetDropBehind, CanSetReadahead,
-    HasEnhancedByteBufferAccess, CanUnbuffer {
+    HasEnhancedByteBufferAccess, CanUnbuffer, StreamCapabilities {
   @VisibleForTesting
   public static boolean tcpReadsDisabledForTesting = false;
   private long hedgedReadOpsLoopNumForTesting = 0;
@@ -1834,5 +1836,17 @@ implements ByteBufferReadable, CanSetDropBehind, CanSetReadahead,
   @Override
   public synchronized void unbuffer() {
     closeCurrentBlockReader();
+  }
+
+  @Override
+  public boolean hasCapability(String capability) {
+    switch (StringUtils.toLowerCase(capability)) {
+      case StreamCapabilities.READAHEAD:
+      case StreamCapabilities.DROPBEHIND:
+      case StreamCapabilities.UNBUFFER:
+        return true;
+      default:
+        return false;
+    }
   }
 }
