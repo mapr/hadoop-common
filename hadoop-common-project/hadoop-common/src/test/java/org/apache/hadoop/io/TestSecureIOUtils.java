@@ -25,10 +25,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.nativeio.NativeIO;
+import org.apache.hadoop.security.SecurityUtil;
+import org.apache.hadoop.security.User;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.rpcauth.KerberosAuthMethod;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -92,6 +97,7 @@ public class TestSecureIOUtils {
 
     System.out.println("Running test with native libs...");
     String invalidUser = "InvalidUser";
+    String invalidGroup = "InvalidGroup";
 
     // We need to make sure that forceSecure.. call works only if
     // the file belongs to expectedOwner.
@@ -99,9 +105,9 @@ public class TestSecureIOUtils {
     // InputStream
     try {
       SecureIOUtils
-          .forceSecureOpenForRead(testFilePathIs, invalidUser, realGroup)
+          .forceSecureOpenForRead(testFilePathIs, invalidUser, invalidGroup)
           .close();
-      fail("Didn't throw expection for wrong user ownership!");
+      fail("Didn't throw exception for wrong user and group ownership!");
 
     } catch (IOException ioe) {
       // expected
@@ -111,8 +117,8 @@ public class TestSecureIOUtils {
     try {
       SecureIOUtils
           .forceSecureOpenFSDataInputStream(testFilePathFadis, invalidUser,
-              realGroup).close();
-      fail("Didn't throw expection for wrong user ownership!");
+            invalidGroup).close();
+      fail("Didn't throw exception for wrong user and group ownership!");
     } catch (IOException ioe) {
       // expected
     }
@@ -121,9 +127,47 @@ public class TestSecureIOUtils {
     try {
       SecureIOUtils
           .forceSecureOpenForRandomRead(testFilePathRaf, "r", invalidUser,
-              realGroup).close();
-      fail("Didn't throw expection for wrong user ownership!");
+            invalidGroup).close();
+      fail("Didn't throw exception for wrong user and group ownership!");
     } catch (IOException ioe) {
+      // expected
+    }
+  }
+
+  @Test(timeout = 10000)
+  public void testReadPermissions() throws IOException {
+    // this will only run if libs are available
+    assumeTrue(NativeIO.isAvailable());
+
+    Configuration conf = new Configuration();
+    conf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+      User.class.getName());
+    conf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+      KerberosAuthMethod.class.getName());
+    SecurityUtil.setAuthenticationMethod(
+      UserGroupInformation.AuthenticationMethod.KERBEROS, conf);
+    UserGroupInformation.setConfiguration(conf);
+
+    String invalidUser = "InvalidUser";
+    String[] invalidGroups = {"invalidGroup1", "invalidGroup2", "invalidGroup3"};
+    
+    // Correct user
+    SecureIOUtils
+      .openForRead(testFilePathIs, realOwner, invalidGroups).close();
+    // Correct group
+    SecureIOUtils
+      .openForRead(testFilePathIs, invalidUser, realGroup).close();
+    // At least one common group
+    String[] correctGroupInGroups = {"invalidGroup1", "invalidGroup2", "invalidGroup3", realGroup};
+    SecureIOUtils
+      .openForRead(testFilePathIs, invalidUser, correctGroupInGroups).close();
+
+    // Invalid user and groups
+    try {
+      SecureIOUtils
+        .openForRead(testFilePathIs, invalidUser, invalidGroups).close();
+      fail("Didn't throw exception for wrong user and groups ownership!");
+    } catch (PermissionNotMatchException e) {
       // expected
     }
   }

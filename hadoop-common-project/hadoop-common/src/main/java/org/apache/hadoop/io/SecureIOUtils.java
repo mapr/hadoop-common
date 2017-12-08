@@ -24,6 +24,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -192,16 +194,16 @@ public class SecureIOUtils {
    *
    * @param f the file that we are trying to open
    * @param expectedOwner the expected user owner for the file
-   * @param expectedGroup the expected group owner for the file
+   * @param expectedGroups the expected groups for the file
    * @throws IOException if an IO Error occurred, or security is enabled and
    * the user/group does not match
    */
   public static FileInputStream openForRead(File f, String expectedOwner, 
-      String expectedGroup) throws IOException {
+      String... expectedGroups) throws IOException {
     if (!UserGroupInformation.isSecurityEnabled()) {
       return new FileInputStream(f);
     }
-    return forceSecureOpenForRead(f, expectedOwner, expectedGroup);
+    return forceSecureOpenForRead(f, expectedOwner, expectedGroups);
   }
 
   /**
@@ -210,14 +212,14 @@ public class SecureIOUtils {
    */
   @VisibleForTesting
   protected static FileInputStream forceSecureOpenForRead(File f, String expectedOwner,
-      String expectedGroup) throws IOException {
+      String... expectedGroups) throws IOException {
 
     FileInputStream fis = new FileInputStream(f);
     boolean success = false;
     try {
       Stat stat = NativeIO.POSIX.getFstat(fis.getFD());
       checkStat(f, stat.getOwner(), stat.getGroup(), expectedOwner,
-          expectedGroup);
+          expectedGroups);
       success = true;
       return fis;
     } finally {
@@ -265,10 +267,11 @@ public class SecureIOUtils {
     }
   }
 
-  private static void checkStat(File f, String owner, String group, 
-      String expectedOwner, 
-      String expectedGroup) throws IOException {
+  private static void checkStat(File f, String owner, String group,
+      String expectedOwner,
+      String... expectedGroups) throws IOException {
     boolean success = true;
+    String[] ownerGroups = UserGroupInformation.createRemoteUser(owner).getGroupNames();
     if (expectedOwner != null &&
         !expectedOwner.equals(owner)) {
       if (Path.WINDOWS) {
@@ -277,17 +280,27 @@ public class SecureIOUtils {
         final String adminsGroupString = "Administrators";
         success = owner.equals(adminsGroupString)
             && Arrays.asList(ugi.getGroupNames()).contains(adminsGroupString);
-      } else if (expectedGroup != null &&
-              !expectedGroup.equals(group)) {
+      } else {
         success = false;
+        if (expectedGroups != null &&
+            ownerGroups != null) {
+          Set<String> commonGroups = new HashSet<>(Arrays.asList(ownerGroups));
+          // User with NM group should also be able to read logs
+          commonGroups.add(group);
+          commonGroups.retainAll(Arrays.asList(expectedGroups));
+          if (!commonGroups.isEmpty()) {
+            success = true;
+          }
+        }
       }
     }
     if (!success) {
       throw new PermissionNotMatchException(
-          "Owner '" + owner + "' with group '" + group + 
+          "Owner '" + owner + "' with its groups " + Arrays.toString(ownerGroups) + 
+              " and NodeManager group '" + group + 
               "' for path " + f + " did not match either " + 
               "expected owner '" + expectedOwner + "' nor " + 
-              "expected group '" + expectedGroup + "'");
+              "expected groups " + Arrays.toString(expectedGroups));
     }
   }
 
