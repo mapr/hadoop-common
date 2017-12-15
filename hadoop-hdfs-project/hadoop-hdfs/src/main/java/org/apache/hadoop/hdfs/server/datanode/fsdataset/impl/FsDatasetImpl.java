@@ -967,8 +967,10 @@ class FsDatasetImpl implements FsDatasetSpi<FsVolumeImpl> {
       // calculate and write the last crc
       checksum.calculateChunkedSums(data, 0, offset, crcs, 0);
       metaOut.write(crcs, 0, 4);
+      metaOut.close();
+      metaOut = null;
     } finally {
-      IOUtils.cleanupWithLogger(LOG, metaOut);
+      IOUtils.closeStream(metaOut);
     }
   }
 
@@ -1061,7 +1063,7 @@ class FsDatasetImpl implements FsDatasetSpi<FsVolumeImpl> {
     }
     return new ReplicaHandler(replica, ref);
   }
-  
+
   /** Append to a finalized replica
    * Change a finalized replica to be a RBW replica and 
    * bump its generation stamp to be the newGS
@@ -2251,7 +2253,7 @@ class FsDatasetImpl implements FsDatasetSpi<FsVolumeImpl> {
       LOG.warn("Reporting the block " + corruptBlock
           + " as corrupt due to length mismatch");
       try {
-        datanode.reportBadBlocks(new ExtendedBlock(bpid, corruptBlock));  
+        datanode.reportBadBlocks(new ExtendedBlock(bpid, corruptBlock));
       } catch (IOException e) {
         LOG.warn("Failed to repot bad block " + corruptBlock, e);
       }

@@ -75,7 +75,7 @@ public abstract class FSImageTestUtil {
   
   public static final Logger LOG =
       LoggerFactory.getLogger(FSImageTestUtil.class);
-  
+
   /**
    * The position in the fsimage header where the txid is
    * written.
@@ -107,6 +107,8 @@ public abstract class FSImageTestUtil {
       try {
         raf.seek(IMAGE_TXID_POS);
         raf.writeLong(0);
+        raf.close();
+        raf = null;
       } finally {
         IOUtils.closeStream(raf);
       }
@@ -518,9 +520,11 @@ public abstract class FSImageTestUtil {
       
       out = new FileOutputStream(versionFile);
       props.store(out, null);
-      
+      out.close();
+      out = null;
     } finally {
-      IOUtils.cleanupWithLogger(null, fis, out);
+      IOUtils.closeStream(fis);
+      IOUtils.closeStream(out);
     }    
   }
 
