@@ -40,6 +40,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMApp;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.AMLivelinessMonitor;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.ContainerAllocationExpirer;
 import org.apache.hadoop.yarn.server.resourcemanager.rmnode.RMNode;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.DebugController;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.security.AMRMTokenSecretManager;
 import org.apache.hadoop.yarn.server.resourcemanager.security.ClientToAMTokenSecretManagerInRM;
@@ -95,6 +96,7 @@ public class RMActiveServiceContext {
   private RMApplicationHistoryWriter rmApplicationHistoryWriter;
   private SystemMetricsPublisher systemMetricsPublisher;
   private RMNodeLabelsManager nodeLabelManager;
+  private DebugController debugController;
   private long epoch;
   private Clock systemClock = new SystemClock();
   private long schedulerRecoveryStartTime = 0;
@@ -453,5 +455,17 @@ public class RMActiveServiceContext {
   @Unstable
   public ConcurrentMap<ApplicationId, ByteBuffer> getSystemCredentialsForApps() {
     return systemCredentials;
+  }
+
+  @Private
+  @Unstable
+  public DebugController getDebugController() {
+    return debugController;
+  }
+
+  @Private
+  @Unstable
+  public void setDebugController(DebugController debugController) {
+    this.debugController = debugController;
   }
 }

@@ -720,4 +720,8 @@ public abstract class AbstractYarnScheduler
     }
     return null;
   }
+
+  public DebugController getDebugController() {
+    return this.rmContext.getDebugController();
+  }
 }

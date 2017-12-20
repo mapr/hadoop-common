@@ -68,6 +68,10 @@ import org.apache.hadoop.yarn.api.protocolrecords.GetContainerReportRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetContainerReportResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.GetContainersRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetContainersResponse;
+import org.apache.hadoop.yarn.api.protocolrecords.GetDebugAppsRequest;
+import org.apache.hadoop.yarn.api.protocolrecords.GetDebugAppsResponse;
+import org.apache.hadoop.yarn.api.protocolrecords.GetDebugQueuesRequest;
+import org.apache.hadoop.yarn.api.protocolrecords.GetDebugQueuesResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.GetLabelsToNodesRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetLabelsToNodesResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.KillApplicationRequest;
@@ -510,6 +514,10 @@ public class TestYarnClient {
       mock(GetContainerReportResponse.class);
     GetLabelsToNodesResponse mockLabelsToNodesResponse =
       mock(GetLabelsToNodesResponse.class);
+    GetDebugAppsResponse mockDebugAppsResponse =
+      mock(GetDebugAppsResponse.class);
+    GetDebugQueuesResponse mockDebugQueuesResponse =
+      mock(GetDebugQueuesResponse.class);
 
     public MockYarnClient() {
       super();
@@ -548,7 +556,13 @@ public class TestYarnClient {
 
         when(rmClient.getLabelsToNodes(any(GetLabelsToNodesRequest.class)))
             .thenReturn(mockLabelsToNodesResponse);
-        
+
+        when(rmClient.getDebugApps(any(GetDebugAppsRequest.class)))
+            .thenReturn(mockDebugAppsResponse);
+
+        when(rmClient.getDebugQueues(any(GetDebugQueuesRequest.class)))
+            .thenReturn(mockDebugQueuesResponse);
+
         historyClient = mock(AHSClient.class);
         
       } catch (YarnException e) {
@@ -841,6 +855,36 @@ public class TestYarnClient {
       }
       throw new ContainerNotFoundException(containerId + " is not found ");
     }
+
+    @Override
+    public Set<String> getDebugApps() throws YarnException, IOException {
+      when(mockDebugAppsResponse.getApplications()).thenReturn(
+          getDebugAppsSet());
+      return super.getDebugApps();
+    }
+
+    public Set<String> getDebugAppsSet() {
+      Set<String> apps = new HashSet<>();
+      apps.add("app1");
+      apps.add("app2");
+      apps.add("app3");
+      return apps;
+    }
+
+    @Override
+    public Set<String> getDebugQueues() throws YarnException, IOException {
+      when(mockDebugQueuesResponse.getQueues()).thenReturn(
+          getDebugQueuesSet());
+      return super.getDebugQueues();
+    }
+
+    public Set<String> getDebugQueuesSet() {
+      Set<String> queues = new HashSet<>();
+      queues.add("queueA");
+      queues.add("queueB");
+      return queues;
+    }
+
   }
 
   @Test(timeout = 30000)
@@ -1229,4 +1273,40 @@ public class TestYarnClient {
             ReservationSystemTestUtil.reservationQ);
     return request;
   }
+
+
+  @Test (timeout = 10000)
+  public void testGetDebugApps() throws YarnException, IOException {
+    Configuration conf = new Configuration();
+    final YarnClient client = new MockYarnClient();
+    client.init(conf);
+    client.start();
+
+    Set<String> expectedApps =
+            ((MockYarnClient)client).getDebugAppsSet();
+    Set<String> apps = client.getDebugApps();
+    Assert.assertEquals(apps, expectedApps);
+    Assert.assertEquals(apps.size(), 3);
+
+    client.stop();
+    client.close();
+  }
+
+  @Test (timeout = 10000)
+  public void testGetDebugQueues() throws YarnException, IOException {
+    Configuration conf = new Configuration();
+    final YarnClient client = new MockYarnClient();
+    client.init(conf);
+    client.start();
+
+    Set<String> expectedQueus =
+        ((MockYarnClient)client).getDebugQueuesSet();
+    Set<String> queues = client.getDebugQueues();
+    Assert.assertEquals(queues, expectedQueus);
+    Assert.assertEquals(queues.size(), 2);
+
+    client.stop();
+    client.close();
+  }
+
 }
