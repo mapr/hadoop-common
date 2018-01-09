@@ -371,7 +371,8 @@ public class RMAppAttemptImpl implements RMAppAttempt, Recoverable {
             // Saving in scheduler
               RMAppAttemptEventType.CONTAINER_ALLOCATED,
               RMAppAttemptEventType.ATTEMPT_NEW_SAVED,
-              RMAppAttemptEventType.KILL))
+              RMAppAttemptEventType.KILL,
+              RMAppAttemptEventType.ATTEMPT_ADDED))
 
       // Transitions from FAILED State
       // For work-preserving AM restart, failed attempt are still capturing
@@ -466,7 +467,7 @@ public class RMAppAttemptImpl implements RMAppAttempt, Recoverable {
 
     this.attemptMetrics =
         new RMAppAttemptMetrics(applicationAttemptId, rmContext);
-    
+
     this.amReq = amReq;
 
     final int diagnosticsLimitKC = getDiagnosticsLimitKCOrThrow(conf);
@@ -849,8 +850,9 @@ public class RMAppAttemptImpl implements RMAppAttempt, Recoverable {
         /* keep the master in sync with the state machine */
         this.stateMachine.doTransition(event.getType(), event);
       } catch (InvalidStateTransitonException e) {
-        LOG.error("Can't handle this event at current state", e);
-        /* TODO fail the application on the failed transition */
+        LOG.error("App attempt: " + appAttemptID
+            + " can't handle this event at current state", e);
+        onInvalidTranstion(event.getType(), oldState);
       }
 
       if (oldState != getAppAttemptState()) {
@@ -2157,5 +2159,10 @@ public class RMAppAttemptImpl implements RMAppAttempt, Recoverable {
 
       return messages.toString();
     }
+  }
+
+  protected void onInvalidTranstion(RMAppAttemptEventType rmAppAttemptEventType,
+          RMAppAttemptState state){
+      /* TODO fail the application on the failed transition */
   }
 }
