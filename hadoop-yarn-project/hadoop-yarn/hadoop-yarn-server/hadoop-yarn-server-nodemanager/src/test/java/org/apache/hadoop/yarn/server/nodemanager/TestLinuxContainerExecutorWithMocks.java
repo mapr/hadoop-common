@@ -145,7 +145,7 @@ public class TestLinuxContainerExecutorWithMocks {
   public void tearDown() {
     deleteMockParamFile();
   }
-  
+
   @Test
   public void testContainerLaunch() throws IOException {
     String appSubmitter = "nobody";
@@ -157,7 +157,7 @@ public class TestLinuxContainerExecutorWithMocks {
     ContainerId cId = mock(ContainerId.class);
     ContainerLaunchContext context = mock(ContainerLaunchContext.class);
     HashMap<String, String> env = new HashMap<String,String>();
-    
+
     when(container.getContainerId()).thenReturn(cId);
     when(container.getLaunchContext()).thenReturn(context);
     
@@ -223,8 +223,6 @@ public class TestLinuxContainerExecutorWithMocks {
   
   @Test (timeout = 5000)
   public void testStartLocalizer() throws IOException {
-
-  
     InetSocketAddress address = InetSocketAddress.createUnresolved("localhost", 8040);
     Path nmPrivateCTokensPath= new Path("file:///bin/nmPrivateCTokensPath");
  
@@ -241,26 +239,32 @@ public class TestLinuxContainerExecutorWithMocks {
           .build());
 
       List<String> result=readMockParams();
-      Assert.assertEquals(result.size(), 25);
+      Assert.assertEquals(result.size(), 26);
       // Workaround to handle YARN-1253.
       Assert.assertEquals(result.get(0), "test");
       Assert.assertEquals(result.get(1), "test");
       Assert.assertEquals(result.get(2), "0" );
       Assert.assertEquals(result.get(3),"application_0" );
-      Assert.assertEquals(result.get(4), "/bin/nmPrivateCTokensPath");
-      Assert.assertEquals(result.get(10), "-classpath" );
-      Assert.assertEquals(result.get(13), "-Xmx256m" );
-      Assert.assertEquals(result.get(14), "-Dlog4j.configuration=container-log4j.properties" );
-      Assert.assertEquals(result.get(15), "-Dyarn.app.container.log.dir=${yarn.log.dir}/userlogs/application_0/12345");
-      Assert.assertEquals(result.get(16), "-Dyarn.app.container.log.filesize=0");
-      Assert.assertEquals(result.get(17), "-Dhadoop.root.logger=INFO,CLA");
-      Assert.assertEquals(result.get(18), "-Dhadoop.root.logfile=container-localizer-syslog");
-      Assert.assertEquals(result.get(19),"org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.ContainerLocalizer" );
-      Assert.assertEquals(result.get(20), "test");
-      Assert.assertEquals(result.get(21), "application_0");
-      Assert.assertEquals(result.get(22),"12345" );
-      Assert.assertEquals(result.get(23),"localhost" );
-      Assert.assertEquals(result.get(24),"8040" );
+      Assert.assertEquals(result.get(4), "12345");
+      Assert.assertEquals(result.get(5), "/bin/nmPrivateCTokensPath");
+      Assert.assertEquals(result.get(11), "-classpath" );
+      Assert.assertEquals(result.get(14), "-Xmx256m" );
+      Assert.assertEquals(result.get(15),
+          "-Dlog4j.configuration=container-log4j.properties" );
+      Assert.assertEquals(result.get(16),
+          "-Dyarn.app.container.log.dir=${yarn.log.dir}/userlogs/application_0/12345");
+      Assert.assertEquals(result.get(17),
+          "-Dyarn.app.container.log.filesize=0");
+      Assert.assertEquals(result.get(18), "-Dhadoop.root.logger=INFO,CLA");
+      Assert.assertEquals(result.get(19),
+          "-Dhadoop.root.logfile=container-localizer-syslog");
+      Assert.assertEquals(result.get(20),
+          "org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.ContainerLocalizer");
+      Assert.assertEquals(result.get(21), "test");
+      Assert.assertEquals(result.get(22), "application_0");
+      Assert.assertEquals(result.get(23),"12345" );
+      Assert.assertEquals(result.get(24),"localhost" );
+      Assert.assertEquals(result.get(25),"8040" );
 
     } catch (InterruptedException e) {
       LOG.error("Error:"+e.getMessage(),e);
@@ -332,7 +336,7 @@ public class TestLinuxContainerExecutorWithMocks {
           }
         }
     ).when(container).handle(any(ContainerDiagnosticsUpdateEvent.class));
-    
+
     when(cId.toString()).thenReturn(containerId);
 
     when(context.getEnvironment()).thenReturn(env);

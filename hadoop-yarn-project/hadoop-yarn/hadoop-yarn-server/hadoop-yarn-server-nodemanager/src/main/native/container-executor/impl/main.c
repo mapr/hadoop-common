@@ -103,7 +103,7 @@ static void assert_valid_setup(char *current_executable) {
 
   char *orig_conf_file = HADOOP_CONF_DIR "/" CONF_FILENAME;
   char *conf_file = resolve_config_path(orig_conf_file, current_executable);
-  
+
   if (conf_file == NULL) {
     free(executable_file);
     fprintf(ERRORFILE, "Configuration file %s not found.\n", orig_conf_file);
@@ -286,13 +286,14 @@ static int validate_run_as_user_commands(int argc, char **argv, int *operation) 
 
   switch (command) {
   case INITIALIZE_CONTAINER:
-    if (argc < 11) {
+    if (argc < 12) {
       fprintf(ERRORFILE, "Too few arguments (%d vs 11) for initialize container\n",
        argc);
       fflush(ERRORFILE);
       return INVALID_ARGUMENT_NUMBER;
     }
     cmd_input.app_id = argv[optind++];
+    cmd_input.container_id = argv[optind++];
     cmd_input.cred_file = argv[optind++];
     cmd_input.ext_cred_file = argv[optind++];
     cmd_input.ext_cred_env_var = argv[optind++];
@@ -427,6 +428,7 @@ int main(int argc, char **argv) {
 
     exit_code = initialize_app(cmd_input.yarn_user_name,
                             cmd_input.app_id,
+                            cmd_input.container_id,
                             cmd_input.cred_file,
                             cmd_input.ext_cred_file,
                             cmd_input.ext_cred_env_var,

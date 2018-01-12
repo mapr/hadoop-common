@@ -257,6 +257,7 @@ public class LinuxContainerExecutor extends ContainerExecutor {
             PrivilegedOperation.RunAsUserCommand.INITIALIZE_CONTAINER
                 .getValue()),
         appId,
+        locId,
         nmPrivateContainerTokensPath.toUri().getPath().toString(),
        (nmPrivateExtTokensPath == null)
             ? ""
