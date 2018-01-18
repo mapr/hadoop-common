@@ -3,6 +3,9 @@ Hadoop Change Log
     HADOOP-11613. Remove commons-httpclient dependency from hadoop-azure.
     (Masatake Iwasaki via cnauroth)
 
+    YARN-7590. Improve container-executor validation check.
+    Contributed by Eric Yang.
+
     HADOOP-10296. Incorrect null check in SwiftRestClient#buildException().
     (Rahul Palamuttam and Kanaka Kumar Avvaru via aajisaka)
 
