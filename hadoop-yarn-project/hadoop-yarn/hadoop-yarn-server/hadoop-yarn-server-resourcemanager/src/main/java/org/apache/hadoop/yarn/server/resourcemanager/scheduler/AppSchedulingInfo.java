@@ -333,7 +333,7 @@ public class AppSchedulingInfo {
       if ( priorities.iterator().hasNext() ) {
         priority = priorities.iterator().next();
       } else {
-        LOG.warn("priorities is empty. Marking resource as not blacklisted");
+        LOG.trace("priorities is empty. Marking resource as not blacklisted");
         return false;
       }
     }
