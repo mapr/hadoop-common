@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.EnumSet;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -79,7 +78,7 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
   private Configuration conf;
 
   private boolean syncFolders = false;
-  private AtomicBoolean ignoreFailures = new AtomicBoolean(false);
+  private boolean ignoreFailures = false;
   private boolean skipCrc = false;
   private boolean overWrite = false;
   private boolean append = false;
@@ -103,8 +102,7 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
     conf = context.getConfiguration();
 
     syncFolders = conf.getBoolean(DistCpOptionSwitch.SYNC_FOLDERS.getConfigLabel(), false);
-    ignoreFailures.set(conf.getBoolean(
-        DistCpOptionSwitch.IGNORE_FAILURES.getConfigLabel(), false));
+    ignoreFailures = conf.getBoolean(DistCpOptionSwitch.IGNORE_FAILURES.getConfigLabel(), false);
     skipCrc = conf.getBoolean(DistCpOptionSwitch.SKIP_CRC.getConfigLabel(), false);
     overWrite = conf.getBoolean(DistCpOptionSwitch.OVERWRITE.getConfigLabel(), false);
     append = conf.getBoolean(DistCpOptionSwitch.APPEND.getConfigLabel(), false);
@@ -354,18 +352,12 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
     LOG.error("Failure in copying " + sourceFileStatus.getPath() + " to " +
                 target, exception);
 
-    if (exception.getCause() instanceof
-            RetriableFileCopyCommand.CopyReadException ||
-        ignoreFailures.compareAndSet(true, false)) {
-      try {
-        incrementCounter(context, Counter.FAIL, 1);
-        incrementCounter(context, Counter.BYTESFAILED,
-            sourceFileStatus.getLen());
-        context.write(null, new Text("FAIL: " + sourceFileStatus.getPath() +
-            " - " + StringUtils.stringifyException(exception)));
-      } finally {
-        ignoreFailures.set(true);
-      }
+    if (ignoreFailures && exception.getCause() instanceof
+            RetriableFileCopyCommand.CopyReadException) {
+      incrementCounter(context, Counter.FAIL, 1);
+      incrementCounter(context, Counter.BYTESFAILED, sourceFileStatus.getLen());
+      context.write(null, new Text("FAIL: " + sourceFileStatus.getPath() + " - " +
+          StringUtils.stringifyException(exception)));
     }
     else
       throw exception;
