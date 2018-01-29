@@ -54,6 +54,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import static org.apache.hadoop.registry.client.impl.zk.ZookeeperConfigOptions.PROP_ZK_ENABLE_SASL_CLIENT;
+
 public class TestRMFailover extends ClientBaseWithFixes {
   private static final Log LOG =
       LogFactory.getLog(TestRMFailover.class.getName());
@@ -110,6 +112,8 @@ public class TestRMFailover extends ClientBaseWithFixes {
     conf.setBoolean(YarnConfiguration.YARN_MINICLUSTER_FIXED_PORTS, true);
     conf.setBoolean(YarnConfiguration.YARN_MINICLUSTER_USE_RPC, true);
     conf.setBoolean(YarnConfiguration.NM_RECOVERY_ENABLED, false);
+
+    System.setProperty(PROP_ZK_ENABLE_SASL_CLIENT, "false");
 
     cluster = new MiniYARNCluster(TestRMFailover.class.getName(), 2, 1, 1, 1);
   }

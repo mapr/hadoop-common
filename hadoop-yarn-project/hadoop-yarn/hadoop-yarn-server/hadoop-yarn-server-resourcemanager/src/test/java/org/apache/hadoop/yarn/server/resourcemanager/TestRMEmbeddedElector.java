@@ -30,6 +30,8 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static org.apache.hadoop.registry.client.impl.zk.ZookeeperConfigOptions.PROP_ZK_ENABLE_SASL_CLIENT;
+
 public class TestRMEmbeddedElector extends ClientBaseWithFixes {
   private static final Log LOG =
       LogFactory.getLog(TestRMEmbeddedElector.class.getName());
@@ -77,6 +79,8 @@ public class TestRMEmbeddedElector extends ClientBaseWithFixes {
     setRpcAddressForRM(RM2_NODE_ID, RM2_PORT_BASE);
 
     conf.setLong(YarnConfiguration.CLIENT_FAILOVER_SLEEPTIME_BASE_MS, 100L);
+
+    System.setProperty(PROP_ZK_ENABLE_SASL_CLIENT, "false");
 
     callbackCalled = new AtomicBoolean(false);
   }
