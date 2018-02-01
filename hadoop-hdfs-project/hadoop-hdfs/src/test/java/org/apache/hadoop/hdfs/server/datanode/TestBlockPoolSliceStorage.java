@@ -17,14 +17,14 @@
 */
 package org.apache.hadoop.hdfs.server.datanode;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hdfs.server.common.Storage;
 import org.junit.Test;
 
 import java.io.File;
 import java.util.Random;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -34,7 +34,8 @@ import static org.junit.Assert.assertThat;
  * restore directories for a given block file path.
 */
 public class TestBlockPoolSliceStorage {
-  public static final Log LOG = LogFactory.getLog(TestBlockPoolSliceStorage.class);
+  public static final Logger LOG = LoggerFactory
+      .getLogger(TestBlockPoolSliceStorage.class);
 
   final Random rand = new Random();
   BlockPoolSliceStorage storage;
@@ -103,8 +104,8 @@ public class TestBlockPoolSliceStorage {
             BlockPoolSliceStorage.TRASH_ROOT_DIR +
             blockFileSubdir.substring(0, blockFileSubdir.length() - 1);
 
-    LOG.info("Got subdir " + blockFileSubdir);
-    LOG.info("Generated file path " + testFilePath);
+    LOG.info("Got subdir {}", blockFileSubdir);
+    LOG.info("Generated file path {}", testFilePath);
     assertThat(storage.getTrashDirectory(new File(testFilePath)), is(expectedTrashPath));
   }
 
@@ -127,7 +128,7 @@ public class TestBlockPoolSliceStorage {
             Storage.STORAGE_DIR_CURRENT +
             blockFileSubdir.substring(0, blockFileSubdir.length() - 1);
 
-    LOG.info("Generated deleted file path " + deletedFilePath);
+    LOG.info("Generated deleted file path {}", deletedFilePath);
     assertThat(storage.getRestoreDirectory(new File(deletedFilePath)),
                is(expectedRestorePath));
 

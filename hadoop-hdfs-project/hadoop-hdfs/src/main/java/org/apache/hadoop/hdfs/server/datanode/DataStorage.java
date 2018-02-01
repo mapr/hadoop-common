@@ -150,8 +150,8 @@ public class DataStorage extends Storage {
     final String oldStorageID = sd.getStorageUuid();
     if (oldStorageID == null || regenerateStorageIds) {
       sd.setStorageUuid(DatanodeStorage.generateUuid());
-      LOG.info("Generated new storageID " + sd.getStorageUuid() +
-          " for directory " + sd.getRoot() +
+      LOG.info("Generated new storageID {} for directory {} {}", sd
+              .getStorageUuid(), sd.getRoot(),
           (oldStorageID == null ? "" : (" to replace " + oldStorageID)));
       return true;
     }
@@ -165,7 +165,7 @@ public class DataStorage extends Storage {
    */
   public void enableTrash(String bpid) {
     if (trashEnabledBpids.add(bpid)) {
-      LOG.info("Enabled trash for bpid " + bpid);
+      LOG.info("Enabled trash for bpid {}", bpid);
     }
   }
 
@@ -173,7 +173,7 @@ public class DataStorage extends Storage {
     if (trashEnabledBpids.contains(bpid)) {
       getBPStorage(bpid).restoreTrash();
       trashEnabledBpids.remove(bpid);
-      LOG.info("Restored trash for bpid " + bpid);
+      LOG.info("Restored trash for bpid {}", bpid);
     }
   }
 
@@ -267,12 +267,12 @@ public class DataStorage extends Storage {
       case NORMAL:
         break;
       case NON_EXISTENT:
-        LOG.info("Storage directory " + dataDir + " does not exist");
+        LOG.info("Storage directory {} does not exist", dataDir);
         throw new IOException("Storage directory " + dataDir
             + " does not exist");
       case NOT_FORMATTED: // format
-        LOG.info("Storage directory " + dataDir + " is not formatted for "
-            + nsInfo.getBlockPoolID());
+        LOG.info("Storage directory {} is not formatted for {}",
+                dataDir, nsInfo.getBlockPoolID());
         LOG.info("Formatting ...");
         format(sd, nsInfo, datanode.getDatanodeUuid());
         break;
@@ -373,7 +373,7 @@ public class DataStorage extends Storage {
               datanode, nsInfo, root, startOpt);
           addStorageDir(sd);
         } catch (IOException e) {
-          LOG.warn(e);
+          LOG.warn(e.toString());
           continue;
         }
       } else {
@@ -436,9 +436,8 @@ public class DataStorage extends Storage {
         try {
           sd.unlock();
         } catch (IOException e) {
-          LOG.warn(String.format(
-            "I/O error attempting to unlock storage directory %s.",
-            sd.getRoot()), e);
+          LOG.warn("I/O error attempting to unlock storage directory {}.",
+              sd.getRoot(), e);
           errorMsgBuilder.append(String.format("Failed to remove %s: %s%n",
               sd.getRoot(), e.getMessage()));
         }
@@ -749,9 +748,9 @@ public class DataStorage extends Storage {
       // The VERSION file is already read in. Override the layoutVersion
       // field and overwrite the file. The upgrade work is handled by
       // {@link BlockPoolSliceStorage#doUpgrade}
-      LOG.info("Updating layout version from " + layoutVersion + " to "
-          + HdfsConstants.DATANODE_LAYOUT_VERSION + " for storage "
-          + sd.getRoot());
+      LOG.info("Updating layout version from {} to {} for storage {}",
+              layoutVersion, HdfsConstants.DATANODE_LAYOUT_VERSION,
+          sd.getRoot());
       layoutVersion = HdfsConstants.DATANODE_LAYOUT_VERSION;
       writeProperties(sd);
       return;
@@ -762,7 +761,7 @@ public class DataStorage extends Storage {
              + "; old CTime = " + this.getCTime()
              + ".\n   new LV = " + HdfsConstants.DATANODE_LAYOUT_VERSION
              + "; new CTime = " + nsInfo.getCTime());
-    
+
     File curDir = sd.getCurrentDir();
     File prevDir = sd.getPreviousDir();
     File bbwDir = new File(sd.getRoot(), Storage.STORAGE_1_BBW);
@@ -797,7 +796,7 @@ public class DataStorage extends Storage {
     
     // 5. Rename <SD>/previous.tmp to <SD>/previous
     rename(tmpDir, prevDir);
-    LOG.info("Upgrade of " + sd.getRoot()+ " is complete");
+    LOG.info("Upgrade of {} is complete", sd.getRoot());
     addBlockPoolStorage(nsInfo.getBlockPoolID(), bpStorage);
   }
 
@@ -852,9 +851,8 @@ public class DataStorage extends Storage {
           HdfsConstants.DATANODE_LAYOUT_VERSION)) {
         readProperties(sd, HdfsConstants.DATANODE_LAYOUT_VERSION);
         writeProperties(sd);
-        LOG.info("Layout version rolled back to "
-            + HdfsConstants.DATANODE_LAYOUT_VERSION + " for storage "
-            + sd.getRoot());
+        LOG.info("Layout version rolled back to {} for storage {}",
+            HdfsConstants.DATANODE_LAYOUT_VERSION, sd.getRoot());
       }
       return;
     }
@@ -871,9 +869,9 @@ public class DataStorage extends Storage {
               + " is newer than the namespace state: LV = "
               + HdfsConstants.DATANODE_LAYOUT_VERSION + " CTime = "
               + nsInfo.getCTime());
-    LOG.info("Rolling back storage directory " + sd.getRoot()
-        + ".\n   target LV = " + HdfsConstants.DATANODE_LAYOUT_VERSION
-        + "; target CTime = " + nsInfo.getCTime());
+    LOG.info("Rolling back storage directory {}.\n   target LV = {}; target "
+            + "CTime = {}", sd.getRoot(),
+            HdfsConstants.DATANODE_LAYOUT_VERSION, nsInfo.getCTime());
     File tmpDir = sd.getRemovedTmp();
     assert !tmpDir.exists() : "removed.tmp directory must not exist.";
     // rename current to tmp
@@ -884,7 +882,7 @@ public class DataStorage extends Storage {
     rename(prevDir, curDir);
     // delete tmp dir
     deleteDir(tmpDir);
-    LOG.info("Rollback of " + sd.getRoot() + " is complete");
+    LOG.info("Rollback of {} is complete", sd.getRoot());
   }
   
   /**
@@ -902,10 +900,9 @@ public class DataStorage extends Storage {
       return; // already discarded
     
     final String dataDirPath = sd.getRoot().getCanonicalPath();
-    LOG.info("Finalizing upgrade for storage directory " 
-             + dataDirPath 
-             + ".\n   cur LV = " + this.getLayoutVersion()
-             + "; cur CTime = " + this.getCTime());
+    LOG.info("Finalizing upgrade for storage directory {}.\n   cur LV = {}; "
+        + "cur CTime = {}", dataDirPath, this.getLayoutVersion(), this
+        .getCTime());
     assert sd.getCurrentDir().exists() : "Current directory must exist.";
     final File tmpDir = sd.getFinalizedTmp();//finalized.tmp directory
     final File bbwDir = new File(sd.getRoot(), Storage.STORAGE_1_BBW);
@@ -1026,8 +1023,8 @@ public class DataStorage extends Storage {
     final ArrayList<LinkArgs> duplicates =
         findDuplicateEntries(idBasedLayoutSingleLinks);
     if (!duplicates.isEmpty()) {
-      LOG.error("There are " + duplicates.size() + " duplicate block " +
-          "entries within the same volume.");
+      LOG.error("There are {} duplicate block " +
+          "entries within the same volume.", duplicates.size());
       removeDuplicateEntries(idBasedLayoutSingleLinks, duplicates);
     }
 
@@ -1169,8 +1166,8 @@ public class DataStorage extends Storage {
           }
         }
         if (!found) {
-          LOG.warn("Unexpectedly low genstamp on " +
-                   duplicate.src.getAbsolutePath() + ".");
+          LOG.warn("Unexpectedly low genstamp on {}.",
+              duplicate.src.getAbsolutePath());
           iter.remove();
         }
       }
@@ -1193,13 +1190,13 @@ public class DataStorage extends Storage {
       long blockLength = duplicate.src.length();
       long prevBlockLength = prevLongest.src.length();
       if (blockLength < prevBlockLength) {
-        LOG.warn("Unexpectedly short length on " +
-            duplicate.src.getAbsolutePath() + ".");
+        LOG.warn("Unexpectedly short length on {}.",
+            duplicate.src.getAbsolutePath());
         continue;
       }
       if (blockLength > prevBlockLength) {
-        LOG.warn("Unexpectedly short length on " +
-            prevLongest.src.getAbsolutePath() + ".");
+        LOG.warn("Unexpectedly short length on {}.",
+            prevLongest.src.getAbsolutePath());
       }
       longestBlockFiles.put(blockId, duplicate);
     }
@@ -1214,7 +1211,7 @@ public class DataStorage extends Storage {
         continue; // file has no duplicates
       }
       if (!bestDuplicate.src.getParent().equals(args.src.getParent())) {
-        LOG.warn("Discarding " + args.src.getAbsolutePath() + ".");
+        LOG.warn("Discarding {}.", args.src.getAbsolutePath());
         iter.remove();
       }
     }

@@ -49,7 +49,7 @@ class JNStorage extends Storage {
   private final FileJournalManager fjm;
   private final StorageDirectory sd;
   private StorageState state;
-  
+
 
   private static final List<Pattern> CURRENT_DIR_PURGE_REGEXES =
       ImmutableList.of(
@@ -167,10 +167,9 @@ class JNStorage extends Storage {
           // /\d+/ in the regex itself.
           long txid = Long.parseLong(matcher.group(1));
           if (txid < minTxIdToKeep) {
-            LOG.info("Purging no-longer needed file " + txid);
+            LOG.info("Purging no-longer needed file {}", txid);
             if (!f.delete()) {
-              LOG.warn("Unable to delete no-longer-needed data " +
-                  f);
+              LOG.warn("Unable to delete no-longer-needed data {}", f);
             }
             break;
           }
@@ -181,7 +180,7 @@ class JNStorage extends Storage {
 
   void format(NamespaceInfo nsInfo) throws IOException {
     setStorageInfo(nsInfo);
-    LOG.info("Formatting journal " + sd + " with nsid: " + getNamespaceID());
+    LOG.info("Formatting journal {} with nsid: {}", sd, getNamespaceID());
     // Unlock the directory before formatting, because we will
     // re-analyze it after format(). The analyzeStorage() call
     // below is reponsible for re-locking it. This is a no-op
@@ -245,7 +244,7 @@ class JNStorage extends Storage {
   }
 
   public void close() throws IOException {
-    LOG.info("Closing journal storage for " + sd);
+    LOG.info("Closing journal storage for {}", sd);
     unlockAll();
   }
 
