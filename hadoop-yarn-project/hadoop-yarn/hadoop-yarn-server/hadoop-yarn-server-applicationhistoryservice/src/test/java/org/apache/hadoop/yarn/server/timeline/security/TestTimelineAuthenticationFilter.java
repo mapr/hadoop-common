@@ -19,6 +19,8 @@
 package org.apache.hadoop.yarn.server.timeline.security;
 
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.security.PrivilegedExceptionAction;
@@ -27,22 +29,27 @@ import java.util.Collection;
 import java.util.concurrent.Callable;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.http.HttpConfig;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.minikdc.MiniKdc;
+import org.apache.hadoop.security.User;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.KerberosTestUtils;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.hadoop.security.authentication.server.KerberosAuthenticationHandler;
 import org.apache.hadoop.security.authorize.AuthorizationException;
+import org.apache.hadoop.security.rpcauth.KerberosAuthMethod;
 import org.apache.hadoop.security.ssl.KeyStoreTestUtil;
 import org.apache.hadoop.security.token.Token;
+import org.apache.hadoop.security.token.delegation.web.KerberosDelegationTokenAuthenticator;
 import org.apache.hadoop.yarn.api.records.timeline.TimelineDomain;
 import org.apache.hadoop.yarn.api.records.timeline.TimelineEntity;
 import org.apache.hadoop.yarn.api.records.timeline.TimelinePutResponse;
 import org.apache.hadoop.yarn.client.api.TimelineClient;
+import org.apache.hadoop.yarn.client.api.impl.TimelineClientImpl;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.security.client.TimelineDelegationTokenIdentifier;
 import org.apache.hadoop.yarn.server.applicationhistoryservice.ApplicationHistoryServer;
@@ -128,6 +135,12 @@ public class TestTimelineAuthenticationFilter {
       conf.set("hadoop.proxyuser.HTTP.hosts", "*");
       conf.set("hadoop.proxyuser.HTTP.users", FOO_USER);
       conf.setInt(YarnConfiguration.TIMELINE_SERVICE_CLIENT_MAX_RETRIES, 1);
+      conf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+              User.class.getName());
+      conf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+              KerberosAuthMethod.class.getName());
+      System.setProperty("hadoop.login", "kerberos");
+      UserGroupInformation.getLoginUser().reloginFromKeytab();
 
       if (withSsl) {
         conf.set(YarnConfiguration.YARN_HTTP_POLICY_KEY,
@@ -150,7 +163,8 @@ public class TestTimelineAuthenticationFilter {
   }
 
   private TimelineClient createTimelineClientForUGI() {
-    TimelineClient client = TimelineClient.createTimelineClient();
+    TimelineClientImpl client = spy((TimelineClientImpl) TimelineClient.createTimelineClient());
+    when(client.getMaprDelegationTokenAuthenticator()).thenReturn(new KerberosDelegationTokenAuthenticator());
     client.init(conf);
     client.start();
     return client;
