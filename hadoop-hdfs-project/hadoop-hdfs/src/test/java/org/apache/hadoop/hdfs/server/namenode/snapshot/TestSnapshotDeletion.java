@@ -30,8 +30,10 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.security.PrivilegedAction;
 
+import org.apache.commons.lang.math.RandomUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FsShell;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
@@ -43,6 +45,7 @@ import org.apache.hadoop.hdfs.MiniDFSNNTopology;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants.SafeModeAction;
 import org.apache.hadoop.hdfs.server.blockmanagement.BlockInfoContiguous;
+import org.apache.hadoop.hdfs.protocol.SnapshotDiffReport;
 import org.apache.hadoop.hdfs.server.blockmanagement.BlockManager;
 import org.apache.hadoop.hdfs.server.namenode.FSDirectory;
 import org.apache.hadoop.hdfs.server.namenode.FSNamesystem;
@@ -59,16 +62,17 @@ import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.ipc.RemoteException;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.test.GenericTestUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.ExpectedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Tests snapshot deletion.
  */
 public class TestSnapshotDeletion {
+  private static final Logger LOG =
+      LoggerFactory.getLogger(TestSnapshotDeletion.class);
   protected static final long seed = 0;
   protected static final short REPLICATION = 3;
   protected static final short REPLICATION_1 = 2;
@@ -1133,5 +1137,122 @@ public class TestSnapshotDeletion {
     long numberOfBlocks = cluster.getNamesystem().getBlocksTotal();
     cluster.restartNameNode(0);
     assertEquals(numberOfBlocks, cluster.getNamesystem().getBlocksTotal());
+  }
+
+  @Test
+  public void testSnapshotWithConcatException() throws Exception {
+    final Path st = new Path("/st");
+    hdfs.mkdirs(st);
+    hdfs.allowSnapshot(st);
+
+    Path[] files = new Path[3];
+    for (int i = 0; i < 3; i++) {
+      files[i] = new Path(st, i+ ".txt");
+    }
+
+    Path dest = new Path(st, "dest.txt");
+    hdfs.createNewFile(dest);
+    hdfs.createSnapshot(st, "ss");
+
+    for (int j = 0; j < 3; j++) {
+      FileSystem fs = cluster.getFileSystem();
+      DFSTestUtil.createFile(fs, files[j], false, 1024,
+          1024, 512, (short) 1, RandomUtils.nextLong(), true);
+    }
+
+    hdfs.createSnapshot(st, "s0");
+
+    // Verify the SnapshotException is thrown as expected for HDFS-4529
+    exception.expect(RemoteException.class);
+    String error = "Concat: the source file /st/0.txt is in snapshot";
+    exception.expectMessage(error);
+    hdfs.concat(dest, files);
+
+    hdfs.setSafeMode(SafeModeAction.SAFEMODE_ENTER);
+    hdfs.saveNamespace();
+    hdfs.setSafeMode(SafeModeAction.SAFEMODE_LEAVE);
+
+    cluster.restartNameNodes();
+  }
+
+  @Test
+  public void testSnapshotDeleteWithConcat() throws Exception {
+    final Path st = new Path("/st");
+    hdfs.mkdirs(st);
+    hdfs.allowSnapshot(st);
+
+    Path[] files = new Path[3];
+    for (int i = 0; i < 3; i++) {
+      files[i] = new Path(st, i+ ".txt");
+    }
+
+    Path dest = new Path(st, "dest.txt");
+    hdfs.createNewFile(dest);
+    hdfs.createSnapshot(st, "ss");
+
+    for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 3; j++) {
+        FileSystem fs = cluster.getFileSystem();
+        DFSTestUtil.createFile(fs, files[j], false, 1024,
+            1024, 512, (short) 1, RandomUtils.nextLong(), true);
+      }
+
+      hdfs.concat(dest, files);
+
+      hdfs.createSnapshot(st, "s" + i);
+    }
+
+
+    hdfs.deleteSnapshot(st, "s1");
+
+    hdfs.setSafeMode(SafeModeAction.SAFEMODE_ENTER);
+    hdfs.saveNamespace();
+    hdfs.setSafeMode(SafeModeAction.SAFEMODE_LEAVE);
+
+    cluster.restartNameNodes();
+  }
+
+  @Test
+  public void testSnapshotDiffReportWithConcat() throws Exception {
+    final Path st = new Path("/st");
+    hdfs.mkdirs(st);
+    hdfs.allowSnapshot(st);
+
+    Path[] files = new Path[3];
+    for (int i = 0; i < 3; i++) {
+      files[i] = new Path(st, i+ ".txt");
+    }
+
+    Path dest = new Path(st, "dest.txt");
+    hdfs.createNewFile(dest);
+    hdfs.createSnapshot(st, "ss");
+
+    for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 3; j++) {
+        FileSystem fs = cluster.getFileSystem();
+        DFSTestUtil.createFile(fs, files[j], false, 1024,
+            1024, 512, (short) 1, RandomUtils.nextLong(), true);
+      }
+
+      hdfs.concat(dest, files);
+
+      hdfs.createSnapshot(st, "s" + i);
+
+      SnapshotDiffReport sdr = hdfs.getSnapshotDiffReport(st, "s" + i, "ss");
+      LOG.info("Snapshot Diff s{} to ss : {}", i, sdr);
+      Assert.assertEquals(sdr.getDiffList().size(), 1);
+      Assert.assertTrue(sdr.getDiffList().get(0).getType() ==
+          SnapshotDiffReport.DiffType.MODIFY);
+      Assert.assertTrue(new Path(st, DFSUtil.bytes2String(
+          sdr.getDiffList().get(0).getSourcePath())).equals(dest));
+    }
+
+    hdfs.deleteSnapshot(st, "s1");
+
+    hdfs.setSafeMode(SafeModeAction.SAFEMODE_ENTER);
+    hdfs.saveNamespace();
+    hdfs.setSafeMode(SafeModeAction.SAFEMODE_LEAVE);
+
+    cluster.restartNameNodes();
   }
 }
