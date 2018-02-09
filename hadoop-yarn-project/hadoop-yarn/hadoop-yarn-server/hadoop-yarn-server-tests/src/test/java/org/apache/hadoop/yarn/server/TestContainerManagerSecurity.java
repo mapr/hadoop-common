@@ -269,11 +269,11 @@ public class TestContainerManagerSecurity extends KerberosSecurityTestcase {
     
     // Testing that NM rejects the requests when we don't send any token.
     if (UserGroupInformation.isSecurityEnabled()) {
-      sb = new StringBuilder("Client cannot authenticate via:[TOKEN]");
+      sb = new StringBuilder("Server asks us to fall back to SIMPLE auth, " +
+          "but this client is configured to only allow secure connections");
     } else {
       sb =
-          new StringBuilder(
-              "SIMPLE authentication is not enabled.  Available:[TOKEN]");
+          new StringBuilder("java.lang.NullPointerException");
     }
     String errorMsg = testStartContainer(rpc, validAppAttemptId, validNode,
         validContainerToken, null, true);
