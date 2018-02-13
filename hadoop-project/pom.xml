@@ -646,8 +646,8 @@
       </dependency>
       <dependency>
         <groupId>com.amazonaws</groupId>
-        <artifactId>aws-java-sdk</artifactId>
-        <version>1.7.15</version>
+        <artifactId>aws-java-sdk-bundle</artifactId>
+        <version>1.11.199</version>
       </dependency>
       <dependency>
         <groupId>org.apache.mina</groupId>
