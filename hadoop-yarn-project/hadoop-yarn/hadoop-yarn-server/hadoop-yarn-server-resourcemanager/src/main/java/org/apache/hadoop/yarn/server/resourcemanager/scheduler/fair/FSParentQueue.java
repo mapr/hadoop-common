@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.PriorityQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -314,24 +313,23 @@ public class FSParentQueue extends FSQueue {
     // Find the childQueue which is most over fair share
     FSQueue candidateQueue = null;
     Comparator<Schedulable> comparator = policy.getComparator();
+
     readLock.lock();
     try {
-      PriorityQueue<FSQueue> sortedQueues = new PriorityQueue<FSQueue>(
-          childQueues.size(), Collections.reverseOrder(comparator));
-      sortedQueues.addAll(childQueues);
-      while (!sortedQueues.isEmpty()) {
-        candidateQueue = sortedQueues.poll();
-        toBePreempted = candidateQueue.preemptContainer();
-        if (toBePreempted != null) {
-          break;
+      for (FSQueue queue : childQueues) {
+        if (candidateQueue == null ||
+            comparator.compare(queue, candidateQueue) > 0) {
+          candidateQueue = queue;
         }
       }
-      sortedQueues.clear();
-      sortedQueues = null;
     } finally {
       readLock.unlock();
     }
 
+    // Let the selected queue choose which of its container to preempt
+    if (candidateQueue != null) {
+      toBePreempted = candidateQueue.preemptContainer();
+    }
     return toBePreempted;
   }
 

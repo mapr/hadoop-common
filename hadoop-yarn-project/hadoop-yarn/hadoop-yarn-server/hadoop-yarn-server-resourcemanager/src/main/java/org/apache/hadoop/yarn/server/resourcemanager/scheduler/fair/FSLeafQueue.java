@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.PriorityQueue;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.logging.Log;
@@ -421,7 +420,6 @@ public class FSLeafQueue extends FSQueue {
     if (candidateSched != null) {
       toBePreempted = candidateSched.preemptContainer();
     }
-
     return toBePreempted;
   }
 
