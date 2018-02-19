@@ -32,10 +32,13 @@ import java.util.Map;
 import java.util.HashMap;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.minikdc.MiniKdc;
+import org.apache.hadoop.security.User;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.KerberosTestUtils;
+import org.apache.hadoop.security.rpcauth.KerberosAuthMethod;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.server.resourcemanager.MockRM;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceScheduler;
@@ -106,7 +109,11 @@ public class TestRMWebServicesHttpStaticUserPermissions {
       "kerberos");
     rmconf.set("yarn.resourcemanager.principal", spnegoPrincipal);
     rmconf.set("yarn.resourcemanager.keytab",
-        spnegoKeytabFile.getAbsolutePath());
+      spnegoKeytabFile.getAbsolutePath());
+    rmconf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+      User.class.getName());
+    rmconf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+      KerberosAuthMethod.class.getName());
     rmconf.setBoolean("mockrm.webapp.enabled", true);
     UserGroupInformation.setConfiguration(rmconf);
     rm = new MockRM(rmconf);
@@ -151,18 +158,18 @@ public class TestRMWebServicesHttpStaticUserPermissions {
 
     // new-application, submit app and kill should fail with
     // forbidden
-    Map<String, Helper> urlRequestMap = new HashMap<String, Helper>();
+    Map<String, Helper> urlRequestMap = new HashMap<>();
     String killAppRequestBody =
         "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
             + "<appstate>\n" + "  <state>KILLED</state>\n" + "</appstate>";
 
-    urlRequestMap.put("http://localhost:8088/ws/v1/cluster/apps", new Helper(
+    urlRequestMap.put("http://localhost:8088/ws/v1/cluster/apps?user.name=dr.who", new Helper(
       "POST", submitAppRequestBody));
     urlRequestMap.put(
-      "http://localhost:8088/ws/v1/cluster/apps/new-application", new Helper(
+      "http://localhost:8088/ws/v1/cluster/apps/new-application?user.name=dr.who", new Helper(
         "POST", ""));
     urlRequestMap.put(
-      "http://localhost:8088/ws/v1/cluster/apps/app_123_1/state", new Helper(
+      "http://localhost:8088/ws/v1/cluster/apps/app_123_1/state?user.name=dr.who", new Helper(
         "PUT", killAppRequestBody));
 
     for (Map.Entry<String, Helper> entry : urlRequestMap.entrySet()) {
