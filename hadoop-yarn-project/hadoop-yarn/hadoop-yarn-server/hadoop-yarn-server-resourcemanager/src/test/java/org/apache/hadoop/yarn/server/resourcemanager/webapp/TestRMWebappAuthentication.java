@@ -183,7 +183,7 @@ public class TestRMWebappAuthentication {
           .getMarshalledAppInfo(app);
 
     URL url =
-        new URL("http://localhost:8088/ws/v1/cluster/apps/new-application");
+        new URL("http://localhost:8088/ws/v1/cluster/apps/new-application?user.name=dr.who");
     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
     TestRMWebServicesDelegationTokenAuthentication.setupConn(conn, "POST",
       "application/xml", requestBody);
@@ -195,7 +195,7 @@ public class TestRMWebappAuthentication {
       assertEquals(Status.FORBIDDEN.getStatusCode(), conn.getResponseCode());
     }
 
-    url = new URL("http://localhost:8088/ws/v1/cluster/apps");
+    url = new URL("http://localhost:8088/ws/v1/cluster/apps?user.name=dr.who");
     conn = (HttpURLConnection) url.openConnection();
     TestRMWebServicesDelegationTokenAuthentication.setupConn(conn, "POST",
       "application/xml", requestBody);
@@ -210,7 +210,7 @@ public class TestRMWebappAuthentication {
     requestBody = "{ \"state\": \"KILLED\"}";
     url =
         new URL(
-          "http://localhost:8088/ws/v1/cluster/apps/application_123_0/state");
+          "http://localhost:8088/ws/v1/cluster/apps/application_123_0/state?user.name=dr.who");
     conn = (HttpURLConnection) url.openConnection();
     TestRMWebServicesDelegationTokenAuthentication.setupConn(conn, "PUT",
       "application/json", requestBody);
