@@ -701,11 +701,21 @@ public class FairScheduler extends
 
     if (!queue.hasAccess(QueueACL.SUBMIT_APPLICATIONS, userUgi)
         && !queue.hasAccess(QueueACL.ADMINISTER_QUEUE, userUgi)) {
-      String msg = "User " + userUgi.getUserName() +
-              " cannot submit applications to queue " + queue.getName();
+      String msg;
+      if (isAppRecovering) {
+        msg = "Application " + applicationId
+            + " will be killed since ACL configuration was changed before recovering and user "
+            + userUgi.getUserName() + " no longer have a rights to submit applications to queue "
+            + queue.getName();
+        rmContext.getDispatcher().getEventHandler().handle(
+            new RMAppEvent(applicationId, RMAppEventType.KILL));
+      } else {
+        msg = "User " + userUgi.getUserName() +
+            " cannot submit applications to queue " + queue.getName();
+        rmContext.getDispatcher().getEventHandler()
+            .handle(new RMAppRejectedEvent(applicationId, msg));
+      }
       LOG.info(msg);
-      rmContext.getDispatcher().getEventHandler()
-          .handle(new RMAppRejectedEvent(applicationId, msg));
       return;
     }
   
@@ -736,6 +746,11 @@ public class FairScheduler extends
       boolean isAttemptRecovering) {
     SchedulerApplication<FSAppAttempt> application =
         applications.get(applicationAttemptId.getApplicationId());
+    if (application == null) {
+      LOG.warn("Application " + applicationAttemptId.getApplicationId() +
+          " cannot be found in scheduler.");
+      return;
+    }
     String user = application.getUser();
     FSLeafQueue queue = (FSLeafQueue) application.getQueue();
 

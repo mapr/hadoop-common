@@ -39,7 +39,7 @@ import java.util.Collection;
 public abstract class ParameterizedSchedulerTestBase {
   protected final static String TEST_DIR =
       new File(System.getProperty("test.build.data", "/tmp")).getAbsolutePath();
-  private final static String FS_ALLOC_FILE =
+  protected final static String FS_ALLOC_FILE =
       new File(TEST_DIR, "test-fs-queues.xml").getAbsolutePath();
 
   private SchedulerType schedulerType;

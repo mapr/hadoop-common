@@ -20,8 +20,10 @@ package org.apache.hadoop.yarn.server.resourcemanager;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -1089,5 +1091,47 @@ public class TestWorkPreservingRMRestart extends ParameterizedSchedulerTestBase 
     assertEquals(RMAppState.FINISHED, recoveredApp1.getState());
     // check that attempt state is recovered correctly.
     assertEquals(RMAppAttemptState.FINISHED, recoveredApp1.getCurrentAppAttempt().getState());
+  }
+
+  @Test(timeout = 20000)
+  public void testFairSchedulerQueueACLChanged() throws Exception {
+    if (getSchedulerType() != SchedulerType.FAIR) {
+      return;
+    }
+
+    rm1 = new MockRM(conf);
+    rm1.start();
+    MockNM nm1 = new MockNM("127.0.0.1:1234", 8192, rm1.getResourceTrackerService());
+    nm1.registerNode();
+    RMApp app = rm1.submitApp(200);
+    MockAM am1 = MockRM.launchAndRegisterAM(app, rm1, nm1);
+    rm1.waitForState(am1.getApplicationAttemptId(), RMAppAttemptState.RUNNING);
+
+    // Failover with new ACL configuration 
+    // so that user no longer have a rights to submit this application
+    PrintWriter out = new PrintWriter(new FileWriter(FS_ALLOC_FILE));
+    out.println("<?xml version=\"1.0\"?>");
+    out.println("<allocations>");
+    out.println("<queue name=\"root\">");
+    out.println("  <aclSubmitApps> </aclSubmitApps>");
+    out.println("  <aclAdministerApps> </aclAdministerApps>");
+    out.println("</queue>");
+    out.println("</allocations>");
+    out.close();
+
+    rm2 = new MockRM(conf, rm1.getRMContext().getStateStore());
+    try {
+      rm2.start();
+    } catch (NullPointerException e) {
+      fail("RM shouldn't crash during recovering if ACL configuration was changed");
+    }
+
+    // Make sure that RMAppEventType.KILL event will be processed
+    Thread.sleep(100);
+
+    RMApp recoveredApp = rm2.getRMContext().getRMApps().get(app.getApplicationId());
+    RMAppAttempt rmAttemptRecovered = recoveredApp.getCurrentAppAttempt();
+    assertNotNull("No AppAttempt found after recovery", rmAttemptRecovered);
+    assertEquals(RMAppState.KILLED, recoveredApp.getState());
   }
 }
