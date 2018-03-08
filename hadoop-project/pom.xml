@@ -62,7 +62,7 @@
     <jersey.version>1.9</jersey.version>
 
     <!-- jackson versions -->
-    <jackson2.version>2.7.8</jackson2.version>
+    <jackson2.version>2.9.4</jackson2.version>
 
     <!-- commons-lang3 version -->
     <commons-lang3.version>3.9</commons-lang3.version>
