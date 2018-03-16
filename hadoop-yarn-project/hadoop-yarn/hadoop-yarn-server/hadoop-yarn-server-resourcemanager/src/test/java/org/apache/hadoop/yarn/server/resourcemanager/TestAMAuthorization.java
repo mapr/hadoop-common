@@ -38,6 +38,7 @@ import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.User;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.rpcauth.DigestAuthMethod;
 import org.apache.hadoop.security.rpcauth.KerberosAuthMethod;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.TokenIdentifier;
@@ -79,6 +80,13 @@ public class TestAMAuthorization {
   @Parameters
   public static Collection<Object[]> configs() {
     Configuration conf = new Configuration();
+    conf.set(
+      CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION,
+      UserGroupInformation.AuthenticationMethod.TOKEN.toString());
+    conf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+      User.class.getName());
+    conf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+      DigestAuthMethod.class.getName());
     Configuration confWithSecurity = new Configuration();
     confWithSecurity.set(
       CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION,
