@@ -131,6 +131,7 @@ public class TestLinuxContainerExecutorWithMocks {
     Configuration conf = new Configuration();
     LinuxContainerRuntime linuxContainerRuntime;
 
+    conf.set(YarnConfiguration.NM_LOG_DIRS, "src/test/resources");
     setupMockExecutor(MOCK_EXECUTOR, conf);
     linuxContainerRuntime = new DefaultLinuxContainerRuntime(
         PrivilegedOperationExecutor.getInstance(conf));
@@ -252,7 +253,8 @@ public class TestLinuxContainerExecutorWithMocks {
       Assert.assertEquals(result.get(15),
           "-Dlog4j.configuration=container-log4j.properties" );
       Assert.assertEquals(result.get(16),
-          "-Dyarn.app.container.log.dir=${yarn.log.dir}/userlogs/application_0/12345");
+          String.format("-Dyarn.app.container.log.dir=%s/application_0/12345",
+          mockExec.getConf().get(YarnConfiguration.NM_LOG_DIRS)));
       Assert.assertEquals(result.get(17),
           "-Dyarn.app.container.log.filesize=0");
       Assert.assertEquals(result.get(18), "-Dhadoop.root.logger=INFO,CLA");
