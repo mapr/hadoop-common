@@ -20,9 +20,12 @@ package org.apache.hadoop.registry.secure;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.minikdc.MiniKdc;
+import org.apache.hadoop.security.User;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.util.KerberosName;
+import org.apache.hadoop.security.rpcauth.KerberosAuthMethod;
 import org.apache.hadoop.service.Service;
 import org.apache.hadoop.service.ServiceOperations;
 import org.apache.hadoop.registry.RegistryTestHelper;
@@ -32,6 +35,7 @@ import org.apache.hadoop.registry.server.services.AddingCompositeService;
 import org.apache.hadoop.registry.server.services.MicroZookeeperService;
 import org.apache.hadoop.registry.server.services.MicroZookeeperServiceKeys;
 import org.apache.hadoop.util.Shell;
+import org.apache.zookeeper.Environment;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -86,6 +90,17 @@ public class AbstractSecureRegistryTest extends RegistryTestHelper {
     CONF = new Configuration();
     CONF.set("hadoop.security.authentication", "kerberos");
     CONF.setBoolean("hadoop.security.authorization", true);
+
+    CONF.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+      User.class.getName());
+    CONF.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+      KerberosAuthMethod.class.getName());
+    System.setProperty("hadoop.login", "kerberos");
+    try {
+      UserGroupInformation.getLoginUser().reloginFromKeytab();
+    } catch (IOException e) {
+      LOG.warn(e.getMessage());
+    }
   }
 
   private static final AddingCompositeService classTeardown =
@@ -121,6 +136,7 @@ public class AbstractSecureRegistryTest extends RegistryTestHelper {
   protected static File jaasFile;
   private LoginContext zookeeperLogin;
   private static String zkServerPrincipal;
+  private static String oldJaasFile;
 
   /**
    * All class initialization for this test class
@@ -128,11 +144,13 @@ public class AbstractSecureRegistryTest extends RegistryTestHelper {
    */
   @BeforeClass
   public static void beforeSecureRegistryTestClass() throws Exception {
+    oldJaasFile = System.getProperty(Environment.JAAS_CONF_KEY);
     registrySecurity = new RegistrySecurity("registrySecurity");
     registrySecurity.init(CONF);
     setupKDCAndPrincipals();
     RegistrySecurity.clearJaasSystemProperties();
     RegistrySecurity.bindJVMtoJAASFile(jaasFile);
+    javax.security.auth.login.Configuration.getConfiguration().refresh();
     initHadoopSecurity();
   }
 
@@ -142,6 +160,7 @@ public class AbstractSecureRegistryTest extends RegistryTestHelper {
     describe(LOG, "teardown of class");
     classTeardown.close();
     teardownKDC();
+    RegistrySecurity.bindJVMtoJAASFile(new File(oldJaasFile));
   }
 
   /**
@@ -219,7 +238,9 @@ public class AbstractSecureRegistryTest extends RegistryTestHelper {
         BOB_LOCALHOST, keytab_bob));
 
     jaasFile = new File(kdcWorkDir, "jaas.txt");
-    FileUtils.write(jaasFile, jaas.toString());
+    FileUtils.copyFile(new File(System.getProperty(Environment.JAAS_CONF_KEY)),
+      jaasFile);
+    FileUtils.write(jaasFile, jaas.toString(), true);
     LOG.info("\n"+ jaas);
     RegistrySecurity.bindJVMtoJAASFile(jaasFile);
   }
