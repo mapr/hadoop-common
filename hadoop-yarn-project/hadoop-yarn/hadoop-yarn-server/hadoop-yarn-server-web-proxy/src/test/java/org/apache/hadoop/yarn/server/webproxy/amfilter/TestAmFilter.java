@@ -32,6 +32,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import static org.junit.Assert.*;
 
+import com.google.common.base.Supplier;
+import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.yarn.server.webproxy.ProxyUtils;
 import org.apache.hadoop.yarn.server.webproxy.WebAppProxyServlet;
 import org.glassfish.grizzly.servlet.HttpServletResponseImpl;
@@ -119,6 +121,44 @@ public class TestAmFilter {
     filter.doFilter(request, response, chain);
     assertTrue(invoked.get());
     filter.destroy();
+  }
+
+  @Test(timeout = 2000)
+  public void testProxyUpdate() throws Exception {
+    Map<String, String> params = new HashMap<>();
+    params.put(AmIpFilter.PROXY_HOSTS, proxyHost);
+    params.put(AmIpFilter.PROXY_URI_BASES, proxyUri);
+
+    FilterConfig conf = new DummyFilterConfig(params);
+    final AmIpFilter filter = new AmIpFilter();
+    int updateInterval = 1000;
+    AmIpFilter.setUpdateInterval(updateInterval);
+    filter.init(conf);
+    filter.getProxyAddresses();
+
+    // check that the configuration was applied
+    assertTrue(filter.getProxyAddresses().contains("127.0.0.1"));
+
+    // change proxy configurations
+    params = new HashMap<>();
+    params.put(AmIpFilter.PROXY_HOSTS, "unknownhost");
+    params.put(AmIpFilter.PROXY_URI_BASES, proxyUri);
+    conf = new DummyFilterConfig(params);
+    filter.init(conf);
+
+    // configurations shouldn't be updated now
+    assertFalse(filter.getProxyAddresses().isEmpty());
+    // waiting for configuration update
+    GenericTestUtils.waitFor(new Supplier<Boolean>() {
+      @Override
+      public Boolean get() {
+        try {
+          return filter.getProxyAddresses().isEmpty();
+        } catch (ServletException e) {
+          return true;
+        }
+      }
+    }, 500, updateInterval);
   }
 
   /**

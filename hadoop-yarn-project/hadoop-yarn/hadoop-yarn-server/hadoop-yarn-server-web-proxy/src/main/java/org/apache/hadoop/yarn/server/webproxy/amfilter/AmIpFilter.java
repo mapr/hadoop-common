@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -41,7 +42,9 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.classification.InterfaceAudience.Public;
+import org.apache.hadoop.util.Time;
 import org.apache.hadoop.yarn.api.ApplicationConstants;
 import org.apache.hadoop.yarn.conf.HAUtil;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
@@ -66,7 +69,7 @@ public class AmIpFilter implements Filter {
   public static final String PROXY_URI_BASES_DELIMITER = ",";
   private static final String PROXY_PATH = "/proxy";
   //update the proxy IP list about every 5 min
-  private static final long UPDATE_INTERVAL = 5 * 60 * 1000;
+  private static long updateInterval = TimeUnit.MINUTES.toMillis(5);
 
   private List<String> proxyHosts = new ArrayList<>();
   private Set<String> proxyAddresses = null;
@@ -78,12 +81,12 @@ public class AmIpFilter implements Filter {
     // Maintain for backwards compatibility
     if (conf.getInitParameter(PROXY_HOST) != null
         && conf.getInitParameter(PROXY_URI_BASE) != null) {
-      //proxyHosts = new ArrayList<>(1);
+      proxyHosts = new ArrayList<>(1);
       proxyHosts.add(conf.getInitParameter(PROXY_HOST));
       proxyUriBases = new HashMap<>(1);
       proxyUriBases.put("dummy", conf.getInitParameter(PROXY_URI_BASE));
     } else {
-      proxyHosts.addAll(Arrays.asList(conf.getInitParameter(PROXY_HOSTS)
+      proxyHosts = new ArrayList<>(Arrays.asList(conf.getInitParameter(PROXY_HOSTS)
           .split(PROXY_HOSTS_DELIMITER)));
 
       String[] proxyUriBasesArr = conf.getInitParameter(PROXY_URI_BASES)
@@ -101,9 +104,9 @@ public class AmIpFilter implements Filter {
   }
 
   protected Set<String> getProxyAddresses() throws ServletException {
-    long now = System.currentTimeMillis();
+    long now = Time.monotonicNow();
     synchronized(this) {
-      if (proxyAddresses == null || (lastUpdate + UPDATE_INTERVAL) >= now) {
+      if (proxyAddresses == null || (lastUpdate + updateInterval) <= now) {
         proxyAddresses = new HashSet<>();
         for (String proxyHost : proxyHosts) {
           try {
@@ -231,5 +234,10 @@ public class AmIpFilter implements Filter {
           "Could not determine the proxy server for redirection");
     }
     return addr;
+  }
+
+  @VisibleForTesting
+  protected static void setUpdateInterval(long updateInterval) {
+    AmIpFilter.updateInterval = updateInterval;
   }
 }
