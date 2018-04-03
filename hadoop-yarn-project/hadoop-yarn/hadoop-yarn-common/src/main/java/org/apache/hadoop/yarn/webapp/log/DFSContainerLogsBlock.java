@@ -82,7 +82,7 @@ public class DFSContainerLogsBlock extends HtmlBlock
           throw new YarnRuntimeException(e);
         }
       }
-    } catch (NotFoundException ex) {
+    } catch (NotFoundException | YarnRuntimeException ex) {
       html.h1(ex.getMessage());
     } catch (Throwable e) {
       throw new RuntimeException(e);
