@@ -278,7 +278,8 @@ public class HttpServer implements FilterContainer {
     }
 
     if (UserGroupInformation.isSecurityEnabled()) {
-      addGlobalFilter("Authentication", HadoopCoreAuthenticationFilter.class.getName(), null);
+      FilterInitializer initializer = new HadoopCoreAuthenticationFilterInitializer();
+      initializer.initFilter(this, conf);
     }
 
     addDefaultServlets();

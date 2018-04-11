@@ -304,7 +304,8 @@ public final class HttpServer2 implements FilterContainer {
       HttpServer2 server = new HttpServer2(this);
 
       if (this.securityEnabled) {
-        server.addGlobalFilter("Authentication", HadoopCoreAuthenticationFilter.class.getName(), null);
+        FilterInitializer initializer = new HadoopCoreAuthenticationFilterInitializer();
+        initializer.initFilter(server, conf);
       }
 
       for (URI ep : endpoints) {
