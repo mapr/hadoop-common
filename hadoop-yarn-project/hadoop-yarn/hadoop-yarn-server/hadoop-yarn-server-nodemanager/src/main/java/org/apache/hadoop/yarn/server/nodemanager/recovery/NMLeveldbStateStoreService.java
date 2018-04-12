@@ -943,7 +943,6 @@ public class NMLeveldbStateStoreService extends NMStateStoreService {
     Path storeRoot = createStorageDir(conf);
     Options options = new Options();
     options.createIfMissing(false);
-    options.logger(new LeveldbLogger());
     LOG.info("Using state database at " + storeRoot + " for recovery");
     File dbfile = new File(storeRoot.toString());
     try {
@@ -978,17 +977,6 @@ public class NMLeveldbStateStoreService extends NMStateStoreService {
     FileSystem fs = FileSystem.getLocal(conf);
     fs.mkdirs(root, new FsPermission((short)0700));
     return root;
-  }
-
-
-  private static class LeveldbLogger implements org.iq80.leveldb.Logger {
-    private static final org.slf4j.Logger LOG =
-        LoggerFactory.getLogger(LeveldbLogger.class);
-
-    @Override
-    public void log(String message) {
-      LOG.info(message);
-    }
   }
 
 
