@@ -77,6 +77,7 @@ Customizing the Fair Scheduler typically involves altering two files. First, sch
 | `yarn.scheduler.fair.allocation.file` | Path to allocation file. An allocation file is an XML manifest describing queues and their properties, in addition to certain policy defaults. This file must be in the XML format described in the next section. If a relative path is given, the file is searched for on the classpath (which typically includes the Hadoop conf directory). Defaults to fair-scheduler.xml. |
 | `yarn.scheduler.fair.user-as-default-queue` | Whether to use the username associated with the allocation as the default queue name, in the event that a queue name is not specified. If this is set to "false" or unset, all jobs have a shared default queue, named "default". Defaults to true. If a queue placement policy is given in the allocations file, this property is ignored. |
 | `yarn.scheduler.fair.preemption` | Whether to use preemption. Defaults to false. |
+| `yarn.scheduler.fair.resources-based-on-labels-enabled` | Whether computing of resources based on node labels is enabled. Defaults to true. |
 | `yarn.scheduler.fair.preemption.cluster-utilization-threshold` | The utilization threshold after which preemption kicks in. The utilization is computed as the maximum ratio of usage to capacity among all resources. Defaults to 0.8f. |
 | `yarn.scheduler.fair.sizebasedweight` | Whether to assign shares to individual apps based on their size, rather than providing an equal share to all apps regardless of size. When set to true, apps are weighted by the natural logarithm of one plus the app's total requested memory, divided by the natural logarithm of 2. Defaults to false. |
 | `yarn.scheduler.fair.assignmultiple` | Whether to allow multiple container assignments in one heartbeat. Defaults to false. |
@@ -129,6 +130,8 @@ The allocation file must be in XML format. The format contains five types of ele
 * **A queueMaxAMShareDefault element**: which sets the default AM resource limit for queue; overriden by maxAMShare element in each queue.
 
 * **A defaultQueueSchedulingPolicy element**: which sets the default scheduling policy for queues; overriden by the schedulingPolicy element in each queue if specified. Defaults to "fair".
+
+* **A defaultQueueLabel element**: which sets the default label for queues which do not have any label; . All queues (exclude "root") which do not have a label will get "defaultQueueLabel" as their label.
 
 * **A queuePlacementPolicy element**: which contains a list of rule elements that tell the scheduler how to place incoming apps into queues. Rules are applied in the order that they are listed. Rules may take arguments. All rules accept the "create" argument, which indicates whether the rule can create a new queue. "Create" defaults to true; if set to false and the rule would place the app in a queue that is not configured in the allocations file, we continue on to the next rule. The last rule must be one that can never issue a continue. Valid rules are:
 

@@ -42,6 +42,8 @@ import org.apache.hadoop.yarn.server.resourcemanager.resource.ResourceWeights;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
 import org.apache.hadoop.yarn.util.resource.Resources;
 
+import static org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.QueueManager.ROOT_QUEUE;
+
 @Private
 @Unstable
 public abstract class FSQueue implements Queue, Schedulable {
@@ -53,6 +55,7 @@ public abstract class FSQueue implements Queue, Schedulable {
 
   protected Expression label;
   protected QueueLabelPolicy labelPolicy;
+  protected String defaultLabel;
 
   protected final FSParentQueue parent;
   protected final RecordFactory recordFactory =
@@ -131,11 +134,14 @@ public abstract class FSQueue implements Queue, Schedulable {
     QueueInfo queueInfo = recordFactory.newRecordInstance(QueueInfo.class);
     queueInfo.setQueueName(getQueueName());
 
-    if (scheduler.getClusterResource().getMemory() == 0) {
+    Resource clusterResource = scheduler.isResourcesBasedOnLabelsEnabled() ?
+        scheduler.getClusterResource(label) :
+        scheduler.getClusterResource();
+    if (clusterResource.getMemory() == 0) {
       queueInfo.setCapacity(0.0f);
     } else {
       queueInfo.setCapacity((float) getFairShare().getMemory() /
-          scheduler.getClusterResource().getMemory());
+          clusterResource.getMemory());
     }
 
     if (getFairShare().getMemory() == 0) {
@@ -178,8 +184,16 @@ public abstract class FSQueue implements Queue, Schedulable {
 
   @Override
   public void setFairShare(Resource fairShare) {
-    this.fairShare = fairShare;
-    metrics.setFairShare(fairShare);
+    Resource clusterResource = scheduler.isResourcesBasedOnLabelsEnabled() ? 
+        scheduler.getClusterResource(label) :
+        scheduler.getClusterResource();
+    if (clusterResource != null) {
+      this.fairShare = Resources.componentwiseMin(fairShare, clusterResource);
+    } else {
+      this.fairShare = fairShare;
+    }
+
+    metrics.setFairShare(this.fairShare);
   }
 
   /** Get the steady fair share assigned to this Schedulable. */
@@ -188,8 +202,16 @@ public abstract class FSQueue implements Queue, Schedulable {
   }
 
   public void setSteadyFairShare(Resource steadyFairShare) {
-    this.steadyFairShare = steadyFairShare;
-    metrics.setSteadyFairShare(steadyFairShare);
+    Resource clusterResource = scheduler.isResourcesBasedOnLabelsEnabled() ?
+        scheduler.getClusterResource(label) :
+        scheduler.getClusterResource();
+    if (clusterResource != null) {
+      this.steadyFairShare = Resources.componentwiseMin(steadyFairShare, clusterResource);
+    } else {
+        this.steadyFairShare = steadyFairShare;
+      }
+
+    metrics.setSteadyFairShare(this.steadyFairShare);
   }
 
   public boolean hasAccess(QueueACL acl, UserGroupInformation user) {
@@ -323,6 +345,14 @@ public abstract class FSQueue implements Queue, Schedulable {
       return null;
     }
   }
+  
+  protected void updateLabel() {
+    if (!name.equals(ROOT_QUEUE) &&
+        label == null && defaultLabel != null) {
+      Expression labelExp = new Expression(defaultLabel);
+      setLabel(labelExp);
+    }
+  }
 
   protected QueueLabelPolicy refreshLabelPolicy() {
     QueueLabelPolicy labelPolicy = 
@@ -345,6 +375,14 @@ public abstract class FSQueue implements Queue, Schedulable {
 	  
   public void setLabel(Expression label) {
     this.label = label;
+  }
+
+  public String getDefaultLabel() {
+    return defaultLabel;
+  }
+
+  public void setDefaultLabel(String defaultLabel) {
+    this.defaultLabel = defaultLabel;
   }
 
   public void setLabelPolicy(QueueLabelPolicy labelPolicy) {

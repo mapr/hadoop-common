@@ -720,6 +720,30 @@ public class TestAllocationFileLoaderService {
     allocLoader.reloadAllocations();
   }
 
+  @Test
+  public void testDefaultQueueLabel() throws Exception {
+    Configuration conf = new Configuration();
+    conf.set(FairSchedulerConfiguration.ALLOCATION_FILE, ALLOC_FILE);
+
+    PrintWriter out = new PrintWriter(new FileWriter(ALLOC_FILE));
+    out.println("<?xml version=\"1.0\"?>");
+    out.println("<allocations>");
+    out.println("<queue name=\"queue1\">");
+    out.println("</queue>");
+    out.println("<defaultQueueLabel>DefaultLabel</defaultQueueLabel>");
+    out.println("</allocations>");
+    out.close();
+
+    AllocationFileLoaderService allocLoader = new AllocationFileLoaderService();
+    allocLoader.init(conf);
+    ReloadListener confHolder = new ReloadListener();
+    allocLoader.setReloadListener(confHolder);
+    allocLoader.reloadAllocations();
+
+    AllocationConfiguration allocConf = confHolder.allocConf;
+    assertEquals("DefaultLabel", allocConf.getDefaultQueueLabel());
+  }
+
   private class ReloadListener implements AllocationFileLoaderService.Listener {
     public AllocationConfiguration allocConf;
     

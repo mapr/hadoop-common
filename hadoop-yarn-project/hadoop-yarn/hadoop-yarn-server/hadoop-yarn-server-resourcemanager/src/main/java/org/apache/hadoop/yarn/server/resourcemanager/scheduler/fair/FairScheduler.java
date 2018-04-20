@@ -24,6 +24,7 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
+import net.java.dev.eval.Expression;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience.LimitedPrivate;
@@ -166,12 +167,15 @@ public class FairScheduler extends
   
   // ms to wait before force killing stuff (must be longer than a couple
   // of heartbeats to give task-kill commands a chance to act).
-  protected long waitTimeBeforeKill; 
+  protected long waitTimeBeforeKill;
+
+  // Whether computing of resources based on node labels is enabled
+  protected boolean isResourcesBasedOnLabelsEnabled;
   
   // Containers whose AMs have been warned that they will be preempted soon.
   private List<RMContainer> warnedContainers = new ArrayList<RMContainer>();
   // Killed/Preempted container, mapping with the application which will get its deallocated resources
-  private HashMap<RMContainer, FSAppAttempt> preemptMapping = new HashMap<RMContainer, FSAppAttempt>();
+  private Map<RMContainer, FSAppAttempt> preemptMapping = new HashMap<>();
 
   protected boolean sizeBasedWeight; // Give larger weights to larger jobs
   protected WeightAdjuster weightAdjuster; // Can be null for no weight adjuster
@@ -370,23 +374,87 @@ public class FairScheduler extends
    * and then select the right ones using preemptTasks.
    */
   protected synchronized void preemptTasksIfNecessary() {
-    if (!shouldAttemptPreemption()) {
-      return;
-    }
+    Set<Expression> allLabels = getLabels();
 
+    if (allLabels.isEmpty()) {
+      if (shouldAttemptPreemption()) {
+        preemptTasksInQueues(queueMgr.getLeafQueues());
+      }
+    } else {
+      for (Expression label : allLabels) {
+        List<FSLeafQueue> fsLeafQueues = new ArrayList<>(queueMgr.getLeafQueues());
+        fsLeafQueues = (List<FSLeafQueue>)(List<?>)getAvailableQueuesForLabel(fsLeafQueues, label);
+        Resource allocatedResource = getAllocatedResourceForQueues(fsLeafQueues);
+       
+        if (shouldAttemptPreemption(label, allocatedResource)) {
+          preemptTasksInQueues(fsLeafQueues);
+        }
+      }
+    }
+  }
+
+  private void preemptTasksInQueues(Collection<FSLeafQueue> queues) {
     long curTime = getClock().getTime();
     if (curTime - lastPreemptCheckTime < preemptionInterval) {
       return;
     }
     lastPreemptCheckTime = curTime;
 
-    HashMap<FSAppAttempt, Resource> resToPreempt = new HashMap<FSAppAttempt, Resource>();
-    for (FSLeafQueue sched : queueMgr.getLeafQueues()) {
+    Map<FSAppAttempt, Resource> resToPreempt = new HashMap<>();
+    for (FSLeafQueue sched : queues) {
       resToPreempt.putAll(resToPreempt(sched, curTime));
     }
     if (!resToPreempt.isEmpty()) {
       preemptResources(resToPreempt);
     }
+  }
+
+  /**
+   * Get queues which have a label and 
+   * their parent queue has this label too or doesn't have any label 
+   * to be able to give resources to child queues
+   * @param queues
+   * @param label
+   * @param parentLabel
+   * @return
+   */
+  protected List<FSQueue> getAvailableQueuesForLabel(List<? extends FSQueue> queues,
+      Expression label, Expression parentLabel) {
+    List<FSQueue> queuesWithLabel = new ArrayList<>();
+    if (label == null) {
+      queuesWithLabel.addAll(queues);
+      return queuesWithLabel;
+    }
+    String labelStr = label.toString();
+    String parentLabelStr = parentLabel == null ? null : parentLabel.toString();
+    for (FSQueue queue : queues) {
+      String queueLabel = queue.getLabel() == null ? null : queue.getLabel().toString();
+      if (queueLabel != null && labelStr.equals(queueLabel)
+          && (parentLabelStr == null || parentLabelStr.equals(queueLabel))) {
+        queuesWithLabel.add(queue);
+      }
+    }
+
+    return queuesWithLabel;
+  }
+
+  protected List<FSQueue> getAvailableQueuesForLabel(List<? extends FSQueue> queues,
+      Expression label) {
+    return getAvailableQueuesForLabel(queues, label, null);
+  }
+
+  /**
+   * Get total allocated resources for queues
+   * @param queues
+   * @return The total allocated resources for queues
+   */
+  protected Resource getAllocatedResourceForQueues(List<? extends FSQueue> queues) {
+    Resource totalAllocatedResources = Resources.createResource(0, 0, 0.0);
+    for (FSQueue queue : queues) {
+      Resources.addTo(totalAllocatedResources, queue.getMetrics().getAllocatedResources());
+    }
+
+    return totalAllocatedResources;
   }
 
   /**
@@ -400,7 +468,7 @@ public class FairScheduler extends
    * containers with lowest priority to preempt.
    * We make sure that no queue is placed below its fair share in the process.
    */
-  protected void preemptResources(HashMap<FSAppAttempt, Resource> toPreempt) {
+  protected void preemptResources(Map<FSAppAttempt, Resource> toPreempt) {
      long start = getClock().getTime();
      if (toPreempt.isEmpty()) {
       return;
@@ -489,7 +557,7 @@ public class FairScheduler extends
    * @param preemptApp
    */
   private void updateResourceToPreempt(RMContainer container,
-      HashMap<FSAppAttempt, Resource> toPreempt, FSAppAttempt preemptApp) {
+      Map<FSAppAttempt, Resource> toPreempt, FSAppAttempt preemptApp) {
     Resource toPreemptResource = toPreempt.get(preemptApp);
     Resource containerResource = container.getContainer().getResource();
     if (Resources.greaterThan(RESOURCE_CALCULATOR, clusterResource,
@@ -544,7 +612,7 @@ public class FairScheduler extends
    * max of the two amounts (this shouldn't happen unless someone sets the
    * timeouts to be identical for some reason).
    */
-  protected HashMap<FSAppAttempt, Resource> resToPreempt(FSLeafQueue sched, long curTime) {
+  protected Map<FSAppAttempt, Resource> resToPreempt(FSLeafQueue sched, long curTime) {
     long minShareTimeout = sched.getMinSharePreemptionTimeout();
     long fairShareTimeout = sched.getFairSharePreemptionTimeout();
     Resource resDueToMinShare = Resources.none();
@@ -564,7 +632,7 @@ public class FairScheduler extends
     Resource resToPreempt = Resources.max(RESOURCE_CALCULATOR, clusterResource,
         resDueToMinShare, resDueToFairShare);
     // resToPreempt is a map which matches different apps with # preemptResources
-    HashMap<FSAppAttempt, Resource> resPerAppMap = new HashMap<FSAppAttempt, Resource>();
+    Map<FSAppAttempt, Resource> resPerAppMap = new HashMap<>();
 
     if (Resources.greaterThan(RESOURCE_CALCULATOR, clusterResource,
         resToPreempt, Resources.none())) {
@@ -1262,9 +1330,27 @@ public class FairScheduler extends
   private boolean shouldAttemptPreemption() {
     if (preemptionEnabled) {
       return (preemptionUtilizationThreshold < Math.max(Math.max(
-            (float) rootMetrics.getAllocatedMB() / clusterResource.getMemory(),
-            (float) rootMetrics.getAllocatedVirtualCores() / clusterResource.getVirtualCores()),
+          (float) rootMetrics.getAllocatedMB() / clusterResource.getMemory(),
+          (float) rootMetrics.getAllocatedVirtualCores() / clusterResource.getVirtualCores()),
           (float) rootMetrics.getAllocatedDisks() / clusterResource.getDisks()));
+    }
+    return false;
+  }
+
+  /**
+   * Check if preemption is enabled and the <b>per-label</b> utilization threshold for
+   * preemption is met.
+   * @param label
+   * @param allocatedResource Resources that allocated in queues which marked by the label
+   * @return true if preemption should be attempted, false otherwise.
+   */
+  private boolean shouldAttemptPreemption(Expression label, Resource allocatedResource) {
+    if (preemptionEnabled) {
+      Resource clusterResource = getClusterResource(label);
+      return (preemptionUtilizationThreshold < Math.max(Math.max(
+          (float) allocatedResource.getMemory() / clusterResource.getMemory(),
+          (float) allocatedResource.getVirtualCores() / clusterResource.getVirtualCores()),
+          (float) allocatedResource.getDisks() / clusterResource.getDisks()));
     }
     return false;
   }
@@ -1457,6 +1543,7 @@ public class FairScheduler extends
       preemptionInterval = this.conf.getPreemptionInterval();
       waitTimeBeforeKill = this.conf.getWaitTimeBeforeKill();
       usePortForNodeName = this.conf.getUsePortForNodeName();
+      isResourcesBasedOnLabelsEnabled = this.conf.isResourcesBasedOnLabelsEnabled();
 
       updateInterval = this.conf.getUpdateInterval();
       if (updateInterval < 0) {
@@ -1856,4 +1943,7 @@ public class FairScheduler extends
     return false;
   }
 
+  public boolean isResourcesBasedOnLabelsEnabled() {
+    return isResourcesBasedOnLabelsEnabled;
+  }
 }

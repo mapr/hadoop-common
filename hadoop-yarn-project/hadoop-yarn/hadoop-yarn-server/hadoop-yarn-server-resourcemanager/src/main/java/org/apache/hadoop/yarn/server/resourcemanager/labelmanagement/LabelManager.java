@@ -168,6 +168,10 @@ public class LabelManager {
     return LabelStorage.getInstance().getLabelsForAllNodes();
   }
 
+  public Set<Expression> getLabels() {
+    return LabelStorage.getInstance().getLabels();
+  }
+
   
   public Expression getEffectiveLabelExpr(String appLabelStr) throws IOException {
     return LabelExpressionHandlingHelper.getEffectiveLabelExpr(appLabelStr);
@@ -184,6 +188,10 @@ public class LabelManager {
   public LabelApplicabilityStatus isNodeApplicableForApp(String node, Expression finalAppLabelExp) 
     throws IOException {
     return LabelExpressionHandlingHelper.isNodeApplicableForApp(node, finalAppLabelExp);
+  }
+
+  public List<String> getNodesForLabel(Expression label) throws IOException {
+    return LabelExpressionHandlingHelper.getNodesForLabel(label);
   }
 
   public Path getLabelFile() {

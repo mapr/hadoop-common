@@ -131,6 +131,11 @@ public class FairSchedulerConfiguration extends Configuration {
   public static final String UPDATE_INTERVAL_MS =
       CONF_PREFIX + "update-interval-ms";
   public static final int DEFAULT_UPDATE_INTERVAL_MS = 500;
+  
+  /** Whether computing of resources based on node labels is enabled. */
+  public static final String RESOURCES_BASED_ON_LABELS_ENABLED =
+      CONF_PREFIX + "resources-based-on-labels-enabled";
+  public static final boolean DEFAULT_RESOURCES_BASED_ON_LABELS_ENABLED = true;
 
   public FairSchedulerConfiguration() {
     super();
@@ -243,6 +248,11 @@ public class FairSchedulerConfiguration extends Configuration {
   public boolean getUsePortForNodeName() {
     return getBoolean(YarnConfiguration.RM_SCHEDULER_INCLUDE_PORT_IN_NODE_NAME,
         YarnConfiguration.DEFAULT_RM_SCHEDULER_USE_PORT_FOR_NODE_NAME);
+  }
+
+  public boolean isResourcesBasedOnLabelsEnabled() {
+    return getBoolean(RESOURCES_BASED_ON_LABELS_ENABLED,
+        DEFAULT_RESOURCES_BASED_ON_LABELS_ENABLED);
   }
 
   /**

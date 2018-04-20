@@ -18,6 +18,8 @@
 
 package org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair;
 
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.metrics2.impl.MetricsCollectorImpl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -80,6 +82,8 @@ import org.apache.hadoop.yarn.server.resourcemanager.ApplicationMasterService;
 import org.apache.hadoop.yarn.server.resourcemanager.MockNodes;
 import org.apache.hadoop.yarn.server.resourcemanager.MockRM;
 import org.apache.hadoop.yarn.server.resourcemanager.ResourceManager;
+import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManagementService;
+import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManager;
 import org.apache.hadoop.yarn.server.resourcemanager.resource.ResourceType;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.MockRMApp;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMApp;
@@ -133,6 +137,8 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     resourceManager = new ResourceManager();
     resourceManager.init(conf);
 
+    lbS = new LabelManagementService();
+
     // TODO: This test should really be using MockRM. For now starting stuff
     // that is needed at a bare minimum.
     ((AsyncDispatcher)resourceManager.getRMContext().getDispatcher()).start();
@@ -145,7 +151,7 @@ public class TestFairScheduler extends FairSchedulerTestBase {
   }
 
   @After
-  public void tearDown() {
+  public void tearDown() throws IOException {
     if (scheduler != null) {
       scheduler.stop();
       scheduler = null;
@@ -154,8 +160,22 @@ public class TestFairScheduler extends FairSchedulerTestBase {
       resourceManager.stop();
       resourceManager = null;
     }
+    if (lbS != null) {
+      lbS.stop();
+      lbS = null;
+    }
     QueueMetrics.clearQueueMetrics();
     DefaultMetricsSystem.shutdown();
+
+    FileSystem fs = FileSystem.getLocal(conf);
+    fs.delete(new Path("/tmp/labelFile"), false);
+    LabelManager lb = LabelManager.getInstance();
+
+    try {
+      lb.refreshLabels();
+    } catch (Exception e) {
+      //throws exception if node.labels.file not specified (equals null)
+    }
   }
   
   @Test(timeout = 30000)
@@ -372,6 +392,705 @@ public class TestFairScheduler extends FairSchedulerTestBase {
       assertEquals(3414, p.getSteadyFairShare().getMemory());
       assertEquals(3414, p.getMetrics().getSteadyFairShareMB());
     }
+  }
+
+  @Test
+  public void testFairShareBasedOnLabelsEnabled() throws IOException {
+    conf.set(FairSchedulerConfiguration.ALLOCATION_FILE, ALLOC_FILE);
+    conf.set(LabelManager.NODE_LABELS_FILE, "/tmp/labelFile");
+    conf.setBoolean(FairSchedulerConfiguration.RESOURCES_BASED_ON_LABELS_ENABLED, true);
+
+    PrintWriter out = new PrintWriter(new FileWriter("/tmp/labelFile"));
+    out.println("node1  LabelA");
+    out.println("node2  LabelB");
+    out.close();
+
+    out = new PrintWriter(new FileWriter(ALLOC_FILE));
+    out.println("<?xml version=\"1.0\"?>");
+    out.println("<allocations>");
+    out.println("<queue name=\"root\">");
+    out.println("  <queue name=\"queue1\">");
+    out.println("  <label>LabelA</label>");
+    out.println("  </queue>");
+    out.println("  <queue name=\"queue2\">");
+    out.println("  <label>LabelB</label>");
+    out.println("  </queue>");
+    out.println("</queue>");
+    out.println("</allocations>");
+    out.close();
+
+    scheduler.init(conf);
+    scheduler.start();
+    scheduler.reinitialize(conf, resourceManager.getRMContext());
+
+    lbS.init(conf);
+    lbS.start();
+    LabelManager lb = LabelManager.getInstance();
+    lb.refreshLabels();
+
+    RMNode node1 = MockNodes.newNodeInfo(1, Resources.createResource(10 * 1024), 1, "node1");
+    NodeAddedSchedulerEvent nodeEvent1 = new NodeAddedSchedulerEvent(node1);
+    scheduler.handle(nodeEvent1);
+
+    RMNode node2 = MockNodes.newNodeInfo(1, Resources.createResource(5 * 1024), 2, "node2");
+    NodeAddedSchedulerEvent nodeEvent2 = new NodeAddedSchedulerEvent(node2);
+    scheduler.handle(nodeEvent2);
+
+    createSchedulingRequest(1 * 1024, "queue1", "user1");
+    createSchedulingRequest(1 * 1024, "queue2", "user1");
+
+    QueueManager queueManager = scheduler.getQueueManager();
+    
+    scheduler.update();
+
+    Collection<FSLeafQueue> leafQueues = queueManager.getLeafQueues();
+    assertEquals(3, leafQueues.size());
+
+    FSParentQueue root = queueManager.getParentQueue("root", false);
+    FSLeafQueue defaultQueue = queueManager.getLeafQueue("default", false);
+    FSLeafQueue queue1 = queueManager.getLeafQueue("queue1", false);
+    FSLeafQueue queue2 = queueManager.getLeafQueue("queue2", false);
+
+    assertEquals(15360, root.getSteadyFairShare().getMemory());
+
+    assertEquals(0, defaultQueue.getSteadyFairShare().getMemory());
+
+    // Resources are available only from "LabelA"
+    assertEquals(10240, queue1.getSteadyFairShare().getMemory());
+    assertEquals(10240, queue1.getFairShare().getMemory());
+
+    // Resources are available only from "LabelB"
+    assertEquals(5120, queue2.getSteadyFairShare().getMemory());
+    assertEquals(5120, queue2.getFairShare().getMemory());
+
+    // computing fair shares based on labels is enabled but labels not specified
+    // we should recompute fair shares based on total cluster resources
+    tearDown();
+    setUp();
+    
+    conf.set(FairSchedulerConfiguration.ALLOCATION_FILE, ALLOC_FILE);
+    scheduler.init(conf);
+    scheduler.start();
+    scheduler.reinitialize(conf, resourceManager.getRMContext());
+    
+    scheduler.handle(nodeEvent1);
+    scheduler.handle(nodeEvent2);
+
+    createSchedulingRequest(1 * 1024, "queue1", "user1");
+    createSchedulingRequest(1 * 1024, "queue2", "user1");
+    scheduler.update();
+
+    queueManager = scheduler.getQueueManager();
+    root = queueManager.getParentQueue("root", false);
+    defaultQueue = queueManager.getLeafQueue("default", false);
+    queue1 = queueManager.getLeafQueue("queue1", false);
+    queue2 = queueManager.getLeafQueue("queue2", false);
+
+    assertEquals(15360, root.getSteadyFairShare().getMemory());
+    assertEquals(5120, defaultQueue.getSteadyFairShare().getMemory());
+    assertEquals(5120, queue1.getSteadyFairShare().getMemory());
+    assertEquals(7680, queue1.getFairShare().getMemory());
+    assertEquals(5120, queue2.getSteadyFairShare().getMemory());
+    assertEquals(7680, queue2.getFairShare().getMemory());
+
+    // We should not take into account cluster resources for a label 
+    // when we disabled computing fair shares based on a label
+    tearDown();
+    setUp();
+    
+    out = new PrintWriter(new FileWriter(ALLOC_FILE));
+    out.println("<?xml version=\"1.0\"?>");
+    out.println("<allocations>");
+    out.println("<queue name=\"root\">");
+    out.println("<label>LabelA</label>");
+    out.println("  <queue name=\"queue1\">");
+    out.println("  </queue>");
+    out.println("  <queue name=\"queue2\">");
+    out.println("  <label>LabelB</label>");
+    out.println("  </queue>");
+    out.println("</queue>");
+    out.println("</allocations>");
+    out.close();
+    
+    conf.setBoolean(FairSchedulerConfiguration.RESOURCES_BASED_ON_LABELS_ENABLED, false);
+    conf.set(FairSchedulerConfiguration.ALLOCATION_FILE, ALLOC_FILE);
+    conf.set(LabelManager.NODE_LABELS_FILE, "/tmp/labelFile");
+    scheduler.init(conf);
+    scheduler.start();
+    scheduler.reinitialize(conf, resourceManager.getRMContext());
+
+    out = new PrintWriter(new FileWriter("/tmp/labelFile"));
+    out.println("node1  LabelA");
+    out.println("node2  LabelB");
+    out.close();
+    lbS.init(conf);
+    lbS.start();
+    lb = LabelManager.getInstance();
+    lb.refreshLabels();
+
+    scheduler.handle(nodeEvent1);
+    scheduler.handle(nodeEvent2);
+
+    createSchedulingRequest(1 * 1024, "queue1", "user1");
+    createSchedulingRequest(1 * 1024, "queue2", "user1");
+    scheduler.update();
+
+    queueManager = scheduler.getQueueManager();
+    root = queueManager.getParentQueue("root", false);
+    defaultQueue = queueManager.getLeafQueue("default", false);
+    queue1 = queueManager.getLeafQueue("queue1", false);
+    queue2 = queueManager.getLeafQueue("queue2", false);
+
+    assertEquals(15360, root.getSteadyFairShare().getMemory());
+    assertEquals(5120, defaultQueue.getSteadyFairShare().getMemory());
+    assertEquals(5120, queue1.getSteadyFairShare().getMemory());
+    assertEquals(7680, queue1.getFairShare().getMemory());
+    assertEquals(5120, queue2.getSteadyFairShare().getMemory());
+    assertEquals(7680, queue2.getFairShare().getMemory());
+
+    // disable computing fair shares based on labels when labels exist
+    tearDown();
+    setUp();
+    
+    conf.setBoolean(FairSchedulerConfiguration.RESOURCES_BASED_ON_LABELS_ENABLED, false);
+    conf.set(FairSchedulerConfiguration.ALLOCATION_FILE, ALLOC_FILE);
+    conf.set(LabelManager.NODE_LABELS_FILE, "/tmp/labelFile");
+    scheduler.init(conf);
+    scheduler.start();
+    scheduler.reinitialize(conf, resourceManager.getRMContext());
+
+    out = new PrintWriter(new FileWriter("/tmp/labelFile"));
+    out.println("node1  LabelA");
+    out.println("node2  LabelB");
+    out.close();
+    lbS.init(conf);
+    lbS.start();
+    lb = LabelManager.getInstance();
+    lb.refreshLabels();
+    
+    scheduler.handle(nodeEvent1);
+    scheduler.handle(nodeEvent2);
+
+    createSchedulingRequest(1 * 1024, "queue1", "user1");
+    createSchedulingRequest(1 * 1024, "queue2", "user1");
+    scheduler.update();
+    
+    queueManager = scheduler.getQueueManager();
+    root = queueManager.getParentQueue("root", false);
+    defaultQueue = queueManager.getLeafQueue("default", false);
+    queue1 = queueManager.getLeafQueue("queue1", false);
+    queue2 = queueManager.getLeafQueue("queue2", false);
+
+    assertEquals(15360, root.getSteadyFairShare().getMemory());
+    assertEquals(5120, defaultQueue.getSteadyFairShare().getMemory());
+    assertEquals(5120, queue1.getSteadyFairShare().getMemory());
+    assertEquals(7680, queue1.getFairShare().getMemory());
+    assertEquals(5120, queue2.getSteadyFairShare().getMemory());
+    assertEquals(7680, queue2.getFairShare().getMemory());
+  }
+
+  @Test
+  public void testFairShareCalculation() throws IOException {
+    conf.set(FairSchedulerConfiguration.ALLOCATION_FILE, ALLOC_FILE);
+
+    PrintWriter out = new PrintWriter(new FileWriter(ALLOC_FILE));
+    out.println("<?xml version=\"1.0\"?>");
+    out.println("<allocations>");
+    out.println("<queue name=\"root\">");
+    out.println("  <queue name=\"queue1\">");
+    out.println("    <queue name=\"queue11\">");
+    out.println("    </queue>");
+    out.println("    <queue name=\"queue12\">");
+    out.println("    </queue>");
+    out.println("  </queue>");
+    out.println("  <queue name=\"queue2\">");
+    out.println("    <queue name=\"queue21\">");
+    out.println("    </queue>");
+    out.println("    <queue name=\"queue22\">");
+    out.println("    </queue>");
+    out.println("  </queue>");
+    out.println("</queue>");
+    out.println("</allocations>");
+    out.close();
+
+    scheduler.init(conf);
+    scheduler.start();
+    scheduler.reinitialize(conf, resourceManager.getRMContext());
+
+    RMNode node1 = MockNodes.newNodeInfo(1, Resources.createResource(10 * 1024), 1, "node1");
+    NodeAddedSchedulerEvent nodeEvent1 = new NodeAddedSchedulerEvent(node1);
+    scheduler.handle(nodeEvent1);
+
+    RMNode node2 = MockNodes.newNodeInfo(1, Resources.createResource(5 * 1024), 2, "node2");
+    NodeAddedSchedulerEvent nodeEvent2 = new NodeAddedSchedulerEvent(node2);
+    scheduler.handle(nodeEvent2);
+
+    createSchedulingRequest(1 * 1024, "queue1.queue11", "user1");
+    createSchedulingRequest(1 * 1024, "queue2.queue21", "user1");
+
+    scheduler.update();
+    scheduler.getQueueManager().getRootQueue()
+            .setSteadyFairShare(scheduler.getClusterResource());
+    scheduler.getQueueManager().getRootQueue().recomputeSteadyShares();
+
+    QueueManager queueManager = scheduler.getQueueManager();
+
+    Collection<FSLeafQueue> leafQueues = queueManager.getLeafQueues();
+    assertEquals(5, leafQueues.size());
+
+    FSLeafQueue defaultQueue = queueManager.getLeafQueue("default", false);
+
+    FSParentQueue root = queueManager.getParentQueue("root", false);
+
+    FSParentQueue queue1 = queueManager.getParentQueue("queue1", false);
+    FSLeafQueue queue11 = queueManager.getLeafQueue("queue1.queue11", false);
+    FSLeafQueue queue12 = queueManager.getLeafQueue("queue1.queue12", false);
+
+    FSParentQueue queue2 = queueManager.getParentQueue("queue2", false);
+    FSLeafQueue queue21 = queueManager.getLeafQueue("queue2.queue21", false);
+    FSLeafQueue queue22 = queueManager.getLeafQueue("queue2.queue22", false);
+
+
+    assertEquals(15360, root.getSteadyFairShare().getMemory());
+
+    assertEquals(5120, defaultQueue.getSteadyFairShare().getMemory());
+
+    assertEquals(5120, queue1.getSteadyFairShare().getMemory());
+    assertEquals(7680, queue1.getFairShare().getMemory());
+    assertEquals(2560, queue11.getSteadyFairShare().getMemory());
+    assertEquals(7680, queue11.getFairShare().getMemory());
+    assertEquals(2560, queue12.getSteadyFairShare().getMemory());
+    assertEquals(0, queue12.getFairShare().getMemory());
+
+    assertEquals(5120, queue2.getSteadyFairShare().getMemory());
+    assertEquals(7680, queue2.getFairShare().getMemory());
+    assertEquals(2560, queue21.getSteadyFairShare().getMemory());
+    assertEquals(7680, queue21.getFairShare().getMemory());
+    assertEquals(2560, queue22.getSteadyFairShare().getMemory());
+    assertEquals(0, queue22.getFairShare().getMemory());
+  }
+
+  @Test
+  public void testFairShareCalculationWithLbs() throws IOException {
+    conf.set(FairSchedulerConfiguration.ALLOCATION_FILE, ALLOC_FILE);
+    conf.set(LabelManager.NODE_LABELS_FILE, "/tmp/labelFile");
+
+    PrintWriter out = new PrintWriter(new FileWriter("/tmp/labelFile"));
+    out.println("node1  LabelA");
+    out.println("node2  LabelB");
+    out.close();
+
+    out = new PrintWriter(new FileWriter(ALLOC_FILE));
+    out.println("<?xml version=\"1.0\"?>");
+    out.println("<allocations>");
+    out.println("<queue name=\"root\">");
+    out.println("  <queue name=\"queue1\">");
+    out.println("  <label>LabelA</label>");
+    out.println("    <queue name=\"queue11\">");
+    out.println("    </queue>");
+    out.println("    <queue name=\"queue12\">");
+    out.println("    </queue>");
+    out.println("  </queue>");
+    out.println("  <queue name=\"queue2\">");
+    out.println("  <label>LabelB</label>");
+    out.println("    <queue name=\"queue21\">");
+    out.println("    </queue>");
+    out.println("    <queue name=\"queue22\">");
+    out.println("    </queue>");
+    out.println("  </queue>");
+    out.println("</queue>");
+    out.println("</allocations>");
+    out.close();
+
+    scheduler.init(conf);
+    scheduler.start();
+    scheduler.reinitialize(conf, resourceManager.getRMContext());
+
+    lbS.init(conf);
+    lbS.start();
+    LabelManager lb = LabelManager.getInstance();
+    lb.refreshLabels();
+
+    RMNode node1 = MockNodes.newNodeInfo(1, Resources.createResource(10 * 1024), 1, "node1");
+    NodeAddedSchedulerEvent nodeEvent1 = new NodeAddedSchedulerEvent(node1);
+    scheduler.handle(nodeEvent1);
+
+    RMNode node2 = MockNodes.newNodeInfo(1, Resources.createResource(5 * 1024), 2, "node2");
+    NodeAddedSchedulerEvent nodeEvent2 = new NodeAddedSchedulerEvent(node2);
+    scheduler.handle(nodeEvent2);
+
+    createSchedulingRequest(1 * 1024, "queue1.queue11", "user1");
+    createSchedulingRequest(1 * 1024, "queue2.queue21", "user1");
+
+    scheduler.update();
+    scheduler.getQueueManager().getRootQueue()
+            .setSteadyFairShare(scheduler.getClusterResource());
+    scheduler.getQueueManager().getRootQueue().recomputeSteadyShares();
+
+    QueueManager queueManager = scheduler.getQueueManager();
+
+    Collection<FSLeafQueue> leafQueues = queueManager.getLeafQueues();
+    assertEquals(5, leafQueues.size());
+
+    FSLeafQueue defaultQueue = queueManager.getLeafQueue("default", false);
+
+    FSParentQueue root = queueManager.getParentQueue("root", false);
+
+    FSParentQueue queue1 = queueManager.getParentQueue("queue1", false);
+    FSLeafQueue queue11 = queueManager.getLeafQueue("queue1.queue11", false);
+    FSLeafQueue queue12 = queueManager.getLeafQueue("queue1.queue12", false);
+
+    FSParentQueue queue2 = queueManager.getParentQueue("queue2", false);
+    FSLeafQueue queue21 = queueManager.getLeafQueue("queue2.queue21", false);
+    FSLeafQueue queue22 = queueManager.getLeafQueue("queue2.queue22", false);
+
+    assertEquals(15360, root.getSteadyFairShare().getMemory());
+
+    assertEquals(0, defaultQueue.getSteadyFairShare().getMemory());
+
+    // Resources are available only from "LabelA"
+    assertEquals(10240, queue1.getSteadyFairShare().getMemory());
+    assertEquals(10240, queue1.getFairShare().getMemory());
+    assertEquals(5120, queue11.getSteadyFairShare().getMemory());
+    assertEquals(10240, queue11.getFairShare().getMemory());
+    assertEquals(5120, queue12.getSteadyFairShare().getMemory());
+    assertEquals(0, queue12.getFairShare().getMemory());
+
+    // Resources are available only from "LabelB"
+    assertEquals(5120, queue2.getSteadyFairShare().getMemory());
+    assertEquals(5120, queue2.getFairShare().getMemory());
+    assertEquals(2560, queue21.getSteadyFairShare().getMemory());
+    assertEquals(5120, queue21.getFairShare().getMemory());
+    assertEquals(2560, queue22.getSteadyFairShare().getMemory());
+    assertEquals(0, queue22.getFairShare().getMemory());
+  }
+
+  @Test
+  public void testFairShareForDifferentLabelsInHierarchy() throws IOException {
+    conf.set(FairSchedulerConfiguration.ALLOCATION_FILE, ALLOC_FILE);
+    conf.set(LabelManager.NODE_LABELS_FILE, "/tmp/labelFile");
+
+    PrintWriter out = new PrintWriter(new FileWriter("/tmp/labelFile"));
+    out.println("node1  LabelA");
+    out.println("node2  LabelB");
+    out.close();
+
+    out = new PrintWriter(new FileWriter(ALLOC_FILE));
+    out.println("<?xml version=\"1.0\"?>");
+    out.println("<allocations>");
+    out.println("<queue name=\"root\">");
+    out.println("<label>LabelA</label>");
+    out.println("  <queue name=\"queue1\">");
+    out.println("    <queue name=\"queue11\">");
+    out.println("    </queue>");
+    out.println("    <queue name=\"queue12\">");
+    out.println("    </queue>");
+    out.println("  </queue>");
+    out.println("  <queue name=\"queue2\">");
+    out.println("  <label>LabelB</label>");
+    out.println("    <queue name=\"queue21\">");
+    out.println("    <label>LabelA</label>");
+    out.println("    </queue>");
+    out.println("    <queue name=\"queue22\">");
+    out.println("    </queue>");
+    out.println("  </queue>");
+    out.println("</queue>");
+    out.println("</allocations>");
+    out.close();
+
+    scheduler.init(conf);
+    scheduler.start();
+    scheduler.reinitialize(conf, resourceManager.getRMContext());
+
+    lbS.init(conf);
+    lbS.start();
+    LabelManager lb = LabelManager.getInstance();
+    lb.refreshLabels();
+
+    RMNode node1 = MockNodes.newNodeInfo(1, Resources.createResource(10 * 1024), 1, "node1");
+    NodeAddedSchedulerEvent nodeEvent1 = new NodeAddedSchedulerEvent(node1);
+    scheduler.handle(nodeEvent1);
+
+    RMNode node2 = MockNodes.newNodeInfo(1, Resources.createResource(5 * 1024), 2, "node2");
+    NodeAddedSchedulerEvent nodeEvent2 = new NodeAddedSchedulerEvent(node2);
+    scheduler.handle(nodeEvent2);
+
+    createSchedulingRequest(1 * 1024, "queue1.queue11", "user1");
+    createSchedulingRequest(1 * 1024, "queue2.queue21", "user1");
+
+    scheduler.update();
+    scheduler.getQueueManager().getRootQueue()
+        .setSteadyFairShare(scheduler.getClusterResource());
+    scheduler.getQueueManager().getRootQueue().recomputeSteadyShares();
+
+    QueueManager queueManager = scheduler.getQueueManager();
+
+    Collection<FSLeafQueue> leafQueues = queueManager.getLeafQueues();
+    assertEquals(5, leafQueues.size());
+
+    FSLeafQueue defaultQueue = queueManager.getLeafQueue("default", false);
+
+    FSParentQueue root = queueManager.getParentQueue("root", false);
+
+    FSParentQueue queue1 = queueManager.getParentQueue("queue1", false);
+    FSLeafQueue queue11 = queueManager.getLeafQueue("queue1.queue11", false);
+    FSLeafQueue queue12 = queueManager.getLeafQueue("queue1.queue12", false);
+
+    FSParentQueue queue2 = queueManager.getParentQueue("queue2", false);
+    FSLeafQueue queue21 = queueManager.getLeafQueue("queue2.queue21", false);
+    FSLeafQueue queue22 = queueManager.getLeafQueue("queue2.queue22", false);
+
+
+    assertEquals(10240, root.getSteadyFairShare().getMemory());
+
+    assertEquals(5120, defaultQueue.getSteadyFairShare().getMemory());
+
+    assertEquals(5120, queue1.getSteadyFairShare().getMemory());
+    assertEquals(10240, queue1.getFairShare().getMemory());
+    assertEquals(2560, queue11.getSteadyFairShare().getMemory());
+    assertEquals(10240, queue11.getFairShare().getMemory());
+    assertEquals(2560, queue12.getSteadyFairShare().getMemory());
+    assertEquals(0, queue12.getFairShare().getMemory());
+
+    // The queue "queue2" and her child queues shouldn't get any resources 
+    // since they have "LabelB" but their parent queue have "LabelA"
+    assertEquals(0, queue2.getSteadyFairShare().getMemory());
+    assertEquals(0, queue2.getFairShare().getMemory());
+    assertEquals(0, queue21.getSteadyFairShare().getMemory());
+    assertEquals(0, queue21.getFairShare().getMemory());
+    assertEquals(0, queue22.getSteadyFairShare().getMemory());
+    assertEquals(0, queue22.getFairShare().getMemory());
+  }
+
+  @Test
+  public void testConfigureDefaultQueueLabel() throws Exception {
+    conf.set(FairSchedulerConfiguration.ALLOCATION_FILE, ALLOC_FILE);
+    
+    PrintWriter out = new PrintWriter(new FileWriter(ALLOC_FILE));
+    out.println("<?xml version=\"1.0\"?>");
+    out.println("<allocations>");
+    out.println("<queue name=\"root\">");
+    out.println("  <queue name=\"queue1\">");
+    out.println("    <label>LabelA</label>");
+    out.println("  </queue>");
+    out.println("  <queue name=\"queue2\">");
+    out.println("    <queue name=\"queue21\">");
+    out.println("    </queue>");
+    out.println("  </queue>");
+    out.println("  <queue name=\"queue3\">");
+    out.println("    <queue name=\"queue31\">");
+    out.println("    <label>LabelA</label>");
+    out.println("    </queue>");
+    out.println("  </queue>");
+    out.println("  <queue name=\"queue4\">");
+    out.println("    <label>LabelA</label>");
+    out.println("    <queue name=\"queue41\">");
+    out.println("    </queue>");
+    out.println("  </queue>");
+    out.println("</queue>");
+    out.println("<defaultQueueLabel>LabelB</defaultQueueLabel>");
+    out.println("</allocations>");
+    out.close();
+
+    scheduler.init(conf);
+    scheduler.start();
+    scheduler.reinitialize(conf, resourceManager.getRMContext());
+    QueueManager queueManager = scheduler.getQueueManager();
+
+    FSQueue root = queueManager.getRootQueue();
+    assertNull(root.getLabel());
+    
+    FSLeafQueue queue1 = queueManager.getLeafQueue("queue1", false);
+    assertEquals("(LabelA)", queue1.getLabel().toString());
+
+    FSParentQueue queue2 = queueManager.getParentQueue("queue2", false);
+    FSLeafQueue queue21 = queueManager.getLeafQueue("queue2.queue21", false);
+    assertEquals("(LabelB)", queue2.getLabel().toString());
+    assertEquals("(LabelB)", queue21.getLabel().toString());
+
+    FSParentQueue queue3 = queueManager.getParentQueue("queue3", false);
+    FSLeafQueue queue31 = queueManager.getLeafQueue("queue3.queue31", false);
+    assertEquals("(LabelB)", queue3.getLabel().toString());
+    assertEquals("(LabelA)", queue31.getLabel().toString());
+
+    FSParentQueue queue4 = queueManager.getParentQueue("queue4", false);
+    FSLeafQueue queue41 = queueManager.getLeafQueue("queue4.queue41", false);
+    assertEquals("(LabelA)", queue4.getLabel().toString());
+    assertEquals("(LabelA)", queue41.getLabel().toString());
+  }
+
+  @Test
+  public void testFairShareWithDefaultQueueLabel() throws IOException {
+    conf.set(FairSchedulerConfiguration.ALLOCATION_FILE, ALLOC_FILE);
+    conf.set(LabelManager.NODE_LABELS_FILE, "/tmp/labelFile");
+
+    PrintWriter out = new PrintWriter(new FileWriter("/tmp/labelFile"));
+    out.println("node1  LabelA");
+    out.println("node2  LabelB");
+    out.close();
+
+    out = new PrintWriter(new FileWriter(ALLOC_FILE));
+    out.println("<?xml version=\"1.0\"?>");
+    out.println("<allocations>");
+    out.println("<queue name=\"root\">");
+    out.println("  <queue name=\"queue1\">");
+    out.println("    <label>LabelA</label>");
+    out.println("  </queue>");
+    out.println("  <queue name=\"queue2\">");
+    out.println("    <queue name=\"queue21\">");
+    out.println("    </queue>");
+    out.println("  </queue>");
+    out.println("</queue>");
+    out.println("<defaultQueueLabel>LabelB</defaultQueueLabel>");
+    out.println("</allocations>");
+    out.close();
+
+    scheduler.init(conf);
+    scheduler.start();
+    scheduler.reinitialize(conf, resourceManager.getRMContext());
+
+    lbS.init(conf);
+    lbS.start();
+    LabelManager lb = LabelManager.getInstance();
+    lb.refreshLabels();
+
+    RMNode node1 = MockNodes.newNodeInfo(1, Resources.createResource(10 * 1024), 1, "node1");
+    NodeAddedSchedulerEvent nodeEvent1 = new NodeAddedSchedulerEvent(node1);
+    scheduler.handle(nodeEvent1);
+
+    RMNode node2 = MockNodes.newNodeInfo(1, Resources.createResource(5 * 1024), 2, "node2");
+    NodeAddedSchedulerEvent nodeEvent2 = new NodeAddedSchedulerEvent(node2);
+    scheduler.handle(nodeEvent2);
+
+    createSchedulingRequest(1 * 1024, "queue2.queue21", "user1");
+
+    scheduler.update();
+    scheduler.getQueueManager().getRootQueue()
+        .setSteadyFairShare(scheduler.getClusterResource());
+    scheduler.getQueueManager().getRootQueue().recomputeSteadyShares();
+
+    QueueManager queueManager = scheduler.getQueueManager();
+
+    Collection<FSLeafQueue> leafQueues = queueManager.getLeafQueues();
+    assertEquals(3, leafQueues.size());
+
+    FSLeafQueue defaultQueue = queueManager.getLeafQueue("default", false);
+
+    FSParentQueue root = queueManager.getParentQueue("root", false);
+
+    FSLeafQueue queue1 = queueManager.getLeafQueue("queue1", false);
+
+    FSParentQueue queue2 = queueManager.getParentQueue("queue2", false);
+    FSLeafQueue queue21 = queueManager.getLeafQueue("queue2.queue21", false);
+
+    FSLeafQueue userQueue = queueManager.getLeafQueue("userqueue", true);
+
+
+    assertEquals(15360, root.getSteadyFairShare().getMemory());
+    assertNull("Label for the root queue shouldn't be set to the default label", root.getLabel());
+
+    assertEquals(1707, defaultQueue.getSteadyFairShare().getMemory());
+    assertEquals("(LabelB)", defaultQueue.getLabel().toString());
+
+    assertEquals(10240, queue1.getSteadyFairShare().getMemory());
+    assertEquals(0, queue1.getFairShare().getMemory());
+
+    assertEquals(1707, queue2.getSteadyFairShare().getMemory());
+    assertEquals(5120, queue2.getFairShare().getMemory());
+    assertEquals("(LabelB)", queue2.getLabel().toString());
+    assertEquals(1707, queue21.getSteadyFairShare().getMemory());
+    assertEquals(5120, queue21.getFairShare().getMemory());
+    assertEquals("(LabelB)", queue21.getLabel().toString());
+
+    assertEquals(1707, userQueue.getSteadyFairShare().getMemory());
+    assertEquals(0, userQueue.getFairShare().getMemory());
+    assertEquals("(LabelB)", userQueue.getLabel().toString());
+  }
+
+  @Test
+  public void testPreemptionWithLbs() throws Exception {
+    conf.setLong(FairSchedulerConfiguration.PREEMPTION_INTERVAL, 5000);
+    conf.setLong(FairSchedulerConfiguration.WAIT_TIME_BEFORE_KILL, 10000);
+    conf.set(FairSchedulerConfiguration.ALLOCATION_FILE, ALLOC_FILE);
+    conf.set(FairSchedulerConfiguration.USER_AS_DEFAULT_QUEUE, "false");
+    conf.set(LabelManager.NODE_LABELS_FILE, "/tmp/labelFile");
+
+    PrintWriter out = new PrintWriter(new FileWriter("/tmp/labelFile"));
+    out.println("node1  Plain");
+    out.println("node2  Large");
+    out.close();
+
+    MockClock clock = new MockClock();
+    scheduler.setClock(clock);
+
+    out = new PrintWriter(new FileWriter(ALLOC_FILE));
+    out.println("<?xml version=\"1.0\"?>");
+    out.println("<allocations>");
+    out.println("<queue name=\"plain1\">");
+    out.println("<label>Plain</label>");
+    out.println("</queue>");
+    out.println("<queue name=\"plain2\">");
+    out.println("<label>Plain</label>");
+    out.println("</queue>");
+    out.println("<queue name=\"large\">");
+    out.println("<label>Large</label>");
+    out.println("</queue>");
+    out.println("<schedulingPolicy>drf</schedulingPolicy>");
+    out.println("<defaultFairSharePreemptionTimeout>10</defaultFairSharePreemptionTimeout>");
+    out.println("<defaultFairSharePreemptionThreshold>.5</defaultFairSharePreemptionThreshold>");
+    out.println("</allocations>");
+    out.close();
+
+    scheduler.init(conf);
+    scheduler.start();
+    scheduler.reinitialize(conf, resourceManager.getRMContext());
+
+    lbS.init(conf);
+    lbS.start();
+    LabelManager lb = LabelManager.getInstance();
+    lb.refreshLabels();
+
+    RMNode node1 = MockNodes.newNodeInfo(1, Resources.createResource(5 * 1024, 5), 1, "node1");
+    NetUtils.addStaticResolution(node1.getHostName(), STATIC_HOST);
+    NodeAddedSchedulerEvent nodeEvent1 = new NodeAddedSchedulerEvent(node1);
+    scheduler.handle(nodeEvent1);
+
+    RMNode node2 = MockNodes.newNodeInfo(1, Resources.createResource(15 * 1024, 5), 1, "node2");
+    NetUtils.addStaticResolution(node2.getHostName(), STATIC_HOST);
+    NodeAddedSchedulerEvent nodeEvent2 = new NodeAddedSchedulerEvent(node2);
+    scheduler.handle(nodeEvent2);
+
+    // Run app in plain1
+    ApplicationAttemptId app1 = createSchedulingRequest(1 * 1024, 1,
+        "plain1", "user1", 5, 1);
+    
+    scheduler.update();
+
+    NodeUpdateSchedulerEvent nodeUpdate1 = new NodeUpdateSchedulerEvent(node1);
+    for (int i = 0; i < 5; i++) {
+      scheduler.handle(nodeUpdate1);
+    }
+
+    // verify if the apps got the containers they requested
+    assertEquals(5, scheduler.getSchedulerApp(app1).getLiveContainers().size());
+
+    // Now submit an app in plain2
+    ApplicationAttemptId app2 = createSchedulingRequest(1 * 1024, 1,
+        "plain2", "user2", 1, 1);
+    scheduler.update();
+
+    // Let 11 sec pass
+    clock.tick(11);
+
+    scheduler.update();
+    Map<FSAppAttempt, Resource> toPreempt = scheduler.resToPreempt(scheduler.getQueueManager()
+        .getLeafQueue("plain2", false), clock.getTime());
+    assertEquals(1024, computeTotalResource(toPreempt).getMemory());
+
+    // verify if the 1 containers required by plain2 are preempted in the same
+    // round
+    scheduler.preemptResources(toPreempt);
+    assertEquals(1, scheduler.getSchedulerApp(app1).getPreemptionContainers().size());
   }
 
   @Test
@@ -1720,7 +2439,7 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     scheduler.update();
 
     // We should be able to claw back one container from queueA.
-    HashMap<FSAppAttempt, Resource> toPreempt = new HashMap<FSAppAttempt, Resource>();
+    Map<FSAppAttempt, Resource> toPreempt = new HashMap<>();
     FSAppAttempt appAttempt1 = scheduler.getSchedulerApp(appAttemptId1);
     toPreempt.put(appAttempt1, Resources.createResource(1 * 1024));
 
@@ -1832,7 +2551,7 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     scheduler.update();
 
     // We should be able to claw back one container from queueA and queueB each.
-    HashMap<FSAppAttempt, Resource> toPreempt = new HashMap<FSAppAttempt, Resource>();
+    Map<FSAppAttempt, Resource> toPreempt = new HashMap<>();
     FSAppAttempt appAttempt2 = scheduler.getSchedulerApp(app2);
     FSAppAttempt appAttempt4 = scheduler.getSchedulerApp(app4);
     
@@ -1981,7 +2700,7 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     clock.tick(11);
 
     scheduler.update();
-    HashMap<FSAppAttempt, Resource> toPreempt = scheduler.resToPreempt(scheduler.getQueueManager()
+    Map<FSAppAttempt, Resource> toPreempt = scheduler.resToPreempt(scheduler.getQueueManager()
         .getLeafQueue("queueA.queueA2", false), clock.getTime());
     assertEquals(3277, computeTotalResource(toPreempt).getMemory());
 
@@ -2055,7 +2774,7 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     clock.tick(11);
 
     scheduler.update();
-    HashMap<FSAppAttempt, Resource> toPreempt = scheduler.resToPreempt(scheduler.getQueueManager()
+    Map<FSAppAttempt, Resource> toPreempt = scheduler.resToPreempt(scheduler.getQueueManager()
         .getLeafQueue("queueA.queueA2", false), clock.getTime());
     scheduler.preemptResources(toPreempt);
 
@@ -2520,13 +3239,12 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     assertEquals(.6f, userQueue.getFairSharePreemptionThreshold(), 0.001);
   }
 
-   private Resource computeTotalResource(
-       HashMap<FSAppAttempt, Resource> resToPreempt) {
-     Resource totoalResource = Resources.createResource(0);
+   private Resource computeTotalResource(Map<FSAppAttempt, Resource> resToPreempt) {
+     Resource totalResource = Resources.createResource(0);
      for (Resource resource : resToPreempt.values()) {
-       totoalResource = Resources.add(totoalResource, resource);
+       totalResource = Resources.add(totalResource, resource);
      }
-     return totoalResource;
+     return totalResource;
    }
   
   @Test (timeout = 5000)

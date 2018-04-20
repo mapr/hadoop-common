@@ -19,11 +19,14 @@ package org.apache.hadoop.yarn.server.resourcemanager.labelmanagement;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.yarn.api.records.NodeToLabelsList;
 import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManager.LabelApplicabilityStatus;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
 
@@ -123,4 +126,21 @@ public class LabelExpressionHandlingHelper {
         throw new IOException("Exception while evaluating: " + finalAppLabelExp);
       }
     }
+
+  static List<String> getNodesForLabel(Expression label) throws IOException {
+
+    List<String> nodesForLabel = new ArrayList<>();
+    List<NodeToLabelsList> labelsForAllNodes = LabelStorage.getInstance().getLabelsForAllNodes();
+    LabelManager lb = LabelManager.getInstance();
+    LabelApplicabilityStatus blackListStatus;
+
+    for (NodeToLabelsList nodeToLabels : labelsForAllNodes) {
+      blackListStatus = lb.isNodeApplicableForApp(nodeToLabels.getNode(), label);
+      if (blackListStatus == LabelApplicabilityStatus.NOT_APPLICABLE ||
+          blackListStatus == LabelApplicabilityStatus.NODE_HAS_LABEL) {
+        nodesForLabel.add(nodeToLabels.getNode());
+      }
+    }
+    return nodesForLabel;
+  }
 }

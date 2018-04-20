@@ -220,6 +220,7 @@ public class AllocationFileLoaderService extends AbstractService {
     Map<String, Long> minSharePreemptionTimeouts = new HashMap<String, Long>();
     Map<String, String> queueLabels = new HashMap<String, String>();
     Map<String, Queue.QueueLabelPolicy> queueLabelPolicies = new HashMap<String, Queue.QueueLabelPolicy>();
+    String defaultQueueLabel = null;
     Map<String, Long> fairSharePreemptionTimeouts = new HashMap<String, Long>();
     Map<String, Float> fairSharePreemptionThresholds =
         new HashMap<String, Float>();
@@ -335,6 +336,9 @@ public class AllocationFileLoaderService extends AbstractService {
         } else if ("reservation-policy".equals(element.getTagName())) {
           String text = ((Text) element.getFirstChild()).getData().trim();
           reservationAdmissionPolicy = text;
+        } else if ("defaultQueueLabel".equals(element.getTagName())) {
+          String text = ((Text)element.getFirstChild()).getData().trim();
+          defaultQueueLabel = text;
         } else {
           LOG.warn("Bad element in allocations file: " + element.getTagName());
         }
@@ -405,7 +409,7 @@ public class AllocationFileLoaderService extends AbstractService {
         minSharePreemptionTimeouts, fairSharePreemptionTimeouts,
         fairSharePreemptionThresholds, queueAcls,
         newPlacementPolicy, configuredQueues, globalReservationQueueConfig,
-        reservableQueues, queueLabels, queueLabelPolicies);
+        reservableQueues, queueLabels, queueLabelPolicies, defaultQueueLabel);
     
     lastSuccessfulReload = clock.getTime();
     lastReloadAttemptFailed = false;

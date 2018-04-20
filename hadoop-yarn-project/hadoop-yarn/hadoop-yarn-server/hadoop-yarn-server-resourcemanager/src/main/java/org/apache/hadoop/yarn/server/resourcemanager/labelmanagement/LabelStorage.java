@@ -32,6 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import net.java.dev.eval.Expression;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
@@ -94,6 +95,11 @@ public final class LabelStorage {
    * mapping. It is used as a placeholder for concrete evaluation
    */
   private Map<String, BigDecimal> labelEvalFillers = new HashMap<String, BigDecimal>();
+  
+  /**
+   * All labels defined on a cluster
+   */
+  private final Set<Expression> labels = new HashSet<>();
 
   private LabelStorage() {
     
@@ -114,8 +120,13 @@ public final class LabelStorage {
   @Private
   void loadAndApplyLabels() throws IOException {
     if (!fs.exists(labelFile)) {
-      LOG.error("LabelFile does not exist: " + labelFile + 
-          ". Existing labels configuration will not be updated");
+      LOG.error("Labels file does not exist: " + labelFile + ".");
+      synchronized (nodeExpressionLabels) {
+        nodeExpressionLabels.clear();
+      }
+      synchronized (labels) {
+        labels.clear();
+      }
       return;
     }
     FSDataInputStream input = fs.open(labelFile);
@@ -184,6 +195,8 @@ public final class LabelStorage {
           nodeNoMatchers.clear();
         }
       }
+      updateClusterLabels();
+      
       nodeNotifierLabelsTmp.clear();
       labelEvalFillersTmp.clear();
       nodeNotifierLabelsTmp = null; // hint to GC it
@@ -274,5 +287,25 @@ public final class LabelStorage {
       labelEvalFillersTmp.putAll(labelEvalFillers);
     }
     return labelEvalFillersTmp;
+  }
+
+  private void updateClusterLabels() {
+    Set<Expression> allLabels = new HashSet<>();
+    List<NodeToLabelsList> labelsForAllNodes = getLabelsForAllNodes();
+    for (NodeToLabelsList nodeToLabelsList : labelsForAllNodes) {
+      for (String label : nodeToLabelsList.getNodeLabel()) {
+        Expression labelExpression = new Expression(label);
+        allLabels.add(labelExpression);
+      }
+    }
+
+    synchronized (labels) {
+      labels.clear();
+      labels.addAll(allLabels);
+    }
+  }
+  
+  public Set<Expression> getLabels() {
+    return new HashSet<>(labels);
   }
 }

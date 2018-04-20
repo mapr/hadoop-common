@@ -37,6 +37,7 @@ import org.apache.hadoop.yarn.factories.RecordFactory;
 import org.apache.hadoop.yarn.factory.providers.RecordFactoryProvider;
 import org.apache.hadoop.yarn.server.resourcemanager.RMContext;
 import org.apache.hadoop.yarn.server.resourcemanager.ResourceManager;
+import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManagementService;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMApp;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppImpl;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttempt;
@@ -73,6 +74,7 @@ public class FairSchedulerTestBase {
   protected Configuration conf;
   protected FairScheduler scheduler;
   protected ResourceManager resourceManager;
+  protected LabelManagementService lbS;
 
   // Helper methods
   public Configuration createConfiguration() {

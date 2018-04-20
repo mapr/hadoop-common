@@ -81,8 +81,12 @@ public class FairSchedulerQueueInfo {
     label = ( labelE == null ) ? Queue.LABEL_NONE : labelE.toString();
     labelPolicy = (queue.getLabelPolicy() == null) ? QueueLabelPolicy.AND.name() :
                   queue.getLabelPolicy().name();
-    
-    clusterResources = new ResourceInfo(scheduler.getClusterResource());
+
+    boolean isResourcesBasedOnLabelsEnabled = scheduler.isResourcesBasedOnLabelsEnabled();
+    Resource clusterResource = isResourcesBasedOnLabelsEnabled ?
+        scheduler.getClusterResource(queue.getLabel()) :
+        scheduler.getClusterResource();
+    clusterResources = new ResourceInfo(clusterResource);
     
     usedResources = new ResourceInfo(queue.getResourceUsage());
     fractionMemUsed = (float)usedResources.getMemory() /
@@ -93,8 +97,7 @@ public class FairSchedulerQueueInfo {
     minResources = new ResourceInfo(queue.getMinShare());
     maxResources = new ResourceInfo(queue.getMaxShare());
     maxResources = new ResourceInfo(
-        Resources.componentwiseMin(queue.getMaxShare(),
-            scheduler.getClusterResource()));
+        Resources.componentwiseMin(queue.getMaxShare(), clusterResource));
 
     fractionMemSteadyFairShare =
         (float)steadyFairResources.getMemory() / clusterResources.getMemory();

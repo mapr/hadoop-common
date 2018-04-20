@@ -26,6 +26,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
+import net.java.dev.eval.Expression;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
@@ -51,6 +52,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.RMAuditLogger;
 import org.apache.hadoop.yarn.server.resourcemanager.RMAuditLogger.AuditConstants;
 import org.apache.hadoop.yarn.server.resourcemanager.RMContext;
 import org.apache.hadoop.yarn.server.resourcemanager.ResourceManager;
+import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManager;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMApp;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppEventType;
@@ -182,6 +184,46 @@ public abstract class AbstractYarnScheduler
   @Override
   public Resource getClusterResource() {
     return clusterResource;
+  }
+
+  /**
+   * Get the resource capacity of the cluster that is available to the label.
+   * @param label
+   * @return resource capacity of the cluster that is available to the label.
+   * If the label is null returns the whole resource capacity of the cluster.
+   */
+  public Resource getClusterResource(Expression label) {
+    if (label == null) {
+      return clusterResource;
+    }
+
+    LabelManager lb = LabelManager.getInstance();
+    List<String> nodesForLabel = null;
+    try {
+      nodesForLabel = lb.getNodesForLabel(label);
+    } catch (IOException e) {
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("Exception while trying to evaluate label expressions", e);
+        return clusterResource;
+      }
+    }
+
+    Resource clusterLabelResource = Resource.newInstance(0, 0, 0.0);
+    for (N node : nodes.values()) {
+      if (nodesForLabel != null && nodesForLabel.contains(node.getNodeName())) {
+        Resources.addTo(clusterLabelResource, node.getTotalResource());
+      }
+    }
+    return clusterLabelResource;
+  }
+
+  /**
+   * Get all labels defined on a cluster
+   * @return all labels defined on a cluster
+   */
+  public Set<Expression> getLabels() {
+    LabelManager lb = LabelManager.getInstance();
+    return lb.getLabels();
   }
 
   @Override

@@ -185,6 +185,8 @@ public class QueueManager {
         leafQueue = new FSLeafQueue(name, scheduler, parent);
         leafQueue.setLabel(leafQueue.refreshLabel());
         leafQueue.setLabelPolicy(leafQueue.refreshLabelPolicy());
+        leafQueue.setDefaultLabel(queueConf.getDefaultQueueLabel());
+        leafQueue.updateLabel();
         try {
           leafQueue.setPolicy(queueConf.getDefaultSchedulingPolicy());
         } catch (AllocationConfigurationException ex) {
@@ -394,6 +396,8 @@ public class QueueManager {
         queue.setPolicy(policy);
         queue.setLabel(queue.refreshLabel());
         queue.setLabelPolicy(queue.refreshLabelPolicy());
+        queue.setDefaultLabel(queueConf.getDefaultQueueLabel());
+        queue.updateLabel();
       } catch (AllocationConfigurationException ex) {
         LOG.warn("Cannot apply configured scheduling policy to queue "
             + queue.getName(), ex);

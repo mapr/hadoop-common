@@ -84,6 +84,7 @@ public class AllocationConfiguration extends ReservationSchedulerConfiguration {
   
   private final Map<String, String> labels;
   private final Map<String, Queue.QueueLabelPolicy> labelPolicies;
+  private final String defaultQueueLabel;
   
   private final SchedulingPolicy defaultSchedulingPolicy;
   
@@ -115,7 +116,8 @@ public class AllocationConfiguration extends ReservationSchedulerConfiguration {
       ReservationQueueConfiguration globalReservationQueueConfig,
       Set<String> reservableQueues,
       Map<String, String> queueLabels, 
-      Map<String, Queue.QueueLabelPolicy> queueLabelPolicies) {
+      Map<String, Queue.QueueLabelPolicy> queueLabelPolicies,
+      String defaultLabel) {
     this.minQueueResources = minQueueResources;
     this.maxQueueResources = maxQueueResources;
     this.queueMaxApps = queueMaxApps;
@@ -137,6 +139,7 @@ public class AllocationConfiguration extends ReservationSchedulerConfiguration {
     this.configuredQueues = configuredQueues;
     this.labels = queueLabels;
     this.labelPolicies = queueLabelPolicies;
+    this.defaultQueueLabel = defaultLabel;
   }
   
   public AllocationConfiguration(Configuration conf) {
@@ -164,6 +167,7 @@ public class AllocationConfiguration extends ReservationSchedulerConfiguration {
         configuredQueues);
     this.labels = new HashMap<String, String>();
     this.labelPolicies = new HashMap<String, Queue.QueueLabelPolicy>();
+    this.defaultQueueLabel = null;
 
   }
   
@@ -351,6 +355,10 @@ public class AllocationConfiguration extends ReservationSchedulerConfiguration {
 
   public Map<String, String> getLabels() {
     return labels;
+  }
+
+  public String getDefaultQueueLabel() {
+    return defaultQueueLabel;
   }
 
   public Map<String, Queue.QueueLabelPolicy> getLabelPolicies() {
