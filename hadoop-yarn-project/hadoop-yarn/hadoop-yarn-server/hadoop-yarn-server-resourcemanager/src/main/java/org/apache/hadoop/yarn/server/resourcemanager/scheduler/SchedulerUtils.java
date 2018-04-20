@@ -209,6 +209,10 @@ public class SchedulerUtils {
     if (labelExp == null) {
       labelExp = RMNodeLabelsManager.NO_LABEL;
     }
+
+    if (resReq.getLabel() == null) {
+      resReq.setLabel(labelExp);
+    }
     resReq.setNodeLabelExpression(labelExp);
   }
 
@@ -274,7 +278,7 @@ public class SchedulerUtils {
               + resReq.getCapability().getDisks()
               + ", maxDisks=" + maximumResource.getDisks());
     }
-    String labelExp = resReq.getNodeLabelExpression();
+    String labelExp = resReq.getLabel();
 
     // we don't allow specify label expression other than resourceName=ANY now
     if (!ResourceRequest.ANY.equals(resReq.getResourceName())
@@ -284,30 +288,6 @@ public class SchedulerUtils {
               + " specified node label expression in a "
               + "resource request has resource name = "
               + resReq.getResourceName());
-    }
-    
-    // we don't allow specify label expression with more than one node labels now
-    if (labelExp != null && labelExp.contains("&&")) {
-      throw new InvalidResourceRequestException(
-          "Invailid resource request, queue=" + queueInfo.getQueueName()
-              + " specified more than one node label "
-              + "in a node label expression, node label expression = "
-              + labelExp);
-    }
-    
-    if (labelExp != null && !labelExp.trim().isEmpty() && queueInfo != null) {
-      if (!checkQueueLabelExpression(queueInfo.getAccessibleNodeLabels(),
-          labelExp)) {
-        throw new InvalidResourceRequestException("Invalid resource request"
-            + ", queue="
-            + queueInfo.getQueueName()
-            + " doesn't have permission to access all labels "
-            + "in resource request. labelExpression of resource request="
-            + labelExp
-            + ". Queue labels="
-            + (queueInfo.getAccessibleNodeLabels() == null ? "" : StringUtils.join(queueInfo
-                .getAccessibleNodeLabels().iterator(), ',')));
-      }
     }
   }
   

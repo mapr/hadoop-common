@@ -83,6 +83,7 @@ import org.apache.hadoop.yarn.util.resource.DominantResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.ResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.Resources;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Sets;
@@ -187,6 +188,7 @@ public class TestSchedulerUtils {
     assertEquals(2048, ask.getCapability().getMemory());
   }
   
+  @Ignore("not acceptable for MapR labels variant")
   @Test (timeout = 30000)
   public void testValidateResourceRequestWithErrorLabelsPermission()
       throws IOException {
@@ -376,6 +378,68 @@ public class TestSchedulerUtils {
           scheduler);
       fail("Should fail");
     } catch (InvalidResourceRequestException e) {
+    }
+  }
+
+  @Test(timeout = 30000)
+  public void testValidateResourceRequestWithLabels()
+      throws IOException {
+    YarnScheduler scheduler = mock(YarnScheduler.class);
+    QueueInfo queueInfo = mock(QueueInfo.class);
+    when(queueInfo.getQueueName()).thenReturn("queue");
+    when(scheduler.getQueueInfo(any(String.class), anyBoolean(), anyBoolean()))
+        .thenReturn(queueInfo);
+    Resource maxResource = Resources.createResource(
+        YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_MB,
+        YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES);
+
+    try {
+      // set queue node mapr label
+      Resource resource = Resources.createResource(
+          0,
+          YarnConfiguration.DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_VCORES);
+      ResourceRequest resReq = BuilderUtils.newResourceRequest(
+          mock(Priority.class), ResourceRequest.ANY, resource, 1);
+      resReq.setLabel("x");
+      SchedulerUtils.normalizeAndvalidateRequest(resReq, maxResource, "queue",
+          scheduler);
+      assertEquals("x", resReq.getLabel());
+
+      // set queue node apache label
+      resReq = BuilderUtils.newResourceRequest(
+          mock(Priority.class), ResourceRequest.ANY, resource, 1);
+      resReq.setNodeLabelExpression("x");
+      SchedulerUtils.normalizeAndvalidateRequest(resReq, maxResource, "queue",
+          scheduler);
+      assertEquals("x", resReq.getLabel());
+
+      // set queue node mapr and apache label
+      resReq = BuilderUtils.newResourceRequest(
+          mock(Priority.class), ResourceRequest.ANY, resource, 1);
+      resReq.setLabel("x");
+      resReq.setNodeLabelExpression("y");
+      SchedulerUtils.normalizeAndvalidateRequest(resReq, maxResource, "queue",
+          scheduler);
+      assertEquals("x", resReq.getLabel());
+
+      // set queue node apache label to empty string
+      resReq = BuilderUtils.newResourceRequest(
+          mock(Priority.class), ResourceRequest.ANY, resource, 1);
+      resReq.setNodeLabelExpression("");
+      SchedulerUtils.normalizeAndvalidateRequest(resReq, maxResource, "queue",
+          scheduler);
+      assertEquals("", resReq.getLabel());
+
+      // set queue node apache label to whitespace
+      resReq = BuilderUtils.newResourceRequest(
+          mock(Priority.class), ResourceRequest.ANY, resource, 1);
+      resReq.setNodeLabelExpression(" ");
+      SchedulerUtils.normalizeAndvalidateRequest(resReq, maxResource, "queue",
+          scheduler);
+      assertEquals("", resReq.getLabel());
+    } catch (InvalidResourceRequestException e) {
+      e.printStackTrace();
+      fail("Should be valid when request labels is a subset of queue labels");
     }
   }
 
