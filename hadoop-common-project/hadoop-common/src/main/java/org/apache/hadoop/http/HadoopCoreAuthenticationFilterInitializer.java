@@ -44,7 +44,9 @@ public class HadoopCoreAuthenticationFilterInitializer extends FilterInitializer
   @Override
   public void initFilter(FilterContainer container, Configuration conf) {
     Map<String, String> filterConfig = createFilterConfig(conf);
-    container.addFilter("HadoopCoreAuthentication",
-        HadoopCoreAuthenticationFilter.class.getName(), filterConfig);
+    if (conf.getBoolean("hadoop.http.core.filter.enable", true)) {
+      container.addGlobalFilter("HadoopCoreAuthentication",
+          HadoopCoreAuthenticationFilter.class.getName(), filterConfig); 
+    }
   }
 }

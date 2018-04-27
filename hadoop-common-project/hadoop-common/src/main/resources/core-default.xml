@@ -57,6 +57,12 @@
   ordering of the filters.</description>
 </property>
 
+<property>
+  <name>hadoop.http.core.filter.enable</name>
+  <value>true</value>
+  <description>Whether HadoopCoreAuthenticationFilter is added to the filter chain</description>
+</property> 
+
 <!--- security properties -->
 
 <property>

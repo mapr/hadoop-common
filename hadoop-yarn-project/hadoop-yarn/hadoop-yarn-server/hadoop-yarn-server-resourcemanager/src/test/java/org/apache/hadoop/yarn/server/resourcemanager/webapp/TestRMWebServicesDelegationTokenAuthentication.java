@@ -180,6 +180,8 @@ public class TestRMWebServicesDelegationTokenAuthentication {
     rmconf.setBoolean("mockrm.webapp.enabled", true);
     rmconf.set("yarn.resourcemanager.proxyuser.client.hosts", "*");
     rmconf.set("yarn.resourcemanager.proxyuser.client.groups", "*");
+    // skip HadoopCoreAuthenticationFilter in the tests
+    rmconf.setBoolean("hadoop.http.core.filter.enable", false);
     UserGroupInformation.setConfiguration(rmconf);
     rm = new MockRM(rmconf);
     rm.start();
