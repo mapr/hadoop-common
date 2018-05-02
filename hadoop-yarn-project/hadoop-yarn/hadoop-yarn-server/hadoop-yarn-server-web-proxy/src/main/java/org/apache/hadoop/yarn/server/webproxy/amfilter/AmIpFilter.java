@@ -200,11 +200,8 @@ public class AmIpFilter implements Filter {
   public String findRedirectUrl() throws ServletException {
     String addr = null;
     YarnConfiguration conf = new YarnConfiguration();
-    String addressPropertyPrefix = YarnConfiguration.useHttps(conf)
-        ? YarnConfiguration.RM_WEBAPP_HTTPS_ADDRESS
-        : YarnConfiguration.RM_WEBAPP_ADDRESS;
 
-    if ( HAUtil.isCustomRMHAEnabled(conf)) {
+    if (HAUtil.isCustomRMHAEnabled(conf)) {
       // http(s)://host:port
       String currentRMAddress = WebAppUtils.getResolvedRMWebAppURLWithScheme(conf);
       String applicationWebProxy = System.getenv(ApplicationConstants.APPLICATION_WEB_PROXY_BASE_ENV);
@@ -221,6 +218,11 @@ public class AmIpFilter implements Filter {
             }
         }
       addr = currentRMAddress.concat(applicationWebProxy);
+      if (!isValidUrl(currentRMAddress)) {
+        throw new ServletException(
+            "Could not determine the proxy server for redirection. " +
+                "Check your network configuration");
+      }
       try {
         URL url = new URL(currentRMAddress);
         proxyUriBases.put(url.getHost() + ":" + url.getPort(), addr);
