@@ -734,7 +734,10 @@ public class AdminService extends CompositeService implements
     boolean isRefreshCompleted = false;
     try {
       LabelManager labelManager = LabelManager.getInstance();
-      labelManager.refreshLabels();
+      Configuration conf =
+          getConfiguration(new Configuration(false),
+              YarnConfiguration.YARN_SITE_CONFIGURATION_FILE);
+      labelManager.refreshLabels(conf);
       isRefreshCompleted = true;
     } catch (Exception e) {
       LOG.error("Failed to refresh cluster node labels", e);

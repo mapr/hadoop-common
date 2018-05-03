@@ -36,6 +36,7 @@ import net.java.dev.eval.Expression;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -118,15 +119,20 @@ public final class LabelStorage {
    * Read a line from file and parse node identifier and labels.
    */
   @Private
-  void loadAndApplyLabels() throws IOException {
-    if (!fs.exists(labelFile)) {
-      LOG.error("Labels file does not exist: " + labelFile + ".");
+  void loadAndApplyLabels(Configuration conf) throws IOException {
+    String labelFilePath = conf.get(LabelManager.NODE_LABELS_FILE, null);
+    labelFile = labelFilePath == null ? null : new Path(labelFilePath);
+    
+    if (labelFile == null || !fs.exists(labelFile)) {
       synchronized (nodeExpressionLabels) {
         nodeExpressionLabels.clear();
       }
       synchronized (labels) {
         labels.clear();
       }
+      nodeToLabelsMap.clear();
+      LOG.info("Labels file does not exist: " + labelFile +". Labels are cleaned up.");
+      
       return;
     }
     FSDataInputStream input = fs.open(labelFile);

@@ -127,6 +127,7 @@ import com.google.common.collect.Sets;
 public class TestFairScheduler extends FairSchedulerTestBase {
   private final static String ALLOC_FILE =
       new File(TEST_DIR, "test-queues").getAbsolutePath();
+  private final static String LABEL_FILE = TEST_DIR + "/labelFile";
   
   private final static String STATIC_HOST = "127.0.0.1";
 
@@ -168,11 +169,11 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     DefaultMetricsSystem.shutdown();
 
     FileSystem fs = FileSystem.getLocal(conf);
-    fs.delete(new Path("/tmp/labelFile"), false);
+    fs.delete(new Path(LABEL_FILE), false);
     LabelManager lb = LabelManager.getInstance();
 
     try {
-      lb.refreshLabels();
+      lb.refreshLabels(conf);
     } catch (Exception e) {
       //throws exception if node.labels.file not specified (equals null)
     }
@@ -397,10 +398,10 @@ public class TestFairScheduler extends FairSchedulerTestBase {
   @Test
   public void testFairShareBasedOnLabelsEnabled() throws IOException {
     conf.set(FairSchedulerConfiguration.ALLOCATION_FILE, ALLOC_FILE);
-    conf.set(LabelManager.NODE_LABELS_FILE, "/tmp/labelFile");
+    conf.set(LabelManager.NODE_LABELS_FILE, LABEL_FILE);
     conf.setBoolean(FairSchedulerConfiguration.RESOURCES_BASED_ON_LABELS_ENABLED, true);
 
-    PrintWriter out = new PrintWriter(new FileWriter("/tmp/labelFile"));
+    PrintWriter out = new PrintWriter(new FileWriter(LABEL_FILE));
     out.println("node1  LabelA");
     out.println("node2  LabelB");
     out.close();
@@ -426,7 +427,7 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     lbS.init(conf);
     lbS.start();
     LabelManager lb = LabelManager.getInstance();
-    lb.refreshLabels();
+    lb.refreshLabels(conf);
 
     RMNode node1 = MockNodes.newNodeInfo(1, Resources.createResource(10 * 1024), 1, "node1");
     NodeAddedSchedulerEvent nodeEvent1 = new NodeAddedSchedulerEvent(node1);
@@ -514,19 +515,19 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     
     conf.setBoolean(FairSchedulerConfiguration.RESOURCES_BASED_ON_LABELS_ENABLED, false);
     conf.set(FairSchedulerConfiguration.ALLOCATION_FILE, ALLOC_FILE);
-    conf.set(LabelManager.NODE_LABELS_FILE, "/tmp/labelFile");
+    conf.set(LabelManager.NODE_LABELS_FILE, LABEL_FILE);
     scheduler.init(conf);
     scheduler.start();
     scheduler.reinitialize(conf, resourceManager.getRMContext());
 
-    out = new PrintWriter(new FileWriter("/tmp/labelFile"));
+    out = new PrintWriter(new FileWriter(LABEL_FILE));
     out.println("node1  LabelA");
     out.println("node2  LabelB");
     out.close();
     lbS.init(conf);
     lbS.start();
     lb = LabelManager.getInstance();
-    lb.refreshLabels();
+    lb.refreshLabels(conf);
 
     scheduler.handle(nodeEvent1);
     scheduler.handle(nodeEvent2);
@@ -554,19 +555,19 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     
     conf.setBoolean(FairSchedulerConfiguration.RESOURCES_BASED_ON_LABELS_ENABLED, false);
     conf.set(FairSchedulerConfiguration.ALLOCATION_FILE, ALLOC_FILE);
-    conf.set(LabelManager.NODE_LABELS_FILE, "/tmp/labelFile");
+    conf.set(LabelManager.NODE_LABELS_FILE, LABEL_FILE);
     scheduler.init(conf);
     scheduler.start();
     scheduler.reinitialize(conf, resourceManager.getRMContext());
 
-    out = new PrintWriter(new FileWriter("/tmp/labelFile"));
+    out = new PrintWriter(new FileWriter(LABEL_FILE));
     out.println("node1  LabelA");
     out.println("node2  LabelB");
     out.close();
     lbS.init(conf);
     lbS.start();
     lb = LabelManager.getInstance();
-    lb.refreshLabels();
+    lb.refreshLabels(conf);
     
     scheduler.handle(nodeEvent1);
     scheduler.handle(nodeEvent2);
@@ -673,9 +674,9 @@ public class TestFairScheduler extends FairSchedulerTestBase {
   @Test
   public void testFairShareCalculationWithLbs() throws IOException {
     conf.set(FairSchedulerConfiguration.ALLOCATION_FILE, ALLOC_FILE);
-    conf.set(LabelManager.NODE_LABELS_FILE, "/tmp/labelFile");
+    conf.set(LabelManager.NODE_LABELS_FILE, LABEL_FILE);
 
-    PrintWriter out = new PrintWriter(new FileWriter("/tmp/labelFile"));
+    PrintWriter out = new PrintWriter(new FileWriter(LABEL_FILE));
     out.println("node1  LabelA");
     out.println("node2  LabelB");
     out.close();
@@ -709,7 +710,7 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     lbS.init(conf);
     lbS.start();
     LabelManager lb = LabelManager.getInstance();
-    lb.refreshLabels();
+    lb.refreshLabels(conf);
 
     RMNode node1 = MockNodes.newNodeInfo(1, Resources.createResource(10 * 1024), 1, "node1");
     NodeAddedSchedulerEvent nodeEvent1 = new NodeAddedSchedulerEvent(node1);
@@ -768,9 +769,9 @@ public class TestFairScheduler extends FairSchedulerTestBase {
   @Test
   public void testFairShareForDifferentLabelsInHierarchy() throws IOException {
     conf.set(FairSchedulerConfiguration.ALLOCATION_FILE, ALLOC_FILE);
-    conf.set(LabelManager.NODE_LABELS_FILE, "/tmp/labelFile");
+    conf.set(LabelManager.NODE_LABELS_FILE, LABEL_FILE);
 
-    PrintWriter out = new PrintWriter(new FileWriter("/tmp/labelFile"));
+    PrintWriter out = new PrintWriter(new FileWriter(LABEL_FILE));
     out.println("node1  LabelA");
     out.println("node2  LabelB");
     out.close();
@@ -805,7 +806,7 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     lbS.init(conf);
     lbS.start();
     LabelManager lb = LabelManager.getInstance();
-    lb.refreshLabels();
+    lb.refreshLabels(conf);
 
     RMNode node1 = MockNodes.newNodeInfo(1, Resources.createResource(10 * 1024), 1, "node1");
     NodeAddedSchedulerEvent nodeEvent1 = new NodeAddedSchedulerEvent(node1);
@@ -922,9 +923,9 @@ public class TestFairScheduler extends FairSchedulerTestBase {
   @Test
   public void testFairShareWithDefaultQueueLabel() throws IOException {
     conf.set(FairSchedulerConfiguration.ALLOCATION_FILE, ALLOC_FILE);
-    conf.set(LabelManager.NODE_LABELS_FILE, "/tmp/labelFile");
+    conf.set(LabelManager.NODE_LABELS_FILE, LABEL_FILE);
 
-    PrintWriter out = new PrintWriter(new FileWriter("/tmp/labelFile"));
+    PrintWriter out = new PrintWriter(new FileWriter(LABEL_FILE));
     out.println("node1  LabelA");
     out.println("node2  LabelB");
     out.close();
@@ -952,7 +953,7 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     lbS.init(conf);
     lbS.start();
     LabelManager lb = LabelManager.getInstance();
-    lb.refreshLabels();
+    lb.refreshLabels(conf);
 
     RMNode node1 = MockNodes.newNodeInfo(1, Resources.createResource(10 * 1024), 1, "node1");
     NodeAddedSchedulerEvent nodeEvent1 = new NodeAddedSchedulerEvent(node1);
@@ -1013,9 +1014,9 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     conf.setLong(FairSchedulerConfiguration.WAIT_TIME_BEFORE_KILL, 10000);
     conf.set(FairSchedulerConfiguration.ALLOCATION_FILE, ALLOC_FILE);
     conf.set(FairSchedulerConfiguration.USER_AS_DEFAULT_QUEUE, "false");
-    conf.set(LabelManager.NODE_LABELS_FILE, "/tmp/labelFile");
+    conf.set(LabelManager.NODE_LABELS_FILE, LABEL_FILE);
 
-    PrintWriter out = new PrintWriter(new FileWriter("/tmp/labelFile"));
+    PrintWriter out = new PrintWriter(new FileWriter(LABEL_FILE));
     out.println("node1  Plain");
     out.println("node2  Large");
     out.close();
@@ -1048,7 +1049,7 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     lbS.init(conf);
     lbS.start();
     LabelManager lb = LabelManager.getInstance();
-    lb.refreshLabels();
+    lb.refreshLabels(conf);
 
     RMNode node1 = MockNodes.newNodeInfo(1, Resources.createResource(5 * 1024, 5), 1, "node1");
     NetUtils.addStaticResolution(node1.getHostName(), STATIC_HOST);

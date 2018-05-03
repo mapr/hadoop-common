@@ -1128,7 +1128,7 @@ public class ClientRMService extends AbstractService implements
     boolean isRefreshCompleted = false;
     try {
       LabelManager labelManager = LabelManager.getInstance();
-      labelManager.refreshLabels();
+      labelManager.refreshLabels(getConfig());
       isRefreshCompleted = true;
     } catch (Exception e) {
         LOG.error("Failed to refresh cluster node labels", e);

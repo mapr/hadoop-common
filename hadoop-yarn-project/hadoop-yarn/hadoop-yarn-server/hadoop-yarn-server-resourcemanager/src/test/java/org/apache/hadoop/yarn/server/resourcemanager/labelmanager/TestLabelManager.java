@@ -19,7 +19,10 @@ package org.apache.hadoop.yarn.server.resourcemanager.labelmanager;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Set;
 
 import net.java.dev.eval.Expression;
@@ -42,39 +45,31 @@ import org.junit.Test;
 
 public class TestLabelManager {
 
-  static Configuration conf;
-  static FileSystem fs;
-  static LabelManagementService lbS;
+  private static Configuration conf;
+  private static FileSystem fs;
+  private static LabelManagementService lbS;
+
+  private final static String TEST_DIR =
+      new File(System.getProperty("test.build.data", "/tmp")).getAbsolutePath();
+  private final static String LABEL_FILE = TEST_DIR + "/labelFile";
   
   @BeforeClass
   public static void setUpBeforeClass() throws Exception {
     conf = new Configuration();
-    conf.set(LabelManager.NODE_LABELS_FILE, "/tmp/labelFile");
-    // set label refresh interval to 5 seconds
-    conf.setLong(LabelManager.NODE_LABELS_MONITOR_INTERVAL, 
-        5*1000);
-    
-    conf.set("fs.file.impl","org.apache.hadoop.fs.LocalFileSystem");
-    conf.set("fs.default.name", "file:///");
+    conf.set(LabelManager.NODE_LABELS_FILE, LABEL_FILE);
+    conf.setLong(LabelManager.NODE_LABELS_MONITOR_INTERVAL, 5*1000);
     fs = FileSystem.getLocal(conf);
-    
-    FSDataOutputStream fsout = fs.create(new Path("/tmp/labelFile"));
-    fsout.writeBytes("/perfnode200.*/ big, \"Production Machines\"");
-    fsout.writeBytes("\n");
-    fsout.writeBytes("/perfnode203.*/ big, 'Development Machines'");
-    fsout.writeBytes("\n");
-    fsout.writeBytes("perfnode15* good");
-    fsout.writeBytes("\n");
-    fsout.writeBytes("perfnode201* slow");
-    fsout.writeBytes("\n");
-    fsout.writeBytes("perfnode204* good, big");
-    fsout.writeBytes("\n");
-    fsout.writeBytes("/node-.+lab/     Fast");  
-    fsout.writeBytes("\n");
-    fsout.writeBytes("node-2*      Slow");
-    fsout.writeBytes("\n");
-    fsout.close();
 
+    PrintWriter out = new PrintWriter(new FileWriter(LABEL_FILE));
+    out.println("perfnode200.* big, \"ProductionMachines\"");
+    out.println("perfnode203.* big, 'DevelopmentMachines'");
+    out.println("perfnode15* good");
+    out.println("perfnode1* right, good, fantastic");
+    out.println("perfnode201* slow");
+    out.println("perfnode204* good, big");
+    out.println("node-.+lab     Fast");
+    out.println("node-2*      Slow");
+    out.close();
     
     lbS = new LabelManagementService();
     lbS.init(conf);
@@ -84,40 +79,35 @@ public class TestLabelManager {
 
   @AfterClass
   public static void tearDownAfterClass() throws Exception {
-    //LabelManager lb = LabelManager.getInstance();
     lbS.stop();
     assertFalse(lbS.getServiceState() != Service.STATE.STOPPED);
-    fs.delete(new Path("/tmp/labelFile"), false);
+    fs.delete(new Path(LABEL_FILE), false);
   }
 
   @Before
   public void setUp() throws Exception {
-    FSDataOutputStream fsout = fs.create(new Path("/tmp/labelFile"));
-    fsout.writeBytes("/perfnode200.*/ big, \"Production Machines\"");
-    fsout.writeBytes("\n");
-    fsout.writeBytes("/perfnode203.*/ big, 'Development Machines'");
-    fsout.writeBytes("\n");
-    fsout.writeBytes("perfnode15* good");
-    fsout.writeBytes("\n");
-    fsout.writeBytes("perfnode1* right, good, fantastic");
-    fsout.writeBytes("\n");
-    fsout.writeBytes("perfnode201* slow");
-    fsout.writeBytes("\n");
-    fsout.writeBytes("perfnode204* good, big");
-    fsout.writeBytes("\n");
-    fsout.writeBytes("/node-.+lab/     Fast");  
-    fsout.writeBytes("\n");
-    fsout.writeBytes("node-2*      Slow");
-    fsout.writeBytes("\n");
-    fsout.close();
-    // make sure file is updated
-    Thread.sleep(6000l);
+    conf = new Configuration();
+    conf.set(LabelManager.NODE_LABELS_FILE, LABEL_FILE);
+    conf.setLong(LabelManager.NODE_LABELS_MONITOR_INTERVAL, 5*1000);
 
+    PrintWriter out = new PrintWriter(new FileWriter(LABEL_FILE));
+    out.println("perfnode200.* big, \"ProductionMachines\"");
+    out.println("perfnode203.* big, 'DevelopmentMachines'");
+    out.println("perfnode15* good");
+    out.println("perfnode1* right, good, fantastic");
+    out.println("perfnode201* slow");
+    out.println("perfnode204* good, big");
+    out.println("node-.+lab     Fast");
+    out.println("node-2*      Slow");
+    out.close();
+    
+    LabelManager lb = LabelManager.getInstance();
+    lb.refreshLabels(conf);
   }
 
   @After
   public void tearDown() throws Exception {
-    fs.delete(new Path("/tmp/labelFile"), false);
+    fs.delete(new Path(LABEL_FILE), false);
   }
 
   @Test (timeout=10000)
@@ -125,7 +115,7 @@ public class TestLabelManager {
     LabelManager lb = LabelManager.getInstance();
     Path labelFile = lb.getLabelFile();
     assertNotNull(labelFile);
-    assertTrue("/tmp/labelFile".equalsIgnoreCase(labelFile.toString()));
+    assertTrue(LABEL_FILE.equalsIgnoreCase(labelFile.toString()));
     assertTrue(lbS.getServiceState() == Service.STATE.STARTED);
     Thread.sleep(1000l);
     Set<String> labels = lb.getLabelsForNode("perfnode151.perf.lab");
@@ -139,13 +129,13 @@ public class TestLabelManager {
     assertNotNull(labels);
     assertEquals(2, labels.size());
     assertTrue(labels.contains("big"));
-    assertTrue(labels.contains("Production Machines"));
+    assertTrue(labels.contains("ProductionMachines"));
 
     labels = lb.getLabelsForNode("perfnode203.abc.qa.lab");
     assertNotNull(labels);
     assertEquals(2, labels.size());
     assertTrue(labels.contains("big"));
-    assertTrue(labels.contains("Development Machines"));
+    assertTrue(labels.contains("DevelopmentMachines"));
 
     labels = lb.getLabelsForNode("node-33.lab");
     assertNotNull(labels);
@@ -183,7 +173,6 @@ public class TestLabelManager {
     assertTrue(labels.contains("good"));
     assertTrue(labels.contains("right"));
     assertTrue(labels.contains("fantastic"));
-
   }
   
   @Test
@@ -191,7 +180,7 @@ public class TestLabelManager {
     LabelManager lb = LabelManager.getInstance();
     Path labelFile = lb.getLabelFile();
     assertNotNull(labelFile);
-    assertTrue("/tmp/labelFile".equalsIgnoreCase(labelFile.toString()));
+    assertTrue(LABEL_FILE.equalsIgnoreCase(labelFile.toString()));
     assertTrue(lbS.getServiceState() == Service.STATE.STARTED);
     Thread.sleep(1000l);
 
@@ -204,8 +193,7 @@ public class TestLabelManager {
     LabelManager lb = LabelManager.getInstance();
     Path labelFile = lb.getLabelFile();
     assertNotNull(labelFile);
-    assertTrue("/tmp/labelFile".equalsIgnoreCase(labelFile.toString()));
-    //lb.start();
+    assertTrue(LABEL_FILE.equalsIgnoreCase(labelFile.toString()));
     assertTrue(lbS.getServiceState() == Service.STATE.STARTED);
     Thread.sleep(1000l);
 
@@ -220,8 +208,6 @@ public class TestLabelManager {
     assertEquals("((good&&big)&&good)", finalExpr.toString());
     
     policy = Queue.QueueLabelPolicy.OR;
-    //Expression queueLabelExpression = lb.constructAppLabel("good && big");
-    //Expression appLabelExpression = lb.constructAppLabel("good");
     
     finalExpr = lb.constructAppLabel(policy,
         appLabelExpression,
@@ -244,8 +230,6 @@ public class TestLabelManager {
         queueLabelExpression);
     
     assertEquals("(good&&big)", finalExpr.toString());
-
-    
   }
   
   @Test
@@ -253,7 +237,7 @@ public class TestLabelManager {
     LabelManager lb = LabelManager.getInstance();
     Path labelFile = lb.getLabelFile();
     assertNotNull(labelFile);
-    assertTrue("/tmp/labelFile".equalsIgnoreCase(labelFile.toString()));
+    assertTrue(LABEL_FILE.equalsIgnoreCase(labelFile.toString()));
     assertTrue(lbS.getServiceState() == Service.STATE.STARTED);
     Thread.sleep(1000l);
 
@@ -274,16 +258,14 @@ public class TestLabelManager {
     result = lb.isNodeApplicableForApp("perfnode203.qa.lab", finalExpr);
     
     assertTrue(result == LabelApplicabilityStatus.NODE_DOES_NOT_HAVE_LABEL);
-    
-    
   }
 
   @Test (timeout=10000)
-  public void testLabelRefresh() throws Exception {
+  public void testLabelsUpdateAfterMonitorInterval() throws Exception {
     LabelManager lb = LabelManager.getInstance();
     Path labelFile = lb.getLabelFile();
     assertNotNull(labelFile);
-    assertTrue("/tmp/labelFile".equalsIgnoreCase(labelFile.toString()));
+    assertTrue(LABEL_FILE.equalsIgnoreCase(labelFile.toString()));
     assertTrue(lbS.getServiceState() == Service.STATE.STARTED);
     Thread.sleep(1000l);
     Set<String> labels = lb.getLabelsForNode("perfnode151.perf.lab");
@@ -297,13 +279,13 @@ public class TestLabelManager {
     assertNotNull(labels);
     assertEquals(2, labels.size());
     assertTrue(labels.contains("big"));
-    assertTrue(labels.contains("Production Machines"));
+    assertTrue(labels.contains("ProductionMachines"));
 
     labels = lb.getLabelsForNode("perfnode203.abc.qa.lab");
     assertNotNull(labels);
     assertEquals(2, labels.size());
     assertTrue(labels.contains("big"));
-    assertTrue(labels.contains("Development Machines"));
+    assertTrue(labels.contains("DevelopmentMachines"));
 
     labels = lb.getLabelsForNode("node-33.lab");
     assertNotNull(labels);
@@ -316,12 +298,12 @@ public class TestLabelManager {
     assertTrue(labels.contains("Slow"));
     assertTrue(labels.contains("Fast"));
 
-    fs.delete(new Path("/tmp/labelFile"), false);
+    fs.delete(new Path(LABEL_FILE), false);
     
-    FSDataOutputStream fsout = fs.create(new Path("/tmp/labelFile"));
-    fsout.writeBytes("/perfnode200.*/ big, \"Prod Machines\"");
+    FSDataOutputStream fsout = fs.create(new Path(LABEL_FILE));
+    fsout.writeBytes("/perfnode200.*/ big, \"ProdMachines\"");
     fsout.writeBytes("\n");
-    fsout.writeBytes("/perfnode203.*/ small, 'Dev Machines'");
+    fsout.writeBytes("/perfnode203.*/ small, 'DevMachines'");
     fsout.writeBytes("\n");
     fsout.writeBytes("perfnode15* good");
     fsout.writeBytes("\n");
@@ -342,13 +324,13 @@ public class TestLabelManager {
     assertNotNull(labels);
     assertEquals(2, labels.size());
     assertTrue(labels.contains("big"));
-    assertTrue(labels.contains("Prod Machines"));
+    assertTrue(labels.contains("ProdMachines"));
 
     labels = lb.getLabelsForNode("perfnode203.abc.qa.lab");
     assertNotNull(labels);
     assertEquals(2, labels.size());
     assertTrue(labels.contains("small"));
-    assertTrue(labels.contains("Dev Machines"));
+    assertTrue(labels.contains("DevMachines"));
 
     labels = lb.getLabelsForNode("perfnode151.perf.lab");
     assertNotNull(labels);
@@ -366,7 +348,55 @@ public class TestLabelManager {
     assertTrue(labels.contains("Slow"));
     assertTrue(labels.contains("Fast"));
   }
-  
+
+  @Test
+  public void testLabelsRefresh() throws IOException {
+    LabelManager lb = LabelManager.getInstance();
+
+    fs.delete(new Path(LABEL_FILE), false);
+
+    PrintWriter out = new PrintWriter(new FileWriter(LABEL_FILE));
+    out.println("node1  Plain");
+    out.println("node2  Large");
+    out.close();
+
+    lb.refreshLabels(conf);
+
+    Set<String> node1Labels = lb.getLabelsForNode("node1");
+    Set<String> node2Labels = lb.getLabelsForNode("node2");
+    assertEquals(node1Labels.size(), 1);
+    assertTrue(node1Labels.contains("Plain"));
+    assertEquals(node2Labels.size(), 1);
+    assertTrue(node2Labels.contains("Large"));
+
+    // Refreshing when the labels file was changed
+    fs.delete(new Path(LABEL_FILE), false);
+
+    out = new PrintWriter(new FileWriter(LABEL_FILE));
+    out.println("node1  Dev");
+    out.println("node2  Prod");
+    out.close();
+
+    lb.refreshLabels(conf);
+
+    node1Labels = lb.getLabelsForNode("node1");
+    node2Labels = lb.getLabelsForNode("node2");
+    assertEquals(node1Labels.size(), 1);
+    assertTrue(node1Labels.contains("Dev"));
+    assertEquals(node2Labels.size(), 1);
+    assertTrue(node2Labels.contains("Prod"));
+    
+    // Refreshing when path to labels file is null
+    lb.refreshLabels(new Configuration());
+    Set<Expression> labels = lb.getLabels();
+    assertTrue(labels.isEmpty());
+
+    // Refreshing when labels file doesn't exist
+    conf.set(LabelManager.NODE_LABELS_FILE, "/notexist");
+    lb.refreshLabels(conf);
+    labels = lb.getLabels();
+    assertTrue(labels.isEmpty());
+  }
   
   @Test
   public void testBadLabels() throws Exception {
@@ -392,10 +422,9 @@ public class TestLabelManager {
   
   //@Test - Use only when testing performance
   public void testPerformance() throws Exception {
+    fs.delete(new Path(LABEL_FILE), false);
     
-    fs.delete(new Path("/tmp/labelFile"), false);
-    
-    FSDataOutputStream fsout = fs.create(new Path("/tmp/labelFile"));
+    FSDataOutputStream fsout = fs.create(new Path(LABEL_FILE));
     for ( int i = 0; i < 1000; i++ ) {
       String node = "node-2."+i+".lab";
       if ( i % 3  == 0 ) {
@@ -427,10 +456,7 @@ public class TestLabelManager {
     while (i < 1000000) {
       String resourceName = "node-2."+i%1000+".lab";
       i++;
-  /*    finalExp = 
-          lb.constructAppLabel(QueueLabelPolicy.OR, 
-              appExp, qExp);
-    */  lb.isNodeApplicableForApp(resourceName, finalExp);
+      lb.isNodeApplicableForApp(resourceName, finalExp);
     }
     long endTime = System.currentTimeMillis();
     
@@ -441,10 +467,7 @@ public class TestLabelManager {
     while (i < 1000000) {
       String resourceName = "node-2."+i%1000+".lab";
       i++;
-/*      finalExp = 
-          lb.constructAppLabel(QueueLabelPolicy.OR, 
-              appExp, qExp);
-*/
+
       lb.isNodeApplicableForApp(resourceName, finalExp);
     }
     endTime = System.currentTimeMillis();
@@ -456,15 +479,11 @@ public class TestLabelManager {
     while (i < 3000000) {
       String resourceName = "/defaultrack";
       i++;
-/*      finalExp = 
-          lb.constructAppLabel(QueueLabelPolicy.OR, 
-              appExp, qExp);
-*/
+
       lb.isNodeApplicableForApp(resourceName, finalExp);
     }
     endTime = System.currentTimeMillis();
     
     System.out.println("Time taken3: " + (endTime - startTime) + " ms");
-
   }
 }

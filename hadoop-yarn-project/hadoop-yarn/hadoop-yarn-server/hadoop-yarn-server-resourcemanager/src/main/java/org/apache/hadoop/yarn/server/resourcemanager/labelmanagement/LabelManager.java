@@ -61,6 +61,8 @@ public class LabelManager {
   public static final long DEFAULT_RELOAD_INTERVAL = 2*60*1000l;
 
   private FileSystem fs;
+  
+  private Configuration config;
 
   private Path labelFile = null;
   private long labelManagerMonitorInterval = DEFAULT_RELOAD_INTERVAL;
@@ -79,6 +81,7 @@ public class LabelManager {
   }
   
   void serviceInit(Configuration conf) throws Exception {
+    setConfig(conf);
     fs = FileSystem.get(conf);
     
     String labelFilePath = conf.get(NODE_LABELS_FILE, null);
@@ -111,6 +114,10 @@ public class LabelManager {
     }
   }
 
+  public void setConfig(Configuration conf) {
+    this.config = conf;
+  }
+
   /**
    * 
    * @return whether service is enabled and worth using it
@@ -126,7 +133,7 @@ public class LabelManager {
         try {
           // check if file is modified
           if (fileChanged()) {
-            LabelStorage.getInstance().loadAndApplyLabels();
+            LabelStorage.getInstance().loadAndApplyLabels(config);
           }
         } catch (Exception e) {
           LOG.error("LabelManager Thread got exception: " +
@@ -156,8 +163,8 @@ public class LabelManager {
    * Read a line from file and parse node identifier and labels.
    */
   @Private
-  public void refreshLabels() throws IOException {
-    LabelStorage.getInstance().loadAndApplyLabels();
+  public void refreshLabels(Configuration conf) throws IOException {
+    LabelStorage.getInstance().loadAndApplyLabels(conf);
   }
 
   public Set<String> getLabelsForNode(String node) {

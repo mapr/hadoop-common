@@ -48,6 +48,7 @@ import static org.junit.Assert.assertTrue;
 public class TestFairSchedulerPreemption extends FairSchedulerTestBase {
   private final static String ALLOC_FILE = new File(TEST_DIR,
       TestFairSchedulerPreemption.class.getName() + ".xml").getAbsolutePath();
+  private final static String LABEL_FILE = TEST_DIR + "/labelFile";
   private final static String STATIC_HOST = "127.0.0.1";
 
   private MockClock clock;
@@ -204,7 +205,7 @@ public class TestFairSchedulerPreemption extends FairSchedulerTestBase {
 
   @Test
   public void testPreemptionThresholdWithLbs() throws Exception {
-    conf.set(LabelManager.NODE_LABELS_FILE, "/tmp/labelFile");
+    conf.set(LabelManager.NODE_LABELS_FILE, LABEL_FILE);
     PrintWriter out = new PrintWriter(new FileWriter(ALLOC_FILE));
     
     out.println("<?xml version=\"1.0\"?>");
@@ -232,7 +233,7 @@ public class TestFairSchedulerPreemption extends FairSchedulerTestBase {
     out.println("</allocations>");
     out.close();
 
-    out = new PrintWriter(new FileWriter("/tmp/labelFile"));
+    out = new PrintWriter(new FileWriter(LABEL_FILE));
     out.println("node1  Plain");
     out.println("node2  Large");
     out.close();
@@ -241,7 +242,7 @@ public class TestFairSchedulerPreemption extends FairSchedulerTestBase {
     lbS.init(conf);
     lbS.start();
     LabelManager lb = LabelManager.getInstance();
-    lb.refreshLabels();
+    lb.refreshLabels(conf);
 
     startResourceManager(0.7f);
 
@@ -322,7 +323,7 @@ public class TestFairSchedulerPreemption extends FairSchedulerTestBase {
 
     lbS.stop();
     FileSystem fs = FileSystem.getLocal(conf);
-    fs.delete(new Path("/tmp/labelFile"), false);
-    lb.refreshLabels();
+    fs.delete(new Path(LABEL_FILE), false);
+    lb.refreshLabels(conf);
   }
 }
