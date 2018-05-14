@@ -180,8 +180,8 @@ public class LabelManager {
   }
 
   
-  public Expression getEffectiveLabelExpr(String appLabelStr) throws IOException {
-    return LabelExpressionHandlingHelper.getEffectiveLabelExpr(appLabelStr);
+  public Expression getEffectiveLabelExpr(String labelStr) throws IOException {
+    return LabelExpressionHandlingHelper.getEffectiveLabelExpr(labelStr);
   }
   
   public Expression constructAppLabel(Queue.QueueLabelPolicy policy,

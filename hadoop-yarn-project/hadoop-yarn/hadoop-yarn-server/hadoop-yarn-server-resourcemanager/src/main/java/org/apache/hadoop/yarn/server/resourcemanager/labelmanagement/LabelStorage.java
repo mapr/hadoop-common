@@ -297,10 +297,18 @@ public final class LabelStorage {
 
   private void updateClusterLabels() {
     Set<Expression> allLabels = new HashSet<>();
+    Expression labelExpression = null;
     List<NodeToLabelsList> labelsForAllNodes = getLabelsForAllNodes();
     for (NodeToLabelsList nodeToLabelsList : labelsForAllNodes) {
       for (String label : nodeToLabelsList.getNodeLabel()) {
-        Expression labelExpression = new Expression(label);
+        try {
+          labelExpression = LabelManager.getInstance().getEffectiveLabelExpr(label);
+        } catch (IOException e) {
+          if (LOG.isDebugEnabled()) {
+            LOG.debug("Exception while trying to evaluate label expression " + labelExpression, e);
+          }
+          continue;
+        }
         allLabels.add(labelExpression);
       }
     }

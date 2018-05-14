@@ -61,8 +61,8 @@ public class TestLabelManager {
     fs = FileSystem.getLocal(conf);
 
     PrintWriter out = new PrintWriter(new FileWriter(LABEL_FILE));
-    out.println("perfnode200.* big, \"ProductionMachines\"");
-    out.println("perfnode203.* big, 'DevelopmentMachines'");
+    out.println("perfnode200.* big, \"Production Machines\"");
+    out.println("perfnode203.* big, 'Development Machines'");
     out.println("perfnode15* good");
     out.println("perfnode1* right, good, fantastic");
     out.println("perfnode201* slow");
@@ -91,8 +91,8 @@ public class TestLabelManager {
     conf.setLong(LabelManager.NODE_LABELS_MONITOR_INTERVAL, 5*1000);
 
     PrintWriter out = new PrintWriter(new FileWriter(LABEL_FILE));
-    out.println("perfnode200.* big, \"ProductionMachines\"");
-    out.println("perfnode203.* big, 'DevelopmentMachines'");
+    out.println("perfnode200.* big, \"Production Machines\"");
+    out.println("perfnode203.* big, 'Development Machines'");
     out.println("perfnode15* good");
     out.println("perfnode1* right, good, fantastic");
     out.println("perfnode201* slow");
@@ -129,13 +129,13 @@ public class TestLabelManager {
     assertNotNull(labels);
     assertEquals(2, labels.size());
     assertTrue(labels.contains("big"));
-    assertTrue(labels.contains("ProductionMachines"));
+    assertTrue(labels.contains("Production Machines"));
 
     labels = lb.getLabelsForNode("perfnode203.abc.qa.lab");
     assertNotNull(labels);
     assertEquals(2, labels.size());
     assertTrue(labels.contains("big"));
-    assertTrue(labels.contains("DevelopmentMachines"));
+    assertTrue(labels.contains("Development Machines"));
 
     labels = lb.getLabelsForNode("node-33.lab");
     assertNotNull(labels);
@@ -185,7 +185,7 @@ public class TestLabelManager {
     Thread.sleep(1000l);
 
     Expression expr = lb.getEffectiveLabelExpr("good && big");
-    assertEquals("(good&&big)", expr.toString());
+    assertEquals("(good && big)", expr.toString());
   }
   
   @Test
@@ -229,7 +229,7 @@ public class TestLabelManager {
         appLabelExpression,
         queueLabelExpression);
     
-    assertEquals("(good&&big)", finalExpr.toString());
+    assertEquals("(good && big)", finalExpr.toString());
   }
   
   @Test
@@ -279,13 +279,13 @@ public class TestLabelManager {
     assertNotNull(labels);
     assertEquals(2, labels.size());
     assertTrue(labels.contains("big"));
-    assertTrue(labels.contains("ProductionMachines"));
+    assertTrue(labels.contains("Production Machines"));
 
     labels = lb.getLabelsForNode("perfnode203.abc.qa.lab");
     assertNotNull(labels);
     assertEquals(2, labels.size());
     assertTrue(labels.contains("big"));
-    assertTrue(labels.contains("DevelopmentMachines"));
+    assertTrue(labels.contains("Development Machines"));
 
     labels = lb.getLabelsForNode("node-33.lab");
     assertNotNull(labels);
@@ -301,9 +301,9 @@ public class TestLabelManager {
     fs.delete(new Path(LABEL_FILE), false);
     
     FSDataOutputStream fsout = fs.create(new Path(LABEL_FILE));
-    fsout.writeBytes("/perfnode200.*/ big, \"ProdMachines\"");
+    fsout.writeBytes("/perfnode200.*/ big, \"Prod Machines\"");
     fsout.writeBytes("\n");
-    fsout.writeBytes("/perfnode203.*/ small, 'DevMachines'");
+    fsout.writeBytes("/perfnode203.*/ small, 'Dev Machines'");
     fsout.writeBytes("\n");
     fsout.writeBytes("perfnode15* good");
     fsout.writeBytes("\n");
@@ -324,13 +324,13 @@ public class TestLabelManager {
     assertNotNull(labels);
     assertEquals(2, labels.size());
     assertTrue(labels.contains("big"));
-    assertTrue(labels.contains("ProdMachines"));
+    assertTrue(labels.contains("Prod Machines"));
 
     labels = lb.getLabelsForNode("perfnode203.abc.qa.lab");
     assertNotNull(labels);
     assertEquals(2, labels.size());
     assertTrue(labels.contains("small"));
-    assertTrue(labels.contains("DevMachines"));
+    assertTrue(labels.contains("Dev Machines"));
 
     labels = lb.getLabelsForNode("perfnode151.perf.lab");
     assertNotNull(labels);
@@ -347,6 +347,25 @@ public class TestLabelManager {
     assertEquals(2, labels.size());
     assertTrue(labels.contains("Slow"));
     assertTrue(labels.contains("Fast"));
+  }
+  
+  @Test
+  public void testGetEffectiveLabelExpr() throws IOException{
+    LabelManager lb = LabelManager.getInstance();
+
+    Expression labelExpr = lb.getEffectiveLabelExpr("High Memory");
+    assertEquals("(High Memory)", labelExpr.toString());
+    labelExpr = lb.getEffectiveLabelExpr("'High Memory'");
+    assertEquals("(High Memory)", labelExpr.toString());
+    labelExpr = lb.getEffectiveLabelExpr("\"High Memory\"");
+    assertEquals("(High Memory)", labelExpr.toString());
+
+    labelExpr = lb.getEffectiveLabelExpr("*");
+    assertNull(labelExpr);
+    labelExpr = lb.getEffectiveLabelExpr("all");
+    assertNull(labelExpr);
+    labelExpr = lb.getEffectiveLabelExpr(null);
+    assertNull(labelExpr);
   }
 
   @Test

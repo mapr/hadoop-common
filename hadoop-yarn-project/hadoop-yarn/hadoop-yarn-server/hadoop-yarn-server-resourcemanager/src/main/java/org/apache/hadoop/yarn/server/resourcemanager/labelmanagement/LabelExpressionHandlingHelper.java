@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.yarn.api.records.NodeToLabelsList;
@@ -45,28 +46,51 @@ public class LabelExpressionHandlingHelper {
   public LabelExpressionHandlingHelper() {
   }
 
-  static Expression getEffectiveLabelExpr(String appLabelStr) throws IOException {
-    if ( appLabelStr == null ) {
+  static Expression getEffectiveLabelExpr(String label) throws IOException {
+    if (label == null) {
       return null;
     }
-    Expression appLabelExpression;
+    Expression labelExpression;
     
-    String appLabelExpressionString = appLabelStr.replaceAll("^\"|\"$", "");
+    String labelExpressionString = label.replaceAll("^\"|\"$", "");
     // check if app could be scheduled anywhere in cluster.
-    if ("*".equals(appLabelExpressionString) || 
-        "all".equals(appLabelExpressionString)) {
-      appLabelExpression = null;
+    if ("*".equals(labelExpressionString) || 
+        "all".equals(labelExpressionString)) {
+      labelExpression = null;
     } else {
+      labelExpressionString = wrapIfNeeded(labelExpressionString);
       try {
         // create an expression, set fillEmptyValues to true and default value 0
-        appLabelExpression = new Expression(appLabelExpressionString);
+        labelExpression = new Expression(labelExpressionString);
       } catch (Throwable t) {
-        LOG.warn("Invalid label format " + appLabelExpressionString + 
+        LOG.warn("Invalid label format " + labelExpressionString + 
                  " Error " + t);
         return null;
       }
     }
-    return appLabelExpression;
+    return labelExpression;
+  }
+
+  /**
+   * If a label contains two or more words (such as "High Memory"),
+   * we should enclose the name in single or double quotation marks
+   * so the whitespace will not be interpreted as a delimiter between two labels.
+   * @param label The label name
+   * @return If the label contains whitespace and doesn't enclose in single or double quotation marks
+   * returns label enclosed in single quotation marks, otherwise returns the same label.
+   */
+  private static String wrapIfNeeded(String label) {
+    final String SINGLE_QUOTATION_MARK = "'";
+    final String DOUBLE_QUOTATION_MARK = "\"";
+    boolean shouldBeWrapped = label.contains(" ") &&
+        !(StringUtils.startsWith(label, SINGLE_QUOTATION_MARK) &&
+        StringUtils.endsWith(label, SINGLE_QUOTATION_MARK) ||
+        StringUtils.startsWith(label, DOUBLE_QUOTATION_MARK) &&
+        StringUtils.endsWith(label, DOUBLE_QUOTATION_MARK));
+    if (shouldBeWrapped) {
+      label = SINGLE_QUOTATION_MARK + label + SINGLE_QUOTATION_MARK;
+    }
+    return label;
   }
 
   static Expression constructAppLabel(Queue.QueueLabelPolicy policy,
