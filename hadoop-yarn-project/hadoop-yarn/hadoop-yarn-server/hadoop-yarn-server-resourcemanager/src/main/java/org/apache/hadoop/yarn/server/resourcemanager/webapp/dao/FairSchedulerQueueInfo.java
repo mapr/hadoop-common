@@ -82,22 +82,19 @@ public class FairSchedulerQueueInfo {
     labelPolicy = (queue.getLabelPolicy() == null) ? QueueLabelPolicy.AND.name() :
                   queue.getLabelPolicy().name();
 
-    boolean isResourcesBasedOnLabelsEnabled = scheduler.isResourcesBasedOnLabelsEnabled();
-    Resource clusterResource = isResourcesBasedOnLabelsEnabled ?
-        scheduler.getClusterResource(queue.getLabel()) :
-        scheduler.getClusterResource();
-    clusterResources = new ResourceInfo(clusterResource);
+    Resource clusterQueueResource = getAvailableClusterResource(queue, scheduler);
+    clusterResources = new ResourceInfo(scheduler.getClusterResource());
     
     usedResources = new ResourceInfo(queue.getResourceUsage());
     fractionMemUsed = (float)usedResources.getMemory() /
-        clusterResources.getMemory();
+        clusterQueueResource.getMemory();
 
     steadyFairResources = new ResourceInfo(queue.getSteadyFairShare());
     fairResources = new ResourceInfo(queue.getFairShare());
     minResources = new ResourceInfo(queue.getMinShare());
     maxResources = new ResourceInfo(queue.getMaxShare());
     maxResources = new ResourceInfo(
-        Resources.componentwiseMin(queue.getMaxShare(), clusterResource));
+        Resources.componentwiseMin(queue.getMaxShare(), clusterQueueResource));
 
     fractionMemSteadyFairShare =
         (float)steadyFairResources.getMemory() / clusterResources.getMemory();
@@ -114,6 +111,14 @@ public class FairSchedulerQueueInfo {
     }
 
     childQueues = getChildQueues(queue, scheduler);
+  }
+
+  private Resource getAvailableClusterResource(FSQueue queue, FairScheduler scheduler) {
+    boolean isResourcesBasedOnLabelsEnabled = scheduler.isResourcesBasedOnLabelsEnabled();
+    if (isResourcesBasedOnLabelsEnabled) {
+      return scheduler.getClusterResource(queue.getLabel());
+    }
+    return scheduler.getClusterResource();
   }
 
   protected FairSchedulerQueueInfoList getChildQueues(FSQueue queue,
