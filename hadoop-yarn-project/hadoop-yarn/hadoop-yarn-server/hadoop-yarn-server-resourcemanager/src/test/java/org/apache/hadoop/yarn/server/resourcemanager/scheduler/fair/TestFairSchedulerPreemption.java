@@ -207,6 +207,7 @@ public class TestFairSchedulerPreemption extends FairSchedulerTestBase {
   public void testPreemptionThresholdWithLbs() throws Exception {
     conf.set(LabelManager.NODE_LABELS_FILE, LABEL_FILE);
     PrintWriter out = new PrintWriter(new FileWriter(ALLOC_FILE));
+    conf.setBoolean(FairSchedulerConfiguration.PREEMPTION_THRESHOLD_BASED_ON_LABELS_ENABLED, true);
     
     out.println("<?xml version=\"1.0\"?>");
     out.println("<allocations>");
@@ -308,10 +309,10 @@ public class TestFairSchedulerPreemption extends FairSchedulerTestBase {
 
     // Verify submitting another request doesn't trigger preemption 
     // because we still not exceed utilization threshold for "Plain" label
-    createSchedulingRequest(1024, "large", "user1", 3);
+    createSchedulingRequest(1024, "large", "user1", 10);
     scheduler.update();
 
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 10; i++) {
       NodeUpdateSchedulerEvent nodeUpdate2 = new NodeUpdateSchedulerEvent(node2);
       scheduler.handle(nodeUpdate2);
     }

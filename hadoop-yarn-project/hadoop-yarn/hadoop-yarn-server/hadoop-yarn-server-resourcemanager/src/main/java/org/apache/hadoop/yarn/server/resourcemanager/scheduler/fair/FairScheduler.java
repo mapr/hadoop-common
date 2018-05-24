@@ -161,6 +161,7 @@ public class FairScheduler extends
   // Preemption related variables
   protected boolean preemptionEnabled;
   protected float preemptionUtilizationThreshold;
+  protected boolean isPreemptionThresholdBasedOnLabelsEnabled;
 
   // How often tasks are preempted
   protected long preemptionInterval; 
@@ -374,13 +375,12 @@ public class FairScheduler extends
    * and then select the right ones using preemptTasks.
    */
   protected synchronized void preemptTasksIfNecessary() {
-    Set<Expression> allLabels = getLabels();
-
-    if (allLabels.isEmpty()) {
+    if (!isPreemptionThresholdBasedOnLabelsEnabled) {
       if (shouldAttemptPreemption()) {
         preemptTasksInQueues(queueMgr.getLeafQueues());
       }
     } else {
+      Set<Expression> allLabels = getLabels();
       for (Expression label : allLabels) {
         List<FSLeafQueue> fsLeafQueues = new ArrayList<>(queueMgr.getLeafQueues());
         fsLeafQueues = (List<FSLeafQueue>)(List<?>)getAvailableQueuesForLabel(fsLeafQueues, label);
@@ -1537,6 +1537,8 @@ public class FairScheduler extends
       preemptionEnabled = this.conf.getPreemptionEnabled();
       preemptionUtilizationThreshold =
           this.conf.getPreemptionUtilizationThreshold();
+      isPreemptionThresholdBasedOnLabelsEnabled =
+          this.conf.isPreemptionThresholdBasedOnLabelsEnabled();
       assignMultiple = this.conf.getAssignMultiple();
       maxAssign = this.conf.getMaxAssign();
       sizeBasedWeight = this.conf.getSizeBasedWeight();

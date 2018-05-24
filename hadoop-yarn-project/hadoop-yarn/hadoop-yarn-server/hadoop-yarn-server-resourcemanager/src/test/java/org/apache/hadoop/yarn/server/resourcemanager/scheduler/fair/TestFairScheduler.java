@@ -675,6 +675,7 @@ public class TestFairScheduler extends FairSchedulerTestBase {
   public void testFairShareCalculationWithLbs() throws IOException {
     conf.set(FairSchedulerConfiguration.ALLOCATION_FILE, ALLOC_FILE);
     conf.set(LabelManager.NODE_LABELS_FILE, LABEL_FILE);
+    conf.setBoolean(FairSchedulerConfiguration.RESOURCES_BASED_ON_LABELS_ENABLED, true);
 
     PrintWriter out = new PrintWriter(new FileWriter(LABEL_FILE));
     out.println("node1  LabelA");
@@ -770,6 +771,7 @@ public class TestFairScheduler extends FairSchedulerTestBase {
   public void testFairShareForDifferentLabelsInHierarchy() throws IOException {
     conf.set(FairSchedulerConfiguration.ALLOCATION_FILE, ALLOC_FILE);
     conf.set(LabelManager.NODE_LABELS_FILE, LABEL_FILE);
+    conf.setBoolean(FairSchedulerConfiguration.RESOURCES_BASED_ON_LABELS_ENABLED, true);
 
     PrintWriter out = new PrintWriter(new FileWriter(LABEL_FILE));
     out.println("node1  LabelA");
@@ -924,6 +926,7 @@ public class TestFairScheduler extends FairSchedulerTestBase {
   public void testFairShareWithDefaultQueueLabel() throws IOException {
     conf.set(FairSchedulerConfiguration.ALLOCATION_FILE, ALLOC_FILE);
     conf.set(LabelManager.NODE_LABELS_FILE, LABEL_FILE);
+    conf.setBoolean(FairSchedulerConfiguration.RESOURCES_BASED_ON_LABELS_ENABLED, true);
 
     PrintWriter out = new PrintWriter(new FileWriter(LABEL_FILE));
     out.println("node1  LabelA");
@@ -1014,6 +1017,8 @@ public class TestFairScheduler extends FairSchedulerTestBase {
     conf.setLong(FairSchedulerConfiguration.WAIT_TIME_BEFORE_KILL, 10000);
     conf.set(FairSchedulerConfiguration.ALLOCATION_FILE, ALLOC_FILE);
     conf.set(FairSchedulerConfiguration.USER_AS_DEFAULT_QUEUE, "false");
+    conf.setBoolean(FairSchedulerConfiguration.RESOURCES_BASED_ON_LABELS_ENABLED, true);
+    conf.setBoolean(FairSchedulerConfiguration.PREEMPTION_THRESHOLD_BASED_ON_LABELS_ENABLED, true);
     conf.set(LabelManager.NODE_LABELS_FILE, LABEL_FILE);
 
     PrintWriter out = new PrintWriter(new FileWriter(LABEL_FILE));
