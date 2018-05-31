@@ -20,6 +20,7 @@ package org.apache.hadoop.yarn.server.webproxy.amfilter;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.classification.InterfaceAudience.Public;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.server.webproxy.ProxyUtils;
 import org.apache.hadoop.yarn.server.webproxy.WebAppProxyServlet;
 import org.slf4j.Logger;
@@ -258,8 +259,17 @@ public class AmIpFilter implements Filter {
           .openConnection();
       conn.connect();
       isValid = conn.getResponseCode() == HttpURLConnection.HTTP_OK;
+      // If security is enabled, any valid RM which can give 401 Unauthorized is
+      // good enough to access. Since AM doesn't have enough credential, auth
+      // cannot be completed and hence 401 is fine in such case.
+      if (!isValid && UserGroupInformation.isSecurityEnabled()) {
+        isValid = (conn
+            .getResponseCode() == HttpURLConnection.HTTP_UNAUTHORIZED)
+            || (conn.getResponseCode() == HttpURLConnection.HTTP_FORBIDDEN);
+        return isValid;
+      }
     } catch (Exception e) {
-      LOG.debug("Failed to connect to " + url + ": " + e.toString());
+      LOG.warn("Failed to connect to " + url + ": " + e.toString());
     }
     return isValid;
   }
