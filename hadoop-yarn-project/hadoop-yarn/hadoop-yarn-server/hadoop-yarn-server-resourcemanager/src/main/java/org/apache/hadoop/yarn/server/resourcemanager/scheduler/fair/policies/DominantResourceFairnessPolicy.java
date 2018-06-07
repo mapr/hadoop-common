@@ -166,23 +166,7 @@ public class DominantResourceFairnessPolicy extends SchedulingPolicy {
       }
       return res;
     }
-
-    public String getComparatorInfo(Schedulable schedulable){
-      ResourceWeights weights = new ResourceWeights();
-      ResourceWeights weightsMinShare = new ResourceWeights();
-      ResourceType[] resourcesOrder = new ResourceType[NUM_RESOURCES];
-      calculateShares(schedulable.getResourceUsage(), clusterCapacity, weights, resourcesOrder, schedulable.getWeights());
-      calculateShares(schedulable.getResourceUsage(), schedulable.getMinShare(), weightsMinShare, null, ResourceWeights.NEUTRAL);
-      boolean isNeedy = weightsMinShare.getWeight(resourcesOrder[0]) < 1.0f;
-
-      StringBuilder sb = new StringBuilder();
-      sb.append("Dominant resource type: ").append(resourcesOrder[0])
-          .append(" Needy: ").append(isNeedy)
-          .append(" Cluster weights: ").append(weights)
-          .append(" Min share weights: ").append(weightsMinShare);
-      return sb.toString();
-    }
-
+    
     /**
      * Calculates and orders a resource's share of a pool in terms of two vectors.
      * The shares vector contains, for each resource, the fraction of the pool that

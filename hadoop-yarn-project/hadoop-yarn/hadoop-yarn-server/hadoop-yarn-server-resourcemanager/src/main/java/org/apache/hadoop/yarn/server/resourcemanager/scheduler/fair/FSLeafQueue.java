@@ -40,7 +40,6 @@ import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.server.resourcemanager.resource.ResourceWeights;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainer;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ActiveUsersManager;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.DebugController;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerAppUtils;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicationAttempt;
 import org.apache.hadoop.yarn.util.resource.Resources;
@@ -79,17 +78,9 @@ public class FSLeafQueue extends FSQueue {
     activeUsersManager = new ActiveUsersManager(getMetrics());
     amResourceUsage = Resource.newInstance(0, 0);
   }
-
-  public String getShareInfo() {
-    return getShareInfo(this);
-  }
-
+  
   public void addApp(FSAppAttempt app, boolean runnable) {
     writeLock.lock();
-    if (isUseDebugController()) {
-      DebugController.LOG.debug("Adding " + (runnable ? "runnable" : "un-runnable") +
-          " app " + app.getApplicationId() + " to queue " + getName());
-    }
     try {
       if (runnable) {
         runnableApps.add(app);
@@ -337,9 +328,6 @@ public class FSLeafQueue extends FSQueue {
     }
 
     if (!assignContainerPreCheck(node)) {
-      if (DebugController.LOG.isDebugEnabled()) {
-        LOG.debug("precheck==false for " + node.getNodeName() + " in " + getName());
-      }
       return assigned;
     }
 
@@ -354,31 +342,15 @@ public class FSLeafQueue extends FSQueue {
     // runnableApps can be in unsorted state because of this section,
     // but we can accept it in practice since the probability is low.
     readLock.lock();
-    if (runnableApps.size()==0 && isUseDebugController()) {
-      DebugController.LOG.debug("No runnableApps in " + getName());
-    }
     try {
       for (FSAppAttempt sched : runnableApps) {
         if (SchedulerAppUtils.isBlacklisted(sched, node, LOG)) {
-          if (isUseDebugController()) {
-            DebugController.LOG.debug("node " + node.getNodeName() +
-                " blacklisted for app " + sched.getApplicationId() + " in queue " + getName());
-          }
           continue;
         }
 
         assigned = sched.assignContainer(node);
         if (!assigned.equals(Resources.none())) {
-          if (isUseDebugController()) {
-            DebugController.LOG.debug("node " + node.getNodeName() + " assigned container for app " +
-                sched.getApplicationId() + " in queue " + getName());
-          }
           break;
-        } else {
-          if (isUseDebugController()) {
-            DebugController.LOG.debug("no assignment to " + node.getNodeName() +
-                " for app " + sched.getApplicationId() + " in queue " + getName());
-          }
         }
       }
     } finally {
@@ -545,21 +517,6 @@ public class FSLeafQueue extends FSQueue {
     }
   }
 
-  public String getAMResourceCapabilityInfo(Resource amResource){
-    float maxAMShare = scheduler.getAllocationConfiguration().getQueueMaxAMShare(getName());
-    boolean check = Math.abs(maxAMShare - -1.0f) < 0.0001;
-    Resource fairShare = getFairShare();
-    Resource maxAMResource = Resources.multiply(getFairShare(), maxAMShare);
-    Resource ifRunAMResource = Resources.add(amResourceUsage, amResource);
-    boolean policyCheck = policy.checkIfAMResourceUsageOverLimit(ifRunAMResource, maxAMResource);
-    StringBuilder sb = new StringBuilder();
-    sb.append("maxShare:").append(maxAMShare).append(" smallCheck:").append(check)
-        .append(" fairShare:").append(fairShare).append(" maxAMShare:").append(maxAMShare)
-        .append(" maxAMResource:").append(maxAMResource).append(" ifRunAMResource:").append(ifRunAMResource)
-        .append(" policyCheck:").append(policyCheck);
-    return sb.toString();
-  }
-
   @Override
   public void recoverContainer(Resource clusterResource,
       SchedulerApplicationAttempt schedulerAttempt, RMContainer rmContainer) {
@@ -621,24 +578,5 @@ public class FSLeafQueue extends FSQueue {
         scheduler.getClusterResource(), share, getDemand());
     return Resources.lessThan(scheduler.getResourceCalculator(),
         scheduler.getClusterResource(), getResourceUsage(), desiredShare);
-  }
-
-  private boolean isUseDebugController() {
-
-    DebugController debugController = DebugController.getInstance();
-    if (DebugController.LOG.isDebugEnabled()) {
-      if (debugController.getApps().isEmpty() &&
-          debugController.getQueues().isEmpty()) {
-        return true;
-      } else {
-        for (FSAppAttempt fsAppAttempt : runnableApps) {
-          if (debugController.containsQueue(fsAppAttempt.getQueueName()) ||
-              debugController.containsApp(fsAppAttempt.getApplicationId().toString())) {
-            return true;
-          }
-        }
-      }
-    }
-    return false;
   }
 }

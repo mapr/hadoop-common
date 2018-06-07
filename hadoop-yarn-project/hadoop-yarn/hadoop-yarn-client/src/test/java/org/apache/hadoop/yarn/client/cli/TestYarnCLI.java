@@ -1404,133 +1404,6 @@ public class TestYarnCLI {
     Assert.assertNotSame("should return non-zero exit code.", 0, exitCode);
   }
 
-  @Test
-  public void testDebugControllerHelpCommand() throws Exception {
-    DebugControllerCLI cli = createAndGetDebugControllerCLI();
-    cli.run(new String[] {});
-    Assert.assertEquals(createDebugControllerCLIHelpMessage(),
-        sysOutStream.toString());
-  }
-
-  @Test
-  public void testDebugControllerAddNonExistedQueue() throws Exception {
-    String queueName = "non-existed-queue";
-    DebugControllerCLI cli = createAndGetDebugControllerCLI();
-    int result = cli.run(new String[] { "-addqueue", queueName });
-    assertEquals(-1, result);
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    PrintWriter pw = new PrintWriter(baos);
-    pw.println("There is no queue \"" + queueName + "\"!");
-    pw.close();
-    String queueInfoStr = baos.toString("UTF-8");
-    Assert.assertEquals(queueInfoStr, sysOutStream.toString());
-  }
-
-  @Test
-  public void testDebugControllerAddNonExistedApp() throws Exception {
-    DebugControllerCLI cli = createAndGetDebugControllerCLI();
-    ApplicationId applicationId = ApplicationId.newInstance(1234, 5);
-    doThrow(new ApplicationNotFoundException("Application with id '" +
-        applicationId + "' doesn't exist in RM.")).when(client)
-        .getApplicationReport(applicationId);
-    try {
-      int exitCode =
-          cli.run(new String[] { "-addapp", applicationId.toString() });
-      verify(sysOut).println("Application with id '" + applicationId +
-          "' doesn't exist in RM.");
-      Assert.assertNotSame("should return non-zero exit code.", 0, exitCode);
-    } catch (ApplicationNotFoundException appEx) {
-      Assert.fail("debugController -addapp should not throw" +
-          "ApplicationNotFoundException. " + appEx);
-    } catch (Exception e) {
-      Assert.fail("Unexpected exception: " + e);
-    }
-  }
-
-  @Test
-  public void testDebugControllerGetApps() throws Exception {
-    DebugControllerCLI cli = createAndGetDebugControllerCLI();
-
-    Set<String> apps= new HashSet<>();
-    String app1 = ApplicationId.newInstance(1234, 5).toString();
-    String app2 = ApplicationId.newInstance(1234, 4).toString();
-    apps.add(app1);
-    apps.add(app2);
-
-    when(client.getDebugApps()).thenReturn(apps);
-
-    int exitCode = cli.run(new String[]{"-getapps"});
-    assertEquals(0, exitCode);
-
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    PrintWriter pw = new PrintWriter(baos);
-    pw.println("Applications with additional scheduling DEBUG:");
-    pw.println("[" + app1 + ", " + app2 + "]");
-    pw.close();
-    String queuesString = baos.toString("UTF-8");
-    Assert.assertEquals(queuesString, sysOutStream.toString());
-  }
-
-  @Test
-  public void testDebugControllerGetQueues() throws Exception {
-    DebugControllerCLI cli = createAndGetDebugControllerCLI();
-
-    Set<String> queues= new HashSet<>();
-    queues.add("queueA");
-    queues.add("queueB");
-
-    when(client.getDebugQueues()).thenReturn(queues);
-
-    int exitCode = cli.run(new String[]{"-getqueues"});
-    assertEquals(0, exitCode);
-
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    PrintWriter pw = new PrintWriter(baos);
-    pw.println("Queues with additional scheduling DEBUG:");
-    pw.println("[queueA, queueB]");
-    pw.close();
-    String queuesString = baos.toString("UTF-8");
-    Assert.assertEquals(queuesString, sysOutStream.toString());
-  }
-
-  @Test
-  public void testDebugControllerRemoveNonExistedQueue() throws Exception {
-    String queueName = "non-existed-queue";
-    DebugControllerCLI cli = createAndGetDebugControllerCLI();
-    int result = cli.run(new String[] { "-removequeue", queueName });
-    assertEquals(-1, result);
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    PrintWriter pw = new PrintWriter(baos);
-    pw.println("There is no queue \"" + queueName + "\"!");
-    pw.close();
-    String queueInfoStr = baos.toString("UTF-8");
-    Assert.assertEquals(queueInfoStr, sysOutStream.toString());
-  }
-
-  @Test
-  public void testDebugControllerRemoveFinishedApp() throws Exception {
-    DebugControllerCLI cli = createAndGetDebugControllerCLI();
-    ApplicationId applicationId = ApplicationId.newInstance(1234, 5);
-    ApplicationReport applicationReport = ApplicationReport.newInstance(
-        applicationId, ApplicationAttemptId.newInstance(applicationId, 1),
-        "user", "queue", "appname", "host", 124, null,
-        YarnApplicationState.FINISHED, "diagnostics", "url", 0, 0,
-        FinalApplicationStatus.SUCCEEDED, null, "N/A", 0.53789f, "YARN", null);
-    when(client.getApplicationReport(any(ApplicationId.class))).thenReturn(
-        applicationReport);
-    try {
-      int exitCode =
-              cli.run(new String[] { "-removeapp", applicationId.toString() });
-      verify(sysOut).println("Application " + applicationId + " has already finished ");
-      Assert.assertNotSame("should return non-zero exit code.", 0, exitCode);
-    } catch (ApplicationNotFoundException appEx) {
-      Assert.fail("debugController -removeapp should not throw" +
-              "ApplicationNotFoundException. " + appEx);
-    } catch (Exception e) {
-      Assert.fail("Unexpected exception: " + e);
-    }
-  }
-
   private void verifyUsageInfo(YarnCLI cli) throws Exception {
     cli.setSysErrPrintStream(sysErr);
     cli.run(new String[] { "application" });
@@ -1570,14 +1443,6 @@ public class TestYarnCLI {
   
   private QueueCLI createAndGetQueueCLI() {
     QueueCLI cli = new QueueCLI();
-    cli.setClient(client);
-    cli.setSysOutPrintStream(sysOut);
-    cli.setSysErrPrintStream(sysErr);
-    return cli;
-  }
-
-  private DebugControllerCLI createAndGetDebugControllerCLI() {
-    DebugControllerCLI cli = new DebugControllerCLI();
     cli.setClient(client);
     cli.setSysOutPrintStream(sysOut);
     cli.setSysErrPrintStream(sysErr);
@@ -1657,27 +1522,4 @@ public class TestYarnCLI {
     String nodesHelpStr = baos.toString("UTF-8");
     return nodesHelpStr;
   }
-
-  private String createDebugControllerCLIHelpMessage() throws IOException {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    PrintWriter pw = new PrintWriter(baos);
-    pw.println("usage: debugcontrol");
-    pw.println(" -addapp <Application ID>      Enable addition scheduling DEBUG on the");
-    pw.println("                               application");
-    pw.println(" -addqueue <Queue name>        Enable addition scheduling DEBUG on the");
-    pw.println("                               queue");
-    pw.println(" -getapps                      Lists the applications with additional");
-    pw.println("                               scheduling DEBUG");
-    pw.println(" -getqueues                    Lists the queues with additional scheduling");
-    pw.println("                               DEBUG");
-    pw.println(" -help                         Displays help for all commands");
-    pw.println(" -removeapp <Application ID>   Disable addition scheduling DEBUG on the");
-    pw.println("                               application");
-    pw.println(" -removequeue <Queue name>     Disable addition scheduling DEBUG on the");
-    pw.println("                               queue");
-    pw.close();
-    String helpString = baos.toString("UTF-8");
-    return helpString;
-  }
-
 }

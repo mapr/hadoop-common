@@ -403,15 +403,4 @@ public abstract class FSQueue implements Queue, Schedulable {
     }
     return true;
   }
-
-  protected String getShareInfo (FSQueue fsQueue) {
-    StringBuilder sb = new StringBuilder();
-    sb.append(" Demand:").append(fsQueue.getDemand())
-        .append(" Min share:").append(fsQueue.getMinShare())
-        .append(" Max share:").append(fsQueue.getMaxShare())
-        .append(" Fair share:").append(fsQueue.getFairShare())
-        .append(" Steady fair share:").append(fsQueue.getSteadyFairShare())
-        .append(" Usage:").append(fsQueue.getResourceUsage());
-    return sb.toString();
-  }
 }

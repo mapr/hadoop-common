@@ -24,10 +24,6 @@ import org.apache.hadoop.classification.InterfaceAudience.Public;
 import org.apache.hadoop.classification.InterfaceStability.Stable;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.io.retry.Idempotent;
-import org.apache.hadoop.yarn.api.protocolrecords.AddDebugQueueResponse;
-import org.apache.hadoop.yarn.api.protocolrecords.AddDebugQueueRequest;
-import org.apache.hadoop.yarn.api.protocolrecords.AddDebugAppRequest;
-import org.apache.hadoop.yarn.api.protocolrecords.AddDebugAppResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.GetApplicationReportRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetClusterMetricsRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetClusterMetricsResponse;
@@ -35,10 +31,6 @@ import org.apache.hadoop.yarn.api.protocolrecords.GetClusterNodeLabelsRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetClusterNodeLabelsResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.GetClusterNodesRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetClusterNodesResponse;
-import org.apache.hadoop.yarn.api.protocolrecords.GetDebugAppsRequest;
-import org.apache.hadoop.yarn.api.protocolrecords.GetDebugAppsResponse;
-import org.apache.hadoop.yarn.api.protocolrecords.GetDebugQueuesRequest;
-import org.apache.hadoop.yarn.api.protocolrecords.GetDebugQueuesResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.GetLabelsToNodesRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetLabelsToNodesResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.GetNewApplicationRequest;
@@ -57,10 +49,6 @@ import org.apache.hadoop.yarn.api.protocolrecords.KillApplicationRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.KillApplicationResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.MoveApplicationAcrossQueuesRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.MoveApplicationAcrossQueuesResponse;
-import org.apache.hadoop.yarn.api.protocolrecords.RemoveDebugAppRequest;
-import org.apache.hadoop.yarn.api.protocolrecords.RemoveDebugAppResponse;
-import org.apache.hadoop.yarn.api.protocolrecords.RemoveDebugQueueRequest;
-import org.apache.hadoop.yarn.api.protocolrecords.RemoveDebugQueueResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.ReservationDeleteRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.ReservationDeleteResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.ReservationSubmissionRequest;
@@ -477,95 +465,4 @@ public interface ApplicationClientProtocol extends ApplicationBaseProtocol {
   public RefreshClusterNodeLabelsResponse refreshClusterNodeLabels(
       RefreshClusterNodeLabelsRequest request) 
   throws YarnException, IOException;
-
-
-    /**
-     * <p>
-     * The interface used by client to enable addition scheduling DEBUG
-     * on the application
-     * </p>
-     *
-     * @param request request to add addition DEBUG level on the application
-     * @throws YarnException
-     * @throws IOException
-     */
-    @Public
-    @Unstable
-    public AddDebugAppResponse addDebugApp (
-        AddDebugAppRequest request) throws YarnException, IOException;
-
-    /**
-     * <p>
-     * The interface used by client to disable addition scheduling DEBUG
-     * on the application
-     * </p>
-     *
-     * @param request request to remove addition DEBUG level on the application
-     * @throws YarnException
-     * @throws IOException
-     */
-    @Public
-    @Unstable
-    public RemoveDebugAppResponse removeDebugApp (
-        RemoveDebugAppRequest request) throws YarnException, IOException;
-
-    /**
-     * <p>
-     * The interface used by client to get applications with additional scheduling DEBUG
-     * on the application
-     * </p>
-     *
-     * @param request request to list addition DEBUG level on the application
-     * @throws YarnException
-     * @throws IOException
-     */
-    @Public
-    @Unstable
-    public GetDebugAppsResponse getDebugApps (
-        GetDebugAppsRequest request) throws YarnException, IOException;
-
-    /**
-     * <p>
-     * The interface used by client to enable addition scheduling DEBUG
-     * on the queue
-     * </p>
-     *
-     * @param request request to add addition DEBUG level on the queue
-     * @throws YarnException
-     * @throws IOException
-     */
-    @Public
-    @Unstable
-    public AddDebugQueueResponse addDebugQueue (
-        AddDebugQueueRequest request) throws YarnException, IOException;
-
-    /**
-     * <p>
-     * The interface used by client to disable addition scheduling DEBUG
-     * on the queue
-     * </p>
-     *
-     * @param request request to remove addition DEBUG level on the queue
-     * @throws YarnException
-     * @throws IOException
-     */
-    @Public
-    @Unstable
-    public RemoveDebugQueueResponse removeDebugQueue (
-        RemoveDebugQueueRequest request) throws YarnException, IOException;
-
-    /**
-     * <p>
-     * The interface used by client to get queues with additional scheduling DEBUG
-     * on the queue
-     * </p>
-     *
-     * @param request request to list addition DEBUG level on the queue
-     * @throws YarnException
-     * @throws IOException
-     */
-    @Public
-    @Unstable
-    public GetDebugQueuesResponse getDebugQueues (
-        GetDebugQueuesRequest request) throws YarnException, IOException;
 }

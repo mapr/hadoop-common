@@ -331,11 +331,6 @@ elif [ "$COMMAND" = "daemonlog" ] ; then
 elif [ "$COMMAND" = "cluster" ] ; then
   CLASS=org.apache.hadoop.yarn.client.cli.ClusterCLI
   YARN_OPTS="$YARN_OPTS $YARN_CLIENT_OPTS"
-
-elif [ "$COMMAND" = "debugcontrol" ] ; then
-  CLASS=org.apache.hadoop.yarn.client.cli.DebugControllerCLI
-  YARN_OPTS="$YARN_OPTS $YARN_CLIENT_OPTS"
-
 else
   CLASS=$COMMAND
 fi

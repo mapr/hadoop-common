@@ -265,9 +265,6 @@ public class ResourceManager extends CompositeService implements Recoverable {
                       YarnConfiguration.RM_BIND_HOST,
                       WebAppUtils.getRMWebAppURLWithoutScheme(this.conf));
 
-    DebugController debugController = DebugController.getInstance();
-    rmContext.setDebugController(debugController);
-
     super.serviceInit(this.conf);
   }
   

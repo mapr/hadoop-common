@@ -437,8 +437,7 @@ public class RMAppManager implements EventHandler<RMAppManagerEvent>,
       {
         finishApplication(applicationId);
         logApplicationSummary(applicationId);
-        checkAppNumCompletedLimit();
-        rmContext.getDebugController().removeApp(applicationId.toString());
+        checkAppNumCompletedLimit(); 
       } 
       break;
       default:

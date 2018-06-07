@@ -57,10 +57,4 @@ service ApplicationClientProtocolService {
   rpc getClusterNodeLabelsNoOp (NoOpGetClusterNodeLabelsRequestProto) returns (NoOpGetClusterNodeLabelsResponseProto);
   rpc getClusterNodeLabels (GetClusterNodeLabelsRequestProto) returns (GetClusterNodeLabelsResponseProto);
   rpc refreshClusterNodeLabels (RefreshClusterNodeLabelsRequestProto) returns (RefreshClusterNodeLabelsResponseProto);
-  rpc addDebugApp (AddDebugAppRequestProto) returns (AddDebugAppResponseProto);
-  rpc removeDebugApp (RemoveDebugAppRequestProto) returns (RemoveDebugAppResponseProto);
-  rpc getDebugApps (GetDebugAppsRequestProto) returns (GetDebugAppsResponseProto);
-  rpc addDebugQueue (AddDebugQueueRequestProto) returns (AddDebugQueueResponseProto);
-  rpc removeDebugQueue (RemoveDebugQueueRequestProto) returns (RemoveDebugQueueResponseProto);
-  rpc getDebugQueues (GetDebugQueuesRequestProto) returns (GetDebugQueuesResponseProto);
 }

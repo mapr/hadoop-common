@@ -50,10 +50,6 @@ import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.yarn.api.ApplicationClientProtocol;
-import org.apache.hadoop.yarn.api.protocolrecords.AddDebugAppResponse;
-import org.apache.hadoop.yarn.api.protocolrecords.AddDebugAppRequest;
-import org.apache.hadoop.yarn.api.protocolrecords.AddDebugQueueRequest;
-import org.apache.hadoop.yarn.api.protocolrecords.AddDebugQueueResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.ApplicationsRequestScope;
 import org.apache.hadoop.yarn.api.protocolrecords.CancelDelegationTokenRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.CancelDelegationTokenResponse;
@@ -75,10 +71,6 @@ import org.apache.hadoop.yarn.api.protocolrecords.GetContainerReportRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetContainerReportResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.GetContainersRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetContainersResponse;
-import org.apache.hadoop.yarn.api.protocolrecords.GetDebugAppsResponse;
-import org.apache.hadoop.yarn.api.protocolrecords.GetDebugAppsRequest;
-import org.apache.hadoop.yarn.api.protocolrecords.GetDebugQueuesResponse;
-import org.apache.hadoop.yarn.api.protocolrecords.GetDebugQueuesRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetDelegationTokenRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetDelegationTokenResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.GetLabelsToNodesRequest;
@@ -99,10 +91,6 @@ import org.apache.hadoop.yarn.api.protocolrecords.MoveApplicationAcrossQueuesReq
 import org.apache.hadoop.yarn.api.protocolrecords.MoveApplicationAcrossQueuesResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.RefreshClusterNodeLabelsRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.RefreshClusterNodeLabelsResponse;
-import org.apache.hadoop.yarn.api.protocolrecords.RemoveDebugAppResponse;
-import org.apache.hadoop.yarn.api.protocolrecords.RemoveDebugAppRequest;
-import org.apache.hadoop.yarn.api.protocolrecords.RemoveDebugQueueResponse;
-import org.apache.hadoop.yarn.api.protocolrecords.RemoveDebugQueueRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.RenewDelegationTokenRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.RenewDelegationTokenResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.ReservationDeleteRequest;
@@ -156,7 +144,6 @@ import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppState;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttempt;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainer;
 import org.apache.hadoop.yarn.server.resourcemanager.rmnode.RMNode;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.DebugController;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerAppReport;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerNodeReport;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.YarnScheduler;
@@ -1306,57 +1293,6 @@ public class ClientRMService extends AbstractService implements
     NoOpGetClusterNodeLabelsResponse response =
         NoOpGetClusterNodeLabelsResponse.newInstance(
             labelsMgr.getClusterNodeLabels());
-    return response;
-  }
-
-
-  @Override
-  public AddDebugAppResponse addDebugApp (
-      AddDebugAppRequest request) throws YarnException, IOException {
-    DebugController debugController = rmContext.getDebugController();
-    debugController.addApp(request.getApplicationId());
-    return Records.newRecord(AddDebugAppResponse.class);
-  }
-
-  @Override
-  public RemoveDebugAppResponse removeDebugApp (
-      RemoveDebugAppRequest request) throws YarnException, IOException {
-    DebugController debugController = rmContext.getDebugController();
-    debugController.removeApp(request.getApplicationId());
-    return Records.newRecord(RemoveDebugAppResponse.class);
-  }
-
-  @Override
-  public GetDebugAppsResponse getDebugApps(GetDebugAppsRequest request)
-      throws YarnException, IOException {
-    DebugController debugController = rmContext.getDebugController();
-    GetDebugAppsResponse response =
-        GetDebugAppsResponse.newInstance(debugController.getApps());
-    return response;
-  }
-
-  @Override
-  public AddDebugQueueResponse addDebugQueue (
-      AddDebugQueueRequest request) throws YarnException, IOException {
-    DebugController debugController = rmContext.getDebugController();
-    debugController.addQueue(request.getQueueName());
-    return Records.newRecord(AddDebugQueueResponse.class);
-  }
-
-  @Override
-  public RemoveDebugQueueResponse removeDebugQueue (
-      RemoveDebugQueueRequest request) throws YarnException, IOException {
-    DebugController debugController = rmContext.getDebugController();
-    debugController.removeQueue(request.getQueueName());
-    return Records.newRecord(RemoveDebugQueueResponse.class);
-  }
-
-  @Override
-  public GetDebugQueuesResponse getDebugQueues(GetDebugQueuesRequest request)
-      throws YarnException, IOException {
-    DebugController debugController = rmContext.getDebugController();
-    GetDebugQueuesResponse response =
-        GetDebugQueuesResponse.newInstance(debugController.getQueues());
     return response;
   }
 

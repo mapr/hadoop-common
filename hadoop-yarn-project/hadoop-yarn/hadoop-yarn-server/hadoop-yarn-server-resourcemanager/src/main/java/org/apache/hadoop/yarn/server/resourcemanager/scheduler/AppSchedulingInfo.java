@@ -279,16 +279,6 @@ public class AppSchedulingInfo {
     // at this point deal with labels only for nodes
     // to comply with: "prohibited all that is not allowed"
     // behavior
-    if (DebugController.getInstance().isUseDebugController(queueName, applicationId.toString())) {
-      StringBuilder sb = new StringBuilder();
-      sb.append("Node ").append(node).append(" ")
-          .append(isBlacklisted(node.getNodeName()) ? "is" : "is not").append(" on dynamic blacklist, ")
-          .append(isBlackListedBasedOnLabels(node.getNodeName()) ? "is" : "is not")
-          .append(" blacklisted based on labels, and ")
-          .append(isBlacklisted(node.getRackName()) ? " is " : " is not ").append("blacklisted based on rack");
-      DebugController.LOG.debug(sb.toString());
-    }
-
     if (isBlacklisted(node.getNodeName()) ||
         isBlackListedBasedOnLabels(node.getNodeName())) {
       if (myLog.isDebugEnabled()) {

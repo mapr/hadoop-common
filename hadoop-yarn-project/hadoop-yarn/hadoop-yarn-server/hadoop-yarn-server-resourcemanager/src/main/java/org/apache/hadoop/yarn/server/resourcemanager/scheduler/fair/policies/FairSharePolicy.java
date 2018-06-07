@@ -64,7 +64,7 @@ public class FairSharePolicy extends SchedulingPolicy {
    * If all weights are equal, slots are given to the job with the fewest tasks;
    * otherwise, jobs with more weight get proportionally more slots.
    */
-  public static class FairShareComparator implements Comparator<Schedulable>,
+  private static class FairShareComparator implements Comparator<Schedulable>,
       Serializable {
     private static final long serialVersionUID = 5564969375856699313L;
     private static final Resource ONE = Resources.createResource(1);
@@ -107,24 +107,6 @@ public class FairSharePolicy extends SchedulingPolicy {
           res = s1.getName().compareTo(s2.getName());
       }
       return res;
-    }
-    public String getComparatorInfo(Schedulable schedulable){
-      Resource minResource = Resources.min(RESOURCE_CALCULATOR, null,
-          schedulable.getMinShare(), schedulable.getDemand());
-      boolean isNeedy = Resources.lessThan(RESOURCE_CALCULATOR, null,
-          schedulable.getResourceUsage(), minResource);
-      double usageToResource = (double) schedulable.getResourceUsage().getMemory() /
-          Resources.max(RESOURCE_CALCULATOR, null, minResource, ONE).getMemory();
-      double usageToWeight = schedulable.getResourceUsage().getMemory() /
-          schedulable.getWeights().getWeight(ResourceType.MEMORY);
-
-      StringBuilder sb = new StringBuilder();
-      sb.append(" Memory weight: ").append(schedulable.getWeights().getWeight(ResourceType.MEMORY))
-          .append(" Min resource: ").append(minResource)
-          .append(" Needy: ").append(isNeedy)
-          .append(" Memory usage to resource: ").append(usageToResource)
-          .append(" Memory usage to weight: ").append(usageToWeight);
-      return sb.toString();
     }
   }
 

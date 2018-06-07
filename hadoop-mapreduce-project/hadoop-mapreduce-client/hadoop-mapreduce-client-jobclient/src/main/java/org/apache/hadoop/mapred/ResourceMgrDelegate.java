@@ -467,38 +467,4 @@ public class ResourceMgrDelegate extends YarnClient {
   public boolean refreshClusterNodeLabels() throws YarnException, IOException {
     return client.refreshClusterNodeLabels();
   }
-
-  @Override
-  public void addDebugApp(String applicationId)
-      throws YarnException, IOException {
-    client.addDebugApp(applicationId);
-  }
-
-  @Override
-  public void removeDebugApp(String applicationId)
-      throws YarnException, IOException {
-    client.removeDebugApp(applicationId);
-  }
-
-  @Override
-  public Set<String> getDebugApps() throws YarnException, IOException {
-    return client.getDebugApps();
-  }
-
-  @Override
-  public void addDebugQueue(String queueName)
-      throws YarnException, IOException {
-    client.addDebugQueue(queueName);
-  }
-
-  @Override
-  public void removeDebugQueue(String queueName)
-      throws YarnException, IOException {
-    client.removeDebugApp(queueName);
-  }
-
-  @Override
-  public Set<String> getDebugQueues() throws YarnException, IOException {
-    return client.getDebugQueues();
-  }
 }

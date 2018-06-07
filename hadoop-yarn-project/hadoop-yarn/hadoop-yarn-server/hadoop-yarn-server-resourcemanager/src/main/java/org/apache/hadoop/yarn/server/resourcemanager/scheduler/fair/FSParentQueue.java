@@ -39,9 +39,6 @@ import org.apache.hadoop.yarn.api.records.QueueACL;
 import org.apache.hadoop.yarn.api.records.QueueUserACLInfo;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainer;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.DebugController;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.policies.DominantResourceFairnessPolicy;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.policies.FairSharePolicy;
 import org.apache.hadoop.yarn.util.resource.Resources;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ActiveUsersManager;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicationAttempt;
@@ -248,9 +245,6 @@ public class FSParentQueue extends FSQueue {
 
     // If this queue is over its limit, reject
     if (!assignContainerPreCheck(node)) {
-      if (DebugController.LOG.isDebugEnabled()) {
-        DebugController.LOG.debug("Queue " + this + " is over limit, can't assignContainer");
-      }
       return assigned;
     }
 
@@ -261,10 +255,7 @@ public class FSParentQueue extends FSQueue {
     } finally {
       writeLock.unlock();
     }
-    if (DebugController.LOG.isDebugEnabled()) {
-      String logMessage = getDebugLogMessage();
-      DebugController.LOG.debug(logMessage);
-    }
+
     /*
      * We are releasing the lock between the sort and iteration of the
      * "sorted" list. There could be changes to the list here:
@@ -278,62 +269,13 @@ public class FSParentQueue extends FSQueue {
       for (FSQueue child : childQueues) {
         assigned = child.assignContainer(node);
         if (!Resources.equals(assigned, Resources.none())) {
-          if (DebugController.LOG.isDebugEnabled()) {
-            DebugController.LOG.debug("Assignment made to node " + node.getNodeName() +
-                " from queue " + child.getName());
-          }
           break;
-        } else {
-          if (DebugController.LOG.isDebugEnabled()) {
-            DebugController.LOG.debug("No assignments for " + node.getNodeName() +
-                " in queue " + child.getName());
-          }
         }
       }
     } finally {
       readLock.unlock();
     }
     return assigned;
-  }
-
-  private String getDebugLogMessage() {
-    DebugController debugController = this.scheduler.getDebugController();
-    StringBuilder sb = new StringBuilder();
-    sb.append("Sorted child queues ");
-
-    int queuePosition = 0;
-    boolean isTrackAllQueues = false;
-    if (debugController.getQueues().isEmpty()) {
-      sb.append("(all queues info): ");
-      isTrackAllQueues = true;
-    } else {
-      sb.append("(only debugController tracking queues): ");
-    }
-
-    Comparator<Schedulable> comparator = policy.getComparator();
-    for (FSQueue child : childQueues) {
-      if (isTrackAllQueues || debugController.getQueues().contains(child.getName())) {
-        sb.append("\n").append(queuePosition).append(" Queue:").append(child.getName())
-            .append(getShareInfo(child)).append(" ");
-        queuePosition++;
-
-        if (comparator.getClass().equals(
-            DominantResourceFairnessPolicy.DominantResourceFairnessComparator.class)) {
-          DominantResourceFairnessPolicy.DominantResourceFairnessComparator dominantComparator =
-              (DominantResourceFairnessPolicy.DominantResourceFairnessComparator) comparator;
-          sb.append(dominantComparator.getComparatorInfo(child));
-        } else if (comparator.getClass().equals(
-            FairSharePolicy.FairShareComparator.class)) {
-          FairSharePolicy.FairShareComparator fairComparator =
-              (FairSharePolicy.FairShareComparator) comparator;
-          sb.append(fairComparator.getComparatorInfo(child));
-        } else {
-          LOG.debug("No specifics for comparator " + comparator.getClass().getName());
-        }
-      }
-    }
-
-    return sb.toString();
   }
 
   @Override

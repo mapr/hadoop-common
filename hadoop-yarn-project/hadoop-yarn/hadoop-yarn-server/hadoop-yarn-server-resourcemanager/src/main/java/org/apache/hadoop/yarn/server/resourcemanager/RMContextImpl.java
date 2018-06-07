@@ -40,7 +40,6 @@ import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMApp;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.AMLivelinessMonitor;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.ContainerAllocationExpirer;
 import org.apache.hadoop.yarn.server.resourcemanager.rmnode.RMNode;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.DebugController;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.security.AMRMTokenSecretManager;
 import org.apache.hadoop.yarn.server.resourcemanager.security.ClientToAMTokenSecretManagerInRM;
@@ -389,16 +388,6 @@ public class RMContextImpl implements RMContext {
 
   void setEpoch(long epoch) {
     activeServiceContext.setEpoch(epoch);
-  }
-
-  @Override
-  public DebugController getDebugController() {
-    return activeServiceContext.getDebugController();
-  }
-
-  @Override
-  public void setDebugController(DebugController debugController) {
-    activeServiceContext.setDebugController(debugController);
   }
 
   @Override

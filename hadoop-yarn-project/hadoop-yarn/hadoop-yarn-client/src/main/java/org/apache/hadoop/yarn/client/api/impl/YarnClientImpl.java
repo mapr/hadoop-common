@@ -43,8 +43,6 @@ import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.TokenIdentifier;
 import org.apache.hadoop.yarn.api.ApplicationClientProtocol;
-import org.apache.hadoop.yarn.api.protocolrecords.AddDebugAppRequest;
-import org.apache.hadoop.yarn.api.protocolrecords.AddDebugQueueRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetApplicationAttemptReportRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetApplicationAttemptReportResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.GetApplicationAttemptsRequest;
@@ -63,10 +61,6 @@ import org.apache.hadoop.yarn.api.protocolrecords.GetContainerReportRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetContainerReportResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.GetContainersRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetContainersResponse;
-import org.apache.hadoop.yarn.api.protocolrecords.GetDebugAppsRequest;
-import org.apache.hadoop.yarn.api.protocolrecords.GetDebugAppsResponse;
-import org.apache.hadoop.yarn.api.protocolrecords.GetDebugQueuesRequest;
-import org.apache.hadoop.yarn.api.protocolrecords.GetDebugQueuesResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.GetDelegationTokenRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetDelegationTokenResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.GetLabelsToNodesRequest;
@@ -80,8 +74,6 @@ import org.apache.hadoop.yarn.api.protocolrecords.NoOpGetClusterNodeLabelsRespon
 import org.apache.hadoop.yarn.api.protocolrecords.KillApplicationRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.KillApplicationResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.MoveApplicationAcrossQueuesRequest;
-import org.apache.hadoop.yarn.api.protocolrecords.RemoveDebugAppRequest;
-import org.apache.hadoop.yarn.api.protocolrecords.RemoveDebugQueueRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.ReservationDeleteRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.ReservationDeleteResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.ReservationSubmissionRequest;
@@ -842,55 +834,4 @@ public class YarnClientImpl extends YarnClient {
     return response.getIsRefreshLabelsComplete();
   }
 
-  @Override
-  public void addDebugApp(String applicationId)
-      throws YarnException, IOException {
-    AddDebugAppRequest request =
-        AddDebugAppRequest.newInstance();
-    request.setApplicationId(applicationId);
-    rmClient.addDebugApp(request);
-  }
-
-  @Override
-  public void removeDebugApp(String applicationId)
-      throws YarnException, IOException {
-    RemoveDebugAppRequest request =
-        RemoveDebugAppRequest.newInstance();
-    request.setApplicationId(applicationId);
-    rmClient.removeDebugApp(request);
-  }
-
-  @Override
-  public Set<String> getDebugApps() throws YarnException, IOException {
-    GetDebugAppsRequest request =
-        GetDebugAppsRequest.newInstance();
-    GetDebugAppsResponse response = rmClient.getDebugApps(request);
-    return response.getApplications();
-  }
-
-  @Override
-  public void addDebugQueue(String queueName)
-      throws YarnException, IOException {
-    AddDebugQueueRequest request =
-        AddDebugQueueRequest.newInstance();
-    request.setQueueName(queueName);
-    rmClient.addDebugQueue(request);
-  }
-
-  @Override
-  public void removeDebugQueue(String queueName)
-      throws YarnException, IOException {
-    RemoveDebugQueueRequest request =
-        RemoveDebugQueueRequest.newInstance();
-    request.setQueueName(queueName);
-    rmClient.removeDebugQueue(request);
-  }
-
-  @Override
-  public Set<String> getDebugQueues() throws YarnException, IOException {
-    GetDebugQueuesRequest request =
-        GetDebugQueuesRequest.newInstance();
-    GetDebugQueuesResponse response = rmClient.getDebugQueues(request);
-    return response.getQueues();
-  }
 }

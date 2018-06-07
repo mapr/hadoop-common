@@ -593,6 +593,6 @@ public class TestRMWebServicesCapacitySched extends JerseyTestBase {
     // If we add a new resource (e.g disks), then
     // CapacitySchedulerPage and these RM WebServices + docs need to be updated
     // eg. ResourceInfo
-    assertEquals("<memory:10, vCores:1, disks:0>", res.toString());
+    assertEquals("<memory:10, vCores:1, disks:0.0>", res.toString());
   }
 }

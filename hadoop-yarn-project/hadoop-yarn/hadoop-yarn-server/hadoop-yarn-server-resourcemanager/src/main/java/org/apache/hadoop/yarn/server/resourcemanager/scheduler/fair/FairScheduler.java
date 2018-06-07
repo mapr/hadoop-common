@@ -68,7 +68,6 @@ import org.apache.hadoop.yarn.server.resourcemanager.rmnode.UpdatedContainerInfo
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.AbstractYarnScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ActiveUsersManager;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Allocation;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.DebugController;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.QueueMetrics;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplication;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerAppUtils;
@@ -1233,11 +1232,6 @@ public class FairScheduler extends
     }
 
     final NodeId nodeID = node.getNodeID();
-    if (isUseDebugController()) {
-      DebugController.LOG.debug("attemptScheduling:" + nodeID
-              + " available: " + node.getAvailableResource());
-      }
-
     if (!nodes.containsKey(nodeID)) {
       // The node might have just been removed while this thread was waiting
       // on the synchronized lock before it entered this synchronized method
@@ -1254,48 +1248,21 @@ public class FairScheduler extends
     FSAppAttempt reservedAppSchedulable = node.getReservedAppSchedulable();
     if (reservedAppSchedulable != null) {
       validReservation = reservedAppSchedulable.assignReservedContainer(node);
-      if (isUseDebugController()) {
-        DebugController.LOG.debug("Existing " + (validReservation ? "valid" : "invalid")
-                + " reservation on " + nodeID + " for app " + reservedAppSchedulable.getApplicationId());
-      }
-    } else {
-      if (isUseDebugController()) {
-        DebugController.LOG.debug("No existing reservation on " + nodeID);
-      }
     }
     if (!validReservation) {
       // No reservation, schedule at queue which is farthest below fair share
       int assignedContainers = 0;
-      int iterations=0;
       while (node.getReservedContainer() == null) {
         boolean assignedContainer = false;
-        iterations++;
         if (!queueMgr.getRootQueue().assignContainer(node).equals(
             Resources.none())) {
           assignedContainers++;
           assignedContainer = true;
         }
-        if (!assignedContainer) {
-          if (isUseDebugController()) {
-            DebugController.LOG.debug("No more containers to assign to " + nodeID);
-          }
-          break;
-        }
-        if (!assignMultiple) {
-          break;
-        }
-        if ((assignedContainers >= maxAssign) && (maxAssign > 0)) {
-          if (isUseDebugController()) {
-            DebugController.LOG.debug("Reached maxAssign");
-          }
-          break;
-        }
+        if (!assignedContainer) { break; }
+        if (!assignMultiple) { break; }
+        if ((assignedContainers >= maxAssign) && (maxAssign > 0)) { break; }
       }
-      if (isUseDebugController()) {
-        DebugController.LOG.debug("Assigned " + assignedContainers + " containers to " + nodeID
-                + " in " + iterations + " iterations, allocate multiple containers per heartbeat:" + assignMultiple);
-      }
-
     }
     updateRootQueueMetrics();
   }
@@ -1924,25 +1891,6 @@ public class FairScheduler extends
       targetQueueName = getDefaultQueueForPlanQueue(targetQueueName);
     }
     return targetQueueName;
-  }
-
-  private boolean isUseDebugController() {
-
-    DebugController debugController = DebugController.getInstance();
-    if (debugController.LOG.isDebugEnabled()) {
-      if (debugController.getApps().isEmpty() &&
-          debugController.getQueues().isEmpty()) {
-        return true;
-      } else {
-        for (ApplicationId appId : applications.keySet()) {
-          if (debugController.containsQueue(applications.get(appId).getQueue().getQueueName()) ||
-                  debugController.containsApp(appId.toString())) {
-            return true;
-          }
-        }
-      }
-    }
-    return false;
   }
 
   public boolean isResourcesBasedOnLabelsEnabled() {

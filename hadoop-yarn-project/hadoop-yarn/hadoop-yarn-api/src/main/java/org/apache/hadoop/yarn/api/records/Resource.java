@@ -25,8 +25,6 @@ import org.apache.hadoop.classification.InterfaceStability.Stable;
 import org.apache.hadoop.yarn.api.ApplicationMasterProtocol;
 import org.apache.hadoop.yarn.util.Records;
 
-import java.text.DecimalFormat;
-
 /**
  * <p><code>Resource</code> models a set of computer resources in the 
  * cluster.</p>
@@ -162,9 +160,7 @@ public abstract class Resource implements Comparable<Resource> {
 
   @Override
   public String toString() {
-    DecimalFormat df = new DecimalFormat("0.##");
-    return "<memory:" + getMemory() + ", vCores:" + getVirtualCores() + ", disks:"
-      + df.format(Precision.round(getDisks(), 2)) + ">";
+    return "<memory:" + getMemory() + ", vCores:" + getVirtualCores() + ", disks:" + Precision.round(getDisks(), 2) + ">";
   }
 
   public static int getAbsIntValue(double dValue) {

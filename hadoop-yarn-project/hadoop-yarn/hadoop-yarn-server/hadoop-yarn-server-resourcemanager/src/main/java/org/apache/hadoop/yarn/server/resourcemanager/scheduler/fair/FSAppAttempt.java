@@ -51,7 +51,6 @@ import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerEven
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerFinishedEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerImpl;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ActiveUsersManager;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.DebugController;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.NodeType;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.QueueMetrics;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicationAttempt;
@@ -350,39 +349,21 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
       Container container) {
     // Update allowed locality level
     NodeType allowed = allowedLocalityLevel.get(priority);
-
-    boolean useDebugController = rmContext.getDebugController().isUseDebugController(
-        appSchedulingInfo.getQueueName(),
-        appSchedulingInfo.getApplicationId().toString());
-
     if (allowed != null) {
       if (allowed.equals(NodeType.OFF_SWITCH) &&
           (type.equals(NodeType.NODE_LOCAL) ||
               type.equals(NodeType.RACK_LOCAL))) {
         this.resetAllowedLocalityLevel(priority, type);
-
-        if (useDebugController) {
-          DebugController.LOG.debug("Reset allowed locality level based on assignment to " + type
-              + " at priority " + priority);
-        }
       }
       else if (allowed.equals(NodeType.RACK_LOCAL) &&
           type.equals(NodeType.NODE_LOCAL)) {
         this.resetAllowedLocalityLevel(priority, type);
-        if (useDebugController) {
-          DebugController.LOG.debug("Reset allowed locality level based on assignment to " + type
-              + " at priority " + priority);
-        }
       }
     }
 
     // Required sanity check - AM can call 'allocate' to update resource 
     // request without locking the scheduler, hence we need to check
     if (getTotalRequiredResources(priority) <= 0) {
-      if (useDebugController) {
-        DebugController.LOG.debug("Ignoring allocate for FSAppAttempt " + this +
-            " node " + node + " as request is from AM");
-      }
       return null;
     }
     
@@ -416,11 +397,7 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
     RMAuditLogger.logSuccess(getUser(), 
         AuditConstants.ALLOC_CONTAINER, "SchedulerApp", 
         getApplicationId(), container.getId());
-    if (useDebugController) {
-      DebugController.LOG.debug("Allocated container " + rmContainer.getContainerId()
-          + " for app " + getApplicationId() + " to node " + node.getNodeName());
-    }
-
+    
     return rmContainer;
   }
 
@@ -432,11 +409,8 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
   public synchronized void resetAllowedLocalityLevel(Priority priority,
       NodeType level) {
     NodeType old = allowedLocalityLevel.get(priority);
-    if (rmContext.getDebugController().isUseDebugController(
-        appSchedulingInfo.getQueueName(), appSchedulingInfo.getApplicationId().toString())) {
-      DebugController.LOG.debug("Raising locality level from " + old + " to " + level +
-          " at priority " + priority);
-    }
+    LOG.info("Raising locality level from " + old + " to " + level + " at " +
+        " priority " + priority);
     allowedLocalityLevel.put(priority, level);
   }
 
@@ -524,11 +498,6 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
       RMContainer rmContainer =
           super.reserve(node, priority, null, container);
       node.reserveResource(this, priority, rmContainer);
-      if(rmContext.getDebugController().isUseDebugController(
-          appSchedulingInfo.getQueueName(), appSchedulingInfo.getApplicationId().toString())) {
-        DebugController.LOG.debug("Reserved resources " + container.getResource()
-            + " on node " + node.getNodeName() + " for app " + getApplicationId());
-      }
     } else {
       RMContainer rmContainer = node.getReservedContainer();
       super.reserve(node, priority, rmContainer, container);
@@ -578,21 +547,10 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
     Resource available = node.getAvailableResource();
 
     Container container = null;
-    boolean useDebugController = rmContext.getDebugController().isUseDebugController(
-        appSchedulingInfo.getQueueName(),
-        appSchedulingInfo.getApplicationId().toString());
     if (reserved) {
       container = node.getReservedContainer().getContainer();
-      if(useDebugController) {
-        DebugController.LOG.debug("attempt assign for existing reservation with container "
-            + container.getId() + " " + container.getResource());
-      }
     } else {
       container = createContainer(node, capability, request.getPriority());
-      if(useDebugController) {
-        DebugController.LOG.debug("created new container " + container.getId() + " "
-            + container.getResource() + " for assign ");
-      }
     }
 
     // The requested container must fit in queue maximum share
@@ -603,10 +561,6 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
       RMContainer allocatedContainer =
           allocate(type, node, request.getPriority(), request, container);
       if (allocatedContainer == null) {
-        if(useDebugController) {
-          DebugController.LOG.debug("Resources fit, but no container allocated for app " + getApplicationId()
-              + " for node " + node.getNodeName() + " for request at priority " + request.getPriority());
-        }
         // Did the application need this resource?
         if (reserved) {
           unreserve(request.getPriority(), node);
@@ -629,15 +583,6 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
         setAMResource(container.getResource());
         getQueue().addAMResourceUsage(container.getResource());
         setAmRunning(true);
-        if(useDebugController) {
-          DebugController.LOG.debug("allocated and assigned AM container " + allocatedContainer.getContainerId()
-              + " " + container.getResource() + " to node " + node.getNodeName());
-        }
-      } else {
-        if(useDebugController) {
-          DebugController.LOG.debug("allocated and assigned container " + allocatedContainer.getContainerId()
-              + " " + container.getResource() + " to node " + node.getNodeName());
-        }
       }
 
       return container.getResource();
@@ -661,15 +606,7 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
     if (!isAmRunning() && !getUnmanagedAM()) {
       List<ResourceRequest> ask = appSchedulingInfo.getAllResourceRequests();
       if (ask.isEmpty() || !getQueue().canRunAppAM(
-              ask.get(0).getCapability())) {
-        if (rmContext.getDebugController().isUseDebugController(
-            appSchedulingInfo.getQueueName(), appSchedulingInfo.getApplicationId().toString())) {
-          DebugController.LOG.error("Over AM share limit because " +
-              (ask.isEmpty() ? "ask is empty" : "queue " +
-               getQueue().getName() + " " +
-               getQueue().getAMResourceCapabilityInfo(ask.get(0).getCapability()) +
-               " can not run app AM with resource requirement " + ask.get(0).getCapability()));
-          }
+          ask.get(0).getCapability())) {
         return true;
       }
     }
@@ -677,25 +614,14 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
   }
 
   private Resource assignContainer(FSSchedulerNode node, boolean reserved) {
-    boolean useDebugController = rmContext.getDebugController().isUseDebugController(
-        appSchedulingInfo.getQueueName(),
-        appSchedulingInfo.getApplicationId().toString());
-    if(useDebugController) {
-      DebugController.LOG.debug("Attempting to assign container to " + node.getNodeName()
-              + " for app " + getApplicationId() + " in queue " + getQueue().getName()
-              + " with shares: " + getQueue().getShareInfo());
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("Node offered to app: " + getName() + " reserved: " + reserved);
     }
+
     Collection<Priority> prioritiesToTry = (reserved) ?
         Arrays.asList(node.getReservedContainer().getReservedPriority()) :
         getPriorities();
-    if(useDebugController){
-      StringBuilder sb = new StringBuilder();
-      sb.append("Priorities to check for " + (reserved ? "reserved" : "unreserved") + " assignment:");
-      for (Priority p : prioritiesToTry) {
-        sb.append(" " + p);
-      }
-      DebugController.LOG.debug(sb.toString());
-    }
+
     // For each priority, see if we can schedule a node local, rack local
     // or off-switch request. Rack of off-switch requests may be delayed
     // (not scheduled) in order to promote better locality.
@@ -704,10 +630,6 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
         // Skip it for reserved container, since
         // we already check it in isValidReservation.
         if (!reserved && !hasContainerForNode(priority, node)) {
-          if(useDebugController) {
-            DebugController.LOG.debug("app " + getApplicationId() + " no container at priority " + priority
-                + " for " + node.getNodeName());
-          }
           continue;
         }
 
@@ -729,52 +651,26 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
               scheduler.getNodeLocalityDelayMs(),
               scheduler.getRackLocalityDelayMs(),
               scheduler.getClock().getTime());
-          if(useDebugController) {
-            DebugController.LOG.debug("app:" + getApplicationId() + " allowedLocality:" + allowedLocality
-                + " priority:" + priority + " nodeDelay:" + scheduler.getNodeLocalityDelayMs()
-                + " rackDelay:" + scheduler.getRackLocalityDelayMs());
-          }
         } else {
           allowedLocality = getAllowedLocalityLevel(priority,
               scheduler.getNumClusterNodes(),
               scheduler.getNodeLocalityThreshold(),
               scheduler.getRackLocalityThreshold());
-          if(useDebugController) {
-            DebugController.LOG.debug("app:" + getApplicationId() + " allowedLocality:" + allowedLocality
-                + " priority:" + priority + " nodeThresh:" + scheduler.getNodeLocalityThreshold()
-                + " rackThresh:" + scheduler.getRackLocalityThreshold()
-                + " numNodes:" + scheduler.getNumClusterNodes());
-          }
         }
 
         if (rackLocalRequest != null && rackLocalRequest.getNumContainers() != 0
             && localRequest != null && localRequest.getNumContainers() != 0) {
-          if(useDebugController) {
-            DebugController.LOG.debug("Will attempt node local assignment from " + localRequest.getNumContainers()
-                + " possible containers for app " + getApplicationId() + " to node " + node.getNodeName()
-                + " at priority " + priority);
-          }
           return assignContainer(node, localRequest,
               NodeType.NODE_LOCAL, reserved);
         }
 
         if (rackLocalRequest != null && !rackLocalRequest.getRelaxLocality()) {
-          if(useDebugController) {
-            DebugController.LOG.debug("Skipping " + rackLocalRequest.getNumContainers()
-                + " rack local containers for app " + getApplicationId() + " for node "+ node.getNodeName()
-                + " at priority " + priority + " as rack local relaxed locality is not allowed");
-          }
           continue;
         }
 
         if (rackLocalRequest != null && rackLocalRequest.getNumContainers() != 0
             && (allowedLocality.equals(NodeType.RACK_LOCAL) ||
             allowedLocality.equals(NodeType.OFF_SWITCH))) {
-          if(useDebugController) {
-            DebugController.LOG.debug("Will attempt rack local assignment from "
-                + rackLocalRequest.getNumContainers() + " possible containers for app " + getApplicationId()
-                + " to node " + node.getNodeName() + " at priority " + priority);
-          }
           return assignContainer(node, rackLocalRequest,
               NodeType.RACK_LOCAL, reserved);
         }
@@ -782,40 +678,18 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
         ResourceRequest offSwitchRequest =
             getResourceRequest(priority, ResourceRequest.ANY);
         if (offSwitchRequest != null && !offSwitchRequest.getRelaxLocality()) {
-          if(useDebugController) {
-            DebugController.LOG.debug("Skipping " + offSwitchRequest.getNumContainers()
-                + " non-local containers for app " + getApplicationId()
-                + " for node "+ node.getNodeName() + " at priority " + priority
-                + " as non-local relaxed locality is not allowed");
-          }
           continue;
         }
 
         if (offSwitchRequest != null &&
             offSwitchRequest.getNumContainers() != 0) {
           if (!hasNodeOrRackLocalRequests(priority) ||
-                  allowedLocality.equals(NodeType.OFF_SWITCH)) {
-            if (useDebugController) {
-              DebugController.LOG.debug("Will attempt non-local assignment from " + offSwitchRequest.getNumContainers()
-                  + " possible containers for app " + getApplicationId() + " to node " + node.getNodeName()
-                  + " at priority " + priority);
-            }
+              allowedLocality.equals(NodeType.OFF_SWITCH)) {
             return assignContainer(
-                    node, offSwitchRequest, NodeType.OFF_SWITCH, reserved);
-          } else {
-            if (useDebugController) {
-              DebugController.LOG.debug("Skipping " + offSwitchRequest.getNumContainers()
-                  + " non-local containers for app " + getApplicationId() + " for node " + node.getNodeName()
-                  + " at priority " + priority + ", betterLocality:" + hasNodeOrRackLocalRequests(priority)
-                  + " non-localProhibited:" + !allowedLocality.equals(NodeType.OFF_SWITCH));
-            }
+                node, offSwitchRequest, NodeType.OFF_SWITCH, reserved);
           }
         }
       }
-    }
-    if(useDebugController) {
-      DebugController.LOG.debug("Couldn't assign from any priority for app " + getApplicationId()
-          + " for node "+ node.getNodeName());
     }
     return Resources.none();
   }
@@ -868,38 +742,28 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
   public boolean assignReservedContainer(FSSchedulerNode node) {
     RMContainer rmContainer = node.getReservedContainer();
     Priority reservedPriority = rmContainer.getReservedPriority();
-   boolean useDebugController = rmContext.getDebugController().isUseDebugController(
-        appSchedulingInfo.getQueueName(),
-        appSchedulingInfo.getApplicationId().toString());
 
     if (!isValidReservation(node)) {
       // Don't hold the reservation if app can no longer use it
       LOG.info("Releasing reservation that cannot be satisfied for " +
           "application " + getApplicationAttemptId() + " on node " + node);
-      if (useDebugController) {
-        DebugController.LOG.debug("Pre-existing reservation for container " + rmContainer.getContainerId()
-            + " " + rmContainer.getReservedResource() + " " + reservedPriority
-            + " no longer valid for " + node.getNodeName());
-      }
       unreserve(reservedPriority, node);
       return false;
+    }
+
+    // Reservation valid; try to fulfill the reservation
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("Trying to fulfill reservation for application "
+          + getApplicationAttemptId() + " on node: " + node);
     }
 
     // Fail early if the reserved container won't fit.
     // Note that we have an assumption here that
     // there's only one container size per priority.
     Resource reservedResource = node.getReservedContainer().getReservedResource();
-    boolean fitsInMaxShare = getQueue().fitsInMaxShare(reservedResource);
-    boolean fitsInNode = Resources.fitsIn(reservedResource, node.getAvailableResource());
-    if (fitsInMaxShare && fitsInNode) {
+    if (getQueue().fitsInMaxShare(reservedResource) &&
+        Resources.fitsIn(reservedResource, node.getAvailableResource())) {
       assignContainer(node, true);
-    } else {
-      if (useDebugController) {
-        DebugController.LOG.debug("Reserved container " + rmContainer.getContainerId() + " " + reservedResource
-            + " " + reservedPriority + " can not be assigned to " + node.getNodeName()
-            + " right now, fits in queue max share:" + fitsInMaxShare + " queue max share:" + getQueue().getMaxShare()
-            + " fits in node:" + fitsInNode);
-      }
     }
     return true;
   }
@@ -997,11 +861,6 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
         LOG.debug("Skipping allocation because maxAMShare limit would " +
             "be exceeded");
       }
-      if (rmContext.getDebugController().isUseDebugController(
-          appSchedulingInfo.getQueueName(), appSchedulingInfo.getApplicationId().toString())) {
-        DebugController.LOG.debug("Can't schedule to " + node.getNodeName() + " as app " + getName() +
-            " would be over AM share limit");
-      }
       return Resources.none();
     }
     return assignContainer(node, false);
@@ -1029,17 +888,4 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
     }
     return toBePreempted;
   }
-
-  @Override
-  public String toString(){
-    StringBuilder sb = new StringBuilder();
-    sb.append("ApplicationAttemptId:").append(attemptId)
-        .append(" currentReservation:").append(currentReservation)
-        .append(" resourceLimit:").append(getHeadroom())
-        .append(" currentConsumption:").append(currentConsumption)
-        .append(" amResource:").append(getAMResource())
-        .append(" queue:").append(queue);
-    return sb.toString();
-  }
-
 }

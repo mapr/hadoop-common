@@ -68,10 +68,6 @@ import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.yarn.api.ApplicationClientProtocol;
-import org.apache.hadoop.yarn.api.protocolrecords.AddDebugQueueRequest;
-import org.apache.hadoop.yarn.api.protocolrecords.AddDebugQueueResponse;
-import org.apache.hadoop.yarn.api.protocolrecords.AddDebugAppResponse;
-import org.apache.hadoop.yarn.api.protocolrecords.AddDebugAppRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.CancelDelegationTokenRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.CancelDelegationTokenResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.GetApplicationAttemptReportRequest;
@@ -86,10 +82,6 @@ import org.apache.hadoop.yarn.api.protocolrecords.GetClusterMetricsRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetClusterMetricsResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.GetClusterNodeLabelsRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetClusterNodeLabelsResponse;
-import org.apache.hadoop.yarn.api.protocolrecords.GetDebugAppsRequest;
-import org.apache.hadoop.yarn.api.protocolrecords.GetDebugAppsResponse;
-import org.apache.hadoop.yarn.api.protocolrecords.GetDebugQueuesRequest;
-import org.apache.hadoop.yarn.api.protocolrecords.GetDebugQueuesResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.NoOpGetClusterNodeLabelsRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.NoOpGetClusterNodeLabelsResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.GetClusterNodesRequest;
@@ -116,10 +108,6 @@ import org.apache.hadoop.yarn.api.protocolrecords.MoveApplicationAcrossQueuesReq
 import org.apache.hadoop.yarn.api.protocolrecords.MoveApplicationAcrossQueuesResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.RefreshClusterNodeLabelsRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.RefreshClusterNodeLabelsResponse;
-import org.apache.hadoop.yarn.api.protocolrecords.RemoveDebugAppRequest;
-import org.apache.hadoop.yarn.api.protocolrecords.RemoveDebugAppResponse;
-import org.apache.hadoop.yarn.api.protocolrecords.RemoveDebugQueueRequest;
-import org.apache.hadoop.yarn.api.protocolrecords.RemoveDebugQueueResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.RenewDelegationTokenRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.RenewDelegationTokenResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.ReservationDeleteRequest;
@@ -470,42 +458,6 @@ public class TestClientRedirect {
     @Override
     public RefreshClusterNodeLabelsResponse refreshClusterNodeLabels(
       RefreshClusterNodeLabelsRequest request) throws YarnException, IOException{
-      return null;
-    }
-
-    @Override
-    public AddDebugAppResponse addDebugApp (
-        AddDebugAppRequest request) throws YarnException, IOException{
-      return null;
-    }
-
-    @Override
-    public RemoveDebugAppResponse removeDebugApp(
-        RemoveDebugAppRequest request) throws YarnException, IOException {
-      return null;
-    }
-
-    @Override
-    public GetDebugAppsResponse getDebugApps(
-        GetDebugAppsRequest request) throws YarnException, IOException {
-      return null;
-    }
-
-    @Override
-    public AddDebugQueueResponse addDebugQueue(
-        AddDebugQueueRequest request) throws YarnException, IOException {
-      return null;
-    }
-
-    @Override
-    public RemoveDebugQueueResponse removeDebugQueue(
-        RemoveDebugQueueRequest request) throws YarnException, IOException {
-      return null;
-    }
-
-    @Override
-    public GetDebugQueuesResponse getDebugQueues(
-        GetDebugQueuesRequest request) throws YarnException, IOException {
       return null;
     }
   }
