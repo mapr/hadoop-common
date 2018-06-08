@@ -66,6 +66,7 @@ enum errorcodes {
 #define MIN_USERID_KEY "min.user.id"
 #define BANNED_USERS_KEY "banned.users"
 #define ALLOWED_SYSTEM_USERS_KEY "allowed.system.users"
+#define MOUNT_CGROUP_SUPPORT_ENABLED_KEY "feature.mount-cgroup.enabled"
 #define TMP_DIR "tmp"
 
 extern struct passwd *user_detail;
@@ -214,6 +215,9 @@ int check_dir(char* npath, mode_t st_mode, mode_t desired,
 
 int create_validate_dir(char* npath, mode_t perm, char* path,
    int finalComponent);
+
+/** Check if cgroup mount support is enabled in configuration. */
+int is_mount_cgroups_support_enabled();
 
 /**
  * Copies external credential file to working directory, similar to how

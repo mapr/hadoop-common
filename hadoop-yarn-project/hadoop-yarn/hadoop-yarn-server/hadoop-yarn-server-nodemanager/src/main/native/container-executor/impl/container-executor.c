@@ -62,6 +62,8 @@ static const int DEFAULT_MIN_USERID = 1000;
 
 static const char* DEFAULT_BANNED_USERS[] = {"mapred", "hdfs", "bin", 0};
 
+static const int DEFAULT_MOUNT_CGROUP_SUPPORT_ENABLED = 0;
+
 //struct to store the user details
 struct passwd *user_detail = NULL;
 
@@ -886,7 +888,7 @@ static int copy_file_with_truncate(int input, const char* in_filename,
  * The input stream is closed.
  * Return 0 if everything is ok.
  */
-static int copy_file(int input, const char* in_filename, 
+static int copy_file(int input, const char* in_filename,
 		     const char* out_filename, mode_t perm) {
 
   return copy_file_with_truncate(input, in_filename, out_filename, perm, 0);
@@ -941,6 +943,10 @@ int create_log_dirs(const char *app_id, char * const * log_dirs) {
   return 0;
 }
 
+int is_mount_cgroups_support_enabled() {
+    return is_feature_enabled(MOUNT_CGROUP_SUPPORT_ENABLED_KEY,
+                              DEFAULT_MOUNT_CGROUP_SUPPORT_ENABLED);
+}
 
 /**
  * Function to prepare the application directories for the container.
@@ -1061,7 +1067,7 @@ int initialize_app(const char *user, const char *app_id,
   return -1;
 }
 
-int launch_container_as_user(const char *user, const char *app_id, 
+int launch_container_as_user(const char *user, const char *app_id,
                    const char *container_id, const char *work_dir,
                    const char *script_name, const char *cred_file,
                    const char *ext_cred_file, const char *ext_cred_env_var,
@@ -1222,7 +1228,7 @@ int launch_container_as_user(const char *user, const char *app_id,
     goto cleanup;
   }
   if (execlp(script_file_dest, script_file_dest, NULL) != 0) {
-    fprintf(LOGFILE, "Couldn't execute the container launch file %s - %s", 
+    fprintf(LOGFILE, "Couldn't execute the container launch file %s - %s",
             script_file_dest, strerror(errno));
     exit_code = UNABLE_TO_EXECUTE_CONTAINER_SCRIPT;
     goto cleanup;
@@ -1319,7 +1325,7 @@ static int delete_path(const char *full_path,
 
     if (tree == NULL) {
       fprintf(LOGFILE,
-              "Cannot open file traversal structure for the path %s:%s.\n", 
+              "Cannot open file traversal structure for the path %s:%s.\n",
               full_path, strerror(errno));
       free(paths[0]);
       return -1;
@@ -1331,7 +1337,7 @@ static int delete_path(const char *full_path,
         if (!needs_tt_user ||
             strcmp(entry->fts_path, full_path) != 0) {
           if (rmdir(entry->fts_accpath) != 0) {
-            fprintf(LOGFILE, "Couldn't delete directory %s - %s\n", 
+            fprintf(LOGFILE, "Couldn't delete directory %s - %s\n",
                     entry->fts_path, strerror(errno));
             if (errno == EROFS) {
               exit_code = -1;
@@ -1362,17 +1368,17 @@ static int delete_path(const char *full_path,
         break;
 
       case FTS_DNR:       // Unreadable directory
-        fprintf(LOGFILE, "Unreadable directory %s. Skipping..\n", 
+        fprintf(LOGFILE, "Unreadable directory %s. Skipping..\n",
                 entry->fts_path);
         break;
 
       case FTS_D:         // A directory in pre-order
         // if the directory isn't readable, chmod it
         if ((entry->fts_statp->st_mode & 0200) == 0) {
-          fprintf(LOGFILE, "Unreadable directory %s, chmoding.\n", 
+          fprintf(LOGFILE, "Unreadable directory %s, chmoding.\n",
                   entry->fts_path);
           if (chmod(entry->fts_accpath, 0700) != 0) {
-            fprintf(LOGFILE, "Error chmoding %s - %s, continuing\n", 
+            fprintf(LOGFILE, "Error chmoding %s - %s, continuing\n",
                     entry->fts_path, strerror(errno));
           }
         }
@@ -1389,7 +1395,7 @@ static int delete_path(const char *full_path,
         break;
 
       case FTS_ERR:       // Error return
-        fprintf(LOGFILE, "Error traversing directory %s - %s\n", 
+        fprintf(LOGFILE, "Error traversing directory %s - %s\n",
                 entry->fts_path, strerror(entry->fts_errno));
         exit_code = -1;
         break;
@@ -1478,20 +1484,25 @@ void chown_dir_contents(const char *dir_path, uid_t uid, gid_t gid) {
   DIR *dp;
   struct dirent *ep;
 
-  char *path_tmp = malloc(strlen(dir_path) + NAME_MAX + 2);
+  size_t len = strlen(dir_path) + NAME_MAX + 2;
+  char *path_tmp = malloc(len);
   if (path_tmp == NULL) {
     return;
   }
 
-  char *buf = stpncpy(path_tmp, dir_path, strlen(dir_path));
-  *buf++ = '/';
-
   dp = opendir(dir_path);
   if (dp != NULL) {
-    while (ep = readdir(dp)) {
-      stpncpy(buf, ep->d_name, strlen(ep->d_name));
-      buf[strlen(ep->d_name)] = '\0';
-      change_owner(path_tmp, uid, gid);
+    while ((ep = readdir(dp)) != NULL) {
+      if (strcmp(ep->d_name, ".") != 0 &&
+          strcmp(ep->d_name, "..") != 0 &&
+          strstr(ep->d_name, "..") == NULL) {
+        int result = snprintf(path_tmp, len, "%s/%s", dir_path, ep->d_name);
+        if (result > 0 && result < len) {
+          change_owner(path_tmp, uid, gid);
+        } else {
+          fprintf(LOGFILE, "Ignored %s/%s due to length", dir_path, ep->d_name);
+        }
+      }
     }
     closedir(dp);
   }
@@ -1514,13 +1525,29 @@ int mount_cgroup(const char *pair, const char *hierarchy) {
   char *mount_path = malloc(strlen(pair));
   char hier_path[EXECUTOR_PATH_MAX];
   int result = 0;
+  size_t len = strlen(pair);
 
-  if (get_kv_key(pair, controller, strlen(pair)) < 0 ||
-      get_kv_value(pair, mount_path, strlen(pair)) < 0) {
+  if (controller == NULL || mount_path == NULL) {
+    fprintf(LOGFILE, "Failed to mount cgroup controller; not enough memory\n");
+    result = OUT_OF_MEMORY;
+    goto cleanup;
+  }
+  if (hierarchy == NULL || strstr(hierarchy, "..") != NULL) {
+    fprintf(LOGFILE, "Unsupported cgroup hierarhy path detected.\n");
+    result = INVALID_COMMAND_PROVIDED;
+    goto cleanup;
+  }
+  if (get_kv_key(pair, controller, len) < 0 ||
+      get_kv_value(pair, mount_path, len) < 0) {
     fprintf(LOGFILE, "Failed to mount cgroup controller; invalid option: %s\n",
               pair);
     result = -1;
   } else {
+    if (strstr(mount_path, "..") != NULL) {
+      fprintf(LOGFILE, "Unsupported cgroup mount path detected.\n");
+      result = INVALID_COMMAND_PROVIDED;
+      goto cleanup;
+    }
     if (mount("none", mount_path, "cgroup", 0, controller) == 0) {
       char *buf = stpncpy(hier_path, mount_path, strlen(mount_path));
       *buf++ = '/';
@@ -1528,13 +1555,20 @@ int mount_cgroup(const char *pair, const char *hierarchy) {
 
       // create hierarchy as 0750 and chown to Hadoop NM user
       const mode_t perms = S_IRWXU | S_IRGRP | S_IXGRP;
+      struct stat sb;
+      if (stat(hier_path, &sb) == 0 &&
+          (sb.st_uid != nm_uid || sb.st_gid != nm_gid)) {
+        fprintf(LOGFILE, "cgroup hierarchy %s already owned by another user %d\n", hier_path, sb.st_uid);
+        result = INVALID_COMMAND_PROVIDED;
+        goto cleanup;
+      }
       if (mkdirs(hier_path, perms) == 0) {
         change_owner(hier_path, nm_uid, nm_gid);
         chown_dir_contents(hier_path, nm_uid, nm_gid);
       }
     } else {
       fprintf(LOGFILE, "Failed to mount cgroup controller %s at %s - %s\n",
-                controller, mount_path, strerror(errno));
+              controller, mount_path, strerror(errno));
       // if controller is already mounted, don't stop trying to mount others
       if (errno != EBUSY) {
         result = -1;
@@ -1542,6 +1576,7 @@ int mount_cgroup(const char *pair, const char *hierarchy) {
     }
   }
 
+cleanup:
   free(controller);
   free(mount_path);
 

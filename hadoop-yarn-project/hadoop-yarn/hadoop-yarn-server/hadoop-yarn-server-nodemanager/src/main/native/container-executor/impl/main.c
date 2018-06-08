@@ -77,20 +77,28 @@ static void flush_and_close_log_files() {
 }
 
 int main(int argc, char **argv) {
-  int invalid_args = 0; 
+  int invalid_args = 0;
   int do_check_setup = 0;
   int do_mount_cgroups = 0;
-  
+
   LOGFILE = stdout;
   ERRORFILE = stderr;
 
   if (argc > 1) {
     if (strcmp("--mount-cgroups", argv[1]) == 0) {
-      do_mount_cgroups = 1;
+      if (is_mount_cgroups_support_enabled()) {
+        if (argc < 4) {
+          display_usage(stdout);
+          return INVALID_ARGUMENT_NUMBER;
+        }
+        do_mount_cgroups = 1;
+      } else {
+        display_feature_disabled_message("mount cgroup");
+      }
     }
   }
 
-  // Minimum number of arguments required to run 
+  // Minimum number of arguments required to run
   // the std. container-executor commands is 4
   // 4 args not needed for checksetup option
   if (argc < 4 && !do_mount_cgroups) {
@@ -99,11 +107,11 @@ int main(int argc, char **argv) {
       const char *arg1 = argv[1];
       if (strcmp("--checksetup", arg1) == 0) {
         invalid_args = 0;
-        do_check_setup = 1;        
-      }      
+        do_check_setup = 1;
+      }
     }
   }
-  
+
   if (invalid_args != 0) {
     display_usage(stdout);
     return INVALID_ARGUMENT_NUMBER;
@@ -228,7 +236,7 @@ int main(int argc, char **argv) {
     fprintf(ERRORFILE, "Invalid yarn user name.\n");
     return INVALID_USER_NAME;
   }
- 
+
   optind = optind + 1;
   command = atoi(argv[optind++]);
 
