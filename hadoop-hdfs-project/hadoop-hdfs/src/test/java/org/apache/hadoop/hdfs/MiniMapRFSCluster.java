@@ -54,7 +54,7 @@ enum NodeState {
 
 class MapRNode {
   private static final Log LOG = LogFactory.getLog(MapRNode.class);
-  public static final String ZOOKEEPER_HOME="/opt/mapr/zookeeper/zookeeper-3.4.5";
+  public static final String ZOOKEEPER_HOME="/opt/mapr/zookeeper/zookeeper-3.4.11";
   public static final String ZOOKEEPER_DATA="/opt/mapr/zkdata";
 
   boolean isCldb;
