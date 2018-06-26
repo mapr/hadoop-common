@@ -129,7 +129,7 @@
         $.get(url, function(t) {
           $('#file-info-preview-body').val(t);
           $('#file-info-tail').show();
-        }, "text").error(network_error_handler(url));
+        }, "text").fail(network_error_handler(url));
       });
 
       if (d.fileLength > 0) {
@@ -139,7 +139,7 @@
         $('#file-info-blockinfo-panel').hide();
       }
       $('#file-info').modal();
-    }).error(network_error_handler(url));
+    }).fail(network_error_handler(url));
   }
 
   function browse_directory(dir) {
@@ -175,7 +175,7 @@
           }
         });
       });
-    }).error(network_error_handler(url));
+    }).fail(network_error_handler(url));
   }
 
 
