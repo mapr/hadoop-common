@@ -43,8 +43,10 @@ import org.apache.hadoop.fs.UnsupportedFileSystemException;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.JobCounter;
 import org.apache.hadoop.mapreduce.MRConfig;
+import org.apache.hadoop.mapreduce.MRJobConfig;
 import org.apache.hadoop.mapreduce.TaskID;
 import org.apache.hadoop.mapreduce.TypeConverter;
+import org.apache.hadoop.mapreduce.task.reduce.Shuffle;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskAttemptId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.mapreduce.v2.app.AppContext;
@@ -339,6 +341,9 @@ public class LocalContainerLauncher extends AbstractService implements
         conf.setInt(JobContext.TASK_PARTITION, task.getPartition());
         conf.set(JobContext.ID, task.getJobID().toString());
 
+        // Reset to 'Apache shuffle' parameters as both mappers and reducers run on the same node
+        resetShuffleParams(conf);
+
         // Use the AM's local dir env to generate the intermediate step 
         // output files
         String[] localSysDirs = StringUtils.getTrimmedStrings(
@@ -442,6 +447,14 @@ public class LocalContainerLauncher extends AbstractService implements
         }
         throw new RuntimeException();
       }
+    }
+
+    private void resetShuffleParams(JobConf conf) {
+      conf.setClass(MRConfig.TASK_LOCAL_OUTPUT_CLASS, MROutputFiles.class, MapOutputFile.class);
+      conf.setClass(MRJobConfig.MAP_OUTPUT_COLLECTOR_CLASS_ATTR, MapTask.MapOutputBuffer.class, MapOutputCollector.class);
+      conf.setClass(MRConfig.SHUFFLE_CONSUMER_PLUGIN, Shuffle.class, ShuffleConsumerPlugin.class);
+      conf.setClass(MRConfig.MAPRED_IFILE_OUTPUTSTREAM, IFileOutputStream.class, IFileOutputStream.class);
+      conf.setClass(MRConfig.MAPRED_IFILE_INPUTSTREAM, IFileInputStream.class, IFileInputStream.class);
     }
 
     /**
