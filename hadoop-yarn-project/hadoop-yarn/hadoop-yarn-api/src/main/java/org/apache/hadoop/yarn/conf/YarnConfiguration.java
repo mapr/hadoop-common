@@ -1605,6 +1605,13 @@ public class YarnConfiguration extends Configuration {
   public static final boolean
       DEFAULT_TIMELINE_SERVICE_CLIENT_BEST_EFFORT = true;
 
+  /** Timeout for timeline client socket connection.
+   *  Defaults to 60000 milliseconds (1 minute). */
+  public static final String TIMELINE_SERVICE_CLIENT_SOCKET_TIMEOUT_MS =
+      TIMELINE_SERVICE_CLIENT_PREFIX + "socket-timeout-ms";
+
+  public static final int DEFAULT_TIMELINE_SERVICE_CLIENT_SOCKET_TIMEOUT_MS = 1 * 60 * 1000;
+
   /** Flag to enable recovery of timeline service */
   public static final String TIMELINE_SERVICE_RECOVERY_ENABLED =
       TIMELINE_SERVICE_PREFIX + "recovery.enabled";

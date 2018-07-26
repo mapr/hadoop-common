@@ -83,6 +83,7 @@ Deployment
 | `yarn.timeline-service.handler-thread-count` | Handler thread count to serve the client RPC requests. Defaults to 10. |
 | `yarn.timeline-service.client.max-retries` | Default maximum number of retires for timeline servive client. Defaults to 30. |
 | `yarn.timeline-service.client.retry-interval-ms` | Default retry time interval for timeline servive client. Defaults to 1000. |
+| `yarn.timeline-service.client.socket-timeout-ms` | Timeout for timeline client socket connection. Defaults to 60000 milliseconds (1 minute). |
 
 #### Timeline store and state store configuration
 

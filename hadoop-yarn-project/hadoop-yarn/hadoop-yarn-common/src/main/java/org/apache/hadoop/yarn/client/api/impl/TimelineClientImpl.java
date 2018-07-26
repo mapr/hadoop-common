@@ -88,8 +88,8 @@ public class TimelineClientImpl extends TimelineClient {
   private static final Log LOG = LogFactory.getLog(TimelineClientImpl.class);
   private static final String RESOURCE_URI_STR = "/ws/v1/timeline/";
   private static final Joiner JOINER = Joiner.on("");
-  public final static int DEFAULT_SOCKET_TIMEOUT = 1 * 60 * 1000; // 1 minute
-
+  public static int DEFAULT_SOCKET_TIMEOUT =
+      YarnConfiguration.DEFAULT_TIMELINE_SERVICE_CLIENT_SOCKET_TIMEOUT_MS; // 1 minute
   private static Options opts;
   private static final String ENTITY_DATA_TYPE = "entity";
   private static final String DOMAIN_DATA_TYPE = "domain";
@@ -265,6 +265,8 @@ public class TimelineClientImpl extends TimelineClient {
     }
     ClientConfig cc = new DefaultClientConfig();
     cc.getClasses().add(YarnJacksonJaxbJsonProvider.class);
+    DEFAULT_SOCKET_TIMEOUT = conf.getInt(YarnConfiguration.TIMELINE_SERVICE_CLIENT_SOCKET_TIMEOUT_MS,
+        YarnConfiguration.DEFAULT_TIMELINE_SERVICE_CLIENT_SOCKET_TIMEOUT_MS);
     connConfigurator = newConnConfigurator(conf);
     if (UserGroupInformation.isSecurityEnabled()) {
       authenticator = getMaprDelegationTokenAuthenticator();
