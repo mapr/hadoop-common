@@ -29,12 +29,15 @@ import org.apache.hadoop.crypto.key.KeyProviderCryptoExtension.EncryptedKeyVersi
 import org.apache.hadoop.crypto.key.KeyProviderDelegationTokenExtension;
 import org.apache.hadoop.crypto.key.kms.KMSClientProvider;
 import org.apache.hadoop.crypto.key.kms.LoadBalancingKMSClientProvider;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.minikdc.MiniKdc;
 import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.security.SecurityUtil;
+import org.apache.hadoop.security.User;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.AuthorizationException;
+import org.apache.hadoop.security.rpcauth.KerberosAuthMethod;
 import org.apache.hadoop.security.ssl.KeyStoreTestUtil;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.test.GenericTestUtils;
@@ -49,7 +52,6 @@ import org.junit.rules.Timeout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.security.auth.kerberos.KerberosPrincipal;
 import javax.security.auth.login.AppConfigurationEntry;
 
 import java.io.File;
@@ -77,6 +79,19 @@ public class TestKMS {
 
   @Rule
   public final Timeout testTimeout = new Timeout(180000);
+
+  private void setMaprSpecificAuthOptionsForKerberosAuthentication(Configuration conf){
+    conf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+      User.class.getName());
+    conf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+      KerberosAuthMethod.class.getName());
+    System.setProperty("hadoop.login", "kerberos");
+    try {
+      UserGroupInformation.getLoginUser().reloginFromKeytab();
+    } catch (IOException e) {
+      LOG.warn(e.getMessage());
+    }
+  }
 
   @Before
   public void cleanUp() {
@@ -271,6 +286,7 @@ public class TestKMS {
     Configuration conf = new Configuration();
     if (kerberos) {
       conf.set("hadoop.security.authentication", "kerberos");
+      setMaprSpecificAuthOptionsForKerberosAuthentication(conf);
     }
     UserGroupInformation.setConfiguration(conf);
     File testDir = getTestDir();
@@ -396,6 +412,10 @@ public class TestKMS {
     final String specialKey = "key %^[\n{]}|\"<>\\";
     Configuration conf = new Configuration();
     conf.set("hadoop.security.authentication", "kerberos");
+    conf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+      User.class.getName());
+    conf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+      KerberosAuthMethod.class.getName());
     UserGroupInformation.setConfiguration(conf);
     File confDir = getTestDir();
     conf = createBaseKMSConf(confDir);
@@ -431,6 +451,10 @@ public class TestKMS {
   public void testKMSProvider() throws Exception {
     Configuration conf = new Configuration();
     conf.set("hadoop.security.authentication", "kerberos");
+    conf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+      User.class.getName());
+    conf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+      KerberosAuthMethod.class.getName());
     UserGroupInformation.setConfiguration(conf);
     File confDir = getTestDir();
     conf = createBaseKMSConf(confDir);
@@ -677,6 +701,7 @@ public class TestKMS {
   public void testKeyACLs() throws Exception {
     Configuration conf = new Configuration();
     conf.set("hadoop.security.authentication", "kerberos");
+    setMaprSpecificAuthOptionsForKerberosAuthentication(conf);
     UserGroupInformation.setConfiguration(conf);
     final File testDir = getTestDir();
     conf = createBaseKMSConf(testDir);
@@ -955,6 +980,7 @@ public class TestKMS {
   public void doKMSRestart(boolean useKrb) throws Exception {
     Configuration conf = new Configuration();
     conf.set("hadoop.security.authentication", "kerberos");
+    setMaprSpecificAuthOptionsForKerberosAuthentication(conf);
     UserGroupInformation.setConfiguration(conf);
     final File testDir = getTestDir();
     conf = createBaseKMSConf(testDir);
@@ -1035,6 +1061,7 @@ public class TestKMS {
   public void testKMSAuthFailureRetry() throws Exception {
     Configuration conf = new Configuration();
     conf.set("hadoop.security.authentication", "kerberos");
+    setMaprSpecificAuthOptionsForKerberosAuthentication(conf);
     UserGroupInformation.setConfiguration(conf);
     final File testDir = getTestDir();
     conf = createBaseKMSConf(testDir);
@@ -1129,6 +1156,7 @@ public class TestKMS {
   public void testACLs() throws Exception {
     Configuration conf = new Configuration();
     conf.set("hadoop.security.authentication", "kerberos");
+    setMaprSpecificAuthOptionsForKerberosAuthentication(conf);
     UserGroupInformation.setConfiguration(conf);
     final File testDir = getTestDir();
     conf = createBaseKMSConf(testDir);
@@ -1439,6 +1467,7 @@ public class TestKMS {
   public void testKMSBlackList() throws Exception {
     Configuration conf = new Configuration();
     conf.set("hadoop.security.authentication", "kerberos");
+    setMaprSpecificAuthOptionsForKerberosAuthentication(conf);
     UserGroupInformation.setConfiguration(conf);
     File testDir = getTestDir();
     conf = createBaseKMSConf(testDir);
@@ -1528,6 +1557,7 @@ public class TestKMS {
   public void testServicePrincipalACLs() throws Exception {
     Configuration conf = new Configuration();
     conf.set("hadoop.security.authentication", "kerberos");
+    setMaprSpecificAuthOptionsForKerberosAuthentication(conf);
     UserGroupInformation.setConfiguration(conf);
     File testDir = getTestDir();
     conf = createBaseKMSConf(testDir);
@@ -1655,6 +1685,7 @@ public class TestKMS {
   public void testDelegationTokenAccess() throws Exception {
     Configuration conf = new Configuration();
     conf.set("hadoop.security.authentication", "kerberos");
+    setMaprSpecificAuthOptionsForKerberosAuthentication(conf);
     UserGroupInformation.setConfiguration(conf);
     final File testDir = getTestDir();
     conf = createBaseKMSConf(testDir);
@@ -1733,6 +1764,7 @@ public class TestKMS {
   public void testDelegationTokensOpsKerberized() throws Exception {
     final Configuration conf = new Configuration();
     conf.set("hadoop.security.authentication", "kerberos");
+    setMaprSpecificAuthOptionsForKerberosAuthentication(conf);
     testDelegationTokensOps(conf, true);
   }
 
@@ -1884,6 +1916,7 @@ public class TestKMS {
 
       Configuration conf = new Configuration();
       conf.set("hadoop.security.authentication", "kerberos");
+      setMaprSpecificAuthOptionsForKerberosAuthentication(conf);
       UserGroupInformation.setConfiguration(conf);
       final File testDir = getTestDir();
       conf = createBaseKMSConf(testDir);
@@ -1974,11 +2007,19 @@ public class TestKMS {
   public void doProxyUserTest(final boolean kerberos) throws Exception {
     Configuration conf = new Configuration();
     conf.set("hadoop.security.authentication", "kerberos");
+    conf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+      User.class.getName());
+    conf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+      KerberosAuthMethod.class.getName());
     UserGroupInformation.setConfiguration(conf);
     final File testDir = getTestDir();
     conf = createBaseKMSConf(testDir);
     if (kerberos) {
       conf.set("hadoop.kms.authentication.type", "kerberos");
+      conf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+        User.class.getName());
+      conf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+        KerberosAuthMethod.class.getName());
     }
     conf.set("hadoop.kms.authentication.kerberos.keytab",
         keytab.getAbsolutePath());
@@ -2079,6 +2120,10 @@ public class TestKMS {
   public void doWebHDFSProxyUserTest(final boolean kerberos) throws Exception {
     Configuration conf = new Configuration();
     conf.set("hadoop.security.authentication", "kerberos");
+    conf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+      User.class.getName());
+    conf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+      KerberosAuthMethod.class.getName());
     UserGroupInformation.setConfiguration(conf);
     final File testDir = getTestDir();
     conf = createBaseKMSConf(testDir);
