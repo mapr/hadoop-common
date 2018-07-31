@@ -353,9 +353,9 @@ public class TestNetworkedJob {
       jobClient.run(arg1);
       assertTrue(bytes.toString().contains("Queue acls for user :"));
       assertTrue(bytes.toString().contains(
-          "root  ADMINISTER_QUEUE,SUBMIT_APPLICATIONS"));
+          "root  SUBMIT_APPLICATIONS"));
       assertTrue(bytes.toString().contains(
-          "default  ADMINISTER_QUEUE,SUBMIT_APPLICATIONS"));
+          "default  SUBMIT_APPLICATIONS"));
 
       // test for info and default queue
 
