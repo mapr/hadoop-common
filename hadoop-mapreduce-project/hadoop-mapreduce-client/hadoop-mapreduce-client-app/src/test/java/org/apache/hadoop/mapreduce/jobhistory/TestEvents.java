@@ -23,6 +23,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 
 import static org.junit.Assert.*;
 
@@ -282,6 +283,7 @@ public class TestEvents {
     datum.taskid = "task_1_2_r03_4";
     datum.taskType = "taskType";
     datum.trackerName = "trackerName";
+    datum.servicesMetaData = new HashMap<>();
     result.setDatum(datum);
     return result;
   }
@@ -329,6 +331,7 @@ public class TestEvents {
     datum.taskid = "task_1_2_r03_4";
     datum.taskType = "taskType";
     datum.trackerName = "trackerName";
+    datum.servicesMetaData = new HashMap<>();
     result.setDatum(datum);
     return result;
   }
