@@ -240,7 +240,7 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
           <goal>jar</goal>
         </goals>
             <configuration>
-              
+
             </configuration>
       </plugin>
 
@@ -641,7 +641,7 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
                 <configuration>
                   <target>
                     <mkdir dir="${project.build.directory}/native"/>
-                    <exec executable="cmake" dir="${project.build.directory}/native" 
+                    <exec executable="cmake" dir="${project.build.directory}/native"
                         failonerror="true">
                       <arg line="${basedir}/src/ -DGENERATED_JAVAH=${project.build.directory}/native/javah -DJVM_ARCH_DATA_MODEL=${sun.arch.data.model} -DREQUIRE_LIBWEBHDFS=${require.libwebhdfs} -DREQUIRE_FUSE=${require.fuse}"/>
                     </exec>
@@ -694,7 +694,7 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
             <artifactId>maven-antrun-plugin</artifactId>
             <executions>
               <execution>
-                <id>create-parallel-tests-dirs</id>               
+                <id>create-parallel-tests-dirs</id>
                 <phase>test-compile</phase>
                 <configuration>
                   <target>
@@ -720,6 +720,24 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
                 <test.build.data>${test.build.data}/${surefire.forkNumber}</test.build.data>
                 <hadoop.tmp.dir>${hadoop.tmp.dir}/${surefire.forkNumber}</hadoop.tmp.dir>
               </systemPropertyVariables>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>java9</id>
+      <activation>
+        <jdk>[9,)</jdk>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+              <testExcludes>
+                <testExclude>org/apache/hadoop/hdfs/TestDFSClientFailover.java</testExclude>
+              </testExcludes>
             </configuration>
           </plugin>
         </plugins>
