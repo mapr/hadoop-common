@@ -28,8 +28,8 @@ import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.tools.DistCpOptions.FileAttribute;
 
@@ -41,7 +41,7 @@ import com.google.common.base.Preconditions;
  */
 public class OptionsParser {
 
-  private static final Log LOG = LogFactory.getLog(OptionsParser.class);
+  private static final Logger LOG = LoggerFactory.getLogger(OptionsParser.class);
 
   private static final Options cliOptions = new Options();
 

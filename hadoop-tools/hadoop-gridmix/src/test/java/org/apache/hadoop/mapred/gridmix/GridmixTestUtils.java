@@ -1,7 +1,7 @@
 package org.apache.hadoop.mapred.gridmix;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -31,7 +31,7 @@ import java.io.IOException;
  * the License.
  */
 public class GridmixTestUtils {
-  private static final Log LOG = LogFactory.getLog(GridmixTestUtils.class);
+  private static final Logger LOG = LoggerFactory.getLogger(GridmixTestUtils.class);
   static final Path DEST = new Path("/gridmix");
   static FileSystem dfs = null;
   static MiniDFSCluster dfsCluster = null;

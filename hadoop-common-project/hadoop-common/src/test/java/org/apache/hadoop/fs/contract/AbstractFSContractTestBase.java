@@ -99,7 +99,7 @@ public abstract class AbstractFSContractTestBase extends Assert
    * Get the log of the base class
    * @return a logger
    */
-  public static Logger getLog() {
+  public static Logger getLogger() {
     return LOG;
   }
 
@@ -266,7 +266,7 @@ public abstract class AbstractFSContractTestBase extends Assert
    * @param e exception raised.
    */
   protected void handleExpectedException(Exception e) {
-    getLog().debug("expected :{}" ,e, e);
+    getLogger().debug("expected :{}" ,e, e);
   }
 
   /**
@@ -351,7 +351,7 @@ public abstract class AbstractFSContractTestBase extends Assert
   protected String generateAndLogErrorListing(Path src, Path dst) throws
                                                                   IOException {
     FileSystem fs = getFileSystem();
-    getLog().error(
+    getLogger().error(
       "src dir " + ContractTestUtils.ls(fs, src.getParent()));
     String destDirLS = ContractTestUtils.ls(fs, dst.getParent());
     if (fs.isDirectory(dst)) {

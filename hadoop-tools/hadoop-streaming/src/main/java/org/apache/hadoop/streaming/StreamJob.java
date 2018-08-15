@@ -38,8 +38,8 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.MRConfig;
 import org.apache.hadoop.mapreduce.MRJobConfig;
@@ -79,7 +79,7 @@ import org.apache.hadoop.util.Tool;
  */
 public class StreamJob implements Tool {
 
-  protected static final Log LOG = LogFactory.getLog(StreamJob.class.getName());
+  protected static final Logger LOG = LoggerFactory.getLogger(StreamJob.class.getName());
   final static String REDUCE_NONE = "NONE";
 
   /** -----------Streaming CLI Implementation  **/

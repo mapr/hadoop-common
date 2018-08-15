@@ -17,8 +17,8 @@
  */
 package org.apache.hadoop.tools.mapred.lib;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -46,7 +46,7 @@ import java.io.IOException;
  * consumed.
  */
 class DynamicInputChunk<K, V> {
-  private static Log LOG = LogFactory.getLog(DynamicInputChunk.class);
+  private static Logger LOG = LoggerFactory.getLogger(DynamicInputChunk.class);
 
   private static Configuration configuration;
   private static Path chunkRootPath;
@@ -126,7 +126,7 @@ class DynamicInputChunk<K, V> {
    * Closes streams opened to the chunk-file.
    */
   public void close() {
-    IOUtils.cleanup(LOG, reader, writer);
+    IOUtils.cleanupWithLogger(LOG, reader, writer);
   }
 
   /**

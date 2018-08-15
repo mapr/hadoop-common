@@ -26,8 +26,8 @@ import java.util.Arrays;
 import java.util.EnumSet;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileChecksum;
 import org.apache.hadoop.fs.FileStatus;
@@ -75,7 +75,7 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
     OVERWRITE,    // Overwrite the whole file
   }
 
-  private static Log LOG = LogFactory.getLog(CopyMapper.class);
+  private static Logger LOG = LoggerFactory.getLogger(CopyMapper.class);
 
   private Configuration conf;
 
@@ -423,7 +423,7 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
     return FileAction.OVERWRITE;
   }
 
-  private boolean canSkip(FileSystem sourceFS, FileStatus source, 
+  private boolean canSkip(FileSystem sourceFS, FileStatus source,
       FileStatus target) throws IOException {
     if (!syncFolders) {
       return true;

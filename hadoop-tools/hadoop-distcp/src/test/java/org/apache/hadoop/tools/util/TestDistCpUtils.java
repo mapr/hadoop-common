@@ -24,8 +24,8 @@ import java.util.EnumSet;
 import java.util.Random;
 import java.util.Stack;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -42,7 +42,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class TestDistCpUtils {
-  private static final Log LOG = LogFactory.getLog(TestDistCpUtils.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TestDistCpUtils.class);
 
   private static final Configuration config = new Configuration();
   private static MiniDFSCluster cluster;
@@ -55,7 +55,7 @@ public class TestDistCpUtils {
     cluster = new MiniDFSCluster.Builder(config)
         .numDataNodes(1)
         .format(true)
-        .build(); 
+        .build();
   }
 
   @AfterClass

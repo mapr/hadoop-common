@@ -119,7 +119,7 @@ public abstract class AbstractContractSeekTest extends AbstractFSContractTestBas
     boolean supportsSeekOnClosedFiles = isSupported(SUPPORTS_SEEK_ON_CLOSED_FILE);
 
     instream = getFileSystem().open(smallSeekFile);
-    getLog().debug(
+    getLogger().debug(
       "Stream is of type " + instream.getClass().getCanonicalName());
     instream.close();
     try {

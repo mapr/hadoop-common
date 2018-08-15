@@ -33,8 +33,8 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -78,9 +78,9 @@ import com.google.common.base.Charsets;
  */
 public class HadoopArchives implements Tool {
   public static final int VERSION = 3;
-  private static final Log LOG = LogFactory.getLog(HadoopArchives.class);
+  private static final Logger LOG = LoggerFactory.getLogger(HadoopArchives.class);
   
-  private static final String NAME = "har"; 
+  private static final String NAME = "har";
   static final String SRC_LIST_LABEL = NAME + ".src.list";
   static final String DST_DIR_LABEL = NAME + ".dest.path";
   static final String TMP_DIR_LABEL = NAME + ".tmp.dir";
@@ -605,7 +605,7 @@ public class HadoopArchives implements Tool {
         //this was a stale copy
         if (destFs.exists(tmpOutput)) {
           destFs.delete(tmpOutput, false);
-        } 
+        }
         partStream = destFs.create(tmpOutput, false, conf.getInt("io.file.buffer.size", 4096), 
             destFs.getDefaultReplication(tmpOutput), blockSize);
       } catch(IOException ie) {
@@ -787,9 +787,9 @@ public class HadoopArchives implements Tool {
       fs.setReplication(index, (short) 5);
       fs.setReplication(masterIndex, (short) 5);
     }
-    
+
   }
-  
+
   /** the main driver for creating the archives
    *  it takes at least three command line parameters. The parent path, 
    *  The src and the dest. It does an lsr on the source paths.
