@@ -22,8 +22,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -69,7 +69,7 @@ public class TestStandbyCheckpoints {
   private final Random random = new Random();
   protected File tmpOivImgDir;
   
-  private static final Log LOG = LogFactory.getLog(TestStandbyCheckpoints.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TestStandbyCheckpoints.class);
 
   @SuppressWarnings("rawtypes")
   @Before
@@ -137,7 +137,7 @@ public class TestStandbyCheckpoints {
   @Test(timeout = 300000)
   public void testSBNCheckpoints() throws Exception {
     JournalSet standbyJournalSet = NameNodeAdapter.spyOnJournalSet(nn1);
-    
+
     doEdits(0, 10);
     HATestUtil.waitForStandbyToCatchUp(nn0, nn1);
     // Once the standby catches up, it should notice that it needs to
@@ -215,9 +215,9 @@ public class TestStandbyCheckpoints {
         DFSConfigKeys.DFS_NAMENODE_CHECKPOINT_PERIOD_KEY, 0);
     cluster.restartNameNode(1);
     nn1 = cluster.getNameNode(1);
- 
+
     FSImage spyImage1 = NameNodeAdapter.spyOnFsImage(nn1);
-    
+
     // We shouldn't save any checkpoints at txid=0
     Thread.sleep(1000);
     Mockito.verify(spyImage1, Mockito.never())
@@ -415,11 +415,11 @@ public class TestStandbyCheckpoints {
     
     // Make sure that our thread is waiting for the lock.
     ThreadUtil.sleepAtLeastIgnoreInterrupts(1000);
-    
+
     assertFalse(nn1.getNamesystem().getFsLockForTests().hasQueuedThreads());
     assertFalse(nn1.getNamesystem().getFsLockForTests().isWriteLocked());
     assertTrue(nn1.getNamesystem().getCpLockForTests().hasQueuedThreads());
-    
+
     // Get /jmx of the standby NN web UI, which will cause the FSNS read lock to
     // be taken.
     String pageContents = DFSTestUtil.urlGet(new URL("http://" +

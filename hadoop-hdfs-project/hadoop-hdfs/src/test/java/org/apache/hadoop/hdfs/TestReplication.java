@@ -33,6 +33,8 @@ import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
@@ -62,8 +64,8 @@ public class TestReplication {
     "/d1/r1", "/d1/r1", "/d1/r2", "/d1/r2", "/d1/r2", "/d2/r3", "/d2/r3"
   };
   private static final int numDatanodes = racks.length;
-  private static final Log LOG = LogFactory.getLog(
-                                       "org.apache.hadoop.hdfs.TestReplication");
+  private static final Logger LOG = LoggerFactory.getLogger(
+          TestReplication.class);
 
   private void writeFile(FileSystem fileSys, Path name, int repl)
     throws IOException {
@@ -337,7 +339,7 @@ public class TestReplication {
     for (int i=0; i<buffer.length; i++) {
       buffer[i] = '1';
     }
-    
+
     try {
       Configuration conf = new HdfsConfiguration();
       conf.set(DFSConfigKeys.DFS_REPLICATION_KEY, Integer.toString(numDataNodes));
@@ -357,19 +359,19 @@ public class TestReplication {
       // get first block of the file.
       ExtendedBlock block = dfsClient.getNamenode().getBlockLocations(testFile,
           0, Long.MAX_VALUE).get(0).getBlock();
-      
+
       cluster.shutdown();
-      
+
       for (int i=0; i<25; i++) {
         buffer[i] = '0';
       }
-      
+
       int fileCount = 0;
       // Choose 3 copies of block file - delete 1 and corrupt the remaining 2
       for (int dnIndex=0; dnIndex<3; dnIndex++) {
         File blockFile = cluster.getBlockFile(dnIndex, block);
         LOG.info("Checking for file " + blockFile);
-        
+
         if (blockFile != null && blockFile.exists()) {
           if (fileCount == 0) {
             LOG.info("Deleting file " + blockFile);
@@ -391,7 +393,7 @@ public class TestReplication {
         }
       }
       assertEquals(3, fileCount);
-      
+
       /* Start the MiniDFSCluster with more datanodes since once a writeBlock
        * to a datanode node fails, same block can not be written to it
        * immediately. In our case some replication attempts will fail.

@@ -35,9 +35,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.impl.Log4JLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -79,10 +78,10 @@ import org.mockito.stubbing.Answer;
  */
 public class TestSaveNamespace {
   static {
-    ((Log4JLogger)FSImage.LOG).getLogger().setLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(FSImage.LOG, Level.ALL);
   }
   
-  private static final Log LOG = LogFactory.getLog(TestSaveNamespace.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TestSaveNamespace.class);
 
   private static class FaultySaveImage implements Answer<Void> {
     int count = 0;
@@ -302,7 +301,7 @@ public class TestSaveNamespace {
         try {
           fsn.close();
         } catch (Throwable t) {
-          LOG.fatal("Failed to shut down", t);
+          LOG.error("Failed to shut down", t);
         }
       }
     }
@@ -379,7 +378,7 @@ public class TestSaveNamespace {
     Whitebox.setInternalState(fsn, "fsImage", spyImage);
 
     spyImage.storage.setStorageDirectories(
-        FSNamesystem.getNamespaceDirs(conf), 
+        FSNamesystem.getNamespaceDirs(conf),
         FSNamesystem.getNamespaceEditsDirs(conf));
 
     doThrow(new IOException("Injected fault: saveFSImage")).
@@ -501,7 +500,7 @@ public class TestSaveNamespace {
   
   /**
    * Test for save namespace should succeed when parent directory renamed with
-   * open lease and destination directory exist. 
+   * open lease and destination directory exist.
    * This test is a regression for HDFS-2827
    */
   @Test
@@ -520,13 +519,13 @@ public class TestSaveNamespace {
       cluster.getNameNodeRpc().saveNamespace();
       fs.setSafeMode(SafeModeAction.SAFEMODE_LEAVE);
     } finally {
-      IOUtils.cleanup(LOG, out, fs);
+      IOUtils.cleanupWithLogger(LOG, out, fs);
       if (cluster != null) {
         cluster.shutdown();
       }
     }
   }
-  
+
   @Test(timeout=20000)
   public void testCancelSaveNamespace() throws Exception {
     Configuration conf = getConf();
@@ -614,7 +613,7 @@ public class TestSaveNamespace {
     cluster.waitActive();
     DistributedFileSystem fs = cluster.getFileSystem();
     try {
-      cluster.getNamesystem().leaseManager.addLease("me", "/non-existent");      
+      cluster.getNamesystem().leaseManager.addLease("me", "/non-existent");
       fs.setSafeMode(SafeModeAction.SAFEMODE_ENTER);
       cluster.getNameNodeRpc().saveNamespace();
       fs.setSafeMode(SafeModeAction.SAFEMODE_LEAVE);
@@ -650,7 +649,7 @@ public class TestSaveNamespace {
     conf.set(DFSConfigKeys.DFS_NAMENODE_NAME_DIR_KEY, nameDirs);
     conf.set(DFSConfigKeys.DFS_NAMENODE_EDITS_DIR_KEY, nameDirs);
     conf.set(DFSConfigKeys.DFS_NAMENODE_SECONDARY_HTTP_ADDRESS_KEY, "0.0.0.0:0");
-    conf.setBoolean(DFSConfigKeys.DFS_PERMISSIONS_ENABLED_KEY, false); 
+    conf.setBoolean(DFSConfigKeys.DFS_PERMISSIONS_ENABLED_KEY, false);
     return conf;
   }
 }

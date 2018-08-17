@@ -33,8 +33,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
@@ -79,7 +79,7 @@ import org.mockito.invocation.InvocationOnMock;
  * and messages.
  */
 public abstract class BlockReportTestBase {
-  public static final Log LOG = LogFactory.getLog(BlockReportTestBase.class);
+  public static final Logger LOG = LoggerFactory.getLogger(BlockReportTestBase.class);
 
   private static short REPL_FACTOR = 1;
   private static final int RAND_LIMIT = 2000;
@@ -823,7 +823,7 @@ public abstract class BlockReportTestBase {
   private static void initLoggers() {
     DFSTestUtil.setNameNodeLogLevel(Level.ALL);
     GenericTestUtils.setLogLevel(DataNode.LOG, Level.ALL);
-    GenericTestUtils.setLogLevel(BlockReportTestBase.LOG, Level.ALL);
+    GenericTestUtils.setLogLevel(BlockReportTestBase.LOG, org.slf4j.event.Level.DEBUG);
   }
 
   private Block findBlock(Path path, long size) throws IOException {
