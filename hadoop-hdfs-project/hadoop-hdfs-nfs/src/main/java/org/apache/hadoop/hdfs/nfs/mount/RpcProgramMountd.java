@@ -24,8 +24,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.nfs.conf.NfsConfigKeys;
 import org.apache.hadoop.hdfs.nfs.conf.NfsConfiguration;
@@ -58,20 +58,21 @@ import com.google.common.annotations.VisibleForTesting;
  * RPC program corresponding to mountd daemon. See {@link Mountd}.
  */
 public class RpcProgramMountd extends RpcProgram implements MountInterface {
-  private static final Log LOG = LogFactory.getLog(RpcProgramMountd.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(RpcProgramMountd.class);
   public static final int PROGRAM = 100005;
   public static final int VERSION_1 = 1;
   public static final int VERSION_2 = 2;
   public static final int VERSION_3 = 3;
 
   private final DFSClient dfsClient;
-  
+
   /** Synchronized list */
   private final List<MountEntry> mounts;
   
   /** List that is unmodifiable */
   private final List<String> exports;
-  
+
   private final NfsExports hostsMatcher;
 
   public RpcProgramMountd(NfsConfiguration config,
@@ -92,7 +93,7 @@ public class RpcProgramMountd extends RpcProgram implements MountInterface {
         NfsConfigKeys.DFS_NFS_KERBEROS_PRINCIPAL_KEY);
     this.dfsClient = new DFSClient(NameNode.getAddress(config), config);
   }
-  
+
   @Override
   public XDR nullOp(XDR out, int xid, InetAddress client) {
     if (LOG.isDebugEnabled()) {
@@ -132,7 +133,7 @@ public class RpcProgramMountd extends RpcProgram implements MountInterface {
     FileHandle handle = null;
     try {
       HdfsFileStatus exFileStatus = dfsClient.getFileInfo(path);
-      
+
       handle = new FileHandle(exFileStatus.getFileId());
     } catch (IOException e) {
       LOG.error("Can't get handle for export:" + path, e);

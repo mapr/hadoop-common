@@ -31,8 +31,6 @@ import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.client.HdfsDataOutputStream;
@@ -61,13 +59,15 @@ import org.jboss.netty.channel.Channel;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * OpenFileCtx saves the context of one HDFS file output stream. Access to it is
  * synchronized by its member lock.
  */
 class OpenFileCtx {
-  public static final Log LOG = LogFactory.getLog(OpenFileCtx.class);
+  public static final Logger LOG = LoggerFactory.getLogger(OpenFileCtx.class);
   
   // Pending writes water mark for dump, 1MB
   private static long DUMP_WRITE_WATER_MARK = 1024 * 1024;
@@ -211,8 +211,8 @@ class OpenFileCtx {
   private long updateNonSequentialWriteInMemory(long count) {
     long newValue = nonSequentialWriteInMemory.addAndGet(count);
     if (LOG.isDebugEnabled()) {
-      LOG.debug("Update nonSequentialWriteInMemory by " + count + " new value: "
-          + newValue);
+      LOG.debug("Update nonSequentialWriteInMemory by {} new value: {}",
+              count, newValue);
     }
 
     Preconditions.checkState(newValue >= 0,
@@ -253,7 +253,7 @@ class OpenFileCtx {
     enabledDump = dumpFilePath != null;
     nextOffset = new AtomicLong();
     nextOffset.set(latestAttr.getSize());
-    try {	
+    try {
       assert(nextOffset.get() == this.fos.getPos());
     } catch (IOException e) {}
     dumpThread = null;
@@ -314,7 +314,7 @@ class OpenFileCtx {
     private void dump() {
       // Create dump outputstream for the first time
       if (dumpOut == null) {
-        LOG.info("Create dump file: " + dumpFilePath);
+        LOG.info("Create dump file: {}", dumpFilePath);
         File dumpFile = new File(dumpFilePath);
         try {
           synchronized (this) {
@@ -324,13 +324,14 @@ class OpenFileCtx {
             dumpOut = new FileOutputStream(dumpFile);
           }
         } catch (IOException e) {
-          LOG.error("Got failure when creating dump stream " + dumpFilePath, e);
+          LOG.error("Got failure when creating dump stream {}",
+              dumpFilePath, e);
           enabledDump = false;
           if (dumpOut != null) {
             try {
               dumpOut.close();
             } catch (IOException e1) {
-              LOG.error("Can't close dump stream " + dumpFilePath, e);
+              LOG.error("Can't close dump stream {}", dumpFilePath, e);
             }
           }
           return;
@@ -342,7 +343,7 @@ class OpenFileCtx {
         try {
           raf = new RandomAccessFile(dumpFilePath, "r");
         } catch (FileNotFoundException e) {
-          LOG.error("Can't get random access to file " + dumpFilePath);
+          LOG.error("Can't get random access to file {}", dumpFilePath);
           // Disable dump
           enabledDump = false;
           return;
@@ -369,8 +370,8 @@ class OpenFileCtx {
             updateNonSequentialWriteInMemory(-dumpedDataSize);
           }
         } catch (IOException e) {
-          LOG.error("Dump data failed: " + writeCtx + " with error: " + e
-              + " OpenFileCtx state: " + activeState);
+          LOG.error("Dump data failed: {} OpenFileCtx state: {}",
+              writeCtx, activeState, e);
           // Disable dump
           enabledDump = false;
           return;
@@ -378,8 +379,8 @@ class OpenFileCtx {
       }
 
       if (LOG.isDebugEnabled()) {
-        LOG.debug("After dump, nonSequentialWriteInMemory == "
-            + nonSequentialWriteInMemory.get());
+        LOG.debug("After dump, nonSequentialWriteInMemory == {}",
+            nonSequentialWriteInMemory.get());
       }
     }
 
@@ -399,22 +400,22 @@ class OpenFileCtx {
                   LOG.debug("Dumper woke up");
                 }
               } catch (InterruptedException e) {
-                LOG.info("Dumper is interrupted, dumpFilePath= "
-                    + OpenFileCtx.this.dumpFilePath);
+                LOG.info("Dumper is interrupted, dumpFilePath = {}",
+                    OpenFileCtx.this.dumpFilePath);
               }
             }
           }
           if (LOG.isDebugEnabled()) {
-            LOG.debug("Dumper checking OpenFileCtx activeState: " + activeState
-                + " enabledDump: " + enabledDump);
+            LOG.debug("Dumper checking OpenFileCtx activeState: {}"
+                    + " enabledDump: {}", activeState, enabledDump);
           }
         } catch (Throwable t) {
           // unblock threads with new request
           synchronized (OpenFileCtx.this) {
             OpenFileCtx.this.notifyAll();
           }
-          LOG.info("Dumper get Throwable: " + t + ". dumpFilePath: "
-              + OpenFileCtx.this.dumpFilePath, t);
+          LOG.info("Dumper got Throwable. dumpFilePath: {}",
+              OpenFileCtx.this.dumpFilePath, t);
           activeState = false;
         }
       }
@@ -430,8 +431,8 @@ class OpenFileCtx {
       return null;
     } else {
       if (xid != writeCtx.getXid()) {
-        LOG.warn("Got a repeated request, same range, with a different xid: "
-            + xid + " xid in old request: " + writeCtx.getXid());
+        LOG.warn("Got a repeated request, same range, with a different xid: " +
+            "{} xid in old request: {}", xid, writeCtx.getXid());
         //TODO: better handling.
       }
       return writeCtx;  
@@ -443,8 +444,8 @@ class OpenFileCtx {
       IdMappingServiceProvider iug) {
     
     if (!activeState) {
-      LOG.info("OpenFileCtx is inactive, fileId: "
-          + request.getHandle().getFileId());
+      LOG.info("OpenFileCtx is inactive, fileId: {}",
+              request.getHandle().getFileId());
       WccData fileWcc = new WccData(latestAttr.getWccAttr(), latestAttr);
       WRITE3Response response = new WRITE3Response(Nfs3Status.NFS3ERR_IO,
           fileWcc, 0, request.getStableHow(), Nfs3Constant.WRITE_COMMIT_VERF);
@@ -463,13 +464,13 @@ class OpenFileCtx {
       if (existantWriteCtx != null) {
         if (!existantWriteCtx.getReplied()) {
           if (LOG.isDebugEnabled()) {
-            LOG.debug("Repeated write request which hasn't been served: xid="
-                + xid + ", drop it.");
+            LOG.debug("Repeated write request which hasn't been served: " +
+                    "xid={}, drop it.", xid);
           }
         } else {
           if (LOG.isDebugEnabled()) {
-            LOG.debug("Repeated write request which is already served: xid="
-                + xid + ", resend response.");
+            LOG.debug("Repeated write request which is already served: xid={}" +
+                    ", resend response.", xid);
           }
           WccData fileWcc = new WccData(latestAttr.getWccAttr(), latestAttr);
           WRITE3Response response = new WRITE3Response(Nfs3Status.NFS3_OK,
@@ -509,7 +510,7 @@ class OpenFileCtx {
     request.setOffset(cachedOffset);
     request.setCount((int) smallerCount);
   }
-  
+
   /**
    * Creates and adds a WriteCtx into the pendingWrites map. This is a
    * synchronized method to handle concurrent writes.
@@ -558,8 +559,8 @@ class OpenFileCtx {
     
     // Fail non-append call
     if (offset < cachedOffset) {
-      LOG.warn("(offset,count,nextOffset): " + "(" + offset + "," + count + ","
-          + nextOffset + ")");
+      LOG.warn("(offset,count,nextOffset): ({},{},{})",
+          offset, count, nextOffset);
       return null;
     } else {
       DataState dataState = offset == cachedOffset ? WriteCtx.DataState.NO_DUMP
@@ -569,8 +570,8 @@ class OpenFileCtx {
           request.getStableHow(), request.getData(), channel, xid, false,
           dataState);
       if (LOG.isDebugEnabled()) {
-        LOG.debug("Add new write to the list with nextOffset " + cachedOffset
-            + " and requested offset=" + offset);
+        LOG.debug("Add new write to the list with nextOffset {}" +
+                " and requested offset={}", cachedOffset, offset);
       }
       if (writeCtx.getDataState() == WriteCtx.DataState.ALLOW_DUMP) {
         // update the memory size
@@ -586,8 +587,8 @@ class OpenFileCtx {
               + pendingWrites.size());
         }
       } else {
-        LOG.warn("Got a repeated request, same range, with xid: " + xid
-            + " nextOffset " + +cachedOffset + " req offset=" + offset);
+        LOG.warn("Got a repeated request, same range, with xid: " +
+            "{} nextOffset {} req offset={}", xid, cachedOffset, offset);
       }
       return writeCtx;
     }
@@ -741,7 +742,7 @@ class OpenFileCtx {
       return new WRITE3Response(Nfs3Status.NFS3ERR_IO, wccData, 0, stableHow,
           Nfs3Constant.WRITE_COMMIT_VERF);
     } finally {
-      IOUtils.cleanup(LOG, fis);
+      IOUtils.cleanupWithLogger(LOG, fis);
     }
 
     // Compare with the request
@@ -874,7 +875,7 @@ class OpenFileCtx {
       LOG.error("Can't get flushed offset, error:" + e);
       return COMMIT_STATUS.COMMIT_ERROR;
     }
-    
+
     if (LOG.isDebugEnabled()) {
       LOG.debug("getFlushedOffset=" + flushed + " commitOffset=" + commitOffset
           + "nextOffset=" + nextOffset.get());
@@ -1011,16 +1012,16 @@ class OpenFileCtx {
       this.asyncStatus = false;
       return null;
     } 
-    
+
       Entry<OffsetRange, WriteCtx> lastEntry = pendingWrites.lastEntry();
       OffsetRange range = lastEntry.getKey();
       WriteCtx toWrite = lastEntry.getValue();
-      
+
       if (LOG.isTraceEnabled()) {
         LOG.trace("range.getMin()=" + range.getMin() + " nextOffset="
             + nextOffset);
       }
-      
+
       long offset = nextOffset.get();
       if (range.getMin() > offset) {
         if (LOG.isDebugEnabled()) {
@@ -1040,7 +1041,7 @@ class OpenFileCtx {
           LOG.debug("Remove write(" + range.getMin() + "-" + range.getMax()
               + ") from the list");
         }
-        // after writing, remove the WriteCtx from cache 
+        // after writing, remove the WriteCtx from cache
         pendingWrites.remove(range);
         // update nextOffset
         nextOffset.addAndGet(toWrite.getCount());
@@ -1049,7 +1050,7 @@ class OpenFileCtx {
         }
         return toWrite;
       }
-    
+
     return null;
   }
   
@@ -1148,7 +1149,7 @@ class OpenFileCtx {
       Nfs3Utils.writeChannelCommit(commit.getChannel(), response
           .serialize(new XDR(), commit.getXid(),
               new VerifierNone()), commit.getXid());
-      
+
       if (LOG.isDebugEnabled()) {
         LOG.debug("FileId: " + latestAttr.getFileId() + " Service time: "
             + Nfs3Utils.getElapsedTime(commit.startTime)
@@ -1248,11 +1249,11 @@ class OpenFileCtx {
 
       LOG.info("Clean up open file context for fileId: "
           + latestAttr.getFileId());
-      cleanup();
+      cleanupWithLogger();
     }
   }
 
-  synchronized void cleanup() {
+  synchronized void cleanupWithLogger() {
     if (!activeState) {
       LOG.info("Current OpenFileCtx is already inactive, no need to cleanup.");
       return;
@@ -1274,12 +1275,12 @@ class OpenFileCtx {
         fos.close();
       }
     } catch (IOException e) {
-      LOG.info("Can't close stream for fileId: " + latestAttr.getFileId()
-          + ", error: " + e);
+      LOG.info("Can't close stream for fileId: {}, error: {}",
+          latestAttr.getFileId(), e.toString());
     }
     
     // Reply error for pending writes
-    LOG.info("There are " + pendingWrites.size() + " pending writes.");
+    LOG.info("There are {} pending writes.", pendingWrites.size());
     WccAttr preOpAttr = latestAttr.getWccAttr();
     while (!pendingWrites.isEmpty()) {
       OffsetRange key = pendingWrites.firstKey();
@@ -1302,11 +1303,12 @@ class OpenFileCtx {
       try {
         dumpOut.close();
       } catch (IOException e) {
-        LOG.error("Failed to close outputstream of dump file" + dumpFilePath, e);
+        LOG.error("Failed to close outputstream of dump file {}",
+            dumpFilePath, e);
       }
       File dumpFile = new File(dumpFilePath);
       if (dumpFile.exists() && !dumpFile.delete()) {
-        LOG.error("Failed to delete dumpfile: " + dumpFile);
+        LOG.error("Failed to delete dumpfile: {}", dumpFile);
       }
     }
     if (raf != null) {

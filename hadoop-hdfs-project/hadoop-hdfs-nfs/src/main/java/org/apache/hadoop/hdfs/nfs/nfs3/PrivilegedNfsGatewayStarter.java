@@ -34,7 +34,7 @@ import org.apache.hadoop.hdfs.nfs.conf.NfsConfiguration;
  * Debian: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=594880
  */
 public class PrivilegedNfsGatewayStarter implements Daemon {
-	
+
   private String[] args = null;
   private DatagramSocket registrationSocket = null;
 
