@@ -25,8 +25,8 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.UnmodifiableIterator;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hdfs.protocol.DatanodeID;
 import org.apache.hadoop.util.HostsFileReader;
 
@@ -60,7 +60,7 @@ import java.util.Map;
  * resolutions are only done during the loading time to minimize the latency.
  */
 class HostFileManager {
-  private static final Log LOG = LogFactory.getLog(HostFileManager.class);
+  private static final Logger LOG = LoggerFactory.getLogger(HostFileManager.class);
   private HostSet includes = new HostSet();
   private HostSet excludes = new HostSet();
 

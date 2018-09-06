@@ -29,8 +29,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.server.blockmanagement.CorruptReplicasMap.Reason;
@@ -45,32 +45,32 @@ import org.junit.Test;
  */
 public class TestCorruptReplicaInfo {
   
-  private static final Log LOG = 
-                           LogFactory.getLog(TestCorruptReplicaInfo.class);
-  
+  private static final Logger LOG =
+          LoggerFactory.getLogger(TestCorruptReplicaInfo.class);
+
   private final Map<Long, Block> block_map =
-    new HashMap<Long, Block>();  
-    
+    new HashMap<Long, Block>();
+
   // Allow easy block creation by block id
   // Return existing block if one with same block id already exists
   private Block getBlock(Long block_id) {
     if (!block_map.containsKey(block_id)) {
       block_map.put(block_id, new Block(block_id,0,0));
     }
-    
+
     return block_map.get(block_id);
   }
-  
+
   private Block getBlock(int block_id) {
     return getBlock((long)block_id);
   }
   
   @Test
-  public void testCorruptReplicaInfo() throws IOException, 
+  public void testCorruptReplicaInfo() throws IOException,
                                        InterruptedException {
-    
+
       CorruptReplicasMap crm = new CorruptReplicasMap();
-      
+
       // Make sure initial values are returned correctly
       assertEquals("Number of corrupt blocks must initially be 0", 0, crm.size());
       assertNull("Param n cannot be less than 0", crm.getCorruptReplicaBlockIds(-1, null));
@@ -86,47 +86,47 @@ public class TestCorruptReplicaInfo {
       for (int i=0;i<NUM_BLOCK_IDS;i++) {
         block_ids.add((long)i);
       }
-      
+
       DatanodeDescriptor dn1 = DFSTestUtil.getLocalDatanodeDescriptor();
       DatanodeDescriptor dn2 = DFSTestUtil.getLocalDatanodeDescriptor();
-      
+
       addToCorruptReplicasMap(crm, getBlock(0), dn1);
       assertEquals("Number of corrupt blocks not returning correctly",
                    1, crm.size());
       addToCorruptReplicasMap(crm, getBlock(1), dn1);
       assertEquals("Number of corrupt blocks not returning correctly",
                    2, crm.size());
-      
+
       addToCorruptReplicasMap(crm, getBlock(1), dn2);
       assertEquals("Number of corrupt blocks not returning correctly",
                    2, crm.size());
-      
+
       crm.removeFromCorruptReplicasMap(getBlock(1));
       assertEquals("Number of corrupt blocks not returning correctly",
                    1, crm.size());
-      
+
       crm.removeFromCorruptReplicasMap(getBlock(0));
       assertEquals("Number of corrupt blocks not returning correctly",
                    0, crm.size());
-      
+
       for (Long block_id: block_ids) {
         addToCorruptReplicasMap(crm, getBlock(block_id), dn1);
       }
-            
+
       assertEquals("Number of corrupt blocks not returning correctly",
                    NUM_BLOCK_IDS, crm.size());
-      
+
       assertTrue("First five block ids not returned correctly ",
                 Arrays.equals(new long[]{0,1,2,3,4},
                               crm.getCorruptReplicaBlockIds(5, null)));
-                              
-      LOG.info(crm.getCorruptReplicaBlockIds(10, 7L));
-      LOG.info(block_ids.subList(7, 18));
+
+      LOG.info(Arrays.toString(crm.getCorruptReplicaBlockIds(10, 7L)));
+      LOG.info(block_ids.subList(7, 18).toString());
 
       assertTrue("10 blocks after 7 not returned correctly ",
                 Arrays.equals(new long[]{8,9,10,11,12,13,14,15,16,17},
                               crm.getCorruptReplicaBlockIds(10, 7L)));
-      
+
   }
   
   private static void addToCorruptReplicasMap(CorruptReplicasMap crm,

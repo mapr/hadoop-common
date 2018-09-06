@@ -963,7 +963,7 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
 
     // format before starting up if requested
     if (startOpt == StartupOption.FORMAT) {
-      
+
       fsImage.format(this, fsImage.getStorage().determineClusterId());// reuse current id
 
       startOpt = StartupOption.REGULAR;
@@ -4173,7 +4173,7 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
   BlockInfoContiguous getStoredBlock(Block block) {
     return blockManager.getStoredBlock(block);
   }
-  
+
   @Override
   public boolean isInSnapshot(BlockInfoContiguousUnderConstruction blockUC) {
     assert hasReadLock();
@@ -5882,7 +5882,7 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
   }
 
   /**
-   * Get the total number of objects in the system. 
+   * Get the total number of objects in the system.
    */
   @Override // FSNamesystemMBean
   public long getMaxObjects() {
@@ -7365,16 +7365,16 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
   /**
    * Get the difference between two snapshots (or between a snapshot and the
    * current status) of a snapshottable directory.
-   * 
+   *
    * @param path The full path of the snapshottable directory.
    * @param fromSnapshot Name of the snapshot to calculate the diff from. Null
    *          or empty string indicates the current tree.
    * @param toSnapshot Name of the snapshot to calculated the diff to. Null or
    *          empty string indicates the current tree.
-   * @return A report about the difference between {@code fromSnapshot} and 
-   *         {@code toSnapshot}. Modified/deleted/created/renamed files and 
-   *         directories belonging to the snapshottable directories are listed 
-   *         and labeled as M/-/+/R respectively. 
+   * @return A report about the difference between {@code fromSnapshot} and
+   *         {@code toSnapshot}. Modified/deleted/created/renamed files and
+   *         directories belonging to the snapshottable directories are listed
+   *         and labeled as M/-/+/R respectively.
    * @throws IOException
    */
   SnapshotDiffReport getSnapshotDiffReport(String path,

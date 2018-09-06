@@ -20,8 +20,8 @@ package org.apache.hadoop.hdfs.server.namenode.web.resources;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
@@ -48,7 +48,8 @@ import org.junit.Test;
  * Test WebHDFS which provides data locality using HTTP redirection.
  */
 public class TestWebHdfsDataLocality {
-  static final Log LOG = LogFactory.getLog(TestWebHdfsDataLocality.class);
+  static final Logger LOG =
+      LoggerFactory.getLogger(TestWebHdfsDataLocality.class);
   {
     DFSTestUtil.setNameNodeLogLevel(Level.ALL);
   }

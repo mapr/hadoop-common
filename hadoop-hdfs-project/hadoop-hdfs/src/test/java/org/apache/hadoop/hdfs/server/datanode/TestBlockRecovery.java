@@ -41,9 +41,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.impl.Log4JLogger;
+import com.google.common.collect.Iterators;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -81,7 +81,7 @@ import org.apache.hadoop.hdfs.server.protocol.VolumeFailureSummary;
 import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.util.Daemon;
 import org.apache.hadoop.util.DataChecksum;
-import org.apache.log4j.Level;
+import org.slf4j.event.Level;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -94,7 +94,8 @@ import org.mockito.stubbing.Answer;
  * This tests if sync all replicas in block recovery works correctly
  */
 public class TestBlockRecovery {
-  private static final Log LOG = LogFactory.getLog(TestBlockRecovery.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(TestBlockRecovery.class);
   private static final String DATA_DIR =
     MiniDFSCluster.getBaseDirectory() + "data";
   private DataNode dn;
@@ -111,10 +112,10 @@ public class TestBlockRecovery {
   private final static long REPLICA_LEN2 = 5000L;
   private final static ExtendedBlock block = new ExtendedBlock(POOL_ID,
       BLOCK_ID, BLOCK_LEN, GEN_STAMP);
-  
+
   static {
-    ((Log4JLogger)LogFactory.getLog(FSNamesystem.class)).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger)LOG).getLogger().setLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(FSNamesystem.LOG, Level.TRACE);
+    GenericTestUtils.setLogLevel(LOG, Level.TRACE);
   }
 
   /**
@@ -207,7 +208,7 @@ public class TestBlockRecovery {
     
     DatanodeInfo[] locs = new DatanodeInfo[]{
         mock(DatanodeInfo.class), mock(DatanodeInfo.class)};
-    RecoveringBlock rBlock = new RecoveringBlock(block, 
+    RecoveringBlock rBlock = new RecoveringBlock(block,
         locs, RECOVERY_ID);
     ArrayList<BlockRecord> syncList = new ArrayList<BlockRecord>(2);
     BlockRecord record1 = new BlockRecord(

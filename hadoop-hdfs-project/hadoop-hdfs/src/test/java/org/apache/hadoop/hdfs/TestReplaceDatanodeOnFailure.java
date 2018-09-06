@@ -20,8 +20,8 @@ package org.apache.hadoop.hdfs;
 import java.io.IOException;
 import java.util.Arrays;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.impl.Log4JLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -33,6 +33,7 @@ import org.apache.hadoop.hdfs.protocol.datatransfer.DataTransferProtocol;
 import org.apache.hadoop.hdfs.protocol.datatransfer.ReplaceDatanodeOnFailure;
 import org.apache.hadoop.hdfs.protocol.datatransfer.ReplaceDatanodeOnFailure.Policy;
 import org.apache.hadoop.io.IOUtils;
+import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.log4j.Level;
 import org.junit.Assert;
 import org.junit.Test;
@@ -42,7 +43,7 @@ import org.junit.Test;
  * data can be read by another client.
  */
 public class TestReplaceDatanodeOnFailure {
-  static final Log LOG = AppendTestUtil.LOG;
+  static final Logger LOG = AppendTestUtil.LOG;
 
   static final String DIR = "/" + TestReplaceDatanodeOnFailure.class.getSimpleName() + "/";
   static final short REPLICATION = 3;
@@ -50,7 +51,7 @@ public class TestReplaceDatanodeOnFailure {
   final private static String RACK1 = "/rack1";
 
   {
-    ((Log4JLogger)DataTransferProtocol.LOG).getLogger().setLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(DataTransferProtocol.LOG, Level.ALL);
   }
 
   /** Test DEFAULT ReplaceDatanodeOnFailure policy. */
@@ -114,7 +115,7 @@ public class TestReplaceDatanodeOnFailure {
   @Test
   public void testReplaceDatanodeOnFailure() throws Exception {
     final Configuration conf = new HdfsConfiguration();
-    
+
     //always replace a datanode
     ReplaceDatanodeOnFailure.write(Policy.ALWAYS, true, conf);
 
@@ -126,7 +127,7 @@ public class TestReplaceDatanodeOnFailure {
     try {
       final DistributedFileSystem fs = cluster.getFileSystem();
       final Path dir = new Path(DIR);
-      
+
       final SlowWriter[] slowwriters = new SlowWriter[10];
       for(int i = 1; i <= slowwriters.length; i++) {
         //create slow writers in different speed
@@ -138,14 +139,14 @@ public class TestReplaceDatanodeOnFailure {
       }
 
       // Let slow writers write something.
-      // Some of them are too slow and will be not yet started. 
+      // Some of them are too slow and will be not yet started.
       sleepSeconds(1);
 
       //start new datanodes
       cluster.startDataNodes(conf, 2, true, null, new String[]{RACK1, RACK1});
       //stop an old datanode
       cluster.stopDataNode(AppendTestUtil.nextInt(REPLICATION));
-      
+
       //Let the slow writer writes a few more seconds
       //Everyone should have written something.
       sleepSeconds(5);
@@ -192,7 +193,7 @@ public class TestReplaceDatanodeOnFailure {
     final HdfsDataOutputStream out;
     final long sleepms;
     private volatile boolean running = true;
-    
+
     SlowWriter(DistributedFileSystem fs, Path filepath, final long sleepms
         ) throws IOException {
       super(SlowWriter.class.getSimpleName() + ":" + filepath);

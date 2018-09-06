@@ -18,7 +18,6 @@
 package org.apache.hadoop.hdfs.tools;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.InetSocketAddress;
@@ -38,8 +37,8 @@ import java.util.TreeSet;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.ReconfigurationTaskStatus;
@@ -72,7 +71,6 @@ import org.apache.hadoop.hdfs.protocol.RollingUpgradeInfo;
 import org.apache.hadoop.hdfs.protocol.SnapshotException;
 import org.apache.hadoop.hdfs.server.namenode.NameNode;
 import org.apache.hadoop.hdfs.server.namenode.TransferFsImage;
-import org.apache.hadoop.ipc.GenericRefreshProtocol;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.ipc.RefreshCallQueueProtocol;
@@ -100,7 +98,7 @@ public class DFSAdmin extends FsShell {
     HdfsConfiguration.init();
   }
   
-  private static final Log LOG = LogFactory.getLog(DFSAdmin.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DFSAdmin.class);
 
   /**
    * An abstract class for the execution of a file system command
@@ -111,7 +109,7 @@ public class DFSAdmin extends FsShell {
     public DFSAdminCommand(FileSystem fs) {
       super(fs.getConf());
       if (!(fs instanceof DistributedFileSystem)) {
-        throw new IllegalArgumentException("FileSystem " + fs.getUri() + 
+        throw new IllegalArgumentException("FileSystem " + fs.getUri() +
             " is not an HDFS file system");
       }
       this.dfs = (DistributedFileSystem)fs;
@@ -162,9 +160,9 @@ public class DFSAdmin extends FsShell {
     private static final String NAME = "setQuota";
     private static final String USAGE =
       "-"+NAME+" <quota> <dirname>...<dirname>";
-    private static final String DESCRIPTION = 
+    private static final String DESCRIPTION =
       "-setQuota <quota> <dirname>...<dirname>: " +
-      "Set the quota <quota> for each directory <dirName>.\n" + 
+      "Set the quota <quota> for each directory <dirName>.\n" +
       "\t\tThe directory quota is a long integer that puts a hard limit\n" +
       "\t\ton the number of names in the directory tree\n" +
       "\t\tFor each directory, attempt to set the quota. An error will be reported if\n" +
@@ -267,7 +265,7 @@ public class DFSAdmin extends FsShell {
       "\t\tThe extra space required for replication is also counted. E.g.\n" +
       "\t\ta 1GB file with replication of 3 consumes 3GB of the quota.\n\n" +
       "\t\tQuota can also be specified with a binary prefix for terabytes,\n" +
-      "\t\tpetabytes etc (e.g. 50t is 50TB, 5m is 5MB, 3p is 3PB).\n" + 
+      "\t\tpetabytes etc (e.g. 50t is 50TB, 5m is 5MB, 3p is 3PB).\n" +
       "\t\tFor each directory, attempt to set the quota. An error will be reported if\n" +
       "\t\t1. N is not a positive integer, or\n" +
       "\t\t2. user is not an administrator, or\n" +
@@ -293,7 +291,7 @@ public class DFSAdmin extends FsShell {
       if (storageTypeString != null) {
         this.type = StorageType.parseStorageType(storageTypeString);
       }
-      
+
       this.args = parameters.toArray(new String[parameters.size()]);
     }
     
@@ -470,17 +468,17 @@ public class DFSAdmin extends FsShell {
                        + " (" + StringUtils.byteDesc(used) + ")");
     System.out.println("DFS Used%: "
         + StringUtils.formatPercent(used/(double)presentCapacity, 2));
-    
+
     /* These counts are not always upto date. They are updated after  
      * iteration of an internal list. Should be updated in a few seconds to 
      * minutes. Use "-metaSave" to list of all such blocks and accurate 
      * counts.
      */
-    System.out.println("Under replicated blocks: " + 
+    System.out.println("Under replicated blocks: " +
                        dfs.getUnderReplicatedBlocksCount());
-    System.out.println("Blocks with corrupt replicas: " + 
+    System.out.println("Blocks with corrupt replicas: " +
                        dfs.getCorruptBlocksCount());
-    System.out.println("Missing blocks: " + 
+    System.out.println("Missing blocks: " +
                        dfs.getMissingBlocksCount());
     System.out.println("Missing blocks (with replication factor 1): " +
                       dfs.getMissingReplOneBlocksCount());
@@ -665,7 +663,7 @@ public class DFSAdmin extends FsShell {
    * @param argv List of of command line parameters.
    * @exception IOException
    */
-  public void allowSnapshot(String[] argv) throws IOException {   
+  public void allowSnapshot(String[] argv) throws IOException {
     DistributedFileSystem dfs = getDFS();
     try {
       dfs.allowSnapshot(new Path(argv[1]));
@@ -681,7 +679,7 @@ public class DFSAdmin extends FsShell {
    * @param argv List of of command line parameters.
    * @exception IOException
    */
-  public void disallowSnapshot(String[] argv) throws IOException {  
+  public void disallowSnapshot(String[] argv) throws IOException {
     DistributedFileSystem dfs = getDFS();
     try {
       dfs.disallowSnapshot(new Path(argv[1]));
@@ -694,7 +692,7 @@ public class DFSAdmin extends FsShell {
   /**
    * Command to ask the namenode to save the namespace.
    * Usage: hdfs dfsadmin -saveNamespace
-   * @exception IOException 
+   * @exception IOException
    * @see org.apache.hadoop.hdfs.protocol.ClientProtocol#saveNamespace()
    */
   public int saveNamespace() throws IOException {
@@ -720,7 +718,7 @@ public class DFSAdmin extends FsShell {
       System.out.println("Save namespace successful");
     }
     exitCode = 0;
-   
+
     return exitCode;
   }
 
@@ -890,9 +888,9 @@ public class DFSAdmin extends FsShell {
     String report ="-report [-live] [-dead] [-decommissioning]:\n" +
       "\tReports basic filesystem information and statistics.\n" +
       "\tOptional flags may be used to filter the list of displayed DNs.\n";
-    
 
-    String safemode = "-safemode <enter|leave|get|wait>:  Safe mode maintenance command.\n" + 
+
+    String safemode = "-safemode <enter|leave|get|wait>:  Safe mode maintenance command.\n" +
       "\t\tSafe mode is a Namenode state in which it\n" +
       "\t\t\t1.  does not accept changes to the name space (read-only)\n" +
       "\t\t\t2.  does not replicate or delete blocks.\n" +
@@ -983,7 +981,7 @@ public class DFSAdmin extends FsShell {
       "\t\tthat will be used by each datanode. This value overrides\n" +
       "\t\tthe dfs.balance.bandwidthPerSec parameter.\n\n" +
       "\t\t--- NOTE: The new value is not persistent on the DataNode.---\n";
-    
+
     String fetchImage = "-fetchImage <local directory>:\n" +
       "\tDownloads the most recent fsimage from the Name Node and saves it in" +
       "\tthe specified local directory.\n";

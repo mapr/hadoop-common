@@ -30,8 +30,8 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CreateFlag;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -56,7 +56,8 @@ import org.mockito.stubbing.Answer;
  * FSNamesystem.getAdditionalBlock().
  */
 public class TestAddBlockRetry {
-  public static final Log LOG = LogFactory.getLog(TestAddBlockRetry.class);
+  public static final Logger LOG =
+      LoggerFactory.getLogger(TestAddBlockRetry.class);
 
   private static final short REPLICATION = 3;
 

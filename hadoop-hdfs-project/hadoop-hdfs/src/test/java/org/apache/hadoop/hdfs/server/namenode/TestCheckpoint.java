@@ -48,9 +48,6 @@ import com.google.common.io.Files;
 import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.impl.Log4JLogger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
@@ -90,7 +87,7 @@ import org.apache.hadoop.test.PathUtils;
 import org.apache.hadoop.util.ExitUtil;
 import org.apache.hadoop.util.ExitUtil.ExitException;
 import org.apache.hadoop.util.StringUtils;
-import org.apache.log4j.Level;
+import org.slf4j.event.Level;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -112,7 +109,7 @@ import com.google.common.primitives.Ints;
 public class TestCheckpoint {
 
   static {
-    ((Log4JLogger)FSImage.LOG).getLogger().setLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(FSImage.LOG, Level.TRACE);
   }
 
   static final Logger LOG = LoggerFactory.getLogger(TestCheckpoint.class);
@@ -151,7 +148,7 @@ public class TestCheckpoint {
     stm.write(buffer);
     stm.close();
   }
-  
+
   @After
   public void checkForSNNThreads() {
     GenericTestUtils.assertNoThreadsMatching(".*SecondaryNameNode.*");
@@ -523,8 +520,8 @@ public class TestCheckpoint {
       Mockito.reset(faultInjector);
       secondary.shutdown(); // secondary namenode crash!
 
-      // start new instance of secondary and verify that 
-      // a new rollEditLog suceedes inspite of the fact that 
+      // start new instance of secondary and verify that
+      // a new rollEditLog suceedes inspite of the fact that
       // edits.new already exists.
       //
       secondary = startSecondaryNameNode(conf);
@@ -884,7 +881,7 @@ public class TestCheckpoint {
       }
       
       LogCapturer logs = GenericTestUtils.LogCapturer.captureLogs(
-          LogFactory.getLog(Storage.class));
+          LoggerFactory.getLogger(Storage.class));
       try {
         // try to lock the storage that's already locked
         savedSd.lock();
@@ -1112,7 +1109,7 @@ public class TestCheckpoint {
       //
       secondary = startSecondaryNameNode(conf);
       secondary.doCheckpoint();
-      
+
       fileSys.delete(tmpDir, true);
       fileSys.mkdirs(tmpDir);
       secondary.doCheckpoint();

@@ -24,8 +24,8 @@ import java.lang.management.ManagementFactory;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileSystem;
@@ -42,8 +42,8 @@ import org.junit.Test;
  * 
  */
 public class TestHostsFiles {
-  private static final Log LOG =
-    LogFactory.getLog(TestHostsFiles.class.getName());
+  private static final Logger LOG =
+    LoggerFactory.getLogger(TestHostsFiles.class.getName());
 
   /*
    * Return a configuration object with low timeouts for testing and 
@@ -118,7 +118,7 @@ public class TestHostsFiles {
 
       // Check the block still has sufficient # replicas across racks
       DFSTestUtil.waitForReplication(cluster, b, 2, REPLICATION_FACTOR, 0);
-      
+
       MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
       ObjectName mxbeanName =
           new ObjectName("Hadoop:service=NameNode,name=NameNodeInfo");

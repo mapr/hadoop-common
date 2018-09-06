@@ -77,7 +77,7 @@ public class TestEditLogTailer {
       }
       
       HATestUtil.waitForStandbyToCatchUp(nn1, nn2);
-      
+
       for (int i = 0; i < DIRS_TO_MAKE / 2; i++) {
         assertTrue(NameNodeAdapter.getFileInfo(nn2,
             getDirPath(i), false).isDir());
@@ -90,7 +90,7 @@ public class TestEditLogTailer {
       }
       
       HATestUtil.waitForStandbyToCatchUp(nn1, nn2);
-      
+
       for (int i = DIRS_TO_MAKE / 2; i < DIRS_TO_MAKE; i++) {
         assertTrue(NameNodeAdapter.getFileInfo(nn2,
             getDirPath(i), false).isDir());

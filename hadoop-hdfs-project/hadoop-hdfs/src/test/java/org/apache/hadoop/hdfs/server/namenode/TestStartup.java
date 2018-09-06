@@ -34,8 +34,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -78,8 +77,8 @@ import javax.management.ObjectName;
 public class TestStartup {
   public static final String NAME_NODE_HOST = "localhost:";
   public static final String WILDCARD_HTTP_HOST = "0.0.0.0:";
-  private static final Log LOG =
-    LogFactory.getLog(TestStartup.class.getName());
+  private static final org.slf4j.Logger LOG =
+      LoggerFactory.getLogger(TestStartup.class.getName());
   private Configuration config;
   private File hdfsDir=null;
   static final long seed = 0xAAAAEEFL;

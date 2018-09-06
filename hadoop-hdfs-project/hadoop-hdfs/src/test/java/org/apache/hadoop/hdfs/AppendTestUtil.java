@@ -25,8 +25,8 @@ import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Random;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -43,7 +43,7 @@ public class AppendTestUtil {
    */
   static final Long RANDOM_NUMBER_GENERATOR_SEED = null;
 
-  static final Log LOG = LogFactory.getLog(AppendTestUtil.class);
+  static final Logger LOG = LoggerFactory.getLogger(AppendTestUtil.class);
 
   private static final Random SEED = new Random();
   static {

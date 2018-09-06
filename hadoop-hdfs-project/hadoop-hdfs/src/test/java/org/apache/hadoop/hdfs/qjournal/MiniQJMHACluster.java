@@ -26,8 +26,8 @@ import java.net.BindException;
 import java.net.URI;
 import java.util.Random;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSUtil;
@@ -41,8 +41,9 @@ public class MiniQJMHACluster {
   private MiniDFSCluster cluster;
   private MiniJournalCluster journalCluster;
   private final Configuration conf;
-  private static final Log LOG = LogFactory.getLog(MiniQJMHACluster.class);
-  
+  private static final Logger LOG =
+      LoggerFactory.getLogger(MiniQJMHACluster.class);
+
   public static final String NAMESERVICE = "ns1";
   private static final String NN1 = "nn1";
   private static final String NN2 = "nn2";
@@ -53,7 +54,7 @@ public class MiniQJMHACluster {
     private final Configuration conf;
     private StartupOption startOpt = null;
     private final MiniDFSCluster.Builder dfsBuilder;
-    
+
     public Builder(Configuration conf) {
       this.conf = conf;
       // most QJMHACluster tests don't need DataNodes, so we'll make
@@ -64,7 +65,7 @@ public class MiniQJMHACluster {
     public MiniDFSCluster.Builder getDfsBuilder() {
       return dfsBuilder;
     }
-    
+
     public MiniQJMHACluster build() throws IOException {
       return new MiniQJMHACluster(this);
     }
@@ -73,7 +74,7 @@ public class MiniQJMHACluster {
       this.startOpt = startOpt;
     }
   }
-  
+
   public static MiniDFSNNTopology createDefaultTopology(int basePort) {
     return new MiniDFSNNTopology()
       .addNameservice(new MiniDFSNNTopology.NSConf(NAMESERVICE).addNN(
@@ -123,11 +124,11 @@ public class MiniQJMHACluster {
       }
     }
   }
-  
+
   private Configuration initHAConf(URI journalURI, Configuration conf) {
     conf.set(DFSConfigKeys.DFS_NAMENODE_SHARED_EDITS_DIR_KEY,
         journalURI.toString());
-    
+
     String address1 = "127.0.0.1:" + basePort;
     String address2 = "127.0.0.1:" + (basePort + 2);
     conf.set(DFSUtil.addKeySuffixes(DFS_NAMENODE_RPC_ADDRESS_KEY,
@@ -140,14 +141,14 @@ public class MiniQJMHACluster {
     conf.set(DFS_CLIENT_FAILOVER_PROXY_PROVIDER_KEY_PREFIX + "." + NAMESERVICE,
         ConfiguredFailoverProxyProvider.class.getName());
     conf.set("fs.defaultFS", "hdfs://" + NAMESERVICE);
-    
+
     return conf;
   }
 
   public MiniDFSCluster getDfsCluster() {
     return cluster;
   }
-  
+
   public MiniJournalCluster getJournalCluster() {
     return journalCluster;
   }

@@ -30,9 +30,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.impl.Log4JLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ha.HAServiceProtocol.HAServiceState;
 import org.apache.hadoop.hdfs.DFSTestUtil;
@@ -74,7 +73,7 @@ public class TestBPOfferService {
 
   private static final String FAKE_BPID = "fake bpid";
   private static final String FAKE_CLUSTERID = "fake cluster";
-  protected static final Log LOG = LogFactory.getLog(
+  protected static final Logger LOG = LoggerFactory.getLogger(
       TestBPOfferService.class);
   private static final ExtendedBlock FAKE_BLOCK =
     new ExtendedBlock(FAKE_BPID, 12345L);
@@ -83,7 +82,7 @@ public class TestBPOfferService {
   private long secondCallTime = 0;
 
   static {
-    ((Log4JLogger)DataNode.LOG).getLogger().setLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(DataNode.LOG, Level.ALL);
   }
 
   private DatanodeProtocolClientSideTranslatorPB mockNN1;
@@ -620,5 +619,5 @@ public class TestBPOfferService {
     } finally {
       bpos.stop();
     }
-  } 
+  }
 }

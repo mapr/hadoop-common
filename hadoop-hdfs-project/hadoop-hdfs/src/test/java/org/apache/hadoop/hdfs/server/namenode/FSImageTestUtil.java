@@ -41,8 +41,8 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -73,8 +73,9 @@ import com.google.common.io.Files;
  */
 public abstract class FSImageTestUtil {
   
-  public static final Log LOG = LogFactory.getLog(FSImageTestUtil.class);
-
+  public static final Logger LOG =
+      LoggerFactory.getLogger(FSImageTestUtil.class);
+  
   /**
    * The position in the fsimage header where the txid is
    * written.
@@ -313,7 +314,7 @@ public abstract class FSImageTestUtil {
         fileList.add(f);
       }
     }
-    
+
     for (List<File> sameNameList : groupedByName.values()) {
       if (sameNameList.get(0).isDirectory()) {
         // recurse
@@ -327,7 +328,7 @@ public abstract class FSImageTestUtil {
       }
     }  
   }
-  
+
   /**
    * Assert that a set of properties files all contain the same data.
    * We cannot simply check the md5sums here, since Properties files
@@ -532,7 +533,7 @@ public abstract class FSImageTestUtil {
     assertNotNull(image);
   }
 
-  public static void logStorageContents(Log LOG, NNStorage storage) {
+  public static void logStorageContents(Logger LOG, NNStorage storage) {
     LOG.info("current storages and corresponding sizes:");
     for (StorageDirectory sd : storage.dirIterable(null)) {
       File curDir = sd.getCurrentDir();
@@ -540,24 +541,11 @@ public abstract class FSImageTestUtil {
       File[] files = curDir.listFiles();
       Arrays.sort(files);
       for (File f : files) {
-        LOG.info("  file " + f.getAbsolutePath() + "; len = " + f.length());  
+        LOG.info("  file " + f.getAbsolutePath() + "; len = " + f.length());
       }
     }
   }
 
-  public static void logStorageContents(org.slf4j.Logger LOG, NNStorage storage) {
-    LOG.info("current storages and corresponding sizes:");
-    for (StorageDirectory sd : storage.dirIterable(null)) {
-      File curDir = sd.getCurrentDir();
-      LOG.info("In directory {}", curDir);
-      File[] files = curDir.listFiles();
-      Arrays.sort(files);
-      for (File f : files) {
-        LOG.info("  file {}; len = {}",  f.getAbsolutePath(), f.length());
-      }
-    }
-  }
-  
   /** get the fsImage*/
   public static FSImage getFSImage(NameNode node) {
     return node.getFSImage();

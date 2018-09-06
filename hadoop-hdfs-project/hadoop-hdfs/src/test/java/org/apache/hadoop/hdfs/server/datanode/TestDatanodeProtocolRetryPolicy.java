@@ -29,9 +29,8 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 
 import com.google.common.base.Supplier;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.impl.Log4JLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.FileSystem;
@@ -53,7 +52,7 @@ import org.apache.hadoop.hdfs.server.protocol.StorageBlockReport;
 import org.apache.hadoop.hdfs.server.protocol.StorageReport;
 import org.apache.hadoop.hdfs.server.protocol.VolumeFailureSummary;
 import org.apache.hadoop.test.GenericTestUtils;
-import org.apache.log4j.Level;
+import org.slf4j.event.Level;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -66,7 +65,7 @@ import org.mockito.stubbing.Answer;
  * This tests DatanodeProtocol retry policy
  */
 public class TestDatanodeProtocolRetryPolicy {
-  private static final Log LOG = LogFactory.getLog(
+  private static final Logger LOG = LoggerFactory.getLogger(
       TestDatanodeProtocolRetryPolicy.class);
   private static final String DATA_DIR =
       MiniDFSCluster.getBaseDirectory() + "data";
@@ -82,7 +81,7 @@ public class TestDatanodeProtocolRetryPolicy {
       DFSTestUtil.getLocalDatanodeRegistration();
 
   static {
-    ((Log4JLogger)LOG).getLogger().setLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(LOG, Level.TRACE);
   }
 
   /**

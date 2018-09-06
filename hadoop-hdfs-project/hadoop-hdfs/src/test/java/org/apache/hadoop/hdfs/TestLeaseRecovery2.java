@@ -56,7 +56,8 @@ import org.slf4j.LoggerFactory;
 
 public class TestLeaseRecovery2 {
   
-  public static final Logger LOG = LoggerFactory.getLogger(TestLeaseRecovery2.class);
+  public static final Logger LOG =
+      LoggerFactory.getLogger(TestLeaseRecovery2.class);
   
   {
     GenericTestUtils.setLogLevel(DataNode.LOG, Level.TRACE);

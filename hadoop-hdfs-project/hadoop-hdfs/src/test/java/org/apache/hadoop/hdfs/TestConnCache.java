@@ -22,8 +22,8 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fs.Path;
 import org.junit.Assert;
 import org.junit.Test;
@@ -33,7 +33,7 @@ import org.junit.Test;
  * mini-cluster.
  */
 public class TestConnCache {
-  static final Log LOG = LogFactory.getLog(TestConnCache.class);
+  static final Logger LOG = LoggerFactory.getLogger(TestConnCache.class);
 
   static final int BLOCK_SIZE = 4096;
   static final int FILE_SIZE = 3 * BLOCK_SIZE;

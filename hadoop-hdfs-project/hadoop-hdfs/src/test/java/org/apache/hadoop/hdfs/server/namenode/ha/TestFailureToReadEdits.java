@@ -65,7 +65,7 @@ public class TestFailureToReadEdits {
   private static final String TEST_DIR1 = "/test1";
   private static final String TEST_DIR2 = "/test2";
   private static final String TEST_DIR3 = "/test3";
-  
+
   private final TestType clusterType;
   private Configuration conf;
   private MiniDFSCluster cluster;
@@ -89,7 +89,7 @@ public class TestFailureToReadEdits {
         { TestType.SHARED_DIR_HA },
         { TestType.QJM_HA } });
   }
-  
+
   public TestFailureToReadEdits(TestType clusterType) {
     this.clusterType = clusterType;
   }
@@ -102,7 +102,7 @@ public class TestFailureToReadEdits {
     conf.setInt(DFSConfigKeys.DFS_NAMENODE_NUM_CHECKPOINTS_RETAINED_KEY, 10);
     conf.setInt(DFSConfigKeys.DFS_HA_TAILEDITS_PERIOD_KEY, 1);
     HAUtil.setAllowStandbyReads(conf, true);
-    
+
     if (clusterType == TestType.SHARED_DIR_HA) {
       MiniDFSNNTopology topology = MiniQJMHACluster.createDefaultTopology(10000);
       cluster = new MiniDFSCluster.Builder(conf)
@@ -158,7 +158,7 @@ public class TestFailureToReadEdits {
     
     // This op should get applied just fine.
     assertTrue(fs.mkdirs(new Path(TEST_DIR2)));
-    
+
     // This is the op the mocking will cause to fail to be read.
     assertTrue(fs.mkdirs(new Path(TEST_DIR3)));
     
@@ -180,7 +180,7 @@ public class TestFailureToReadEdits {
     // Null because it hasn't been created yet.
     assertNull(NameNodeAdapter.getFileInfo(nn1,
         TEST_DIR3, false));
-    
+
     // Now let the standby read ALL the edits.
     answer.setThrowExceptionOnRead(false);
     HATestUtil.waitForStandbyToCatchUp(nn0, nn1);

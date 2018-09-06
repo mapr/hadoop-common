@@ -25,21 +25,22 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 
 @InterfaceAudience.Private
 public final class Util {
-  private final static Log LOG = LogFactory.getLog(Util.class.getName());
+  private final static Logger LOG =
+      LoggerFactory.getLogger(Util.class.getName());
 
   /**
    * Interprets the passed string as a URI. In case of error it 
    * assumes the specified string is a file.
    *
    * @param s the string to interpret
-   * @return the resulting URI 
-   * @throws IOException 
+   * @return the resulting URI
+   * @throws IOException
    */
   public static URI stringAsURI(String s) throws IOException {
     URI u = null;

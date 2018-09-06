@@ -28,9 +28,8 @@ import static org.junit.Assume.assumeTrue;
 import java.io.File;
 import java.util.ArrayList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.impl.Log4JLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.ReconfigurationException;
 import org.apache.hadoop.fs.FileSystem;
@@ -45,7 +44,8 @@ import org.apache.hadoop.hdfs.server.datanode.fsdataset.FsDatasetSpi;
 import org.apache.hadoop.hdfs.server.namenode.FSNamesystem;
 import org.apache.hadoop.hdfs.server.protocol.VolumeFailureSummary;
 import org.apache.hadoop.io.IOUtils;
-import org.apache.log4j.Level;
+import org.apache.hadoop.test.GenericTestUtils;
+import org.slf4j.event.Level;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -55,9 +55,11 @@ import org.junit.Test;
  */
 public class TestDataNodeVolumeFailureReporting {
 
-  private static final Log LOG = LogFactory.getLog(TestDataNodeVolumeFailureReporting.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(TestDataNodeVolumeFailureReporting.class);
   {
-    ((Log4JLogger)TestDataNodeVolumeFailureReporting.LOG).getLogger().setLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(TestDataNodeVolumeFailureReporting.LOG,
+        Level.TRACE);
   }
 
   private FileSystem fs;
@@ -86,7 +88,7 @@ public class TestDataNodeVolumeFailureReporting {
 
   @After
   public void tearDown() throws Exception {
-    IOUtils.cleanup(LOG, fs);
+    IOUtils.cleanupWithLogger(LOG, fs);
     if (cluster != null) {
       cluster.shutdown();
     }

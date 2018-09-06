@@ -21,8 +21,8 @@ package org.apache.hadoop.hdfs.server.namenode;
   import static org.junit.Assert.assertTrue;
   import static org.junit.Assert.fail;
 
-  import org.apache.commons.logging.Log;
-  import org.apache.commons.logging.LogFactory;
+  import org.slf4j.Logger;
+  import org.slf4j.LoggerFactory;
   import org.apache.hadoop.conf.Configuration;
   import org.apache.hadoop.fs.ContentSummary;
   import org.apache.hadoop.fs.Path;
@@ -53,7 +53,8 @@ public class TestQuotaByStorageType {
   private DistributedFileSystem dfs;
   private FSNamesystem fsn;
 
-  protected static final Log LOG = LogFactory.getLog(TestQuotaByStorageType.class);
+  protected static final Logger LOG =
+      LoggerFactory.getLogger(TestQuotaByStorageType.class);
 
   @Before
   public void setUp() throws Exception {

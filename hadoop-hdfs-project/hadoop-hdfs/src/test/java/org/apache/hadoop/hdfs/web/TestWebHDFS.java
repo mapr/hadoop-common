@@ -30,9 +30,8 @@ import java.security.PrivilegedExceptionAction;
 import java.util.Random;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.impl.Log4JLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -57,14 +56,14 @@ import org.apache.hadoop.ipc.RetriableException;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.test.GenericTestUtils;
-import org.apache.log4j.Level;
+import org.slf4j.event.Level;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.internal.util.reflection.Whitebox;
 
 /** Test WebHDFS */
 public class TestWebHDFS {
-  static final Log LOG = LogFactory.getLog(TestWebHDFS.class);
+  static final Logger LOG = LoggerFactory.getLogger(TestWebHDFS.class);
   
   static final Random RANDOM = new Random();
   
@@ -230,7 +229,7 @@ public class TestWebHDFS {
   /** Test client retry with namenode restarting. */
   @Test(timeout=300000)
   public void testNamenodeRestart() throws Exception {
-    ((Log4JLogger)NamenodeWebHdfsMethods.LOG).getLogger().setLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(NamenodeWebHdfsMethods.LOG, Level.TRACE);
     final Configuration conf = WebHdfsTestUtil.createConf();
     TestDFSClientRetries.namenodeRestartTest(conf, true);
   }
@@ -332,10 +331,10 @@ public class TestWebHDFS {
       }
     }
   }
-  
+
   /**
    * WebHdfs should be enabled by default after HDFS-5532
-   * 
+   *
    * @throws Exception
    */
   @Test

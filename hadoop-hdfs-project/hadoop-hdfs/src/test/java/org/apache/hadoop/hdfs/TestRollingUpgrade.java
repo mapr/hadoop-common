@@ -20,8 +20,8 @@ package org.apache.hadoop.hdfs;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -49,7 +49,8 @@ import org.junit.Test;
  * This class tests rolling upgrade.
  */
 public class TestRollingUpgrade {
-  private static final Log LOG = LogFactory.getLog(TestRollingUpgrade.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(TestRollingUpgrade.class);
 
   public static void runCmd(DFSAdmin dfsadmin, boolean success,
       String... args) throws  Exception {

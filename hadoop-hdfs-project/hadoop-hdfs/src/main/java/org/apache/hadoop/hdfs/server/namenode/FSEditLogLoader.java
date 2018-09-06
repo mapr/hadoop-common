@@ -29,8 +29,8 @@ import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.fs.FileSystem;
@@ -108,7 +108,8 @@ import com.google.common.base.Preconditions;
 @InterfaceAudience.Private
 @InterfaceStability.Evolving
 public class FSEditLogLoader {
-  static final Log LOG = LogFactory.getLog(FSEditLogLoader.class.getName());
+  static final Logger LOG =
+      LoggerFactory.getLogger(FSEditLogLoader.class.getName());
   static final long REPLAY_TRANSACTION_LOG_INTERVAL = 1000; // 1sec
 
   private final FSNamesystem fsNamesys;

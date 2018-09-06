@@ -37,8 +37,8 @@ import java.util.Map.Entry;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileUtil;
@@ -70,7 +70,7 @@ import org.eclipse.jetty.io.EofException;
  */
 @InterfaceAudience.Private
 public class TransferFsImage {
-  
+
   public final static String CONTENT_LENGTH = "Content-Length";
   public final static String FILE_LENGTH = "File-Length";
   public final static String MD5_HEADER = "X-MD5-Digest";
@@ -90,7 +90,8 @@ public class TransferFsImage {
     isSpnegoEnabled = UserGroupInformation.isSecurityEnabled();
   }
 
-  private static final Log LOG = LogFactory.getLog(TransferFsImage.class);
+  private static final Logger LOG =
+          LoggerFactory.getLogger(TransferFsImage.class);
   
   public static void downloadMostRecentImageToDirectory(URL infoServer,
       File dir) throws IOException {
@@ -224,7 +225,7 @@ public class TransferFsImage {
       if (e.getResponseCode() == HttpServletResponse.SC_CONFLICT) {
         // this is OK - this means that a previous attempt to upload
         // this checkpoint succeeded even though we thought it failed.
-        LOG.info("Image upload with txid " + txid + 
+        LOG.info("Image upload with txid " + txid +
             " conflicted with a previous image upload to the " +
             "same NameNode. Continuing...", e);
         return;
@@ -366,7 +367,7 @@ public class TransferFsImage {
           LOG.warn("SIMULATING A CORRUPT BYTE IN IMAGE TRANSFER!");
           buf[0]++;
         }
-        
+
         out.write(buf, 0, num);
         if (throttler != null) {
           throttler.throttle(num, canceler);
@@ -416,7 +417,7 @@ public class TransferFsImage {
           "\nResponse message:\n" + connection.getResponseMessage(),
           connection);
     }
-    
+
     long advertisedSize;
     String contentLength = connection.getHeaderField(CONTENT_LENGTH);
     if (contentLength != null) {
@@ -471,7 +472,7 @@ public class TransferFsImage {
       }
       localPaths = newLocalPaths;
     }
-    
+
 
     long received = 0;
     MessageDigest digester = null;
@@ -502,13 +503,13 @@ public class TransferFsImage {
             }
           }
         }
-        
+
         if (outputStreams.isEmpty()) {
           throw new IOException(
               "Unable to download to any storage directory");
         }
       }
-      
+
       int num = 1;
       byte[] buf = new byte[HdfsConstants.IO_FILE_BUFFER_SIZE];
       while (num > 0) {
@@ -555,18 +556,18 @@ public class TransferFsImage {
 
     if (digester != null) {
       MD5Hash computedDigest = new MD5Hash(digester.digest());
-      
+
       if (advertisedDigest != null &&
           !computedDigest.equals(advertisedDigest)) {
         deleteTmpFiles(localPaths);
         throw new IOException("File " + url + " computed digest " +
-            computedDigest + " does not match advertised digest " + 
+            computedDigest + " does not match advertised digest " +
             advertisedDigest);
       }
       return computedDigest;
     } else {
       return null;
-    }    
+    }
   }
 
   private static void deleteTmpFiles(List<File> files) {
@@ -600,7 +601,7 @@ public class TransferFsImage {
       super(msg);
       this.responseCode = connection.getResponseCode();
     }
-    
+
     public int getResponseCode() {
       return responseCode;
     }

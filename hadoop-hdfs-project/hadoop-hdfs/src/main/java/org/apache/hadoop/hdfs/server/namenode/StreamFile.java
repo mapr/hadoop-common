@@ -118,9 +118,9 @@ public class StreamFile extends DfsServlet {
       }
       throw ioe;
     } finally {
-      IOUtils.cleanup(LOG, in);
-      IOUtils.cleanup(LOG, out);
-      IOUtils.cleanup(LOG, dfs);
+      IOUtils.cleanupWithLogger(LOG, in);
+      IOUtils.cleanupWithLogger(LOG, out);
+      IOUtils.cleanupWithLogger(LOG, dfs);
     }
   }
   

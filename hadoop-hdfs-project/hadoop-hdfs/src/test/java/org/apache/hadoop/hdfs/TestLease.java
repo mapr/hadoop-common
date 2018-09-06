@@ -34,8 +34,8 @@ import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.crypto.CipherSuite;
 import org.apache.hadoop.crypto.CryptoProtocolVersion;
@@ -71,7 +71,7 @@ public class TestLease {
   
   static final String dirString = "/test/lease";
   final Path dir = new Path(dirString);
-  static final Log LOG = LogFactory.getLog(TestLease.class);
+  static final Logger LOG = LoggerFactory.getLogger(TestLease.class);
   final Configuration conf = new HdfsConfiguration();
 
   @Test

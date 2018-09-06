@@ -43,7 +43,7 @@ import com.google.common.base.Preconditions;
 public class DataNodeTestUtils {
   private static final String DIR_FAILURE_SUFFIX = ".origin";
 
-  public static DatanodeRegistration 
+  public static DatanodeRegistration
   getDNRegistrationForBP(DataNode dn, String bpid) throws IOException {
     return dn.getDNRegistrationForBP(bpid);
   }
@@ -70,7 +70,7 @@ public class DataNodeTestUtils {
       bpos.triggerBlockReportForTests();
     }
   }
-  
+
   /**
    * Insert a Mockito spy object between the given DataNode and
    * the given NameNode. This can be used to delay or wait for
@@ -79,7 +79,7 @@ public class DataNodeTestUtils {
   public static DatanodeProtocolClientSideTranslatorPB spyOnBposToNN(
       DataNode dn, NameNode nn) {
     String bpid = nn.getNamesystem().getBlockPoolId();
-    
+
     BPOfferService bpos = null;
     for (BPOfferService thisBpos : dn.getAllBpOs()) {
       if (thisBpos.getBlockPoolId().equals(bpid)) {
@@ -89,7 +89,7 @@ public class DataNodeTestUtils {
     }
     Preconditions.checkArgument(bpos != null,
         "No such bpid: %s", bpid);
-    
+
     BPServiceActor bpsa = null;
     for (BPServiceActor thisBpsa : bpos.getBPServiceActors()) {
       if (thisBpsa.getNNSocketAddress().equals(nn.getServiceRpcAddress())) {
@@ -140,7 +140,7 @@ public class DataNodeTestUtils {
       throws IOException {
     return FsDatasetTestUtil.getMetaFile(dn.getFSDataset(), bpid, b);
   }
-  
+
   public static boolean unlinkBlock(DataNode dn, ExtendedBlock bk, int numLinks
       ) throws IOException {
     return FsDatasetTestUtil.unlinkBlock(dn.getFSDataset(), bk, numLinks);

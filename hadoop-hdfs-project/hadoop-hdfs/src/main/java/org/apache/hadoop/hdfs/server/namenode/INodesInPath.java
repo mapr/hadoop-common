@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 import com.google.common.collect.ImmutableList;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.UnresolvedLinkException;
 import org.apache.hadoop.hdfs.DFSUtil;
@@ -42,7 +42,7 @@ import static org.apache.hadoop.hdfs.server.namenode.snapshot.Snapshot.ID_INTEGE
  * Contains INodes information resolved from a given path.
  */
 public class INodesInPath {
-  public static final Log LOG = LogFactory.getLog(INodesInPath.class);
+  public static final Logger LOG = LoggerFactory.getLogger(INodesInPath.class);
 
   /**
    * @return true if path component is {@link HdfsConstants#DOT_SNAPSHOT_DIR}
@@ -95,12 +95,12 @@ public class INodesInPath {
    * the number of INodes is equal to the number of path components. For
    * snapshot path (e.g., /foo/.snapshot/s1/bar), the number of INodes is
    * (number_of_path_components - 1).
-   * 
-   * An UnresolvedPathException is always thrown when an intermediate path 
-   * component refers to a symbolic link. If the final path component refers 
+   *
+   * An UnresolvedPathException is always thrown when an intermediate path
+   * component refers to a symbolic link. If the final path component refers
    * to a symbolic link then an UnresolvedPathException is only thrown if
-   * resolveLink is true.  
-   * 
+   * resolveLink is true.
+   *
    * <p>
    * Example: <br>
    * Given the path /c1/c2/c3 where only /c1/c2 exists, resulting in the
@@ -188,7 +188,7 @@ public class INodesInPath {
         break;
       }
       final byte[] childName = components[count + 1];
-      
+
       // check if the next byte[] in components is for ".snapshot"
       if (isDotSnapshotDir(childName) && dir.isSnapshottable()) {
         // skip the ".snapshot" in components
@@ -326,7 +326,7 @@ public class INodesInPath {
       throw new NoSuchElementException("inodes.length == " + inodes.length);
     }
   }
-  
+
   /** @return the last inode. */
   public INode getLastINode() {
     return getINode(-1);

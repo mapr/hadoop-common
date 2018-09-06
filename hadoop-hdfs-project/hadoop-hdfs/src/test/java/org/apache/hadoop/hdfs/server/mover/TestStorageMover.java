@@ -26,9 +26,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.impl.Log4JLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -61,7 +60,8 @@ import org.apache.hadoop.hdfs.server.datanode.fsdataset.FsVolumeSpi;
 import org.apache.hadoop.hdfs.server.datanode.fsdataset.impl.FsVolumeImpl;
 import org.apache.hadoop.hdfs.server.namenode.snapshot.SnapshotTestHelper;
 import org.apache.hadoop.io.IOUtils;
-import org.apache.log4j.Level;
+import org.apache.hadoop.test.GenericTestUtils;
+import org.slf4j.event.Level;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -74,14 +74,13 @@ import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_DATANODE_LAZY_WRITER_INTE
  * Test the data migration tool (for Archival Storage)
  */
 public class TestStorageMover {
-  static final Log LOG = LogFactory.getLog(TestStorageMover.class);
+  static final Logger LOG = LoggerFactory.getLogger(TestStorageMover.class);
   static {
-    ((Log4JLogger)LogFactory.getLog(BlockPlacementPolicy.class)
-        ).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger)LogFactory.getLog(Dispatcher.class)
-        ).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger)LogFactory.getLog(DataTransferProtocol.class)).getLogger()
-        .setLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(
+        LoggerFactory.getLogger(BlockPlacementPolicy.class), Level.TRACE);
+    GenericTestUtils.setLogLevel(LoggerFactory.getLogger(Dispatcher.class),
+        Level.TRACE);
+    GenericTestUtils.setLogLevel(DataTransferProtocol.LOG, Level.TRACE);
   }
 
   private static final int BLOCK_SIZE = 1024;
@@ -596,7 +595,7 @@ public class TestStorageMover {
       // make sure the writing can continue
       out.writeBytes("world!");
       ((DFSOutputStream) out.getWrappedStream()).hsync();
-      IOUtils.cleanup(LOG, out);
+      IOUtils.cleanupWithLogger(LOG, out);
 
       lbs = test.dfs.getClient().getLocatedBlocks(
           barFile.toString(), BLOCK_SIZE);
@@ -611,7 +610,7 @@ public class TestStorageMover {
       byte[] buf = new byte[13];
       // read from offset 1024
       in.readFully(BLOCK_SIZE, buf, 0, buf.length);
-      IOUtils.cleanup(LOG, in);
+      IOUtils.cleanupWithLogger(LOG, in);
       Assert.assertEquals("hello, world!", new String(buf));
     } finally {
       test.shutdownCluster();

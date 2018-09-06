@@ -26,8 +26,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A low memory linked hash set implementation, which uses an array for storing
@@ -67,7 +67,8 @@ public class LightWeightHashSet<T> implements Collection<T> {
   protected static final int MINIMUM_CAPACITY = 16;
 
   static final int MAXIMUM_CAPACITY = 1 << 30;
-  private static final Log LOG = LogFactory.getLog(LightWeightHashSet.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(LightWeightHashSet.class);
 
   /**
    * An internal array of entries, which are the rows of the hash table. The

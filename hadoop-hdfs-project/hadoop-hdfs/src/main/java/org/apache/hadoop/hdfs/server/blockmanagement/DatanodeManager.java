@@ -22,8 +22,8 @@ import static org.apache.hadoop.util.Time.monotonicNow;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.net.InetAddresses;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.HadoopIllegalArgumentException;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
@@ -59,7 +59,7 @@ import java.util.*;
 @InterfaceAudience.Private
 @InterfaceStability.Evolving
 public class DatanodeManager {
-  static final Log LOG = LogFactory.getLog(DatanodeManager.class);
+  static final Logger LOG = LoggerFactory.getLogger(DatanodeManager.class);
 
   private final Namesystem namesystem;
   private final BlockManager blockManager;
@@ -178,7 +178,7 @@ public class DatanodeManager {
       final Configuration conf) throws IOException {
     this.namesystem = namesystem;
     this.blockManager = blockManager;
-    
+
     this.heartbeatManager = new HeartbeatManager(namesystem, blockManager, conf);
     this.decomManager = new DecommissionManager(namesystem, blockManager,
         heartbeatManager);
@@ -358,10 +358,10 @@ public class DatanodeManager {
     if (avoidStaleDataNodesForRead) {
       return datanode.isStale(staleInterval);
     }
-      
+
     return false;
   }
-  
+
   /** Sort the located blocks by the distance to the target host. */
   public void sortLocatedBlocks(final String targethost,
       final List<LocatedBlock> locatedblocks) {
@@ -376,27 +376,27 @@ public class DatanodeManager {
       if (rName != null)
         client = new NodeBase(rName + NodeBase.PATH_SEPARATOR_STR + targethost);
     }
-    
+
     Comparator<DatanodeInfo> comparator = avoidStaleDataNodesForRead ?
-        new DFSUtil.DecomStaleComparator(staleInterval) : 
+        new DFSUtil.DecomStaleComparator(staleInterval) :
         DFSUtil.DECOM_COMPARATOR;
-        
+
     for (LocatedBlock b : locatedblocks) {
       DatanodeInfo[] di = b.getLocations();
       // Move decommissioned/stale datanodes to the bottom
       Arrays.sort(di, comparator);
-      
+
       int lastActiveIndex = di.length - 1;
       while (lastActiveIndex > 0 && isInactive(di[lastActiveIndex])) {
           --lastActiveIndex;
       }
-      int activeLen = lastActiveIndex + 1;      
+      int activeLen = lastActiveIndex + 1;
       networktopology.sortByDistance(client, b.getLocations(), activeLen);
       // must update cache since we modified locations array
       b.updateCachedStorageInfo();
     }
   }
-  
+
   CyclicIteration<String, DatanodeDescriptor> getDatanodeCyclicIteration(
       final String firstkey) {
     return new CyclicIteration<String, DatanodeDescriptor>(
@@ -512,7 +512,7 @@ public class DatanodeManager {
       final DatanodeDescriptor dd = getDatanode(datanodeID[i]);
       storages[i] = dd.getStorageInfo(storageIDs[i]);
     }
-    return storages; 
+    return storages;
   }
 
   /** Prints information about all datanodes. */
@@ -657,7 +657,7 @@ public class DatanodeManager {
       HashMap<String, Integer> versionCount = new HashMap<String, Integer>();
       for(DatanodeDescriptor dn: datanodeMap.values()) {
         // Check isAlive too because right after removeDatanode(),
-        // isDatanodeDead() is still true 
+        // isDatanodeDead() is still true
         if(shouldCountVersion(dn))
         {
           Integer num = versionCount.get(dn.getSoftwareVersion());
@@ -674,7 +674,7 @@ public class DatanodeManager {
       return new HashMap<String, Integer> (this.datanodesSoftwareVersions);
     }
   }
-  
+
   /**
    *  Resolve a node's network location. If the DNS to switch mapping fails 
    *  then this method guarantees default rack location. 
@@ -788,22 +788,22 @@ public class DatanodeManager {
    * The operation procedure of making a already decommissioned data node not
    * to be displayed is as following:
    * <ol>
-   *   <li> 
+   *   <li>
    *   Host must have been in the include hosts list and the include hosts list
    *   must not be empty.
    *   </li>
    *   <li>
    *   Host is decommissioned by remaining in the include hosts list and added
-   *   into the exclude hosts list. Name node is updated with the new 
+   *   into the exclude hosts list. Name node is updated with the new
    *   information by issuing dfsadmin -refreshNodes command.
    *   </li>
    *   <li>
-   *   Host is removed from both include hosts and exclude hosts lists.  Name 
-   *   node is updated with the new informationby issuing dfsamin -refreshNodes 
+   *   Host is removed from both include hosts and exclude hosts lists.  Name
+   *   node is updated with the new informationby issuing dfsamin -refreshNodes
    *   command.
    *   <li>
    * </ol>
-   * 
+   *
    * @param nodeList
    *          , array list of live or dead nodes.
    */
@@ -940,7 +940,7 @@ public class DatanodeManager {
                 getNetworkDependenciesWithDefault(nodeS));
           }
           getNetworkTopology().add(nodeS);
-            
+
           // also treat the registration message as a heartbeat
           heartbeatManager.register(nodeS);
           incrementVersionCount(nodeS.getSoftwareVersion());
@@ -972,7 +972,7 @@ public class DatanodeManager {
         }
         networktopology.add(nodeDescr);
         nodeDescr.setSoftwareVersion(nodeReg.getSoftwareVersion());
-  
+
         // register new datanode
         addDatanode(nodeDescr);
         // also treat the registration message as a heartbeat
@@ -1032,7 +1032,7 @@ public class DatanodeManager {
   
   /**
    * 1. Added to hosts  --> no further work needed here.
-   * 2. Removed from hosts --> mark AdminState as decommissioned. 
+   * 2. Removed from hosts --> mark AdminState as decommissioned.
    * 3. Added to exclude --> start decommission.
    * 4. Removed from exclude --> stop decommission.
    */
@@ -1076,7 +1076,7 @@ public class DatanodeManager {
     // A decommissioning DN may be "alive" or "dead".
     return getDatanodeListForReport(DatanodeReportType.DECOMMISSIONING);
   }
-  
+
   /* Getter and Setter for stale DataNodes related attributes */
 
   /**
@@ -1338,7 +1338,7 @@ public class DatanodeManager {
   /** Handle heartbeat from datanodes. */
   public DatanodeCommand[] handleHeartbeat(DatanodeRegistration nodeReg,
       StorageReport[] reports, final String blockPoolId,
-      long cacheCapacity, long cacheUsed, int xceiverCount, 
+      long cacheCapacity, long cacheUsed, int xceiverCount,
       int maxTransfers, int failedVolumes,
       VolumeFailureSummary volumeFailureSummary) throws IOException {
     synchronized (heartbeatManager) {
@@ -1349,8 +1349,8 @@ public class DatanodeManager {
         } catch(UnregisteredNodeException e) {
           return new DatanodeCommand[]{RegisterCommand.REGISTER};
         }
-        
-        // Check if this datanode should actually be shutdown instead. 
+
+        // Check if this datanode should actually be shutdown instead.
         if (nodeinfo != null && nodeinfo.isDisallowed()) {
           setDatanodeDead(nodeinfo);
           throw new DisallowedDatanodeException(nodeinfo);
@@ -1439,7 +1439,7 @@ public class DatanodeManager {
         }
         boolean sendingCachingCommands = false;
         long nowMs = monotonicNow();
-        if (shouldSendCachingCommands && 
+        if (shouldSendCachingCommands &&
             ((nowMs - nodeinfo.getLastCachingDirectiveSentTimeMs()) >=
                 timeBetweenResendingCachingDirectivesMs)) {
           DatanodeCommand pendingCacheCommand =

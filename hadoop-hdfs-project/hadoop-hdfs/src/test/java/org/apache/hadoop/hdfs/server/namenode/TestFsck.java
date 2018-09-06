@@ -89,6 +89,7 @@ import org.apache.hadoop.net.NetworkTopology;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
@@ -118,7 +119,7 @@ public class TestFsck {
       "ip=/\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\s" + 
       "cmd=getfileinfo\\ssrc=\\/\\sdst=null\\s" + 
       "perm=null\\s" + "proto=.*");
-  
+
   static final Pattern numCorruptBlocksPattern = Pattern.compile(
       ".*Corrupt blocks:\t\t([0123456789]*).*");
   
@@ -130,13 +131,14 @@ public class TestFsck {
                         throws Exception {
     ByteArrayOutputStream bStream = new ByteArrayOutputStream();
     PrintStream out = new PrintStream(bStream, true);
-    ((Log4JLogger)FSPermissionChecker.LOG).getLogger().setLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(
+        FSPermissionChecker.LOG, org.slf4j.event.Level.TRACE);
     int errCode = ToolRunner.run(new DFSck(conf, out), path);
     if (checkErrorCode) {
       assertEquals(expectedErrCode, errCode);
     }
-    ((Log4JLogger)FSPermissionChecker.LOG).getLogger().setLevel(Level.INFO);
-    FSImage.LOG.error("OUTPUT = " + bStream.toString());
+    GenericTestUtils.setLogLevel(
+        FSPermissionChecker.LOG, org.slf4j.event.Level.INFO);
     return bStream.toString();
   }
 
@@ -168,7 +170,7 @@ public class TestFsck {
       assertTrue(outStr.contains(NamenodeFsck.HEALTHY_STATUS));
       if (fs != null) {try{fs.close();} catch(Exception e){}}
       cluster.shutdown();
-      
+
       // restart the cluster; bring up namenode but not the data nodes
       cluster = new MiniDFSCluster.Builder(conf)
           .numDataNodes(0).format(false).build();
@@ -176,7 +178,7 @@ public class TestFsck {
       // expect the result is corrupt
       assertTrue(outStr.contains(NamenodeFsck.CORRUPT_STATUS));
       System.out.println(outStr);
-      
+
       // bring up data nodes & cleanup cluster
       cluster.startDataNodes(conf, 4, true, null, null);
       cluster.waitActive();
@@ -292,7 +294,7 @@ public class TestFsck {
           return null;
         }
       });
-      
+
       // set permission and try DFSck again as the fake user, should succeed
       fs.setPermission(dirpath, new FsPermission((short) 0777));
       fakeUGI.doAs(new PrivilegedExceptionAction<Object>() {
@@ -394,10 +396,10 @@ public class TestFsck {
       // Fix the filesystem by removing corruptFileName
       outStr = runFsck(conf, 1, true, "/", "-delete");
       assertTrue(outStr.contains(NamenodeFsck.CORRUPT_STATUS));
-      
+
       // Check to make sure we have a healthy filesystem
       outStr = runFsck(conf, 0, true, "/");
-      assertTrue(outStr.contains(NamenodeFsck.HEALTHY_STATUS)); 
+      assertTrue(outStr.contains(NamenodeFsck.HEALTHY_STATUS));
       util.cleanup(fs, topDir);
     } finally {
       if (fs != null) {try{fs.close();} catch(Exception e){}}
@@ -456,7 +458,7 @@ public class TestFsck {
         }
       }
     }
-    
+
     public void checkSalvagedRemains() throws IOException {
       int chainIdx = 0;
       HdfsFileStatus status = dfsClient.getFileInfo(name);
@@ -518,7 +520,7 @@ public class TestFsck {
       util.waitReplication(fs, topDir, (short)3);
       String outStr = runFsck(conf, 0, true, "/");
       assertTrue(outStr.contains(NamenodeFsck.HEALTHY_STATUS));
-      
+
       // Corrupt a block by deleting it
       String[] fileNames = util.getFileNames(topDir);
       DFSClient dfsClient = new DFSClient(new InetSocketAddress("localhost",
@@ -541,8 +543,8 @@ public class TestFsck {
         } catch (InterruptedException ignore) {
         }
         outStr = runFsck(conf, 1, false, "/");
-      } 
-      
+      }
+
       // After a fsck -move, the corrupted file should still exist.
       for (int i = 0; i < MAX_MOVE_TRIES; i++) {
         outStr = runFsck(conf, 1, true, "/", "-move" );
@@ -561,10 +563,10 @@ public class TestFsck {
       // Fix the filesystem by moving corrupted files to lost+found
       outStr = runFsck(conf, 1, true, "/", "-move", "-delete");
       assertTrue(outStr.contains(NamenodeFsck.CORRUPT_STATUS));
-      
+
       // Check to make sure we have healthy filesystem
       outStr = runFsck(conf, 0, true, "/");
-      assertTrue(outStr.contains(NamenodeFsck.HEALTHY_STATUS)); 
+      assertTrue(outStr.contains(NamenodeFsck.HEALTHY_STATUS));
       util.cleanup(fs, topDir);
       if (fs != null) {try{fs.close();} catch(Exception e){}}
       cluster.shutdown();
@@ -598,20 +600,20 @@ public class TestFsck {
       int writeCount = 0;
       while (writeCount != 100) {
         out.write(randomString.getBytes());
-        writeCount++;                  
+        writeCount++;
       }
       // We expect the filesystem to be HEALTHY and show one open file
       outStr = runFsck(conf, 0, true, topDir);
       System.out.println(outStr);
       assertTrue(outStr.contains(NamenodeFsck.HEALTHY_STATUS));
-      assertFalse(outStr.contains("OPENFORWRITE")); 
+      assertFalse(outStr.contains("OPENFORWRITE"));
       // Use -openforwrite option to list open files
       outStr = runFsck(conf, 0, true, topDir, "-openforwrite");
       System.out.println(outStr);
       assertTrue(outStr.contains("OPENFORWRITE"));
       assertTrue(outStr.contains("openFile"));
       // Close the file
-      out.close(); 
+      out.close();
       // Now, fsck should show HEALTHY fs and should not show any open files
       outStr = runFsck(conf, 0, true, topDir);
       System.out.println(outStr);
@@ -794,23 +796,23 @@ public class TestFsck {
       String fileName = "/test.txt";
       Path filePath = new Path(fileName);
       FileSystem fs = cluster.getFileSystem();
-      
+
       // create a one-block file
       DFSTestUtil.createFile(fs, filePath, 1L, (short)1, 1L);
       DFSTestUtil.waitReplication(fs, filePath, (short)1);
-      
+
       // intentionally corrupt NN data structure
       INodeFile node = (INodeFile) cluster.getNamesystem().dir.getINode
           (fileName, true);
       final BlockInfoContiguous[] blocks = node.getBlocks();
       assertEquals(blocks.length, 1);
       blocks[0].setNumBytes(-1L);  // set the block length to be negative
-      
+
       // run fsck and expect a failure with -1 as the error code
       String outStr = runFsck(conf, -1, true, fileName);
       System.out.println(outStr);
       assertTrue(outStr.contains(NamenodeFsck.FAILURE_STATUS));
-      
+
       // clean up file system
       fs.delete(filePath, true);
     } finally {
@@ -947,19 +949,19 @@ public class TestFsck {
     
     try {
       // Startup a minicluster
-      cluster = 
+      cluster =
           new MiniDFSCluster.Builder(conf).numDataNodes(NUM_REPLICAS).build();
       assertNotNull("Failed Cluster Creation", cluster);
       cluster.waitClusterUp();
       dfs = cluster.getFileSystem();
       assertNotNull("Failed to get FileSystem", dfs);
-      
+
       // Create a file that will be intentionally under-replicated
       final String pathString = new String("/testfile");
       final Path path = new Path(pathString);
       long fileLen = blockSize * NUM_BLOCKS;
       DFSTestUtil.createFile(dfs, path, fileLen, REPL_FACTOR, 1);
-      
+
       // Create an under-replicated file
       NameNode namenode = cluster.getNameNode();
       NetworkTopology nettop = cluster.getNamesystem().getBlockManager()
@@ -968,18 +970,18 @@ public class TestFsck {
       Writer result = new StringWriter();
       PrintWriter out = new PrintWriter(result, true);
       InetAddress remoteAddress = InetAddress.getLocalHost();
-      NamenodeFsck fsck = new NamenodeFsck(conf, namenode, nettop, pmap, out, 
+      NamenodeFsck fsck = new NamenodeFsck(conf, namenode, nettop, pmap, out,
           NUM_REPLICAS, (short)1, remoteAddress);
-      
+
       // Run the fsck and check the Result
-      final HdfsFileStatus file = 
+      final HdfsFileStatus file =
           namenode.getRpcServer().getFileInfo(pathString);
       assertNotNull(file);
       Result res = new Result(conf);
       fsck.check(pathString, file, res);
       // Also print the output from the fsck, for ex post facto sanity checks
       System.out.println(result.toString());
-      assertEquals(res.missingReplicas, 
+      assertEquals(res.missingReplicas,
           (NUM_BLOCKS*REPL_FACTOR) - (NUM_BLOCKS*NUM_REPLICAS));
       assertEquals(res.numExpectedReplicas, NUM_BLOCKS*REPL_FACTOR);
     } finally {
@@ -1018,38 +1020,38 @@ public class TestFsck {
     
     try {
       // Startup a minicluster
-      cluster = 
+      cluster =
           new MiniDFSCluster.Builder(conf).numDataNodes(NUM_DN).hosts(hosts)
           .racks(racks).build();
       assertNotNull("Failed Cluster Creation", cluster);
       cluster.waitClusterUp();
       dfs = cluster.getFileSystem();
       assertNotNull("Failed to get FileSystem", dfs);
-      
+
       // Create a file that will be intentionally under-replicated
       final String pathString = new String("/testfile");
       final Path path = new Path(pathString);
       long fileLen = blockSize * NUM_BLOCKS;
       DFSTestUtil.createFile(dfs, path, fileLen, REPL_FACTOR, 1);
-      
+
       // Create an under-replicated file
       NameNode namenode = cluster.getNameNode();
       NetworkTopology nettop = cluster.getNamesystem().getBlockManager()
           .getDatanodeManager().getNetworkTopology();
-      // Add a new node on different rack, so previous blocks' replicas 
+      // Add a new node on different rack, so previous blocks' replicas
       // are considered to be misplaced
       nettop.add(DFSTestUtil.getDatanodeDescriptor("/rack2", "/host3"));
       NUM_DN++;
-      
+
       Map<String,String[]> pmap = new HashMap<String, String[]>();
       Writer result = new StringWriter();
       PrintWriter out = new PrintWriter(result, true);
       InetAddress remoteAddress = InetAddress.getLocalHost();
-      NamenodeFsck fsck = new NamenodeFsck(conf, namenode, nettop, pmap, out, 
+      NamenodeFsck fsck = new NamenodeFsck(conf, namenode, nettop, pmap, out,
           NUM_DN, REPL_FACTOR, remoteAddress);
-      
+
       // Run the fsck and check the Result
-      final HdfsFileStatus file = 
+      final HdfsFileStatus file =
           namenode.getRpcServer().getFileInfo(pathString);
       assertNotNull(file);
       Result res = new Result(conf);
@@ -1083,7 +1085,7 @@ public class TestFsck {
     FSNamesystem fsName = mock(FSNamesystem.class);
     BlockManager blockManager = mock(BlockManager.class);
     DatanodeManager dnManager = mock(DatanodeManager.class);
-    
+
     when(namenode.getNamesystem()).thenReturn(fsName);
     when(fsName.getBlockLocations(
         anyString(), anyLong(), anyLong(), anyBoolean(), anyBoolean()))

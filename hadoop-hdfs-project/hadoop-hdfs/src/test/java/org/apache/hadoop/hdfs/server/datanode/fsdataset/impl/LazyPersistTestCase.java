@@ -18,8 +18,8 @@
 package org.apache.hadoop.hdfs.server.datanode.fsdataset.impl;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CreateFlag;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -79,7 +79,8 @@ public abstract class LazyPersistTestCase {
   private static final String JMX_SERVICE_NAME = "DataNode";
   protected static final int LAZY_WRITE_FILE_SCRUBBER_INTERVAL_SEC = 3;
   protected static final int LAZY_WRITER_INTERVAL_SEC = 1;
-  protected static final Log LOG = LogFactory.getLog(LazyPersistTestCase.class);
+  protected static final Logger LOG =
+      LoggerFactory.getLogger(LazyPersistTestCase.class);
   protected static final short REPL_FACTOR = 1;
 
   protected MiniDFSCluster cluster;

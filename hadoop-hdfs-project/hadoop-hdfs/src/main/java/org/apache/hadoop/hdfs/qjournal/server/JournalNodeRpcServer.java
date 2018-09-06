@@ -121,7 +121,7 @@ class JournalNodeRpcServer implements QJournalProtocol {
   @Override
   public GetJournalStateResponseProto getJournalState(String journalId)
         throws IOException {
-    long epoch = jn.getOrCreateJournal(journalId).getLastPromisedEpoch(); 
+    long epoch = jn.getOrCreateJournal(journalId).getLastPromisedEpoch();
     return GetJournalStateResponseProto.newBuilder()
         .setLastPromisedEpoch(epoch)
         .setHttpPort(jn.getBoundHttpAddress().getPort())

@@ -28,8 +28,8 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
@@ -49,7 +49,7 @@ import com.google.common.base.Supplier;
  * Static utility functions useful for testing HA.
  */
 public abstract class HATestUtil {
-  private static final Log LOG = LogFactory.getLog(HATestUtil.class);
+  private static final Logger LOG = LoggerFactory.getLogger(HATestUtil.class);
   
   private static final String LOGICAL_HOSTNAME = "ha-nn-uri-%d";
   
@@ -67,12 +67,12 @@ public abstract class HATestUtil {
    */
   public static void waitForStandbyToCatchUp(NameNode active,
       NameNode standby) throws InterruptedException, IOException, CouldNotCatchUpException {
-    
+
     long activeTxId = active.getNamesystem().getFSImage().getEditLog()
       .getLastWrittenTxId();
-    
+
     active.getRpcServer().rollEditLog();
-    
+
     long start = Time.now();
     while (Time.now() - start < TestEditLogTailer.NN_LAG_TIMEOUT) {
       long nn2HighestTxId = standby.getNamesystem().getFSImage()
@@ -185,7 +185,7 @@ public abstract class HATestUtil {
         logicalName, nameNodeId1), address1);
     conf.set(DFSUtil.addKeySuffixes(DFS_NAMENODE_RPC_ADDRESS_KEY,
         logicalName, nameNodeId2), address2);
-    
+
     conf.set(DFSConfigKeys.DFS_NAMESERVICES, logicalName);
     conf.set(DFSUtil.addKeySuffixes(DFS_HA_NAMENODES_KEY_PREFIX, logicalName),
         nameNodeId1 + "," + nameNodeId2);
@@ -193,7 +193,7 @@ public abstract class HATestUtil {
         ConfiguredFailoverProxyProvider.class.getName());
     conf.set("fs.defaultFS", "hdfs://" + logicalName);
   }
-  
+
 
   public static String getLogicalHostname(MiniDFSCluster cluster) {
     return String.format(LOGICAL_HOSTNAME, cluster.getInstanceId());

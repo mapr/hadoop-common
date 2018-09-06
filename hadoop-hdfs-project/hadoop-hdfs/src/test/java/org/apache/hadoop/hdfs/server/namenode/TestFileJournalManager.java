@@ -34,8 +34,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.PriorityQueue;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.hdfs.server.common.Storage.StorageDirectory;
@@ -54,7 +54,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.TreeMultiset;
 
 public class TestFileJournalManager {
-  static final Log LOG = LogFactory.getLog(TestFileJournalManager.class);
+  static final Logger LOG =
+      LoggerFactory.getLogger(TestFileJournalManager.class);
 
   private Configuration conf;
 
@@ -108,11 +109,12 @@ public class TestFileJournalManager {
             numTransactions++;
           }
         } finally {
-          IOUtils.cleanup(LOG, elis);
+          IOUtils.cleanupWithLogger(LOG, elis);
         }
       }
     } finally {
-      IOUtils.cleanup(LOG, allStreams.toArray(new EditLogInputStream[0]));
+      IOUtils.cleanupWithLogger(
+          LOG, allStreams.toArray(new EditLogInputStream[0]));
     }
     return numTransactions;
   }
@@ -421,8 +423,9 @@ public class TestFileJournalManager {
         return ret;
       }
     } finally {
-      IOUtils.cleanup(LOG,  allStreams.toArray(new EditLogInputStream[0]));
-      IOUtils.cleanup(LOG,  elis);
+      IOUtils.cleanupWithLogger(
+          LOG, allStreams.toArray(new EditLogInputStream[0]));
+      IOUtils.cleanupWithLogger(LOG, elis);
     }
     return null;
   }
@@ -446,7 +449,7 @@ public class TestFileJournalManager {
       FSEditLogOp op = elis.readOp();
       assertEquals("read unexpected op", op.getTransactionId(), 5);
     } finally {
-      IOUtils.cleanup(LOG, elis);
+      IOUtils.cleanupWithLogger(LOG, elis);
     }
   }
 
@@ -476,7 +479,7 @@ public class TestFileJournalManager {
         assertTrue(lastReadOp.getTransactionId() <= 100);
       }
     } finally {
-      IOUtils.cleanup(LOG, elis);
+      IOUtils.cleanupWithLogger(LOG, elis);
     }
   }
 
@@ -503,7 +506,7 @@ public class TestFileJournalManager {
       }
       jm.doPreUpgrade();
     } finally {
-      IOUtils.cleanup(LOG, jm);
+      IOUtils.cleanupWithLogger(LOG, jm);
       // Restore permissions on storage directory and make sure we can delete.
       FileUtil.setWritable(storageDir, true);
       FileUtil.fullyDelete(storageDir);

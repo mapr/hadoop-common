@@ -60,7 +60,7 @@ import com.google.common.base.Preconditions;
 @InterfaceStability.Evolving
 public class EditLogTailer {
   public static final Logger LOG = LoggerFactory.getLogger(EditLogTailer.class);
-  
+
   private final EditLogTailerThread tailerThread;
   
   private final Configuration conf;
@@ -98,7 +98,7 @@ public class EditLogTailer {
    * available to be read from.
    */
   private final long sleepTimeMs;
-  
+
   public EditLogTailer(FSNamesystem namesystem, Configuration conf) {
     this.tailerThread = new EditLogTailerThread();
     this.conf = conf;
@@ -123,16 +123,16 @@ public class EditLogTailer {
     
     sleepTimeMs = conf.getInt(DFSConfigKeys.DFS_HA_TAILEDITS_PERIOD_KEY,
         DFSConfigKeys.DFS_HA_TAILEDITS_PERIOD_DEFAULT) * 1000;
-    
+
     LOG.debug("logRollPeriodMs=" + logRollPeriodMs +
         " sleepTime=" + sleepTimeMs);
   }
-  
+
   private InetSocketAddress getActiveNodeAddress() {
     Configuration activeConf = HAUtil.getConfForOtherNode(conf);
     return NameNode.getServiceAddress(activeConf, true);
   }
-  
+
   private NamenodeProtocol getActiveNodeProxy() throws IOException {
     if (cachedActiveProxy == null) {
       int rpcTimeout = conf.getInt(
@@ -171,7 +171,7 @@ public class EditLogTailer {
   public void setEditLog(FSEditLog editLog) {
     this.editLog = editLog;
   }
-  
+
   public void catchupDuringFailover() throws IOException {
     Preconditions.checkState(tailerThread == null ||
         !tailerThread.isAlive(),

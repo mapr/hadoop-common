@@ -35,8 +35,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileUtil;
@@ -55,7 +55,7 @@ import org.apache.hadoop.util.Time;
  */
 @InterfaceAudience.Private
 public class DirectoryScanner implements Runnable {
-  private static final Log LOG = LogFactory.getLog(DirectoryScanner.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DirectoryScanner.class);
 
   private final FsDatasetSpi<?> dataset;
   private final ExecutorService reportCompileThreadPool;
@@ -85,7 +85,7 @@ public class DirectoryScanner implements Runnable {
     long missingMemoryBlocks = 0;
     long mismatchBlocks = 0;
     long duplicateBlocks = 0;
-    
+
     public Stats(String bpid) {
       this.bpid = bpid;
     }
@@ -99,14 +99,14 @@ public class DirectoryScanner implements Runnable {
       + ", mismatched blocks:" + mismatchBlocks;
     }
   }
-  
+
   static class ScanInfoPerBlockPool extends 
                      HashMap<String, LinkedList<ScanInfo>> {
     
     private static final long serialVersionUID = 1L;
 
     ScanInfoPerBlockPool() {super();}
-    
+
     ScanInfoPerBlockPool(int sz) {super(sz);}
     
     /**
@@ -156,31 +156,31 @@ public class DirectoryScanner implements Runnable {
    * Tracks the files and other information related to a block on the disk
    * Missing file is indicated by setting the corresponding member
    * to null.
-   * 
+   *
    * Because millions of these structures may be created, we try to save
    * memory here.  So instead of storing full paths, we store path suffixes.
    * The block file, if it exists, will have a path like this:
    * <volume_base_path>/<block_path>
    * So we don't need to store the volume path, since we already know what the
    * volume is.
-   * 
+   *
    * The metadata file, if it exists, will have a path like this:
    * <volume_base_path>/<block_path>_<genstamp>.meta
    * So if we have a block file, there isn't any need to store the block path
    * again.
-   * 
+   *
    * The accessor functions take care of these manipulations.
    */
   static class ScanInfo implements Comparable<ScanInfo> {
     private final long blockId;
-    
+
     /**
      * The block file path, relative to the volume's base directory.
      * If there was no block file found, this may be null. If 'vol'
      * is null, then this is the full path of the block file.
      */
     private final String blockSuffix;
-    
+
     /**
      * The suffix of the meta file path relative to the block file.
      * If blockSuffix is null, then this will be the entire path relative
@@ -198,10 +198,10 @@ public class DirectoryScanner implements Runnable {
 
     private final static Pattern CONDENSED_PATH_REGEX =
         Pattern.compile("(?<!^)(\\\\|/){2,}");
-    
-    private final static String QUOTED_FILE_SEPARATOR = 
+
+    private final static String QUOTED_FILE_SEPARATOR =
         Matcher.quoteReplacement(File.separator);
-    
+
     /**
      * Get the most condensed version of the path.
      *
@@ -236,7 +236,7 @@ public class DirectoryScanner implements Runnable {
         getCondensedPath(vol.getBasePath());
       this.blockSuffix = blockFile == null ? null :
         getSuffix(blockFile, condensedVolPath);
-      this.blockFileLength = (blockFile != null) ? blockFile.length() : 0; 
+      this.blockFileLength = (blockFile != null) ? blockFile.length() : 0;
       if (metaFile == null) {
         this.metaSuffix = null;
       } else if (blockFile == null) {
@@ -304,7 +304,7 @@ public class DirectoryScanner implements Runnable {
 
     public long getGenStamp() {
       return metaSuffix != null ? Block.getGenerationStamp(
-          getMetaFile().getName()) : 
+          getMetaFile().getName()) :
             GenerationStamp.GRANDFATHER_GENERATION_STAMP;
     }
   }
@@ -329,7 +329,7 @@ public class DirectoryScanner implements Runnable {
     shouldRun = true;
     long offset = DFSUtil.getRandom().nextInt((int) (scanPeriodMsecs/1000L)) * 1000L; //msec
     long firstScanTime = Time.now() + offset;
-    LOG.info("Periodic Directory Tree Verification scan starting at " 
+    LOG.info("Periodic Directory Tree Verification scan starting at "
         + firstScanTime + " with interval " + scanPeriodMsecs);
     masterThread.scheduleAtFixedRate(this, offset, scanPeriodMsecs, 
                                      TimeUnit.MILLISECONDS);
@@ -370,7 +370,7 @@ public class DirectoryScanner implements Runnable {
       throw er;
     }
   }
-  
+
   void shutdown() {
     if (!shouldRun) {
       LOG.warn("DirectoryScanner: shutdown has been called, but periodic scanner not started");
@@ -554,12 +554,12 @@ public class DirectoryScanner implements Runnable {
       if (isValid(dataset, volumes.get(i))) {
         ReportCompiler reportCompiler =
           new ReportCompiler(datanode,volumes.get(i));
-        Future<ScanInfoPerBlockPool> result = 
+        Future<ScanInfoPerBlockPool> result =
           reportCompileThreadPool.submit(reportCompiler);
         compilersInProgress.put(i, result);
       }
     }
-    
+
     for (Entry<Integer, Future<ScanInfoPerBlockPool>> report :
         compilersInProgress.entrySet()) {
       try {
@@ -588,7 +588,7 @@ public class DirectoryScanner implements Runnable {
         && metaFile.endsWith(Block.METADATA_EXTENSION);
   }
 
-  private static class ReportCompiler 
+  private static class ReportCompiler
   implements Callable<ScanInfoPerBlockPool> {
     private final FsVolumeSpi volume;
     private final DataNode datanode;

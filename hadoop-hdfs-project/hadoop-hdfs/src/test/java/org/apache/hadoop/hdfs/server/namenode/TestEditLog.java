@@ -54,9 +54,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.impl.Log4JLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.ChecksumException;
 import org.apache.hadoop.fs.FileSystem;
@@ -95,9 +94,9 @@ import com.google.common.collect.Lists;
  * This class tests the creation and validation of a checkpoint.
  */
 public class TestEditLog {
-  
+
   static {
-    ((Log4JLogger)FSEditLog.LOG).getLogger().setLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(FSEditLog.LOG, Level.ALL);
   }
 
   /**
@@ -140,7 +139,7 @@ public class TestEditLog {
     }
   }
 
-  static final Log LOG = LogFactory.getLog(TestEditLog.class);
+  static final Logger LOG = LoggerFactory.getLogger(TestEditLog.class);
   
   static final int NUM_DATA_NODES = 0;
 
@@ -478,7 +477,7 @@ public class TestEditLog {
 
   @Test
   public void testSyncBatching() throws Exception {
-    // start a cluster 
+    // start a cluster
     Configuration conf = new HdfsConfiguration();
     MiniDFSCluster cluster = null;
     FileSystem fileSys = null;
@@ -1556,7 +1555,7 @@ public class TestEditLog {
       fileSys.create(file2).close();
 
       // Restart and assert the above stated expectations.
-      IOUtils.cleanup(LOG, fileSys);
+      IOUtils.cleanupWithLogger(LOG, fileSys);
       cluster.restartNameNode();
       fileSys = cluster.getFileSystem();
       assertFalse(fileSys.getAclStatus(dir1).getEntries().isEmpty());
@@ -1565,7 +1564,7 @@ public class TestEditLog {
       assertTrue(fileSys.getAclStatus(dir3).getEntries().isEmpty());
       assertTrue(fileSys.getAclStatus(file2).getEntries().isEmpty());
     } finally {
-      IOUtils.cleanup(LOG, fileSys);
+      IOUtils.cleanupWithLogger(LOG, fileSys);
       if (cluster != null) {
         cluster.shutdown();
       }

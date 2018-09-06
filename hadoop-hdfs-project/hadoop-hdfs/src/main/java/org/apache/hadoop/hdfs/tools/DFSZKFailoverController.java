@@ -23,8 +23,8 @@ import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_KERBEROS_PRINCIP
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.HadoopIllegalArgumentException;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
@@ -51,8 +51,8 @@ import com.google.protobuf.InvalidProtocolBufferException;
 @InterfaceAudience.Private
 public class DFSZKFailoverController extends ZKFailoverController {
 
-  private static final Log LOG =
-    LogFactory.getLog(DFSZKFailoverController.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(DFSZKFailoverController.class);
   private final AccessControlList adminAcl;
   /* the same as superclass's localTarget, but with the more specfic NN type */
   private final NNHAServiceTarget localNNTarget;
@@ -180,7 +180,7 @@ public class DFSZKFailoverController extends ZKFailoverController {
     try {
       retCode = zkfc.run(parser.getRemainingArgs());
     } catch (Throwable t) {
-      LOG.fatal("Got a fatal error, exiting now", t);
+      LOG.error("Got a fatal error, exiting now", t);
     }
     System.exit(retCode);
   }

@@ -30,8 +30,8 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.io.IOUtils;
@@ -44,7 +44,8 @@ import org.apache.hadoop.hdfs.server.namenode.FSEditLogLoader.PositionTrackingIn
  */
 @InterfaceAudience.Private
 public class OfflineImageViewer {
-  public static final Log LOG = LogFactory.getLog(OfflineImageViewer.class);
+  public static final Logger LOG =
+      LoggerFactory.getLogger(OfflineImageViewer.class);
   
   private final static String usage = 
     "Usage: bin/hdfs oiv_legacy [OPTIONS] -i INPUTFILE -o OUTPUTFILE\n" +
@@ -139,7 +140,7 @@ public class OfflineImageViewer {
       if (!done) {
         LOG.error("image loading failed at offset " + tracker.getPos());
       }
-      IOUtils.cleanup(LOG, in, tracker);
+      IOUtils.cleanupWithLogger(LOG, in, tracker);
     }
   }
 

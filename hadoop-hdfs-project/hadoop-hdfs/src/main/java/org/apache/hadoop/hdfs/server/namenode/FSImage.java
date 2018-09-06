@@ -144,7 +144,7 @@ public class FSImage implements Closeable {
     }
 
     this.editLog = new FSEditLog(conf, storage, editsDirs);
-    
+
     archivalManager = new NNStorageRetentionManager(conf, storage, editLog);
   }
  
@@ -293,7 +293,7 @@ public class FSImage implements Closeable {
     
     return loadFSImage(target, startOpt, recovery);
   }
-  
+
   /**
    * For each storage directory, performs recovery of incomplete transitions
    * (eg. upgrade, rollback, checkpoint) and inserts the directory's storage
@@ -794,10 +794,10 @@ public class FSImage implements Closeable {
   private boolean needsResaveBasedOnStaleCheckpoint(
       File imageFile, long numEditsLoaded) {
     final long checkpointPeriod = conf.getLong(
-        DFSConfigKeys.DFS_NAMENODE_CHECKPOINT_PERIOD_KEY, 
+        DFSConfigKeys.DFS_NAMENODE_CHECKPOINT_PERIOD_KEY,
         DFSConfigKeys.DFS_NAMENODE_CHECKPOINT_PERIOD_DEFAULT);
     final long checkpointTxnCount = conf.getLong(
-        DFSConfigKeys.DFS_NAMENODE_CHECKPOINT_TXNS_KEY, 
+        DFSConfigKeys.DFS_NAMENODE_CHECKPOINT_TXNS_KEY,
         DFSConfigKeys.DFS_NAMENODE_CHECKPOINT_TXNS_DEFAULT);
     long checkpointAge = Time.now() - imageFile.lastModified();
 
@@ -854,7 +854,7 @@ public class FSImage implements Closeable {
    * Update the count of each directory with quota in the namespace.
    * A directory's count is defined as the total number inodes in the tree
    * rooted at the directory.
-   * 
+   *
    * This is an update of existing state of the filesystem and does not
    * throw QuotaExceededException.
    */
@@ -871,7 +871,7 @@ public class FSImage implements Closeable {
     final EnumCounters<StorageType> parentTypeSpaces = counts.getTypeSpaces();
 
     dir.computeQuotaUsage4CurrentDirectory(bsps, blockStoragePolicyId, counts);
-    
+
     for (INode child : dir.getChildrenList(Snapshot.CURRENT_STATE_ID)) {
       final byte childPolicyId = child.getStoragePolicyIDForQuota(blockStoragePolicyId);
       if (child.isDirectory()) {
@@ -883,7 +883,7 @@ public class FSImage implements Closeable {
             Snapshot.CURRENT_STATE_ID);
       }
     }
-      
+
     if (dir.isQuotaSet()) {
       // check if quota is violated. It indicates a software bug.
       final QuotaCounts q = dir.getQuotaCounts();
@@ -981,7 +981,7 @@ public class FSImage implements Closeable {
     FSImageFormatProtobuf.Saver saver = new FSImageFormatProtobuf.Saver(context);
     FSImageCompression compression = FSImageCompression.createCompression(conf);
     saver.save(newFile, compression);
-    
+
     MD5FileUtils.saveMD5File(dstFile, saver.getSavedDigest());
     storage.setMostRecentCheckpointInfo(txid, Time.now());
   }

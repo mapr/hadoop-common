@@ -28,8 +28,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
 import org.apache.hadoop.hdfs.protocol.datatransfer.InvalidEncryptionKeyException;
@@ -52,18 +52,18 @@ import com.google.common.base.Preconditions;
 @InterfaceAudience.Private
 public class BlockTokenSecretManager extends
     SecretManager<BlockTokenIdentifier> {
-  public static final Log LOG = LogFactory
-      .getLog(BlockTokenSecretManager.class);
-  
+  public static final Logger LOG = LoggerFactory
+      .getLogger(BlockTokenSecretManager.class);
+
   // We use these in an HA setup to ensure that the pair of NNs produce block
   // token serial numbers that are in different ranges.
   private static final int LOW_MASK  = ~(1 << 31);
-  
+
   public static final Token<BlockTokenIdentifier> DUMMY_TOKEN = new Token<BlockTokenIdentifier>();
 
   private final boolean isMaster;
   private int nnIndex;
-  
+
   /**
    * keyUpdateInterval is the interval that NN updates its block keys. It should
    * be set long enough so that all live DN's and Balancer should have sync'ed
@@ -77,16 +77,16 @@ public class BlockTokenSecretManager extends
   private final Map<Integer, BlockKey> allKeys;
   private String blockPoolId;
   private final String encryptionAlgorithm;
-  
+
   private final SecureRandom nonceGenerator = new SecureRandom();
 
   public static enum AccessMode {
     READ, WRITE, COPY, REPLACE
   };
-  
+
   /**
    * Constructor for slaves.
-   * 
+   *
    * @param keyUpdateInterval how often a new key will be generated
    * @param tokenLifetime how long an individual token is valid
    */
@@ -95,10 +95,10 @@ public class BlockTokenSecretManager extends
     this(false, keyUpdateInterval, tokenLifetime, blockPoolId,
         encryptionAlgorithm);
   }
-  
+
   /**
    * Constructor for masters.
-   * 
+   *
    * @param keyUpdateInterval how often a new key will be generated
    * @param tokenLifetime how long an individual token is valid
    * @param nnIndex namenode index
@@ -115,7 +115,7 @@ public class BlockTokenSecretManager extends
     setSerialNo(new SecureRandom().nextInt());
     generateKeys();
   }
-  
+
   private BlockTokenSecretManager(boolean isMaster, long keyUpdateInterval,
       long tokenLifetime, String blockPoolId, String encryptionAlgorithm) {
     this.isMaster = isMaster;
@@ -126,12 +126,12 @@ public class BlockTokenSecretManager extends
     this.encryptionAlgorithm = encryptionAlgorithm;
     generateKeys();
   }
-  
+
   @VisibleForTesting
   public synchronized void setSerialNo(int serialNo) {
     this.serialNo = (serialNo & LOW_MASK) | (nnIndex << 31);
   }
-  
+
   public void setBlockPoolId(String blockPoolId) {
     this.blockPoolId = blockPoolId;
   }
@@ -328,7 +328,7 @@ public class BlockTokenSecretManager extends
 
   /**
    * Create an empty block token identifier
-   * 
+   *
    * @return a newly created empty block token identifier
    */
   @Override
@@ -338,7 +338,7 @@ public class BlockTokenSecretManager extends
 
   /**
    * Create a new password/secret for the given block token identifier.
-   * 
+   *
    * @param identifier
    *          the block token identifier
    * @return token password/secret
@@ -361,7 +361,7 @@ public class BlockTokenSecretManager extends
 
   /**
    * Look up the token password/secret for the given block token identifier.
-   * 
+   *
    * @param identifier
    *          the block token identifier to look up
    * @return token password/secret as byte[]
@@ -385,11 +385,11 @@ public class BlockTokenSecretManager extends
     }
     return createPassword(identifier.getBytes(), key.getKey());
   }
-  
+
   /**
    * Generate a data encryption key for this block pool, using the current
    * BlockKey.
-   * 
+   *
    * @return a data encryption key which may be used to encrypt traffic
    *         over the DataTransferProtocol
    */
@@ -405,10 +405,10 @@ public class BlockTokenSecretManager extends
         encryptionKey, Time.now() + tokenLifetime,
         encryptionAlgorithm);
   }
-  
+
   /**
    * Recreate an encryption key based on the given key id and nonce.
-   * 
+   *
    * @param keyId identifier of the secret key used to generate the encryption key.
    * @param nonce random value used to create the encryption key
    * @return the encryption key which corresponds to this (keyId, blockPoolId, nonce)
@@ -427,7 +427,7 @@ public class BlockTokenSecretManager extends
     }
     return createPassword(nonce, key.getKey());
   }
-  
+
   @VisibleForTesting
   public synchronized void setKeyUpdateIntervalForTesting(long millis) {
     this.keyUpdateInterval = millis;
@@ -437,10 +437,10 @@ public class BlockTokenSecretManager extends
   public void clearAllKeysForTesting() {
     allKeys.clear();
   }
-  
+
   @VisibleForTesting
   public synchronized int getSerialNoForTesting() {
     return serialNo;
   }
-  
+
 }

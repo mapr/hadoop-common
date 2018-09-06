@@ -27,8 +27,8 @@ import java.util.Map;
 import javax.management.ObjectName;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
@@ -63,7 +63,7 @@ import com.google.common.collect.Maps;
  */
 @InterfaceAudience.Private
 public class JournalNode implements Tool, Configurable, JournalNodeMXBean {
-  public static final Log LOG = LogFactory.getLog(JournalNode.class);
+  public static final Logger LOG = LoggerFactory.getLogger(JournalNode.class);
   private Configuration conf;
   private JournalNodeRpcServer rpcServer;
   private JournalNodeHttpServer httpServer;
@@ -89,11 +89,11 @@ public class JournalNode implements Tool, Configurable, JournalNodeMXBean {
     Journal journal = journalsById.get(jid);
     if (journal == null) {
       File logDir = getLogDir(jid);
-      LOG.info("Initializing journal in directory " + logDir);      
+      LOG.info("Initializing journal in directory " + logDir);
       journal = new Journal(conf, logDir, jid, startOpt, new ErrorReporter());
       journalsById.put(jid, journal);
     }
-    
+
     return journal;
   }
 
@@ -140,9 +140,9 @@ public class JournalNode implements Tool, Configurable, JournalNodeMXBean {
    */
   public void start() throws IOException {
     Preconditions.checkState(!isStarted(), "JN already running");
-    
+
     validateAndCreateJournalDir(localDir);
-    
+
     DefaultMetricsSystem.initialize("JournalNode");
     JvmMetrics.create("JournalNode",
         conf.get(DFSConfigKeys.DFS_METRICS_SESSION_ID_KEY),
@@ -151,9 +151,9 @@ public class JournalNode implements Tool, Configurable, JournalNodeMXBean {
     InetSocketAddress socAddr = JournalNodeRpcServer.getAddress(conf);
     SecurityUtil.login(conf, DFSConfigKeys.DFS_JOURNALNODE_KEYTAB_FILE_KEY,
         DFSConfigKeys.DFS_JOURNALNODE_KERBEROS_PRINCIPAL_KEY, socAddr.getHostName());
-    
+
     registerJNMXBean();
-    
+
     httpServer = new JournalNodeHttpServer(conf, this);
     httpServer.start();
 
@@ -173,7 +173,7 @@ public class JournalNode implements Tool, Configurable, JournalNodeMXBean {
   public InetSocketAddress getBoundIpcAddress() {
     return rpcServer.getAddress();
   }
-  
+
   @Deprecated
   public InetSocketAddress getBoundHttpAddress() {
     return httpServer.getAddress();
@@ -190,7 +190,7 @@ public class JournalNode implements Tool, Configurable, JournalNodeMXBean {
    */
   public void stop(int rc) {
     this.resultCode = rc;
-    
+
     if (rpcServer != null) { 
       rpcServer.stop();
     }
@@ -204,7 +204,7 @@ public class JournalNode implements Tool, Configurable, JournalNodeMXBean {
     }
     
     for (Journal j : journalsById.values()) {
-      IOUtils.cleanup(LOG, j);
+      IOUtils.cleanupWithLogger(LOG, j);
     }
 
     if (journalNodeInfoBeanName != null) {
@@ -293,11 +293,11 @@ public class JournalNode implements Tool, Configurable, JournalNodeMXBean {
   private void registerJNMXBean() {
     journalNodeInfoBeanName = MBeans.register("JournalNode", "JournalNodeInfo", this);
   }
-  
+
   private class ErrorReporter implements StorageErrorReporter {
     @Override
     public void reportErrorOnFile(File f) {
-      LOG.fatal("Error reported on file " + f + "... exiting",
+      LOG.error("Error reported on file " + f + "... exiting",
           new Exception());
       stop(1);
     }

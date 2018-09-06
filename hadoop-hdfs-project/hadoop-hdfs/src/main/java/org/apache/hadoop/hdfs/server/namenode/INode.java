@@ -22,8 +22,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.fs.ContentSummary;
 import org.apache.hadoop.fs.Path;
@@ -51,7 +51,7 @@ import com.google.common.base.Preconditions;
  */
 @InterfaceAudience.Private
 public abstract class INode implements INodeAttributes, Diff.Element<byte[]> {
-  public static final Log LOG = LogFactory.getLog(INode.class);
+  public static final Logger LOG = LoggerFactory.getLogger(INode.class);
 
   /** parent is either an {@link INodeDirectory} or an {@link INodeReference}.*/
   private INode parent = null;
@@ -389,7 +389,7 @@ public abstract class INode implements INodeAttributes, Diff.Element<byte[]> {
    * @param bsps
    *          block storage policy suite to calculate intended storage type usage
    * @param snapshotId
-   *          The id of the snapshot to delete. 
+   *          The id of the snapshot to delete.
    *          {@link Snapshot#CURRENT_STATE_ID} means to delete the current
    *          file/directory.
    * @param priorSnapshotId
@@ -400,7 +400,7 @@ public abstract class INode implements INodeAttributes, Diff.Element<byte[]> {
    *          blocks collected from the descents for further block
    *          deletion/update will be added to the given map.
    * @param removedINodes
-   *          INodes collected from the descents for further cleaning up of 
+   *          INodes collected from the descents for further cleaning up of
    *          inodeMap
    * @return quota usage delta when deleting a snapshot
    */
@@ -408,7 +408,7 @@ public abstract class INode implements INodeAttributes, Diff.Element<byte[]> {
       final int snapshotId,
       int priorSnapshotId, BlocksMapUpdateInfo collectedBlocks,
       List<INode> removedINodes);
-  
+
   /**
    * Destroy self and clear everything! If the INode is a file, this method
    * collects its blocks for further block deletion. If the INode is a
@@ -539,7 +539,7 @@ public abstract class INode implements INodeAttributes, Diff.Element<byte[]> {
    * @param bsps Block storage policy suite to calculate intended storage type usage
    * @param blockStoragePolicyId block storage policy id of the current INode
    * @param counts The subtree counts for returning.
-   * @param useCache Whether to use cached quota usage. Note that 
+   * @param useCache Whether to use cached quota usage. Note that
    *                 {@link WithName} node never uses cache for its subtree.
    * @param lastSnapshotId {@link Snapshot#CURRENT_STATE_ID} indicates the 
    *                       computation is in the current tree. Otherwise the id
@@ -581,7 +581,7 @@ public abstract class INode implements INodeAttributes, Diff.Element<byte[]> {
     // Get the full path name of this inode.
     return FSDirectory.getFullPathName(this);
   }
-  
+
   @Override
   public String toString() {
     return getLocalName();
@@ -819,7 +819,7 @@ public abstract class INode implements INodeAttributes, Diff.Element<byte[]> {
     out.print(getParentString());
     out.print(", " + getPermissionStatus(snapshotId));
   }
-  
+
   /**
    * Information used for updating the blocksMap when deleting files.
    */
@@ -828,7 +828,7 @@ public abstract class INode implements INodeAttributes, Diff.Element<byte[]> {
      * The list of blocks that need to be removed from blocksMap
      */
     private final List<Block> toDeleteList;
-    
+
     public BlocksMapUpdateInfo() {
       toDeleteList = new ChunkedArrayList<Block>();
     }
@@ -839,7 +839,7 @@ public abstract class INode implements INodeAttributes, Diff.Element<byte[]> {
     public List<Block> getToDeleteList() {
       return toDeleteList;
     }
-    
+
     /**
      * Add a to-be-deleted block into the
      * {@link BlocksMapUpdateInfo#toDeleteList}

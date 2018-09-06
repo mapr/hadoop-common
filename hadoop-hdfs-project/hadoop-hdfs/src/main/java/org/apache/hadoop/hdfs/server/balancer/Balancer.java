@@ -32,8 +32,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -164,7 +164,7 @@ import com.google.common.base.Preconditions;
 
 @InterfaceAudience.Private
 public class Balancer {
-  static final Log LOG = LogFactory.getLog(Balancer.class);
+  static final Logger LOG = LoggerFactory.getLogger(Balancer.class);
 
   static final Path BALANCER_ID_PATH = new Path("/system/balancer.id");
 
@@ -182,11 +182,11 @@ public class Balancer {
       + "\tIncludes only the specified datanodes."
       + "\n\t[-idleiterations <idleiterations>]"
       + "\tNumber of consecutive idle iterations (-1 for Infinite) before exit.";
-  
+
   private final Dispatcher dispatcher;
   private final BalancingPolicy policy;
   private final double threshold;
-  
+
   // all data node lists
   private final Collection<Source> overUtilized = new LinkedList<Source>();
   private final Collection<Source> aboveAvgUtilized = new LinkedList<Source>();
@@ -200,7 +200,7 @@ public class Balancer {
    */
   private static void checkReplicationPolicyCompatibility(Configuration conf
       ) throws UnsupportedActionException {
-    if (!(BlockPlacementPolicy.getInstance(conf, null, null, null) instanceof 
+    if (!(BlockPlacementPolicy.getInstance(conf, null, null, null) instanceof
         BlockPlacementPolicyDefault)) {
       throw new UnsupportedActionException(
           "Balancer without BlockPlacementPolicyDefault");
@@ -281,7 +281,7 @@ public class Balancer {
         if (utilization == null) { // datanode does not have such storage type 
           continue;
         }
-        
+
         final long capacity = getCapacity(r, t);
         final double utilizationDiff = utilization - policy.getAvgUtilization(t);
         final double thresholdDiff = Math.abs(utilizationDiff) - threshold;
@@ -517,7 +517,7 @@ public class Balancer {
         LOG.info( "Need to move "+ StringUtils.byteDesc(bytesLeftToMove)
             + " to make the cluster balanced." );
       }
-      
+
       /* Decide all the nodes that will participate in the block move and
        * the number of bytes that need to be moved from one node to another
        * in this iteration. Maximum bytes to be moved per node is
@@ -531,7 +531,7 @@ public class Balancer {
         LOG.info( "Will move " + StringUtils.byteDesc(bytesBeingMoved) +
             " in this iteration");
       }
-      
+
       /* For each pair of <source, target>, start a thread that repeatedly 
        * decide a block to be moved and its proxy source, 
        * then initiates the move until all bytes are moved or no more block
@@ -572,14 +572,14 @@ public class Balancer {
             DFSConfigKeys.DFS_NAMENODE_REPLICATION_INTERVAL_DEFAULT) * 1000;
     LOG.info("namenodes  = " + namenodes);
     LOG.info("parameters = " + p);
-    
+
     System.out.println("Time Stamp               Iteration#  Bytes Already Moved  Bytes Left To Move  Bytes Being Moved");
     
     List<NameNodeConnector> connectors = Collections.emptyList();
     try {
       connectors = NameNodeConnector.newNameNodeConnectors(namenodes, 
             Balancer.class.getSimpleName(), BALANCER_ID_PATH, conf, p.maxIdleIteration);
-    
+
       boolean done = false;
       for(int iteration = 0; !done; iteration++) {
         done = true;
@@ -605,7 +605,7 @@ public class Balancer {
       }
     } finally {
       for(NameNodeConnector nnc : connectors) {
-        IOUtils.cleanup(LOG, nnc);
+        IOUtils.cleanupWithLogger(LOG, nnc);
       }
     }
     return ExitStatus.SUCCESS.getExitCode();
@@ -772,7 +772,7 @@ public class Balancer {
           throw e;
         }
       }
-      
+
       return new Parameters(policy, threshold, maxIdleIteration, nodesTobeExcluded, nodesTobeIncluded);
     }
 

@@ -21,8 +21,8 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 import org.apache.hadoop.io.IOUtils;
 
@@ -37,7 +37,7 @@ import com.google.common.primitives.Longs;
  * different subset of the available edits.
  */
 class RedundantEditLogInputStream extends EditLogInputStream {
-  public static final Log LOG = LogFactory.getLog(EditLogInputStream.class.getName());
+  public static final Logger LOG = LoggerFactory.getLogger(EditLogInputStream.class.getName());
   private int curIdx;
   private long prevTxId;
   private final EditLogInputStream[] streams;
@@ -151,7 +151,7 @@ class RedundantEditLogInputStream extends EditLogInputStream {
 
   @Override
   public void close() throws IOException {
-    IOUtils.cleanup(LOG,  streams);
+    IOUtils.cleanupWithLogger(LOG,  streams);
   }
 
   @Override

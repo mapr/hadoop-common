@@ -25,7 +25,7 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileSystemTestHelper;
@@ -123,7 +123,7 @@ public class TestSaslDataTransfer extends SaslDataTransferTestCase {
     clientConf.set(DFS_DATA_TRANSFER_PROTECTION_KEY, "");
 
     LogCapturer logs = GenericTestUtils.LogCapturer.captureLogs(
-        LogFactory.getLog(DataNode.class));
+        LoggerFactory.getLogger(DataNode.class));
     try {
       doTest(clientConf);
       Assert.fail("Should fail if SASL data transfer protection is not " +

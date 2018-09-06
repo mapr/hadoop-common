@@ -27,7 +27,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Random;
 
-import org.apache.commons.logging.impl.Log4JLogger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -46,7 +45,9 @@ import org.apache.hadoop.hdfs.server.namenode.snapshot.DirectoryWithSnapshotFeat
 import org.apache.hadoop.hdfs.server.namenode.snapshot.Snapshot;
 import org.apache.hadoop.hdfs.server.namenode.snapshot.SnapshotTestHelper;
 import org.apache.hadoop.hdfs.util.Canceler;
-import org.apache.log4j.Level;
+import org.apache.hadoop.test.GenericTestUtils;
+import org.slf4j.event.Level;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -58,7 +59,7 @@ import org.junit.Test;
 public class TestFSImageWithSnapshot {
   {
     SnapshotTestHelper.disableLogs();
-    ((Log4JLogger)INode.LOG).getLogger().setLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(INode.LOG, Level.TRACE);
   }
 
   static final long seed = 0;
@@ -69,7 +70,7 @@ public class TestFSImageWithSnapshot {
   private final Path dir = new Path("/TestSnapshot");
   private static final String testDir =
       System.getProperty("test.build.data", "build/test/data");
-  
+
   Configuration conf;
   MiniDFSCluster cluster;
   FSNamesystem fsn;

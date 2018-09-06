@@ -23,8 +23,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.Stack;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fs.permission.AclEntryScope;
 import org.apache.hadoop.fs.permission.AclEntryType;
 import org.apache.hadoop.fs.permission.FsAction;
@@ -43,7 +43,7 @@ import org.apache.hadoop.security.UserGroupInformation;
  * Some of the helper methods are gaurded by {@link FSNamesystem#readLock()}.
  */
 class FSPermissionChecker implements AccessControlEnforcer {
-  static final Log LOG = LogFactory.getLog(UserGroupInformation.class);
+  static final Logger LOG = LoggerFactory.getLogger(UserGroupInformation.class);
 
   /** @return a string for throwing {@link AccessControlException} */
   private String toAccessControlString(INodeAttributes inodeAttrib, String path,

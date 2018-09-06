@@ -48,9 +48,8 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.impl.Log4JLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.crypto.CipherSuite;
 import org.apache.hadoop.crypto.CryptoProtocolVersion;
@@ -110,8 +109,8 @@ public class TestDFSClientRetries {
   private static final String ADDRESS = "0.0.0.0";
   final static private int PING_INTERVAL = 1000;
   final static private int MIN_SLEEP_TIME = 1000;
-  public static final Log LOG =
-    LogFactory.getLog(TestDFSClientRetries.class.getName());
+  public static final Logger LOG =
+      LoggerFactory.getLogger(TestDFSClientRetries.class.getName());
   static private Configuration conf = null;
  
  private static class TestServer extends Server {
@@ -176,7 +175,7 @@ public class TestDFSClientRetries {
                                                   InterruptedException { 
     final int writeTimeout = 100; //milliseconds.
     // set a very short write timeout for datanode, so that tests runs fast.
-    conf.setInt(DFSConfigKeys.DFS_DATANODE_SOCKET_WRITE_TIMEOUT_KEY, writeTimeout); 
+    conf.setInt(DFSConfigKeys.DFS_DATANODE_SOCKET_WRITE_TIMEOUT_KEY, writeTimeout);
     // set a smaller block size
     final int blockSize = 10*1024*1024;
     conf.setInt(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, blockSize);
@@ -355,7 +354,7 @@ public class TestDFSClientRetries {
       cluster.shutdown();
     }
   }
-  
+
   /**
    * Test that getAdditionalBlock() and close() are idempotent. This allows
    * a client to safely retry a call and still produce a correct
@@ -386,7 +385,7 @@ public class TestDFSClientRetries {
           LocatedBlocks lb = cluster.getNameNodeRpc().getBlockLocations(src, 0, Long.MAX_VALUE);
           int blockCount = lb.getLocatedBlocks().size();
           assertEquals(lb.getLastLocatedBlock().getBlock(), ret.getBlock());
-          
+
           // Retrying should result in a new block at the end of the file.
           // (abandoning the old one)
           LocatedBlock ret2 = (LocatedBlock) invocation.callRealMethod();
@@ -435,7 +434,7 @@ public class TestDFSClientRetries {
         stm.close();
         stm = null;
       } finally {
-        IOUtils.cleanup(LOG, stm);
+        IOUtils.cleanupWithLogger(LOG, stm);
       }
       
       // Make sure the mock was actually properly injected.
@@ -579,16 +578,16 @@ public class TestDFSClientRetries {
     LOG.info("Test 4 succeeded! Time spent: "  + (timestamp2-timestamp)/1000.0 + " sec.");
   }
 
-  private boolean busyTest(int xcievers, int threads, int fileLen, int timeWin, int retries) 
+  private boolean busyTest(int xcievers, int threads, int fileLen, int timeWin, int retries)
     throws IOException {
 
     boolean ret = true;
     short replicationFactor = 1;
     long blockSize = 128*1024*1024; // DFS block size
     int bufferSize = 4096;
-    
+
     conf.setInt(DFSConfigKeys.DFS_DATANODE_MAX_RECEIVER_THREADS_KEY, xcievers);
-    conf.setInt(DFSConfigKeys.DFS_CLIENT_MAX_BLOCK_ACQUIRE_FAILURES_KEY, 
+    conf.setInt(DFSConfigKeys.DFS_CLIENT_MAX_BLOCK_ACQUIRE_FAILURES_KEY,
                 retries);
     conf.setInt(DFSConfigKeys.DFS_CLIENT_RETRY_WINDOW_BASE, timeWin);
     // Disable keepalive
@@ -670,7 +669,7 @@ public class TestDFSClientRetries {
     }
     return ret;
   }
-  
+
   class DFSClientReader implements Runnable {
     
     DFSClient client;
@@ -818,7 +817,7 @@ public class TestDFSClientRetries {
 
   public static void namenodeRestartTest(final Configuration conf,
       final boolean isWebHDFS) throws Exception {
-    ((Log4JLogger)DFSClient.LOG).getLogger().setLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(DFSClient.LOG, Level.ALL);
 
     final List<Exception> exceptions = new ArrayList<Exception>();
 

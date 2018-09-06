@@ -28,8 +28,8 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.Random;
 
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.impl.Log4JLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Options.Rename;
@@ -52,9 +52,9 @@ import org.apache.hadoop.hdfs.server.namenode.top.TopAuditLogger;
 import org.apache.hadoop.metrics2.MetricsRecordBuilder;
 import org.apache.hadoop.metrics2.MetricsSource;
 import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
+import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.test.MetricsAsserts;
-import org.apache.hadoop.util.Time;
-import org.apache.log4j.Level;
+import org.slf4j.event.Level;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -71,7 +71,7 @@ public class TestNameNodeMetrics {
   private static final String NS_METRICS = "FSNamesystem";
   
   // Number of datanodes in the cluster
-  private static final int DATANODE_COUNT = 3; 
+  private static final int DATANODE_COUNT = 3;
   private static final int WAIT_GAUGE_VALUE_RETRIES = 20;
   
   // Rollover interval of percentile metrics (in seconds)
@@ -82,14 +82,14 @@ public class TestNameNodeMetrics {
     CONF.setInt(DFSConfigKeys.DFS_BYTES_PER_CHECKSUM_KEY, 1);
     CONF.setLong(DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_KEY,
         DFS_REPLICATION_INTERVAL);
-    CONF.setInt(DFSConfigKeys.DFS_NAMENODE_REPLICATION_INTERVAL_KEY, 
+    CONF.setInt(DFSConfigKeys.DFS_NAMENODE_REPLICATION_INTERVAL_KEY,
         DFS_REPLICATION_INTERVAL);
     CONF.set(DFSConfigKeys.DFS_METRICS_PERCENTILES_INTERVALS_KEY, 
         "" + PERCENTILES_INTERVAL);
     // Enable stale DataNodes checking
     CONF.setBoolean(DFSConfigKeys.DFS_NAMENODE_AVOID_STALE_DATANODE_FOR_READ_KEY, true);
-    ((Log4JLogger)LogFactory.getLog(MetricsAsserts.class))
-      .getLogger().setLevel(Level.DEBUG);
+    GenericTestUtils.setLogLevel(LoggerFactory.getLogger(MetricsAsserts.class),
+      Level.DEBUG);
   }
   
   private MiniDFSCluster cluster;
@@ -101,7 +101,7 @@ public class TestNameNodeMetrics {
   private static Path getTestPath(String fileName) {
     return new Path(TEST_ROOT_DIR_PATH, fileName);
   }
-  
+
   @Before
   public void setUp() throws Exception {
     cluster = new MiniDFSCluster.Builder(CONF).numDataNodes(DATANODE_COUNT).build();
@@ -229,14 +229,14 @@ public class TestNameNodeMetrics {
     assertCounter("DeleteFileOps", 1L, rb);
     assertCounter("FilesDeleted", 1L, rb);
   }
-  
+
   /** Corrupt a block and ensure metrics reflects it */
   @Test
   public void testCorruptBlock() throws Exception {
     // Create a file with single block with two replicas
     final Path file = getTestPath("testCorruptBlock");
     createFile(file, 100, (short)2);
-    
+
     // Corrupt first replica of the block
     LocatedBlock block = NameNodeAdapter.getBlockLocations(
         cluster.getNameNode(), file.toString(), 0, 1).get(0);
@@ -257,7 +257,7 @@ public class TestNameNodeMetrics {
     assertGauge("PendingReplicationBlocks", 0L, rb);
     assertGauge("ScheduledReplicationBlocks", 0L, rb);
   }
-  
+
   /** Create excess blocks by reducing the replication factor for
    * for a file and ensure metrics reflects it
    */
@@ -378,7 +378,7 @@ public class TestNameNodeMetrics {
     //Perform create file operation
     createFile(file1_Path,100,(short)2);
     updateMetrics();
-  
+
     //Create file does not change numGetBlockLocations metric
     //expect numGetBlockLocations = 0 for previous and current interval 
     assertCounter("GetBlockLocations", 0L, getMetrics(NN_METRICS));
@@ -396,7 +396,7 @@ public class TestNameNodeMetrics {
     updateMetrics();
     assertCounter("GetBlockLocations", 3L, getMetrics(NN_METRICS));
   }
-  
+
   /**
    * Test NN checkpoint and transaction-related metrics.
    */
@@ -412,7 +412,7 @@ public class TestNameNodeMetrics {
     
     fs.mkdirs(new Path(TEST_ROOT_DIR_PATH, "/tmp"));
     updateMetrics();
-    
+
     assertGauge("LastCheckpointTime", lastCkptTime, getMetrics(NS_METRICS));
     assertGauge("LastWrittenTransactionId", 2L, getMetrics(NS_METRICS));
     assertGauge("TransactionsSinceLastCheckpoint", 2L, getMetrics(NS_METRICS));
@@ -420,7 +420,7 @@ public class TestNameNodeMetrics {
     
     cluster.getNameNodeRpc().rollEditLog();
     updateMetrics();
-    
+
     assertGauge("LastCheckpointTime", lastCkptTime, getMetrics(NS_METRICS));
     assertGauge("LastWrittenTransactionId", 4L, getMetrics(NS_METRICS));
     assertGauge("TransactionsSinceLastCheckpoint", 4L, getMetrics(NS_METRICS));
@@ -430,7 +430,7 @@ public class TestNameNodeMetrics {
     cluster.getNameNodeRpc().saveNamespace();
     cluster.getNameNodeRpc().setSafeMode(SafeModeAction.SAFEMODE_LEAVE, false);
     updateMetrics();
-    
+
     long newLastCkptTime = MetricsAsserts.getLongGauge("LastCheckpointTime",
         getMetrics(NS_METRICS));
     assertTrue(lastCkptTime < newLastCkptTime);

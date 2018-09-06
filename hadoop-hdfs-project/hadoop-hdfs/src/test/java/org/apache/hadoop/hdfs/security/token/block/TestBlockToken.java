@@ -34,9 +34,8 @@ import java.net.InetSocketAddress;
 import java.util.EnumSet;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.impl.Log4JLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -70,6 +69,7 @@ import org.apache.hadoop.security.SaslRpcServer;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.TokenIdentifier;
+import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.util.Time;
 import org.apache.log4j.Level;
 import org.junit.Assert;
@@ -85,15 +85,16 @@ import com.google.protobuf.ServiceException;
 
 /** Unit tests for block tokens */
 public class TestBlockToken {
-  public static final Log LOG = LogFactory.getLog(TestBlockToken.class);
+  public static final Logger LOG =
+      LoggerFactory.getLogger(TestBlockToken.class);
   private static final String ADDRESS = "0.0.0.0";
 
   static {
-    ((Log4JLogger) Client.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger) Server.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger) SaslRpcClient.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger) SaslRpcServer.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger) SaslInputStream.LOG).getLogger().setLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(Client.LOG, Level.ALL);
+    GenericTestUtils.setLogLevel(Server.LOG, Level.ALL);
+    GenericTestUtils.setLogLevel(SaslRpcClient.LOG, Level.ALL);
+    GenericTestUtils.setLogLevel(SaslRpcServer.LOG, Level.ALL);
+    GenericTestUtils.setLogLevel(SaslInputStream.LOG, Level.ALL);
   }
 
   /** Directory where we can count our open file descriptors under Linux */
@@ -104,7 +105,7 @@ public class TestBlockToken {
   final ExtendedBlock block1 = new ExtendedBlock("0", 0L);
   final ExtendedBlock block2 = new ExtendedBlock("10", 10L);
   final ExtendedBlock block3 = new ExtendedBlock("-10", -108L);
-  
+
   @Before
   public void disableKerberos() {
     Configuration conf = new Configuration();
@@ -128,7 +129,7 @@ public class TestBlockToken {
         InvocationOnMock invocation) throws IOException {
       Object args[] = invocation.getArguments();
       assertEquals(2, args.length);
-      GetReplicaVisibleLengthRequestProto req = 
+      GetReplicaVisibleLengthRequestProto req =
           (GetReplicaVisibleLengthRequestProto) args[1];
       Set<TokenIdentifier> tokenIds = UserGroupInformation.getCurrentUser()
           .getTokenIdentifiers();
@@ -223,7 +224,7 @@ public class TestBlockToken {
     BlockTokenIdentifier id = sm.createIdentifier();
     id.readFields(new DataInputStream(new ByteArrayInputStream(token
         .getIdentifier())));
-    
+
     doAnswer(new GetLengthAnswer(sm, id)).when(mockDN)
         .getReplicaVisibleLength(any(RpcController.class),
             any(GetReplicaVisibleLengthRequestProto.class));
@@ -242,7 +243,7 @@ public class TestBlockToken {
     Configuration conf = new Configuration();
     conf.set(HADOOP_SECURITY_AUTHENTICATION, "kerberos");
     UserGroupInformation.setConfiguration(conf);
-    
+
     BlockTokenSecretManager sm = new BlockTokenSecretManager(
         blockKeyUpdateInterval, blockTokenLifetime, 0, "fake-pool", null);
     Token<BlockTokenIdentifier> token = sm.generateToken(block3,
@@ -280,7 +281,7 @@ public class TestBlockToken {
     Configuration conf = new Configuration();
     conf.set(HADOOP_SECURITY_AUTHENTICATION, "kerberos");
     UserGroupInformation.setConfiguration(conf);
-    
+
     Assume.assumeTrue(FD_DIR.exists());
     BlockTokenSecretManager sm = new BlockTokenSecretManager(
         blockKeyUpdateInterval, blockTokenLifetime, 0, "fake-pool", null);
@@ -374,7 +375,7 @@ public class TestBlockToken {
    * This test writes a file and gets the block locations without closing the
    * file, and tests the block token in the last block. Block token is verified
    * by ensuring it is of correct kind.
-   * 
+   *
    * @throws IOException
    * @throws InterruptedException
    */

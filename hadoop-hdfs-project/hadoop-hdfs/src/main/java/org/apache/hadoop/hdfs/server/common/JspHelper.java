@@ -32,8 +32,8 @@ import java.util.HashMap;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -75,7 +75,7 @@ public class JspHelper {
   public static final String NAMENODE_ADDRESS = "nnaddr";
   static final String SET_DELEGATION = "&" + DELEGATION_PARAMETER_NAME +
                                               "=";
-  private static final Log LOG = LogFactory.getLog(JspHelper.class);
+  private static final Logger LOG = LoggerFactory.getLogger(JspHelper.class);
 
   /** Private constructor for preventing creating JspHelper object. */
   private JspHelper() {}
@@ -155,7 +155,7 @@ public class JspHelper {
   }
 
   /**
-   * Validate filename. 
+   * Validate filename.
    * @return null if the filename is invalid.
    *         Otherwise, return the validated filename.
    */
@@ -165,7 +165,7 @@ public class JspHelper {
   }
 
   /**
-   * Validate a long value. 
+   * Validate a long value.
    * @return null if the value is invalid.
    *         Otherwise, return the validated Long object.
    */
@@ -370,7 +370,7 @@ public class JspHelper {
   /**
    * Returns the url parameter for the given string, prefixed with
    * paramSeparator.
-   * 
+   *
    * @param name parameter name
    * @param val parameter value
    * @param paramSeparator URL parameter prefix, i.e. either '?' or '&'
@@ -379,11 +379,11 @@ public class JspHelper {
   public static String getUrlParam(String name, String val, String paramSeparator) {
     return val == null ? "" : paramSeparator + name + "=" + val;
   }
-  
+
   /**
    * Returns the url parameter for the given string, prefixed with '?' if
    * firstParam is true, prefixed with '&' if firstParam is false.
-   * 
+   *
    * @param name parameter name
    * @param val parameter value
    * @param firstParam true if this is the first parameter in the list, false otherwise
@@ -392,10 +392,10 @@ public class JspHelper {
   public static String getUrlParam(String name, String val, boolean firstParam) {
     return getUrlParam(name, val, firstParam ? "?" : "&");
   }
-  
+
   /**
    * Returns the url parameter for the given string, prefixed with '&'.
-   * 
+   *
    * @param name parameter name
    * @param val parameter value
    * @return url parameter

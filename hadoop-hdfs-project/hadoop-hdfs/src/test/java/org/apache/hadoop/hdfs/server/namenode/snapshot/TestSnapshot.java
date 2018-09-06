@@ -34,7 +34,6 @@ import java.util.HashMap;
 import java.util.Random;
 
 import org.apache.commons.io.output.NullOutputStream;
-import org.apache.commons.logging.impl.Log4JLogger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -61,7 +60,7 @@ import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.ipc.RemoteException;
 import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.util.Time;
-import org.apache.log4j.Level;
+import org.slf4j.event.Level;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -75,7 +74,7 @@ import org.junit.rules.ExpectedException;
  */
 public class TestSnapshot {
   {
-    ((Log4JLogger)INode.LOG).getLogger().setLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(INode.LOG, Level.TRACE);
     SnapshotTestHelper.disableLogs();
   }
 
@@ -101,7 +100,7 @@ public class TestSnapshot {
   
   private static final String testDir =
       System.getProperty("test.build.data", "build/test/data");
-  
+
   @Rule
   public ExpectedException exception = ExpectedException.none();
   

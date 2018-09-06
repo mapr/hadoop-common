@@ -31,8 +31,8 @@ import java.io.FileNotFoundException;
 import java.security.PrivilegedExceptionAction;
 import java.util.Arrays;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileContext;
 import org.apache.hadoop.fs.FileStatus;
@@ -55,7 +55,8 @@ import org.junit.Test;
 
 public class TestPermissionSymlinks {
 
-  private static final Log LOG = LogFactory.getLog(TestPermissionSymlinks.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(TestPermissionSymlinks.class);
   private static final Configuration conf = new HdfsConfiguration();
   // Non-super user to run commands with
   private static final UserGroupInformation user = UserGroupInformation

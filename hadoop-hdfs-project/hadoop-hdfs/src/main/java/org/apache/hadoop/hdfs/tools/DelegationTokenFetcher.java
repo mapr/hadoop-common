@@ -34,8 +34,8 @@ import java.util.Date;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -67,8 +67,8 @@ import com.google.common.base.Charsets;
  */
 @InterfaceAudience.Private
 public class DelegationTokenFetcher {
-  private static final Log LOG = 
-    LogFactory.getLog(DelegationTokenFetcher.class);
+  private static final Logger LOG =
+    LoggerFactory.getLogger(DelegationTokenFetcher.class);
   private static final String WEBSERVICE = "webservice";
   private static final String RENEWER = "renewer";
   private static final String CANCEL = "cancel";
@@ -85,12 +85,12 @@ public class DelegationTokenFetcher {
     err.println("  --webservice <url>  Url to contact NN on");
     err.println("  --renewer <name>    Name of the delegation token renewer");
     err.println("  --cancel            Cancel the delegation token");
-    err.println("  --renew             Renew the delegation token.  Delegation " 
+    err.println("  --renew             Renew the delegation token.  Delegation "
     		+ "token must have been fetched using the --renewer <name> option.");
     err.println("  --print             Print the delegation token");
     err.println();
     GenericOptionsParser.printGenericCommandUsage(err);
-    ExitUtil.terminate(1);    
+    ExitUtil.terminate(1);
   }
 
   private static Collection<Token<?>> readTokens(Path file, Configuration conf)
@@ -98,7 +98,7 @@ public class DelegationTokenFetcher {
     Credentials creds = Credentials.readTokenStorageFile(file, conf);
     return creds.getAllTokens();
   }
-    
+
   /**
    * Command-line interface
    */
@@ -116,11 +116,11 @@ public class DelegationTokenFetcher {
     GenericOptionsParser parser = new GenericOptionsParser(conf,
         fetcherOptions, args);
     CommandLine cmd = parser.getCommandLine();
-    
+
     // get options
     final String webUrl = cmd.hasOption(WEBSERVICE) ? cmd
         .getOptionValue(WEBSERVICE) : null;
-    final String renewer = cmd.hasOption(RENEWER) ? 
+    final String renewer = cmd.hasOption(RENEWER) ?
         cmd.getOptionValue(RENEWER) : null;
     final boolean cancel = cmd.hasOption(CANCEL);
     final boolean renew = cmd.hasOption(RENEW);
@@ -163,7 +163,7 @@ public class DelegationTokenFetcher {
               }
               return null;
             }
-            
+
             if (renew) {
               for (Token<?> token : readTokens(tokenFile, conf)) {
                 if (token.isManaged()) {
@@ -208,7 +208,7 @@ public class DelegationTokenFetcher {
           }
         });
   }
-  
+
   static public Credentials getDTfromRemote(URLConnectionFactory factory,
       URI nnUri, String renewer, String proxyUser) throws IOException {
     StringBuilder buf = new StringBuilder(nnUri.toString())
@@ -248,7 +248,7 @@ public class DelegationTokenFetcher {
     } catch (Exception e) {
       throw new IOException("Unable to obtain remote token", e);
     } finally {
-      IOUtils.cleanup(LOG, dis);
+      IOUtils.cleanupWithLogger(LOG, dis);
       if (conn != null) {
         conn.disconnect();
       }
@@ -308,7 +308,7 @@ public class DelegationTokenFetcher {
       }
       throw ie;
     } finally {
-      IOUtils.cleanup(LOG, in);
+      IOUtils.cleanupWithLogger(LOG, in);
       if (connection != null) {
         connection.disconnect();
       }
@@ -319,9 +319,9 @@ public class DelegationTokenFetcher {
   static private IOException getExceptionFromResponse(HttpURLConnection con) {
     IOException e = null;
     String resp;
-    if(con == null) 
-      return null;    
-    
+    if(con == null)
+      return null;
+
     try {
       resp = con.getResponseMessage();
     } catch (IOException ie) { return null; }
@@ -334,15 +334,15 @@ public class DelegationTokenFetcher {
       return null;
     exceptionClass = rs[0];
     exceptionMsg = rs[1];
-    LOG.info("Error response from HTTP request=" + resp + 
+    LOG.info("Error response from HTTP request=" + resp +
         ";ec=" + exceptionClass + ";em="+exceptionMsg);
-    
+
     if(exceptionClass == null || exceptionClass.isEmpty())
       return null;
-    
+
     // recreate exception objects
     try {
-      Class<? extends Exception> ec = 
+      Class<? extends Exception> ec =
          Class.forName(exceptionClass).asSubclass(Exception.class);
       // we are interested in constructor with String arguments
       java.lang.reflect.Constructor<? extends Exception> constructor =
@@ -356,7 +356,7 @@ public class DelegationTokenFetcher {
     }
     if(e == null)
       return null;
-    
+
     e.setStackTrace(new StackTraceElement[0]); // local stack is not relevant
     LOG.info("Exception from HTTP response=" + e.getLocalizedMessage());
     return e;

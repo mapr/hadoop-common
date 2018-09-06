@@ -28,9 +28,9 @@ import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.impl.Log4JLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
@@ -48,7 +48,6 @@ import org.apache.hadoop.hdfs.server.namenode.FileJournalManager.EditLogFile;
 import org.apache.hadoop.hdfs.server.protocol.NamenodeProtocols;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.test.GenericTestUtils;
-import org.apache.log4j.Level;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -58,12 +57,13 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
 public class TestBackupNode {
-  public static final Log LOG = LogFactory.getLog(TestBackupNode.class);
+  public static final Logger LOG =
+      LoggerFactory.getLogger(TestBackupNode.class);
 
   
   static {
-    ((Log4JLogger)Checkpointer.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger)BackupImage.LOG).getLogger().setLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(Checkpointer.LOG, Level.TRACE);
+    GenericTestUtils.setLogLevel(BackupImage.LOG, Level.TRACE);
   }
   
   static final String BASE_DIR = MiniDFSCluster.getBaseDirectory();
@@ -193,7 +193,7 @@ public class TestBackupNode {
       
       // do some edits
       assertTrue(fileSys.mkdirs(new Path("/edit-while-bn-down")));
-      
+
       // start a new backup node
       backup = startBackupNode(conf, StartupOption.BACKUP, 1);
 

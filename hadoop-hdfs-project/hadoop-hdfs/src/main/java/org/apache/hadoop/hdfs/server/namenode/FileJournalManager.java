@@ -254,7 +254,7 @@ public class FileJournalManager implements JournalManager {
   public static List<EditLogFile> matchEditLogs(File logDir) throws IOException {
     return matchEditLogs(FileUtil.listFiles(logDir));
   }
-  
+
   static List<EditLogFile> matchEditLogs(File[] filesInStorage) {
     return matchEditLogs(filesInStorage, false);
   }
@@ -319,7 +319,7 @@ public class FileJournalManager implements JournalManager {
       Collection<EditLogInputStream> streams, long fromTxId,
       boolean inProgressOk) throws IOException {
     List<EditLogFile> elfs = matchEditLogs(sd.getCurrentDir());
-    LOG.debug(this + ": selecting input streams starting at " + fromTxId + 
+    LOG.debug(this + ": selecting input streams starting at " + fromTxId +
         (inProgressOk ? " (inProgress ok) " : " (excluding inProgress) ") +
         "from among " + elfs.size() + " candidate file(s)");
     addStreamsToCollectionFromFiles(elfs, streams, fromTxId, inProgressOk);
@@ -419,7 +419,7 @@ public class FileJournalManager implements JournalManager {
   public EditLogFile getLogFile(long startTxId) throws IOException {
     return getLogFile(sd.getCurrentDir(), startTxId);
   }
-  
+
   public static EditLogFile getLogFile(File dir, long startTxId)
       throws IOException {
     List<EditLogFile> files = matchEditLogs(dir);
@@ -580,7 +580,7 @@ public class FileJournalManager implements JournalManager {
   public void discardSegments(long startTxid) throws IOException {
     discardEditLogSegments(startTxid);
   }
-  
+
   @Override
   public void doPreUpgrade() throws IOException {
     LOG.info("Starting upgrade of edits directory " + sd.getRoot());

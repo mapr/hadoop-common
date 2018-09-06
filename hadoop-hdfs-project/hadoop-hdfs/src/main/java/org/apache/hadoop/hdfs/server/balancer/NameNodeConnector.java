@@ -31,8 +31,8 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -59,11 +59,12 @@ import com.google.common.annotations.VisibleForTesting;
  */
 @InterfaceAudience.Private
 public class NameNodeConnector implements Closeable {
-  private static final Log LOG = LogFactory.getLog(NameNodeConnector.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(NameNodeConnector.class);
 
   public static final int DEFAULT_MAX_IDLE_ITERATIONS = 5;
   private static boolean write2IdFile = true;
-  
+
   /** Create {@link NameNodeConnector} for the given namenodes. */
   public static List<NameNodeConnector> newNameNodeConnectors(
       Collection<URI> namenodes, String name, Path idPath, Configuration conf,

@@ -34,8 +34,8 @@ import java.util.Map;
 import java.util.TreeSet;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -106,7 +106,8 @@ import com.google.common.annotations.VisibleForTesting;
  */
 @InterfaceAudience.Private
 public class NamenodeFsck implements DataEncryptionKeyFactory {
-  public static final Log LOG = LogFactory.getLog(NameNode.class.getName());
+  public static final Logger LOG =
+      LoggerFactory.getLogger(NameNode.class.getName());
 
   // return string marking fsck status
   public static final String CORRUPT_STATUS = "is CORRUPT";
@@ -527,7 +528,7 @@ public class NamenodeFsck implements DataEncryptionKeyFactory {
       if (isCorrupt) {
         corrupt++;
         res.corruptBlocks++;
-        out.print("\n" + path + ": CORRUPT blockpool " + block.getBlockPoolId() + 
+        out.print("\n" + path + ": CORRUPT blockpool " + block.getBlockPoolId() +
             " block " + block.getBlockName()+"\n");
       }
       if (liveReplicas >= minReplication)
@@ -898,7 +899,7 @@ public class NamenodeFsck implements DataEncryptionKeyFactory {
       missingIds.add(id);
       missingSize += size;
     }
-    
+
     /** Return the actual replication factor. */
     float getReplicationFactor() {
       if (totalBlocks == 0)

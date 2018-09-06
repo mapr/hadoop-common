@@ -28,8 +28,8 @@ import java.security.PrivilegedAction;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.HadoopIllegalArgumentException;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configurable;
@@ -67,7 +67,8 @@ import com.google.common.base.Preconditions;
  */
 @InterfaceAudience.Private
 public class BootstrapStandby implements Tool, Configurable {
-  private static final Log LOG = LogFactory.getLog(BootstrapStandby.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(BootstrapStandby.class);
   private String nsId;
   private String nnId;
   private String otherNNId;
@@ -132,7 +133,7 @@ public class BootstrapStandby implements Tool, Configurable {
     System.err.println("Usage: " + this.getClass().getSimpleName() +
         " [-force] [-nonInteractive] [-skipSharedEditsCheck]");
   }
-  
+
   private NamenodeProtocol createNNProtocolProxy()
       throws IOException {
     return NameNodeProxies.createNonHAProxy(getConf(),
@@ -148,7 +149,7 @@ public class BootstrapStandby implements Tool, Configurable {
     try {
       nsInfo = proxy.versionRequest();
     } catch (IOException ioe) {
-      LOG.fatal("Unable to fetch namespace information from active NN at " +
+      LOG.error("Unable to fetch namespace information from active NN at " +
           otherIpcAddr + ": " + ioe.getMessage());
       if (LOG.isDebugEnabled()) {
         LOG.debug("Full exception trace", ioe);
@@ -157,13 +158,13 @@ public class BootstrapStandby implements Tool, Configurable {
     }
 
     if (!checkLayoutVersion(nsInfo)) {
-      LOG.fatal("Layout version on remote node (" + nsInfo.getLayoutVersion()
+      LOG.error("Layout version on remote node (" + nsInfo.getLayoutVersion()
           + ") does not match " + "this node's layout version ("
           + HdfsConstants.NAMENODE_LAYOUT_VERSION + ")");
       return ERR_CODE_INVALID_VERSION;
     }
 
-    
+
     System.out.println(
         "=====================================================\n" +
         "About to bootstrap Standby ID " + nnId + " from:\n" +
@@ -179,16 +180,16 @@ public class BootstrapStandby implements Tool, Configurable {
 
     long imageTxId = proxy.getMostRecentCheckpointTxId();
     long curTxId = proxy.getTransactionID();
-    
+
     NNStorage storage = new NNStorage(conf, dirsToFormat, editUrisToFormat);
-    
+
     // Check with the user before blowing away data.
     if (!Storage.confirmFormat(storage.dirIterable(null),
             force, interactive)) {
       storage.close();
       return ERR_CODE_ALREADY_FORMATTED;
     }
-    
+
     // Format the storage (writes VERSION file)
     storage.format(nsInfo);
 
@@ -252,9 +253,9 @@ public class BootstrapStandby implements Tool, Configurable {
           "or call saveNamespace on the active node.\n" +
           "Error: " + e.getLocalizedMessage();
       if (LOG.isDebugEnabled()) {
-        LOG.fatal(msg, e);
+        LOG.error(msg, e);
       } else {
-        LOG.fatal(msg);
+        LOG.error(msg);
       }
       return false;
     }
@@ -279,7 +280,7 @@ public class BootstrapStandby implements Tool, Configurable {
       throw new HadoopIllegalArgumentException(
         "Shared edits storage is not enabled for this namenode.");
     }
-    
+
     Configuration otherNode = HAUtil.getConfForOtherNode(conf);
     otherNNId = HAUtil.getNameNodeId(otherNode, nsId);
     otherIpcAddr = NameNode.getServiceAddress(otherNode, true);

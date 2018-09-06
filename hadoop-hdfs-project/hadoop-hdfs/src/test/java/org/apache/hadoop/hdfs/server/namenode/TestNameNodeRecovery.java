@@ -31,8 +31,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -57,7 +57,7 @@ import com.google.common.collect.Sets;
  * This tests data recovery mode for the NameNode.
  */
 public class TestNameNodeRecovery {
-  private static final Log LOG = LogFactory.getLog(TestNameNodeRecovery.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TestNameNodeRecovery.class);
   private static final StartupOption recoverStartOpt = StartupOption.RECOVER;
   private static final File TEST_DIR = PathUtils.getTestDir(TestNameNodeRecovery.class);
 
@@ -136,7 +136,7 @@ public class TestNameNodeRecovery {
       // We should have read every valid transaction.
       assertTrue(validTxIds.isEmpty());
     } finally {
-      IOUtils.cleanup(LOG, elfos, elfis);
+      IOUtils.cleanupWithLogger(LOG, elfos, elfis);
     }
   }
 

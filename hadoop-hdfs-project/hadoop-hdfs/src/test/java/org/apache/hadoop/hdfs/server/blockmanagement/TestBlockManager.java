@@ -79,7 +79,7 @@ public class TestBlockManager {
    * of times trying to trigger the incorrect behavior.
    */
   private static final int NUM_TEST_ITERS = 30;
-  
+
   private static final int BLOCK_SIZE = 64*1024;
 
   private FSNamesystem fsn;
@@ -367,7 +367,7 @@ public class TestBlockManager {
     bm.processMisReplicatedBlocks();
     assertEquals(0, bm.numOfUnderReplicatedBlocks());
   }
-  
+
   
   /**
    * Tell the block manager that replication is completed for the given
@@ -417,7 +417,7 @@ public class TestBlockManager {
     }
     return ret;
   }
-  
+
   private List<DatanodeDescriptor> startDecommission(int ... indexes) {
     List<DatanodeDescriptor> nodes = getNodes(indexes);
     for (DatanodeDescriptor node : nodes) {

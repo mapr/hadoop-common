@@ -35,7 +35,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.SortedMap;
 
-import org.apache.commons.logging.impl.Log4JLogger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -49,26 +48,27 @@ import org.apache.hadoop.hdfs.server.namenode.FSEditLogLoader.EditLogValidation;
 import org.apache.hadoop.hdfs.server.namenode.NNStorage.NameNodeDirType;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.test.PathUtils;
-import org.apache.log4j.Level;
+import org.apache.hadoop.test.GenericTestUtils;
+import org.slf4j.event.Level;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 
 public class TestFSEditLogLoader {
-  
+
   static {
-    ((Log4JLogger)FSImage.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger)FSEditLogLoader.LOG).getLogger().setLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(FSImage.LOG, Level.TRACE);
+    GenericTestUtils.setLogLevel(FSEditLogLoader.LOG, Level.TRACE);
   }
-  
+
   private static final File TEST_DIR = PathUtils.getTestDir(TestFSEditLogLoader.class);
 
   private static final int NUM_DATA_NODES = 0;
-  
+
   @Test
   public void testDisplayRecentEditLogOpCodes() throws IOException {
-    // start a cluster 
+    // start a cluster
     Configuration conf = new HdfsConfiguration();
     MiniDFSCluster cluster = null;
     FileSystem fileSys = null;

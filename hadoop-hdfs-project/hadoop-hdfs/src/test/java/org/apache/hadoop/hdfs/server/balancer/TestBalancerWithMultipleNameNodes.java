@@ -25,8 +25,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.impl.Log4JLogger;
+import org.slf4j.Logger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -42,7 +41,8 @@ import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants.DatanodeReportType;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
-import org.apache.log4j.Level;
+import org.apache.hadoop.test.GenericTestUtils;
+import org.slf4j.event.Level;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -50,10 +50,10 @@ import org.junit.Test;
  * Test balancer with multiple NameNodes
  */
 public class TestBalancerWithMultipleNameNodes {
-  static final Log LOG = Balancer.LOG;
+  static final Logger LOG = Balancer.LOG;
   {
-    ((Log4JLogger)LOG).getLogger().setLevel(Level.ALL);
-    DFSTestUtil.setNameNodeLogLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(LOG, Level.TRACE);
+    DFSTestUtil.setNameNodeLogLevel(org.apache.log4j.Level.TRACE);
   }
 
   
@@ -76,7 +76,7 @@ public class TestBalancerWithMultipleNameNodes {
     final MiniDFSCluster cluster;
     final ClientProtocol[] clients;
     final short replication;
-    
+
     Suite(MiniDFSCluster cluster, final int nNameNodes, final int nDataNodes,
         Configuration conf) throws IOException {
       this.conf = conf;
@@ -209,7 +209,7 @@ public class TestBalancerWithMultipleNameNodes {
     try {
       Thread.sleep(ms);
     } catch(InterruptedException e) {
-      LOG.error(e);
+      LOG.error("{}", e);
     }
   }
   
@@ -223,9 +223,9 @@ public class TestBalancerWithMultipleNameNodes {
    * First start a cluster and fill the cluster up to a certain size.
    * Then redistribute blocks according the required distribution.
    * Finally, balance the cluster.
-   * 
+   *
    * @param nNameNodes Number of NameNodes
-   * @param distributionPerNN The distribution for each NameNode. 
+   * @param distributionPerNN The distribution for each NameNode.
    * @param capacities Capacities of the datanodes
    * @param racks Rack names
    * @param conf Configuration

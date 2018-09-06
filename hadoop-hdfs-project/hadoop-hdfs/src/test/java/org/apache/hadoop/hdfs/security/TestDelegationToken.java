@@ -28,9 +28,8 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.security.PrivilegedExceptionAction;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.impl.Log4JLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -52,7 +51,8 @@ import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.SecretManager.InvalidToken;
 import org.apache.hadoop.security.token.Token;
-import org.apache.log4j.Level;
+import org.apache.hadoop.test.GenericTestUtils;
+import org.slf4j.event.Level;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -62,7 +62,8 @@ public class TestDelegationToken {
   private MiniDFSCluster cluster;
   private DelegationTokenSecretManager dtSecretManager;
   private Configuration config;
-  private static final Log LOG = LogFactory.getLog(TestDelegationToken.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(TestDelegationToken.class);
   
   @Before
   public void setUp() throws Exception {
@@ -170,7 +171,7 @@ public class TestDelegationToken {
   @SuppressWarnings("deprecation")
   @Test
   public void testDelegationTokenWebHdfsApi() throws Exception {
-    ((Log4JLogger)NamenodeWebHdfsMethods.LOG).getLogger().setLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(NamenodeWebHdfsMethods.LOG, Level.TRACE);
     final String uri = WebHdfsFileSystem.SCHEME  + "://"
         + config.get(DFSConfigKeys.DFS_NAMENODE_HTTP_ADDRESS_KEY);
     //get file system as JobTracker
@@ -239,7 +240,7 @@ public class TestDelegationToken {
       }
     });
   }
-  
+
   /**
    * Test that the delegation token secret manager only runs when the
    * NN is out of safe mode. This is because the secret manager

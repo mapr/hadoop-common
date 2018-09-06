@@ -23,8 +23,8 @@ import java.net.InetSocketAddress;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.NameNodeProxies;
@@ -41,7 +41,8 @@ abstract class DfsServlet extends HttpServlet {
   /** For java.io.Serializable */
   private static final long serialVersionUID = 1L;
 
-  static final Log LOG = LogFactory.getLog(DfsServlet.class.getCanonicalName());
+  static final Logger LOG =
+      LoggerFactory.getLogger(DfsServlet.class.getCanonicalName());
 
   /** Write the object to XML format */
   protected void writeXml(Exception except, String path, XMLOutputter doc)
@@ -63,11 +64,11 @@ abstract class DfsServlet extends HttpServlet {
   }
 
   /**
-   * Create a {@link NameNode} proxy from the current {@link ServletContext}. 
+   * Create a {@link NameNode} proxy from the current {@link ServletContext}.
    */
   protected ClientProtocol createNameNodeProxy() throws IOException {
     ServletContext context = getServletContext();
-    // if we are running in the Name Node, use it directly rather than via 
+    // if we are running in the Name Node, use it directly rather than via
     // rpc
     NameNode nn = NameNodeHttpServer.getNameNodeFromContext(context);
     if (nn != null) {

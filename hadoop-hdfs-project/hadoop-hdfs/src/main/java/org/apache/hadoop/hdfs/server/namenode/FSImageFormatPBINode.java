@@ -26,8 +26,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.HadoopIllegalArgumentException;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.fs.permission.AclEntry;
@@ -69,7 +69,7 @@ public final class FSImageFormatPBINode {
   private final static long USER_GROUP_STRID_MASK = (1 << 24) - 1;
   private final static int USER_STRID_OFFSET = 40;
   private final static int GROUP_STRID_OFFSET = 16;
-  private static final Log LOG = LogFactory.getLog(FSImageFormatPBINode.class);
+  private static final Logger LOG = LoggerFactory.getLogger(FSImageFormatPBINode.class);
 
   private static final int ACL_ENTRY_NAME_MASK = (1 << 24) - 1;
   private static final int ACL_ENTRY_NAME_OFFSET = 6;
@@ -338,7 +338,7 @@ public final class FSImageFormatPBINode {
             f.getAcl(), state.getStringTable()));
         file.addAclFeature(new AclFeature(entries));
       }
-      
+
       if (f.hasXAttrs()) {
         file.addXAttrFeature(new XAttrFeature(
             loadXAttrs(f.getXAttrs(), state.getStringTable())));

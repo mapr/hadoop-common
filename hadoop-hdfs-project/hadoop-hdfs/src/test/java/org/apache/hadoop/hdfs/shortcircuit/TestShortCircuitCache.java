@@ -38,8 +38,8 @@ import java.util.Map;
 
 import com.google.common.collect.HashMultimap;
 import org.apache.commons.lang.mutable.MutableBoolean;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
@@ -78,7 +78,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 
 public class TestShortCircuitCache {
-  static final Log LOG = LogFactory.getLog(TestShortCircuitCache.class);
+  static final Logger LOG =
+      LoggerFactory.getLogger(TestShortCircuitCache.class);
   
   private static class TestFileDescriptorPair {
     final TemporarySocketDirectory dir = new TemporarySocketDirectory();
@@ -111,7 +112,7 @@ public class TestShortCircuitCache {
     }
 
     public void close() throws IOException {
-      IOUtils.cleanup(LOG, fis);
+      IOUtils.cleanupWithLogger(LOG, fis);
       dir.close();
     }
 

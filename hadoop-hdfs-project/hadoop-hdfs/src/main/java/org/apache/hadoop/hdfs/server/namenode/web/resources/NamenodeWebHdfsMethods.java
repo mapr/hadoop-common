@@ -48,8 +48,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.ContentSummary;
 import org.apache.hadoop.fs.FileStatus;
@@ -98,7 +98,8 @@ import com.sun.jersey.spi.container.ResourceFilters;
 @Path("")
 @ResourceFilters(ParamFilter.class)
 public class NamenodeWebHdfsMethods {
-  public static final Log LOG = LogFactory.getLog(NamenodeWebHdfsMethods.class);
+  public static final Logger LOG =
+      LoggerFactory.getLogger(NamenodeWebHdfsMethods.class);
 
   private static final UriFsPathParam ROOT = new UriFsPathParam("");
   

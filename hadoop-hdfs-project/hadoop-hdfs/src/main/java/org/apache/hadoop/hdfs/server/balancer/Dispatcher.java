@@ -42,8 +42,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
@@ -83,7 +83,7 @@ import com.google.common.base.Preconditions;
 /** Dispatching block replica moves between datanodes. */
 @InterfaceAudience.Private
 public class Dispatcher {
-  static final Log LOG = LogFactory.getLog(Dispatcher.class);
+  static final Logger LOG = LoggerFactory.getLogger(Dispatcher.class);
 
   private static final long GB = 1L << 30; // 1GB
   private static final long MAX_BLOCKS_SIZE_TO_FETCH = 2 * GB;

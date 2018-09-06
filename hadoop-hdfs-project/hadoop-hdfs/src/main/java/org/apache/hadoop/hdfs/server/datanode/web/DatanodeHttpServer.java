@@ -30,8 +30,8 @@ import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedWriteHandler;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSUtil;
@@ -62,7 +62,7 @@ public class DatanodeHttpServer implements Closeable {
   private InetSocketAddress httpAddress;
   private InetSocketAddress httpsAddress;
 
-  static final Log LOG = LogFactory.getLog(DatanodeHttpServer.class);
+  static final Logger LOG = LoggerFactory.getLogger(DatanodeHttpServer.class);
 
   public DatanodeHttpServer(final Configuration conf, final InetSocketAddress
     jettyAddr, final ServerSocketChannel externalHttpChannel)

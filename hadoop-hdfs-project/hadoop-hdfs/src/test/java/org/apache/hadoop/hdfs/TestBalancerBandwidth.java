@@ -21,8 +21,8 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.server.datanode.DataNode;
 import org.junit.Test;
@@ -35,7 +35,7 @@ public class TestBalancerBandwidth {
   final static private Configuration conf = new Configuration();
   final static private int NUM_OF_DATANODES = 2;
   final static private int DEFAULT_BANDWIDTH = 1024*1024;
-  public static final Log LOG = LogFactory.getLog(TestBalancerBandwidth.class);
+  public static final Logger LOG = LoggerFactory.getLogger(TestBalancerBandwidth.class);
 
   @Test
   public void testBalancerBandwidth() throws Exception {
@@ -45,7 +45,7 @@ public class TestBalancerBandwidth {
         DEFAULT_BANDWIDTH);
 
     /* Create and start cluster */
-    MiniDFSCluster cluster = 
+    MiniDFSCluster cluster =
       new MiniDFSCluster.Builder(conf).numDataNodes(NUM_OF_DATANODES).build();
     try {
       cluster.waitActive();

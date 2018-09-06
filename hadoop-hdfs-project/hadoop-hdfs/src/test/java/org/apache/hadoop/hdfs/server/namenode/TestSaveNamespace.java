@@ -58,7 +58,7 @@ import org.apache.hadoop.hdfs.util.MD5FileUtils;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.test.GenericTestUtils.DelayAnswer;
-import org.apache.log4j.Level;
+import org.slf4j.event.Level;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.internal.util.reflection.Whitebox;
@@ -78,7 +78,7 @@ import org.mockito.stubbing.Answer;
  */
 public class TestSaveNamespace {
   static {
-    GenericTestUtils.setLogLevel(FSImage.LOG, Level.ALL);
+    GenericTestUtils.setLogLevel(FSImage.LOG, Level.TRACE);
   }
   
   private static final Logger LOG = LoggerFactory.getLogger(TestSaveNamespace.class);
