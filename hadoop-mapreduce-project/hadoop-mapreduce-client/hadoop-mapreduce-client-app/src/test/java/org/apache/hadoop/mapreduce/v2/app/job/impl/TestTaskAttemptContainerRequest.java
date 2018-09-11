@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.junit.After;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.security.User;
 import org.apache.hadoop.security.rpcauth.KerberosAuthMethod;
@@ -65,12 +66,10 @@ import org.junit.Test;
 @SuppressWarnings({"rawtypes"})
 public class TestTaskAttemptContainerRequest {
 
-  //WARNING: This test must be the only test in this file.  This is because
-  // there is an optimization where the credentials passed in are cached
-  // statically so they do not need to be recomputed when creating a new
-  // ContainerLaunchContext. if other tests run first this code will cache
-  // their credentials and this test will fail trying to look for the
-  // credentials it inserted in.
+  @After
+  public void cleanup() {
+    UserGroupInformation.reset();
+  }
 
   @Test
   public void testAttemptContainerRequest() throws Exception {
