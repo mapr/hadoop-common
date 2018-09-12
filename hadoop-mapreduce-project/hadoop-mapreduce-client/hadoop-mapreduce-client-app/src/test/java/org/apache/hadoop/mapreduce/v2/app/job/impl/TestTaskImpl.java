@@ -50,17 +50,13 @@ import org.apache.hadoop.mapreduce.v2.app.AppContext;
 import org.apache.hadoop.mapreduce.v2.app.TaskAttemptListener;
 import org.apache.hadoop.mapreduce.v2.app.job.TaskAttempt;
 import org.apache.hadoop.mapreduce.v2.app.job.TaskStateInternal;
-import org.apache.hadoop.mapreduce.v2.app.job.event.TaskAttemptEvent;
-import org.apache.hadoop.mapreduce.v2.app.job.event.TaskAttemptEventType;
 import org.apache.hadoop.mapreduce.v2.app.job.event.TaskEvent;
 import org.apache.hadoop.mapreduce.v2.app.job.event.TaskEventType;
 import org.apache.hadoop.mapreduce.v2.app.job.event.TaskTAttemptEvent;
-import org.apache.hadoop.mapreduce.v2.app.job.event.TaskTAttemptKilledEvent;
 import org.apache.hadoop.mapreduce.v2.app.metrics.MRAppMetrics;
 import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
-import org.apache.hadoop.yarn.event.Event;
 import org.apache.hadoop.yarn.event.EventHandler;
 import org.apache.hadoop.yarn.event.InlineDispatcher;
 import org.apache.hadoop.yarn.util.Clock;
@@ -93,8 +89,7 @@ public class TestTaskImpl {
   private int taskCounter = 0;
   private final int partition = 1;
   
-  private InlineDispatcher dispatcher;
-  private MockTaskAttemptEventHandler taskAttemptEventHandler;
+  private InlineDispatcher dispatcher;   
   private List<MockTaskAttemptImpl> taskAttempts;
   
   private class MockTaskImpl extends TaskImpl {
@@ -239,10 +234,7 @@ public class TestTaskImpl {
     taskSplitMetaInfo = mock(TaskSplitMetaInfo.class);
     when(taskSplitMetaInfo.getLocations()).thenReturn(dataLocations); 
     
-    taskAttempts = new ArrayList<MockTaskAttemptImpl>();
-
-    taskAttemptEventHandler = new MockTaskAttemptEventHandler();
-    dispatcher.register(TaskAttemptEventType.class, taskAttemptEventHandler);
+    taskAttempts = new ArrayList<MockTaskAttemptImpl>();    
   }
   
   private MockTaskImpl createMockTask(TaskType taskType) {
@@ -279,12 +271,8 @@ public class TestTaskImpl {
   }
   
   private void killScheduledTaskAttempt(TaskAttemptId attemptId) {
-    killScheduledTaskAttempt(attemptId, false);
-  }
-
-  private void killScheduledTaskAttempt(TaskAttemptId attemptId,
-      boolean reschedule) {
-    mockTask.handle(new TaskTAttemptKilledEvent(attemptId, reschedule));
+    mockTask.handle(new TaskTAttemptEvent(attemptId, 
+        TaskEventType.T_ATTEMPT_KILLED));
     assertTaskScheduledState();
   }
 
@@ -313,15 +301,11 @@ public class TestTaskImpl {
   }
   
   private void killRunningTaskAttempt(TaskAttemptId attemptId) {
-    killRunningTaskAttempt(attemptId, false);
-  }
-
-  private void killRunningTaskAttempt(TaskAttemptId attemptId,
-      boolean reschedule) {
-    mockTask.handle(new TaskTAttemptKilledEvent(attemptId, reschedule));
+    mockTask.handle(new TaskTAttemptEvent(attemptId, 
+        TaskEventType.T_ATTEMPT_KILLED));
     assertTaskRunningState();  
   }
-
+  
   private void failRunningTaskAttempt(TaskAttemptId attemptId) {
     mockTask.handle(new TaskTAttemptEvent(attemptId, 
         TaskEventType.T_ATTEMPT_FAILED));
@@ -350,7 +334,7 @@ public class TestTaskImpl {
   }
     
   /**
-   * {@link TaskStateInternal#KILL_WAIT}
+   * {@link TaskState#KILL_WAIT}
    */
   private void assertTaskKillWaitState() {
     assertEquals(TaskStateInternal.KILL_WAIT, mockTask.getInternalState());
@@ -414,12 +398,10 @@ public class TestTaskImpl {
    */
   public void testKillScheduledTaskAttempt() {
     LOG.info("--- START: testKillScheduledTaskAttempt ---");
-    mockTask = createMockTask(TaskType.MAP);
+    mockTask = createMockTask(TaskType.MAP);        
     TaskId taskId = getNewTaskID();
     scheduleTaskAttempt(taskId);
-    killScheduledTaskAttempt(getLastAttempt().getAttemptId(), true);
-    assertEquals(TaskAttemptEventType.TA_RESCHEDULE,
-        taskAttemptEventHandler.lastTaskAttemptEvent.getType());
+    killScheduledTaskAttempt(getLastAttempt().getAttemptId());
   }
   
   @Test 
@@ -442,13 +424,11 @@ public class TestTaskImpl {
    */
   public void testKillRunningTaskAttempt() {
     LOG.info("--- START: testKillRunningTaskAttempt ---");
-    mockTask = createMockTask(TaskType.MAP);
+    mockTask = createMockTask(TaskType.MAP);        
     TaskId taskId = getNewTaskID();
     scheduleTaskAttempt(taskId);
     launchTaskAttempt(getLastAttempt().getAttemptId());
-    killRunningTaskAttempt(getLastAttempt().getAttemptId(), true);
-    assertEquals(TaskAttemptEventType.TA_RESCHEDULE,
-        taskAttemptEventHandler.lastTaskAttemptEvent.getType());
+    killRunningTaskAttempt(getLastAttempt().getAttemptId());    
   }
 
   @Test
@@ -464,28 +444,6 @@ public class TestTaskImpl {
     assertTaskSucceededState();
     mockTask.handle(new TaskEvent(taskId, TaskEventType.T_KILL));
     assertTaskSucceededState();
-  }
-
-  @Test
-  /**
-   * Kill map attempt for succeeded map task
-   * {@link TaskState#SUCCEEDED}->{@link TaskState#SCHEDULED}
-   */
-  public void testKillAttemptForSuccessfulTask() {
-    LOG.info("--- START: testKillAttemptForSuccessfulTask ---");
-    mockTask = createMockTask(TaskType.MAP);
-    TaskId taskId = getNewTaskID();
-    scheduleTaskAttempt(taskId);
-    launchTaskAttempt(getLastAttempt().getAttemptId());
-    commitTaskAttempt(getLastAttempt().getAttemptId());
-    mockTask.handle(new TaskTAttemptEvent(getLastAttempt().getAttemptId(),
-        TaskEventType.T_ATTEMPT_SUCCEEDED));
-    assertTaskSucceededState();
-    mockTask.handle(
-        new TaskTAttemptKilledEvent(getLastAttempt().getAttemptId(), true));
-    assertEquals(TaskAttemptEventType.TA_RESCHEDULE,
-        taskAttemptEventHandler.lastTaskAttemptEvent.getType());
-    assertTaskScheduledState();
   }
 
   @Test 
@@ -745,8 +703,8 @@ public class TestTaskImpl {
     assertEquals(TaskState.FAILED, mockTask.getState());
     taskAttempt = taskAttempts.get(3);
     taskAttempt.setState(TaskAttemptState.KILLED);
-    mockTask.handle(new TaskTAttemptKilledEvent(taskAttempt.getAttemptId(),
-        false));
+    mockTask.handle(new TaskTAttemptEvent(taskAttempt.getAttemptId(),
+        TaskEventType.T_ATTEMPT_KILLED));
     assertEquals(TaskState.FAILED, mockTask.getState());
   }
 
@@ -792,14 +750,4 @@ public class TestTaskImpl {
     Counters taskCounters = mockTask.getCounters();
     assertEquals("wrong counters for task", specAttemptCounters, taskCounters);
   }
-
-  public static class MockTaskAttemptEventHandler implements EventHandler {
-    public TaskAttemptEvent lastTaskAttemptEvent;
-    @Override
-    public void handle(Event event) {
-      if (event instanceof TaskAttemptEvent) {
-        lastTaskAttemptEvent = (TaskAttemptEvent)event;
-      }
-    }
-  };
 }

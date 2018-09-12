@@ -97,7 +97,6 @@ import org.apache.hadoop.mapreduce.v2.app.job.event.TaskAttemptStatusUpdateEvent
 import org.apache.hadoop.mapreduce.v2.app.job.event.TaskAttemptStatusUpdateEvent.TaskAttemptStatus;
 import org.apache.hadoop.mapreduce.v2.app.job.event.TaskEventType;
 import org.apache.hadoop.mapreduce.v2.app.job.event.TaskTAttemptEvent;
-import org.apache.hadoop.mapreduce.v2.app.job.event.TaskTAttemptKilledEvent;
 import org.apache.hadoop.mapreduce.v2.app.launcher.ContainerLauncher;
 import org.apache.hadoop.mapreduce.v2.app.launcher.ContainerLauncherEvent;
 import org.apache.hadoop.mapreduce.v2.app.launcher.ContainerRemoteLaunchEvent;
@@ -186,7 +185,6 @@ public abstract class TaskAttemptImpl implements
   private int httpPort;
   private Locality locality;
   private Avataar avataar;
-  private boolean rescheduleNextAttempt = false;
 
   private static final CleanupContainerTransition CLEANUP_CONTAINER_TRANSITION =
     new CleanupContainerTransition();
@@ -1277,16 +1275,6 @@ public abstract class TaskAttemptImpl implements
   }
 
   //always called in write lock
-  private boolean getRescheduleNextAttempt() {
-    return rescheduleNextAttempt;
-  }
-
-  //always called in write lock
-  private void setRescheduleNextAttempt(boolean reschedule) {
-    rescheduleNextAttempt = reschedule;
-  }
-
-  //always called in write lock
   private void setFinishTime() {
     //set the finish time only if launch time is set
     if (launchTime != 0) {
@@ -1641,8 +1629,9 @@ public abstract class TaskAttemptImpl implements
               TaskEventType.T_ATTEMPT_FAILED));
           break;
         case KILLED:
-          taskAttempt.eventHandler.handle(new TaskTAttemptKilledEvent(
-              taskAttempt.attemptId, false));
+          taskAttempt.eventHandler.handle(new TaskTAttemptEvent(
+              taskAttempt.attemptId,
+              TaskEventType.T_ATTEMPT_KILLED));
           break;
         default:
           LOG.error("Task final state is not FAILED or KILLED: " + finalState);
@@ -1884,6 +1873,7 @@ public abstract class TaskAttemptImpl implements
 
       // not setting a finish time since it was set on success
       assert (taskAttempt.getFinishTime() != 0);
+
       assert (taskAttempt.getLaunchTime() != 0);
       taskAttempt.eventHandler
           .handle(createJobCounterUpdateEventTAKilled(taskAttempt, true));
@@ -1891,13 +1881,8 @@ public abstract class TaskAttemptImpl implements
           taskAttempt, TaskAttemptStateInternal.KILLED);
       taskAttempt.eventHandler.handle(new JobHistoryEvent(taskAttempt.attemptId
           .getTaskId().getJobId(), tauce));
-      boolean rescheduleNextTaskAttempt = false;
-      if (event instanceof TaskAttemptKillEvent) {
-        rescheduleNextTaskAttempt =
-            ((TaskAttemptKillEvent)event).getRescheduleAttempt();
-      }
-      taskAttempt.eventHandler.handle(new TaskTAttemptKilledEvent(
-          taskAttempt.attemptId, rescheduleNextTaskAttempt));
+      taskAttempt.eventHandler.handle(new TaskTAttemptEvent(
+          taskAttempt.attemptId, TaskEventType.T_ATTEMPT_KILLED));
       return TaskAttemptStateInternal.KILLED;
     }
   }
@@ -1928,8 +1913,9 @@ public abstract class TaskAttemptImpl implements
             ((TaskAttemptKillEvent) event).getMessage());
       }
 
-      taskAttempt.eventHandler.handle(new TaskTAttemptKilledEvent(
-          taskAttempt.attemptId, taskAttempt.getRescheduleNextAttempt()));
+      taskAttempt.eventHandler.handle(new TaskTAttemptEvent(
+          taskAttempt.attemptId,
+          TaskEventType.T_ATTEMPT_KILLED));
     }
   }
 
@@ -1942,34 +1928,23 @@ public abstract class TaskAttemptImpl implements
       // unregister it to TaskAttemptListener so that it stops listening
       // for it
       taskAttempt.taskAttemptListener.unregister(
-          taskAttempt.attemptId, taskAttempt.jvmID);
-      sendContainerCleanup(taskAttempt, event);
-      // Store reschedule flag so that after clean up is completed, new
-      // attempt is scheduled/rescheduled based on it.
+              taskAttempt.attemptId, taskAttempt.jvmID);
+
       if (event instanceof TaskAttemptKillEvent) {
-        taskAttempt.setRescheduleNextAttempt(
-            ((TaskAttemptKillEvent)event).getRescheduleAttempt());
+        taskAttempt.addDiagnosticInfo(
+                ((TaskAttemptKillEvent) event).getMessage());
       }
-    }
-  }
 
-  @SuppressWarnings("unchecked")
-  private static void sendContainerCleanup(TaskAttemptImpl taskAttempt,
-      TaskAttemptEvent event) {
-    if (event instanceof TaskAttemptKillEvent) {
-      taskAttempt.addDiagnosticInfo(
-          ((TaskAttemptKillEvent) event).getMessage());
+      taskAttempt.reportedStatus.progress = 1.0f;
+      taskAttempt.updateProgressSplits();
+      //send the cleanup event to containerLauncher
+      taskAttempt.eventHandler.handle(new ContainerLauncherEvent(
+              taskAttempt.attemptId,
+              taskAttempt.container.getId(), StringInterner
+              .weakIntern(taskAttempt.container.getNodeId().toString()),
+              taskAttempt.container.getContainerToken(),
+              ContainerLauncher.EventType.CONTAINER_REMOTE_CLEANUP));
     }
-
-    taskAttempt.reportedStatus.progress = 1.0f;
-    taskAttempt.updateProgressSplits();
-    //send the cleanup event to containerLauncher
-    taskAttempt.eventHandler.handle(
-        new ContainerLauncherEvent(taskAttempt.attemptId,
-            taskAttempt.container.getId(), StringInterner
-            .weakIntern(taskAttempt.container.getNodeId().toString()),
-            taskAttempt.container.getContainerToken(),
-            ContainerLauncher.EventType.CONTAINER_REMOTE_CLEANUP));
   }
 
   private void addDiagnosticInfo(String diag) {
