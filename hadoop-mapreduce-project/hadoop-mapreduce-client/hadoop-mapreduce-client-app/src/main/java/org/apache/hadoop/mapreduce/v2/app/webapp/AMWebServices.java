@@ -64,6 +64,7 @@ import org.apache.hadoop.mapreduce.v2.app.webapp.dao.JobTaskAttemptCounterInfo;
 import org.apache.hadoop.mapreduce.v2.app.webapp.dao.JobTaskAttemptState;
 import org.apache.hadoop.mapreduce.v2.app.webapp.dao.JobTaskCounterInfo;
 import org.apache.hadoop.mapreduce.v2.app.webapp.dao.JobsInfo;
+import org.apache.hadoop.mapreduce.v2.app.webapp.dao.MapTaskAttemptInfo;
 import org.apache.hadoop.mapreduce.v2.app.webapp.dao.ReduceTaskAttemptInfo;
 import org.apache.hadoop.mapreduce.v2.app.webapp.dao.TaskAttemptInfo;
 import org.apache.hadoop.mapreduce.v2.app.webapp.dao.TaskAttemptsInfo;
@@ -383,9 +384,9 @@ public class AMWebServices {
     for (TaskAttempt ta : task.getAttempts().values()) {
       if (ta != null) {
         if (task.getType() == TaskType.REDUCE) {
-          attempts.add(new ReduceTaskAttemptInfo(ta, task.getType()));
+          attempts.add(new ReduceTaskAttemptInfo(ta));
         } else {
-          attempts.add(new TaskAttemptInfo(ta, task.getType(), true));
+          attempts.add(new MapTaskAttemptInfo(ta, true));
         }
       }
     }
@@ -405,9 +406,9 @@ public class AMWebServices {
     Task task = getTaskFromTaskIdString(tid, job);
     TaskAttempt ta = getTaskAttemptFromTaskAttemptString(attId, task);
     if (task.getType() == TaskType.REDUCE) {
-      return new ReduceTaskAttemptInfo(ta, task.getType());
+      return new ReduceTaskAttemptInfo(ta);
     } else {
-      return new TaskAttemptInfo(ta, task.getType(), true);
+      return new MapTaskAttemptInfo(ta, true);
     }
   }
 
