@@ -186,6 +186,7 @@ public class UserGroupInformation {
   public static final String USER_TICKET_FILE_LOCATION = "MAPR_TICKETFILE_LOCATION";
 
   public static final String JAVA_SECURITY_AUTH_LOGIN_CONFIG = "java.security.auth.login.config";
+  public static final String DEFAULT_JAVA_SECURITY_AUTH_LOGIN_CONFIG = System.getenv("JAVA_SECURITY_AUTH");
 
   /** 
    * A method to initialize the fields that depend on a configuration.
@@ -245,7 +246,7 @@ public class UserGroupInformation {
     String loginConfPath = System.getProperty(JAVA_SECURITY_AUTH_LOGIN_CONFIG);
     
     if (loginConfPath == null) {
-      loginConfPath = conf.get(JAVA_SECURITY_AUTH_LOGIN_CONFIG);
+      loginConfPath = conf.get(JAVA_SECURITY_AUTH_LOGIN_CONFIG, DEFAULT_JAVA_SECURITY_AUTH_LOGIN_CONFIG);
       if (loginConfPath != null ) {
         System.setProperty(JAVA_SECURITY_AUTH_LOGIN_CONFIG, loginConfPath);
         loginConfPath = System.getProperty(JAVA_SECURITY_AUTH_LOGIN_CONFIG);
