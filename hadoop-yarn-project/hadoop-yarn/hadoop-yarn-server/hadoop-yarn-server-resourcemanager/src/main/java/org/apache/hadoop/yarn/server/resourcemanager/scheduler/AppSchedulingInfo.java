@@ -337,7 +337,8 @@ public class AppSchedulingInfo {
     if ( req != null ) {
       try {
         if (!isAppLabelExpressionSet.get()) {
-          final String requestLabel = (req.getLabel() == null ? applicationLabel : req.getLabel());
+          String labelExp= req.getLabel();
+          final String requestLabel = (labelExp == null || labelExp.trim().isEmpty() ? applicationLabel : labelExp);
           appLabelExpression = lb.getEffectiveLabelExpr(requestLabel);
           isAppLabelExpressionSet.set(true);
         }
