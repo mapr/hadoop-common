@@ -340,6 +340,16 @@
 </property>
 
 <property>
+  <name>mapreduce.multi.split.locations</name>
+  <value>3</value>
+</property>
+
+<property>
+  <name>mapreduce.multi.split.locations.enabled</name>
+  <value>true</value>
+</property>
+
+<property>
   <name>mapreduce.jobtracker.taskscheduler.maxrunningtasks.perjob</name>
   <value></value>
   <description>The maximum number of running tasks for a job before

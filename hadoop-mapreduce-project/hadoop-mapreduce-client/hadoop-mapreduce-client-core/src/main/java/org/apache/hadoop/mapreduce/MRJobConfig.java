@@ -81,6 +81,9 @@ public interface MRJobConfig {
    */
   public static final String MAPREDUCE_MULTI_SPLIT_LOCATIONS = "mapreduce.multi.split.locations";
   public static final int DEFAULT_MAPREDUCE_MULTI_SPLIT_LOCATIONS = 3;
+  
+  public static final String MAPREDUCE_MULTI_SPLIT_LOCATIONS_ENABLED = "mapreduce.multi.split.locations.enabled";
+  public static final boolean DEFAULT_MAPREDUCE_MULTI_SPLIT_LOCATIONS_ENABLED = true;
 
   public static final String NUM_MAPS = "mapreduce.job.maps";
 

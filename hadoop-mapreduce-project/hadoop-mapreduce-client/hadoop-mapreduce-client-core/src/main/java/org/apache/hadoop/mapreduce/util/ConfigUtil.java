@@ -532,6 +532,8 @@ public class ConfigUtil {
         MRJobConfig.SPLIT_METAINFO_MAXSIZE),
       new DeprecationDelta("mapred.multi.split.locations",
         MRJobConfig.MAPREDUCE_MULTI_SPLIT_LOCATIONS),
+      new DeprecationDelta("mapred.multi.split.locations.enabled",
+        MRJobConfig.MAPREDUCE_MULTI_SPLIT_LOCATIONS),
       new DeprecationDelta("mapred.input.dir.recursive",
         FileInputFormat.INPUT_DIR_RECURSIVE)
     });

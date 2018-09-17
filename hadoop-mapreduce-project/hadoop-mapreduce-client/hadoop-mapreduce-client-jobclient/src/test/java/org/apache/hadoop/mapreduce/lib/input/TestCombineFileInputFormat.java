@@ -47,6 +47,7 @@ import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobContext;
+import org.apache.hadoop.mapreduce.MRJobConfig;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
@@ -378,6 +379,7 @@ public class TestCombineFileInputFormat {
        * file3, file4 will be present on all datanodes. 
        */
       Configuration conf = new Configuration();
+      conf.setBoolean(MRJobConfig.MAPREDUCE_MULTI_SPLIT_LOCATIONS_ENABLED, false);
       conf.setBoolean("dfs.replication.considerLoad", false);
       dfs = new MiniDFSCluster.Builder(conf).racks(rack1).hosts(hosts1)
           .build();
@@ -1027,9 +1029,11 @@ public class TestCombineFileInputFormat {
 
     OneFileInfo.populateBlockInfo(blocks, rackToBlocks, blockToNodes,
         nodeToBlocks, rackToNodes);
-    
+
+    Configuration conf = new Configuration();
+    conf.setBoolean(MRJobConfig.MAPREDUCE_MULTI_SPLIT_LOCATIONS_ENABLED, false);
     inFormat.createSplits(nodeToBlocks, blockToNodes, rackToBlocks, totLength,
-        maxSplitSize, minSizeNode, minSizeRack, splits, new Configuration());
+        maxSplitSize, minSizeNode, minSizeRack, splits, conf);
 
     int expectedSplitCount = (int) (totLength / maxSplitSize);
     assertEquals(expectedSplitCount, splits.size());
@@ -1080,9 +1084,11 @@ public class TestCombineFileInputFormat {
     
     OneFileInfo.populateBlockInfo(blocks, rackToBlocks, blockToNodes, 
                              nodeToBlocks, rackToNodes);
-    
+
+    Configuration conf = new Configuration();
+    conf.setBoolean(MRJobConfig.MAPREDUCE_MULTI_SPLIT_LOCATIONS_ENABLED, false);
     inFormat.createSplits(nodeToBlocks, blockToNodes, rackToBlocks, totLength,  
-                          maxSize, minSizeNode, minSizeRack, splits, new Configuration());
+                          maxSize, minSizeNode, minSizeRack, splits, conf);
     
     int expectedSplitCount = (int)(totLength/maxSize);
     assertEquals(expectedSplitCount, splits.size());
@@ -1122,6 +1128,7 @@ public class TestCombineFileInputFormat {
        * file3, file4 will be present on all datanodes. 
        */
       Configuration conf = new Configuration();
+      conf.setBoolean(MRJobConfig.MAPREDUCE_MULTI_SPLIT_LOCATIONS_ENABLED, false);
       conf.setBoolean("dfs.replication.considerLoad", false);
       dfs = new MiniDFSCluster.Builder(conf).racks(rack1).hosts(hosts1)
           .build();

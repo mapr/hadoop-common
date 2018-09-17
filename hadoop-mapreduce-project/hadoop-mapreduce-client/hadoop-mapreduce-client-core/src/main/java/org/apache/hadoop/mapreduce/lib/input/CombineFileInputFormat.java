@@ -578,51 +578,59 @@ public abstract class CombineFileInputFormat<K, V>
       }
     }
 
-    // Compute topKArray - the hosts with maximum byte contribution
-    final int k = conf.getInt(MRJobConfig.MAPREDUCE_MULTI_SPLIT_LOCATIONS,
-        MRJobConfig.DEFAULT_MAPREDUCE_MULTI_SPLIT_LOCATIONS);
+    CombineFileSplit thissplit;
+    boolean isMultiSplitLocationsEnabled = conf.getBoolean(
+        MRJobConfig.MAPREDUCE_MULTI_SPLIT_LOCATIONS_ENABLED,
+        MRJobConfig.DEFAULT_MAPREDUCE_MULTI_SPLIT_LOCATIONS_ENABLED);
+    if (isMultiSplitLocationsEnabled) {
+      // Compute topKArray - the hosts with maximum byte contribution
+      final int k = conf.getInt(MRJobConfig.MAPREDUCE_MULTI_SPLIT_LOCATIONS,
+          MRJobConfig.DEFAULT_MAPREDUCE_MULTI_SPLIT_LOCATIONS);
 
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("Determine top-" + k + " bytes locations for split");
-    }
-    final String[] topKArray;
-    final Set<String> hostKeySet = hostCounterMap.keySet();
-    final int hostKeySetSize = hostKeySet.size();
-    if (k < hostKeySetSize) {
       if (LOG.isDebugEnabled()) {
-        LOG.debug("k=" + k + " < keySetSize" + hostKeySetSize
-          + ": use PriorityQueue for top-k");
+        LOG.debug("Determine top-" + k + " bytes locations for split");
       }
-      final TopLocations topKHosts = new TopLocations(k);
-      Iterator<HostCounter> it;
-      for (it = hostCounterMap.values().iterator(); it.hasNext(); ) {
-        topKHosts.insert(it.next());
-        it.remove();
-      }
-      topKArray = new String[k];
-      for (int i = topKArray.length - 1; i >= 0; i--) {
-        final HostCounter hc = topKHosts.pop();
-        topKArray[i] = hc.host;
-
+      final String[] topKArray;
+      final Set<String> hostKeySet = hostCounterMap.keySet();
+      final int hostKeySetSize = hostKeySet.size();
+      if (k < hostKeySetSize) {
         if (LOG.isDebugEnabled()) {
-          LOG.debug("PQ.pop top location: " + hc);
+          LOG.debug("k=" + k + " < keySetSize" + hostKeySetSize
+              + ": use PriorityQueue for top-k");
         }
-      }
-    } else {
-      if (LOG.isDebugEnabled()) {
-        LOG.debug("k=" + k + " >= keySetSize=" + hostKeySetSize
-          + ": using all locations");
+        final TopLocations topKHosts = new TopLocations(k);
+        Iterator<HostCounter> it;
+        for (it = hostCounterMap.values().iterator(); it.hasNext(); ) {
+          topKHosts.insert(it.next());
+          it.remove();
+        }
+        topKArray = new String[k];
+        for (int i = topKArray.length - 1; i >= 0; i--) {
+          final HostCounter hc = topKHosts.pop();
+          topKArray[i] = hc.host;
 
-        for (HostCounter hc : hostCounterMap.values()) {
-          LOG.debug("Location: " + hc);
+          if (LOG.isDebugEnabled()) {
+            LOG.debug("PQ.pop top location: " + hc);
+          }
         }
+      } else {
+        if (LOG.isDebugEnabled()) {
+          LOG.debug("k=" + k + " >= keySetSize=" + hostKeySetSize
+              + ": using all locations");
+
+          for (HostCounter hc : hostCounterMap.values()) {
+            LOG.debug("Location: " + hc);
+          }
+        }
+        topKArray = new String[hostCounterMap.size()];
+        hostKeySet.toArray(topKArray);
       }
-      topKArray = new String[hostCounterMap.size()];
-      hostKeySet.toArray(topKArray);
+      // add this split to the list that is returned
+      thissplit = new CombineFileSplit(fl, offset, length, topKArray);
+    } else {
+      thissplit = new CombineFileSplit(fl, offset,
+          length, locations.toArray(new String[0]));
     }
-     // add this split to the list that is returned
-    CombineFileSplit thissplit = new CombineFileSplit(fl, offset, 
-                                   length, topKArray);
     splitList.add(thissplit); 
   }
 
