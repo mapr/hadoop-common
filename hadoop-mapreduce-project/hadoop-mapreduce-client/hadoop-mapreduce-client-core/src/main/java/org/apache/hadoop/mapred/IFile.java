@@ -380,12 +380,14 @@ public class IFile {
                   CompressionCodec codec,
                   Counters.Counter readsCounter) throws IOException {
       readRecordsCounter = readsCounter;
-      this.checksumIn = newInstance(constructor(
-          conf.getClass("mapred.ifile.inputstream",
-              IFileInputStream.class, IFileInputStream.class), 
-              InputStream.class, long.class, Configuration.class), in, length, conf);
-
-      //checksumIn = new IFileInputStream(in,length, conf);
+      if (conf != null) {
+        this.checksumIn = newInstance(constructor(
+            conf.getClass("mapred.ifile.inputstream",
+                IFileInputStream.class, IFileInputStream.class),
+            InputStream.class, long.class, Configuration.class), in, length, conf);
+      } else {
+        checksumIn = new IFileInputStream(in, length, conf);
+      }
       if (codec != null) {
         decompressor = CodecPool.getDecompressor(codec);
         if (decompressor != null) {
