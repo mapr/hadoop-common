@@ -184,6 +184,16 @@
 </property>
 
 <property>
+  <name>mapreduce.multi.split.locations</name>
+  <value>3</value>
+</property>
+
+<property>
+  <name>mapreduce.multi.split.locations.enabled</name>
+  <value>true</value>
+</property>
+
+<property>
   <name>mapreduce.map.maxattempts</name>
   <value>4</value>
   <description>Expert: The maximum number of attempts per map task.

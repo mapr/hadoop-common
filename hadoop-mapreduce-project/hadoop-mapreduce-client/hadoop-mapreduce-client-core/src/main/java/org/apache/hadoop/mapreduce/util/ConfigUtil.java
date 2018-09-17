@@ -434,6 +434,8 @@ public class ConfigUtil {
         MRJobConfig.MAPREDUCE_JOB_USER_CLASSPATH_FIRST ),
       new DeprecationDelta("mapred.multi.split.locations",
         MRJobConfig.MAPREDUCE_MULTI_SPLIT_LOCATIONS),
+      new DeprecationDelta("mapred.multi.split.locations.enabled",
+        MRJobConfig.MAPREDUCE_MULTI_SPLIT_LOCATIONS),
       new DeprecationDelta("mapred.input.dir.recursive",
         FileInputFormat.INPUT_DIR_RECURSIVE)
     });
