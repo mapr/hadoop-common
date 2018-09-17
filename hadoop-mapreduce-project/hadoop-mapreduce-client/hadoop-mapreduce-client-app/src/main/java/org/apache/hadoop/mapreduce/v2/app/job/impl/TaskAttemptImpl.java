@@ -1101,6 +1101,11 @@ public abstract class TaskAttemptImpl implements
     }
   }
 
+  @VisibleForTesting
+  protected static void setCommonContainerSpec(ContainerLaunchContext commonContainerSpec) {
+    TaskAttemptImpl.commonContainerSpec = commonContainerSpec;
+  }
+
   protected abstract org.apache.hadoop.mapred.Task createRemoteTask();
 
   @Override

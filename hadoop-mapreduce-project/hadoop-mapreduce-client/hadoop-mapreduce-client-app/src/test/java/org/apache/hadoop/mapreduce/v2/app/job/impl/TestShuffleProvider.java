@@ -103,6 +103,7 @@ public class TestShuffleProvider {
 
     jobConf.set(MRJobConfig.APPLICATION_ATTEMPT_ID, taImpl.getID().toString());
 
+    TaskAttemptImpl.setCommonContainerSpec(null);
     ContainerLaunchContext launchCtx =
         TaskAttemptImpl.createContainerLaunchContext(null,
             jobConf, jobToken, taImpl.createRemoteTask(),

@@ -114,6 +114,7 @@ public class TestTaskAttemptContainerRequest {
 
     jobConf.set(MRJobConfig.APPLICATION_ATTEMPT_ID, taImpl.getID().toString());
 
+    TaskAttemptImpl.setCommonContainerSpec(null);
     ContainerLaunchContext launchCtx =
         TaskAttemptImpl.createContainerLaunchContext(acls,
             jobConf, jobToken, taImpl.createRemoteTask(),
