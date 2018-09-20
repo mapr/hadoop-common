@@ -26,6 +26,7 @@ import java.net.UnknownHostException;
 import java.security.Principal;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedExceptionAction;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ServiceLoader;
@@ -46,10 +47,9 @@ import org.apache.hadoop.security.rpcauth.RpcAuthMethod;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.TokenInfo;
 import org.apache.hadoop.util.StringUtils;
+import org.xbill.DNS.Name;
+import org.xbill.DNS.ResolverConfig;
 
-
-//this will need to be replaced someday when there is a suitable replacement
-import sun.net.dns.ResolverConfiguration;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.net.InetAddresses;
@@ -187,7 +187,7 @@ public class SecurityUtil {
     return components[0] + "/" +
         StringUtils.toLowerCase(fqdn) + "@" + components[2];
   }
-  
+
   static String getLocalHostName() throws UnknownHostException {
     return InetAddress.getLocalHost().getCanonicalHostName();
   }
@@ -498,10 +498,15 @@ public class SecurityUtil {
    *       hadoop.security.token.service.use_ip=false 
    */
   protected static class QualifiedHostResolver implements HostResolver {
-    @SuppressWarnings("unchecked")
-    private List<String> searchDomains =
-        ResolverConfiguration.open().searchlist();
-    
+    private List<String> searchDomains;
+    {
+      ResolverConfig resolverConfig = ResolverConfig.getCurrentConfig();
+      searchDomains = new ArrayList<>();
+      for (Name name : resolverConfig.searchPath()) {
+        searchDomains.add(name.toString());
+      }
+    }
+
     /**
      * Create an InetAddress with a fully qualified hostname of the given
      * hostname.  InetAddress does not qualify an incomplete hostname that

@@ -289,6 +289,11 @@
       <groupId>org.apache.kerby</groupId>
       <artifactId>kerb-simplekdc</artifactId>
     </dependency>
+    <dependency>
+      <groupId>dnsjava</groupId>
+      <artifactId>dnsjava</artifactId>
+      <scope>compile</scope>
+    </dependency>
   </dependencies>
 
   <build>
