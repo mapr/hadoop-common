@@ -50,9 +50,9 @@ import org.apache.hadoop.util.StringUtils;
 
 //this will need to be replaced someday when there is a suitable replacement
 import sun.net.dns.ResolverConfiguration;
-import sun.net.util.IPAddressUtil;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.net.InetAddresses;
 
 @InterfaceAudience.LimitedPrivate({"HDFS", "MapReduce"})
 @InterfaceStability.Evolving
@@ -518,14 +518,11 @@ public class SecurityUtil {
     public InetAddress getByName(String host) throws UnknownHostException {
       InetAddress addr = null;
 
-      if (IPAddressUtil.isIPv4LiteralAddress(host)) {
-        // use ipv4 address as-is
-        byte[] ip = IPAddressUtil.textToNumericFormatV4(host);
-        addr = InetAddress.getByAddress(host, ip);
-      } else if (IPAddressUtil.isIPv6LiteralAddress(host)) {
-        // use ipv6 address as-is
-        byte[] ip = IPAddressUtil.textToNumericFormatV6(host);
-        addr = InetAddress.getByAddress(host, ip);
+      if (InetAddresses.isInetAddress(host)) {
+        // valid ip address. use it as-is
+        addr = InetAddresses.forString(host);
+        // set hostname
+        addr = InetAddress.getByAddress(host, addr.getAddress());
       } else if (host.endsWith(".")) {
         // a rooted host ends with a dot, ex. "host."
         // rooted hosts never use the search path, so only try an exact lookup
