@@ -498,12 +498,14 @@ public class SecurityUtil {
    *       hadoop.security.token.service.use_ip=false 
    */
   protected static class QualifiedHostResolver implements HostResolver {
-    private List<String> searchDomains;
+    private List<String> searchDomains = new ArrayList<>();
     {
       ResolverConfig resolverConfig = ResolverConfig.getCurrentConfig();
-      searchDomains = new ArrayList<>();
-      for (Name name : resolverConfig.searchPath()) {
-        searchDomains.add(name.toString());
+      Name[] names = resolverConfig.searchPath();
+      if (names != null) {
+        for (Name name : names) {
+          searchDomains.add(name.toString());
+        }
       }
     }
 
