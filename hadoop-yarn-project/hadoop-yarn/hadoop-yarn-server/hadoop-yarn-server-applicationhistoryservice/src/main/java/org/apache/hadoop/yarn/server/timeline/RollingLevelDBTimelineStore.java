@@ -88,6 +88,7 @@ import static org.apache.hadoop.yarn.conf.YarnConfiguration.DEFAULT_TIMELINE_SER
 import static org.apache.hadoop.yarn.conf.YarnConfiguration.DEFAULT_TIMELINE_SERVICE_LEVELDB_TTL_INTERVAL_MS;
 import static org.apache.hadoop.yarn.conf.YarnConfiguration.DEFAULT_TIMELINE_SERVICE_LEVELDB_WRITE_BATCH_SIZE;
 import static org.apache.hadoop.yarn.conf.YarnConfiguration.DEFAULT_TIMELINE_SERVICE_LEVELDB_WRITE_BUFFER_SIZE;
+import static org.apache.hadoop.yarn.conf.YarnConfiguration.DEFAULT_TIMELINE_SERVICE_LEVELDB_MAX_DELETE_SIZE;
 import static org.apache.hadoop.yarn.conf.YarnConfiguration.DEFAULT_TIMELINE_SERVICE_TTL_MS;
 import static org.apache.hadoop.yarn.conf.YarnConfiguration.TIMELINE_SERVICE_LEVELDB_MAX_OPEN_FILES;
 import static org.apache.hadoop.yarn.conf.YarnConfiguration.TIMELINE_SERVICE_LEVELDB_PATH;
@@ -97,6 +98,7 @@ import static org.apache.hadoop.yarn.conf.YarnConfiguration.TIMELINE_SERVICE_LEV
 import static org.apache.hadoop.yarn.conf.YarnConfiguration.TIMELINE_SERVICE_LEVELDB_TTL_INTERVAL_MS;
 import static org.apache.hadoop.yarn.conf.YarnConfiguration.TIMELINE_SERVICE_LEVELDB_WRITE_BATCH_SIZE;
 import static org.apache.hadoop.yarn.conf.YarnConfiguration.TIMELINE_SERVICE_LEVELDB_WRITE_BUFFER_SIZE;
+import static org.apache.hadoop.yarn.conf.YarnConfiguration.TIMELINE_SERVICE_LEVELDB_MAX_DELETE_SIZE;
 import static org.apache.hadoop.yarn.conf.YarnConfiguration.TIMELINE_SERVICE_TTL_ENABLE;
 import static org.apache.hadoop.yarn.conf.YarnConfiguration.TIMELINE_SERVICE_TTL_MS;
 
@@ -204,6 +206,7 @@ public class RollingLevelDBTimelineStore extends AbstractService implements
   private static final Version CURRENT_VERSION_INFO = Version.newInstance(1, 0);
 
   private static long writeBatchSize = 10000;
+  private static long maxDeleteSize;
 
   @Private
   @VisibleForTesting
@@ -263,6 +266,11 @@ public class RollingLevelDBTimelineStore extends AbstractService implements
         DEFAULT_TIMELINE_SERVICE_LEVELDB_WRITE_BUFFER_SIZE) > 0,
         "%s property value should be greater than zero",
         TIMELINE_SERVICE_LEVELDB_WRITE_BUFFER_SIZE);
+    Preconditions.checkArgument(conf.getLong(
+        TIMELINE_SERVICE_LEVELDB_MAX_DELETE_SIZE,
+        DEFAULT_TIMELINE_SERVICE_LEVELDB_MAX_DELETE_SIZE) > 0,
+        "%s property value should be greater than zero",
+        TIMELINE_SERVICE_LEVELDB_MAX_DELETE_SIZE);
 
     Options options = new Options();
     options.createIfMissing(true);
@@ -333,6 +341,9 @@ public class RollingLevelDBTimelineStore extends AbstractService implements
         TIMELINE_SERVICE_LEVELDB_WRITE_BATCH_SIZE,
         DEFAULT_TIMELINE_SERVICE_LEVELDB_WRITE_BATCH_SIZE);
 
+    maxDeleteSize = conf.getLong(
+        TIMELINE_SERVICE_LEVELDB_MAX_DELETE_SIZE,
+        DEFAULT_TIMELINE_SERVICE_LEVELDB_MAX_DELETE_SIZE);
     super.serviceInit(conf);
   }
   
@@ -1497,6 +1508,10 @@ public class RollingLevelDBTimelineStore extends AbstractService implements
           }
         }
         ++totalCount;
+        if (totalCount >= maxDeleteSize) {
+          LOG.info("Reached max delete size of " + maxDeleteSize + " entities per thread wake up.");
+          break;
+        }
       }
       if (LOG.isDebugEnabled()) {
         LOG.debug("Preparing to delete a batch of " + batchSize

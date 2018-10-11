@@ -1522,6 +1522,13 @@ public class YarnConfiguration extends Configuration {
   public static final int DEFAULT_TIMELINE_SERVICE_LEVELDB_WRITE_BUFFER_SIZE =
       16 * 1024 * 1024;
 
+  /** Timeline service cleanup thread max delete size */
+  public static final String TIMELINE_SERVICE_LEVELDB_MAX_DELETE_SIZE =
+      TIMELINE_SERVICE_LEVELDB_PREFIX + "max-delete-size";
+
+  /** Default leveldb delete max size if no configuration is specified */
+  public static final long DEFAULT_TIMELINE_SERVICE_LEVELDB_MAX_DELETE_SIZE = Long.MAX_VALUE;
+
   /** Timeline service leveldb write batch size. This value can be tuned down
    * to reduce lock time for ttl eviction. */
   public static final String

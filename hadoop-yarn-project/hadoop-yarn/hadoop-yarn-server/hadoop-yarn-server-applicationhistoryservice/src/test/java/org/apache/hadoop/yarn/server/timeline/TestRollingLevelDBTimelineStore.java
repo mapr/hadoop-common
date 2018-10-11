@@ -124,6 +124,32 @@ public class TestRollingLevelDBTimelineStore extends TimelineStoreTestUtils {
   }
 
   @Test
+  public void testDeleteMaxValues() throws Exception {
+    restartTimelineStoreWithMaxDeleteSize(2);
+    testDeleteMaxSize(2);
+  }
+  
+  @Test(expected = IllegalArgumentException.class)
+  public void testDeleteMaxWithZero() throws Exception {
+    restartTimelineStoreWithMaxDeleteSize(0);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testDeleteMaxWithNegativeValue() throws Exception {
+    restartTimelineStoreWithMaxDeleteSize(-1);
+  }
+  
+  private void restartTimelineStoreWithMaxDeleteSize(long maxDeleteSize) throws IOException {
+    config.setLong(YarnConfiguration.TIMELINE_SERVICE_LEVELDB_MAX_DELETE_SIZE, maxDeleteSize);
+    restartTimelineStore();
+  }
+  
+  private void testDeleteMaxSize(long expected) throws IOException {
+    long deletedEntitiesCount = ((RollingLevelDBTimelineStore) store).evictOldStartTimes(System.currentTimeMillis());
+    Assert.assertEquals(expected, deletedEntitiesCount);
+  }
+
+  @Test
   public void testCacheSizes() {
     Configuration conf = new Configuration();
     assertEquals(10000,
