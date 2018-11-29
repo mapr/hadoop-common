@@ -346,7 +346,7 @@
        <Method name="removeRenewAction" />
        <Bug pattern="BC_UNCONFIRMED_CAST" />
      </Match>
-     
+
      <!-- Inconsistent synchronization flagged by findbugs is not valid. -->
      <Match>
        <Class name="org.apache.hadoop.ipc.Client$Connection" />
@@ -410,4 +410,10 @@
     <Bug pattern="NP_NULL_PARAM_DEREF"/>
   </Match>
 
+  <!-- Parameter is checked with Strings.isNullOrEmpty before accessing -->
+  <Match>
+    <Class name="org.apache.hadoop.conf.Configuration"/>
+    <Method name="asXmlDocument"/>
+    <Bug pattern="NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE"/>
+  </Match>
 </FindBugsFilter>
