@@ -376,7 +376,7 @@ public class TestTimelineClient {
       YarnConfiguration conf) {
     TimelineClientImpl client =
         spy((TimelineClientImpl) TimelineClient.createTimelineClient());
-    when(client.getMaprDelegationTokenAuthenticator()).thenReturn(new KerberosDelegationTokenAuthenticator());
+//    when(client.getMaprDelegationTokenAuthenticator()).thenReturn(new KerberosDelegationTokenAuthenticator());
     client.init(conf);
     client.start();
     return client;

@@ -183,31 +183,13 @@ public class DelegationTokenAuthenticationFilter
       setHandlerAuthMethod(SaslRpcServer.AuthMethod.KERBEROS);
     }
 
-    Class<?> clazz = getMaprDelegationTokenAuthenticationHandler();
-
-    if (handler instanceof MultiMechsAuthenticationHandler ||
-      clazz != null && handler.getClass().isAssignableFrom(clazz)) {
+    if (handler instanceof MultiMechsAuthenticationHandler) {
       setHandlerAuthMethod(SaslRpcServer.AuthMethod.KERBEROS);
     }
 
     // proxyuser configuration
     Configuration conf = getProxyuserConfiguration(filterConfig);
     ProxyUsers.refreshSuperUserGroupsConfiguration(conf, PROXYUSER_PREFIX);
-  }
-
-  private Class<?> getMaprDelegationTokenAuthenticationHandler() {
-    final String MAPR_HANDLER =  "com.mapr.security.maprauth.MaprDelegationTokenAuthenticationHandler";
-    Class<? extends DelegationTokenAuthenticationHandler> clazz = null;
-    try {
-      clazz = (Class<? extends DelegationTokenAuthenticationHandler>)
-        Thread.currentThread()
-          .getContextClassLoader()
-          .loadClass(MAPR_HANDLER);
-    } catch (ClassNotFoundException e) {
-      LOG.error("Unable to load class " + MAPR_HANDLER, e);
-      return null;
-    }
-    return clazz;
   }
 
   @Override

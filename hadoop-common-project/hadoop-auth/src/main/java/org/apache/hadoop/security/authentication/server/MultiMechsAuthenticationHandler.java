@@ -42,9 +42,8 @@ public class MultiMechsAuthenticationHandler implements AuthenticationHandler {
       public String getType() {
         return "basic";
       }
-      
-      public String getMyClassName() {
-        return "com.mapr.security.maprauth.BasicAuthHandler";
+      public Class<? extends MultiMechsAuthenticationHandler> getMyClass() {
+        return BasicAuthHandler.class;
       }
       public int getOrder() {
         return 2;
@@ -54,8 +53,8 @@ public class MultiMechsAuthenticationHandler implements AuthenticationHandler {
       public String getType() {
         return "kerberos";
       }
-      public String getMyClassName() {
-        return "org.apache.hadoop.security.authentication.server.KerberosAuthHandler";
+      public Class<? extends MultiMechsAuthenticationHandler> getMyClass() {
+        return KerberosAuthHandler.class;
       }
       public int getOrder() {
         return 1;
@@ -65,8 +64,8 @@ public class MultiMechsAuthenticationHandler implements AuthenticationHandler {
       public String getType() {
         return "maprauth";
       }
-      public String getMyClassName() {
-        return "com.mapr.security.maprauth.MaprAuthenticationHandler";
+      public Class<? extends MultiMechsAuthenticationHandler> getMyClass() {
+        return MaprAuthenticationHandler.class;
       }
       public int getOrder() {
         return 0;
@@ -77,7 +76,7 @@ public class MultiMechsAuthenticationHandler implements AuthenticationHandler {
       return null;
     }
     
-    public String getMyClassName() {
+    public Class<? extends MultiMechsAuthenticationHandler> getMyClass() {
       return null;
     }
     
@@ -86,14 +85,9 @@ public class MultiMechsAuthenticationHandler implements AuthenticationHandler {
     }
 
     public static Class<? extends MultiMechsAuthenticationHandler> getClassFromType(String type) {
-      for ( AuthHandlerEnum value : AuthHandlerEnum.values()) {
-        if ( value.getType().equalsIgnoreCase(type)) {
-          try {
-            Class<?> klass = Thread.currentThread().getContextClassLoader().loadClass(value.getMyClassName());
-            return  (Class<? extends MultiMechsAuthenticationHandler>) klass;
-          } catch (ClassNotFoundException ex) {
-            return null;
-          } 
+      for (AuthHandlerEnum value : AuthHandlerEnum.values()) {
+        if (value.getType().equalsIgnoreCase(type)) {
+          return value.getMyClass();
         }
       }
       return null;
