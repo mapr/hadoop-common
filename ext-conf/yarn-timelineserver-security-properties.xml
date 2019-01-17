@@ -1,0 +1,6 @@
+<!--TIMELINE SECURITY SECTION-->
+<property>
+    <name>yarn.timeline-service.http-authentication.type</name>
+    <value>com.mapr.security.maprauth.MaprDelegationTokenAuthenticationHandler</value>
+</property>
+<!--TIMELINE SECURITY SECTION END-->
