@@ -38,6 +38,8 @@ import org.apache.hadoop.yarn.event.EventHandler;
 import org.apache.hadoop.yarn.exceptions.InvalidResourceRequestException;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.ipc.RPCUtil;
+import org.apache.hadoop.yarn.security.ExternalTokenManager;
+import org.apache.hadoop.yarn.security.ExternalTokenManagerFactory;
 import org.apache.hadoop.yarn.server.resourcemanager.RMAuditLogger.AuditConstants;
 import org.apache.hadoop.yarn.server.resourcemanager.recovery.RMStateStore;
 import org.apache.hadoop.yarn.server.resourcemanager.recovery.RMStateStore.RMState;
@@ -78,6 +80,7 @@ public class RMAppManager implements EventHandler<RMAppManagerEvent>,
   private final YarnScheduler scheduler;
   private final ApplicationACLsManager applicationACLsManager;
   private Configuration conf;
+  private ExternalTokenManager extTokenMgr = ExternalTokenManagerFactory.get();
 
   public RMAppManager(RMContext context,
       YarnScheduler scheduler, ApplicationMasterService masterService,
@@ -206,7 +209,12 @@ public class RMAppManager implements EventHandler<RMAppManagerEvent>,
       if (UserGroupInformation.isSecurityEnabled()) {
         rmContext.getDelegationTokenRenewer().applicationFinished(applicationId);
       }
-      
+
+      // Cleanup any external tokens
+      if (extTokenMgr != null) {
+        extTokenMgr.removeToken(applicationId, conf);
+      }
+
       completedApps.add(applicationId);
       completedAppsInStateStore++;
       writeAuditLog(applicationId);

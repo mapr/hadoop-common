@@ -61,7 +61,6 @@ import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttempt;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttemptEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttemptEventType;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttemptImpl;
-import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttemptState;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.event.RMAppAttemptLaunchFailedEvent;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 
@@ -135,14 +134,6 @@ public class AMLauncher implements Runnable {
   }
   
   private void cleanup() throws IOException, YarnException {
-    // Cleanup any external tokens
-    if (extTokenMgr != null &&
-            (application.getAppAttemptState() == RMAppAttemptState.FINISHED ||
-                    application.getAppAttemptState() == RMAppAttemptState.KILLED ||
-                    ((RMAppAttemptImpl) application).mayBeLastAttempt())) {
-      extTokenMgr.removeToken(application.getAppAttemptId().getApplicationId(), conf);
-    }
-
     connect();
     ContainerId containerId = masterContainer.getId();
     List<ContainerId> containerIds = new ArrayList<ContainerId>();
