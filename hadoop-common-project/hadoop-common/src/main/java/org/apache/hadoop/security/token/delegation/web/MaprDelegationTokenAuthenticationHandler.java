@@ -7,7 +7,7 @@ import org.apache.hadoop.security.authentication.server.MultiMechsAuthentication
 @InterfaceAudience.Private
 @InterfaceStability.Evolving
 public class MaprDelegationTokenAuthenticationHandler extends DelegationTokenAuthenticationHandler {
-    public MaprDelegationTokenAuthenticationHandler() {
-        super(new MultiMechsAuthenticationHandler());
-    }
+  public MaprDelegationTokenAuthenticationHandler() {
+    super(new MultiMechsAuthenticationHandler());
+  }
 }

@@ -17,15 +17,15 @@ import java.util.Properties;
 
 
 public abstract class MaprAuthenticationHandler extends MultiMechsAuthenticationHandler {
-    private static Logger LOG = LoggerFactory.
-            getLogger(MaprAuthenticationHandler.class);
+  private static Logger LOG = LoggerFactory.
+      getLogger(MaprAuthenticationHandler.class);
 
-    private final String ticketGenerationClass = "com.mapr.security.ClusterServerTicketGeneration";
+  private final String ticketGenerationClass = "com.mapr.security.ClusterServerTicketGeneration";
 
-    /**
-     * Authentication type will be embedded in the authentication token
-     */
-    public static final String TYPE = "maprauth";
+  /**
+   * Authentication type will be embedded in the authentication token
+   */
+  public static final String TYPE = "maprauth";
 
 /*
   @Override
@@ -33,62 +33,62 @@ public abstract class MaprAuthenticationHandler extends MultiMechsAuthentication
         return TYPE;
     }
 */
-    /**
-     * This function is invoked when the filter is coming up.
-     * we try to get the mapr serverkey which will be used later
-     * to decrypt information sent by the client
-     *
-     * Also since we may be required to authenticate using Kerberos
-     * we invoke the kerberos init code after checking if the
-     * principal and keytab specified in the config file exist. If they
-     * don't exist we don't invoke the kerberos init code because
-     * we don't expect to use kerberos.
-     *
-     * @param config configuration properties to initialize the handler.
-     *
-     * @throws ServletException
-     */
-    @Override
-    public void init(Properties config) throws ServletException {
-        /* Get the server key */
-        try {
 
-            /* TODO: Check for UserGroupInformation.isMaprSecurityEnabled() */
-            Class<?> klass = Thread.currentThread().getContextClassLoader().loadClass(ticketGenerationClass);
-            AbstractTicketGeneration generation = (AbstractTicketGeneration) klass.newInstance();
-            generation.generateTicketAndSetServerKey();
-        } catch (Exception e) {
-            throw new ServletException(e);
-        }
+  /**
+   * This function is invoked when the filter is coming up.
+   * we try to get the mapr serverkey which will be used later
+   * to decrypt information sent by the client
+   * <p>
+   * Also since we may be required to authenticate using Kerberos
+   * we invoke the kerberos init code after checking if the
+   * principal and keytab specified in the config file exist. If they
+   * don't exist we don't invoke the kerberos init code because
+   * we don't expect to use kerberos.
+   *
+   * @param config configuration properties to initialize the handler.
+   * @throws ServletException
+   */
+  @Override
+  public void init(Properties config) throws ServletException {
+    /* Get the server key */
+    try {
+
+      /* TODO: Check for UserGroupInformation.isMaprSecurityEnabled() */
+      Class<?> klass = Thread.currentThread().getContextClassLoader().loadClass(ticketGenerationClass);
+      AbstractTicketGeneration generation = (AbstractTicketGeneration) klass.newInstance();
+      generation.generateTicketAndSetServerKey();
+    } catch (Exception e) {
+      throw new ServletException(e);
     }
+  }
 
-    public abstract AuthenticationToken maprAuthenticate(HttpServletRequest request, HttpServletResponse response);
+  public abstract AuthenticationToken maprAuthenticate(HttpServletRequest request, HttpServletResponse response);
 
-    @Override
-    public void destroy() {
+  @Override
+  public void destroy() {
+  }
+
+  @Override
+  public AuthenticationToken postauthenticate(HttpServletRequest request,
+                                              final HttpServletResponse response)
+      throws IOException, AuthenticationException {
+    if (request.getHeader(KerberosAuthenticator.AUTHORIZATION) != null) {
+      return maprAuthenticate(request, response);
     }
+    return null;
+  }
 
-    @Override
-    public AuthenticationToken postauthenticate(HttpServletRequest request,
-                                                final HttpServletResponse response)
-            throws IOException, AuthenticationException {
-        if (request.getHeader(KerberosAuthenticator.AUTHORIZATION) != null) {
-            return maprAuthenticate(request, response);
-        }
-        return null;
-    }
+  @Override
+  public void addHeader(HttpServletResponse response) {
+    response.addHeader(KerberosAuthenticator.WWW_AUTHENTICATE, AbstractMaprAuthenticator.NEGOTIATE);
+  }
 
-    @Override
-    public void addHeader(HttpServletResponse response) {
-        response.addHeader(KerberosAuthenticator.WWW_AUTHENTICATE, AbstractMaprAuthenticator.NEGOTIATE);
+  @Override
+  public MultiMechsAuthenticationHandler getAuthBasedEntity(String authorization) {
+    if (authorization != null && authorization.startsWith(AbstractMaprAuthenticator.NEGOTIATE)) {
+      return this;
     }
-
-    @Override
-    public MultiMechsAuthenticationHandler getAuthBasedEntity(String authorization) {
-        if ( authorization != null && authorization.startsWith(AbstractMaprAuthenticator.NEGOTIATE)) {
-            return this;
-        }
-        return null;
-    }
+    return null;
+  }
 
 }
