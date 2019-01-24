@@ -20,11 +20,11 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <parent>
     <groupId>org.apache.hadoop</groupId>
     <artifactId>hadoop-project</artifactId>
-    <version>2.7.0-mapr-1710-SNAPSHOT</version>
+    <version>2.7.0-mapr-1904-SNAPSHOT</version>
     <relativePath>../hadoop-project</relativePath>
   </parent>
   <artifactId>hadoop-maprfs-project</artifactId>
-  <version>2.7.0-mapr-1710-SNAPSHOT</version>
+  <version>2.7.0-mapr-1904-SNAPSHOT</version>
   <description>Apache Hadoop MapR-FS Project</description>
   <name>Apache Hadoop MapR-FS Project</name>
   <packaging>pom</packaging>
