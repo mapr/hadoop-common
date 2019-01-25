@@ -1,0 +1,87 @@
+<?xml version="1.0"?>
+<!--
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License. See accompanying LICENSE file.
+-->
+<configuration>
+  <!-- Site specific YARN configuration properties -->
+  <property>
+    <name>yarn.resourcemanager.hostname</name>
+    <value>__RM_IP__</value>
+    <description>host is the hostname of the resourcemanager</description>
+  </property>
+  <property>
+    <name>yarn.resourcemanager.recovery.enabled</name>
+    <value>true</value>
+    <description>RM Recovery Enabled</description>
+  </property>
+  <property>
+    <name>yarn.resourcemanager.scheduler.class</name>
+    <value>org.apache.myriad.scheduler.yarn.MyriadFairScheduler</value>
+    <description>One can configure other scehdulers as well from following list: org.apache.myriad.scheduler.yarn.MyriadCapacityScheduler, org.apache.myriad.scheduler.yarn.MyriadFifoScheduler</description>
+  </property>
+  <property>
+    <name>yarn.nodemanager.resource.cpu-vcores</name>
+    <value>\$\{nodemanager.resource.cpu-vcores\}</value>
+  </property>
+  <property>
+    <name>yarn.nodemanager.resource.memory-mb</name>
+    <value>\$\{nodemanager.resource.memory-mb\}</value>
+  </property>
+  <property>
+    <name>yarn.nodemanager.address</name>
+    <value>\$\{myriad.yarn.nodemanager.address\}</value>
+  </property>
+  <property>
+    <name>yarn.nodemanager.webapp.address</name>
+    <value>\$\{myriad.yarn.nodemanager.webapp.address\}</value>
+  </property>
+  <property>
+    <name>yarn.nodemanager.webapp.https.address</name>
+    <value>\$\{myriad.yarn.nodemanager.webapp.address\}</value>
+  </property>
+  <property>
+    <name>yarn.nodemanager.localizer.address</name>
+    <value>\$\{myriad.yarn.nodemanager.localizer.address\}</value>
+  </property>
+  <property>
+   <name>mapreduce.shuffle.port</name>
+   <value>\$\{myriad.mapreduce.shuffle.port\}</value>
+  </property>
+  <property>
+    <name>yarn.nodemanager.aux-services</name>
+    <value>mapreduce_shuffle,mapr_direct_shuffle,myriad_executor</value>
+  </property>
+  <property>
+    <name>yarn.nodemanager.aux-services.myriad_executor.class</name>
+    <value>org.apache.myriad.executor.MyriadExecutorAuxService</value>
+  </property>
+  <property>
+    <name>yarn.resourcemanager.store.class</name>
+    <value>org.apache.hadoop.yarn.server.resourcemanager.recovery.MyriadFileSystemRMStateStore</value>
+  </property>
+  <property>
+    <name>yarn.scheduler.minimum-allocation-mb</name>
+    <value>0</value>
+  </property>
+  <property>
+    <name>yarn.scheduler.minimum-allocation-vcores</name>
+    <value>0</value>
+  </property>
+  <property>
+    <name>yarn.scheduler.minimum-allocation-disks</name>
+    <value>0</value>
+  </property>
+  
+  <!-- :::CAUTION::: DO NOT EDIT ANYTHING ON OR ABOVE THIS LINE -->
+</configuration>
+

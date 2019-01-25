@@ -218,7 +218,7 @@ case $COMMAND in
       CYAN='\033[01;36m'
       echo -e "${CYAN}Try 'hadoop conf-details' for more detailed configuration.${NONE}"
     elif [ "$COMMAND" = "conf-details" ] ; then
-      CLASS=com.mapr.hadoop.conf.HadoopConfigClassifier
+      CLASS=org.apache.hadoop.conf.HadoopConfigClassifier
     # End: MapR specific section
 
     elif [[ "$COMMAND" = -*  ]] ; then

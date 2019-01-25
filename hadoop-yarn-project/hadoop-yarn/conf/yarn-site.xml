@@ -80,7 +80,7 @@
 
   <property>
     <name>yarn.nodemanager.aux-services.mapr_direct_shuffle.class</name>
-    <value>com.mapr.hadoop.mapred.LocalVolumeAuxService</value>
+    <value>org.apache.hadoop.mapred.LocalVolumeAuxService</value>
   </property>
 
   <property>

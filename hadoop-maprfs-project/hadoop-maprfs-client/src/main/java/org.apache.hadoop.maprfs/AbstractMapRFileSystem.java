@@ -18,6 +18,7 @@
 
 package org.apache.hadoop.maprfs;
 
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.PathId;
 
@@ -30,4 +31,6 @@ import org.apache.hadoop.fs.PathId;
 public abstract class AbstractMapRFileSystem extends FileSystem implements Fid {
 
     public abstract PathId createPathId();
+
+    public abstract FSDataOutputStream createFid(String pfid, String file, boolean overwrite);
 }

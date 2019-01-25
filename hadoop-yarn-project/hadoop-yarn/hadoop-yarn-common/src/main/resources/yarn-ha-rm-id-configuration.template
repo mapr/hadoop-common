@@ -1,0 +1,26 @@
+
+  <!-- Configuration for __RM_ID__ -->
+  <property>
+    <name>yarn.resourcemanager.scheduler.address.__RM_ID__</name>
+    <value>__IP_FOR_RM_ID__:8030</value>
+  </property>
+  <property>
+    <name>yarn.resourcemanager.resource-tracker.address.__RM_ID__</name>
+    <value>__IP_FOR_RM_ID__:8031</value>
+  </property>
+  <property>
+    <name>yarn.resourcemanager.address.__RM_ID__</name>
+    <value>__IP_FOR_RM_ID__:8032</value>
+  </property>
+  <property>
+    <name>yarn.resourcemanager.admin.address.__RM_ID__</name>
+    <value>__IP_FOR_RM_ID__:8033</value>
+  </property>
+  <property>
+    <name>yarn.resourcemanager.webapp.address.__RM_ID__</name>
+    <value>__IP_FOR_RM_ID__:8088</value>
+  </property>
+  <property>
+    <name>yarn.resourcemanager.webapp.https.address.__RM_ID__</name>
+    <value>__IP_FOR_RM_ID__:8090</value>
+  </property>

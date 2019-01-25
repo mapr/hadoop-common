@@ -33,6 +33,8 @@ public interface Fid {
 
     FSDataOutputStream createFid(String pfid, String file) throws IOException;
 
+    FSDataOutputStream createFid(String pfid, String file, boolean overwrite) throws IOException;
+
     FSDataInputStream openFid(String fid, long[] ips, long chunkSize, long fileSize) throws IOException;
 
     FSDataInputStream openFid(String pfid, String file, long[] ips) throws IOException;
