@@ -4,6 +4,7 @@
 
 package org.apache.hadoop.mapred;
 
+import org.apache.hadoop.maprfs.MapRPathId;
 import org.apache.hadoop.util.BaseMapRUtil;
 import org.apache.hadoop.maprfs.AbstractMapRFileSystem;
 import com.google.common.annotations.VisibleForTesting;

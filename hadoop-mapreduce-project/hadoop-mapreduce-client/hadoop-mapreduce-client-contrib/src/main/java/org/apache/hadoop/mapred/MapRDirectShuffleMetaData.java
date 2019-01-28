@@ -2,6 +2,7 @@ package org.apache.hadoop.mapred;
 
 import org.apache.hadoop.fs.PathId;
 import org.apache.hadoop.io.WritableUtils;
+import org.apache.hadoop.maprfs.MapRPathId;
 
 
 import java.io.DataInput;
