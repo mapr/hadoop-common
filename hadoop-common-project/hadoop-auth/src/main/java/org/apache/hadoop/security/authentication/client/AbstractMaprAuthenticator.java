@@ -1,5 +1,6 @@
 package org.apache.hadoop.security.authentication.client;
 
+import java.io.IOException;
 import java.net.URL;
 
 public abstract class AbstractMaprAuthenticator implements Authenticator {
@@ -14,7 +15,7 @@ public abstract class AbstractMaprAuthenticator implements Authenticator {
    */
   public static final String NEGOTIATE = "MAPR-Negotiate";
 
-  public abstract void authenticate(URL url, AuthenticatedURL.Token token);
+  public abstract void authenticate(URL url, AuthenticatedURL.Token token) throws IOException, AuthenticationException;
 
   public abstract void setConnectionConfigurator(ConnectionConfigurator configurator);
 
