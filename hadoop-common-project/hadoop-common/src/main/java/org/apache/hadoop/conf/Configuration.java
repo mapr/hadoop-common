@@ -710,7 +710,7 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
           "respectively");
     }
     addDefaultResource("core-default.xml");
-    addDefaultResource("org.apache.hadoop.conf.CoreDefaultProperties");
+    addDefaultResource(CoreDefaultProperties.class.getName());
     addDefaultResource("core-site.xml");
 
   }

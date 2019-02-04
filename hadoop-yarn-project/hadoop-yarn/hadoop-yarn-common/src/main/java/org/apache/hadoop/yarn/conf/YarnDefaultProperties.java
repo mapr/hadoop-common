@@ -12,7 +12,7 @@ import java.util.Properties;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.http.HttpConfig;
 
-import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.util.CommonMapRUtil;
 
 
 /**
@@ -59,7 +59,7 @@ public class YarnDefaultProperties extends Properties {
   private static final boolean isSecurityEnabled;
 
   static {
-    isSecurityEnabled = UserGroupInformation.isSecurityEnabled();
+    isSecurityEnabled = CommonMapRUtil.getInstance().isSecurityEnabled();
   }
   public YarnDefaultProperties() {
     // Dummy values needed to handle delegation token code path in TokenCache

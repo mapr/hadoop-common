@@ -13,7 +13,7 @@ public class HadoopConfigClassifier {
   private static final String MAPRED_DEFAULT_XML = "mapred-default.xml";
   private static final String YARN_DEFAULT_XML = "yarn-default.xml";
 
-  private static final String CORE_DEFAULT_PROPERTIES = "org.apache.hadoop.conf.CoreDefaultProperties";
+  private static final String CORE_DEFAULT_PROPERTIES = CoreDefaultProperties.class.getName();
   private static final String MAPRED_DEFAULT_PROPERTIES = "org.apache.hadoop.mapreduce.conf.MapReduceDefaultProperties";
   private static final String YARN_DEFAULT_PROPERTIES = "org.apache.hadoop.yarn.conf.YarnDefaultProperties";
 
