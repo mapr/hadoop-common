@@ -890,6 +890,36 @@ extern  "C" {
      */
     int hdfsSetThreads(int threads);
 
+    /**
+     * hdfsGetPathFromFid2 populates path based on FID (made of c, i, u)
+     * @param fs The configured filesystem handle.
+     * @param cid container id in the FID
+     * @param cinum inode number in FID
+     * @param uniq uniqifier in FID
+     * @param path to store FID path
+     * @return Returns 0 on success, -1 on error.
+     */
+    int hdfsGetPathFromFid2(hdfsFS fs, uint32_t cid, uint32_t cinum,
+                            uint32_t uniq, char* path);
+
+    /**
+     * hdfsGetPathFromFidStr populates path based on FID string (made of c, i, u)
+     * @param fs The configured filesystem handle.
+     * @param fidStr FID as string "c.i.u"
+     * @param path to store FID path
+     * @return Returns 0 on success, -1 on error.
+     */
+     int hdfsGetPathFromFidStr(hdfsFS fs, char *fidStr, char *path);
+
+    /** returns volume name from volume id
+     * hdfsGetVolumeName returns volume name from volume id
+     * @param fs The configured filesystem handle.
+     * @param volid volume id
+     * @return Return volume name on success, NULL on error
+     */
+     char* hdfsGetVolumeName(hdfsFS fs, uint32_t volid);
+
+
     /*
      * Internal Note: If more APIs are exported using this file, modify the
      * src/fs/client/fileclient/cc/MapRClient.def to export
