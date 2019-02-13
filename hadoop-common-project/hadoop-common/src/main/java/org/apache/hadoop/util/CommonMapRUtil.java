@@ -4,17 +4,15 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 
 public class CommonMapRUtil {
 
   private static final String MAPR_CLUSTER_FILE_NAME = "/conf/mapr-clusters.conf";
   private volatile String defaultClusterName = "default";
-  private boolean isSecurityEnabled;
-  private final String JNISecurity = "com.mapr.security.JNISecurity";
+  private boolean securityEnabled = false;
+  private boolean kerberosEnabled = false;
   private static CommonMapRUtil s_instance;
 
   private static final Log LOG = LogFactory.getLog(CommonMapRUtil.class);
@@ -32,54 +30,58 @@ public class CommonMapRUtil {
   }
 
   public synchronized void init() {
-    initCurrentClusterName();
-    initSecurityStatus();
-  }
-
-
-  public synchronized void initCurrentClusterName() {
     String maprHome = BaseMapRUtil.getPathToMaprHome();
     String clusterConfFile = maprHome + MAPR_CLUSTER_FILE_NAME;
     String tempClusterName = null;
     try {
       String strLine;
-      String clusterName = defaultClusterName;
       BufferedReader bfr = new BufferedReader(new FileReader(clusterConfFile));
       while ((strLine = bfr.readLine()) != null) {
-        if (strLine.matches("^\\s*#.*")) {
-          String[] tokens = strLine.split("[\\s]+");
-          if (tokens.length < 2) continue;
-          clusterName = tokens[0];
+        String[] tokens;
+        if (strLine.matches("^\\s*#.*") || (tokens = strLine.split("[\\s]+")).length < 2) continue;
+        Object clusterName = tokens[0];
+        for (int i = 1; i < tokens.length; ++i) {
+          if (tokens[i].contains("=")) {
+            String[] arr = tokens[i].split("=");
+            if (arr.length == 2){
+              if (setClusterOption(arr[0], arr[1]) == 0) continue;
+            }
+            LOG.error("Can't parse options:" + tokens[i] + " for cluster " + clusterName);
+            continue;
+          }
         }
         if (tempClusterName != null) continue;
-        this.defaultClusterName = clusterName;
-        tempClusterName = clusterName;
+        this.defaultClusterName = (String) clusterName;
+        tempClusterName = (String) clusterName;
       }
-    } catch (IOException bfr) {
-      LOG.info("Cannot read cluster name");
-      bfr.printStackTrace();
+    }
+    catch (FileNotFoundException bfr) {
+    }
+    catch (Throwable t) {
+      LOG.error("Exception during init", t);
     }
   }
 
-  public void initSecurityStatus() {
-    try {
-      Class<?> klass = Thread.currentThread().getContextClassLoader().loadClass(JNISecurity);
-      Method getSecurityStatus = klass.getDeclaredMethod("IsSecurityEnabled", String.class);
-      isSecurityEnabled = (boolean) getSecurityStatus.invoke(null, getCurrentClusterName());
-    } catch (ClassNotFoundException err) {
-      LOG.info("Cannot find JNISecurity class at classpath");
-      err.printStackTrace();
-    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException err) {
-      LOG.info("Cannot execute IsSecurityEnabled method");
-      err.printStackTrace();
+  public boolean isSecurityEnabled(){
+    return securityEnabled;
+  }
+
+  public boolean isKerberosEnabled(){
+    return kerberosEnabled;
+  }
+
+  private int setClusterOption(String property, String arg){
+    switch (property) {
+      case "secure":
+        securityEnabled = Boolean.parseBoolean(arg);
+        return 0;
+      case "kerberosEnable":
+        kerberosEnabled = Boolean.parseBoolean(arg);
+        return 0;
+      default:
+        return 1;
     }
   }
 
-  public String getCurrentClusterName() {
-    return this.defaultClusterName;
-  }
 
-  public boolean isSecurityEnabled() {
-    return this.isSecurityEnabled;
-  }
 }
