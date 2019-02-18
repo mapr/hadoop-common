@@ -30,7 +30,8 @@ WARDEN_HEAPSIZE_PERCENT_KEY="service.heapsize.percent"
 WARDEN_RUNSTATE_KEY="service.runstate"
 RC=0
 hadoop=2
-hadoopVersion="__VERSION_3DIG__"
+hadoopVersion="__VERSION_3DIGIT__"
+yarn_version="${hadoopVersion}"
 
 if [ -e "${MAPR_HOME}/server/common-ecosystem.sh" ]; then
     . "${MAPR_HOME}/server/common-ecosystem.sh"
@@ -389,13 +390,13 @@ TL_RESTART
 }
 
 function ConfigureHadoop2() {
-    sed -i -e 's|{MAPR_HOME}|'__PKGDESTDIR__'|g' "$HADOOP_HOME"/etc/hadoop/ssl-client.xml
-    sed -i -e 's|{MAPR_HOME}|'__PKGDESTDIR__'|g' "$HADOOP_HOME"/etc/hadoop/ssl-server.xml
+    sed -i -e 's|{MAPR_HOME}|'__PREFIX__'|g' "$HADOOP_HOME"/etc/hadoop/ssl-client.xml
+    sed -i -e 's|{MAPR_HOME}|'__PREFIX__'|g' "$HADOOP_HOME"/etc/hadoop/ssl-server.xml
     chmod 640 "$HADOOP_HOME"/etc/hadoop/ssl-server.xml
 
-    ln -sf "$HADOOP_HOME"/etc/hadoop/ssl-client.xml __PKGDESTDIR__/conf/ssl-client.xml
-    ln -sf "$HADOOP_HOME"/etc/hadoop/ssl-server.xml __PKGDESTDIR__/conf/ssl-server.xml
-    chmod 640 __PKGDESTDIR__/conf/ssl-server.xml
+    ln -sf "$HADOOP_HOME"/etc/hadoop/ssl-client.xml __PREFIX__/conf/ssl-client.xml
+    ln -sf "$HADOOP_HOME"/etc/hadoop/ssl-server.xml __PREFIX__/conf/ssl-server.xml
+    chmod 640 __PREFIX__/conf/ssl-server.xml
 }
 
 function ConfigureYarnLinuxContainerExecutor() {
@@ -567,13 +568,6 @@ function update_warden_value() {
     local value=$3
 
     sed -i 's/\([ ]*'"$key"'=\).*$/\1'"$value"'/' "$f"
-}
-
-#############################################################################
-# function to adjust ownership
-#############################################################################
-function adjustOwnership() {
-    chown -R "$MAPR_USER":"$MAPR_GROUP" $HADOOP_HOME
 }
 
 #############################################################################
@@ -876,8 +870,6 @@ fi
 cp ${NEW_HADOOP_CONF_FILE} ${HADOOP_CONF_FILE}
 
 rm -f "${NEW_HADOOPT_CONF_FILE}"
-
-adjustOwnership
 
 # remove state file
 if [ -f "$HADOOP_HOME/etc/.not_configured_yet" ]; then
