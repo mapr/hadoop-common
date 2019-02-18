@@ -243,7 +243,7 @@ function ConfigureWardenRMHA() {
     local maprHA=$2
 
     if [ -e ${WardenRMConfFile} ]; then
-        if [ $maprHA -eq 1 ]; then
+        if [[ $maprHA -eq 1 ]]; then
             runOnNodes=1
         else
             runOnNodes=all
@@ -864,7 +864,7 @@ ConfigureJMXForHadoop
 
 if [ ! -z "$rm_ip" ]; then
     ConfigureYarnServices "$rm_ip" "$hs_ip"
-elif [ $isOnlyRoles -ne 1 ]; then
+elif [[ $isOnlyRoles -ne 1 ]]; then
     # No -RM provided and no -R. Configure MapR-HA for RM.
     ConfigureYarnServices "" "$hs_ip"
 fi

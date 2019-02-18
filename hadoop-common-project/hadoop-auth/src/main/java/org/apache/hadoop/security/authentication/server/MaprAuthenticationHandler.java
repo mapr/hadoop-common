@@ -62,7 +62,8 @@ public abstract class MaprAuthenticationHandler extends MultiMechsAuthentication
     }
   }
 
-  public abstract AuthenticationToken maprAuthenticate(HttpServletRequest request, HttpServletResponse response);
+  public abstract AuthenticationToken maprAuthenticate(HttpServletRequest request, HttpServletResponse response)
+      throws IOException, AuthenticationException;
 
   @Override
   public void destroy() {
