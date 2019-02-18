@@ -20,7 +20,9 @@
 # This gets fillled out at package time
 HADOOP_HOME="${HADOOP_HOME:-__INSTALL__}"
 HADOOP_CONF_DIR="${HADOOP_HOME}/etc/hadoop"
-MAPR_HOME=${MAPR_HOME:-/opt/mapr}
+HADOOP_SSL_CLIENT_FILE=${HADOOP_CONF_DIR}/ssl-client.xml
+HADOOP_SSL_SERVER_FILE=${HADOOP_CONF_DIR}/ssl-server.xml
+MAPR_HOME=${MAPR_HOME:-__PREFIX__}
 HADOOP_BASE="${MAPR_HOME}/hadoop"
 NOW=$(date "+%Y%m%d_%H%M%S")
 WARDEN_START_KEY="service.command.start"
@@ -39,11 +41,6 @@ else
     echo "Failed to source common-ecosystem.sh"
     exit 0
 fi
-
-INST_WARDEN_RM_FILE="${MAPR_CONF_CONFD_DIR}/warden.resourcemanager.conf"
-PKG_WARDEN_RM_FILE="${HADOOP_HOME}/ext-conf/warden.resourcemanager.conf"
-INST_WARDEN_NM_FILE="${MAPR_CONF_CONFD_DIR}/warden.nodemanager.conf"
-PKG_WARDEN_NM_FILE="${HADOOP_HOME}/ext-conf/warden.nodemanager.conf"
 
 INSTALL_DIR=${MAPR_HOME}
 SERVER_DIR=${INSTALL_DIR}/server
@@ -162,7 +159,7 @@ function ConfigureYarnSiteXml() {
     local TEMP_FILE="${HADOOP_HOME}/etc/hadoop/${FILENAME}.xml.tmp"
     local TIMESTAMP="$(date +%F.%H-%M)"
     phatJar="$(ls $INSTALL_DIR/lib/hadoop-yarn-common-*.jar | grep -v jni | grep -v diagnostic | grep -v core | grep -v test)"
-    if [ -z "$phatJar"] || [ ! -f "$phatJar"]; then
+    if [ -z "$phatJar" ] || [ ! -f "$phatJar" ]; then
         logErr "Failed to find hadoop-yarn-common jar"
         exit 1
     fi
@@ -238,18 +235,13 @@ RM_RESTART
     fi
 }
 
-function ConfigureYarnServices() {
-    maprHA=0
-    # Set Resource Manager IP
-    if [ ! -z "$1" ]; then
-        RM_IP="$1"
-    else
-        maprHA=1
-    fi
+function ConfigureWardenRMHA() {
 
     # Configure RM Service in Warden to run only on a single node or multiple nodes depending on
     # whether MapR RM HA is configured or not.
-    WardenRMConfFile=${MAPR_HOME}/conf/conf.d/warden.resourcemanager.conf
+    local WardenRMConfFile=$1
+    local maprHA=$2
+
     if [ -e ${WardenRMConfFile} ]; then
         if [ $maprHA -eq 1 ]; then
             runOnNodes=1
@@ -257,6 +249,16 @@ function ConfigureYarnServices() {
             runOnNodes=all
         fi
         sed -i -e "s/^services=resourcemanager:.*:cldb$/services=resourcemanager:${runOnNodes}:cldb/" ${WardenRMConfFile}
+    fi
+}
+
+function ConfigureYarnServices() {
+    maprHA=0
+    # Set Resource Manager IP
+    if [ ! -z "$1" ]; then
+        RM_IP="$1"
+    else
+        maprHA=1
     fi
 
     if [ ! -z "$2" ]; then
@@ -322,8 +324,6 @@ function ConfigureYarnServices() {
 }
 
 function ConfigureTimeLineServer() {
-    local WardenTLConfFile="${MAPR_HOME}/conf/conf.d/warden.timelineserver.conf"
-    local WardenTLConfFileTmpl="${HADOOP_HOME}/etc/hadoop/warden.timelineserver.conf"
     local YarnSiteFile="${HADOOP_HOME}/etc/hadoop/yarn-site.xml"
     local YarnTLProps="${HADOOP_HOME}/etc/hadoop/yarn-timelineserver-properties.xml"
     local YarnTLSecurityProps="${HADOOP_HOME}/etc/hadoop/yarn-timelineserver-security-properties.xml"
@@ -383,20 +383,16 @@ TL_RESTART
             fi
         fi
     fi
-
-    if [ ! -f ${WardenTLConfFile} -a -f ${ROLES}/timelineserver ]; then
-        cp $WardenTLConfFileTmpl "${MAPR_HOME}/conf/conf.d"
-    fi
 }
 
 function ConfigureHadoop2() {
-    sed -i -e 's|{MAPR_HOME}|'__PREFIX__'|g' "$HADOOP_HOME"/etc/hadoop/ssl-client.xml
-    sed -i -e 's|{MAPR_HOME}|'__PREFIX__'|g' "$HADOOP_HOME"/etc/hadoop/ssl-server.xml
-    chmod 640 "$HADOOP_HOME"/etc/hadoop/ssl-server.xml
+    sed -i -e 's|{MAPR_HOME}|'${MAPR_HOME}'|g' "$HADOOP_SSL_CLIENT_FILE"
+    sed -i -e 's|{MAPR_HOME}|'${MAPR_HOME}'|g' "$HADOOP_SSL_SERVER_FILE"
+    chmod 640 "$HADOOP_SSL_SERVER_FILE"
 
-    ln -sf "$HADOOP_HOME"/etc/hadoop/ssl-client.xml __PREFIX__/conf/ssl-client.xml
-    ln -sf "$HADOOP_HOME"/etc/hadoop/ssl-server.xml __PREFIX__/conf/ssl-server.xml
-    chmod 640 __PREFIX__/conf/ssl-server.xml
+    ln -sf "$HADOOP_SSL_CLIENT_FILE" "${MAPR_CONF_DIR}"/ssl-client.xml
+    ln -sf "$HADOOP_SSL_SERVER_FILE" "${MAPR_CONF_DIR}"/ssl-server.xml
+    chmod 640 "${MAPR_CONF_DIR}"/ssl-server.xml
 }
 
 function ConfigureYarnLinuxContainerExecutor() {
@@ -532,6 +528,26 @@ function ConfigureRunUserForHadoop() {
 
 }
 
+function ConfigureJMXForHadoop() {
+    #TODO
+    # currently collectd's configure script does a bunch of seds into the yarn script to 
+    # enable JMX and set options and ports for JMX.
+    #
+
+    if hasRole "resourcemanager" ; then
+        : # do what collect does for RM
+    fi
+    if hasRole "nodemanager" ; then
+        : # do what collect does for NM
+    fi
+    if hasRole "historyserver" ; then
+        : # do what collect does for HS
+    fi
+    if hasRole "timelineserver" ; then
+        : # do what collect does for TL
+    fi
+}
+
 #############################################################################
 # Function to extract key from warden config file
 #
@@ -587,19 +603,10 @@ function installWardenConfFile() {
     local pkg_heapsize_percent
     local newestPrevVersionFile
     local tmpWardenFile
-    local warden_type=$1
+    local service_name=$1
 
-    case "$warden_type" in
-        NM)
-            PKG_WARDEN_FILE=$PKG_WARDEN_NM_FILE
-            INST_WARDEN_FILE=$INST_WARDEN_NM_FILE
-            ;;
-        RM)
-            PKG_WARDEN_FILE=$PKG_WARDEN_RM_FILE
-            INST_WARDEN_FILE=$INST_WARDEN_RM_FILE
-            ;;
-
-    esac
+    INST_WARDEN_FILE="${MAPR_CONF_CONFD_DIR}/warden.${service_name}.conf"
+    PKG_WARDEN_FILE="${HADOOP_HOME}/ext-conf/warden.${service_name}.conf"
 
     tmpWardenFile=$(basename $PKG_WARDEN_FILE)
     tmpWardenFile="/tmp/${tmpWardenFile}$$"
@@ -633,6 +640,7 @@ function installWardenConfFile() {
             rc=$?
             rm -f "${tmpWardenFile}"
         fi
+        ConfigureWardenRMHA "${INST_WARDEN_FILE}" "$maprHA"
     else
         if ! [ -d "${MAPR_CONF_CONFD_DIR}" ]; then
             mkdir -p "${MAPR_CONF_CONFD_DIR}" >/dev/null 2>&1
@@ -641,6 +649,7 @@ function installWardenConfFile() {
         if [ -n "$newestPrevVersionFile" ] && [ -f "$newestPrevVersionFile" ]; then
             curr_runstate=$(get_warden_value "$newestPrevVersionFile" "$WARDEN_RUNSTATE_KEY")
             cp "$PKG_WARDEN_FILE" "${tmpWardenFile}"
+            ConfigureWardenRMHA "${tmpWardenFile}" "$maprHA"
             if [ -n "$curr_runstate" ]; then
                 echo "service.runstate=$curr_runstate" >>"${tmpWardenFile}"
             fi
@@ -848,13 +857,10 @@ ConfigureHadoopDir
 ConfigureHadoop
 UpdateFileClientConfig
 ConfigureJMHadoopProperties "${INSTALL_DIR}/conf/hadoop-metrics.properties"
+ConfigureYarnLinuxContainerExecutor
 
-if hasRole "nodemanager"; then
-    installWardenConfFile NM
-fi
-if hasRole "resourcemanager"; then
-    installWardenConfFile RM
-fi
+# TODO - this one is incomplete
+ConfigureJMXForHadoop
 
 if [ ! -z "$rm_ip" ]; then
     ConfigureYarnServices "$rm_ip" "$hs_ip"
@@ -866,10 +872,18 @@ if [ ! -z "$tl_ip" ]; then
     ConfigureTimeLineServer "$tl_ip"
 fi
 
-#install our changes
-cp ${NEW_HADOOP_CONF_FILE} ${HADOOP_CONF_FILE}
-
-rm -f "${NEW_HADOOPT_CONF_FILE}"
+if hasRole "nodemanager"; then
+    installWardenConfFile nodemanager
+fi
+if hasRole "resourcemanager"; then
+    installWardenConfFile resourcemanager
+fi
+if hasRole "historyserver"; then
+    installWardenConfFile historyserver
+fi
+if hasRole "timelineserver"; then
+    installWardenConfFile timelineserver
+fi
 
 # remove state file
 if [ -f "$HADOOP_HOME/etc/.not_configured_yet" ]; then
