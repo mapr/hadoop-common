@@ -22,6 +22,8 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.PathId;
 
+import java.io.IOException;
+
 /**
  * An abstract base class which represents top-level API for MapR-FS implementation of Hadoop {@link FileSystem}.
  * This class should be used from Hadoop side to get access to MapR-FS specific functionality.
@@ -32,5 +34,5 @@ public abstract class AbstractMapRFileSystem extends FileSystem implements Fid {
 
     public abstract PathId createPathId();
 
-    public abstract FSDataOutputStream createFid(String pfid, String file, boolean overwrite);
+    public abstract FSDataOutputStream createFid(String pfid, String file, boolean overwrite) throws IOException;
 }
