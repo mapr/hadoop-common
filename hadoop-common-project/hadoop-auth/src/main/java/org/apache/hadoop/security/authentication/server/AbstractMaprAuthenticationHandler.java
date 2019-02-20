@@ -16,9 +16,9 @@ import java.io.IOException;
 import java.util.Properties;
 
 
-public abstract class MaprAuthenticationHandler extends MultiMechsAuthenticationHandler {
+public abstract class AbstractMaprAuthenticationHandler extends MultiMechsAuthenticationHandler {
   private static Logger LOG = LoggerFactory.
-      getLogger(MaprAuthenticationHandler.class);
+      getLogger(AbstractMaprAuthenticationHandler.class);
 
   private final String ticketGenerationClass = "com.mapr.security.ClusterServerTicketGeneration";
 

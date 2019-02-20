@@ -65,7 +65,7 @@ public class MultiMechsAuthenticationHandler implements AuthenticationHandler {
         return "maprauth";
       }
       public Class<? extends MultiMechsAuthenticationHandler> getMyClass() {
-        return MaprAuthenticationHandler.class;
+        return AbstractMaprAuthenticationHandler.class;
       }
       public int getOrder() {
         return 0;
