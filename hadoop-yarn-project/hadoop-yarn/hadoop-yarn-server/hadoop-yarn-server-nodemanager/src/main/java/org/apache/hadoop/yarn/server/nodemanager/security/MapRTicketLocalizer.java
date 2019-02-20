@@ -18,7 +18,7 @@ import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.security.ExternalTokenLocalizer;
 
-import org.apache.hadoop.yarn.server.nodemanager.util.YarnAppUtil;
+import org.apache.hadoop.yarn.util.YarnAppUtil;
 
 /**
  * Localizer for MapR ticket. It expects the ticket to be already present in

@@ -1,15 +1,12 @@
 /**
  * Copyright (c) 2014 & onwards. MapR Tech, Inc., All rights reserved
  */
-package org.apache.hadoop.yarn.server.resourcemanager.security;
+package org.apache.hadoop.yarn.security;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ApplicationSubmissionContext;
 import org.apache.hadoop.yarn.conf.DefaultYarnConfiguration;
-import org.apache.hadoop.yarn.security.ExternalTokenManager;
-
-import org.apache.hadoop.yarn.server.nodemanager.security.MapRTicketUploader;
 
 /**
  * Manages MapR ticket needed for running the application.

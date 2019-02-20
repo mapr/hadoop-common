@@ -84,7 +84,7 @@ public class YarnDefaultProperties extends Properties {
         "org.apache.hadoop.yarn.server.nodemanager.security.MapRTicketLocalizer");
 
     put(YarnConfiguration.YARN_EXT_TOKEN_MANAGER,
-        "org.apache.hadoop.yarn.server.resourcemanager.security.MapRTicketManager");
+        "org.apache.hadoop.yarn.security.MapRTicketManager");
 
     // RM auxiliary service
     put(YarnConfiguration.RM_AUX_SERVICES, RM_VOLUME_MANAGER_SERVICE);

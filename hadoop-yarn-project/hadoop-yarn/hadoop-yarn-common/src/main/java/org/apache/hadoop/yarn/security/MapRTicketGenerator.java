@@ -1,7 +1,7 @@
 /**
  * Copyright (c) 2014 & onwards. MapR Tech, Inc., All rights reserved
  */
-package org.apache.hadoop.yarn.server.resourcemanager.security;
+package org.apache.hadoop.yarn.security;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -19,7 +19,7 @@ import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ApplicationSubmissionContext;
 import org.apache.hadoop.yarn.conf.YarnDefaultProperties;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
-import org.apache.hadoop.yarn.server.nodemanager.util.YarnAppUtil;
+import org.apache.hadoop.yarn.util.YarnAppUtil;
 
 /**
  * Handler to respond to a newly registered application with ResourceManager.

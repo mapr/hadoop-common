@@ -19,7 +19,7 @@ import org.apache.hadoop.yarn.conf.YarnDefaultProperties;
 import org.apache.hadoop.yarn.server.api.ConfigurableAuxiliaryService;
 
 import org.apache.hadoop.util.BaseMapRUtil;
-import org.apache.hadoop.yarn.server.nodemanager.util.YarnAppUtil;
+import org.apache.hadoop.yarn.util.YarnAppUtil;
 
 /**
  * Manage resource manager volume and directory creation on MapRFS.

@@ -1,7 +1,7 @@
 /**
  * Copyright (c) 2014 & onwards. MapR Tech, Inc., All rights reserved
  */
-package org.apache.hadoop.yarn.server.nodemanager.security;
+package org.apache.hadoop.yarn.security;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,7 +19,7 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
-import org.apache.hadoop.yarn.server.nodemanager.util.YarnAppUtil;
+import org.apache.hadoop.yarn.util.YarnAppUtil;
 
 /**
  * Handler to upload MapR ticket to Distribtued Cache so that it is available

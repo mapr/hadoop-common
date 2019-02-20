@@ -1,7 +1,7 @@
 /**
  * Copyright (c) 2014 & onwards. MapR Tech, Inc., All rights reserved
  */
-package org.apache.hadoop.yarn.server.nodemanager.util;
+package org.apache.hadoop.yarn.util;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -9,7 +9,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.conf.YarnDefaultProperties;
-import org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.ResourceLocalizationService;
 
 public class YarnAppUtil {
   /**
@@ -96,7 +95,7 @@ public class YarnAppUtil {
    */
   public static String getNMPrivateRelativeTicketLocation(String appIdStr) {
     StringBuilder sb = new StringBuilder();
-    sb.append(ResourceLocalizationService.NM_PRIVATE_DIR)
+    sb.append("nmPrivate")
       .append(Path.SEPARATOR)
       .append(appIdStr).append(Path.SEPARATOR)
       .append(MAPR_TICKET_FILE);
