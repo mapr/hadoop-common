@@ -131,7 +131,7 @@ public class YarnDefaultProperties extends Properties {
 
     put(YarnConfiguration.LOG_AGGREGATION_ENABLED, "false");
     put(YarnConfiguration.ENABLE_DFS_LOGGING, "false");
-    put(YarnConfiguration.DFS_LOGGING_HANDLER_CLASS, "org.apache.hadoop.yarn.server.utils.MapRFSLoggingHandler");
+    put(YarnConfiguration.DFS_LOGGING_HANDLER_CLASS, "org.apache.hadoop.yarn.util.MapRFSLoggingHandler");
 
     put(YarnConfiguration.DFS_LOGGING_DIR_GLOB,
         FS_DEFAULT_NAME
