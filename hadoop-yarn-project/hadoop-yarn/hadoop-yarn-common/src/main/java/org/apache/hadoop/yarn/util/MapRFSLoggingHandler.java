@@ -1,5 +1,5 @@
 /* Copyright (c) 2014 & onwards. MapR Tech, Inc., All rights reserved */
-package org.apache.hadoop.yarn.server.utils;
+package org.apache.hadoop.yarn.util;
 
 import java.io.IOException;
 
