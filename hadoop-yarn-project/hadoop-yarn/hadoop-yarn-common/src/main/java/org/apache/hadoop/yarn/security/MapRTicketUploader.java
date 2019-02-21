@@ -17,6 +17,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.util.CommonMapRUtil;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 import org.apache.hadoop.yarn.util.YarnAppUtil;
@@ -27,7 +28,6 @@ import org.apache.hadoop.yarn.util.YarnAppUtil;
  */
 public class MapRTicketUploader {
   private static final Log LOG = LogFactory.getLog(MapRTicketUploader.class);
-  private static final String JNISecurity = "com.mapr.security.JNISecurity";
 
   public void uploadToken(ApplicationId appId, Configuration conf) {
     // Upload only if security is enabled and the current user is not a proxy user
@@ -52,13 +52,8 @@ public class MapRTicketUploader {
     // Get ticket
     String ticketPath = null;
     try {
-      Class<?> klass = Thread.currentThread().getContextClassLoader().loadClass(JNISecurity);
-      Method getUserTicket = klass.getDeclaredMethod("GetUserTicketAndKeyFileLocation");
-      ticketPath = (String) getUserTicket.invoke(null);
-    } catch (ClassNotFoundException  err) {
-      LOG.info("Cannot find JNISecurity class at classpath");
-      err.printStackTrace();
-    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException err){
+      ticketPath = (String) CommonMapRUtil.getInstance().getGetUserTicketMethod().invoke(null);
+    } catch (IllegalAccessException | InvocationTargetException err) {
       LOG.info("Cannot execute GetUserTicketAndKeyFileLocation method");
       err.printStackTrace();
     }

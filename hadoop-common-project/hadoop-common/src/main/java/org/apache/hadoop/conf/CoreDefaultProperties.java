@@ -58,6 +58,8 @@ public class CoreDefaultProperties extends Properties
   private static final boolean isSecurityEnabled;
 
   static {
+    //Initialize Hadoop CommonMapRUtil before ShimLoader
+    CommonMapRUtil.getInstance();
     try {
       Class<?> klass = Thread.currentThread().getContextClassLoader().loadClass(ShimLoader);
       Method loadShims = klass.getDeclaredMethod("load");
