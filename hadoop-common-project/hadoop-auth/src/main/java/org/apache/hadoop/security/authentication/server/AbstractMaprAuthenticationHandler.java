@@ -5,7 +5,6 @@ import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
 
 
-import org.apache.hadoop.security.authentication.util.AbstractTicketGeneration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,18 +48,7 @@ public abstract class AbstractMaprAuthenticationHandler extends MultiMechsAuthen
    * @throws ServletException
    */
   @Override
-  public void init(Properties config) throws ServletException {
-    /* Get the server key */
-    try {
-
-      /* TODO: Check for UserGroupInformation.isMaprSecurityEnabled() */
-      Class<?> klass = Thread.currentThread().getContextClassLoader().loadClass(ticketGenerationClass);
-      AbstractTicketGeneration generation = (AbstractTicketGeneration) klass.newInstance();
-      generation.generateTicketAndSetServerKey();
-    } catch (Exception e) {
-      throw new ServletException(e);
-    }
-  }
+  public abstract void init(Properties config) throws ServletException;
 
   public abstract AuthenticationToken maprAuthenticate(HttpServletRequest request, HttpServletResponse response)
       throws IOException, AuthenticationException;
