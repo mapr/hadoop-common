@@ -3,6 +3,8 @@
  */
 package org.apache.hadoop.yarn.security;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Method;
 
@@ -120,7 +122,7 @@ public class MapRTicketGenerator {
               + " user: " + username + " at " + ticketPath);
         }
         Method cloneAndGenerateTicketFile = klass.getDeclaredMethod("CloneAndGenerateTicketFile",
-            FSDataInputStream.class, long.class, FSDataOutputStream.class);
+            DataInputStream.class, long.class, DataOutputStream.class);
         cloneAndGenerateTicketFile.invoke(null, fsin, expiration, outTicket);
       } else {
         if (LOG.isDebugEnabled()) {
@@ -128,7 +130,7 @@ public class MapRTicketGenerator {
               + " user: " + username + " at " + ticketPath);
         }
         Method mergeAndGenerateTicketFile = klass.getDeclaredMethod("MergeAndGenerateTicketFile",
-            FSDataInputStream.class, String.class, long.class, FSDataOutputStream.class);
+            DataInputStream.class, String.class, long.class, DataOutputStream.class);
         mergeAndGenerateTicketFile.invoke(null, fsin, username, expiration, outTicket);
       }
     } catch (Throwable t) {
