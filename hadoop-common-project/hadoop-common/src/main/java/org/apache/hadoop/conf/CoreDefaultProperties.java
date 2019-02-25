@@ -11,7 +11,6 @@ import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.BaseMapRUtil;
-import org.apache.hadoop.util.CommonMapRUtil;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -52,42 +51,7 @@ import java.util.Properties;
 
 public class CoreDefaultProperties extends Properties
 {
-  private static final String ShimLoader = "com.mapr.fs.ShimLoader";
-  private static final String JVMProperties = "com.mapr.baseutils.JVMProperties";
   private static final Log LOG = LogFactory.getLog(CoreDefaultProperties.class);
-  private static final boolean isSecurityEnabled;
-
-  static {
-    //Initialize Hadoop CommonMapRUtil before ShimLoader
-    CommonMapRUtil.getInstance();
-    try {
-      Class<?> klass = Thread.currentThread().getContextClassLoader().loadClass(ShimLoader);
-      Method loadShims = klass.getDeclaredMethod("load");
-      loadShims.invoke(null);
-    } catch (ClassNotFoundException err) {
-      LOG.info("Cannot find ShimLoader class at classpath");
-      err.printStackTrace();
-    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException err) {
-      LOG.info("Cannot execute load() method");
-      err.printStackTrace();
-    }
-  }
-
-
-  static {
-    isSecurityEnabled = CommonMapRUtil.getInstance().isSecurityEnabled();
-    try {
-      Class<?> klass = Thread.currentThread().getContextClassLoader().loadClass(JVMProperties);
-      Method initJVMProperties = klass.getDeclaredMethod("init");
-      initJVMProperties.invoke(null);
-    } catch (ClassNotFoundException err) {
-      LOG.info("Cannot find JVMProperties class at classpath");
-      err.printStackTrace();
-    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException err) {
-      LOG.info("Cannot execute init() method");
-      err.printStackTrace();
-    }
-  }
 
   private static final Map<String,String> props =
       new HashMap<String,String>();
@@ -289,61 +253,10 @@ public class CoreDefaultProperties extends Properties
   }
 
   static {
-    if ( isSecurityEnabled ) {
-      // set the value for hadoop.security.authentication
-      props.put(CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION, // core-default.xml
-          UserGroupInformation.AuthenticationMethod.CUSTOM.name());
-      props.put(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY, // core-default.xml
-          "org.apache.hadoop.security.rpcauth.MaprAuthMethod");
-      props.put(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY, // core-default.xml
-          "com.mapr.security.MapRPrincipal");
-
-      props.put("hadoop.http.authentication.type",
-          "org.apache.hadoop.security.authentication.server.MultiMechsAuthenticationHandler");
-      // set hadoop.ssl.enabled to be true
-      props.put(CommonConfigurationKeysPublic.HADOOP_SSL_ENABLED_KEY, "true"); // this is a deprecated property in core-default.xml. It is used to enable the SslSocketConnector in HttpServer used by jobtracker, tasktracker etc.
-
-      props.put(CommonConfigurationKeysPublic.LOG_LEVEL_AUTHENTICATOR_CLASS,
-          "com.mapr.security.maprauth.MaprAuthenticator");
-
-    } else {
-      props.put(CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION, // core-default.xml
-          UserGroupInformation.AuthenticationMethod.SIMPLE.name());
-    }
-  }
-
-  static {
     props.put("hadoop.http.authentication.signature.secret", // core-default.xml
         "com.mapr.security.maprauth.MaprSignatureSecretFactory");
   }
 
-  static {
-    if ( isSecurityEnabled ) {
-      props.put("hadoop.http.authentication.signer.secret.provider", // core-default.xml
-          MapRSignerSecretProvider.class.getName());
-    } else {
-      props.put("hadoop.http.authentication.signer.secret.provider", // core-default.xml
-          "random");
-    }
-  }
-
-  public static final String HADOOP_SECURITY_AUTHORIZATION = "false";
-  static {
-    if ( isSecurityEnabled ) {
-      props.put("hadoop.security.authorization", // core-default.xml
-          "true");
-    } else {
-      props.put("hadoop.security.authorization", // core-default.xml
-          HADOOP_SECURITY_AUTHORIZATION);
-    }
-  }
-  public static final String HADOOP_SECURITY_PROTECTION = "privacy";
-  static {
-    if ( isSecurityEnabled ) {
-      props.put("hadoop.rpc.protection", // core-default.xml
-          HADOOP_SECURITY_PROTECTION);
-    }
-  }
   public static final String HADOOP_SECURITY_GROUP_MAPPING = "org.apache.hadoop.security.JniBasedUnixGroupsMappingWithFallback";
   static {
     props.put("hadoop.security.group.mapping", // core-default.xml

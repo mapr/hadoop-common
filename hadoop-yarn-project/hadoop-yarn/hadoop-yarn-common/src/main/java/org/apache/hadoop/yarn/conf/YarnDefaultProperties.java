@@ -12,9 +12,6 @@ import java.util.Properties;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.http.HttpConfig;
 
-import org.apache.hadoop.util.CommonMapRUtil;
-
-
 /**
  * Default values for properties defined in yarn-site.xml.
  */
@@ -56,11 +53,6 @@ public class YarnDefaultProperties extends Properties {
   public static final String DEFAULT_MAPR_LOCAL_VOL_PATH = "/var/mapr/local";
 
 
-  private static final boolean isSecurityEnabled;
-
-  static {
-    isSecurityEnabled = CommonMapRUtil.getInstance().isSecurityEnabled();
-  }
   public YarnDefaultProperties() {
     // Dummy values needed to handle delegation token code path in TokenCache
     put(YarnConfiguration.RM_PRINCIPAL, "mapr");
@@ -73,12 +65,6 @@ public class YarnDefaultProperties extends Properties {
     put(RM_DIR, DEFAULT_RM_DIR);
     put(RM_STAGING_DIR, DEFAULT_RM_STAGING_DIR);
     put(RM_SYSTEM_DIR, DEFAULT_RM_SYSTEM_DIR);
-
-
-    if (isSecurityEnabled) {
-      put(YarnConfiguration.YARN_HTTP_POLICY_KEY,      // yarn-default.xml
-          HttpConfig.Policy.HTTPS_ONLY.name());
-    }
 
     put(YarnConfiguration.YARN_NODEMANAGER_EXT_TOKEN_LOCALIZER,
         "org.apache.hadoop.yarn.server.nodemanager.security.MapRTicketLocalizer");

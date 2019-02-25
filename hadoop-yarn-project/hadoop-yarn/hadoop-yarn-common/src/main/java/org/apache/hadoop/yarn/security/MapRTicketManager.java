@@ -12,11 +12,18 @@ import org.apache.hadoop.yarn.conf.DefaultYarnConfiguration;
  * Manages MapR ticket needed for running the application.
  */
 public class MapRTicketManager implements ExternalTokenManager {
-  private MapRTicketUploader uploader;
+  private AbstractMapRTicketUploader uploader;
   private MapRTicketGenerator generator;
 
   public MapRTicketManager() {
-    uploader = new MapRTicketUploader();
+    try {
+      Class<?> klass = Thread.currentThread().getContextClassLoader().loadClass("com.mapr.hadoop.yarn.security.MapRTicketUploader");
+      uploader = (AbstractMapRTicketUploader) klass.newInstance();
+    } catch (ClassNotFoundException err) {
+      err.printStackTrace();
+    } catch (InstantiationException | IllegalAccessException err) {
+      err.printStackTrace();
+    }
     generator = new MapRTicketGenerator();
   }
 
