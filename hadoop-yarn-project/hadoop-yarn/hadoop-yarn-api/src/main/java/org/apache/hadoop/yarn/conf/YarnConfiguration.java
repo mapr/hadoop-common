@@ -770,7 +770,7 @@ public class YarnConfiguration extends Configuration {
       + "proxy-user-privileges.enabled";
   public static boolean DEFAULT_RM_PROXY_USER_PRIVILEGES_ENABLED = false;
 
-  public static final String DFS_LOGGING_PREFIX = YARN_PREFIX + "dfs-logging.";
+  public static final String DFS_LOGGING_PREFIX = YARN_PREFIX + "dfs_logging.";
 
   /**
    * Whether to save logs directly in DFS instead of writing to local file
