@@ -13,11 +13,12 @@ import java.util.ArrayList;
 
 public class MapRCommonSecurityUtil {
 
-  private static final String MAPR_CLUSTER_FILE_NAME = "/conf/mapr-clusters.conf";
-  private volatile String defaultClusterName = "default";
+  public static final String DEFAULT_INSTALL_LOCATION = "/opt/mapr";
+  private static final String CLUSTER_CONFIG_LOCATION = "/conf/mapr-clusters.conf";
+  private String currentClusterName;
   private static MapRCommonSecurityUtil s_instance;
-  private boolean securityEnabled = false;
-  private boolean kerberosEnabled = false;
+  private boolean isClusterSecure = false;
+  private boolean isClusterValid = false;
 
 
   private static final Log LOG = LogFactory.getLog(MapRCommonSecurityUtil.class);
@@ -34,8 +35,8 @@ public class MapRCommonSecurityUtil {
     s_instance = new MapRCommonSecurityUtil();
   }
 
-  public synchronized void init() {
-    readMapRClusterConf();
+  public void init() {
+    parseMaprClustersConf();
   }
 
   /**
@@ -97,31 +98,79 @@ public class MapRCommonSecurityUtil {
     return filePath;
   }
 
-  private void readMapRClusterConf() {
-    String maprHome = BaseMapRUtil.getPathToMaprHome();
-    String clusterConfFile = maprHome + MAPR_CLUSTER_FILE_NAME;
+  /*
+   * Parses the mapr-clusters.conf file to obtain the current cluster name and the
+   * cluster security status. Invoked by the constructor
+   */
+  private void parseMaprClustersConf() {
+    String clusterConfig;
+    String installDir;
+    String maprHomeDir= System.getenv("MAPR_HOME");
+    if (maprHomeDir != null) {
+      if (!maprHomeDir.isEmpty()) {
+        installDir = maprHomeDir;
+      } else {
+        installDir = DEFAULT_INSTALL_LOCATION;
+      }
+    } else
+      installDir = DEFAULT_INSTALL_LOCATION;
+
+    clusterConfig = installDir + CLUSTER_CONFIG_LOCATION;
+
     try {
-      String strLine;
-      BufferedReader bfr = new BufferedReader(new FileReader(clusterConfFile));
-      while ((strLine = bfr.readLine()) != null) {
-        String[] tokens;
-        if (strLine.matches("^\\s*#.*") || (tokens = strLine.split("[\\s]+")).length < 3) continue;
-        String clusterName = tokens[0];
-        for (int i = 1; i < tokens.length; ++i) {
-          if (tokens[i].contains("=")) {
-            String[] arr = tokens[i].split("=");
-            if (arr.length == 2){
-              if (setClusterOption(arr[0], arr[1]) == 0) continue;
+      File file = new File(clusterConfig);
+      FileReader fileReader = new FileReader(file);
+      BufferedReader bufferedReader = new BufferedReader(fileReader);
+      String line;
+      /*
+       * Each line of mapr-cluster.conf has a format like this:
+       * chyelin61.cluster.com secure=true node-61.lab:7222
+       */
+      boolean firstLine = true;
+      String thisCluster;
+      while ((line = bufferedReader.readLine()) != null) {
+        /*
+         * At this point, we have a line containing the cluster name and its
+         * security status. Split this into space-delimited tokens and look
+         * for the one with the secure=flag
+         */
+        String[] elements = line.split (" ");
+        /*
+         * This is the cluster name for this entry
+         */
+        thisCluster = elements[0];
+        if (firstLine) {
+          if (currentClusterName == null) {
+            currentClusterName = thisCluster;
+          }
+          firstLine = false;
+        }
+        /*
+         * We need to find an entry with a matching cluster name
+         */
+        if (!currentClusterName.equals(thisCluster))
+          continue;
+        /*
+         * If we get here, we have a matching cluster entry
+         */
+        isClusterValid = true;
+        /*
+         * See if the cluster is secure
+         */
+        for (int i = 1; i<elements.length; i++) {
+          if (elements[i].startsWith("secure=")) {
+            String[] secureSetting = elements[i].split ("=");
+            isClusterSecure=false;
+            if (secureSetting[1].equalsIgnoreCase("true")) {
+              isClusterSecure=true;
             }
-            LOG.error("Can't parse options:" + tokens[i] + " for cluster " + clusterName);
-            continue;
+            break;
           }
         }
-        this.defaultClusterName = clusterName;
-        break;
       }
-    } catch (IOException bfr) {
-      LOG.error("Exception during read cluster name", bfr);
+      bufferedReader.close();
+    } catch (IOException e) {
+      LOG.error ("Failed to parse mapr-clusters.conf: " + e.getMessage());
     }
   }
 
@@ -148,25 +197,12 @@ public class MapRCommonSecurityUtil {
     return processOutput.toString().trim();
   }
 
-  private int setClusterOption(String property, String arg) {
-    switch (property) {
-      case "secure":
-        securityEnabled = Boolean.parseBoolean(arg);
-        return 0;
-      case "kerberosEnable":
-        kerberosEnabled = Boolean.parseBoolean(arg);
-        return 0;
-      default:
-        return 1;
-    }
-  }
-
   public boolean isSecurityEnabled() {
-    return securityEnabled;
+    return isClusterSecure;
   }
 
   public String getClusterName() {
-    return defaultClusterName;
+    return currentClusterName;
   }
 
 }
