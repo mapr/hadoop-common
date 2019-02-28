@@ -65,7 +65,13 @@ public class MultiMechsAuthenticationHandler implements AuthenticationHandler {
         return "maprauth";
       }
       public Class<? extends MultiMechsAuthenticationHandler> getMyClass() {
-        return AbstractMaprAuthenticationHandler.class;
+        try {
+          Class<?> klass = Thread.currentThread().getContextClassLoader().
+              loadClass("com.mapr.security.maprauth.MaprAuthenticationHandler");
+          return (Class<? extends AbstractMaprAuthenticationHandler>) klass;
+        } catch (ClassNotFoundException e) {
+          return null;
+        }
       }
       public int getOrder() {
         return 0;
