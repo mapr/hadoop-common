@@ -22,37 +22,37 @@ import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.yarn.api.records.Resource;
 
 /**
- * A {@link ResourceCalculator} which uses the concept of  
+ * A {@link ResourceCalculator} which uses the concept of
  * <em>dominant resource</em> to compare multi-dimensional resources.
  *
- * Essentially the idea is that the in a multi-resource environment, 
- * the resource allocation should be determined by the dominant share 
- * of an entity (user or queue), which is the maximum share that the 
- * entity has been allocated of any resource. 
- * 
- * In a nutshell, it seeks to maximize the minimum dominant share across 
- * all entities. 
- * 
+ * Essentially the idea is that the in a multi-resource environment,
+ * the resource allocation should be determined by the dominant share
+ * of an entity (user or queue), which is the maximum share that the
+ * entity has been allocated of any resource.
+ *
+ * In a nutshell, it seeks to maximize the minimum dominant share across
+ * all entities.
+ *
  * For example, if user A runs CPU-heavy tasks and user B runs
- * memory-heavy tasks, it attempts to equalize CPU share of user A 
- * with Memory-share of user B. 
- * 
+ * memory-heavy tasks, it attempts to equalize CPU share of user A
+ * with Memory-share of user B.
+ *
  * In the single resource case, it reduces to max-min fairness for that resource.
- * 
+ *
  * See the Dominant Resource Fairness paper for more details:
  * www.cs.berkeley.edu/~matei/papers/2011/nsdi_drf.pdf
  */
 @Private
 @Unstable
 public class DominantResourceCalculator extends ResourceCalculator {
-  
+
   @Override
   public int compare(Resource clusterResource, Resource lhs, Resource rhs) {
-    
+
     if (lhs.equals(rhs)) {
       return 0;
     }
-    
+
     if (isInvalidDivisor(clusterResource)) {
       if ((lhs.getMemory() < rhs.getMemory() && lhs.getVirtualCores() > rhs
           .getVirtualCores())
@@ -70,7 +70,7 @@ public class DominantResourceCalculator extends ResourceCalculator {
 
     float l = getResourceAsValue(clusterResource, lhs, true);
     float r = getResourceAsValue(clusterResource, rhs, true);
-    
+
     if (l < r) {
       return -1;
     } else if (l > r) {
@@ -84,14 +84,14 @@ public class DominantResourceCalculator extends ResourceCalculator {
         return 1;
       }
     }
-    
+
     return 0;
   }
 
   /**
    * Use 'dominant' for now since we only have 2 resources - gives us a slight
    * performance boost.
-   * 
+   *
    * Once we add more resources, we'll need a more complicated (and slightly
    * less performant algorithm).
    */
@@ -100,31 +100,31 @@ public class DominantResourceCalculator extends ResourceCalculator {
     // Just use 'dominant' resource
     return (dominant) ?
         Math.max(
-            (float)resource.getMemory() / clusterResource.getMemory(), 
+            (float)resource.getMemory() / clusterResource.getMemory(),
             (float)resource.getVirtualCores() / clusterResource.getVirtualCores()
-            ) 
+            )
         :
           Math.min(
-              (float)resource.getMemory() / clusterResource.getMemory(), 
+              (float)resource.getMemory() / clusterResource.getMemory(),
               (float)resource.getVirtualCores() / clusterResource.getVirtualCores()
-              ); 
+              );
   }
-  
+
   @Override
   public int computeAvailableContainers(Resource available, Resource required) {
     return Math.min(
-        available.getMemory() / required.getMemory(), 
+        available.getMemory() / required.getMemory(),
         available.getVirtualCores() / required.getVirtualCores());
   }
 
   @Override
-  public float divide(Resource clusterResource, 
+  public float divide(Resource clusterResource,
       Resource numerator, Resource denominator) {
-    return 
-        getResourceAsValue(clusterResource, numerator, true) / 
+    return
+        getResourceAsValue(clusterResource, numerator, true) /
         getResourceAsValue(clusterResource, denominator, true);
   }
-  
+
   @Override
   public boolean isInvalidDivisor(Resource r) {
     if (r.getMemory() == 0.0f || r.getVirtualCores() == 0.0f) {
@@ -136,7 +136,7 @@ public class DominantResourceCalculator extends ResourceCalculator {
   @Override
   public float ratio(Resource a, Resource b) {
     return Math.max(
-        (float)a.getMemory()/b.getMemory(), 
+        (float)a.getMemory()/b.getMemory(),
         (float)a.getVirtualCores()/b.getVirtualCores()
         );
   }
@@ -169,7 +169,7 @@ public class DominantResourceCalculator extends ResourceCalculator {
   @Override
   public Resource roundUp(Resource r, Resource stepFactor) {
     return Resources.createResource(
-        roundUp(r.getMemory(), stepFactor.getMemory()), 
+        roundUp(r.getMemory(), stepFactor.getMemory()),
         roundUp(r.getVirtualCores(), stepFactor.getVirtualCores())
         );
   }
@@ -189,7 +189,7 @@ public class DominantResourceCalculator extends ResourceCalculator {
         roundUp(
             (int)Math.ceil(r.getMemory() * by), stepFactor.getMemory()),
         roundUp(
-            (int)Math.ceil(r.getVirtualCores() * by), 
+            (int)Math.ceil(r.getVirtualCores() * by),
             stepFactor.getVirtualCores())
         );
   }
@@ -199,11 +199,11 @@ public class DominantResourceCalculator extends ResourceCalculator {
       Resource stepFactor) {
     return Resources.createResource(
         roundDown(
-            (int)(r.getMemory() * by), 
+            (int)(r.getMemory() * by),
             stepFactor.getMemory()
             ),
         roundDown(
-            (int)(r.getVirtualCores() * by), 
+            (int)(r.getVirtualCores() * by),
             stepFactor.getVirtualCores()
             )
         );

@@ -24,8 +24,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -53,12 +53,12 @@ public class FileSystemNodeLabelsStore extends NodeLabelsStore {
     super(mgr);
   }
 
-  protected static final Log LOG = LogFactory.getLog(FileSystemNodeLabelsStore.class);
+  protected static final Logger LOG = LoggerFactory.getLogger(FileSystemNodeLabelsStore.class);
 
   protected static final String DEFAULT_DIR_NAME = "node-labels";
   protected static final String MIRROR_FILENAME = "nodelabel.mirror";
   protected static final String EDITLOG_FILENAME = "nodelabel.editlog";
-  
+
   protected enum SerializedLogType {
     ADD_LABELS, NODE_TO_LABELS, REMOVE_LABELS
   }
@@ -67,7 +67,7 @@ public class FileSystemNodeLabelsStore extends NodeLabelsStore {
   FileSystem fs;
   FSDataOutputStream editlogOs;
   Path editLogPath;
-  
+
   private String getDefaultFSNodeLabelsRootDir() throws IOException {
     // default is in local: /tmp/hadoop-yarn-${user}/node-labels/
     return "file:///tmp/hadoop-yarn-"
@@ -105,18 +105,18 @@ public class FileSystemNodeLabelsStore extends NodeLabelsStore {
             YarnConfiguration.DEFAULT_FS_NODE_LABELS_STORE_RETRY_POLICY_SPEC);
     confCopy.set("dfs.client.retry.policy.spec", retryPolicy);
     fs = fsWorkingPath.getFileSystem(confCopy);
-    
+
     // if it's local file system, use RawLocalFileSystem instead of
     // LocalFileSystem, the latter one doesn't support append.
     if (fs.getScheme().equals("file")) {
       fs = ((LocalFileSystem)fs).getRaw();
     }
   }
-  
+
   private void ensureAppendEditlogFile() throws IOException {
     editlogOs = fs.append(editLogPath);
   }
-  
+
   private void ensureCloseEditlogFile() throws IOException {
     editlogOs.close();
   }
@@ -161,9 +161,9 @@ public class FileSystemNodeLabelsStore extends NodeLabelsStore {
      * 4) Rename mirror to mirror.old
      * 5) Move mirror.writing to mirror
      * 6) Remove mirror.old
-     * 7) Remove edit log and create a new empty edit log 
+     * 7) Remove edit log and create a new empty edit log
      */
-    
+
     // Open mirror from serialized file
     Path mirrorPath = new Path(fsWorkingPath, MIRROR_FILENAME);
     Path oldMirrorPath = new Path(fsWorkingPath, MIRROR_FILENAME + ".old");
@@ -197,7 +197,7 @@ public class FileSystemNodeLabelsStore extends NodeLabelsStore {
         try {
           // read edit log one by one
           SerializedLogType type = SerializedLogType.values()[is.readInt()];
-          
+
           switch (type) {
           case ADD_LABELS: {
             Collection<String> labels =
@@ -237,24 +237,24 @@ public class FileSystemNodeLabelsStore extends NodeLabelsStore {
     ((ReplaceLabelsOnNodeRequestPBImpl) ReplaceLabelsOnNodeRequest
         .newInstance(mgr.getNodeLabels())).getProto().writeDelimitedTo(os);
     os.close();
-    
+
     // Move mirror to mirror.old
     if (fs.exists(mirrorPath)) {
       fs.delete(oldMirrorPath, false);
       fs.rename(mirrorPath, oldMirrorPath);
     }
-    
+
     // move mirror.writing to mirror
     fs.rename(writingMirrorPath, mirrorPath);
     fs.delete(writingMirrorPath, false);
-    
+
     // remove mirror.old
     fs.delete(oldMirrorPath, false);
-    
+
     // create a new editlog file
     editlogOs = fs.create(editLogPath, true);
     editlogOs.close();
-    
+
     LOG.info("Finished write mirror at:" + mirrorPath.toString());
     LOG.info("Finished create editlog file at:" + editLogPath.toString());
   }

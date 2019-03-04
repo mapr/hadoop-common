@@ -31,7 +31,7 @@ public class ResourcePBImpl extends Resource {
   ResourceProto proto = ResourceProto.getDefaultInstance();
   ResourceProto.Builder builder = null;
   boolean viaProto = false;
-  
+
   public ResourcePBImpl() {
     builder = ResourceProto.newBuilder();
   }
@@ -40,7 +40,7 @@ public class ResourcePBImpl extends Resource {
     this.proto = proto;
     viaProto = true;
   }
-  
+
   public ResourceProto getProto() {
     proto = viaProto ? proto : builder.build();
     viaProto = true;
@@ -53,8 +53,8 @@ public class ResourcePBImpl extends Resource {
     }
     viaProto = false;
   }
-    
-  
+
+
   @Override
   public int getMemory() {
     ResourceProtoOrBuilder p = viaProto ? proto : builder;
@@ -102,5 +102,5 @@ public class ResourcePBImpl extends Resource {
     }
     return diff;
   }
-  
-}  
+
+}

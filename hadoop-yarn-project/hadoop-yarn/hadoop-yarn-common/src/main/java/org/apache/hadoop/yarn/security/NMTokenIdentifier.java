@@ -23,8 +23,8 @@ import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Public;
 import org.apache.hadoop.classification.InterfaceStability.Evolving;
 import org.apache.hadoop.io.Text;
@@ -42,7 +42,8 @@ import com.google.protobuf.TextFormat;
 @Evolving
 public class NMTokenIdentifier extends TokenIdentifier {
 
-  private static Log LOG = LogFactory.getLog(NMTokenIdentifier.class);
+  private final static Logger LOG =
+      LoggerFactory.getLogger(NMTokenIdentifier.class);
 
   public static final Text KIND = new Text("NMToken");
   

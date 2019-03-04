@@ -35,8 +35,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.yarn.api.records.NodeId;
@@ -57,7 +57,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 
 public class CommonNodeLabelsManager extends AbstractService {
-  protected static final Log LOG = LogFactory.getLog(CommonNodeLabelsManager.class);
+  protected static final Logger LOG = LoggerFactory.getLogger(CommonNodeLabelsManager.class);
   private static final int MAX_LABEL_LENGTH = 255;
   public static final Set<String> EMPTY_STRING_SET = Collections
       .unmodifiableSet(new HashSet<String>(0));
@@ -66,7 +66,7 @@ public class CommonNodeLabelsManager extends AbstractService {
   private static final Pattern LABEL_PATTERN = Pattern
       .compile("^[0-9a-zA-Z][0-9a-zA-Z-_]*");
   public static final int WILDCARD_PORT = 0;
-  
+
   /**
    * Error messages
    */
@@ -213,7 +213,7 @@ public class CommonNodeLabelsManager extends AbstractService {
     if (nodeLabelsEnabled) {
       initNodeLabelStore(conf);
     }
-    
+
     labelCollections.put(NO_LABEL, new NodeLabel(NO_LABEL));
   }
 
@@ -263,7 +263,7 @@ public class CommonNodeLabelsManager extends AbstractService {
 
   /**
    * Add multiple node labels to repository
-   * 
+   *
    * @param labels
    *          new node labels added
    */
@@ -755,7 +755,7 @@ public class CommonNodeLabelsManager extends AbstractService {
         } else {
           LOG.warn("getLabelsToNodes : Label [" + label + "] cannot be found");
         }
-      }      
+      }
       return Collections.unmodifiableMap(labelsToNodes);
     } finally {
       readLock.unlock();
@@ -808,7 +808,7 @@ public class CommonNodeLabelsManager extends AbstractService {
     }
     return newLabels;
   }
-  
+
   protected Node getNMInNodeSet(NodeId nodeId) {
     return getNMInNodeSet(nodeId, nodeCollections);
   }
@@ -849,7 +849,7 @@ public class CommonNodeLabelsManager extends AbstractService {
       return host.labels;
     }
   }
-  
+
   protected void createNodeIfNonExisted(NodeId nodeId) throws IOException {
     Host host = nodeCollections.get(nodeId.getHost());
     if (null == host) {

@@ -26,7 +26,7 @@ import org.apache.hadoop.yarn.util.Records;
 @InterfaceAudience.LimitedPrivate({"YARN", "MapReduce"})
 @Unstable
 public class Resources {
-  
+
   // Java doesn't have const :(
   private static final Resource NONE = new Resource() {
 
@@ -71,9 +71,9 @@ public class Resources {
       }
       return diff;
     }
-    
+
   };
-  
+
   private static final Resource UNBOUNDED = new Resource() {
 
     @Override
@@ -139,7 +139,7 @@ public class Resources {
   public static Resource none() {
     return NONE;
   }
-  
+
   public static Resource unbounded() {
     return UNBOUNDED;
   }
@@ -204,7 +204,7 @@ public class Resources {
   public static Resource multiply(Resource lhs, double by) {
     return multiplyTo(clone(lhs), by);
   }
-  
+
   public static Resource multiplyAndNormalizeUp(
       ResourceCalculator calculator,Resource lhs, double by, Resource factor) {
     return calculator.multiplyAndNormalizeUp(lhs, by, factor);
@@ -214,7 +214,7 @@ public class Resources {
       ResourceCalculator calculator,Resource lhs, double by, Resource factor) {
     return calculator.multiplyAndNormalizeDown(lhs, by, factor);
   }
-  
+
   public static Resource multiplyAndRoundDown(Resource lhs, double by) {
     Resource out = clone(lhs);
     out.setMemory((int)(lhs.getMemory() * by));
@@ -222,7 +222,7 @@ public class Resources {
     out.setDisks(lhs.getDisks() * by);
     return out;
   }
-  
+
   public static Resource normalize(
       ResourceCalculator calculator, Resource lhs, Resource min,
       Resource max, Resource increment) {

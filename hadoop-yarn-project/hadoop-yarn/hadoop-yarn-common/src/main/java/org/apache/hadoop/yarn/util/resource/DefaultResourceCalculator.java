@@ -24,7 +24,7 @@ import org.apache.hadoop.yarn.api.records.Resource;
 @Private
 @Unstable
 public class DefaultResourceCalculator extends ResourceCalculator {
-  
+
   @Override
   public int compare(Resource unused, Resource lhs, Resource rhs) {
     // Only consider memory
@@ -104,7 +104,7 @@ public class DefaultResourceCalculator extends ResourceCalculator {
       Resource stepFactor) {
     return Resources.createResource(
         roundDown(
-            (int)(r.getMemory() * by), 
+            (int)(r.getMemory() * by),
             stepFactor.getMemory()
             )
         );

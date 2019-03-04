@@ -20,8 +20,8 @@ package org.apache.hadoop.yarn.util;
 
 import java.lang.reflect.Constructor;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Public;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Evolving;
@@ -37,8 +37,8 @@ import org.apache.hadoop.conf.Configured;
 @Public
 @Evolving
 public abstract class ResourceCalculatorProcessTree extends Configured {
-  static final Log LOG = LogFactory
-      .getLog(ResourceCalculatorProcessTree.class);
+  static final Logger LOG = LoggerFactory
+      .getLogger(ResourceCalculatorProcessTree.class);
   public static final int UNAVAILABLE = -1;
 
   /**

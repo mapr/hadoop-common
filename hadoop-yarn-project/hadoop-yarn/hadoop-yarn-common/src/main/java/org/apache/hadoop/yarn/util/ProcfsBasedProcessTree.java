@@ -35,8 +35,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
@@ -52,8 +52,8 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
 @InterfaceStability.Unstable
 public class ProcfsBasedProcessTree extends ResourceCalculatorProcessTree {
 
-  static final Log LOG = LogFactory
-      .getLog(ProcfsBasedProcessTree.class);
+  static final Logger LOG = LoggerFactory
+      .getLogger(ProcfsBasedProcessTree.class);
 
   private static final String PROCFS = "/proc/";
 
@@ -355,7 +355,7 @@ public class ProcfsBasedProcessTree extends ResourceCalculatorProcessTree {
     }
     return total;
   }
-  
+
   @Override
   @SuppressWarnings("deprecation")
   public long getCumulativeVmem(int olderThanAge) {
@@ -382,7 +382,7 @@ public class ProcfsBasedProcessTree extends ResourceCalculatorProcessTree {
     }
     return isAvailable ? totalPages * PAGE_SIZE : UNAVAILABLE; // convert # pages to byte
   }
-  
+
   @Override
   @SuppressWarnings("deprecation")
   public long getCumulativeRssmem(int olderThanAge) {
@@ -433,13 +433,13 @@ public class ProcfsBasedProcessTree extends ResourceCalculatorProcessTree {
               }
             }
           }
-        
+
           if (LOG.isDebugEnabled()) {
             LOG.debug(procMemInfo.toString());
           }
         }
       }
-      
+
     }
     if (total > 0) {
       total *= KB_TO_BYTES; // convert to bytes

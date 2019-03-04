@@ -18,17 +18,17 @@
 
 package org.apache.hadoop.yarn.util;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.util.Shell;
 
 import org.junit.Test;
 import static org.junit.Assert.assertTrue;
 
 public class TestWindowsBasedProcessTree {
-  private static final Log LOG = LogFactory
-      .getLog(TestWindowsBasedProcessTree.class);
-  
+  private static final Logger LOG = LoggerFactory
+      .getLogger(TestWindowsBasedProcessTree.class);
+
   class WindowsBasedProcessTreeTester extends WindowsBasedProcessTree {
     String infoStr = null;
     public WindowsBasedProcessTreeTester(String pid) {
@@ -45,11 +45,11 @@ public class TestWindowsBasedProcessTree {
   public void tree() {
     if( !Shell.WINDOWS) {
       LOG.info("Platform not Windows. Not testing");
-      return;      
+      return;
     }
     assertTrue("WindowsBasedProcessTree should be available on Windows", 
                WindowsBasedProcessTree.isAvailable());
-    
+
     WindowsBasedProcessTreeTester pTree = new WindowsBasedProcessTreeTester("-1");
     pTree.infoStr = "3524,1024,1024,500\r\n2844,1024,1024,500\r\n";
     pTree.updateProcessTree();
@@ -57,7 +57,7 @@ public class TestWindowsBasedProcessTree {
     assertTrue(pTree.getCumulativeVmem() == 2048);
     assertTrue(pTree.getVirtualMemorySize(0) == 2048);
     assertTrue(pTree.getCumulativeVmem(0) == 2048);
-    
+
     assertTrue(pTree.getRssMemorySize() == 2048);
     assertTrue(pTree.getCumulativeRssmem() == 2048);
     assertTrue(pTree.getRssMemorySize(0) == 2048);
