@@ -30,8 +30,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
@@ -105,7 +105,9 @@ import javax.crypto.SecretKey;
 @Private
 public class ApplicationMasterService extends AbstractService implements
     ApplicationMasterProtocol {
-  private static final Log LOG = LogFactory.getLog(ApplicationMasterService.class);
+  private static final Logger LOG = LoggerFactory.
+      getLogger(ApplicationMasterService.class);
+
   private final AMLivelinessMonitor amLivelinessMonitor;
   private YarnScheduler rScheduler;
   private InetSocketAddress masterServiceAddress;
@@ -130,12 +132,12 @@ public class ApplicationMasterService extends AbstractService implements
         YarnConfiguration.RM_SCHEDULER_ADDRESS,
         YarnConfiguration.DEFAULT_RM_SCHEDULER_ADDRESS,
         YarnConfiguration.DEFAULT_RM_SCHEDULER_PORT);
-    
-    if (conf.getBoolean(YarnConfiguration.RM_IS_ALL_IFACES, 
+
+    if (conf.getBoolean(YarnConfiguration.RM_IS_ALL_IFACES,
         YarnConfiguration.DEFAULT_RM_IS_ALL_IFACES)) {
       masterServiceAddress = NetUtils.createSocketAddr(
-        YarnConfiguration.ALL_IFACE_LISTEN_ADDRESS, 
-        masterServiceAddress.getPort(), 
+        YarnConfiguration.ALL_IFACE_LISTEN_ADDRESS,
+        masterServiceAddress.getPort(),
         YarnConfiguration.RM_SCHEDULER_ADDRESS);
     }
   }
@@ -154,9 +156,9 @@ public class ApplicationMasterService extends AbstractService implements
     this.server =
       rpc.getServer(ApplicationMasterProtocol.class, this, masterServiceAddress,
           serverConf, this.rmContext.getAMRMTokenSecretManager(),
-          serverConf.getInt(YarnConfiguration.RM_SCHEDULER_CLIENT_THREAD_COUNT, 
+          serverConf.getInt(YarnConfiguration.RM_SCHEDULER_CLIENT_THREAD_COUNT,
               YarnConfiguration.DEFAULT_RM_SCHEDULER_CLIENT_THREAD_COUNT));
-    
+
     // Enable service authorization?
     if (conf.getBoolean(
         CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHORIZATION, 
@@ -170,7 +172,7 @@ public class ApplicationMasterService extends AbstractService implements
       }
       refreshServiceAcls(conf, RMPolicyProvider.getInstance());
     }
-    
+
     this.server.start();
     this.masterServiceAddress =
         conf.updateConnectAddr(YarnConfiguration.RM_BIND_HOST,
@@ -261,7 +263,7 @@ public class ApplicationMasterService extends AbstractService implements
           applicationAttemptId);
       throwApplicationDoesNotExistInCacheException(applicationAttemptId);
     }
-    
+
     // Allow only one thread in AM to do registerApp at a time.
     synchronized (lock) {
       AllocateResponse lastResponse = lock.getAllocateResponse();
@@ -277,15 +279,15 @@ public class ApplicationMasterService extends AbstractService implements
           appID, applicationAttemptId);
         throw new InvalidApplicationMasterRequestException(message);
       }
-      
+
       SecretKey masterKey = null;
       if (UserGroupInformation.isSecurityEnabled()) {
         masterKey = waitAndGetMasterKey(applicationAttemptId);
       }
-      
+
       this.amLivelinessMonitor.receivedPing(applicationAttemptId);
       RMApp app = this.rmContext.getRMApps().get(appID);
-      
+
       // Setting the response id to 0 to identify if the
       // application master is register for the respective attemptid
       lastResponse.setResponseId(0);
@@ -311,7 +313,7 @@ public class ApplicationMasterService extends AbstractService implements
       if (UserGroupInformation.isSecurityEnabled()) {
         LOG.info("Setting client token master key");
         response.setClientToAMTokenMasterKey(java.nio.ByteBuffer.wrap(
-                masterKey.getEncoded()));        
+                masterKey.getEncoded()));
       }
 
       // For work-preserving AM restart, retrieve previous attempts' containers
@@ -353,9 +355,9 @@ public class ApplicationMasterService extends AbstractService implements
       return response;
     }
   }
-  
+
   /**
-   * MasterKey can be null in case RMAppAttemptImpl haven't yet 
+   * MasterKey can be null in case RMAppAttemptImpl haven't yet
    * been processed the LAUNCH event.
    * We need to wait the masterKey to be set.
    * Method tries to get MasterKey up to RM_AM_MASTER_KEY_MAX_RETRIES
@@ -370,7 +372,7 @@ public class ApplicationMasterService extends AbstractService implements
     int waitInterval = conf.getInt(
             YarnConfiguration.RM_AM_MASTER_KEY_RETRY_INTERVAL_MS,
             YarnConfiguration.DEFAULT_RM_AM_MASTER_KEY_RETRY_INTERVAL_MS);
-    
+
     for (int i = 0; i < maxRetry; i++) {
       masterKey = rmContext
               .getClientToAMTokenSecretManager()
@@ -378,8 +380,8 @@ public class ApplicationMasterService extends AbstractService implements
       if (masterKey != null) {
         return masterKey;
       }
-      
-      LOG.warn("Master key is null for attempt " + applicationAttemptId 
+
+      LOG.warn("Master key is null for attempt " + applicationAttemptId
               + " after " + (i + 1) + " try from " + maxRetry);
       try {
         Thread.sleep(waitInterval);
@@ -545,8 +547,8 @@ public class ApplicationMasterService extends AbstractService implements
               blacklistRequest.getBlacklistRemovals() : Collections.EMPTY_LIST;
       RMApp app =
           this.rmContext.getRMApps().get(applicationId);
-      
-      // set label expression for Resource Requests if resourceName=ANY 
+
+      // set label expression for Resource Requests if resourceName=ANY
       ApplicationSubmissionContext asc = app.getApplicationSubmissionContext();
       for (ResourceRequest req : ask) {
         if (null == req.getNodeLabelExpression()
@@ -554,7 +556,7 @@ public class ApplicationMasterService extends AbstractService implements
           req.setNodeLabelExpression(asc.getNodeLabelExpression());
         }
       }
-              
+
       // sanity check
       try {
         RMServerUtils.normalizeAndValidateRequests(ask,
@@ -564,7 +566,7 @@ public class ApplicationMasterService extends AbstractService implements
         LOG.warn("Invalid resource ask by application " + appAttemptId, e);
         throw e;
       }
-      
+
       try {
         RMServerUtils.validateBlacklistRequest(blacklistRequest);
       }  catch (InvalidResourceBlacklistRequestException e) {
@@ -586,7 +588,7 @@ public class ApplicationMasterService extends AbstractService implements
 
       // Send new requests to appAttempt.
       Allocation allocation =
-          this.rScheduler.allocate(appAttemptId, ask, release, 
+          this.rScheduler.allocate(appAttemptId, ask, release,
               blacklistAdditions, blacklistRemovals);
 
       if (!blacklistAdditions.isEmpty() || !blacklistRemovals.isEmpty()) {
@@ -606,7 +608,7 @@ public class ApplicationMasterService extends AbstractService implements
       if(app.pullRMNodeUpdates(updatedNodes) > 0) {
         List<NodeReport> updatedNodeReports = new ArrayList<NodeReport>();
         for(RMNode rmNode: updatedNodes) {
-          SchedulerNodeReport schedulerNodeReport =  
+          SchedulerNodeReport schedulerNodeReport =
               rScheduler.getNodeReport(rmNode.getNodeID());
           Resource used = BuilderUtils.newResource(0, 0);
           int numContainers = 0;
@@ -669,9 +671,9 @@ public class ApplicationMasterService extends AbstractService implements
        */
       lock.setAllocateResponse(allocateResponse);
       return allocateResponse;
-    }    
+    }
   }
-  
+
   private PreemptionMessage generatePreemptionMessage(Allocation allocation){
     PreemptionMessage pMsg = null;
     // assemble strict preemption request
@@ -720,7 +722,7 @@ public class ApplicationMasterService extends AbstractService implements
       contract.setResourceRequest(pRes);
       pMsg.setContract(contract);
     }
-    
+
     return pMsg;
   }
 

@@ -31,8 +31,8 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Public;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.conf.Configuration;
@@ -57,10 +57,10 @@ import com.google.common.annotations.VisibleForTesting;
 @Public
 @Unstable
 public class AllocationFileLoaderService extends AbstractService {
-  
-  public static final Log LOG = LogFactory.getLog(
+
+  public static final Logger LOG = LoggerFactory.getLogger(
       AllocationFileLoaderService.class.getName());
-  
+
   /** Time to wait between checks of the allocation file */
   public static final long ALLOC_RELOAD_INTERVAL_MS = 10 * 1000;
 
@@ -76,15 +76,15 @@ public class AllocationFileLoaderService extends AbstractService {
 
   private long lastSuccessfulReload; // Last time we successfully reloaded queues
   private boolean lastReloadAttemptFailed = false;
-  
-  // Path to XML file containing allocations. 
+
+  // Path to XML file containing allocations.
   private File allocFile;
-  
+
   private Listener reloadListener;
-  
+
   @VisibleForTesting
   long reloadIntervalMs = ALLOC_RELOAD_INTERVAL_MS;
-  
+
   private Thread reloadThread;
   private volatile boolean running = true;
 
@@ -95,9 +95,9 @@ public class AllocationFileLoaderService extends AbstractService {
   public AllocationFileLoaderService(Clock clock) {
     super(AllocationFileLoaderService.class.getName());
     this.clock = clock;
-    
+
   }
-  
+
   @Override
   public void serviceInit(Configuration conf) throws Exception {
     this.allocFile = getAllocationFile(conf);
@@ -141,7 +141,7 @@ public class AllocationFileLoaderService extends AbstractService {
     }
     super.serviceInit(conf);
   }
-  
+
   @Override
   public void serviceStart() throws Exception {
     if (reloadThread != null) {
@@ -149,7 +149,7 @@ public class AllocationFileLoaderService extends AbstractService {
     }
     super.serviceStart();
   }
-  
+
   @Override
   public void serviceStop() throws Exception {
     running = false;
@@ -163,7 +163,7 @@ public class AllocationFileLoaderService extends AbstractService {
     }
     super.serviceStop();
   }
-  
+
   /**
    * Path to XML file containing allocations. If the
    * path is relative, it is searched for in the
@@ -188,11 +188,11 @@ public class AllocationFileLoaderService extends AbstractService {
     }
     return allocFile;
   }
-  
+
   public synchronized void setReloadListener(Listener reloadListener) {
     this.reloadListener = reloadListener;
   }
-  
+
   /**
    * Updates the allocation list from the allocation config file. This file is
    * expected to be in the XML format specified in the design doc.
@@ -410,13 +410,13 @@ public class AllocationFileLoaderService extends AbstractService {
         fairSharePreemptionThresholds, queueAcls,
         newPlacementPolicy, configuredQueues, globalReservationQueueConfig,
         reservableQueues, queueLabels, queueLabelPolicies, defaultQueueLabel);
-    
+
     lastSuccessfulReload = clock.getTime();
     lastReloadAttemptFailed = false;
 
     reloadListener.onReload(info);
   }
-  
+
   /**
    * Loads a queue from a queue element in the configuration file
    */
@@ -516,7 +516,7 @@ public class AllocationFileLoaderService extends AbstractService {
         } catch( IllegalArgumentException ie)  {
           LOG.warn("Unknown Label Policy: " + text);
         }
-      } else if ("queue".endsWith(field.getTagName()) || 
+      } else if ("queue".endsWith(field.getTagName()) ||
           "pool".equals(field.getTagName())) {
         loadQueue(queueName, field, minQueueResources, maxQueueResources,
             queueMaxApps, userMaxApps, queueMaxAMShares, queueWeights,

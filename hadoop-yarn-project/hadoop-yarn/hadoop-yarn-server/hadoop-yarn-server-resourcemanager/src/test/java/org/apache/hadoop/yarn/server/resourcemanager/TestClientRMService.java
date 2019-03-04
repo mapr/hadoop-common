@@ -46,8 +46,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutionException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -163,7 +163,8 @@ import org.mockito.Mockito;
 
 public class TestClientRMService {
 
-  private static final Log LOG = LogFactory.getLog(TestClientRMService.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(TestClientRMService.class);
 
   private RecordFactory recordFactory = RecordFactoryProvider
       .getRecordFactory(null);
@@ -171,20 +172,20 @@ public class TestClientRMService {
   private String appType = "MockApp";
 
   private static RMDelegationTokenSecretManager dtsm;
-  
+
   private final static String QUEUE_1 = "Q-1";
   private final static String QUEUE_2 = "Q-2";
   private final static String kerberosRule = "RULE:[1:$1@$0](.*@EXAMPLE.COM)s/@.*//\nDEFAULT";
   static {
     KerberosName.setRules(kerberosRule);
   }
-  
+
   @BeforeClass
   public static void setupSecretManager() throws IOException {
     RMContext rmContext = mock(RMContext.class);
     when(rmContext.getStateStore()).thenReturn(new NullRMStateStore());
     dtsm = new RMDelegationTokenSecretManager(60000, 60000, 60000, 60000, rmContext);
-    dtsm.startThreads();  
+    dtsm.startThreads();
   }
 
   @AfterClass
@@ -193,7 +194,7 @@ public class TestClientRMService {
       dtsm.stopThreads();
     }
   }
-  
+
   @Test
   public void testGetClusterNodes() throws Exception {
     MockRM rm = new MockRM() {
@@ -282,7 +283,7 @@ public class TestClientRMService {
       Assert.assertTrue(report.getNodeLabels() != null
           && report.getNodeLabels().isEmpty());
     }
-    
+
     rpc.stopProxy(client, conf);
     rm.close();
   }
@@ -634,7 +635,7 @@ public class TestClientRMService {
       UserGroupInformation.createRemoteUser(ownerPrincipal);
   private static final UserGroupInformation otherKerb =
       UserGroupInformation.createRemoteUser(otherPrincipal);
-  
+
   @Test
   public void testTokenRenewalByOwner() throws Exception {
     owner.doAs(new PrivilegedExceptionAction<Void>() {
@@ -645,7 +646,7 @@ public class TestClientRMService {
       }
     });
   }
-  
+
   @Test
   public void testTokenRenewalWrongUser() throws Exception {
     try {
@@ -1130,7 +1131,7 @@ public class TestClientRMService {
     };
 
     when(rmContext.getDispatcher().getEventHandler()).thenReturn(eventHandler);
-      
+
     final ClientRMService rmService =
         new ClientRMService(rmContext, yarnScheduler, appManager, null, null,
             null);
@@ -1429,7 +1430,7 @@ public class TestClientRMService {
             ReservationSystemTestUtil.reservationQ);
     return request;
   }
-  
+
   @Test
   public void testGetNodeLabels() throws Exception {
     MockRM rm = new MockRM() {
@@ -1471,7 +1472,7 @@ public class TestClientRMService {
         Arrays.asList(node1, node2)));
     Assert.assertTrue(nodeToLabels.get(node1).containsAll(Arrays.asList("x")));
     Assert.assertTrue(nodeToLabels.get(node2).containsAll(Arrays.asList("y")));
-    
+
     rpc.stopProxy(client, conf);
     rm.close();
 

@@ -19,6 +19,7 @@
 package org.apache.hadoop.yarn.server.resourcemanager;
 
 import org.apache.hadoop.net.NetUtils;
+import org.apache.hadoop.test.GenericTestUtils;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import static org.mockito.Matchers.argThat;
@@ -37,8 +38,9 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.QueueMetrics;
 import org.junit.After;
 import org.junit.Assert;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.FinishApplicationMasterRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetApplicationReportRequest;
@@ -76,9 +78,6 @@ import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttemptS
 import org.apache.hadoop.yarn.server.resourcemanager.rmnode.RMNode;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacityScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.security.NMTokenSecretManagerInRM;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.invocation.InvocationOnMock;
@@ -86,13 +85,14 @@ import org.mockito.stubbing.Answer;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class TestRM extends ParameterizedSchedulerTestBase {
-  private static final Log LOG = LogFactory.getLog(TestRM.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(TestRM.class);
 
   // Milliseconds to sleep for when waiting for something to happen
   private final static int WAIT_SLEEP_MS = 100;
 
   private YarnConfiguration conf;
-  
+
   private final static String HOST = "127.0.0.1";
 
   public TestRM(SchedulerType type) {
@@ -110,7 +110,7 @@ public class TestRM extends ParameterizedSchedulerTestBase {
     QueueMetrics.clearQueueMetrics();
     DefaultMetricsSystem.shutdown();
   }
-  
+
   @BeforeClass
   public static void beforeClass() {
     NetUtils.addStaticResolution("h1", HOST);
@@ -119,21 +119,19 @@ public class TestRM extends ParameterizedSchedulerTestBase {
 
   @Test
   public void testGetNewAppId() throws Exception {
-    Logger rootLogger = LogManager.getRootLogger();
-    rootLogger.setLevel(Level.DEBUG);
+    GenericTestUtils.setRootLogLevel(Level.DEBUG);
     MockRM rm = new MockRM(conf);
     rm.start();
     
     GetNewApplicationResponse resp = rm.getNewAppId();
     assert (resp.getApplicationId().getId() != 0);    
-    assert (resp.getMaximumResourceCapability().getMemory() > 0);    
+    assert (resp.getMaximumResourceCapability().getMemory() > 0);
     rm.stop();
   }
   
   @Test (timeout = 30000)
   public void testAppWithNoContainers() throws Exception {
-    Logger rootLogger = LogManager.getRootLogger();
-    rootLogger.setLevel(Level.DEBUG);
+    GenericTestUtils.setRootLogLevel(Level.DEBUG);
     MockRM rm = new MockRM(conf);
     rm.start();
     MockNM nm1 = rm.registerNode("h1:1234", 5120);
@@ -154,8 +152,7 @@ public class TestRM extends ParameterizedSchedulerTestBase {
 
   @Test (timeout = 30000)
   public void testAppOnMultiNode() throws Exception {
-    Logger rootLogger = LogManager.getRootLogger();
-    rootLogger.setLevel(Level.DEBUG);
+    GenericTestUtils.setRootLogLevel(Level.DEBUG);
     conf.set("yarn.scheduler.capacity.node-locality-delay", "-1");
     MockRM rm = new MockRM(conf);
     rm.start();

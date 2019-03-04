@@ -24,8 +24,8 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.Assert;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -48,7 +48,8 @@ import org.junit.Test;
 
 public class TestFSRMStateStore extends RMStateStoreTestBase {
 
-  public static final Log LOG = LogFactory.getLog(TestFSRMStateStore.class);
+  public static final Logger LOG =
+      LoggerFactory.getLogger(TestFSRMStateStore.class);
 
   private TestFSRMStateStoreTester fsTester;
 

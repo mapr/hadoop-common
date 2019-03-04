@@ -70,13 +70,13 @@ public class TestSchedulingPolicy {
    * Trivial tests that make sure
    * {@link SchedulingPolicy#isApplicableTo(SchedulingPolicy, byte)} works as
    * expected for the possible values of depth
-   * 
+   *
    * @throws AllocationConfigurationException
    */
   @Test(timeout = 1000)
   public void testIsApplicableTo() throws AllocationConfigurationException {
     final String ERR = "Broken SchedulingPolicy#isApplicableTo";
-    
+
     // fifo
     SchedulingPolicy policy = SchedulingPolicy.parse("fifo");
     assertTrue(ERR,
@@ -86,9 +86,9 @@ public class TestSchedulingPolicy {
     assertFalse(ERR, SchedulingPolicy.isApplicableTo(
         SchedulingPolicy.parse("fifo"), SchedulingPolicy.DEPTH_ROOT));
 
-    
+
     // fair
-    policy = SchedulingPolicy.parse("fair"); 
+    policy = SchedulingPolicy.parse("fair");
     assertTrue(ERR,
         SchedulingPolicy.isApplicableTo(policy, SchedulingPolicy.DEPTH_LEAF));
     assertTrue(ERR, SchedulingPolicy.isApplicableTo(policy,
@@ -99,9 +99,9 @@ public class TestSchedulingPolicy {
         SchedulingPolicy.isApplicableTo(policy, SchedulingPolicy.DEPTH_PARENT));
     assertTrue(ERR,
         SchedulingPolicy.isApplicableTo(policy, SchedulingPolicy.DEPTH_ANY));
-    
+
     // drf
-    policy = SchedulingPolicy.parse("drf"); 
+    policy = SchedulingPolicy.parse("drf");
     assertTrue(ERR,
         SchedulingPolicy.isApplicableTo(policy, SchedulingPolicy.DEPTH_LEAF));
     assertTrue(ERR, SchedulingPolicy.isApplicableTo(policy,
@@ -112,7 +112,7 @@ public class TestSchedulingPolicy {
         SchedulingPolicy.isApplicableTo(policy, SchedulingPolicy.DEPTH_PARENT));
     assertTrue(ERR,
         SchedulingPolicy.isApplicableTo(policy, SchedulingPolicy.DEPTH_ANY));
-    
+
     policy = Mockito.mock(SchedulingPolicy.class);
     Mockito.when(policy.getApplicableDepth()).thenReturn(
         SchedulingPolicy.DEPTH_PARENT);

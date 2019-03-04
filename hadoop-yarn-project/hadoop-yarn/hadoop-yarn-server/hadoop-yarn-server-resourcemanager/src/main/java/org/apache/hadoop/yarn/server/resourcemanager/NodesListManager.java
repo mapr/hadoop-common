@@ -24,8 +24,8 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.service.AbstractService;
@@ -48,7 +48,8 @@ import com.google.common.annotations.VisibleForTesting;
 public class NodesListManager extends AbstractService implements
     EventHandler<NodesListManagerEvent> {
 
-  private static final Log LOG = LogFactory.getLog(NodesListManager.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(NodesListManager.class);
 
   private HostsFileReader hostsReader;
   private Configuration conf;

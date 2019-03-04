@@ -43,8 +43,10 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.test.GenericTestUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
@@ -115,9 +117,6 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.fica.FiCaS
 import org.apache.hadoop.yarn.server.security.ApplicationACLsManager;
 import org.apache.hadoop.yarn.server.utils.BuilderUtils;
 import org.apache.hadoop.yarn.util.ConverterUtils;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -128,7 +127,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 
 public class TestRMRestart extends ParameterizedSchedulerTestBase {
-  private static final Log LOG = LogFactory.getLog(TestRMRestart.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(TestRMRestart.class);
   private final static File TEMP_DIR = new File(System.getProperty(
     "test.build.data", "/tmp"), "decommision");
   private File hostFile = new File(TEMP_DIR + File.separator + "hostFile.txt");
@@ -145,8 +145,7 @@ public class TestRMRestart extends ParameterizedSchedulerTestBase {
   @Before
   public void setup() throws IOException {
     conf = getConf();
-    Logger rootLogger = LogManager.getRootLogger();
-    rootLogger.setLevel(Level.DEBUG);
+    GenericTestUtils.setRootLogLevel(Level.DEBUG);
     UserGroupInformation.setConfiguration(conf);
     conf.setBoolean(YarnConfiguration.RECOVERY_ENABLED, true);
     conf.setBoolean(YarnConfiguration.RM_WORK_PRESERVING_RECOVERY_ENABLED, false);

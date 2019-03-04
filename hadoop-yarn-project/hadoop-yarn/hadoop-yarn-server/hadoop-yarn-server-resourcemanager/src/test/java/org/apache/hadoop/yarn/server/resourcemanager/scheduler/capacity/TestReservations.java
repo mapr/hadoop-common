@@ -33,8 +33,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.Container;
 import org.apache.hadoop.yarn.api.records.ContainerId;
@@ -73,7 +73,8 @@ import org.mockito.stubbing.Answer;
 
 public class TestReservations {
 
-  private static final Log LOG = LogFactory.getLog(TestReservations.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(TestReservations.class);
 
   private final RecordFactory recordFactory = RecordFactoryProvider
       .getRecordFactory(null);

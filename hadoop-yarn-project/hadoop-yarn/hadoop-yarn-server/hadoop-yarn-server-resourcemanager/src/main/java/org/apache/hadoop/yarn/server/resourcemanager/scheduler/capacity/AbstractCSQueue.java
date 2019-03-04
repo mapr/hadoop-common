@@ -51,11 +51,11 @@ import org.apache.hadoop.yarn.util.resource.Resources;
 import com.google.common.collect.Sets;
 
 public abstract class AbstractCSQueue implements CSQueue {
-  
+
   CSQueue parent;
   final String queueName;
   volatile int numContainers;
-  
+
   final Resource minimumAllocation;
   Resource maximumAllocation;
   QueueState state;
@@ -66,7 +66,7 @@ public abstract class AbstractCSQueue implements CSQueue {
   Set<String> accessibleLabels;
   RMNodeLabelsManager labelManager;
   String defaultLabelExpression;
-  
+
   Map<AccessType, AccessControlList> acls = 
       new HashMap<AccessType, AccessControlList>();
   boolean reservationsContinueLooking;
@@ -78,19 +78,19 @@ public abstract class AbstractCSQueue implements CSQueue {
   // Track capacities like used-capcity/abs-used-capacity/capacity/abs-capacity,
   // etc.
   QueueCapacities queueCapacities;
-  
+
   private final RecordFactory recordFactory = 
       RecordFactoryProvider.getRecordFactory(null);
   protected CapacitySchedulerContext csContext;
   protected YarnAuthorizationProvider authorizer = null;
 
-  public AbstractCSQueue(CapacitySchedulerContext cs, 
+  public AbstractCSQueue(CapacitySchedulerContext cs,
       String queueName, CSQueue parent, CSQueue old) throws IOException {
     this.labelManager = cs.getRMContext().getNodeLabelManager();
     this.parent = parent;
     this.queueName = queueName;
     this.resourceCalculator = cs.getResourceCalculator();
-    
+
     // must be called after parent and queueName is set
     this.metrics = old != null ? old.getMetrics() :
         QueueMetrics.forQueue(getQueuePath(), parent,
@@ -99,22 +99,22 @@ public abstract class AbstractCSQueue implements CSQueue {
 
     this.csContext = cs;
     this.minimumAllocation = csContext.getMinimumResourceCapability();
-    
+
     // initialize ResourceUsage
     queueUsage = new ResourceUsage();
     queueEntity = new PrivilegedEntity(EntityType.QUEUE, getQueuePath());
-    
+
     // initialize QueueCapacities
-    queueCapacities = new QueueCapacities(parent == null);    
+    queueCapacities = new QueueCapacities(parent == null);
   }
-  
+
   protected void setupConfigurableCapacities() {
     CSQueueUtils.loadUpdateAndCheckCapacities(
         getQueuePath(),
-        accessibleLabels, 
-        csContext.getConfiguration(), 
+        accessibleLabels,
+        csContext.getConfiguration(),
         queueCapacities,
-        parent == null ? null : parent.getQueueCapacities(), 
+        parent == null ? null : parent.getQueueCapacities(),
         csContext.getRMContext().getNodeLabelManager());
   }
   
@@ -200,7 +200,7 @@ public abstract class AbstractCSQueue implements CSQueue {
   public synchronized void setUsedCapacity(float usedCapacity) {
     queueCapacities.setUsedCapacity(usedCapacity);
   }
-  
+
   @Override
   public synchronized void setAbsoluteUsedCapacity(float absUsedCapacity) {
     queueCapacities.setAbsoluteUsedCapacity(absUsedCapacity);
@@ -219,7 +219,7 @@ public abstract class AbstractCSQueue implements CSQueue {
     CSQueueUtils.checkAbsoluteCapacity(getQueueName(),
         queueCapacities.getAbsoluteCapacity(),
         absMaxCapacity);
-    
+
     queueCapacities.setMaximumCapacity(maximumCapacity);
     queueCapacities.setAbsoluteMaximumCapacity(absMaxCapacity);
   }
@@ -243,7 +243,7 @@ public abstract class AbstractCSQueue implements CSQueue {
     }
     SchedulerUtils.checkIfLabelInClusterNodeLabels(labelManager,
         this.accessibleLabels);
-    
+
     // inherit from parent if labels not set
     if (this.defaultLabelExpression == null && parent != null
         && this.accessibleLabels.containsAll(parent.getAccessibleNodeLabels())) {
@@ -252,20 +252,20 @@ public abstract class AbstractCSQueue implements CSQueue {
 
     // After we setup labels, we can setup capacities
     setupConfigurableCapacities();
-    
+
     this.maximumAllocation =
         csContext.getConfiguration().getMaximumAllocationPerQueue(
             getQueuePath());
-    
+
     authorizer = YarnAuthorizationProvider.getInstance(csContext.getConf());
-    
+
     this.state = csContext.getConfiguration().getState(getQueuePath());
     this.acls = csContext.getConfiguration().getAcls(getQueuePath());
 
     // Update metrics
     CSQueueUtils.updateQueueStatistics(
         resourceCalculator, this, parent, clusterResource, minimumAllocation);
-    
+
     // Check if labels of this queue is a subset of parent queue, only do this
     // when we not root
     if (parent != null && parent.getParent() != null) {
@@ -293,7 +293,7 @@ public abstract class AbstractCSQueue implements CSQueue {
 
     this.preemptionDisabled = isQueueHierarchyPreemptionDisabled(this);
   }
-  
+
   protected QueueInfo getQueueInfo() {
     QueueInfo queueInfo = recordFactory.newRecordInstance(QueueInfo.class);
     queueInfo.setQueueName(queueName);
@@ -316,7 +316,7 @@ public abstract class AbstractCSQueue implements CSQueue {
 
     return queueInfo;
   }
-  
+
   @Private
   public synchronized Resource getMaximumAllocation() {
     return maximumAllocation;
@@ -327,9 +327,9 @@ public abstract class AbstractCSQueue implements CSQueue {
     return minimumAllocation;
   }
   
-  synchronized void allocateResource(Resource clusterResource, 
+  synchronized void allocateResource(Resource clusterResource,
       Resource resource, Set<String> nodeLabels) {
-    
+
     // Update usedResources by labels
     if (nodeLabels == null || nodeLabels.isEmpty()) {
       queueUsage.incUsed(resource);
@@ -343,7 +343,7 @@ public abstract class AbstractCSQueue implements CSQueue {
     CSQueueUtils.updateQueueStatistics(resourceCalculator, this, getParent(),
         clusterResource, minimumAllocation);
   }
-  
+
   protected synchronized void releaseResource(Resource clusterResource,
       Resource resource, Set<String> nodeLabels) {
     // Update usedResources by labels
@@ -390,7 +390,7 @@ public abstract class AbstractCSQueue implements CSQueue {
    * unless any queue in the <em>qPath</em> hierarchy has explicitly turned
    * preemption off.
    * NOTE: Preemptability is inherited from a queue's parent.
-   * 
+   *
    * @return true if queue has preemption disabled, false otherwise
    */
   private boolean isQueueHierarchyPreemptionDisabled(CSQueue q) {
@@ -418,7 +418,7 @@ public abstract class AbstractCSQueue implements CSQueue {
     return csConf.getPreemptionDisabled(q.getQueuePath(),
                                         parentQ.getPreemptionDisabled());
   }
-  
+
   protected Resource getCurrentResourceLimit(Resource clusterResource,
       ResourceLimits currentResourceLimits) {
     /*

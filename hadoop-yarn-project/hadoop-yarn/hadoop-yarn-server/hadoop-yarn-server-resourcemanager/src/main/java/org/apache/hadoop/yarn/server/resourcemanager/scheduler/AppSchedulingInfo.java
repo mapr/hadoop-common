@@ -35,8 +35,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import net.java.dev.eval.Expression;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
@@ -61,7 +61,8 @@ import org.apache.hadoop.yarn.util.resource.Resources;
 @Unstable
 public class AppSchedulingInfo {
   
-  private static final Log LOG = LogFactory.getLog(AppSchedulingInfo.class);
+  private static final Logger LOG =
+          LoggerFactory.getLogger(AppSchedulingInfo.class);
   private final ApplicationAttemptId applicationAttemptId;
   final ApplicationId applicationId;
   private String queueName;
@@ -84,12 +85,12 @@ public class AppSchedulingInfo {
 
   //private final ApplicationStore store;
   private ActiveUsersManager activeUsersManager;
-  
+
   /* Allocated by scheduler */
   boolean pending = true; // for app metrics
   private AtomicBoolean userBlacklistChanged = new AtomicBoolean(false);
-  
- 
+
+
   public AppSchedulingInfo(ApplicationAttemptId appAttemptId,
       String user, Queue queue, ActiveUsersManager activeUsersManager,
       long epoch) {
@@ -105,11 +106,11 @@ public class AppSchedulingInfo {
   public void setApplicationLabel(String applicationLabel) {
     this.applicationLabel = applicationLabel;
   }
-  
+
   public String getApplicationLabel() {
     return this.applicationLabel;
   }
-  
+
   public ApplicationId getApplicationId() {
     return applicationId;
   }
@@ -129,7 +130,7 @@ public class AppSchedulingInfo {
   public synchronized boolean isPending() {
     return pending;
   }
-  
+
   /**
    * Clear any pending requests from this application.
    */
@@ -154,7 +155,7 @@ public class AppSchedulingInfo {
   synchronized public void updateResourceRequests(
       List<ResourceRequest> requests, boolean recoverPreemptedRequest) {
     QueueMetrics metrics = queue.getMetrics();
-    
+
     // Update resource requests
     for (ResourceRequest request : requests) {
       Priority priority = request.getPriority();
@@ -168,12 +169,12 @@ public class AppSchedulingInfo {
               + request);
         }
         updatePendingResources = true;
-        
+
         // Premature optimization?
         // Assumes that we won't see more than one priority request updated
         // in one call, reasonable assumption... however, it's totally safe
         // to activate same application more than once.
-        // Thus we don't need another loop ala the one in decrementOutstanding()  
+        // Thus we don't need another loop ala the one in decrementOutstanding()
         // which is needed during deactivate.
         if (request.getNumContainers() > 0) {
           activeUsersManager.activateApplication(user, applicationId);
@@ -197,14 +198,14 @@ public class AppSchedulingInfo {
 
       asks.put(resourceName, request);
       if (updatePendingResources) {
-        
+
         // Similarly, deactivate application?
         if (request.getNumContainers() <= 0) {
           LOG.info("checking for deactivate of application :"
               + this.applicationId);
           checkForDeactivation();
         }
-        
+
         int lastRequestContainers = lastRequest != null ? lastRequest
             .getNumContainers() : 0;
         Resource lastRequestCapability = lastRequest != null ? lastRequest
@@ -275,7 +276,7 @@ public class AppSchedulingInfo {
     return (request == null) ? null : request.getCapability();
   }
 
-  public boolean isBlacklisted(SchedulerNode node, Log myLog) {
+  public boolean isBlacklisted(SchedulerNode node, Logger myLog) {
     // at this point deal with labels only for nodes
     // to comply with: "prohibited all that is not allowed"
     // behavior
@@ -299,19 +300,19 @@ public class AppSchedulingInfo {
     }
     return false;
   }
-  
+
   public synchronized boolean isBlacklisted(String resourceName) {
     if (blacklist.contains(resourceName)) {
       return true;
     }
     return false;
   }
-  
+
   private boolean isBlackListedBasedOnLabels(String resourceName) {
     // TODO Not sure if at the end can add blacklisted here resource to list of blacklisted
     // since situation can change on the fly.
     LabelManager lb = LabelManager.getInstance();
-    
+
     // if LBS Service is not enabled no need to proceed further
     if ( !lb.isServiceEnabled() ) {
       return false;
@@ -328,10 +329,10 @@ public class AppSchedulingInfo {
       }
     }
     // Get ResourceRequest for AppMaster as it will determine whole App label
-    ResourceRequest req = getResourceRequest(priority, 
+    ResourceRequest req = getResourceRequest(priority,
         resourceName);
     if ( req == null ) {
-      req = getResourceRequest(priority, 
+      req = getResourceRequest(priority,
           ResourceRequest.ANY);
     }
     if ( req != null ) {
@@ -344,8 +345,8 @@ public class AppSchedulingInfo {
           appLabelExpression = lb.getEffectiveLabelExpr(requestLabel);
           isAppLabelExpressionSet.set(true);
         }
-        Expression finalExp = 
-            lb.constructAppLabel(queue.getLabelPolicy(), 
+        Expression finalExp =
+            lb.constructAppLabel(queue.getLabelPolicy(),
                 appLabelExpression, queue.getLabel());
         LabelApplicabilityStatus blackListStatus = lb.isNodeApplicableForApp(resourceName, finalExp);
         switch (blackListStatus) {
@@ -366,11 +367,11 @@ public class AppSchedulingInfo {
     }
     return false;
   }
-  
+
   /**
    * Resources have been allocated to this application by the resource
    * scheduler. Track them.
-   * 
+   *
    * @param type
    *          the type of the node
    * @param node
@@ -415,7 +416,7 @@ public class AppSchedulingInfo {
   /**
    * The {@link ResourceScheduler} is allocating data-local resources to the
    * application.
-   * 
+   *
    * @param allocatedContainers
    *          resources allocated to the application
    */
@@ -450,7 +451,7 @@ public class AppSchedulingInfo {
   /**
    * The {@link ResourceScheduler} is allocating data-local resources to the
    * application.
-   * 
+   *
    * @param allocatedContainers
    *          resources allocated to the application
    */
@@ -459,7 +460,7 @@ public class AppSchedulingInfo {
       List<ResourceRequest> resourceRequests) {
     // Update future requirements
     decResourceRequest(node.getRackName(), priority, rackLocalRequest);
-    
+
     ResourceRequest offRackRequest = requests.get(priority).get(
         ResourceRequest.ANY);
     decrementOutstanding(offRackRequest);
@@ -472,7 +473,7 @@ public class AppSchedulingInfo {
   /**
    * The {@link ResourceScheduler} is allocating data-local resources to the
    * application.
-   * 
+   *
    * @param allocatedContainers
    *          resources allocated to the application
    */
@@ -491,14 +492,14 @@ public class AppSchedulingInfo {
 
     // Do not remove ANY
     offSwitchRequest.setNumContainers(numOffSwitchContainers);
-    
+
     // Do we have any outstanding requests?
     // If there is nothing, we need to deactivate this application
     if (numOffSwitchContainers == 0) {
       checkForDeactivation();
     }
   }
-  
+
   synchronized private void checkForDeactivation() {
     boolean deactivate = true;
     for (Priority priority : getPriorities()) {
@@ -514,7 +515,7 @@ public class AppSchedulingInfo {
       activeUsersManager.deactivateApplication(user, applicationId);
     }
   }
-  
+
   synchronized public void move(Queue newQueue) {
     QueueMetrics oldMetrics = queue.getMetrics();
     QueueMetrics newMetrics = newQueue.getMetrics();
@@ -547,7 +548,7 @@ public class AppSchedulingInfo {
       }
     }
     metrics.finishAppAttempt(applicationId, pending, user);
-    
+
     // Clear requests themselves
     clearRequests();
   }
@@ -584,7 +585,7 @@ public class AppSchedulingInfo {
     metrics.allocateResources(user, 1, rmContainer.getAllocatedResource(),
       false);
   }
-  
+
   public ResourceRequest cloneResourceRequest(ResourceRequest request) {
     ResourceRequest newRequest = ResourceRequest.newInstance(
         request.getPriority(), request.getResourceName(),

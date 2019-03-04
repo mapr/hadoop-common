@@ -18,12 +18,12 @@
 
 package org.apache.hadoop.yarn.server.resourcemanager.scheduler;
 
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
 
 public class SchedulerAppUtils {
 
   public static  boolean isBlacklisted(SchedulerApplicationAttempt application,
-      SchedulerNode node, Log LOG) {
+      SchedulerNode node, Logger LOG) {
     return application.isBlacklisted(node, LOG);
   }
 }

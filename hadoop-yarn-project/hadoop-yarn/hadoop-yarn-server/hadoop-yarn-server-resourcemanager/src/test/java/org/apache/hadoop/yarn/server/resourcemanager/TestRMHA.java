@@ -28,8 +28,8 @@ import java.net.InetSocketAddress;
 
 import javax.ws.rs.core.MediaType;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ha.HAServiceProtocol;
 import org.apache.hadoop.ha.HAServiceProtocol.HAServiceState;
@@ -65,7 +65,7 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 
 public class TestRMHA {
-  private Log LOG = LogFactory.getLog(TestRMHA.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TestRMHA.class);
   private Configuration configuration;
   private MockRM rm = null;
   private RMApp app = null;

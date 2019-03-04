@@ -31,8 +31,8 @@ import java.util.concurrent.ConcurrentSkipListMap;
 
 import net.java.dev.eval.Expression;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.LimitedPrivate;
 import org.apache.hadoop.classification.InterfaceStability.Evolving;
 import org.apache.hadoop.conf.Configurable;
@@ -109,7 +109,8 @@ public class FifoScheduler extends
     AbstractYarnScheduler<FiCaSchedulerApp, FiCaSchedulerNode> implements
     Configurable {
 
-  private static final Log LOG = LogFactory.getLog(FifoScheduler.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(FifoScheduler.class);
 
   private static final RecordFactory recordFactory = 
     RecordFactoryProvider.getRecordFactory(null);
@@ -209,7 +210,7 @@ public class FifoScheduler extends
       String labelPolicy = null;
       try {
         labelPolicy = getConf().get(getQueueName() +
-          DOT + 
+          DOT +
           DEFAULT_QUEUE_LABEL_POLICY_TAG, QueueLabelPolicy.AND.name());
         return QueueLabelPolicy.valueOf(labelPolicy);
       } catch (IllegalArgumentException ie) {
@@ -383,7 +384,7 @@ public class FifoScheduler extends
     }
 
     // Sanity check
-    SchedulerUtils.normalizeRequests(ask, resourceCalculator, 
+    SchedulerUtils.normalizeRequests(ask, resourceCalculator,
         clusterResource, minimumAllocation, getMaximumResourceCapability());
 
     // Release containers
@@ -414,7 +415,7 @@ public class FifoScheduler extends
         application.showRequests();
 
         LOG.debug("allocate:" +
-            " applicationId=" + applicationAttemptId + 
+            " applicationId=" + applicationAttemptId +
             " #ask=" + ask.size());
       }
 
@@ -557,14 +558,14 @@ public class FifoScheduler extends
         if (SchedulerAppUtils.isBlacklisted(application, node, LOG)) {
           continue;
         }
-        
+
         for (Priority priority : application.getPriorities()) {
-          int maxContainers = 
-            getMaxAllocatableContainers(application, priority, node, 
-                NodeType.OFF_SWITCH); 
+          int maxContainers =
+            getMaxAllocatableContainers(application, priority, node,
+                NodeType.OFF_SWITCH);
           // Ensure the application needs containers of this priority
           if (maxContainers > 0) {
-            int assignedContainers = 
+            int assignedContainers =
               assignContainersOnNode(node, application, priority);
             // Do not assign out of order w.r.t priorities
             if (assignedContainers == 0) {
@@ -599,8 +600,8 @@ public class FifoScheduler extends
   private int getMaxAllocatableContainers(FiCaSchedulerApp application,
       Priority priority, FiCaSchedulerNode node, NodeType type) {
     int maxContainers = 0;
-    
-    ResourceRequest offSwitchRequest = 
+
+    ResourceRequest offSwitchRequest =
       application.getResourceRequest(priority, ResourceRequest.ANY);
     if (offSwitchRequest != null) {
       maxContainers = offSwitchRequest.getNumContainers();
@@ -611,7 +612,7 @@ public class FifoScheduler extends
     }
 
     if (type == NodeType.RACK_LOCAL) {
-      ResourceRequest rackLocalRequest = 
+      ResourceRequest rackLocalRequest =
         application.getResourceRequest(priority, node.getRMNode().getRackName());
       if (rackLocalRequest == null) {
         return maxContainers;
@@ -621,7 +622,7 @@ public class FifoScheduler extends
     }
 
     if (type == NodeType.NODE_LOCAL) {
-      ResourceRequest nodeLocalRequest = 
+      ResourceRequest nodeLocalRequest =
         application.getResourceRequest(priority, node.getRMNode().getNodeAddress());
       if (nodeLocalRequest != null) {
         maxContainers = Math.min(maxContainers, nodeLocalRequest.getNumContainers());
@@ -633,14 +634,14 @@ public class FifoScheduler extends
 
 
   private int assignContainersOnNode(FiCaSchedulerNode node, 
-      FiCaSchedulerApp application, Priority priority 
+      FiCaSchedulerApp application, Priority priority
   ) {
     // Data-local
-    int nodeLocalContainers = 
-      assignNodeLocalContainers(node, application, priority); 
+    int nodeLocalContainers =
+      assignNodeLocalContainers(node, application, priority);
 
     // Rack-local
-    int rackLocalContainers = 
+    int rackLocalContainers =
       assignRackLocalContainers(node, application, priority);
 
     // Off-switch
@@ -651,7 +652,7 @@ public class FifoScheduler extends
     LOG.debug("assignContainersOnNode:" +
         " node=" + node.getRMNode().getNodeAddress() + 
         " application=" + application.getApplicationId().getId() +
-        " priority=" + priority.getPriority() + 
+        " priority=" + priority.getPriority() +
         " #assigned=" + 
         (nodeLocalContainers + rackLocalContainers + offSwitchContainers));
 
@@ -662,24 +663,24 @@ public class FifoScheduler extends
   private int assignNodeLocalContainers(FiCaSchedulerNode node, 
       FiCaSchedulerApp application, Priority priority) {
     int assignedContainers = 0;
-    ResourceRequest request = 
+    ResourceRequest request =
       application.getResourceRequest(priority, node.getNodeName());
     if (request != null) {
       // Don't allocate on this node if we don't need containers on this rack
       ResourceRequest rackRequest =
-          application.getResourceRequest(priority, 
+          application.getResourceRequest(priority,
               node.getRMNode().getRackName());
       if (rackRequest == null || rackRequest.getNumContainers() <= 0) {
         return 0;
       }
-      
-      int assignableContainers = 
+
+      int assignableContainers =
         Math.min(
-            getMaxAllocatableContainers(application, priority, node, 
-                NodeType.NODE_LOCAL), 
+            getMaxAllocatableContainers(application, priority, node,
+                NodeType.NODE_LOCAL),
                 request.getNumContainers());
       assignedContainers = 
-        assignContainer(node, application, priority, 
+        assignContainer(node, application, priority,
             assignableContainers, request, NodeType.NODE_LOCAL);
     }
     return assignedContainers;
@@ -688,7 +689,7 @@ public class FifoScheduler extends
   private int assignRackLocalContainers(FiCaSchedulerNode node, 
       FiCaSchedulerApp application, Priority priority) {
     int assignedContainers = 0;
-    ResourceRequest request = 
+    ResourceRequest request =
       application.getResourceRequest(priority, node.getRMNode().getRackName());
     if (request != null) {
       // Don't allocate on this rack if the application doens't need containers
@@ -697,14 +698,14 @@ public class FifoScheduler extends
       if (offSwitchRequest.getNumContainers() <= 0) {
         return 0;
       }
-      
-      int assignableContainers = 
+
+      int assignableContainers =
         Math.min(
-            getMaxAllocatableContainers(application, priority, node, 
-                NodeType.RACK_LOCAL), 
+            getMaxAllocatableContainers(application, priority, node,
+                NodeType.RACK_LOCAL),
                 request.getNumContainers());
       assignedContainers = 
-        assignContainer(node, application, priority, 
+        assignContainer(node, application, priority,
             assignableContainers, request, NodeType.RACK_LOCAL);
     }
     return assignedContainers;
@@ -713,23 +714,23 @@ public class FifoScheduler extends
   private int assignOffSwitchContainers(FiCaSchedulerNode node, 
       FiCaSchedulerApp application, Priority priority) {
     int assignedContainers = 0;
-    ResourceRequest request = 
+    ResourceRequest request =
       application.getResourceRequest(priority, ResourceRequest.ANY);
     if (request != null) {
       assignedContainers = 
-        assignContainer(node, application, priority, 
+        assignContainer(node, application, priority,
             request.getNumContainers(), request, NodeType.OFF_SWITCH);
     }
     return assignedContainers;
   }
 
-  private int assignContainer(FiCaSchedulerNode node, FiCaSchedulerApp application, 
-      Priority priority, int assignableContainers, 
+  private int assignContainer(FiCaSchedulerNode node, FiCaSchedulerApp application,
+      Priority priority, int assignableContainers,
       ResourceRequest request, NodeType type) {
     LOG.debug("assignContainers:" +
         " node=" + node.getRMNode().getNodeAddress() + 
         " application=" + application.getApplicationId().getId() + 
-        " priority=" + priority.getPriority() + 
+        " priority=" + priority.getPriority() +
         " assignableContainers=" + assignableContainers +
         " request=" + request + " type=" + type);
     Resource capability = request.getCapability();
@@ -753,7 +754,7 @@ public class FifoScheduler extends
       // Inform the application
       RMContainer rmContainer =
           application.allocate(type, node, priority, request, container);
-        
+
         // Inform the node
         node.allocateContainer(rmContainer);
 
@@ -766,7 +767,7 @@ public class FifoScheduler extends
 
   private synchronized void nodeUpdate(RMNode rmNode) {
     FiCaSchedulerNode node = getNode(rmNode.getNodeID());
-    
+
     List<UpdatedContainerInfo> containerInfoList = rmNode.pullContainerUpdates();
     List<ContainerStatus> newlyLaunchedContainers = new ArrayList<ContainerStatus>();
     List<ContainerStatus> completedContainers = new ArrayList<ContainerStatus>();
@@ -783,7 +784,7 @@ public class FifoScheduler extends
     for (ContainerStatus completedContainer : completedContainers) {
       ContainerId containerId = completedContainer.getContainerId();
       LOG.debug("Container FINISHED: " + containerId);
-      completedContainer(getRMContainer(containerId), 
+      completedContainer(getRMContainer(containerId),
           completedContainer, RMContainerEventType.FINISHED);
     }
 
@@ -803,7 +804,7 @@ public class FifoScheduler extends
 
     if (Resources.greaterThanOrEqual(resourceCalculator, clusterResource,
             node.getAvailableResource(),minimumAllocation)) {
-      LOG.debug("Node heartbeat " + rmNode.getNodeID() + 
+      LOG.debug("Node heartbeat " + rmNode.getNodeID() +
           " available resource = " + node.getAvailableResource());
 
       assignContainers(node);
@@ -906,7 +907,7 @@ public class FifoScheduler extends
       ContainerExpiredSchedulerEvent containerExpiredEvent = 
           (ContainerExpiredSchedulerEvent) event;
       ContainerId containerid = containerExpiredEvent.getContainerId();
-      completedContainer(getRMContainer(containerid), 
+      completedContainer(getRMContainer(containerid),
           SchedulerUtils.createAbnormalContainerStatus(
               containerid, 
               SchedulerUtils.EXPIRED_CONTAINER),
@@ -978,17 +979,17 @@ public class FifoScheduler extends
     }
     // Kill running containers
     for(RMContainer container : node.getRunningContainers()) {
-      completedContainer(container, 
+      completedContainer(container,
           SchedulerUtils.createAbnormalContainerStatus(
               container.getContainerId(), 
               SchedulerUtils.LOST_CONTAINER),
               RMContainerEventType.KILL);
     }
-    
+
     //Remove the node
     this.nodes.remove(nodeInfo.getNodeID());
     updateMaximumAllocation(node, false);
-    
+
     // Update cluster metrics
     Resources.subtractFrom(clusterResource, node.getTotalResource());
   }

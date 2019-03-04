@@ -27,8 +27,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
 import net.java.dev.eval.Expression;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.conf.Configuration;
@@ -78,7 +78,8 @@ public abstract class AbstractYarnScheduler
     <T extends SchedulerApplicationAttempt, N extends SchedulerNode>
     extends AbstractService implements ResourceScheduler {
 
-  private static final Log LOG = LogFactory.getLog(AbstractYarnScheduler.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(AbstractYarnScheduler.class);
 
   // Nodes in the cluster, indexed by NodeId
   protected Map<NodeId, N> nodes = new ConcurrentHashMap<NodeId, N>();
@@ -99,7 +100,7 @@ public abstract class AbstractYarnScheduler
   private long configuredMaximumAllocationWaitTime;
 
   protected RMContext rmContext;
-  
+
   /*
    * All schedulers which are inheriting AbstractYarnScheduler should use
    * concurrent version of 'applications' map.
@@ -437,7 +438,7 @@ public abstract class AbstractYarnScheduler
 
       // recover scheduler attempt
       schedulerAttempt.recoverContainer(rmContainer);
-            
+
       // set master container for the current running AMContainer for this
       // attempt.
       RMAppAttempt appAttempt = rmApp.getCurrentAppAttempt();
@@ -483,7 +484,7 @@ public abstract class AbstractYarnScheduler
   }
 
   /**
-   * Recover resource request back from RMContainer when a container is 
+   * Recover resource request back from RMContainer when a container is
    * preempted before AM pulled the same. If container is pulled by
    * AM, then RMContainer will not have resource request to recover.
    * @param rmContainer
@@ -496,7 +497,7 @@ public abstract class AbstractYarnScheduler
       return;
     }
     // Add resource request back to Scheduler.
-    SchedulerApplicationAttempt schedulerAttempt 
+    SchedulerApplicationAttempt schedulerAttempt
         = getCurrentAttemptForContainer(rmContainer.getContainerId());
     if (schedulerAttempt != null) {
       schedulerAttempt.recoverResourceRequests(requests);
@@ -570,7 +571,7 @@ public abstract class AbstractYarnScheduler
     try {
       getQueueInfo(destQueue, false, false);
     } catch (IOException e) {
-      LOG.warn(e);
+      LOG.warn(e.toString());
       throw new YarnException(e);
     }
     // check if source queue is a valid
@@ -610,11 +611,11 @@ public abstract class AbstractYarnScheduler
           queueName + "."));
     }
   }
-  
+
   /**
    * Process resource update on a node.
    */
-  public synchronized void updateNodeResource(RMNode nm, 
+  public synchronized void updateNodeResource(RMNode nm,
       ResourceOption resourceOption) {
     SchedulerNode node = getSchedulerNode(nm.getNodeID());
     Resource newResource = resourceOption.getResource();
@@ -639,7 +640,7 @@ public abstract class AbstractYarnScheduler
       Resources.addTo(clusterResource, newResource);
     } else {
       // Log resource change
-      LOG.warn("Update resource on node: " + node.getNodeName() 
+      LOG.warn("Update resource on node: " + node.getNodeName()
           + " with the same resource: " + newResource);
     }
   }

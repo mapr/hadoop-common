@@ -32,8 +32,8 @@ import java.util.List;
 
 import javax.crypto.SecretKey;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ha.HAServiceProtocol;
 import org.apache.hadoop.ha.HAServiceProtocol.StateChangeRequestInfo;
@@ -77,7 +77,8 @@ import static org.junit.Assert.assertFalse;
 
 public class TestZKRMStateStore extends RMStateStoreTestBase {
 
-  public static final Log LOG = LogFactory.getLog(TestZKRMStateStore.class);
+  public static final Logger LOG =
+      LoggerFactory.getLogger(TestZKRMStateStore.class);
   private static final int ZK_TIMEOUT_MS = 1000;
 
   class TestZKRMStateStoreTester implements RMStateStoreHelper {
@@ -166,7 +167,7 @@ public class TestZKRMStateStore extends RMStateStoreTestBase {
     public boolean attemptExists(RMAppAttempt attempt) throws Exception {
       ApplicationAttemptId attemptId = attempt.getAppAttemptId();
       return null != client.exists(store.getAttemptNode(
-              attemptId.getApplicationId().toString(), attemptId.toString()), 
+              attemptId.getApplicationId().toString(), attemptId.toString()),
               false);
     }
   }
@@ -413,7 +414,7 @@ public class TestZKRMStateStore extends RMStateStoreTestBase {
   public void testFencedState() throws Exception {
     TestZKRMStateStoreTester zkTester = new TestZKRMStateStoreTester();
 	RMStateStore store = zkTester.getRMStateStore();
-   
+
     // Move state to FENCED from ACTIVE
     store.updateFencedState();
     assertEquals("RMStateStore should have been in fenced state",

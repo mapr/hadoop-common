@@ -77,7 +77,7 @@ public class MockAM {
     while (!finalState.equals(attempt.getAppAttemptState())
         && timeoutSecs++ < 40) {
       System.out
-          .println("AppAttempt : " + attemptId + " State is : " 
+          .println("AppAttempt : " + attemptId + " State is : "
               + attempt.getAppAttemptState()
               + " Waiting for state : " + finalState);
       Thread.sleep(1000);
@@ -218,7 +218,7 @@ public class MockAM {
     capability.setDisks(discs);
     req.setCapability(capability);
     if (labelExpression != null) {
-     req.setNodeLabelExpression(labelExpression); 
+     req.setNodeLabelExpression(labelExpression);
     }
     return req;
   }
@@ -258,7 +258,7 @@ public class MockAM {
       throw (Exception) e.getCause();
     }
   }
-  
+
   public AllocateResponse doHeartbeat() throws Exception {
     return allocate(null, null);
   }
@@ -305,7 +305,7 @@ public class MockAM {
   public ApplicationAttemptId getApplicationAttemptId() {
     return this.attemptId;
   }
-  
+
   public List<Container> allocateAndWaitForContainers(int nContainer,
     int memory, MockNM nm) throws Exception {
     return allocateAndWaitForContainers(nContainer, memory, 0, 0,  nm);

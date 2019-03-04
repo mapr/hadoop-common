@@ -19,8 +19,8 @@
 package org.apache.hadoop.yarn.server.resourcemanager;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ha.HAServiceProtocol;
@@ -99,6 +99,8 @@ import org.apache.hadoop.yarn.webapp.WebApp;
 import org.apache.hadoop.yarn.webapp.WebApps;
 import org.apache.hadoop.yarn.webapp.WebApps.Builder;
 import org.apache.hadoop.yarn.webapp.util.WebAppUtils;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -122,7 +124,8 @@ public class ResourceManager extends CompositeService implements Recoverable {
    */
   public static final int SHUTDOWN_HOOK_PRIORITY = 30;
 
-  private static final Log LOG = LogFactory.getLog(ResourceManager.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ResourceManager.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
   private static long clusterTimeStamp = System.currentTimeMillis();
 
   /**
@@ -169,7 +172,7 @@ public class ResourceManager extends CompositeService implements Recoverable {
   private UserGroupInformation rmLoginUGI;
 
   private ConfigurableAuxServices auxiliaryServices;
-  
+
   public ResourceManager() {
     super("ResourceManager");
   }
@@ -191,7 +194,7 @@ public class ResourceManager extends CompositeService implements Recoverable {
   protected void serviceInit(Configuration conf) throws Exception {
     this.conf = conf;
     this.rmContext = new RMContextImpl();
-    
+
     this.configurationProvider =
         ConfigurationProviderFactory.getConfigurationProvider(conf);
     this.configurationProvider.init(this.conf);
@@ -230,7 +233,7 @@ public class ResourceManager extends CompositeService implements Recoverable {
     if (this.rmContext.isHAEnabled()) {
       HAUtil.verifyAndSetConfiguration(this.conf);
     }
-    
+
     // Set UGI and do login
     // If security is enabled, use login user
     // If security is not enabled, use current user
@@ -256,9 +259,9 @@ public class ResourceManager extends CompositeService implements Recoverable {
     adminService = createAdminService();
     addService(adminService);
     rmContext.setRMAdminService(adminService);
-    
+
     rmContext.setYarnConfiguration(conf);
-    
+
     createAndInitActiveServices();
 
     webAppAddress = WebAppUtils.getWebAppBindURL(this.conf,
@@ -276,7 +279,7 @@ public class ResourceManager extends CompositeService implements Recoverable {
 
     super.serviceInit(this.conf);
   }
-  
+
   protected QueueACLsManager createQueueACLsManager(ResourceScheduler scheduler,
       Configuration conf) {
     return new QueueACLsManager(scheduler, conf);
@@ -371,7 +374,7 @@ public class ResourceManager extends CompositeService implements Recoverable {
   }
 
   protected SystemMetricsPublisher createSystemMetricsPublisher() {
-    return new SystemMetricsPublisher(); 
+    return new SystemMetricsPublisher();
   }
 
   // sanity check for configurations
@@ -440,7 +443,7 @@ public class ResourceManager extends CompositeService implements Recoverable {
       AMLivelinessMonitor amFinishingMonitor = createAMLivelinessMonitor();
       addService(amFinishingMonitor);
       rmContext.setAMFinishingMonitor(amFinishingMonitor);
-      
+
       RMNodeLabelsManager nlm = createNodeLabelManager();
       nlm.setRMContext(rmContext);
       addService(nlm);
@@ -493,10 +496,10 @@ public class ResourceManager extends CompositeService implements Recoverable {
       scheduler.setRMContext(rmContext);
       addIfService(scheduler);
       rmContext.setScheduler(scheduler);
-      
+
       LabelManagementService lb = new LabelManagementService();
       addService(lb);
-      
+
       schedulerDispatcher = createSchedulerEventDispatcher();
       addIfService(schedulerDispatcher);
       rmDispatcher.register(SchedulerEventType.class, schedulerDispatcher);
@@ -691,13 +694,13 @@ public class ResourceManager extends CompositeService implements Recoverable {
             scheduler.handle(event);
           } catch (Throwable t) {
             // An error occurred, but we are shutting down anyway.
-            // If it was an InterruptedException, the very act of 
+            // If it was an InterruptedException, the very act of
             // shutdown could have caused it and is probably harmless.
             if (stopped) {
               LOG.warn("Exception during shutdown: ", t);
               break;
             }
-            LOG.fatal("Error in handling event type " + event.getType()
+            LOG.error(FATAL,"Error in handling event type " + event.getType()
                 + " to the scheduler", t);
             if (shouldExitOnError
                 && !ShutdownHookManager.get().isShutdownInProgress()) {
@@ -746,7 +749,7 @@ public class ResourceManager extends CompositeService implements Recoverable {
 
     @Override
     public void handle(RMFatalEvent event) {
-      LOG.fatal("Received a " + RMFatalEvent.class.getName() + " of type " +
+      LOG.error(FATAL,"Received a " + RMFatalEvent.class.getName() + " of type " +
           event.getType().name() + ". Cause:\n" + event.getCause());
 
       ExitUtil.terminate(1, event.getCause());
@@ -762,7 +765,7 @@ public class ResourceManager extends CompositeService implements Recoverable {
         adminService.resetLeaderElection();
         return;
       } catch (Exception e) {
-        LOG.fatal("Failed to transition RM to Standby mode.");
+        LOG.error("Failed to transition RM to Standby mode.");
         ExitUtil.terminate(1, e);
       }
     }
@@ -903,7 +906,7 @@ public class ResourceManager extends CompositeService implements Recoverable {
       }
     }
   }
-  
+
   protected void startWepApp() {
 
     // Use the customized yarn filter instead of the standard kerberos filter to
@@ -965,7 +968,7 @@ public class ResourceManager extends CompositeService implements Recoverable {
       }
     }
 
-    // if security is not enabled and the default filter initializer has not 
+    // if security is not enabled and the default filter initializer has not
     // been set, set the initializer to include the
     // RMAuthenticationFilterInitializer which in turn will set up the simple
     // auth filter.
@@ -1174,7 +1177,7 @@ public class ResourceManager extends CompositeService implements Recoverable {
   public ClientRMService getClientRMService() {
     return this.clientRM;
   }
-  
+
   /**
    * return the scheduler.
    * @return the scheduler for the Resource Manager.
@@ -1246,7 +1249,7 @@ public class ResourceManager extends CompositeService implements Recoverable {
         resourceManager.start();
       }
     } catch (Throwable t) {
-      LOG.fatal("Error starting ResourceManager", t);
+      LOG.error(FATAL, "Error starting ResourceManager", t);
       System.exit(-1);
     }
   }

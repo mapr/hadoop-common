@@ -20,8 +20,8 @@ package org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity;
 import java.io.IOException;
 import java.util.HashMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.security.GroupMappingServiceProvider;
 import org.apache.hadoop.yarn.api.records.ApplicationAccessType;
@@ -38,7 +38,8 @@ import org.junit.Test;
 
 public class TestQueueMappings {
 
-  private static final Log LOG = LogFactory.getLog(TestQueueMappings.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(TestQueueMappings.class);
 
   private static final String Q1 = "q1";
   private static final String Q2 = "q2";

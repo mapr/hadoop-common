@@ -23,8 +23,8 @@ import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.DataInputByteBuffer;
 import org.apache.hadoop.security.Credentials;
@@ -68,7 +68,8 @@ import com.google.common.annotations.VisibleForTesting;
 public class RMAppManager implements EventHandler<RMAppManagerEvent>, 
                                         Recoverable {
 
-  private static final Log LOG = LogFactory.getLog(RMAppManager.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(RMAppManager.class);
 
   private int maxCompletedAppsInMemory;
   private int maxCompletedAppsInStateStore;
@@ -106,7 +107,8 @@ public class RMAppManager implements EventHandler<RMAppManagerEvent>,
    *  This class is for logging the application summary.
    */
   static class ApplicationSummary {
-    static final Log LOG = LogFactory.getLog(ApplicationSummary.class);
+    static final Logger LOG = LoggerFactory.
+        getLogger(ApplicationSummary.class);
 
     // Escape sequences 
     static final char EQUALS = '=';
@@ -187,7 +189,7 @@ public class RMAppManager implements EventHandler<RMAppManagerEvent>,
      */
     public static void logAppSummary(RMApp app) {
       if (app != null) {
-        LOG.info(createAppSummary(app));
+        LOG.info(createAppSummary(app).toString());
       }
     }
   }

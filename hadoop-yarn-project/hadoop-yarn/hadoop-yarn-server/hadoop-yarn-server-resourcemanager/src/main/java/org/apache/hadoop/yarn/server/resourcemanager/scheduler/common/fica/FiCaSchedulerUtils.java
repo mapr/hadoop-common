@@ -18,12 +18,13 @@
 
 package org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.fica;
 
-import org.apache.commons.logging.Log;
+
+import org.slf4j.Logger;
 
 public class FiCaSchedulerUtils {
 
   public static  boolean isBlacklisted(FiCaSchedulerApp application,
-      FiCaSchedulerNode node, Log LOG) {
+      FiCaSchedulerNode node, Logger LOG) {
     return application.isBlacklisted(node, LOG);
   }
 }

@@ -29,8 +29,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map.Entry;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -63,7 +63,6 @@ import org.fusesource.leveldbjni.JniDBFactory;
 import org.fusesource.leveldbjni.internal.NativeDB;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBException;
-import org.iq80.leveldb.Logger;
 import org.iq80.leveldb.Options;
 import org.iq80.leveldb.WriteBatch;
 
@@ -71,8 +70,8 @@ import com.google.common.annotations.VisibleForTesting;
 
 public class LeveldbRMStateStore extends RMStateStore {
 
-  public static final Log LOG =
-      LogFactory.getLog(LeveldbRMStateStore.class);
+  public static final Logger LOG =
+      LoggerFactory.getLogger(LeveldbRMStateStore.class);
 
   private static final String SEPARATOR = "/";
   private static final String DB_NAME = "yarn-rm-state";
@@ -278,7 +277,7 @@ public class LeveldbRMStateStore extends RMStateStore {
     try {
       key.readFields(in);
     } finally {
-      IOUtils.cleanup(LOG, in);
+      IOUtils.cleanupWithLogger(LOG, in);
     }
     return key;
   }
@@ -325,7 +324,7 @@ public class LeveldbRMStateStore extends RMStateStore {
     try {
       tokenData.readFields(in);
     } finally {
-      IOUtils.cleanup(LOG, in);
+      IOUtils.cleanupWithLogger(LOG, in);
     }
     return tokenData;
   }
@@ -343,7 +342,7 @@ public class LeveldbRMStateStore extends RMStateStore {
       try {
         state.rmSecretManagerState.dtSequenceNumber = in.readInt();
       } finally {
-        IOUtils.cleanup(LOG, in);
+        IOUtils.cleanupWithLogger(LOG, in);
       }
     }
   }
@@ -713,8 +712,8 @@ public class LeveldbRMStateStore extends RMStateStore {
     return numEntries;
   }
 
-  private static class LeveldbLogger implements Logger {
-    private static final Log LOG = LogFactory.getLog(LeveldbLogger.class);
+  private static class LeveldbLogger implements org.iq80.leveldb.Logger {
+    private static final Logger LOG = LoggerFactory.getLogger(LeveldbLogger.class);
 
     @Override
     public void log(String message) {

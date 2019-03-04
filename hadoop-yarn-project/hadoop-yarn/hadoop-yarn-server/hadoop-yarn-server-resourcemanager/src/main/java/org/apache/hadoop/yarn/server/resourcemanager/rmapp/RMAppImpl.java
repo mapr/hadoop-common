@@ -36,8 +36,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.DataInputByteBuffer;
@@ -102,7 +102,8 @@ import com.google.common.annotations.VisibleForTesting;
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class RMAppImpl implements RMApp, Recoverable {
 
-  private static final Log LOG = LogFactory.getLog(RMAppImpl.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(RMAppImpl.class);
   private static final String UNAVAILABLE = "N/A";
 
   // Immutable fields
@@ -365,7 +366,7 @@ public class RMAppImpl implements RMApp, Recoverable {
       Configuration config, String name, String user, String queue,
       ApplicationSubmissionContext submissionContext, YarnScheduler scheduler,
       ApplicationMasterService masterService, long submitTime,
-      String applicationType, Set<String> applicationTags, 
+      String applicationType, Set<String> applicationTags,
       ResourceRequest amReq) {
 
     this.systemClock = new SystemClock();
@@ -726,7 +727,7 @@ public class RMAppImpl implements RMApp, Recoverable {
     ApplicationStateData appState =
         state.getApplicationState().get(getApplicationId());
     this.recoveredFinalState = appState.getState();
-    LOG.info("Recovering app: " + getApplicationId() + " with " + 
+    LOG.info("Recovering app: " + getApplicationId() + " with " +
         + appState.getAttemptCount() + " attempts and final state = "
         + this.recoveredFinalState );
     this.diagnostics.append(appState.getDiagnostics());
@@ -779,7 +780,7 @@ public class RMAppImpl implements RMApp, Recoverable {
     attempts.put(appAttemptId, attempt);
     currentAttempt = attempt;
   }
-  
+
   private void
       createAndStartNewAttempt(boolean transferStateFromPreviousAttempt) {
     createNewAttempt();
@@ -1328,7 +1329,7 @@ public class RMAppImpl implements RMApp, Recoverable {
     return appState == RMAppState.FAILED || appState == RMAppState.FINISHED
         || appState == RMAppState.KILLED;
   }
-  
+
   public RMAppState getRecoveredFinalState() {
     return this.recoveredFinalState;
   }
@@ -1381,7 +1382,7 @@ public class RMAppImpl implements RMApp, Recoverable {
   
   @Override
   public ResourceRequest getAMResourceRequest() {
-    return this.amReq; 
+    return this.amReq;
   }
 
   protected Credentials parseCredentials() throws IOException {

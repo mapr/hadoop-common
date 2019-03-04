@@ -45,8 +45,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CyclicBarrier;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -94,10 +94,11 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 public class TestLeafQueue {
-  
-  private static final Log LOG = LogFactory.getLog(TestLeafQueue.class);
-  
-  private final RecordFactory recordFactory = 
+
+  private static final Logger LOG =
+    LoggerFactory.getLogger(TestLeafQueue.class);
+
+  private final RecordFactory recordFactory =
       RecordFactoryProvider.getRecordFactory(null);
 
   RMContext rmContext;
@@ -114,7 +115,7 @@ public class TestLeafQueue {
   final static String DEFAULT_RACK = "/default";
 
   private final ResourceCalculator resourceCalculator = new DefaultResourceCalculator();
-  
+
   @Before
   public void setUp() throws Exception {
     CapacityScheduler spyCs = new CapacityScheduler();
@@ -164,8 +165,8 @@ public class TestLeafQueue {
         containerTokenSecretManager);
 
     root = 
-        CapacityScheduler.parseQueue(csContext, csConf, null, 
-            CapacitySchedulerConfiguration.ROOT, 
+        CapacityScheduler.parseQueue(csContext, csConf, null,
+            CapacitySchedulerConfiguration.ROOT,
             queues, queues, 
             TestUtils.spyHook);
 
@@ -178,7 +179,7 @@ public class TestLeafQueue {
         .thenReturn(new YarnConfiguration());
     when(cs.getNumClusterNodes()).thenReturn(3);
   }
-  
+
   private static final String A = "a";
   private static final String B = "b";
   private static final String C = "c";
@@ -234,23 +235,23 @@ public class TestLeafQueue {
   }
 
   static LeafQueue stubLeafQueue(LeafQueue queue) {
-    
+
     // Mock some methods for ease in these unit tests
     
     // 1. LeafQueue.createContainer to return dummy containers
     doAnswer(
         new Answer<Container>() {
           @Override
-          public Container answer(InvocationOnMock invocation) 
+          public Container answer(InvocationOnMock invocation)
               throws Throwable {
-            final FiCaSchedulerApp application = 
+            final FiCaSchedulerApp application =
                 (FiCaSchedulerApp)(invocation.getArguments()[0]);
-            final ContainerId containerId =                 
+            final ContainerId containerId =
                 TestUtils.getMockContainerId(application);
 
             Container container = TestUtils.getMockContainer(
                 containerId,
-                ((FiCaSchedulerNode)(invocation.getArguments()[1])).getNodeID(), 
+                ((FiCaSchedulerNode)(invocation.getArguments()[1])).getNodeID(),
                 (Resource)(invocation.getArguments()[2]),
                 ((Priority)invocation.getArguments()[3]));
             return container;
@@ -258,12 +259,12 @@ public class TestLeafQueue {
         }
       ).
       when(queue).createContainer(
-              any(FiCaSchedulerApp.class), 
-              any(FiCaSchedulerNode.class), 
+              any(FiCaSchedulerApp.class),
+              any(FiCaSchedulerNode.class),
               any(Resource.class),
               any(Priority.class)
               );
-    
+
     // 2. Stub out LeafQueue.parent.completedContainer
     CSQueue parent = queue.getParent();
     doNothing().when(parent).completedContainer(
@@ -299,15 +300,15 @@ public class TestLeafQueue {
 
 	  //Verify the value for getAMResourceLimit for queues with < .1 maxcap
 	  Resource clusterResource = Resource.newInstance(50 * GB, 50);
-	  
+
     a.updateClusterResource(clusterResource,
         new ResourceLimits(clusterResource));
-	  assertEquals(Resource.newInstance(1 * GB, 1), 
+	  assertEquals(Resource.newInstance(1 * GB, 1),
 	    a.getAMResourceLimit());
-    
+
 	  b.updateClusterResource(clusterResource,
         new ResourceLimits(clusterResource));
-	  assertEquals(Resource.newInstance(5 * GB, 1), 
+	  assertEquals(Resource.newInstance(5 * GB, 1),
 	    b.getAMResourceLimit());
   }
  
@@ -580,14 +581,14 @@ public class TestLeafQueue {
     assertEquals((int)(a.getCapacity() * node_0.getTotalResource().getMemory()),
         a.getMetrics().getAvailableMB());
   }
-  
+
   @Test
   public void testUserLimits() throws Exception {
     // Mock the queue
     LeafQueue a = stubLeafQueue((LeafQueue)queues.get(A));
     //unset maxCapacity
     a.setMaxCapacity(1.0f);
-    
+
     // Users
     final String user_0 = "user_0";
     final String user_1 = "user_1";
@@ -603,14 +604,14 @@ public class TestLeafQueue {
     final ApplicationAttemptId appAttemptId_1 = 
         TestUtils.getMockApplicationAttemptId(1, 0); 
     FiCaSchedulerApp app_1 = 
-        new FiCaSchedulerApp(appAttemptId_1, user_0, a, 
+        new FiCaSchedulerApp(appAttemptId_1, user_0, a,
             a.getActiveUsersManager(), spyRMContext);
     a.submitApplicationAttempt(app_1, user_0);  // same user
 
-    final ApplicationAttemptId appAttemptId_2 = 
-        TestUtils.getMockApplicationAttemptId(2, 0); 
-    FiCaSchedulerApp app_2 = 
-        new FiCaSchedulerApp(appAttemptId_2, user_1, a, 
+    final ApplicationAttemptId appAttemptId_2 =
+        TestUtils.getMockApplicationAttemptId(2, 0);
+    FiCaSchedulerApp app_2 =
+        new FiCaSchedulerApp(appAttemptId_2, user_1, a,
             a.getActiveUsersManager(), spyRMContext);
     a.submitApplicationAttempt(app_2, user_1);
 
@@ -648,7 +649,7 @@ public class TestLeafQueue {
     assertEquals("There should only be 1 active user!", 
         1, a.getActiveUsersManager().getNumActiveUsers());
 
-    // This commented code is key to test 'activeUsers'. 
+    // This commented code is key to test 'activeUsers'.
     // It should fail the test if uncommented since
     // it would increase 'activeUsers' to 2 and stop user_2
     // Pre MAPREDUCE-3732 this test should fail without this block too
@@ -864,10 +865,10 @@ public class TestLeafQueue {
 
     // Setup some nodes
     String host_0 = "127.0.0.1";
-    FiCaSchedulerNode node_0 = TestUtils.getMockNode(host_0, DEFAULT_RACK, 
+    FiCaSchedulerNode node_0 = TestUtils.getMockNode(host_0, DEFAULT_RACK,
       0, 16*GB);
     String host_1 = "127.0.0.2";
-    FiCaSchedulerNode node_1 = TestUtils.getMockNode(host_1, DEFAULT_RACK, 
+    FiCaSchedulerNode node_1 = TestUtils.getMockNode(host_1, DEFAULT_RACK,
       0, 16*GB);
 
     final int numNodes = 2;
@@ -887,7 +888,7 @@ public class TestLeafQueue {
     assertEquals(0*GB, app_1.getCurrentConsumption().getMemory());
     //Now, headroom is the same for all apps for a given user + queue combo
     //and a change to any app's headroom is reflected for all the user's apps
-    //once those apps are active/have themselves calculated headroom for 
+    //once those apps are active/have themselves calculated headroom for
     //allocation at least one time
     assertEquals(2*GB, app_0.getHeadroom().getMemory());
     assertEquals(0*GB, app_1.getHeadroom().getMemory());//not yet active
@@ -906,7 +907,7 @@ public class TestLeafQueue {
     assertEquals(1*GB, app_1.getHeadroom().getMemory());//now active
     assertEquals(0*GB, app_2.getHeadroom().getMemory());//not yet active
 
-    //Complete container and verify that headroom is updated, for both apps 
+    //Complete container and verify that headroom is updated, for both apps
     //for the user
     RMContainer rmContainer = app_0.getLiveContainers().iterator().next();
     a.completedContainer(clusterResource, app_0, node_0, rmContainer,
@@ -938,7 +939,7 @@ public class TestLeafQueue {
             a.getActiveUsersManager(), spyRMContext);
     a.submitApplicationAttempt(app_0, user_0);
 
-    final ApplicationAttemptId appAttemptId_1 = 
+    final ApplicationAttemptId appAttemptId_1 =
         TestUtils.getMockApplicationAttemptId(1, 0); 
     FiCaSchedulerApp app_1 = 
         new FiCaSchedulerApp(appAttemptId_1, user_0, a, 
@@ -961,7 +962,7 @@ public class TestLeafQueue {
     final int numNodes = 2;
     Resource clusterResource = Resources.createResource(numNodes * (8*GB), 1);
     when(csContext.getNumClusterNodes()).thenReturn(numNodes);
- 
+
     // Setup resource-requests
     Priority priority = TestUtils.createMockPriority(1);
     app_0.updateResourceRequests(Collections.singletonList(
@@ -991,9 +992,9 @@ public class TestLeafQueue {
     assertEquals(2*GB, a.getUsedResources().getMemory());
     assertEquals(2*GB, app_0.getCurrentConsumption().getMemory());
     assertEquals(0*GB, app_1.getCurrentConsumption().getMemory());
-    assertEquals(2*GB, app_0.getHeadroom().getMemory()); 
+    assertEquals(2*GB, app_0.getHeadroom().getMemory());
       // User limit = 4G, 2 in use
-    assertEquals(0*GB, app_1.getHeadroom().getMemory()); 
+    assertEquals(0*GB, app_1.getHeadroom().getMemory());
       // the application is not yet active
 
     // Again one to user_0 since he hasn't exceeded user limit yet
@@ -1004,7 +1005,7 @@ public class TestLeafQueue {
     assertEquals(1*GB, app_1.getCurrentConsumption().getMemory());
     assertEquals(1*GB, app_0.getHeadroom().getMemory()); // 4G - 3G
     assertEquals(1*GB, app_1.getHeadroom().getMemory()); // 4G - 3G
-    
+
     // Submit requests for app_1 and set max-cap
     a.setMaxCapacity(.1f);
     app_2.updateResourceRequests(Collections.singletonList(
@@ -1030,7 +1031,7 @@ public class TestLeafQueue {
     assertEquals(1, a.getActiveUsersManager().getNumActiveUsers());
     a.assignContainers(clusterResource, node_1, false,
         new ResourceLimits(clusterResource));
-    assertEquals(0*GB, app_2.getHeadroom().getMemory());   // hit queue max-cap 
+    assertEquals(0*GB, app_2.getHeadroom().getMemory());   // hit queue max-cap
   }
 
   @Test
@@ -1083,7 +1084,7 @@ public class TestLeafQueue {
     Resource clusterResource = 
         Resources.createResource(numNodes * (8*GB), numNodes * 16);
     when(csContext.getNumClusterNodes()).thenReturn(numNodes);
-    
+
     // Setup resource-requests
     Priority priority = TestUtils.createMockPriority(1);
     app_0.updateResourceRequests(Collections.singletonList(
@@ -1169,7 +1170,7 @@ public class TestLeafQueue {
     a.setUserLimitFactor(1);
     a.assignContainers(clusterResource, node_0, false,
         new ResourceLimits(clusterResource));
-    assertEquals(7*GB, a.getUsedResources().getMemory()); 
+    assertEquals(7*GB, a.getUsedResources().getMemory());
     assertEquals(3*GB, app_0.getCurrentConsumption().getMemory());
     assertEquals(0*GB, app_1.getCurrentConsumption().getMemory());
     assertEquals(3*GB, app_2.getCurrentConsumption().getMemory());
@@ -1178,7 +1179,7 @@ public class TestLeafQueue {
     // Now we should assign to app_3 again since user_2 is under user-limit
     a.assignContainers(clusterResource, node_0, false,
         new ResourceLimits(clusterResource));
-    assertEquals(8*GB, a.getUsedResources().getMemory()); 
+    assertEquals(8*GB, a.getUsedResources().getMemory());
     assertEquals(3*GB, app_0.getCurrentConsumption().getMemory());
     assertEquals(0*GB, app_1.getCurrentConsumption().getMemory());
     assertEquals(3*GB, app_2.getCurrentConsumption().getMemory());
@@ -1298,7 +1299,7 @@ public class TestLeafQueue {
     // Now, reservation should kick in for app_1
     a.assignContainers(clusterResource, node_0, false,
         new ResourceLimits(clusterResource));
-    assertEquals(6*GB, a.getUsedResources().getMemory()); 
+    assertEquals(6*GB, a.getUsedResources().getMemory());
     assertEquals(2*GB, app_0.getCurrentConsumption().getMemory());
     assertEquals(0*GB, app_1.getCurrentConsumption().getMemory());
     assertEquals(4*GB, app_1.getCurrentReservation().getMemory());
@@ -1315,7 +1316,7 @@ public class TestLeafQueue {
         RMContainerEventType.KILL, null, true);
     a.assignContainers(clusterResource, node_0, false,
         new ResourceLimits(clusterResource));
-    assertEquals(5*GB, a.getUsedResources().getMemory()); 
+    assertEquals(5*GB, a.getUsedResources().getMemory());
     assertEquals(1*GB, app_0.getCurrentConsumption().getMemory());
     assertEquals(0*GB, app_1.getCurrentConsumption().getMemory());
     assertEquals(4*GB, app_1.getCurrentReservation().getMemory());
@@ -1340,7 +1341,7 @@ public class TestLeafQueue {
     assertEquals(0*GB, a.getMetrics().getReservedMB());
     assertEquals(4*GB, a.getMetrics().getAllocatedMB());
   }
-  
+
   @Test
   public void testStolenReservedContainer() throws Exception {
     // Manipulate queue 'a'
@@ -1374,7 +1375,7 @@ public class TestLeafQueue {
     FiCaSchedulerNode node_1 = TestUtils.getMockNode(host_1, DEFAULT_RACK, 0, 4*GB);
 
     final int numNodes = 3;
-    Resource clusterResource = 
+    Resource clusterResource =
         Resources.createResource(numNodes * (4*GB), numNodes * 16);
     when(csContext.getNumClusterNodes()).thenReturn(numNodes);
 
@@ -1421,7 +1422,7 @@ public class TestLeafQueue {
     // node_1 heartbeats in and gets the DEFAULT_RACK request for app_1
     // We do not need locality delay here
     doReturn(-1).when(a).getNodeLocalityDelay();
-    
+
     a.assignContainers(clusterResource, node_1, false,
         new ResourceLimits(clusterResource));
     assertEquals(10*GB, a.getUsedResources().getMemory());
@@ -1484,7 +1485,7 @@ public class TestLeafQueue {
     
     String host_1 = "127.0.0.2";
     FiCaSchedulerNode node_1 = TestUtils.getMockNode(host_1, DEFAULT_RACK, 0, 4*GB);
-    
+
     final int numNodes = 3;
     Resource clusterResource = 
         Resources.createResource(numNodes * (4*GB), numNodes * 16);
@@ -1494,7 +1495,7 @@ public class TestLeafQueue {
     when(a.getMaximumAllocation()).thenReturn(
         Resources.createResource(4*GB, 16));
     when(a.getMinimumAllocationFactor()).thenReturn(0.25f); // 1G / 4G 
-    
+
     // Setup resource-requests
     Priority priority = TestUtils.createMockPriority(1);
     app_0.updateResourceRequests(Collections.singletonList(
@@ -1525,7 +1526,7 @@ public class TestLeafQueue {
     // Now, reservation should kick in for app_1
     a.assignContainers(clusterResource, node_0, false,
         new ResourceLimits(clusterResource));
-    assertEquals(6*GB, a.getUsedResources().getMemory()); 
+    assertEquals(6*GB, a.getUsedResources().getMemory());
     assertEquals(2*GB, app_0.getCurrentConsumption().getMemory());
     assertEquals(0*GB, app_1.getCurrentConsumption().getMemory());
     assertEquals(4*GB, app_1.getCurrentReservation().getMemory());
@@ -1540,7 +1541,7 @@ public class TestLeafQueue {
         RMContainerEventType.KILL, null, true);
     a.assignContainers(clusterResource, node_0, false,
         new ResourceLimits(clusterResource));
-    assertEquals(5*GB, a.getUsedResources().getMemory()); 
+    assertEquals(5*GB, a.getUsedResources().getMemory());
     assertEquals(1*GB, app_0.getCurrentConsumption().getMemory());
     assertEquals(0*GB, app_1.getCurrentConsumption().getMemory());
     assertEquals(4*GB, app_1.getCurrentReservation().getMemory());
@@ -1550,7 +1551,7 @@ public class TestLeafQueue {
     // Re-reserve
     a.assignContainers(clusterResource, node_0, false,
         new ResourceLimits(clusterResource));
-    assertEquals(5*GB, a.getUsedResources().getMemory()); 
+    assertEquals(5*GB, a.getUsedResources().getMemory());
     assertEquals(1*GB, app_0.getCurrentConsumption().getMemory());
     assertEquals(0*GB, app_1.getCurrentConsumption().getMemory());
     assertEquals(4*GB, app_1.getCurrentReservation().getMemory());
@@ -1560,14 +1561,14 @@ public class TestLeafQueue {
     // Try to schedule on node_1 now, should *move* the reservation
     a.assignContainers(clusterResource, node_1, false,
         new ResourceLimits(clusterResource));
-    assertEquals(9*GB, a.getUsedResources().getMemory()); 
+    assertEquals(9*GB, a.getUsedResources().getMemory());
     assertEquals(1*GB, app_0.getCurrentConsumption().getMemory());
     assertEquals(4*GB, app_1.getCurrentConsumption().getMemory());
     assertEquals(4*GB, app_1.getCurrentReservation().getMemory());
     assertEquals(4*GB, node_1.getUsedResource().getMemory());
     // Doesn't change yet... only when reservation is cancelled or a different
     // container is reserved
-    assertEquals(2, app_1.getReReservations(priority)); 
+    assertEquals(2, app_1.getReReservations(priority));
     
     // Now finish another container from app_0 and see the reservation cancelled
     rmContainer = app_0.getLiveContainers().iterator().next();
@@ -1583,11 +1584,11 @@ public class TestLeafQueue {
     assertEquals(4*GB, app_1.getCurrentConsumption().getMemory());
     assertEquals(4*GB, app_1.getCurrentReservation().getMemory());
     assertEquals(0*GB, node_0.getUsedResource().getMemory());
-    assertEquals(4*GB, 
+    assertEquals(4*GB,
         assignment.getExcessReservation().getContainer().getResource().getMemory());
   }
   
-  
+
 
   @Test
   public void testLocalityScheduling() throws Exception {
@@ -1601,11 +1602,11 @@ public class TestLeafQueue {
     // Submit applications
     final ApplicationAttemptId appAttemptId_0 = 
         TestUtils.getMockApplicationAttemptId(0, 0); 
-    FiCaSchedulerApp app_0 = 
-        spy(new FiCaSchedulerApp(appAttemptId_0, user_0, a, 
+    FiCaSchedulerApp app_0 =
+        spy(new FiCaSchedulerApp(appAttemptId_0, user_0, a,
             mock(ActiveUsersManager.class), spyRMContext));
     a.submitApplicationAttempt(app_0, user_0);
-    
+
     // Setup some nodes and racks
     String host_0 = "127.0.0.1";
     String rack_0 = "rack_0";
@@ -1646,11 +1647,11 @@ public class TestLeafQueue {
 
     // Start testing...
     CSAssignment assignment = null;
-    
+
     // Start with off switch, shouldn't allocate due to delay scheduling
     assignment = a.assignContainers(clusterResource, node_2, false,
         new ResourceLimits(clusterResource));
-    verify(app_0, never()).allocate(any(NodeType.class), eq(node_2), 
+    verify(app_0, never()).allocate(any(NodeType.class), eq(node_2),
         any(Priority.class), any(ResourceRequest.class), any(Container.class));
     assertEquals(1, app_0.getSchedulingOpportunities(priority));
     assertEquals(3, app_0.getTotalRequiredResources(priority));
@@ -1659,7 +1660,7 @@ public class TestLeafQueue {
     // Another off switch, shouldn't allocate due to delay scheduling
     assignment = a.assignContainers(clusterResource, node_2, false,
         new ResourceLimits(clusterResource));
-    verify(app_0, never()).allocate(any(NodeType.class), eq(node_2), 
+    verify(app_0, never()).allocate(any(NodeType.class), eq(node_2),
         any(Priority.class), any(ResourceRequest.class), any(Container.class));
     assertEquals(2, app_0.getSchedulingOpportunities(priority));
     assertEquals(3, app_0.getTotalRequiredResources(priority));
@@ -1668,7 +1669,7 @@ public class TestLeafQueue {
     // Another off switch, shouldn't allocate due to delay scheduling
     assignment = a.assignContainers(clusterResource, node_2, false,
         new ResourceLimits(clusterResource));
-    verify(app_0, never()).allocate(any(NodeType.class), eq(node_2), 
+    verify(app_0, never()).allocate(any(NodeType.class), eq(node_2),
         any(Priority.class), any(ResourceRequest.class), any(Container.class));
     assertEquals(3, app_0.getSchedulingOpportunities(priority));
     assertEquals(3, app_0.getTotalRequiredResources(priority));
@@ -1678,7 +1679,7 @@ public class TestLeafQueue {
     // since missedOpportunities=3 and reqdContainers=3
     assignment = a.assignContainers(clusterResource, node_2, false,
         new ResourceLimits(clusterResource));
-    verify(app_0).allocate(eq(NodeType.OFF_SWITCH), eq(node_2), 
+    verify(app_0).allocate(eq(NodeType.OFF_SWITCH), eq(node_2),
         any(Priority.class), any(ResourceRequest.class), any(Container.class));
     assertEquals(4, app_0.getSchedulingOpportunities(priority)); // should NOT reset
     assertEquals(2, app_0.getTotalRequiredResources(priority));
@@ -1687,7 +1688,7 @@ public class TestLeafQueue {
     // NODE_LOCAL - node_0
     assignment = a.assignContainers(clusterResource, node_0, false,
         new ResourceLimits(clusterResource));
-    verify(app_0).allocate(eq(NodeType.NODE_LOCAL), eq(node_0), 
+    verify(app_0).allocate(eq(NodeType.NODE_LOCAL), eq(node_0),
         any(Priority.class), any(ResourceRequest.class), any(Container.class));
     assertEquals(0, app_0.getSchedulingOpportunities(priority)); // should reset
     assertEquals(1, app_0.getTotalRequiredResources(priority));
@@ -1696,7 +1697,7 @@ public class TestLeafQueue {
     // NODE_LOCAL - node_1
     assignment = a.assignContainers(clusterResource, node_1, false,
         new ResourceLimits(clusterResource));
-    verify(app_0).allocate(eq(NodeType.NODE_LOCAL), eq(node_1), 
+    verify(app_0).allocate(eq(NodeType.NODE_LOCAL), eq(node_1),
         any(Priority.class), any(ResourceRequest.class), any(Container.class));
     assertEquals(0, app_0.getSchedulingOpportunities(priority)); // should reset
     assertEquals(0, app_0.getTotalRequiredResources(priority));
@@ -1708,14 +1709,14 @@ public class TestLeafQueue {
         TestUtils.createResourceRequest(host_1, 1*GB, 1, 
             true, priority, recordFactory));
     app_0_requests_0.add(
-        TestUtils.createResourceRequest(rack_1, 1*GB, 1, 
+        TestUtils.createResourceRequest(rack_1, 1*GB, 1,
             true, priority, recordFactory));
     app_0_requests_0.add(
         TestUtils.createResourceRequest(ResourceRequest.ANY, 1*GB, 2, // one extra
             true, priority, recordFactory));
     app_0.updateResourceRequests(app_0_requests_0);
     assertEquals(2, app_0.getTotalRequiredResources(priority));
-    
+
     String host_3 = "127.0.0.4"; // on rack_1
     FiCaSchedulerNode node_3 = TestUtils.getMockNode(host_3, rack_1, 0, 8*GB);
     
@@ -1732,13 +1733,13 @@ public class TestLeafQueue {
     // Should assign RACK_LOCAL now
     assignment = a.assignContainers(clusterResource, node_3, false,
         new ResourceLimits(clusterResource));
-    verify(app_0).allocate(eq(NodeType.RACK_LOCAL), eq(node_3), 
+    verify(app_0).allocate(eq(NodeType.RACK_LOCAL), eq(node_3),
         any(Priority.class), any(ResourceRequest.class), any(Container.class));
     assertEquals(0, app_0.getSchedulingOpportunities(priority)); // should reset
     assertEquals(1, app_0.getTotalRequiredResources(priority));
     assertEquals(NodeType.RACK_LOCAL, assignment.getType());
   }
-  
+
   @Test
   public void testApplicationPriorityScheduling() throws Exception {
     // Manipulate queue 'a'
@@ -1750,8 +1751,8 @@ public class TestLeafQueue {
     // Submit applications
     final ApplicationAttemptId appAttemptId_0 = 
         TestUtils.getMockApplicationAttemptId(0, 0); 
-    FiCaSchedulerApp app_0 = 
-        spy(new FiCaSchedulerApp(appAttemptId_0, user_0, a, 
+    FiCaSchedulerApp app_0 =
+        spy(new FiCaSchedulerApp(appAttemptId_0, user_0, a,
             mock(ActiveUsersManager.class), spyRMContext));
     a.submitApplicationAttempt(app_0, user_0);
     
@@ -1814,11 +1815,11 @@ public class TestLeafQueue {
     // thus, no P2 either!
     a.assignContainers(clusterResource, node_2, false,
         new ResourceLimits(clusterResource));
-    verify(app_0, never()).allocate(any(NodeType.class), eq(node_2), 
+    verify(app_0, never()).allocate(any(NodeType.class), eq(node_2),
         eq(priority_1), any(ResourceRequest.class), any(Container.class));
     assertEquals(1, app_0.getSchedulingOpportunities(priority_1));
     assertEquals(2, app_0.getTotalRequiredResources(priority_1));
-    verify(app_0, never()).allocate(any(NodeType.class), eq(node_2), 
+    verify(app_0, never()).allocate(any(NodeType.class), eq(node_2),
         eq(priority_2), any(ResourceRequest.class), any(Container.class));
     assertEquals(0, app_0.getSchedulingOpportunities(priority_2));
     assertEquals(1, app_0.getTotalRequiredResources(priority_2));
@@ -1827,11 +1828,11 @@ public class TestLeafQueue {
     // thus, no P2 either!
     a.assignContainers(clusterResource, node_2, false,
         new ResourceLimits(clusterResource));
-    verify(app_0, never()).allocate(any(NodeType.class), eq(node_2), 
+    verify(app_0, never()).allocate(any(NodeType.class), eq(node_2),
         eq(priority_1), any(ResourceRequest.class), any(Container.class));
     assertEquals(2, app_0.getSchedulingOpportunities(priority_1));
     assertEquals(2, app_0.getTotalRequiredResources(priority_1));
-    verify(app_0, never()).allocate(any(NodeType.class), eq(node_2), 
+    verify(app_0, never()).allocate(any(NodeType.class), eq(node_2),
         eq(priority_2), any(ResourceRequest.class), any(Container.class));
     assertEquals(0, app_0.getSchedulingOpportunities(priority_2));
     assertEquals(1, app_0.getTotalRequiredResources(priority_2));
@@ -1839,11 +1840,11 @@ public class TestLeafQueue {
     // Another off-switch, shouldn't allocate OFF_SWITCH P1
     a.assignContainers(clusterResource, node_2, false,
         new ResourceLimits(clusterResource));
-    verify(app_0).allocate(eq(NodeType.OFF_SWITCH), eq(node_2), 
+    verify(app_0).allocate(eq(NodeType.OFF_SWITCH), eq(node_2),
         eq(priority_1), any(ResourceRequest.class), any(Container.class));
     assertEquals(3, app_0.getSchedulingOpportunities(priority_1));
     assertEquals(1, app_0.getTotalRequiredResources(priority_1));
-    verify(app_0, never()).allocate(any(NodeType.class), eq(node_2), 
+    verify(app_0, never()).allocate(any(NodeType.class), eq(node_2),
         eq(priority_2), any(ResourceRequest.class), any(Container.class));
     assertEquals(0, app_0.getSchedulingOpportunities(priority_2));
     assertEquals(1, app_0.getTotalRequiredResources(priority_2));
@@ -1851,11 +1852,11 @@ public class TestLeafQueue {
     // Now, DATA_LOCAL for P1
     a.assignContainers(clusterResource, node_0, false,
         new ResourceLimits(clusterResource));
-    verify(app_0).allocate(eq(NodeType.NODE_LOCAL), eq(node_0), 
+    verify(app_0).allocate(eq(NodeType.NODE_LOCAL), eq(node_0),
         eq(priority_1), any(ResourceRequest.class), any(Container.class));
     assertEquals(0, app_0.getSchedulingOpportunities(priority_1));
     assertEquals(0, app_0.getTotalRequiredResources(priority_1));
-    verify(app_0, never()).allocate(any(NodeType.class), eq(node_0), 
+    verify(app_0, never()).allocate(any(NodeType.class), eq(node_0),
         eq(priority_2), any(ResourceRequest.class), any(Container.class));
     assertEquals(0, app_0.getSchedulingOpportunities(priority_2));
     assertEquals(1, app_0.getTotalRequiredResources(priority_2));
@@ -1863,11 +1864,11 @@ public class TestLeafQueue {
     // Now, OFF_SWITCH for P2
     a.assignContainers(clusterResource, node_1, false,
         new ResourceLimits(clusterResource));
-    verify(app_0, never()).allocate(any(NodeType.class), eq(node_1), 
+    verify(app_0, never()).allocate(any(NodeType.class), eq(node_1),
         eq(priority_1), any(ResourceRequest.class), any(Container.class));
     assertEquals(0, app_0.getSchedulingOpportunities(priority_1));
     assertEquals(0, app_0.getTotalRequiredResources(priority_1));
-    verify(app_0).allocate(eq(NodeType.OFF_SWITCH), eq(node_1), 
+    verify(app_0).allocate(eq(NodeType.OFF_SWITCH), eq(node_1),
         eq(priority_2), any(ResourceRequest.class), any(Container.class));
     assertEquals(1, app_0.getSchedulingOpportunities(priority_2));
     assertEquals(0, app_0.getTotalRequiredResources(priority_2));
@@ -1887,7 +1888,7 @@ public class TestLeafQueue {
     final ApplicationAttemptId appAttemptId_0 = 
         TestUtils.getMockApplicationAttemptId(0, 0); 
     FiCaSchedulerApp app_0 = 
-        spy(new FiCaSchedulerApp(appAttemptId_0, user_0, a, 
+        spy(new FiCaSchedulerApp(appAttemptId_0, user_0, a,
             mock(ActiveUsersManager.class), spyRMContext));
     a.submitApplicationAttempt(app_0, user_0);
     
@@ -1940,7 +1941,7 @@ public class TestLeafQueue {
     // NODE_LOCAL - node_0_1
     a.assignContainers(clusterResource, node_0_0, false,
         new ResourceLimits(clusterResource));
-    verify(app_0).allocate(eq(NodeType.NODE_LOCAL), eq(node_0_0), 
+    verify(app_0).allocate(eq(NodeType.NODE_LOCAL), eq(node_0_0),
         any(Priority.class), any(ResourceRequest.class), any(Container.class));
     assertEquals(0, app_0.getSchedulingOpportunities(priority)); // should reset
     assertEquals(0, app_0.getTotalRequiredResources(priority));
@@ -1949,7 +1950,7 @@ public class TestLeafQueue {
     // required(ANY) == 0
     a.assignContainers(clusterResource, node_1_0, false,
         new ResourceLimits(clusterResource));
-    verify(app_0, never()).allocate(any(NodeType.class), eq(node_1_0), 
+    verify(app_0, never()).allocate(any(NodeType.class), eq(node_1_0),
         any(Priority.class), any(ResourceRequest.class), any(Container.class));
     assertEquals(0, app_0.getSchedulingOpportunities(priority)); // Still zero
                                                                // since #req=0
@@ -1966,15 +1967,15 @@ public class TestLeafQueue {
     // required(rack_1) == 0
     a.assignContainers(clusterResource, node_0_1, false,
         new ResourceLimits(clusterResource));
-    verify(app_0, never()).allocate(any(NodeType.class), eq(node_1_0), 
+    verify(app_0, never()).allocate(any(NodeType.class), eq(node_1_0),
         any(Priority.class), any(ResourceRequest.class), any(Container.class));
-    assertEquals(1, app_0.getSchedulingOpportunities(priority)); 
+    assertEquals(1, app_0.getSchedulingOpportunities(priority));
     assertEquals(1, app_0.getTotalRequiredResources(priority));
     
     // NODE_LOCAL - node_1
     a.assignContainers(clusterResource, node_1_0, false,
         new ResourceLimits(clusterResource));
-    verify(app_0).allocate(eq(NodeType.NODE_LOCAL), eq(node_1_0), 
+    verify(app_0).allocate(eq(NodeType.NODE_LOCAL), eq(node_1_0),
         any(Priority.class), any(ResourceRequest.class), any(Container.class));
     assertEquals(0, app_0.getSchedulingOpportunities(priority)); // should reset
     assertEquals(0, app_0.getTotalRequiredResources(priority));
@@ -2156,15 +2157,15 @@ public class TestLeafQueue {
     // Submit applications
     final ApplicationAttemptId appAttemptId_0 = 
         TestUtils.getMockApplicationAttemptId(0, 0); 
-    FiCaSchedulerApp app_0 = 
-        spy(new FiCaSchedulerApp(appAttemptId_0, user_0, a, 
+    FiCaSchedulerApp app_0 =
+        spy(new FiCaSchedulerApp(appAttemptId_0, user_0, a,
             mock(ActiveUsersManager.class), spyRMContext));
     a.submitApplicationAttempt(app_0, user_0);
 
     final ApplicationAttemptId appAttemptId_1 = 
         TestUtils.getMockApplicationAttemptId(1, 0); 
-    FiCaSchedulerApp app_1 = 
-        spy(new FiCaSchedulerApp(appAttemptId_1, user_0, a, 
+    FiCaSchedulerApp app_1 =
+        spy(new FiCaSchedulerApp(appAttemptId_1, user_0, a,
             mock(ActiveUsersManager.class), spyRMContext));
     a.submitApplicationAttempt(app_1, user_0);
 
@@ -2173,8 +2174,8 @@ public class TestLeafQueue {
     String rack_0 = "rack_0";
     String host_0_1 = "127.0.0.2";
     FiCaSchedulerNode node_0_1 = TestUtils.getMockNode(host_0_1, rack_0, 0, 8*GB);
-    
-    
+
+
     String host_1_0 = "127.0.0.3";
     String rack_1 = "rack_1";
     FiCaSchedulerNode node_1_0 = TestUtils.getMockNode(host_1_0, rack_1, 0, 8*GB);
@@ -2225,9 +2226,9 @@ public class TestLeafQueue {
     
     // node_0_1  
     // Shouldn't allocate since RR(rack_0) = null && RR(ANY) = relax: false
-    a.assignContainers(clusterResource, node_0_1, false, 
+    a.assignContainers(clusterResource, node_0_1, false,
         new ResourceLimits(clusterResource));
-    verify(app_0, never()).allocate(any(NodeType.class), eq(node_0_1), 
+    verify(app_0, never()).allocate(any(NodeType.class), eq(node_0_1),
         any(Priority.class), any(ResourceRequest.class), any(Container.class));
     assertEquals(0, app_0.getSchedulingOpportunities(priority)); // should be 0
     
@@ -2248,9 +2249,9 @@ public class TestLeafQueue {
 
     // node_1_1  
     // Shouldn't allocate since RR(rack_1) = relax: false
-    a.assignContainers(clusterResource, node_1_1, false, 
+    a.assignContainers(clusterResource, node_1_1, false,
         new ResourceLimits(clusterResource));
-    verify(app_0, never()).allocate(any(NodeType.class), eq(node_0_1), 
+    verify(app_0, never()).allocate(any(NodeType.class), eq(node_0_1),
         any(Priority.class), any(ResourceRequest.class), any(Container.class));
     assertEquals(0, app_0.getSchedulingOpportunities(priority)); // should be 0
     
@@ -2279,9 +2280,9 @@ public class TestLeafQueue {
 
     // node_1_1  
     // Shouldn't allocate since node_1_1 is blacklisted
-    a.assignContainers(clusterResource, node_1_1, false, 
+    a.assignContainers(clusterResource, node_1_1, false,
         new ResourceLimits(clusterResource));
-    verify(app_0, never()).allocate(any(NodeType.class), eq(node_1_1), 
+    verify(app_0, never()).allocate(any(NodeType.class), eq(node_1_1),
         any(Priority.class), any(ResourceRequest.class), any(Container.class));
     assertEquals(0, app_0.getSchedulingOpportunities(priority)); // should be 0
 
@@ -2308,9 +2309,9 @@ public class TestLeafQueue {
 
     // node_1_1  
     // Shouldn't allocate since rack_1 is blacklisted
-    a.assignContainers(clusterResource, node_1_1, false, 
+    a.assignContainers(clusterResource, node_1_1, false,
         new ResourceLimits(clusterResource));
-    verify(app_0, never()).allocate(any(NodeType.class), eq(node_1_1), 
+    verify(app_0, never()).allocate(any(NodeType.class), eq(node_1_1),
         any(Priority.class), any(ResourceRequest.class), any(Container.class));
     assertEquals(0, app_0.getSchedulingOpportunities(priority)); // should be 0
     
@@ -2335,11 +2336,11 @@ public class TestLeafQueue {
     // Blacklist: < host_0_0 >       <----
 
     // Now, should allocate since RR(rack_1) = relax: true
-    a.assignContainers(clusterResource, node_1_1, false, 
+    a.assignContainers(clusterResource, node_1_1, false,
         new ResourceLimits(clusterResource));
-    verify(app_0,never()).allocate(eq(NodeType.RACK_LOCAL), eq(node_1_1), 
+    verify(app_0,never()).allocate(eq(NodeType.RACK_LOCAL), eq(node_1_1),
         any(Priority.class), any(ResourceRequest.class), any(Container.class));
-    assertEquals(0, app_0.getSchedulingOpportunities(priority)); 
+    assertEquals(0, app_0.getSchedulingOpportunities(priority));
     assertEquals(1, app_0.getTotalRequiredResources(priority));
 
     // Now sanity-check node_local
@@ -2366,11 +2367,11 @@ public class TestLeafQueue {
     // host_1_0: 8G
     // host_1_1: 7G
 
-    a.assignContainers(clusterResource, node_1_0, false, 
+    a.assignContainers(clusterResource, node_1_0, false,
         new ResourceLimits(clusterResource));
-    verify(app_0).allocate(eq(NodeType.NODE_LOCAL), eq(node_1_0), 
+    verify(app_0).allocate(eq(NodeType.NODE_LOCAL), eq(node_1_0),
         any(Priority.class), any(ResourceRequest.class), any(Container.class));
-    assertEquals(0, app_0.getSchedulingOpportunities(priority)); 
+    assertEquals(0, app_0.getSchedulingOpportunities(priority));
     assertEquals(0, app_0.getTotalRequiredResources(priority));
 
   }
@@ -2385,13 +2386,13 @@ public class TestLeafQueue {
     when(csContext.getRMContext()).thenReturn(rmContext);
     csConf.setFloat(CapacitySchedulerConfiguration.
         MAXIMUM_APPLICATION_MASTERS_RESOURCE_PERCENT, 0.1f);
-    ParentQueue root = new ParentQueue(csContext, 
+    ParentQueue root = new ParentQueue(csContext,
         CapacitySchedulerConfiguration.ROOT, null, null);
     csConf.setCapacity(CapacitySchedulerConfiguration.ROOT + "." + A, 80);
     LeafQueue a = new LeafQueue(csContext, A, root, null);
     assertEquals(0.1f, a.getMaxAMResourcePerQueuePercent(), 1e-3f);
     assertEquals(a.getAMResourceLimit(), Resources.createResource(160 * GB, 1));
-    
+
     csConf.setFloat(CapacitySchedulerConfiguration.
         MAXIMUM_APPLICATION_MASTERS_RESOURCE_PERCENT, 0.2f);
     LeafQueue newA = new LeafQueue(csContext, A, root, null);
@@ -2401,7 +2402,7 @@ public class TestLeafQueue {
 
     Resource newClusterResource = Resources.createResource(100 * 20 * GB,
         100 * 32);
-    a.updateClusterResource(newClusterResource, 
+    a.updateClusterResource(newClusterResource,
         new ResourceLimits(newClusterResource));
     //  100 * 20 * 0.2 = 400
     assertEquals(a.getAMResourceLimit(), Resources.createResource(400 * GB, 1));
@@ -2449,7 +2450,7 @@ public class TestLeafQueue {
             recordFactory)));
 
     try {
-      a.assignContainers(clusterResource, node_0, false, 
+      a.assignContainers(clusterResource, node_0, false,
           new ResourceLimits(clusterResource));
     } catch (NullPointerException e) {
       Assert.fail("NPE when allocating container on node but "

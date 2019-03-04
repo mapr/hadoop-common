@@ -103,7 +103,7 @@ public class RMContextImpl implements RMContext {
     ConfigurationProvider provider = new LocalConfigurationProvider();
     setConfigurationProvider(provider);
   }
-  
+
   @VisibleForTesting
   // helper constructor for tests
   public RMContextImpl(Dispatcher rmDispatcher,

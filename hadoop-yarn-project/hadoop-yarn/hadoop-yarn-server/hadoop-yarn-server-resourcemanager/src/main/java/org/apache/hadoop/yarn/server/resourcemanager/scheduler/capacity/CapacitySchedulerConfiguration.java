@@ -28,8 +28,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.authorize.AccessControlList;
@@ -52,9 +52,9 @@ import com.google.common.collect.ImmutableSet;
 
 public class CapacitySchedulerConfiguration extends ReservationSchedulerConfiguration {
 
-  private static final Log LOG = 
-    LogFactory.getLog(CapacitySchedulerConfiguration.class);
-  
+  private static final Logger LOG =
+      LoggerFactory.getLogger(CapacitySchedulerConfiguration.class);
+
   private static final String CS_CONFIGURATION_FILE = "capacity-scheduler.xml";
   
   @Private
@@ -78,7 +78,7 @@ public class CapacitySchedulerConfiguration extends ReservationSchedulerConfigur
   @Private
   public static final String MAXIMUM_APPLICATION_MASTERS_RESOURCE_PERCENT =
     PREFIX + MAXIMUM_AM_RESOURCE_SUFFIX;
-  
+
   @Private
   public static final String QUEUES = "queues";
   
@@ -133,7 +133,7 @@ public class CapacitySchedulerConfiguration extends ReservationSchedulerConfigur
   @Private
   public static final float 
   DEFAULT_MAXIMUM_APPLICATIONMASTERS_RESOURCE_PERCENT = 0.1f;
-  
+
   @Private
   public static final float UNDEFINED = -1;
   
@@ -328,7 +328,7 @@ public class CapacitySchedulerConfiguration extends ReservationSchedulerConfigur
     return getFloat(getQueuePrefix(queue) + MAXIMUM_AM_RESOURCE_SUFFIX, 
     		getMaximumApplicationMasterResourcePercent());
   }
-  
+
   public float getNonLabeledQueueCapacity(String queue) {
     float capacity = queue.equals("root") ? 100.0f : getFloat(
         getQueuePrefix(queue) + CAPACITY, UNDEFINED);
@@ -336,7 +336,7 @@ public class CapacitySchedulerConfiguration extends ReservationSchedulerConfigur
       throw new IllegalArgumentException("Illegal " +
       		"capacity of " + capacity + " for queue " + queue);
     }
-    LOG.debug("CSConf - getCapacity: queuePrefix=" + getQueuePrefix(queue) + 
+    LOG.debug("CSConf - getCapacity: queuePrefix=" + getQueuePrefix(queue) +
         ", capacity=" + capacity);
     return capacity;
   }
@@ -354,7 +354,7 @@ public class CapacitySchedulerConfiguration extends ReservationSchedulerConfigur
   public float getNonLabeledQueueMaximumCapacity(String queue) {
     float maxCapacity = getFloat(getQueuePrefix(queue) + MAXIMUM_CAPACITY,
         MAXIMUM_CAPACITY_VALUE);
-    maxCapacity = (maxCapacity == DEFAULT_MAXIMUM_CAPACITY_VALUE) ? 
+    maxCapacity = (maxCapacity == DEFAULT_MAXIMUM_CAPACITY_VALUE) ?
         MAXIMUM_CAPACITY_VALUE : maxCapacity;
     return maxCapacity;
   }
@@ -372,7 +372,7 @@ public class CapacitySchedulerConfiguration extends ReservationSchedulerConfigur
   public void setCapacityByLabel(String queue, String label, float capacity) {
     setFloat(getNodeLabelPrefix(queue, label) + CAPACITY, capacity);
   }
-  
+
   public void setMaximumCapacityByLabel(String queue, String label,
       float capacity) {
     setFloat(getNodeLabelPrefix(queue, label) + MAXIMUM_CAPACITY, capacity);
@@ -403,10 +403,10 @@ public class CapacitySchedulerConfiguration extends ReservationSchedulerConfigur
   
   public QueueState getState(String queue) {
     String state = get(getQueuePrefix(queue) + STATE);
-    return (state != null) ? 
+    return (state != null) ?
         QueueState.valueOf(StringUtils.toUpperCase(state)) : QueueState.RUNNING;
   }
-  
+
   public void setAccessibleNodeLabels(String queue, Set<String> labels) {
     if (labels == null) {
       return;
@@ -645,7 +645,7 @@ public class CapacitySchedulerConfiguration extends ReservationSchedulerConfigur
     int delay = getInt(NODE_LOCALITY_DELAY, DEFAULT_NODE_LOCALITY_DELAY);
     return (delay == DEFAULT_NODE_LOCALITY_DELAY) ? 0 : delay;
   }
-  
+
   public ResourceCalculator getResourceCalculator() {
     return ReflectionUtils.newInstance(
         getClass(

@@ -45,8 +45,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
@@ -111,8 +111,8 @@ import com.google.common.base.Supplier;
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class TestDelegationTokenRenewer {
-  private static final Log LOG = 
-      LogFactory.getLog(TestDelegationTokenRenewer.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(TestDelegationTokenRenewer.class);
   private static final Text KIND = new Text("HDFS_DELEGATION_TOKEN");
   
   private static BlockingQueue<Event> eventQueue;
@@ -487,7 +487,7 @@ public class TestDelegationTokenRenewer {
     }
     fail("App submission with a cancelled token should have failed");
   }
-  
+
   /**
    * Basic idea of the test:
    * 1. register a token for 2 seconds with no cancel at the end

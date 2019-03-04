@@ -22,8 +22,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.server.utils.Lock;
@@ -37,15 +37,16 @@ import org.apache.hadoop.yarn.server.utils.Lock;
  */
 @Private
 public class ActiveUsersManager {
-  
-  private static final Log LOG = LogFactory.getLog(ActiveUsersManager.class);
+
+  private static final Logger LOG =
+          LoggerFactory.getLogger(ActiveUsersManager.class);
   
   private final QueueMetrics metrics;
   
   private int activeUsers = 0;
   private Map<String, Set<ApplicationId>> usersApplications = 
       new HashMap<String, Set<ApplicationId>>();
-  
+
   public ActiveUsersManager(QueueMetrics metrics) {
     this.metrics = metrics;
   }
@@ -65,7 +66,7 @@ public class ActiveUsersManager {
       usersApplications.put(user, userApps);
       ++activeUsers;
       metrics.incrActiveUsers();
-      LOG.debug("User " + user + " added to activeUsers, currently: " + 
+      LOG.debug("User " + user + " added to activeUsers, currently: " +
           activeUsers);
     }
     if (userApps.add(applicationId)) {
@@ -91,12 +92,12 @@ public class ActiveUsersManager {
         usersApplications.remove(user);
         --activeUsers;
         metrics.decrActiveUsers();
-        LOG.debug("User " + user + " removed from activeUsers, currently: " + 
+        LOG.debug("User " + user + " removed from activeUsers, currently: " +
             activeUsers);
       }
     }
   }
-  
+
   /**
    * Get number of active users i.e. users with applications which have pending
    * resource requests.

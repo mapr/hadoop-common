@@ -31,8 +31,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Assert;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.AccessControlList;
@@ -79,7 +79,8 @@ public class TestApplicationACLs {
   private static final String SUPER_GROUP = "superGroup";
   private static final String UNAVAILABLE = "N/A";
 
-  private static final Log LOG = LogFactory.getLog(TestApplicationACLs.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(TestApplicationACLs.class);
 
   static MockRM resourceManager;
   static Configuration conf = new YarnConfiguration();

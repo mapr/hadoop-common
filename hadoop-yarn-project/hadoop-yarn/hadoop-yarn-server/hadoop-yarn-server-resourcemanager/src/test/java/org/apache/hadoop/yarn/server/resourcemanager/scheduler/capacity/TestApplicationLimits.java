@@ -34,8 +34,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -64,7 +64,8 @@ import org.mockito.Mockito;
 
 public class TestApplicationLimits {
   
-  private static final Log LOG = LogFactory.getLog(TestApplicationLimits.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(TestApplicationLimits.class);
   final static int GB = 1024;
 
   LeafQueue queue;
@@ -108,12 +109,12 @@ public class TestApplicationLimits {
         containerTokenSecretManager);
 
     Map<String, CSQueue> queues = new HashMap<String, CSQueue>();
-    CSQueue root = 
-        CapacityScheduler.parseQueue(csContext, csConf, null, "root", 
-            queues, queues, 
+    CSQueue root =
+        CapacityScheduler.parseQueue(csContext, csConf, null, "root",
+            queues, queues,
             TestUtils.spyHook);
 
-    
+
     queue = spy(new LeafQueue(csContext, A, root, null));
 
     // Stub out ACL checks
@@ -174,7 +175,7 @@ public class TestApplicationLimits {
     
     ActiveUsersManager activeUsersManager = mock(ActiveUsersManager.class);
     when(queue.getActiveUsersManager()).thenReturn(activeUsersManager);
-    
+
     assertEquals(Resource.newInstance(8 * GB, 1), queue.getAMResourceLimit());
     assertEquals(Resource.newInstance(4 * GB, 1),
       queue.getUserAMResourceLimit());
@@ -267,7 +268,7 @@ public class TestApplicationLimits {
     
     Map<String, CSQueue> queues = new HashMap<String, CSQueue>();
     CSQueue root = 
-        CapacityScheduler.parseQueue(csContext, csConf, null, "root", 
+        CapacityScheduler.parseQueue(csContext, csConf, null, "root",
             queues, queues, TestUtils.spyHook);
 
     LeafQueue queue = (LeafQueue)queues.get(A);
@@ -280,7 +281,7 @@ public class TestApplicationLimits {
     assertEquals(queue.getAMResourceLimit(), Resource.newInstance(160*GB, 1));
     assertEquals(queue.getUserAMResourceLimit(), 
       Resource.newInstance(80*GB, 1));
-    
+
     assertEquals(
         (int)(clusterResource.getMemory() * queue.getAbsoluteCapacity()),
         queue.getMetrics().getAvailableMB()
@@ -323,14 +324,14 @@ public class TestApplicationLimits {
 
     // Change the per-queue max AM resources percentage.
     csConf.setFloat(
-      "yarn.scheduler.capacity." + 
-          queue.getQueuePath() + 
+      "yarn.scheduler.capacity." +
+          queue.getQueuePath() +
           ".maximum-am-resource-percent",
       0.5f);
     // Re-create queues to get new configs.
     queues = new HashMap<String, CSQueue>();
-    root = 
-        CapacityScheduler.parseQueue(csContext, csConf, null, "root", 
+    root =
+        CapacityScheduler.parseQueue(csContext, csConf, null, "root",
             queues, queues, TestUtils.spyHook);
     clusterResource = Resources.createResource(100 * 16 * GB);
 
@@ -347,13 +348,13 @@ public class TestApplicationLimits {
 
     // Change the per-queue max applications.
     csConf.setInt(
-      "yarn.scheduler.capacity." + 
-          queue.getQueuePath() + 
+      "yarn.scheduler.capacity." +
+          queue.getQueuePath() +
           ".maximum-applications", 9999);
     // Re-create queues to get new configs.
     queues = new HashMap<String, CSQueue>();
-    root = 
-        CapacityScheduler.parseQueue(csContext, csConf, null, "root", 
+    root =
+        CapacityScheduler.parseQueue(csContext, csConf, null, "root",
             queues, queues, TestUtils.spyHook);
 
     queue = (LeafQueue)queues.get(A);
@@ -370,7 +371,7 @@ public class TestApplicationLimits {
     final String user_0 = "user_0";
     final String user_1 = "user_1";
     final String user_2 = "user_2";
-    
+
     assertEquals(Resource.newInstance(16 * GB, 1), queue.getAMResourceLimit());
     assertEquals(Resource.newInstance(8 * GB, 1),
       queue.getUserAMResourceLimit());
@@ -564,7 +565,7 @@ public class TestApplicationLimits {
     when(csContext.getClusterResource()).thenReturn(clusterResource);
     
     Map<String, CSQueue> queues = new HashMap<String, CSQueue>();
-    CapacityScheduler.parseQueue(csContext, csConf, null, "root", 
+    CapacityScheduler.parseQueue(csContext, csConf, null, "root",
         queues, queues, TestUtils.spyHook);
 
     // Manipulate queue 'a'
@@ -591,7 +592,7 @@ public class TestApplicationLimits {
     when(rmApp.getAMResourceRequest()).thenReturn(amResourceRequest);
     Mockito.doReturn(rmApp).when(spyApps).get((ApplicationId)Matchers.any());
     when(spyRMContext.getRMApps()).thenReturn(spyApps);
-    
+
 
     Priority priority_1 = TestUtils.createMockPriority(1);
 
@@ -667,10 +668,10 @@ public class TestApplicationLimits {
     assertEquals(expectedHeadroom, app_0_1.getHeadroom());
     assertEquals(expectedHeadroom, app_1_0.getHeadroom());
   }
-  
+
 
   @After
   public void tearDown() {
-  
+
   }
 }

@@ -25,6 +25,7 @@ import static org.mockito.Mockito.spy;
 import java.util.ArrayList;
 
 import org.apache.hadoop.net.NetUtils;
+import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ContainerState;
 import org.apache.hadoop.yarn.api.records.Resource;
@@ -43,9 +44,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.NodesListManagerEventType;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttempt;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttemptState;
 import org.apache.hadoop.yarn.server.resourcemanager.rmnode.RMNode;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import org.slf4j.event.Level;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
@@ -53,13 +52,12 @@ import org.mockito.ArgumentMatcher;
 public class TestNodesListManager {
   // To hold list of application for which event was received
   ArrayList<ApplicationId> applist = new ArrayList<ApplicationId>();
-  
+
   private static final String HOST = "127.0.0.1";
 
   @Test(timeout = 300000)
   public void testNodeUsableEvent() throws Exception {
-    Logger rootLogger = LogManager.getRootLogger();
-    rootLogger.setLevel(Level.DEBUG);
+    GenericTestUtils.setRootLogLevel(Level.DEBUG);
     final Dispatcher dispatcher = getDispatcher();
     YarnConfiguration conf = new YarnConfiguration();
     MockRM rm = new MockRM(conf) {

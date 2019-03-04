@@ -37,8 +37,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.security.Credentials;
@@ -97,7 +97,8 @@ import org.mockito.Matchers;
 
 @RunWith(value = Parameterized.class)
 public class TestRMAppTransitions {
-  static final Log LOG = LogFactory.getLog(TestRMAppTransitions.class);
+  static final Logger LOG =
+      LoggerFactory.getLogger(TestRMAppTransitions.class);
 
   private boolean isSecurityEnabled;
   private Configuration conf;
@@ -238,7 +239,7 @@ public class TestRMAppTransitions {
 
     rmDispatcher.register(RMAppEventType.class,
         new TestApplicationEventDispatcher(rmContext));
-    
+
     rmDispatcher.register(RMAppManagerEventType.class,
         new TestApplicationManagerEventDispatcher());
     
@@ -261,7 +262,7 @@ public class TestRMAppTransitions {
 
     ApplicationMasterService masterService =
         new ApplicationMasterService(rmContext, scheduler);
-    
+
     if(submissionContext == null) {
       submissionContext = new ApplicationSubmissionContextPBImpl();
     }
@@ -310,7 +311,7 @@ public class TestRMAppTransitions {
   private static void assertStartTimeSet(RMApp application) {
     Assert.assertTrue("application start time is not greater than 0",
         application.getStartTime() > 0);
-    Assert.assertTrue("application start time is before currentTime", 
+    Assert.assertTrue("application start time is before currentTime",
         application.getStartTime() <= System.currentTimeMillis());
   }
 
@@ -735,7 +736,7 @@ public class TestRMAppTransitions {
     verifyApplicationFinished(RMAppState.KILLED);
     verifyAppRemovedSchedulerEvent(RMAppState.KILLED);
   }
-  
+
   @Test
   public void testAppAcceptedAttemptKilled() throws IOException,
       InterruptedException {
@@ -972,7 +973,7 @@ public class TestRMAppTransitions {
     assertTimesAtFinish(application);
     assertAppState(RMAppState.KILLED, application);
   }
-  
+
   @Test(timeout = 30000)
   public void testAppsRecoveringStates() throws Exception {
     RMState state = new RMState();
@@ -1057,7 +1058,7 @@ public class TestRMAppTransitions {
   private void verifyAppRemovedSchedulerEvent(RMAppState finalState) {
     Assert.assertEquals(SchedulerEventType.APP_REMOVED,
       schedulerDispatcher.lastSchedulerEvent.getType());
-    if(schedulerDispatcher.lastSchedulerEvent instanceof 
+    if(schedulerDispatcher.lastSchedulerEvent instanceof
         AppRemovedSchedulerEvent) {
       AppRemovedSchedulerEvent appRemovedEvent =
           (AppRemovedSchedulerEvent) schedulerDispatcher.lastSchedulerEvent;

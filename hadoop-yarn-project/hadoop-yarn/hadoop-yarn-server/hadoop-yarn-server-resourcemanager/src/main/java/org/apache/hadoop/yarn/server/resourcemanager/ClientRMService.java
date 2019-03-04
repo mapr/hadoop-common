@@ -36,8 +36,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang.math.LongRange;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
@@ -168,7 +168,8 @@ public class ClientRMService extends AbstractService implements
     ApplicationClientProtocol {
   private static final ArrayList<ApplicationReport> EMPTY_APPS_REPORT = new ArrayList<ApplicationReport>();
 
-  private static final Log LOG = LogFactory.getLog(ClientRMService.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(ClientRMService.class);
 
   final private AtomicInteger applicationCounter = new AtomicInteger(0);
   final private YarnScheduler scheduler;
@@ -233,7 +234,7 @@ public class ClientRMService extends AbstractService implements
             conf, this.rmDTSecretManager,
             conf.getInt(YarnConfiguration.RM_CLIENT_THREAD_COUNT, 
                 YarnConfiguration.DEFAULT_RM_CLIENT_THREAD_COUNT));
-    
+
     // Enable service authorization?
     if (conf.getBoolean(
         CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHORIZATION, 
@@ -247,7 +248,7 @@ public class ClientRMService extends AbstractService implements
       }
       refreshServiceAcls(conf, RMPolicyProvider.getInstance());
     }
-    
+
     this.server.start();
     clientBindAddress = conf.updateConnectAddr(YarnConfiguration.RM_BIND_HOST,
                                                YarnConfiguration.RM_ADDRESS,
@@ -270,13 +271,13 @@ public class ClientRMService extends AbstractService implements
             YarnConfiguration.RM_ADDRESS,
             YarnConfiguration.DEFAULT_RM_ADDRESS,
             YarnConfiguration.DEFAULT_RM_PORT);
-    if ( conf.getBoolean(YarnConfiguration.RM_IS_ALL_IFACES, 
+    if ( conf.getBoolean(YarnConfiguration.RM_IS_ALL_IFACES,
         YarnConfiguration.DEFAULT_RM_IS_ALL_IFACES)) {
       configuredAddr = NetUtils.createSocketAddr(
-          YarnConfiguration.ALL_IFACE_LISTEN_ADDRESS, 
-          configuredAddr.getPort(), 
+          YarnConfiguration.ALL_IFACE_LISTEN_ADDRESS,
+          configuredAddr.getPort(),
           YarnConfiguration.RM_ADMIN_ADDRESS);
-    } 
+    }
     return configuredAddr;
   }
 
@@ -905,7 +906,7 @@ public class ClientRMService extends AbstractService implements
     return response;
   }
 
-  private NodeReport createNodeReports(RMNode rmNode) {    
+  private NodeReport createNodeReports(RMNode rmNode) {
     SchedulerNodeReport schedulerNodeReport = 
         scheduler.getNodeReport(rmNode.getNodeID());
     Resource used = BuilderUtils.newResource(0, 0);
@@ -913,8 +914,8 @@ public class ClientRMService extends AbstractService implements
     if (schedulerNodeReport != null) {
       used = schedulerNodeReport.getUsedResource();
       numContainers = schedulerNodeReport.getNumContainers();
-    } 
-    
+    }
+
     NodeReport report =
         BuilderUtils.newNodeReport(rmNode.getNodeID(), rmNode.getState(),
             rmNode.getHttpAddress(), rmNode.getRackName(), used,
@@ -1056,7 +1057,7 @@ public class ClientRMService extends AbstractService implements
           + callerUGI.getShortUserName() + " cannot perform operation "
           + ApplicationAccessType.MODIFY_APP.name() + " on " + applicationId));
     }
-    
+
     // Moves only allowed when app is in a state that means it is tracked by
     // the scheduler
     if (EnumSet.of(RMAppState.NEW, RMAppState.NEW_SAVING, RMAppState.FAILED,
@@ -1072,7 +1073,7 @@ public class ClientRMService extends AbstractService implements
     SettableFuture<Object> future = SettableFuture.create();
     this.rmContext.getDispatcher().getEventHandler().handle(
         new RMAppMoveEvent(applicationId, request.getTargetQueue(), future));
-    
+
     try {
       future.get();
     } catch ( InterruptedException | ExecutionException ex) {
@@ -1133,7 +1134,7 @@ public class ClientRMService extends AbstractService implements
     return response;
   }
 
-  void refreshServiceAcls(Configuration configuration, 
+  void refreshServiceAcls(Configuration configuration,
       PolicyProvider policyProvider) {
     this.server.refreshServiceAclWithLoadedConfiguration(configuration,
         policyProvider);

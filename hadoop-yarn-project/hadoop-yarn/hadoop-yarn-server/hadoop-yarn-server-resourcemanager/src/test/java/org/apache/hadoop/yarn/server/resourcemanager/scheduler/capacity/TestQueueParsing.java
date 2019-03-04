@@ -20,8 +20,8 @@ package org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity;
 
 import java.io.IOException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.service.ServiceOperations;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.nodelabels.CommonNodeLabelsManager;
@@ -39,7 +39,8 @@ import com.google.common.collect.ImmutableSet;
 
 public class TestQueueParsing {
 
-  private static final Log LOG = LogFactory.getLog(TestQueueParsing.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(TestQueueParsing.class);
   
   private static final double DELTA = 0.000001;
   
@@ -357,7 +358,7 @@ public class TestQueueParsing {
     conf.setCapacityByLabel(B3, "red", 25);
     conf.setCapacityByLabel(B3, "blue", 25);
   }
-  
+
   private void setupQueueConfigurationWithLabelsInherit(
       CapacitySchedulerConfiguration conf) {
     // Define top-level queues
@@ -464,7 +465,7 @@ public class TestQueueParsing {
     // queue-B2 inherits "red"/"blue"
     Assert.assertTrue(capacityScheduler.getQueue("b2")
         .getAccessibleNodeLabels().containsAll(ImmutableSet.of("red", "blue")));
-    
+
     // check capacity of A2
     CSQueue qA2 = capacityScheduler.getQueue("a2");
     Assert.assertEquals(0.7, qA2.getCapacity(), DELTA);
@@ -473,7 +474,7 @@ public class TestQueueParsing {
     Assert.assertEquals(0.25, qA2.getQueueCapacities().getAbsoluteCapacity("red"), DELTA);
     Assert.assertEquals(0.1275, qA2.getAbsoluteMaximumCapacity(), DELTA);
     Assert.assertEquals(0.3, qA2.getQueueCapacities().getAbsoluteMaximumCapacity("red"), DELTA);
-    
+
     // check capacity of B3
     CSQueue qB3 = capacityScheduler.getQueue("b3");
     Assert.assertEquals(0.18, qB3.getAbsoluteCapacity(), DELTA);
@@ -481,7 +482,7 @@ public class TestQueueParsing {
     Assert.assertEquals(0.35, qB3.getAbsoluteMaximumCapacity(), DELTA);
     Assert.assertEquals(1, qB3.getQueueCapacities().getAbsoluteMaximumCapacity("red"), DELTA);
   }
-  
+
   private void
       checkQueueLabelsInheritConfig(CapacityScheduler capacityScheduler) {
     // queue-A is red, blue
@@ -506,7 +507,7 @@ public class TestQueueParsing {
   @Test
   public void testQueueParsingWithLabels() throws IOException {
     nodeLabelManager.addToCluserNodeLabels(ImmutableSet.of("red", "blue"));
-    
+
     YarnConfiguration conf = new YarnConfiguration();
     CapacitySchedulerConfiguration csConf =
         new CapacitySchedulerConfiguration(conf);
@@ -769,7 +770,7 @@ public class TestQueueParsing {
     Assert.assertEquals(0.10 * 0.4, a2.getAbsoluteCapacity(), DELTA);
     Assert.assertEquals(0.15, a2.getAbsoluteMaximumCapacity(), DELTA);
   }
-  
+
   @Test(expected = IOException.class)
   public void testQueueParsingWithMoveQueue()
       throws IOException {

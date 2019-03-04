@@ -22,8 +22,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.yarn.event.EventHandler;
 import org.apache.hadoop.yarn.server.resourcemanager.RMContext;
@@ -32,7 +32,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttempt;
 
 public class ApplicationMasterLauncher extends AbstractService implements
     EventHandler<AMLauncherEvent> {
-  private static final Log LOG = LogFactory.getLog(
+  private static final Logger LOG = LoggerFactory.getLogger(
       ApplicationMasterLauncher.class);
   private final ThreadPoolExecutor launcherPool;
   private LauncherThread launcherHandlingThread;
@@ -45,11 +45,11 @@ public class ApplicationMasterLauncher extends AbstractService implements
   public ApplicationMasterLauncher(RMContext context) {
     super(ApplicationMasterLauncher.class.getName());
     this.context = context;
-    this.launcherPool = new ThreadPoolExecutor(10, 10, 1, 
+    this.launcherPool = new ThreadPoolExecutor(10, 10, 1,
         TimeUnit.HOURS, new LinkedBlockingQueue<Runnable>());
     this.launcherHandlingThread = new LauncherThread();
   }
-  
+
   @Override
   protected void serviceStart() throws Exception {
     launcherHandlingThread.start();

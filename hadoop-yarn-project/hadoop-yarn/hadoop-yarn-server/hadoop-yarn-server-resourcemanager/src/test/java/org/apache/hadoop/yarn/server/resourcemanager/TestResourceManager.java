@@ -24,8 +24,8 @@ import static org.junit.Assert.fail;
 import java.io.IOException;
 import java.util.Collection;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.http.lib.StaticUserWebFilter;
@@ -55,7 +55,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class TestResourceManager {
-  private static final Log LOG = LogFactory.getLog(TestResourceManager.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(TestResourceManager.class);
   
   private ResourceManager resourceManager = null;
   

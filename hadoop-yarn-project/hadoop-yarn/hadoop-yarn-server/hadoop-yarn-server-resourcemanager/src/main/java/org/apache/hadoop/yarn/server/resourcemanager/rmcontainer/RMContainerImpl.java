@@ -25,8 +25,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
 import org.apache.commons.lang.time.DateUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.Container;
 import org.apache.hadoop.yarn.api.records.ContainerExitStatus;
@@ -60,7 +60,8 @@ import org.apache.hadoop.yarn.webapp.util.WebAppUtils;
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class RMContainerImpl implements RMContainer {
 
-  private static final Log LOG = LogFactory.getLog(RMContainerImpl.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(RMContainerImpl.class);
 
   private static final StateMachineFactory<RMContainerImpl, RMContainerState, 
                                            RMContainerEventType, RMContainerEvent> 
@@ -140,9 +141,9 @@ public class RMContainerImpl implements RMContainer {
             RMContainerEventType.KILL, RMContainerEventType.FINISHED))
 
     // create the topology tables
-    .installTopology(); 
-                        
-                        
+    .installTopology();
+
+
 
   private final StateMachine<RMContainerState, RMContainerEventType,
                                                  RMContainerEvent> stateMachine;
@@ -340,7 +341,7 @@ public class RMContainerImpl implements RMContainer {
       readLock.unlock();
     }
   }
-  
+
   @Override
   public List<ResourceRequest> getResourceRequests() {
     try {
@@ -350,7 +351,7 @@ public class RMContainerImpl implements RMContainer {
       readLock.unlock();
     }
   }
-  
+
   public void setResourceRequests(List<ResourceRequest> requests) {
     try {
       writeLock.lock();
@@ -403,7 +404,7 @@ public class RMContainerImpl implements RMContainer {
          stateMachine.doTransition(event.getType(), event);
       } catch (InvalidStateTransitonException e) {
         LOG.error("Can't handle this event at current state", e);
-        LOG.error("Invalid event " + event.getType() + 
+        LOG.error("Invalid event " + event.getType() +
             " on container " + this.containerId);
       }
       if (oldState != getState()) {
@@ -420,7 +421,7 @@ public class RMContainerImpl implements RMContainer {
   public ContainerStatus getFinishedStatus() {
     return finishedStatus;
   }
-  
+
   private static class BaseTransition implements
       SingleArcTransition<RMContainerImpl, RMContainerEvent> {
 

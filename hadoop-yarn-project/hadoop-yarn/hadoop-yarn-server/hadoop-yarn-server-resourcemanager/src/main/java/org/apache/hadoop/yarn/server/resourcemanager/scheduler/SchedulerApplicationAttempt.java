@@ -28,8 +28,8 @@ import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.lang.time.DateUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Stable;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
@@ -71,8 +71,8 @@ import com.google.common.collect.Multiset;
 @Unstable
 public class SchedulerApplicationAttempt {
   
-  private static final Log LOG = LogFactory
-    .getLog(SchedulerApplicationAttempt.class);
+  private static final Logger LOG = LoggerFactory
+      .getLogger(SchedulerApplicationAttempt.class);
 
   private static final long MEM_AGGREGATE_ALLOCATION_CACHE_MSECS = 3000;
   protected long lastMemoryAggregateAllocationUpdateTime = 0;
@@ -83,7 +83,7 @@ public class SchedulerApplicationAttempt {
   protected ApplicationAttemptId attemptId;
   protected Map<ContainerId, RMContainer> liveContainers =
       new HashMap<ContainerId, RMContainer>();
-  protected final Map<Priority, Map<NodeId, RMContainer>> reservedContainers = 
+  protected final Map<Priority, Map<NodeId, RMContainer>> reservedContainers =
       new HashMap<Priority, Map<NodeId, RMContainer>>();
 
   private final Multiset<Priority> reReservations = HashMultiset.create();
@@ -96,7 +96,7 @@ public class SchedulerApplicationAttempt {
   private boolean amRunning = false;
   private LogAggregationContext logAggregationContext;
 
-  protected List<RMContainer> newlyAllocatedContainers = 
+  protected List<RMContainer> newlyAllocatedContainers =
       new ArrayList<RMContainer>();
 
   // This pendingRelease is used in work-preserving recovery scenario to keep
@@ -121,16 +121,16 @@ public class SchedulerApplicationAttempt {
 
   protected Queue queue;
   protected boolean isStopped = false;
-  
+
   protected final RMContext rmContext;
-  
+
   public SchedulerApplicationAttempt(ApplicationAttemptId applicationAttemptId, 
       String user, Queue queue, ActiveUsersManager activeUsersManager,
       RMContext rmContext) {
     Preconditions.checkNotNull(rmContext, "RMContext should not be null");
     this.rmContext = rmContext;
-    this.appSchedulingInfo = 
-        new AppSchedulingInfo(applicationAttemptId, user, queue,  
+    this.appSchedulingInfo =
+        new AppSchedulingInfo(applicationAttemptId, user, queue,
             activeUsersManager, rmContext.getEpoch());
     this.queue = queue;
     this.pendingRelease = new HashSet<ContainerId>();
@@ -152,7 +152,7 @@ public class SchedulerApplicationAttempt {
       }
     }
   }
-  
+
   /**
    * Get the live containers of the application.
    * @return live containers of the application
@@ -204,7 +204,7 @@ public class SchedulerApplicationAttempt {
   public Collection<Priority> getPriorities() {
     return appSchedulingInfo.getPriorities();
   }
-  
+
   public synchronized ResourceRequest getResourceRequest(Priority priority, String resourceName) {
     return this.appSchedulingInfo.getResourceRequest(priority, resourceName);
   }
@@ -302,7 +302,7 @@ public class SchedulerApplicationAttempt {
    */
   public synchronized List<RMContainer> getReservedContainers() {
     List<RMContainer> reservedContainers = new ArrayList<RMContainer>();
-    for (Map.Entry<Priority, Map<NodeId, RMContainer>> e : 
+    for (Map.Entry<Priority, Map<NodeId, RMContainer>> e :
       this.reservedContainers.entrySet()) {
       reservedContainers.addAll(e.getValue().values());
     }
@@ -313,21 +313,21 @@ public class SchedulerApplicationAttempt {
       RMContainer rmContainer, Container container) {
     // Create RMContainer if necessary
     if (rmContainer == null) {
-      rmContainer = 
-          new RMContainerImpl(container, getApplicationAttemptId(), 
+      rmContainer =
+          new RMContainerImpl(container, getApplicationAttemptId(),
               node.getNodeID(), appSchedulingInfo.getUser(), rmContext);
-        
+
       Resources.addTo(currentReservation, container.getResource());
-      
+
       // Reset the re-reservation count
       resetReReservations(priority);
     } else {
       // Note down the re-reservation
       addReReservation(priority);
     }
-    rmContainer.handle(new RMContainerReservedEvent(container.getId(), 
+    rmContainer.handle(new RMContainerReservedEvent(container.getId(),
         container.getResource(), node.getNodeID(), priority));
-    
+
     Map<NodeId, RMContainer> reservedContainers = 
         this.reservedContainers.get(priority);
     if (reservedContainers == null) {
@@ -346,7 +346,7 @@ public class SchedulerApplicationAttempt {
 
     return rmContainer;
   }
-  
+
   /**
    * Has the application reserved the given <code>node</code> at the
    * given <code>priority</code>?
@@ -355,16 +355,16 @@ public class SchedulerApplicationAttempt {
    * @return true is reserved, false if not
    */
   public synchronized boolean isReserved(SchedulerNode node, Priority priority) {
-    Map<NodeId, RMContainer> reservedContainers = 
+    Map<NodeId, RMContainer> reservedContainers =
         this.reservedContainers.get(priority);
     if (reservedContainers != null) {
       return reservedContainers.containsKey(node.getNodeID());
     }
     return false;
   }
-  
+
   public synchronized void setHeadroom(Resource globalLimit) {
-    this.resourceLimit = globalLimit; 
+    this.resourceLimit = globalLimit;
   }
 
   /**
@@ -376,12 +376,12 @@ public class SchedulerApplicationAttempt {
     if (resourceLimit.getMemory() < 0) {
       resourceLimit.setMemory(0);
     }
-    
+
     return resourceLimit;
   }
   
   public synchronized int getNumReservedContainers(Priority priority) {
-    Map<NodeId, RMContainer> reservedContainers = 
+    Map<NodeId, RMContainer> reservedContainers =
         this.reservedContainers.get(priority);
     return (reservedContainers == null) ? 0 : reservedContainers.size();
   }
@@ -407,8 +407,8 @@ public class SchedulerApplicationAttempt {
       for (Priority priority : getPriorities()) {
         Map<String, ResourceRequest> requests = getResourceRequests(priority);
         if (requests != null) {
-          LOG.debug("showRequests:" + " application=" + getApplicationId() + 
-              " headRoom=" + getHeadroom() + 
+          LOG.debug("showRequests:" + " application=" + getApplicationId() +
+              " headRoom=" + getHeadroom() +
               " currentConsumption=" + currentConsumption.getMemory());
           for (ResourceRequest request : requests.values()) {
             LOG.debug("showRequests:" + " application=" + getApplicationId()
@@ -487,12 +487,12 @@ public class SchedulerApplicationAttempt {
           blacklistAdditions, blacklistRemovals);
     }
   }
-  
+
   public boolean isBlacklisted(String resourceName) {
     return this.appSchedulingInfo.isBlacklisted(resourceName);
   }
 
-  public boolean isBlacklisted(SchedulerNode node, Log myLog) {
+  public boolean isBlacklisted(SchedulerNode node, Logger myLog) {
     return this.appSchedulingInfo.isBlacklisted(node, myLog);
   }
 
@@ -550,9 +550,9 @@ public class SchedulerApplicationAttempt {
       for (RMContainer rmContainer : this.liveContainers.values()) {
         long usedMillis = currentTimeMillis - rmContainer.getCreationTime();
         Resource resource = rmContainer.getContainer().getResource();
-        memorySeconds += resource.getMemory() * usedMillis /  
+        memorySeconds += resource.getMemory() * usedMillis /
             DateUtils.MILLIS_PER_SECOND;
-        vcoreSeconds += resource.getVirtualCores() * usedMillis  
+        vcoreSeconds += resource.getVirtualCores() * usedMillis
             / DateUtils.MILLIS_PER_SECOND;
       }
 

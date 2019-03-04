@@ -19,8 +19,8 @@ package org.apache.hadoop.yarn.server.resourcemanager;
 
 import java.net.InetAddress;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -32,7 +32,8 @@ import org.apache.hadoop.yarn.api.records.ContainerId;
  * Audit log format is written as key=value pairs. Tab separated.
  */
 public class RMAuditLogger {
-  private static final Log LOG = LogFactory.getLog(RMAuditLogger.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(RMAuditLogger.class);
 
   static enum Keys {USER, OPERATION, TARGET, RESULT, IP, PERMISSIONS,
                     DESCRIPTION, APPID, APPATTEMPTID, CONTAINERID}
@@ -92,7 +93,7 @@ public class RMAuditLogger {
    *
    * @param user User who made the service request to the ResourceManager
    * @param operation Operation requested by the user.
-   * @param target The target on which the operation is being performed. 
+   * @param target The target on which the operation is being performed.
    * @param appId Application Id in which operation was performed.
    * @param containerId Container Id in which operation was performed.
    *
@@ -100,10 +101,10 @@ public class RMAuditLogger {
    * Note that the {@link RMAuditLogger} uses tabs ('\t') as a key-val delimiter
    * and hence the value fields should not contains tabs ('\t').
    */
-  public static void logSuccess(String user, String operation, String target, 
+  public static void logSuccess(String user, String operation, String target,
       ApplicationId appId, ContainerId containerId) {
     if (LOG.isInfoEnabled()) {
-      LOG.info(createSuccessLog(user, operation, target, appId, null, 
+      LOG.info(createSuccessLog(user, operation, target, appId, null,
           containerId));
     }
   }
@@ -113,7 +114,7 @@ public class RMAuditLogger {
    *
    * @param user User who made the service request to the ResourceManager.
    * @param operation Operation requested by the user.
-   * @param target The target on which the operation is being performed. 
+   * @param target The target on which the operation is being performed.
    * @param appId Application Id in which operation was performed.
    * @param attemptId Application Attempt Id in which operation was performed.
    *

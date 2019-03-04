@@ -25,8 +25,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ApplicationResourceUsageReport;
 import org.apache.hadoop.yarn.api.records.Resource;
@@ -36,7 +36,8 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.NodeType;
 import org.apache.hadoop.yarn.util.resource.Resources;
 
 public class RMAppAttemptMetrics {
-  private static final Log LOG = LogFactory.getLog(RMAppAttemptMetrics.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(RMAppAttemptMetrics.class);
 
   private ApplicationAttemptId attemptId = null;
   // preemption info

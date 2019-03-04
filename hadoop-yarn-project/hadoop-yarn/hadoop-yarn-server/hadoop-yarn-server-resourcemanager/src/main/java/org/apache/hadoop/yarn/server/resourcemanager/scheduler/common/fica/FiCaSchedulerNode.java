@@ -21,8 +21,8 @@ package org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.fica;
 
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.Priority;
 import org.apache.hadoop.yarn.nodelabels.CommonNodeLabelsManager;
@@ -33,7 +33,8 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerNode;
 
 public class FiCaSchedulerNode extends SchedulerNode {
 
-  private static final Log LOG = LogFactory.getLog(FiCaSchedulerNode.class);
+  private static final Logger LOG =
+          LoggerFactory.getLogger(FiCaSchedulerNode.class);
   
   public FiCaSchedulerNode(RMNode node, boolean usePortForNodeName,
       Set<String> nodeLabels) {

@@ -36,8 +36,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.LimitedPrivate;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Evolving;
@@ -118,6 +118,8 @@ import org.apache.hadoop.yarn.util.resource.Resources;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 @LimitedPrivate("yarn")
 @Evolving
@@ -126,9 +128,12 @@ public class CapacityScheduler extends
     AbstractYarnScheduler<FiCaSchedulerApp, FiCaSchedulerNode> implements
     PreemptableResourceScheduler, CapacitySchedulerContext, Configurable {
 
-  private static final Log LOG = LogFactory.getLog(CapacityScheduler.class);
+  private static final Logger LOG =
+          LoggerFactory.getLogger(CapacityScheduler.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
+
   private YarnAuthorizationProvider authorizer;
- 
+
   private CSQueue root;
   // timeout to join when we stop this service
   protected final long THREAD_JOIN_TIMEOUT_MS = 1000;
@@ -146,7 +151,7 @@ public class CapacityScheduler extends
     }
   };
 
-  static final Comparator<FiCaSchedulerApp> applicationComparator = 
+  static final Comparator<FiCaSchedulerApp> applicationComparator =
     new Comparator<FiCaSchedulerApp>() {
     @Override
     public int compare(FiCaSchedulerApp a1, FiCaSchedulerApp a2) {
@@ -158,7 +163,7 @@ public class CapacityScheduler extends
   public void setConf(Configuration conf) {
       yarnConf = conf;
   }
-  
+
   private void validateConf(Configuration conf) {
     // validate scheduler memory allocation setting
     int minMem = conf.getInt(
@@ -234,7 +239,7 @@ public class CapacityScheduler extends
   private boolean scheduleAsynchronously;
   private AsyncScheduleThread asyncSchedulerThread;
   private RMNodeLabelsManager labelManager;
-  
+
   /**
    * EXPERT
    */
@@ -243,7 +248,7 @@ public class CapacityScheduler extends
       CapacitySchedulerConfiguration.SCHEDULE_ASYNCHRONOUSLY_PREFIX
           + ".scheduling-interval-ms";
   private static final long DEFAULT_ASYNC_SCHEDULER_INTERVAL = 5;
-  
+
   private boolean overrideWithQueueMappings = false;
   private List<QueueMapping> mappings = null;
   private Groups groups;
@@ -266,14 +271,14 @@ public class CapacityScheduler extends
   public CSQueue getRootQueue() {
     return root;
   }
-  
+
   @Override
   public CapacitySchedulerConfiguration getConfiguration() {
     return conf;
   }
 
   @Override
-  public synchronized RMContainerTokenSecretManager 
+  public synchronized RMContainerTokenSecretManager
   getContainerTokenSecretManager() {
     return this.rmContext.getContainerTokenSecretManager();
   }
@@ -388,13 +393,13 @@ public class CapacityScheduler extends
       throw new IOException("Failed to re-init queues", t);
     }
   }
-  
+
   long getAsyncScheduleInterval() {
     return asyncScheduleInterval;
   }
 
   private final static Random random = new Random(System.currentTimeMillis());
-  
+
   /**
    * Schedule on all nodes by starting at a random point.
    * @param cs
@@ -417,7 +422,7 @@ public class CapacityScheduler extends
       Thread.sleep(cs.getAsyncScheduleInterval());
     } catch (InterruptedException e) {}
   }
-  
+
   static class AsyncScheduleThread extends Thread {
 
     private final CapacityScheduler cs;
@@ -450,9 +455,9 @@ public class CapacityScheduler extends
     }
 
   }
-  
+
   @Private
-  public static final String ROOT_QUEUE = 
+  public static final String ROOT_QUEUE =
     CapacitySchedulerConfiguration.PREFIX + CapacitySchedulerConfiguration.ROOT;
 
   static class QueueHook {
@@ -491,8 +496,8 @@ public class CapacityScheduler extends
   private void initializeQueues(CapacitySchedulerConfiguration conf)
     throws IOException {
 
-    root = 
-        parseQueue(this, conf, null, CapacitySchedulerConfiguration.ROOT, 
+    root =
+        parseQueue(this, conf, null, CapacitySchedulerConfiguration.ROOT,
             queues, queues, noop);
     labelManager.reinitializeQueueLabels(getQueueToLabels());
     LOG.info("Initialized root queue " + root);
@@ -501,20 +506,20 @@ public class CapacityScheduler extends
   }
 
   @Lock(CapacityScheduler.class)
-  private void reinitializeQueues(CapacitySchedulerConfiguration conf) 
+  private void reinitializeQueues(CapacitySchedulerConfiguration conf)
   throws IOException {
     // Parse new queues
     Map<String, CSQueue> newQueues = new HashMap<String, CSQueue>();
-    CSQueue newRoot = 
-        parseQueue(this, conf, null, CapacitySchedulerConfiguration.ROOT, 
-            newQueues, queues, noop); 
-    
+    CSQueue newRoot =
+        parseQueue(this, conf, null, CapacitySchedulerConfiguration.ROOT,
+            newQueues, queues, noop);
+
     // Ensure all existing queues are still present
     validateExistingQueues(queues, newQueues);
 
     // Add new queues
     addNewQueues(queues, newQueues);
-    
+
     // Re-configure queues
     root.reinitialize(newRoot, clusterResource);
     initializeQueueMappings();
@@ -552,14 +557,14 @@ public class CapacityScheduler extends
    */
   @Lock(CapacityScheduler.class)
   private void validateExistingQueues(
-      Map<String, CSQueue> queues, Map<String, CSQueue> newQueues) 
+      Map<String, CSQueue> queues, Map<String, CSQueue> newQueues)
   throws IOException {
     // check that all static queues are included in the newQueues list
     for (Map.Entry<String, CSQueue> e : queues.entrySet()) {
       if (!(e.getValue() instanceof ReservationQueue)) {
         String queueName = e.getKey();
         CSQueue oldQueue = e.getValue();
-        CSQueue newQueue = newQueues.get(queueName); 
+        CSQueue newQueue = newQueues.get(queueName);
         if (null == newQueue) {
           throw new IOException(queueName + " cannot be found during refresh!");
         } else if (!oldQueue.getQueuePath().equals(newQueue.getQueuePath())) {
@@ -579,7 +584,7 @@ public class CapacityScheduler extends
    */
   @Lock(CapacityScheduler.class)
   private void addNewQueues(
-      Map<String, CSQueue> queues, Map<String, CSQueue> newQueues) 
+      Map<String, CSQueue> queues, Map<String, CSQueue> newQueues)
   {
     for (Map.Entry<String, CSQueue> e : newQueues.entrySet()) {
       String queueName = e.getKey();
@@ -589,19 +594,19 @@ public class CapacityScheduler extends
       }
     }
   }
-  
+
   @Lock(CapacityScheduler.class)
   static CSQueue parseQueue(
       CapacitySchedulerContext csContext,
-      CapacitySchedulerConfiguration conf, 
+      CapacitySchedulerConfiguration conf,
       CSQueue parent, String queueName, Map<String, CSQueue> queues,
-      Map<String, CSQueue> oldQueues, 
+      Map<String, CSQueue> oldQueues,
       QueueHook hook) throws IOException {
     CSQueue queue;
     String fullQueueName =
         (parent == null) ? queueName
             : (parent.getQueuePath() + "." + queueName);
-    String[] childQueueNames = 
+    String[] childQueueNames =
       conf.getQueues(fullQueueName);
     boolean isReservableQueue = conf.isReservable(fullQueueName);
     if (childQueueNames == null || childQueueNames.length == 0) {
@@ -628,7 +633,7 @@ public class CapacityScheduler extends
         throw new IllegalStateException(
             "Only Leaf Queues can be reservable for " + queueName);
       }
-      ParentQueue parentQueue = 
+      ParentQueue parentQueue =
         new ParentQueue(csContext, queueName, parent, oldQueues.get(queueName));
 
       // Used only for unit tests
@@ -636,8 +641,8 @@ public class CapacityScheduler extends
 
       List<CSQueue> childQueues = new ArrayList<CSQueue>();
       for (String childQueueName : childQueueNames) {
-        CSQueue childQueue = 
-          parseQueue(csContext, conf, queue, childQueueName, 
+        CSQueue childQueue =
+          parseQueue(csContext, conf, queue, childQueueName,
               queues, oldQueues, hook);
         childQueues.add(childQueue);
       }
@@ -748,7 +753,7 @@ public class CapacityScheduler extends
             + " Queue removal during recovery is not presently supported by the"
             + " capacity scheduler, please restart with all queues configured"
             + " which were present before shutdown/restart.";
-        LOG.fatal(queueErrorMsg);
+        LOG.error(FATAL,queueErrorMsg);
         throw new QueueInvalidException(queueErrorMsg);
       }
     }
@@ -768,7 +773,7 @@ public class CapacityScheduler extends
             + " not presently supported by the capacity scheduler. Please"
             + " restart with leaf queues before shutdown/restart continuing"
             + " as leaf queues.";
-        LOG.fatal(queueErrorMsg);
+        LOG.error(FATAL,queueErrorMsg);
         throw new QueueInvalidException(queueErrorMsg);
       }
     }
@@ -800,7 +805,7 @@ public class CapacityScheduler extends
     // sanity checks.
     CSQueue queue = getQueue(queueName);
     if (queue == null) {
-      String message = "Application " + applicationId + 
+      String message = "Application " + applicationId +
       " submitted by user " + user + " to unknown queue: " + queueName;
       this.rmContext.getDispatcher().getEventHandler()
           .handle(new RMAppEvent(applicationId,
@@ -808,7 +813,7 @@ public class CapacityScheduler extends
       return;
     }
     if (!(queue instanceof LeafQueue)) {
-      String message = "Application " + applicationId + 
+      String message = "Application " + applicationId +
           " submitted by user " + user + " to non-leaf queue: " + queueName;
       this.rmContext.getDispatcher().getEventHandler()
           .handle(new RMAppEvent(applicationId,
@@ -901,7 +906,7 @@ public class CapacityScheduler extends
       RMAppAttemptState rmAppAttemptFinalState, boolean keepContainers) {
     LOG.info("Application Attempt " + applicationAttemptId + " is done." +
         " finalState=" + rmAppAttemptFinalState);
-    
+
     FiCaSchedulerApp attempt = getApplicationAttempt(applicationAttemptId);
     SchedulerApplication<FiCaSchedulerApp> application =
         applications.get(applicationAttemptId.getApplicationId());
@@ -953,7 +958,7 @@ public class CapacityScheduler extends
   @Override
   @Lock(Lock.NoLock.class)
   public Allocation allocate(ApplicationAttemptId applicationAttemptId,
-      List<ResourceRequest> ask, List<ContainerId> release, 
+      List<ResourceRequest> ask, List<ContainerId> release,
       List<String> blacklistAdditions, List<String> blacklistRemovals) {
 
     FiCaSchedulerApp application = getApplicationAttempt(applicationAttemptId);
@@ -962,7 +967,7 @@ public class CapacityScheduler extends
           "or non existant application " + applicationAttemptId);
       return EMPTY_ALLOCATION;
     }
-    
+
     // Sanity check
     SchedulerUtils.normalizeRequests(
         ask, getResourceCalculator(), getClusterResource(),
@@ -985,21 +990,21 @@ public class CapacityScheduler extends
 
         if(LOG.isDebugEnabled()) {
           LOG.debug("allocate: pre-update" +
-            " applicationAttemptId=" + applicationAttemptId + 
+            " applicationAttemptId=" + applicationAttemptId +
             " application=" + application);
         }
         application.showRequests();
-  
+
         // Update application requests
         application.updateResourceRequests(ask);
-  
+
         LOG.debug("allocate: post-update");
         application.showRequests();
       }
 
       if(LOG.isDebugEnabled()) {
         LOG.debug("allocate:" +
-          " applicationAttemptId=" + applicationAttemptId + 
+          " applicationAttemptId=" + applicationAttemptId +
           " #ask=" + ask.size());
       }
 
@@ -1012,8 +1017,8 @@ public class CapacityScheduler extends
 
   @Override
   @Lock(Lock.NoLock.class)
-  public QueueInfo getQueueInfo(String queueName, 
-      boolean includeChildQueues, boolean recursive) 
+  public QueueInfo getQueueInfo(String queueName,
+      boolean includeChildQueues, boolean recursive)
   throws IOException {
     CSQueue queue = null;
     queue = this.queues.get(queueName);
@@ -1048,7 +1053,7 @@ public class CapacityScheduler extends
     }
 
     FiCaSchedulerNode node = getNode(nm.getNodeID());
-    
+
     List<UpdatedContainerInfo> containerInfoList = nm.pullContainerUpdates();
     List<ContainerStatus> newlyLaunchedContainers = new ArrayList<ContainerStatus>();
     List<ContainerStatus> completedContainers = new ArrayList<ContainerStatus>();
@@ -1056,7 +1061,7 @@ public class CapacityScheduler extends
       newlyLaunchedContainers.addAll(containerInfo.getNewlyLaunchedContainers());
       completedContainers.addAll(containerInfo.getCompletedContainers());
     }
-    
+
     // Processing the newly launched containers
     for (ContainerStatus launchedContainer : newlyLaunchedContainers) {
       containerLaunchedOnNode(launchedContainer.getContainerId(), node);
@@ -1066,7 +1071,7 @@ public class CapacityScheduler extends
     for (ContainerStatus completedContainer : completedContainers) {
       ContainerId containerId = completedContainer.getContainerId();
       LOG.debug("Container FINISHED: " + containerId);
-      completedContainer(getRMContainer(containerId), 
+      completedContainer(getRMContainer(containerId),
           completedContainer, RMContainerEventType.FINISHED);
     }
 
@@ -1076,20 +1081,20 @@ public class CapacityScheduler extends
         + " availableResource: " + node.getAvailableResource());
     }
   }
-  
+
   /**
    * Process resource update on a node.
    */
-  private synchronized void updateNodeAndQueueResource(RMNode nm, 
+  private synchronized void updateNodeAndQueueResource(RMNode nm,
       ResourceOption resourceOption) {
     updateNodeResource(nm, resourceOption);
     root.updateClusterResource(clusterResource, new ResourceLimits(
         clusterResource));
   }
-  
+
   /**
    * Process node labels update on a node.
-   * 
+   *
    * TODO: Currently capacity scheduler will kill containers on a node when
    * labels on the node changed. It is a simply solution to ensure guaranteed
    * capacity on labels of queues. When YARN-2498 completed, we can let
@@ -1102,32 +1107,32 @@ public class CapacityScheduler extends
     if (null == node) {
       return;
     }
-    
+
     // labels is same, we don't need do update
     if (node.getLabels().size() == newLabels.size()
         && node.getLabels().containsAll(newLabels)) {
       return;
     }
-    
+
     // Kill running containers since label is changed
     for (RMContainer rmContainer : node.getRunningContainers()) {
       ContainerId containerId = rmContainer.getContainerId();
-      completedContainer(rmContainer, 
+      completedContainer(rmContainer,
           ContainerStatus.newInstance(containerId,
-              ContainerState.COMPLETE, 
+              ContainerState.COMPLETE,
               String.format(
                   "Container=%s killed since labels on the node=%s changed",
                   containerId.toString(), nodeId.toString()),
               ContainerExitStatus.KILLED_BY_RESOURCEMANAGER),
           RMContainerEventType.KILL);
     }
-    
+
     // Unreserve container on this node
     RMContainer reservedContainer = node.getReservedContainer();
     if (null != reservedContainer) {
       dropContainerReservation(reservedContainer);
     }
-    
+
     // Update node labels after we've done this
     node.updateLabels(newLabels);
   }
@@ -1154,26 +1159,26 @@ public class CapacityScheduler extends
     if (reservedContainer != null) {
       FiCaSchedulerApp reservedApplication =
           getCurrentAttemptForContainer(reservedContainer.getContainerId());
-      
+
       // Try to fulfill the reservation
-      LOG.info("Trying to fulfill reservation for application " + 
-          reservedApplication.getApplicationId() + " on node: " + 
+      LOG.info("Trying to fulfill reservation for application " +
+          reservedApplication.getApplicationId() + " on node: " +
           node.getNodeID());
-      
+
       LeafQueue queue = ((LeafQueue)reservedApplication.getQueue());
       CSAssignment assignment = queue.assignContainers(clusterResource, node,
           false, new ResourceLimits(
               clusterResource));
-      
+
       RMContainer excessReservation = assignment.getExcessReservation();
       if (excessReservation != null) {
       Container container = excessReservation.getContainer();
       queue.completedContainer(
-          clusterResource, assignment.getApplication(), node, 
-          excessReservation, 
+          clusterResource, assignment.getApplication(), node,
+          excessReservation,
           SchedulerUtils.createAbnormalContainerStatus(
-              container.getId(), 
-              SchedulerUtils.UNRESERVED_CONTAINER), 
+              container.getId(),
+              SchedulerUtils.UNRESERVED_CONTAINER),
           RMContainerEventType.RELEASED, null, true);
       }
 
@@ -1191,12 +1196,12 @@ public class CapacityScheduler extends
             clusterResource));
       }
     } else {
-      LOG.info("Skipping scheduling since node " + node.getNodeID() + 
-          " is reserved by application " + 
+      LOG.info("Skipping scheduling since node " + node.getNodeID() +
+          " is reserved by application " +
           node.getReservedContainer().getContainerId().getApplicationAttemptId()
           );
     }
-  
+
   }
 
   @Override
@@ -1218,7 +1223,7 @@ public class CapacityScheduler extends
     break;
     case NODE_RESOURCE_UPDATE:
     {
-      NodeResourceUpdateSchedulerEvent nodeResourceUpdatedEvent = 
+      NodeResourceUpdateSchedulerEvent nodeResourceUpdatedEvent =
           (NodeResourceUpdateSchedulerEvent)event;
       updateNodeAndQueueResource(nodeResourceUpdatedEvent.getRMNode(),
         nodeResourceUpdatedEvent.getResourceOption());
@@ -1228,7 +1233,7 @@ public class CapacityScheduler extends
     {
       NodeLabelsUpdateSchedulerEvent labelUpdateEvent =
           (NodeLabelsUpdateSchedulerEvent) event;
-      
+
       for (Entry<NodeId, Set<String>> entry : labelUpdateEvent
           .getUpdatedNodeToLabels().entrySet()) {
         NodeId id = entry.getKey();
@@ -1292,13 +1297,13 @@ public class CapacityScheduler extends
     break;
     case CONTAINER_EXPIRED:
     {
-      ContainerExpiredSchedulerEvent containerExpiredEvent = 
+      ContainerExpiredSchedulerEvent containerExpiredEvent =
           (ContainerExpiredSchedulerEvent) event;
       ContainerId containerId = containerExpiredEvent.getContainerId();
-      completedContainer(getRMContainer(containerId), 
+      completedContainer(getRMContainer(containerId),
           SchedulerUtils.createAbnormalContainerStatus(
-              containerId, 
-              SchedulerUtils.EXPIRED_CONTAINER), 
+              containerId,
+              SchedulerUtils.EXPIRED_CONTAINER),
           RMContainerEventType.EXPIRE);
     }
     break;
@@ -1324,14 +1329,14 @@ public class CapacityScheduler extends
         clusterResource));
     int numNodes = numNodeManagers.incrementAndGet();
     updateMaximumAllocation(schedulerNode, true);
-    
-    LOG.info("Added node " + nodeManager.getNodeAddress() + 
+
+    LOG.info("Added node " + nodeManager.getNodeAddress() +
         " clusterResource: " + clusterResource);
 
     if (scheduleAsynchronously && numNodes == 1) {
       asyncSchedulerThread.beginSchedule();
     }
-    
+
     // update this node to node label manager
     if (labelManager != null) {
       labelManager.activateNode(nodeManager.getNodeID(),
@@ -1344,7 +1349,7 @@ public class CapacityScheduler extends
     if (labelManager != null) {
       labelManager.deactivateNode(nodeInfo.getNodeID());
     }
-    
+
     FiCaSchedulerNode node = nodes.get(nodeInfo.getNodeID());
     if (node == null) {
       return;
@@ -1357,34 +1362,34 @@ public class CapacityScheduler extends
     if (scheduleAsynchronously && numNodes == 0) {
       asyncSchedulerThread.suspendSchedule();
     }
-    
+
     // Remove running containers
     List<RMContainer> runningContainers = node.getRunningContainers();
     for (RMContainer container : runningContainers) {
-      completedContainer(container, 
+      completedContainer(container,
           SchedulerUtils.createAbnormalContainerStatus(
-              container.getContainerId(), 
-              SchedulerUtils.LOST_CONTAINER), 
+              container.getContainerId(),
+              SchedulerUtils.LOST_CONTAINER),
           RMContainerEventType.KILL);
     }
-    
+
     // Remove reservations, if any
     RMContainer reservedContainer = node.getReservedContainer();
     if (reservedContainer != null) {
-      completedContainer(reservedContainer, 
+      completedContainer(reservedContainer,
           SchedulerUtils.createAbnormalContainerStatus(
-              reservedContainer.getContainerId(), 
-              SchedulerUtils.LOST_CONTAINER), 
+              reservedContainer.getContainerId(),
+              SchedulerUtils.LOST_CONTAINER),
           RMContainerEventType.KILL);
     }
 
     this.nodes.remove(nodeInfo.getNodeID());
     updateMaximumAllocation(node, false);
 
-    LOG.info("Removed node " + nodeInfo.getNodeAddress() + 
+    LOG.info("Removed node " + nodeInfo.getNodeAddress() +
         " clusterResource: " + clusterResource);
   }
-  
+
   @Lock(CapacityScheduler.class)
   @Override
   protected synchronized void completedContainer(RMContainer rmContainer,
@@ -1393,9 +1398,9 @@ public class CapacityScheduler extends
       LOG.info("Null container completed...");
       return;
     }
-    
+
     Container container = rmContainer.getContainer();
-    
+
     // Get the application for the finished container
     FiCaSchedulerApp application =
         getCurrentAttemptForContainer(container.getId());
@@ -1406,7 +1411,7 @@ public class CapacityScheduler extends
           + appId + " completed with event " + event);
       return;
     }
-    
+
     // Get the node on which the container was allocated
     FiCaSchedulerNode node = getNode(container.getNodeId());
     if (node == null) {
@@ -1415,10 +1420,10 @@ public class CapacityScheduler extends
           .getNodeId() + ". However the node might be already removed by RM.");
       return;
     }
-    
+
     // Inform the queue
     LeafQueue queue = (LeafQueue)application.getQueue();
-    queue.completedContainer(clusterResource, application, node, 
+    queue.completedContainer(clusterResource, application, node,
         rmContainer, containerStatus, event, null, true);
 
     LOG.info("Application attempt " + application.getApplicationAttemptId()
@@ -1433,12 +1438,12 @@ public class CapacityScheduler extends
       ApplicationAttemptId applicationAttemptId) {
     return super.getApplicationAttempt(applicationAttemptId);
   }
-  
+
   @Lock(Lock.NoLock.class)
   public FiCaSchedulerNode getNode(NodeId nodeId) {
     return nodes.get(nodeId);
   }
-  
+
   @Lock(Lock.NoLock.class)
   Map<NodeId, FiCaSchedulerNode> getAllNodes() {
     return nodes;
@@ -1720,14 +1725,14 @@ public class CapacityScheduler extends
     }
     if (calculatorName
       .equals(DominantResourceCalculator.class.getName())) {
-      return EnumSet.of(SchedulerResourceTypes.MEMORY, 
+      return EnumSet.of(SchedulerResourceTypes.MEMORY,
               SchedulerResourceTypes.CPU);
     }
-    return EnumSet.of(SchedulerResourceTypes.MEMORY, 
-            SchedulerResourceTypes.CPU, 
+    return EnumSet.of(SchedulerResourceTypes.MEMORY,
+            SchedulerResourceTypes.CPU,
             SchedulerResourceTypes.DISK);
   }
-  
+
   @Override
   public Resource getMaximumResourceCapability(String queueName) {
     CSQueue queue = getQueue(queueName);

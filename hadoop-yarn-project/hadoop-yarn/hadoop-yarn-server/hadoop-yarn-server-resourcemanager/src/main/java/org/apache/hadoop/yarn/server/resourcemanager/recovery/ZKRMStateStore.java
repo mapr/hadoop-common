@@ -31,8 +31,8 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.base.Preconditions;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.conf.Configuration;
@@ -88,7 +88,7 @@ import com.google.common.annotations.VisibleForTesting;
 @Unstable
 public class ZKRMStateStore extends RMStateStore {
 
-  public static final Log LOG = LogFactory.getLog(ZKRMStateStore.class);
+  public static final Logger LOG = LoggerFactory.getLogger(ZKRMStateStore.class);
   private final SecureRandom random = new SecureRandom();
 
   protected static final String ROOT_ZNODE_NAME = "ZKRMStateRoot";
@@ -691,7 +691,7 @@ public class ZKRMStateStore extends RMStateStore {
       LOG.debug("Removing info for attempt: " + appAttemptId + " at: "
           + attemptIdRemovePath);
     }
-    
+
     if (existsWithRetries(attemptIdRemovePath, true) != null) {
       doDeleteMultiWithRetries(Op.delete(attemptIdRemovePath, -1));
     } else {
@@ -1076,7 +1076,7 @@ public class ZKRMStateStore extends RMStateStore {
     public void run() {
       try {
         while (true) {
-          if(isFencedState()) { 
+          if(isFencedState()) {
             break;
           }
           doStoreMultiWithRetries(emptyOpList);

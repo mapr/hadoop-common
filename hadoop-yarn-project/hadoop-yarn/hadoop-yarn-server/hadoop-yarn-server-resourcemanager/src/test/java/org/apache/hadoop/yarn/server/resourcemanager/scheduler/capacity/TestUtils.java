@@ -26,8 +26,8 @@ import static org.mockito.Mockito.when;
 
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -61,7 +61,8 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 public class TestUtils {
-  private static final Log LOG = LogFactory.getLog(TestUtils.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(TestUtils.class);
 
   /**
    * Get a mock {@link RMContext} for use in test cases.
@@ -87,10 +88,10 @@ public class TestUtils {
       }
     };
     
-    // No op 
-    ContainerAllocationExpirer cae = 
+    // No op
+    ContainerAllocationExpirer cae =
         new ContainerAllocationExpirer(nullDispatcher);
-    
+
     Configuration conf = new Configuration();
     RMApplicationHistoryWriter writer =  mock(RMApplicationHistoryWriter.class);
     RMContextImpl rmContext =
@@ -118,7 +119,7 @@ public class TestUtils {
             return (Resource) args[1];
           }
         });
-    
+
     rmContext.setNodeLabelManager(nlm);
     rmContext.setSystemMetricsPublisher(mock(SystemMetricsPublisher.class));
     rmContext.setRMApplicationHistoryWriter(mock(RMApplicationHistoryWriter.class));
@@ -150,10 +151,10 @@ public class TestUtils {
   public static ResourceRequest createResourceRequest(
       String resourceName, int memory, int numContainers, boolean relaxLocality,
       Priority priority, RecordFactory recordFactory) {
-    ResourceRequest request = 
+    ResourceRequest request =
         recordFactory.newRecordInstance(ResourceRequest.class);
     Resource capability = Resources.createResource(memory, 1);
-    
+
     request.setNumContainers(numContainers);
     request.setResourceName(resourceName);
     request.setCapability(capability);
@@ -161,7 +162,7 @@ public class TestUtils {
     request.setPriority(priority);
     return request;
   }
-  
+
   public static ApplicationId getMockApplicationId(int appId) {
     ApplicationId applicationId = mock(ApplicationId.class);
     when(applicationId.getClusterTimestamp()).thenReturn(0L);
@@ -172,12 +173,12 @@ public class TestUtils {
   public static ApplicationAttemptId 
   getMockApplicationAttemptId(int appId, int attemptId) {
     ApplicationId applicationId = BuilderUtils.newApplicationId(0l, appId);
-    ApplicationAttemptId applicationAttemptId = mock(ApplicationAttemptId.class);  
+    ApplicationAttemptId applicationAttemptId = mock(ApplicationAttemptId.class);
     when(applicationAttemptId.getApplicationId()).thenReturn(applicationId);
     when(applicationAttemptId.getAttemptId()).thenReturn(attemptId);
     return applicationAttemptId;
   }
-  
+
   public static FiCaSchedulerNode getMockNode(
       String host, String rack, int port, int capability) {
     NodeId nodeId = mock(NodeId.class);

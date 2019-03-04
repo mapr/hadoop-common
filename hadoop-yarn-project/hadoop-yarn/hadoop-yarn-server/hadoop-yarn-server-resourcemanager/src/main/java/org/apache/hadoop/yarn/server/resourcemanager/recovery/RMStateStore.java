@@ -31,8 +31,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 import javax.crypto.SecretKey;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.conf.Configuration;
@@ -68,6 +68,8 @@ import org.apache.hadoop.yarn.state.InvalidStateTransitonException;
 import org.apache.hadoop.yarn.state.SingleArcTransition;
 import org.apache.hadoop.yarn.state.StateMachine;
 import org.apache.hadoop.yarn.state.StateMachineFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 @Private
 @Unstable
@@ -94,7 +96,10 @@ public abstract class RMStateStore extends AbstractService {
   private final ReadLock readLock;
   private final WriteLock writeLock;
 
-  public static final Log LOG = LogFactory.getLog(RMStateStore.class);
+  public static final Logger LOG =
+      LoggerFactory.getLogger(RMStateStore.class);
+
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
 
   private enum RMStateStoreState {
     ACTIVE,
@@ -604,7 +609,7 @@ public abstract class RMStateStore extends AbstractService {
    * Get the current epoch of RM and increment the value.
    */
   public abstract long getAndIncrementEpoch() throws Exception;
-  
+
   /**
    * Blocking API
    * The derived class must recover state from the store and return a new 
@@ -916,7 +921,7 @@ public abstract class RMStateStore extends AbstractService {
       standByTransitionThread.setName("StandByTransitionThread Handler");
       standByTransitionThread.start();
     } else if (YarnConfiguration.shouldRMFailFast(getConfig())) {
-      LOG.fatal("Fail RM now due to state-store error!");
+      LOG.error(FATAL,"Fail RM now due to state-store error!");
       rmDispatcher.getEventHandler().handle(
           new RMFatalEvent(RMFatalEventType.STATE_STORE_OP_FAILED,
               failureCause));

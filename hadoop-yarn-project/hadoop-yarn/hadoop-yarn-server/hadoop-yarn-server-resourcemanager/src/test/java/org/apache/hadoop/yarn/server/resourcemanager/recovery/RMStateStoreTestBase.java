@@ -38,8 +38,8 @@ import java.util.Map;
 import javax.crypto.SecretKey;
 
 import org.junit.Assert;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ha.ClientBaseWithFixes;
 import org.apache.hadoop.io.Text;
@@ -79,7 +79,8 @@ import org.apache.hadoop.yarn.util.ConverterUtils;
 
 public class RMStateStoreTestBase extends ClientBaseWithFixes{
 
-  public static final Log LOG = LogFactory.getLog(RMStateStoreTestBase.class);
+  public static final Logger LOG =
+      LoggerFactory.getLogger(RMStateStoreTestBase.class);
 
   static class TestDispatcher implements Dispatcher, EventHandler<Event> {
 
@@ -594,7 +595,7 @@ public class RMStateStoreTestBase extends ClientBaseWithFixes{
       Assert.assertFalse(stateStoreHelper.appExists(app));
     }
   }
-  
+
   public void testRemoveAttempt(RMStateStoreHelper stateStoreHelper)
     throws Exception {
     RMStateStore store = stateStoreHelper.getRMStateStore();

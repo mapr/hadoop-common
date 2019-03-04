@@ -27,8 +27,8 @@ import java.util.Map;
 
 import org.junit.Assert;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.yarn.api.ContainerManagementProtocol;
 import org.apache.hadoop.yarn.api.protocolrecords.GetContainerStatusesRequest;
@@ -62,7 +62,8 @@ import org.apache.hadoop.yarn.util.resource.Resources;
 
 @Private
 public class NodeManager implements ContainerManagementProtocol {
-  private static final Log LOG = LogFactory.getLog(NodeManager.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(NodeManager.class);
   private static final RecordFactory recordFactory = RecordFactoryProvider.getRecordFactory(null);
   
   final private String containerManagerAddress;
@@ -211,10 +212,10 @@ public class NodeManager implements ContainerManagementProtocol {
 
   synchronized public void checkResourceUsage() {
     LOG.info("Checking resource usage for " + containerManagerAddress);
-    Assert.assertEquals(available.getMemory(), 
+    Assert.assertEquals(available.getMemory(),
         resourceManager.getResourceScheduler().getNodeReport(
             this.nodeId).getAvailableResource().getMemory());
-    Assert.assertEquals(used.getMemory(), 
+    Assert.assertEquals(used.getMemory(),
         resourceManager.getResourceScheduler().getNodeReport(
             this.nodeId).getUsedResource().getMemory());
   }
@@ -295,7 +296,7 @@ public class NodeManager implements ContainerManagementProtocol {
     return GetContainerStatusesResponse.newInstance(statuses, null);
   }
 
-  public static org.apache.hadoop.yarn.server.api.records.NodeStatus 
+  public static org.apache.hadoop.yarn.server.api.records.NodeStatus
   createNodeStatus(NodeId nodeId, List<ContainerStatus> containers) {
     RecordFactory recordFactory = RecordFactoryProvider.getRecordFactory(null);
     org.apache.hadoop.yarn.server.api.records.NodeStatus nodeStatus = 

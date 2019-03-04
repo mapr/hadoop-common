@@ -31,8 +31,8 @@ import java.util.PriorityQueue;
 import java.util.Set;
 
 import org.apache.commons.collections.map.HashedMap;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.NodeId;
@@ -79,8 +79,8 @@ import com.google.common.annotations.VisibleForTesting;
  */
 public class ProportionalCapacityPreemptionPolicy implements SchedulingEditPolicy {
 
-  private static final Log LOG =
-    LogFactory.getLog(ProportionalCapacityPreemptionPolicy.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(ProportionalCapacityPreemptionPolicy.class);
 
   /** If true, run the policy but do not affect the cluster with preemption and
    * kill events. */
@@ -172,7 +172,7 @@ public class ProportionalCapacityPreemptionPolicy implements SchedulingEditPolic
     rc = scheduler.getResourceCalculator();
     labels = null;
   }
-  
+
   @VisibleForTesting
   public ResourceCalculator getResourceCalculator() {
     return rc;
@@ -190,7 +190,7 @@ public class ProportionalCapacityPreemptionPolicy implements SchedulingEditPolic
 
   /**
    * Setting Node Labels
-   * 
+   *
    * @param nodelabels
    */
   public void setNodeLabels(Map<NodeId, Set<String>> nodelabels) {
@@ -199,7 +199,7 @@ public class ProportionalCapacityPreemptionPolicy implements SchedulingEditPolic
 
   /**
    * This method returns all non labeled resources.
-   * 
+   *
    * @param clusterResources
    * @return Resources
    */
@@ -350,14 +350,14 @@ public class ProportionalCapacityPreemptionPolicy implements SchedulingEditPolic
     computeFixpointAllocation(rc, tot_guarant, nonZeroGuarQueues, unassigned,
         false);
 
-    // if any capacity is left unassigned, distributed among zero-guarantee 
+    // if any capacity is left unassigned, distributed among zero-guarantee
     // queues uniformly (i.e., not based on guaranteed capacity, as this is zero)
     if (!zeroGuarQueues.isEmpty()
         && Resources.greaterThan(rc, tot_guarant, unassigned, Resources.none())) {
       computeFixpointAllocation(rc, tot_guarant, zeroGuarQueues, unassigned,
           true);
     }
-    
+
     // based on ideal assignment computed above and current assignment we derive
     // how much preemption is required overall
     Resource totPreemptionNeeded = Resource.newInstance(0, 0);
@@ -390,7 +390,7 @@ public class ProportionalCapacityPreemptionPolicy implements SchedulingEditPolic
     }
 
   }
-  
+
   /**
    * Given a set of queues compute the fix-point distribution of unassigned
    * resources among them. As pending request of a queue are exhausted, the
@@ -400,13 +400,13 @@ public class ProportionalCapacityPreemptionPolicy implements SchedulingEditPolic
    * distributed uniformly.
    */
   private void computeFixpointAllocation(ResourceCalculator rc,
-      Resource tot_guarant, Collection<TempQueue> qAlloc, Resource unassigned, 
+      Resource tot_guarant, Collection<TempQueue> qAlloc, Resource unassigned,
       boolean ignoreGuarantee) {
     // Prior to assigning the unused resources, process each queue as follows:
     // If current > guaranteed, idealAssigned = guaranteed + untouchable extra
     // Else idealAssigned = current;
     // Subtract idealAssigned resources from unassigned.
-    // If the queue has all of its needs met (that is, if 
+    // If the queue has all of its needs met (that is, if
     // idealAssigned >= current + pending), remove it from consideration.
     // Sort queues from most under-guaranteed to most over-guaranteed.
     TQComparator tqComparator = new TQComparator(rc, tot_guarant);
@@ -493,7 +493,7 @@ public class ProportionalCapacityPreemptionPolicy implements SchedulingEditPolic
   private void resetCapacity(ResourceCalculator rc, Resource clusterResource,
       Collection<TempQueue> queues, boolean ignoreGuar) {
     Resource activeCap = Resource.newInstance(0, 0);
-    
+
     if (ignoreGuar) {
       for (TempQueue q : queues) {
         q.normalizedGuarantee = (float)  1.0f / ((float) queues.size());
@@ -550,7 +550,7 @@ public class ProportionalCapacityPreemptionPolicy implements SchedulingEditPolic
 
         // lock the leafqueue while we scan applications and unreserve
         synchronized (qT.leafQueue) {
-          NavigableSet<FiCaSchedulerApp> ns = 
+          NavigableSet<FiCaSchedulerApp> ns =
               (NavigableSet<FiCaSchedulerApp>) qT.leafQueue.getApplications();
           Iterator<FiCaSchedulerApp> desc = ns.descendingIterator();
           qT.actuallyPreempted = Resources.clone(resToObtain);
@@ -584,9 +584,9 @@ public class ProportionalCapacityPreemptionPolicy implements SchedulingEditPolic
 
   /**
    * As more resources are needed for preemption, saved AMContainers has to be
-   * rescanned. Such AMContainers can be preempted based on resToObtain, but 
+   * rescanned. Such AMContainers can be preempted based on resToObtain, but
    * maxAMCapacityForThisQueue resources will be still retained.
-   *  
+   *
    * @param clusterResource
    * @param preemptMap
    * @param skippedAMContainerlist
@@ -605,7 +605,7 @@ public class ProportionalCapacityPreemptionPolicy implements SchedulingEditPolic
         break;
       }
       // Once skippedAMSize reaches down to maxAMCapacityForThisQueue,
-      // container selection iteration for preemption will be stopped. 
+      // container selection iteration for preemption will be stopped.
       if (Resources.lessThanOrEqual(rc, clusterResource, skippedAMSize,
           maxAMCapacityForThisQueue)) {
         break;
@@ -617,7 +617,7 @@ public class ProportionalCapacityPreemptionPolicy implements SchedulingEditPolic
         preemptMap.put(c.getApplicationAttemptId(), contToPrempt);
       }
       contToPrempt.add(c);
-      
+
       Resources.subtractFrom(resToObtain, c.getContainer().getResource());
       Resources.subtractFrom(skippedAMSize, c.getContainer()
           .getResource());
@@ -684,10 +684,10 @@ public class ProportionalCapacityPreemptionPolicy implements SchedulingEditPolic
 
     return ret;
   }
-  
+
   /**
    * Checking if given container is a labeled container
-   * 
+   *
    * @param c
    * @return true/false
    */
@@ -879,8 +879,8 @@ public class ProportionalCapacityPreemptionPolicy implements SchedulingEditPolic
                       Resources.subtract(maxCapacity, idealAssigned),
                       Resource.newInstance(0, 0));
       // remain = avail - min(avail, (max - assigned), (current + pending - assigned))
-      Resource accepted = 
-          Resources.min(rc, clusterResource, 
+      Resource accepted =
+          Resources.min(rc, clusterResource,
               absMaxCapIdealAssignedDelta,
           Resources.min(rc, clusterResource, avail, Resources.subtract(
               Resources.add(current, pending), idealAssigned)));

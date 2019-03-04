@@ -76,20 +76,20 @@ public abstract class FSQueue implements Queue, Schedulable {
     metrics.setMaxShare(getMaxShare());
     this.parent = parent;
   }
-  
+
   public String getName() {
     return name;
   }
-  
+
   @Override
   public String getQueueName() {
     return name;
   }
-  
+
   public SchedulingPolicy getPolicy() {
     return policy;
   }
-  
+
   public FSParentQueue getParent() {
     return parent;
   }
@@ -107,12 +107,12 @@ public abstract class FSQueue implements Queue, Schedulable {
   public ResourceWeights getWeights() {
     return scheduler.getAllocationConfiguration().getQueueWeight(getName());
   }
-  
+
   @Override
   public Resource getMinShare() {
     return scheduler.getAllocationConfiguration().getMinResources(getName());
   }
-  
+
   @Override
   public Resource getMaxShare() {
     return scheduler.getAllocationConfiguration().getMaxResources(getName());
@@ -161,7 +161,7 @@ public abstract class FSQueue implements Queue, Schedulable {
     }
     queueInfo.setChildQueues(childQueueInfos);
     queueInfo.setQueueState(QueueState.RUNNING);
-    
+
     queueInfo.setQueueLabel((label == null)
             ? Queue.LABEL_NONE
             : label.toString());
@@ -185,7 +185,7 @@ public abstract class FSQueue implements Queue, Schedulable {
 
   @Override
   public void setFairShare(Resource fairShare) {
-    Resource clusterResource = scheduler.isResourcesBasedOnLabelsEnabled() ? 
+    Resource clusterResource = scheduler.isResourcesBasedOnLabelsEnabled() ?
         scheduler.getClusterResource(label) :
         scheduler.getClusterResource();
     if (clusterResource != null) {
@@ -351,13 +351,13 @@ public abstract class FSQueue implements Queue, Schedulable {
     return String.format("[%s, demand=%s, running=%s, share=%s, w=%s]",
         getName(), getDemand(), getResourceUsage(), fairShare, getWeights());
   }
-  
+
   @Override
   public Set<String> getAccessibleNodeLabels() {
     // TODO, add implementation for FS
     return null;
   }
-  
+
   @Override
   public String getDefaultNodeLabelExpression() {
     // TODO, add implementation for FS
@@ -379,7 +379,7 @@ public abstract class FSQueue implements Queue, Schedulable {
       return null;
     }
   }
-  
+
   protected void updateLabel() {
     if (!name.equals(ROOT_QUEUE) &&
         label == null && defaultLabel != null) {
@@ -389,7 +389,7 @@ public abstract class FSQueue implements Queue, Schedulable {
   }
 
   protected QueueLabelPolicy refreshLabelPolicy() {
-    QueueLabelPolicy labelPolicy = 
+    QueueLabelPolicy labelPolicy =
         scheduler.getAllocationConfiguration().getLabelPolicies().get(getName());
     if ( labelPolicy == null &&  parent != null ) {
       labelPolicy = parent.refreshLabelPolicy();
@@ -406,7 +406,7 @@ public abstract class FSQueue implements Queue, Schedulable {
   public Expression getLabel() {
     return label;
   }
-	  
+
   public void setLabel(Expression label) {
     this.label = label;
   }

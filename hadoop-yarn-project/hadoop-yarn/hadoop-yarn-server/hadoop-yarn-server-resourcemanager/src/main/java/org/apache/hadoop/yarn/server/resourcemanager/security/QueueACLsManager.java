@@ -29,7 +29,7 @@ import com.google.common.annotations.VisibleForTesting;
 public class QueueACLsManager {
   private ResourceScheduler scheduler;
   private boolean isACLsEnable;
-  
+
   @VisibleForTesting
   public QueueACLsManager() {
     this(null, new Configuration());

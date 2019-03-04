@@ -27,6 +27,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.Set;
+import java.util.Enumeration;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -160,6 +161,14 @@ public abstract class GenericTestUtils {
 
   public static void setRootLogLevel(org.slf4j.event.Level level) {
     setLogLevel(LogManager.getRootLogger(), Level.toLevel(level.toString()));
+  }
+
+  public static void setCurrentLoggersLogLevel(org.slf4j.event.Level level) {
+    for (Enumeration<?> loggers = LogManager.getCurrentLoggers();
+        loggers.hasMoreElements();) {
+      Logger logger = (Logger) loggers.nextElement();
+      logger.setLevel(Level.toLevel(level.toString()));
+    }
   }
 
   public static org.slf4j.event.Level toLevel(String level) {

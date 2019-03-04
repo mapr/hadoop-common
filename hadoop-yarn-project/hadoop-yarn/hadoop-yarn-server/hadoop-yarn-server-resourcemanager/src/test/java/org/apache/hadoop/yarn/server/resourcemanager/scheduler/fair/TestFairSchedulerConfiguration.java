@@ -50,12 +50,12 @@ public class TestFairSchedulerConfiguration {
     assertEquals(BuilderUtils.newResource(1024, 2, 1),
         parseResourceConfigValue("  1024. mb, 2. vcores  , 1. disks"));
   }
-  
+
   @Test(expected = AllocationConfigurationException.class)
   public void testNoUnits() throws Exception {
     parseResourceConfigValue("1024");
   }
-  
+
   @Test(expected = AllocationConfigurationException.class)
   public void testOnlyMemory() throws Exception {
     parseResourceConfigValue("1024mb");
@@ -65,10 +65,10 @@ public class TestFairSchedulerConfiguration {
   public void testOnlyCPU() throws Exception {
     parseResourceConfigValue("1024vcores");
   }
-  
+
   @Test(expected = AllocationConfigurationException.class)
   public void testGibberish() throws Exception {
     parseResourceConfigValue("1o24vc0res");
   }
-  
+
 }

@@ -25,8 +25,8 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import net.java.dev.eval.Expression;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.LimitedPrivate;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.conf.Configuration;
@@ -107,7 +107,7 @@ import com.google.common.base.Preconditions;
  * fashion.  Applications may only be scheduled on leaf queues. Queues can be
  * specified as children of other queues by placing them as sub-elements of their
  * parents in the fair scheduler configuration file.
- * 
+ *
  * A queue's name starts with the names of its parents, with periods as
  * separators.  So a queue named "queue1" under the root named, would be 
  * referred to as "root.queue1", and a queue named "queue2" under a queue
@@ -125,8 +125,9 @@ public class FairScheduler extends
   private volatile Clock clock;
   private boolean usePortForNodeName;
 
-  private static final Log LOG = LogFactory.getLog(FairScheduler.class);
-  
+  private static final Logger LOG =
+          LoggerFactory.getLogger(FairScheduler.class);
+
   private static final ResourceCalculator RESOURCE_CALCULATOR =
       new DiskBasedResourceCalculator();
   
@@ -162,15 +163,15 @@ public class FairScheduler extends
   protected boolean isPreemptionThresholdBasedOnLabelsEnabled;
 
   // How often tasks are preempted
-  protected long preemptionInterval; 
-  
+  protected long preemptionInterval;
+
   // ms to wait before force killing stuff (must be longer than a couple
   // of heartbeats to give task-kill commands a chance to act).
   protected long waitTimeBeforeKill;
 
   // Whether computing of resources based on node labels is enabled
   protected boolean isResourcesBasedOnLabelsEnabled;
-  
+
   // Containers whose AMs have been warned that they will be preempted soon.
   private List<RMContainer> warnedContainers = new ArrayList<RMContainer>();
   // Killed/Preempted container, mapping with the application which will get its deallocated resources
@@ -197,7 +198,7 @@ public class FairScheduler extends
   private AllocationFileLoaderService allocsLoader;
   @VisibleForTesting
   AllocationConfiguration allocConf;
-  
+
   public FairScheduler() {
     super(FairScheduler.class.getName());
     clock = new SystemClock();
@@ -586,7 +587,7 @@ public class FairScheduler extends
     LOG.info("Preempting container (prio=" + container.getContainer().getPriority() +
         "res=" + container.getContainer().getResource() +
         ") from queue " + queue.getName());
-    
+
     Long time = app.getContainerPreemptionTime(container);
 
     if (time != null) {
@@ -797,7 +798,7 @@ public class FairScheduler extends
       LOG.info(msg);
       return;
     }
-  
+
     SchedulerApplication<FSAppAttempt> application =
         new SchedulerApplication<FSAppAttempt>(queue, user);
     applications.put(applicationId, application);
@@ -850,7 +851,7 @@ public class FairScheduler extends
     } else {
       maxRunningEnforcer.trackNonRunnableApp(attempt);
     }
-    
+
     queue.getMetrics().submitAppAttempt(user);
 
     LOG.info("Added Application Attempt " + applicationAttemptId
@@ -1117,7 +1118,7 @@ public class FairScheduler extends
         LOG.debug("Preempting " + application.getPreemptionContainers().size()
             + " container(s)");
       }
-      
+
       Set<ContainerId> preemptionContainerIds = new HashSet<ContainerId>();
       for (RMContainer container : application.getPreemptionContainers()) {
         preemptionContainerIds.add(container.getContainerId());
@@ -1132,7 +1133,7 @@ public class FairScheduler extends
           preemptionContainerIds, null, null, allocation.getNMTokenList());
     }
   }
-  
+
   /**
    * Process a heartbeat update from a node.
    */
@@ -1143,14 +1144,14 @@ public class FairScheduler extends
     }
     eventLog.log("HEARTBEAT", nm.getHostName());
     FSSchedulerNode node = getFSSchedulerNode(nm.getNodeID());
-    
+
     List<UpdatedContainerInfo> containerInfoList = nm.pullContainerUpdates();
     List<ContainerStatus> newlyLaunchedContainers = new ArrayList<ContainerStatus>();
     List<ContainerStatus> completedContainers = new ArrayList<ContainerStatus>();
     for(UpdatedContainerInfo containerInfo : containerInfoList) {
       newlyLaunchedContainers.addAll(containerInfo.getNewlyLaunchedContainers());
       completedContainers.addAll(containerInfo.getCompletedContainers());
-    } 
+    }
     // Processing the newly launched containers
     for (ContainerStatus launchedContainer : newlyLaunchedContainers) {
       containerLaunchedOnNode(launchedContainer.getContainerId(), node);
@@ -1731,16 +1732,16 @@ public class FairScheduler extends
       if (targetQueue == oldQueue) {
         return oldQueue.getQueueName();
       }
-      
+
       if (oldQueue.isRunnableApp(attempt)) {
         verifyMoveDoesNotViolateConstraints(attempt, oldQueue, targetQueue);
       }
-      
+
       executeMove(app, attempt, oldQueue, targetQueue);
       return targetQueue.getQueueName();
     }
   }
-  
+
   private void verifyMoveDoesNotViolateConstraints(FSAppAttempt app,
       FSLeafQueue oldQueue, FSLeafQueue targetQueue) throws YarnException {
     String queueName = targetQueue.getQueueName();
@@ -1840,7 +1841,7 @@ public class FairScheduler extends
    * Process resource update on a node and update Queue.
    */
   @Override
-  public synchronized void updateNodeResource(RMNode nm, 
+  public synchronized void updateNodeResource(RMNode nm,
       ResourceOption resourceOption) {
     super.updateNodeResource(nm, resourceOption);
     updateRootQueueMetrics();

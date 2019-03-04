@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -119,7 +119,7 @@ public class RMServerUtils {
    * It will validate to make sure all the containers belong to correct
    * application attempt id. If not then it will throw
    * {@link InvalidContainerReleaseException}
-   * 
+   *
    * @param containerReleaseList
    *          containers to be released as requested by application master.
    * @param appAttemptId
@@ -142,7 +142,7 @@ public class RMServerUtils {
   }
 
   public static UserGroupInformation verifyAdminAccess(
-      YarnAuthorizationProvider authorizer, String method, final Log LOG)
+      YarnAuthorizationProvider authorizer, String method, final Logger LOG)
       throws IOException {
     // by default, this method will use AdminService as module name
     return verifyAdminAccess(authorizer, method, "AdminService", LOG);
@@ -160,7 +160,7 @@ public class RMServerUtils {
    */
   public static UserGroupInformation verifyAdminAccess(
       YarnAuthorizationProvider authorizer, String method, String module,
-      final Log LOG)
+      final Logger LOG)
       throws IOException {
     UserGroupInformation user;
     try {

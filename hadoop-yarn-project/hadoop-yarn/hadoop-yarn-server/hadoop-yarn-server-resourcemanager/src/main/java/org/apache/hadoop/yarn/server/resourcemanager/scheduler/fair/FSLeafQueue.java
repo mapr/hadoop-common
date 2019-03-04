@@ -28,8 +28,8 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -47,8 +47,8 @@ import org.apache.hadoop.yarn.util.resource.Resources;
 @Private
 @Unstable
 public class FSLeafQueue extends FSQueue {
-  private static final Log LOG = LogFactory.getLog(
-      FSLeafQueue.class.getName());
+  private static final Logger LOG = LoggerFactory.
+          getLogger(FSLeafQueue.class.getName());
 
   private final List<FSAppAttempt> runnableApps = // apps that are runnable
       new ArrayList<FSAppAttempt>();
@@ -64,7 +64,7 @@ public class FSLeafQueue extends FSQueue {
   // Variables used for preemption
   private long lastTimeAtMinShare;
   private long lastTimeAtFairShareThreshold;
-  
+
   // Track the AM resource usage for this queue
   private Resource amResourceUsage;
 
@@ -103,7 +103,7 @@ public class FSLeafQueue extends FSQueue {
       writeLock.unlock();
     }
   }
-  
+
   /**
    * Removes the given app from this queue.
    * @return whether or not the app was runnable
@@ -242,7 +242,7 @@ public class FSLeafQueue extends FSQueue {
     }
     super.policy = policy;
   }
-  
+
   @Override
   public void recomputeShares() {
     readLock.lock();
@@ -291,7 +291,7 @@ public class FSLeafQueue extends FSQueue {
           + "; the max is " + maxRes);
     }
   }
-  
+
   private void updateDemandForApp(FSAppAttempt sched, Resource maxRes) {
     sched.updateDemand();
     Resource toAdd = sched.getDemand();

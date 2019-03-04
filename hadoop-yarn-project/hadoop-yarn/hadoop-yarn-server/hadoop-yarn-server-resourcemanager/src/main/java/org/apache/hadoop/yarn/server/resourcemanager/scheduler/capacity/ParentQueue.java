@@ -33,8 +33,8 @@ import java.util.TreeSet;
 import org.apache.commons.lang.StringUtils;
 import net.java.dev.eval.Expression;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Evolving;
 import org.apache.hadoop.security.AccessControlException;
@@ -73,21 +73,22 @@ import com.google.common.collect.Sets;
 @Evolving
 public class ParentQueue extends AbstractCSQueue {
 
-  private static final Log LOG = LogFactory.getLog(ParentQueue.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(ParentQueue.class);
 
-  protected final Set<CSQueue> childQueues;  
+  protected final Set<CSQueue> childQueues;
   private final boolean rootQueue;
   final Comparator<CSQueue> queueComparator;
   volatile int numApplications;
   private final CapacitySchedulerContext scheduler;
-  
+
   private Expression label;
   private Queue.QueueLabelPolicy labelPolicy;
-  
+
   private final RecordFactory recordFactory = 
     RecordFactoryProvider.getRecordFactory(null);
 
-  public ParentQueue(CapacitySchedulerContext cs, 
+  public ParentQueue(CapacitySchedulerContext cs,
       String queueName, CSQueue parent, CSQueue old) throws IOException {
     super(cs, queueName, parent, old);
     this.scheduler = cs;
@@ -103,14 +104,14 @@ public class ParentQueue extends AbstractCSQueue {
           "capacity of " + rawCapacity + " for queue " + queueName +
           ". Must be " + CapacitySchedulerConfiguration.MAXIMUM_CAPACITY_VALUE);
     }
-    
+
     this.childQueues = new TreeSet<CSQueue>(queueComparator);
-    
+
     setupQueueConfigs(cs.getClusterResource());
 
-    LOG.info("Initialized parent-queue " + queueName + 
-        " name=" + queueName + 
-        ", fullname=" + getQueuePath()); 
+    LOG.info("Initialized parent-queue " + queueName +
+        " name=" + queueName +
+        ", fullname=" + getQueuePath());
   }
 
   synchronized void setupQueueConfigs(Resource clusterResource)
@@ -124,7 +125,7 @@ public class ParentQueue extends AbstractCSQueue {
     this.label = refreshLabel();
     this.labelPolicy = refreshLabelPolicy();
 
-    StringBuilder labelStrBuilder = new StringBuilder(); 
+    StringBuilder labelStrBuilder = new StringBuilder();
     if (accessibleLabels != null) {
       for (String s : accessibleLabels) {
         labelStrBuilder.append(s);
@@ -136,9 +137,9 @@ public class ParentQueue extends AbstractCSQueue {
         ", capacity=" + this.queueCapacities.getCapacity() +
         ", asboluteCapacity=" + this.queueCapacities.getAbsoluteCapacity() +
         ", maxCapacity=" + this.queueCapacities.getMaximumCapacity() +
-        ", asboluteMaxCapacity=" + this.queueCapacities.getAbsoluteMaximumCapacity() + 
+        ", asboluteMaxCapacity=" + this.queueCapacities.getAbsoluteMaximumCapacity() +
         ", state=" + state +
-        ", acls=" + aclsString + 
+        ", acls=" + aclsString +
         ", labels=" + labelStrBuilder.toString() + "\n" +
         ", reservationsContinueLooking=" + reservationsContinueLooking);
   }
@@ -152,10 +153,10 @@ public class ParentQueue extends AbstractCSQueue {
     }
     float delta = Math.abs(1.0f - childCapacities);  // crude way to check
     // allow capacities being set to 0, and enforce child 0 if parent is 0
-    if (((queueCapacities.getCapacity() > 0) && (delta > PRECISION)) || 
+    if (((queueCapacities.getCapacity() > 0) && (delta > PRECISION)) ||
         ((queueCapacities.getCapacity() == 0) && (childCapacities > 0))) {
       throw new IllegalArgumentException("Illegal" +
-      		" capacity of " + childCapacities + 
+      		" capacity of " + childCapacities +
       		" for children of queue " + queueName);
     }
     // check label capacities
@@ -173,7 +174,7 @@ public class ParentQueue extends AbstractCSQueue {
             + " for label=" + nodeLabel);
       }
     }
-    
+
     this.childQueues.clear();
     this.childQueues.addAll(childQueues);
     if (LOG.isDebugEnabled()) {
@@ -188,7 +189,7 @@ public class ParentQueue extends AbstractCSQueue {
   }
 
   @Override
-  public synchronized QueueInfo getQueueInfo( 
+  public synchronized QueueInfo getQueueInfo(
       boolean includeChildQueues, boolean recursive) {
     QueueInfo queueInfo = getQueueInfo();
 
@@ -201,19 +202,19 @@ public class ParentQueue extends AbstractCSQueue {
       }
     }
     queueInfo.setChildQueues(childQueuesInfo);
-    
+
     return queueInfo;
   }
 
   private synchronized QueueUserACLInfo getUserAclInfo(
       UserGroupInformation user) {
-    QueueUserACLInfo userAclInfo = 
+    QueueUserACLInfo userAclInfo =
       recordFactory.newRecordInstance(QueueUserACLInfo.class);
     List<QueueACL> operations = new ArrayList<QueueACL>();
     for (QueueACL operation : QueueACL.values()) {
       if (hasAccess(operation, user)) {
         operations.add(operation);
-      } 
+      }
     }
 
     userAclInfo.setQueueName(getQueueName());
@@ -225,15 +226,15 @@ public class ParentQueue extends AbstractCSQueue {
   public synchronized List<QueueUserACLInfo> getQueueUserAclInfo(
       UserGroupInformation user) {
     List<QueueUserACLInfo> userAcls = new ArrayList<QueueUserACLInfo>();
-    
+
     // Add parent queue acls
     userAcls.add(getUserAclInfo(user));
-    
+
     // Add children queue acls
     for (CSQueue child : childQueues) {
       userAcls.addAll(child.getQueueUserAclInfo(user));
     }
- 
+
     return userAcls;
   }
 
@@ -266,14 +267,14 @@ public class ParentQueue extends AbstractCSQueue {
     // Re-configure existing child queues and add new ones
     // The CS has already checked to ensure all existing child queues are present!
     Map<String, CSQueue> currentChildQueues = getQueues(childQueues);
-    Map<String, CSQueue> newChildQueues = 
+    Map<String, CSQueue> newChildQueues =
         getQueues(newlyParsedParentQueue.childQueues);
     for (Map.Entry<String, CSQueue> e : newChildQueues.entrySet()) {
       String newChildQueueName = e.getKey();
       CSQueue newChildQueue = e.getValue();
 
       CSQueue childQueue = currentChildQueues.get(newChildQueueName);
-      
+
       // Check if the child-queue already exists
       if (childQueue != null) {
         // Re-init existing child queues
@@ -281,13 +282,13 @@ public class ParentQueue extends AbstractCSQueue {
         LOG.info(getQueueName() + ": re-configured queue: " + childQueue);
       } else {
         // New child queue, do not re-init
-        
+
         // Set parent to 'this'
         newChildQueue.setParent(this);
-        
+
         // Save in list of current child queues
         currentChildQueues.put(newChildQueueName, newChildQueue);
-        
+
         LOG.info(getQueueName() + ": added new child queue: " + newChildQueue);
       }
     }
@@ -308,14 +309,14 @@ public class ParentQueue extends AbstractCSQueue {
   @Override
   public void submitApplication(ApplicationId applicationId, String user,
       String queue) throws AccessControlException {
-    
+
     synchronized (this) {
       // Sanity check
       if (queue.equals(queueName)) {
         throw new AccessControlException("Cannot submit application " +
             "to non-leaf queue: " + queueName);
       }
-      
+
       if (state != QueueState.RUNNING) {
         throw new AccessControlException("Queue " + getQueuePath() +
             " is STOPPED. Cannot accept submission of application: " +
@@ -357,34 +358,34 @@ public class ParentQueue extends AbstractCSQueue {
     ++numApplications;
 
     LOG.info("Application added -" +
-        " appId: " + applicationId + 
-        " user: " + user + 
-        " leaf-queue of parent: " + getQueueName() + 
+        " appId: " + applicationId +
+        " user: " + user +
+        " leaf-queue of parent: " + getQueueName() +
         " #applications: " + getNumApplications());
   }
   
   @Override
   public void finishApplication(ApplicationId application, String user) {
-    
+
     synchronized (this) {
       removeApplication(application, user);
     }
-    
+
     // Inform the parent queue
     if (parent != null) {
       parent.finishApplication(application, user);
     }
   }
 
-  private synchronized void removeApplication(ApplicationId applicationId, 
+  private synchronized void removeApplication(ApplicationId applicationId,
       String user) {
-    
+
     --numApplications;
 
     LOG.info("Application removed -" +
-        " appId: " + applicationId + 
-        " user: " + user + 
-        " leaf-queue of parent: " + getQueueName() + 
+        " appId: " + applicationId +
+        " user: " + user +
+        " leaf-queue of parent: " + getQueueName() +
         " #applications: " + getNumApplications());
   }
 
@@ -392,23 +393,23 @@ public class ParentQueue extends AbstractCSQueue {
   public synchronized CSAssignment assignContainers(Resource clusterResource,
       FiCaSchedulerNode node, boolean needToUnreserve,
       ResourceLimits resourceLimits) {
-    CSAssignment assignment = 
+    CSAssignment assignment =
         new CSAssignment(Resources.createResource(0, 0), NodeType.NODE_LOCAL);
     Set<String> nodeLabels = node.getLabels();
-    
+
     // if our queue cannot access this node, just return
     if (!SchedulerUtils.checkQueueAccessToNode(accessibleLabels, nodeLabels)) {
       return assignment;
     }
-    
+
     while (canAssign(clusterResource, node)) {
       if (LOG.isDebugEnabled()) {
         LOG.debug("Trying to assign containers to child-queue of "
           + getQueueName());
       }
-      
+
       boolean localNeedToUnreserve = false;
-      
+
       // Are we over maximum-capacity for this queue?
       if (!canAssignToThisQueue(clusterResource, nodeLabels)) {
         // check to see if we could if we unreserve first
@@ -417,29 +418,29 @@ public class ParentQueue extends AbstractCSQueue {
           break;
         }
       }
-      
+
       // Schedule
-      CSAssignment assignedToChild = 
+      CSAssignment assignedToChild =
           assignContainersToChildQueues(clusterResource, node,
               localNeedToUnreserve | needToUnreserve, resourceLimits);
       assignment.setType(assignedToChild.getType());
-      
+
       // Done if no child-queue assigned anything
       if (Resources.greaterThan(
-              resourceCalculator, clusterResource, 
+              resourceCalculator, clusterResource,
               assignedToChild.getResource(), Resources.none())) {
         // Track resource utilization for the parent-queue
         super.allocateResource(clusterResource, assignedToChild.getResource(),
             nodeLabels);
-        
+
         // Track resource utilization in this pass of the scheduler
         Resources.addTo(assignment.getResource(), assignedToChild.getResource());
-        
+
         LOG.info("assignedContainer" +
-            " queue=" + getQueueName() + 
+            " queue=" + getQueueName() +
             " usedCapacity=" + getUsedCapacity() +
             " absoluteUsedCapacity=" + getAbsoluteUsedCapacity() +
-            " used=" + queueUsage.getUsed() + 
+            " used=" + queueUsage.getUsed() +
             " cluster=" + clusterResource);
 
       } else {
@@ -464,8 +465,8 @@ public class ParentQueue extends AbstractCSQueue {
         }
         break;
       }
-    } 
-    
+    }
+
     return assignment;
   }
 
@@ -479,7 +480,7 @@ public class ParentQueue extends AbstractCSQueue {
       // Any queue can always access any node without label
       labelCanAccess.add(RMNodeLabelsManager.NO_LABEL);
     }
-    
+
     boolean canAssign = true;
     for (String label : labelCanAccess) {
       float currentAbsoluteLabelUsedCapacity =
@@ -487,7 +488,7 @@ public class ParentQueue extends AbstractCSQueue {
               queueUsage.getUsed(label),
               labelManager.getResourceByLabel(label, clusterResource));
       // if any of the label doesn't beyond limit, we can allocate on this node
-      if (currentAbsoluteLabelUsedCapacity >= 
+      if (currentAbsoluteLabelUsedCapacity >=
             queueCapacities.getAbsoluteMaximumCapacity(label)) {
         if (LOG.isDebugEnabled()) {
           LOG.debug(getQueueName() + " used=" + queueUsage.getUsed()
@@ -499,13 +500,13 @@ public class ParentQueue extends AbstractCSQueue {
         break;
       }
     }
-    
+
     return canAssign;
   }
 
-  
+
   private synchronized boolean assignToQueueIfUnreserve(Resource clusterResource) {
-    if (this.reservationsContinueLooking) {      
+    if (this.reservationsContinueLooking) {
       // check to see if we could potentially use this node instead of a reserved
       // node
 
@@ -536,13 +537,13 @@ public class ParentQueue extends AbstractCSQueue {
     return false;
    }
 
-  
+
   private boolean canAssign(Resource clusterResource, FiCaSchedulerNode node) {
-    return (node.getReservedContainer() == null) && 
-        Resources.greaterThanOrEqual(resourceCalculator, clusterResource, 
+    return (node.getReservedContainer() == null) &&
+        Resources.greaterThanOrEqual(resourceCalculator, clusterResource,
             node.getAvailableResource(), minimumAllocation);
   }
-  
+
   private ResourceLimits getResourceLimitsOfChild(CSQueue child,
       Resource clusterResource, ResourceLimits myLimits) {
     /*
@@ -559,16 +560,16 @@ public class ParentQueue extends AbstractCSQueue {
     // Child's limit = my-available-resource + resource-already-used-by-child
     Resource childLimit =
         Resources.add(myMaxAvailableResource, child.getUsedResources());
-    
+
     return new ResourceLimits(childLimit);
   }
-  
+
   private synchronized CSAssignment assignContainersToChildQueues(
       Resource cluster, FiCaSchedulerNode node, boolean needToUnreserve,
       ResourceLimits limits) {
-    CSAssignment assignment = 
+    CSAssignment assignment =
         new CSAssignment(Resources.createResource(0, 0), NodeType.NODE_LOCAL);
-    
+
     printChildQueues();
 
     // Try to assign to most 'under-served' sub-queue
@@ -578,17 +579,17 @@ public class ParentQueue extends AbstractCSQueue {
         LOG.debug("Trying to assign to queue: " + childQueue.getQueuePath()
           + " stats: " + childQueue);
       }
-      
+
       // Get ResourceLimits of child queue before assign containers
       ResourceLimits childLimits =
           getResourceLimitsOfChild(childQueue, cluster, limits);
-      
+
       assignment =
           childQueue.assignContainers(cluster, node, needToUnreserve,
               childLimits);
       if(LOG.isDebugEnabled()) {
         LOG.debug("Assigned to queue: " + childQueue.getQueuePath() +
-          " stats: " + childQueue + " --> " + 
+          " stats: " + childQueue + " --> " +
           assignment.getResource() + ", " + assignment.getType());
       }
 
@@ -598,7 +599,7 @@ public class ParentQueue extends AbstractCSQueue {
               assignment.getResource(), Resources.none())) {
         // Remove and re-insert to sort
         iter.remove();
-        LOG.info("Re-sorting assigned queue: " + childQueue.getQueuePath() + 
+        LOG.info("Re-sorting assigned queue: " + childQueue.getQueuePath() +
             " stats: " + childQueue);
         childQueues.add(childQueue);
         if (LOG.isDebugEnabled()) {
@@ -607,7 +608,7 @@ public class ParentQueue extends AbstractCSQueue {
         break;
       }
     }
-    
+
     return assignment;
   }
 
@@ -629,7 +630,7 @@ public class ParentQueue extends AbstractCSQueue {
         + " child-queues: " + getChildQueuesToPrint());
     }
   }
-  
+
   @Override
   public void completedContainer(Resource clusterResource,
       FiCaSchedulerApp application, FiCaSchedulerNode node, 
@@ -644,10 +645,10 @@ public class ParentQueue extends AbstractCSQueue {
             .getResource(), node.getLabels());
 
         LOG.info("completedContainer" +
-            " queue=" + getQueueName() + 
+            " queue=" + getQueueName() +
             " usedCapacity=" + getUsedCapacity() +
             " absoluteUsedCapacity=" + getAbsoluteUsedCapacity() +
-            " used=" + queueUsage.getUsed() + 
+            " used=" + queueUsage.getUsed() +
             " cluster=" + clusterResource);
 
         // Note that this is using an iterator on the childQueues so this can't
@@ -685,15 +686,15 @@ public class ParentQueue extends AbstractCSQueue {
     for (CSQueue childQueue : childQueues) {
       // Get ResourceLimits of child queue before assign containers
       ResourceLimits childLimits =
-          getResourceLimitsOfChild(childQueue, clusterResource, resourceLimits);     
+          getResourceLimitsOfChild(childQueue, clusterResource, resourceLimits);
       childQueue.updateClusterResource(clusterResource, childLimits);
     }
-    
+
     // Update metrics
     CSQueueUtils.updateQueueStatistics(
         resourceCalculator, this, parent, clusterResource, minimumAllocation);
   }
-  
+
   @Override
   public synchronized List<CSQueue> getChildQueues() {
     return new ArrayList<CSQueue>(childQueues);
@@ -705,7 +706,7 @@ public class ParentQueue extends AbstractCSQueue {
     if (rmContainer.getState().equals(RMContainerState.COMPLETED)) {
       return;
     }
-    // Careful! Locking order is important! 
+    // Careful! Locking order is important!
     synchronized (this) {
       FiCaSchedulerNode node =
           scheduler.getNode(rmContainer.getContainer().getNodeId());

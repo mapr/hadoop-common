@@ -51,25 +51,25 @@ import com.google.common.collect.Sets;
 @Private
 @Unstable
 public class SchedulerUtils {
-  
-  private static final RecordFactory recordFactory = 
+
+  private static final RecordFactory recordFactory =
       RecordFactoryProvider.getRecordFactory(null);
 
-  public static final String RELEASED_CONTAINER = 
+  public static final String RELEASED_CONTAINER =
       "Container released by application";
-  
-  public static final String LOST_CONTAINER = 
+
+  public static final String LOST_CONTAINER =
       "Container released on a *lost* node";
-  
-  public static final String PREEMPTED_CONTAINER = 
+
+  public static final String PREEMPTED_CONTAINER =
       "Container preempted by scheduler";
-  
-  public static final String COMPLETED_APPLICATION = 
+
+  public static final String COMPLETED_APPLICATION =
       "Container of a completed application";
-  
+
   public static final String EXPIRED_CONTAINER =
       "Container expired since it was unused";
-  
+
   public static final String UNRESERVED_CONTAINER =
       "Container reservation no longer required.";
 
@@ -84,7 +84,7 @@ public class SchedulerUtils {
    */
   public static ContainerStatus createAbnormalContainerStatus(
       ContainerId containerId, String diagnostics) {
-    return createAbnormalContainerStatus(containerId, 
+    return createAbnormalContainerStatus(containerId,
         ContainerExitStatus.ABORTED, diagnostics);
   }
 
@@ -99,14 +99,14 @@ public class SchedulerUtils {
    */
   public static ContainerStatus createPreemptedContainerStatus(
       ContainerId containerId, String diagnostics) {
-    return createAbnormalContainerStatus(containerId, 
+    return createAbnormalContainerStatus(containerId,
         ContainerExitStatus.PREEMPTED, diagnostics);
   }
 
   /**
    * Utility to create a {@link ContainerStatus} during exceptional
    * circumstances.
-   * 
+   *
    * @param containerId {@link ContainerId} of returned/released/lost container.
    * @param diagnostics diagnostic message
    * @return <code>ContainerStatus</code> for an returned/released/lost 
@@ -114,7 +114,7 @@ public class SchedulerUtils {
    */
   private static ContainerStatus createAbnormalContainerStatus(
       ContainerId containerId, int exitStatus, String diagnostics) {
-    ContainerStatus containerStatus = 
+    ContainerStatus containerStatus =
         recordFactory.newRecordInstance(ContainerStatus.class);
     containerStatus.setContainerId(containerId);
     containerStatus.setDiagnostics(diagnostics);
@@ -163,7 +163,7 @@ public class SchedulerUtils {
    */
   public static void normalizeRequests(
       List<ResourceRequest> asks,
-      ResourceCalculator resourceCalculator, 
+      ResourceCalculator resourceCalculator,
       Resource clusterResource,
       Resource minimumResource,
       Resource maximumResource,
@@ -180,13 +180,13 @@ public class SchedulerUtils {
    * requested memory is a multiple of minMemory and is not zero.
    */
   public static void normalizeRequest(
-      ResourceRequest ask, 
-      ResourceCalculator resourceCalculator, 
+      ResourceRequest ask,
+      ResourceCalculator resourceCalculator,
       Resource clusterResource,
       Resource minimumResource,
       Resource maximumResource,
       Resource incrementResource) {
-    Resource normalized = 
+    Resource normalized =
         Resources.normalize(
             resourceCalculator, ask.getCapability(), minimumResource,
             maximumResource, incrementResource);
@@ -244,7 +244,7 @@ public class SchedulerUtils {
   /**
    * Utility method to validate a resource request, by insuring that the
    * requested memory/vcore/disk is non-negative and not greater than max
-   * 
+   *
    * @throws InvalidResourceRequestException when there is invalid request
    */
   public static void validateResourceRequest(ResourceRequest resReq,
@@ -290,7 +290,7 @@ public class SchedulerUtils {
               + resReq.getResourceName());
     }
   }
-  
+
   public static boolean checkQueueAccessToNode(Set<String> queueLabels,
       Set<String> nodeLabels) {
     // if queue's label is *, it can access any node
@@ -309,7 +309,7 @@ public class SchedulerUtils {
     // sorry, you cannot access
     return false;
   }
-  
+
   public static void checkIfLabelInClusterNodeLabels(RMNodeLabelsManager mgr,
       Set<String> labels) throws IOException {
     if (mgr == null) {
@@ -329,7 +329,7 @@ public class SchedulerUtils {
       }
     }
   }
-  
+
   public static boolean checkNodeLabelExpression(Set<String> nodeLabels,
       String labelExpression) {
     // empty label expression can only allocate on node with empty labels

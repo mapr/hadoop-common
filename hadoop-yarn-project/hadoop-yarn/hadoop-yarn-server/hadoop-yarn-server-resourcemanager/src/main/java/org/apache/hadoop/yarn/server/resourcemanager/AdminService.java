@@ -25,8 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
@@ -104,7 +104,8 @@ import com.google.protobuf.BlockingService;
 public class AdminService extends CompositeService implements
     HAServiceProtocol, ResourceManagerAdministrationProtocol {
 
-  private static final Log LOG = LogFactory.getLog(AdminService.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(AdminService.class);
 
   private final RMContext rmContext;
   private final ResourceManager rm;
@@ -120,7 +121,7 @@ public class AdminService extends CompositeService implements
 
   private YarnAuthorizationProvider authorizer;
 
-  private final RecordFactory recordFactory = 
+  private final RecordFactory recordFactory =
     RecordFactoryProvider.getRecordFactory(null);
 
   private UserGroupInformation daemonUser;
@@ -149,14 +150,14 @@ public class AdminService extends CompositeService implements
        YarnConfiguration.DEFAULT_RM_ADMIN_ADDRESS,
        YarnConfiguration.DEFAULT_RM_ADMIN_PORT);
     daemonUser = UserGroupInformation.getCurrentUser();
-   if ( conf.getBoolean(YarnConfiguration.RM_IS_ALL_IFACES, 
+   if ( conf.getBoolean(YarnConfiguration.RM_IS_ALL_IFACES,
        YarnConfiguration.DEFAULT_RM_IS_ALL_IFACES)) {
      masterServiceBindAddress = NetUtils.createSocketAddr(
-         YarnConfiguration.ALL_IFACE_LISTEN_ADDRESS, 
-         masterServiceBindAddress.getPort(), 
+         YarnConfiguration.ALL_IFACE_LISTEN_ADDRESS,
+         masterServiceBindAddress.getPort(),
          YarnConfiguration.RM_ADMIN_ADDRESS);
    }
-    
+
    authorizer = YarnAuthorizationProvider.getInstance(conf);
     authorizer.setAdmins(getAdminAclList(conf), UserGroupInformation
          .getCurrentUser());
@@ -371,7 +372,7 @@ public class AdminService extends CompositeService implements
       ret.setNotReadyToBecomeActive("State is " + haState);
     }
     return ret;
-  } 
+  }
 
   @Override
   public RefreshQueuesResponse refreshQueues(RefreshQueuesRequest request)
@@ -440,7 +441,7 @@ public class AdminService extends CompositeService implements
     ProxyUsers.refreshSuperUserGroupsConfiguration(conf);
     RMAuditLogger.logSuccess(user.getShortUserName(),
         argName, "AdminService");
-    
+
     return recordFactory.newRecordInstance(
         RefreshSuperUserGroupsConfigurationResponse.class);
   }
@@ -493,11 +494,11 @@ public class AdminService extends CompositeService implements
   public RefreshServiceAclsResponse refreshServiceAcls(
       RefreshServiceAclsRequest request) throws YarnException, IOException {
     if (!getConfig().getBoolean(
-             CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHORIZATION, 
+             CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHORIZATION,
              false)) {
       throw RPCUtil.getRemoteException(
-          new IOException("Service Authorization (" + 
-              CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHORIZATION + 
+          new IOException("Service Authorization (" +
+              CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHORIZATION +
               ") not enabled."));
     }
 
@@ -517,7 +518,7 @@ public class AdminService extends CompositeService implements
         conf, policyProvider);
     rmContext.getResourceTrackerService().refreshServiceAcls(
         conf, policyProvider);
-    
+
     return recordFactory.newRecordInstance(RefreshServiceAclsResponse.class);
   }
 
@@ -547,12 +548,12 @@ public class AdminService extends CompositeService implements
       UpdateNodeResourceRequest request) throws YarnException, IOException {
     String argName = "updateNodeResource";
     UserGroupInformation user = checkAcls(argName);
-    
+
     checkRMStatus(user.getShortUserName(), argName, "update node resource.");
-    
+
     Map<NodeId, ResourceOption> nodeResourceMap = request.getNodeResourceMap();
     Set<NodeId> nodeIds = nodeResourceMap.keySet();
-    // verify nodes are all valid first. 
+    // verify nodes are all valid first.
     // if any invalid nodes, throw exception instead of partially updating
     // valid nodes.
     for (NodeId nodeId : nodeIds) {
@@ -565,7 +566,7 @@ public class AdminService extends CompositeService implements
                 + "on an unrecognized node: " + nodeId);
       }
     }
-    
+
     // do resource update on each node.
     // Notice: it is still possible to have invalid NodeIDs as nodes decommission
     // may happen just at the same time. This time, only log and skip absent
@@ -575,7 +576,7 @@ public class AdminService extends CompositeService implements
       ResourceOption newResourceOption = entry.getValue();
       NodeId nodeId = entry.getKey();
       RMNode node = this.rmContext.getRMNodes().get(nodeId);
-      
+
       if (node == null) {
         LOG.warn("Resource update get failed on an unrecognized node: " + nodeId);
         allSuccess = false;
@@ -592,7 +593,7 @@ public class AdminService extends CompositeService implements
       RMAuditLogger.logSuccess(user.getShortUserName(), argName,
           "AdminService");
     }
-    UpdateNodeResourceResponse response = 
+    UpdateNodeResourceResponse response =
         UpdateNodeResourceResponse.newInstance();
     return response;
   }
@@ -765,7 +766,7 @@ public class AdminService extends CompositeService implements
   private void checkRMStatus(String user, String argName, String msg)
       throws StandbyException {
     if (!isRMActive()) {
-      RMAuditLogger.logFailure(user, argName, "", 
+      RMAuditLogger.logFailure(user, argName, "",
           "AdminService", "ResourceManager is not active. Can not " + msg);
       throwStandbyException();
     }
@@ -774,7 +775,7 @@ public class AdminService extends CompositeService implements
   private YarnException logAndWrapException(IOException ioe, String user,
       String argName, String msg) throws YarnException {
     LOG.info("Exception " + msg, ioe);
-    RMAuditLogger.logFailure(user, argName, "", 
+    RMAuditLogger.logFailure(user, argName, "",
         "AdminService", "Exception " + msg);
     return RPCUtil.getRemoteException(ioe);
   }

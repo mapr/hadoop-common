@@ -29,8 +29,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import javax.xml.parsers.ParserConfigurationException;
 
 import com.google.common.collect.ImmutableList;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.conf.Configuration;
@@ -40,13 +40,13 @@ import org.xml.sax.SAXException;
 /**
  * Maintains a list of queues as well as scheduling parameters for each queue,
  * such as guaranteed share allocations, from the fair scheduler config file.
- * 
+ *
  */
 @Private
 @Unstable
 public class QueueManager {
-  public static final Log LOG = LogFactory.getLog(
-    QueueManager.class.getName());
+  public static final Logger LOG =
+          LoggerFactory.getLogger(QueueManager.class.getName());
 
   public static final String ROOT_QUEUE = "root";
   
@@ -69,11 +69,11 @@ public class QueueManager {
       SAXException, AllocationConfigurationException, ParserConfigurationException {
     rootQueue = new FSParentQueue("root", scheduler, null);
     queues.put(rootQueue.getName(), rootQueue);
-    
+
     // Create the default queue
     getLeafQueue(YarnConfiguration.DEFAULT_QUEUE_NAME, true);
   }
-  
+
   /**
    * Get a leaf queue by name, creating it if the create param is true and is necessary.
    * If the queue is not or can not be a leaf queue, i.e. it already exists as a
@@ -122,7 +122,7 @@ public class QueueManager {
     }
     return (FSParentQueue) queue;
   }
-  
+
   private FSQueue getQueue(String name, boolean create, FSQueueType queueType) {
     name = ensureRootPrefix(name);
     synchronized (queues) {
@@ -139,11 +139,11 @@ public class QueueManager {
       return queue;
     }
   }
-  
+
   /**
-   * Creates a leaf or parent queue based on what is specified in 'queueType' 
+   * Creates a leaf or parent queue based on what is specified in 'queueType'
    * and places it in the tree. Creates any parents that don't already exist.
-   * 
+   *
    * @return
    *    the created queue, if successful. null if not allowed (one of the parent
    *    queues in the queue name is already a leaf queue)
@@ -173,7 +173,7 @@ public class QueueManager {
         }
       }
     }
-    
+
     // At this point, parent refers to the deepest existing parent of the
     // queue to create.
     // Now that we know everything worked out, make all the queues
@@ -387,7 +387,7 @@ public class QueueManager {
         getParentQueue(name, true);
       }
     }
-    
+
     for (FSQueue queue : queues.values()) {
       // Update queue metrics
       FSQueueMetrics queueMetrics = queue.getMetrics();

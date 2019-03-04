@@ -18,8 +18,8 @@
 
 package org.apache.hadoop.yarn.server.resourcemanager.recovery;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ha.ClientBaseWithFixes;
 import org.apache.hadoop.util.StringUtils;
@@ -51,8 +51,8 @@ public class TestZKRMStateStoreZKClientConnections extends
 
   private static final int ZK_OP_WAIT_TIME = 3000;
   private static final int ZK_TIMEOUT_MS = 1000;
-  private Log LOG =
-      LogFactory.getLog(TestZKRMStateStoreZKClientConnections.class);
+  private Logger LOG =
+      LoggerFactory.getLogger(TestZKRMStateStoreZKClientConnections.class);
 
   private static final String DIGEST_USER_PASS="test-user:test-password";
   private static final String TEST_AUTH_GOOD = "digest:" + DIGEST_USER_PASS;

@@ -31,8 +31,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.net.Node;
@@ -84,7 +84,8 @@ import com.google.common.annotations.VisibleForTesting;
 @SuppressWarnings("unchecked")
 public class RMNodeImpl implements RMNode, EventHandler<RMNodeEvent> {
 
-  private static final Log LOG = LogFactory.getLog(RMNodeImpl.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(RMNodeImpl.class);
 
   private static final RecordFactory recordFactory = RecordFactoryProvider
       .getRecordFactory(null);
@@ -129,7 +130,7 @@ public class RMNodeImpl implements RMNode, EventHandler<RMNodeEvent> {
 
   private NodeHeartbeatResponse latestNodeHeartBeatResponse = recordFactory
       .newRecordInstance(NodeHeartbeatResponse.class);
-  
+
   private static final StateMachineFactory<RMNodeImpl,
                                            NodeState,
                                            RMNodeEventType,
@@ -138,12 +139,12 @@ public class RMNodeImpl implements RMNode, EventHandler<RMNodeEvent> {
                                            NodeState,
                                            RMNodeEventType,
                                            RMNodeEvent>(NodeState.NEW)
-  
+
      //Transitions from NEW state
-     .addTransition(NodeState.NEW, NodeState.RUNNING, 
+     .addTransition(NodeState.NEW, NodeState.RUNNING,
          RMNodeEventType.STARTED, new AddNodeTransition())
      .addTransition(NodeState.NEW, NodeState.NEW,
-         RMNodeEventType.RESOURCE_UPDATE, 
+         RMNodeEventType.RESOURCE_UPDATE,
          new UpdateNodeResourceWhenUnusableTransition())
 
      //Transitions from RUNNING state
@@ -175,7 +176,7 @@ public class RMNodeImpl implements RMNode, EventHandler<RMNodeEvent> {
      .addTransition(NodeState.REBOOTED, NodeState.REBOOTED,
          RMNodeEventType.RESOURCE_UPDATE,
          new UpdateNodeResourceWhenUnusableTransition())
-         
+
      //Transitions from DECOMMISSIONED state
      .addTransition(NodeState.DECOMMISSIONED, NodeState.DECOMMISSIONED,
          RMNodeEventType.RESOURCE_UPDATE,
@@ -219,7 +220,7 @@ public class RMNodeImpl implements RMNode, EventHandler<RMNodeEvent> {
          new AddContainersToBeRemovedFromNMTransition())
 
      // create the topology tables
-     .installTopology(); 
+     .installTopology();
 
   private final StateMachine<NodeState, RMNodeEventType,
                              RMNodeEvent> stateMachine;
@@ -246,8 +247,8 @@ public class RMNodeImpl implements RMNode, EventHandler<RMNodeEvent> {
     this.writeLock = lock.writeLock();
 
     this.stateMachine = stateMachineFactory.make(this);
-    
-    this.nodeUpdateQueue = new ConcurrentLinkedQueue<UpdatedContainerInfo>();  
+
+    this.nodeUpdateQueue = new ConcurrentLinkedQueue<UpdatedContainerInfo>();
   }
 
   @Override
@@ -369,7 +370,7 @@ public class RMNodeImpl implements RMNode, EventHandler<RMNodeEvent> {
     }
 
   }
-  
+
   @Override
   public List<ContainerId> getContainersToCleanUp() {
 
@@ -453,7 +454,7 @@ public class RMNodeImpl implements RMNode, EventHandler<RMNodeEvent> {
       metrics.decrNumUnhealthyNMs();
       break;
     default:
-      LOG.debug("Unexpected previous node state");    
+      LOG.debug("Unexpected previous node state");
     }
   }
 
@@ -542,7 +543,7 @@ public class RMNodeImpl implements RMNode, EventHandler<RMNodeEvent> {
           }
         }
       }
-      
+
       if (null != startEvent.getRunningApplications()) {
         for (ApplicationId appId : startEvent.getRunningApplications()) {
           handleRunningAppOnNode(rmNode, rmNode.context, appId, rmNode.nodeId);
@@ -759,7 +760,7 @@ public class RMNodeImpl implements RMNode, EventHandler<RMNodeEvent> {
       // Switch the last heartbeatresponse.
       rmNode.latestNodeHeartBeatResponse = statusEvent.getLatestResponse();
 
-      NodeHealthStatus remoteNodeHealthStatus = 
+      NodeHealthStatus remoteNodeHealthStatus =
           statusEvent.getNodeHealthStatus();
       rmNode.setHealthReport(remoteNodeHealthStatus.getHealthReport());
       rmNode.setLastHealthReportTime(
@@ -863,8 +864,8 @@ public class RMNodeImpl implements RMNode, EventHandler<RMNodeEvent> {
     Set<String> labelsForNode = LabelManager
             .getInstance()
             .getLabelsForNode(node.getName());
-    
-    return labelsForNode == null ? 
+
+    return labelsForNode == null ?
             CommonNodeLabelsManager.EMPTY_STRING_SET : labelsForNode;
   }
 

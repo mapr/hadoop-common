@@ -24,8 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.yarn.api.records.Container;
@@ -50,7 +50,8 @@ import com.google.common.collect.ImmutableSet;
 @Unstable
 public abstract class SchedulerNode {
 
-  private static final Log LOG = LogFactory.getLog(SchedulerNode.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(SchedulerNode.class);
 
   private Resource availableResource = Resource.newInstance(0, 0);
   private Resource usedResource = Resource.newInstance(0, 0);
@@ -65,9 +66,9 @@ public abstract class SchedulerNode {
 
   private final RMNode rmNode;
   private final String nodeName;
-  
+
   private volatile Set<String> labels = null;
-  
+
   public SchedulerNode(RMNode node, boolean usePortForNodeName,
       Set<String> labels) {
     this.rmNode = node;
@@ -98,10 +99,10 @@ public abstract class SchedulerNode {
     this.availableResource = Resources.subtract(totalResourceCapability,
       this.usedResource);
   }
-  
+
   /**
    * Get the ID of the node which contains both its hostname and port.
-   * 
+   *
    * @return the ID of the node
    */
   public NodeId getNodeID() {
@@ -120,7 +121,7 @@ public abstract class SchedulerNode {
    * {@link YarnConfiguration#RM_SCHEDULER_INCLUDE_PORT_IN_NODE_NAME} constant.
    * The main usecase of this is Yarn minicluster to be able to differentiate
    * node manager instances by their port number.
-   * 
+   *
    * @return name of the node for scheduling matching decisions.
    */
   public String getNodeName() {
@@ -129,7 +130,7 @@ public abstract class SchedulerNode {
 
   /**
    * Get rackname.
-   * 
+   *
    * @return rackname
    */
   public String getRackName() {
@@ -139,7 +140,7 @@ public abstract class SchedulerNode {
   /**
    * The Scheduler has allocated containers on this node to the given
    * application.
-   * 
+   *
    * @param rmContainer
    *          allocated container
    */
@@ -159,7 +160,7 @@ public abstract class SchedulerNode {
 
   /**
    * Get available resources on the node.
-   * 
+   *
    * @return available resources on the node
    */
   public synchronized Resource getAvailableResource() {
@@ -168,7 +169,7 @@ public abstract class SchedulerNode {
 
   /**
    * Get used resources on the node.
-   * 
+   *
    * @return used resources on the node
    */
   public synchronized Resource getUsedResource() {
@@ -177,7 +178,7 @@ public abstract class SchedulerNode {
 
   /**
    * Get total resources on the node.
-   * 
+   *
    * @return total resources on the node.
    */
   public synchronized Resource getTotalResource() {
@@ -198,7 +199,7 @@ public abstract class SchedulerNode {
 
   /**
    * Release an allocated container on this node.
-   * 
+   *
    * @param container
    *          container to be released
    */
@@ -260,7 +261,7 @@ public abstract class SchedulerNode {
 
   /**
    * Get number of active containers on the node.
-   * 
+   *
    * @return number of active containers on the node
    */
   public int getNumContainers() {
@@ -286,11 +287,11 @@ public abstract class SchedulerNode {
     }
     allocateContainer(rmContainer);
   }
-  
+
   public Set<String> getLabels() {
     return labels;
   }
-  
+
   public void updateLabels(Set<String> labels) {
     this.labels = labels;
   }

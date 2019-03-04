@@ -23,8 +23,8 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.ipc.Server;
@@ -77,7 +77,8 @@ import com.google.common.annotations.VisibleForTesting;
 public class ResourceTrackerService extends AbstractService implements
     ResourceTracker {
 
-  private static final Log LOG = LogFactory.getLog(ResourceTrackerService.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(ResourceTrackerService.class);
 
   private static final RecordFactory recordFactory = 
     RecordFactoryProvider.getRecordFactory(null);
@@ -97,7 +98,7 @@ public class ResourceTrackerService extends AbstractService implements
       .newRecordInstance(NodeHeartbeatResponse.class);
   private static final NodeHeartbeatResponse shutDown = recordFactory
   .newRecordInstance(NodeHeartbeatResponse.class);
-  
+
   private int minAllocMb;
   private int minAllocVcores;
   private double minAllocDisks;
@@ -131,14 +132,14 @@ public class ResourceTrackerService extends AbstractService implements
        YarnConfiguration.DEFAULT_RM_RESOURCE_TRACKER_ADDRESS,
        YarnConfiguration.DEFAULT_RM_RESOURCE_TRACKER_PORT);
 
-    if ( conf.getBoolean(YarnConfiguration.RM_IS_ALL_IFACES, 
+    if ( conf.getBoolean(YarnConfiguration.RM_IS_ALL_IFACES,
         YarnConfiguration.DEFAULT_RM_IS_ALL_IFACES)) {
       resourceTrackerAddress = NetUtils.createSocketAddr(
-        YarnConfiguration.ALL_IFACE_LISTEN_ADDRESS, 
-        resourceTrackerAddress.getPort(), 
+        YarnConfiguration.ALL_IFACE_LISTEN_ADDRESS,
+        resourceTrackerAddress.getPort(),
         YarnConfiguration.RM_RESOURCE_TRACKER_ADDRESS);
     }
-    
+
     RackResolver.init(conf);
     nextHeartBeatInterval =
         conf.getLong(YarnConfiguration.RM_NM_HEARTBEAT_INTERVAL_MS,
@@ -176,12 +177,12 @@ public class ResourceTrackerService extends AbstractService implements
     this.server =
       rpc.getServer(ResourceTracker.class, this, resourceTrackerAddress,
           conf, null,
-          conf.getInt(YarnConfiguration.RM_RESOURCE_TRACKER_CLIENT_THREAD_COUNT, 
+          conf.getInt(YarnConfiguration.RM_RESOURCE_TRACKER_CLIENT_THREAD_COUNT,
               YarnConfiguration.DEFAULT_RM_RESOURCE_TRACKER_CLIENT_THREAD_COUNT));
-    
+
     // Enable service authorization?
     if (conf.getBoolean(
-        CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHORIZATION, 
+        CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHORIZATION,
         false)) {
       InputStream inputStream =
           this.rmContext.getConfigurationProvider()
@@ -192,7 +193,7 @@ public class ResourceTrackerService extends AbstractService implements
       }
       refreshServiceAcls(conf, RMPolicyProvider.getInstance());
     }
- 
+
     this.server.start();
     conf.updateConnectAddr(YarnConfiguration.RM_BIND_HOST,
 			   YarnConfiguration.RM_RESOURCE_TRACKER_ADDRESS,
@@ -319,7 +320,7 @@ public class ResourceTrackerService extends AbstractService implements
     response.setContainerTokenMasterKey(containerTokenSecretManager
         .getCurrentKey());
     response.setNMTokenMasterKey(nmTokenSecretManager
-        .getCurrentKey());    
+        .getCurrentKey());
 
     RMNode rmNode = new RMNodeImpl(nodeId, rmContext, host, cmPort, httpPort,
         resolve(host), capability, nodeManagerVersion);
@@ -445,7 +446,7 @@ public class ResourceTrackerService extends AbstractService implements
     // 4. Send status to RMNode, saving the latest response.
     this.rmContext.getDispatcher().getEventHandler().handle(
         new RMNodeStatusEvent(nodeId, remoteNodeStatus.getNodeHealthStatus(),
-            remoteNodeStatus.getContainersStatuses(), 
+            remoteNodeStatus.getContainersStatuses(),
             remoteNodeStatus.getKeepAliveApplications(), nodeHeartBeatResponse));
 
     return nodeHeartBeatResponse;

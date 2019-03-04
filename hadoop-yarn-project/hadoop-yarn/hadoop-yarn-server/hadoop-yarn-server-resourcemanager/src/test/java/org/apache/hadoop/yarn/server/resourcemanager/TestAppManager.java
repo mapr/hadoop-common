@@ -19,8 +19,8 @@
 package org.apache.hadoop.yarn.server.resourcemanager;
 
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.yarn.server.resourcemanager.metrics.SystemMetricsPublisher;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppImpl;
 
@@ -82,8 +82,9 @@ import com.google.common.collect.Maps;
  */
 
 public class TestAppManager{
-  private Log LOG = LogFactory.getLog(TestAppManager.class);
-  private static RMAppEventType appEventType = RMAppEventType.KILL; 
+  private Logger LOG =
+          LoggerFactory.getLogger(TestAppManager.class);
+  private static RMAppEventType appEventType = RMAppEventType.KILL;
 
   public synchronized RMAppEventType getAppEventType() {
     return appEventType;
@@ -155,8 +156,8 @@ public class TestAppManager{
       setAppEventType(event.getType());
       System.out.println("in handle routine " + getAppEventType().toString());
     }   
-  }   
-  
+  }
+
 
   // Extend and make the functions we want to test public
   public class TestRMAppManager extends RMAppManager {
@@ -197,7 +198,7 @@ public class TestAppManager{
   protected void addToCompletedApps(TestRMAppManager appMonitor, RMContext rmContext) {
     for (RMApp app : rmContext.getRMApps().values()) {
       if (app.getState() == RMAppState.FINISHED
-          || app.getState() == RMAppState.KILLED 
+          || app.getState() == RMAppState.KILLED
           || app.getState() == RMAppState.FAILED) {
         appMonitor.finishApplication(app.getApplicationId());
       }
@@ -472,7 +473,7 @@ public class TestAppManager{
 
     // wait for event to be processed
     int timeoutSecs = 0;
-    while ((getAppEventType() == RMAppEventType.KILL) && 
+    while ((getAppEventType() == RMAppEventType.KILL) &&
         timeoutSecs++ < 20) {
       Thread.sleep(1000);
     }

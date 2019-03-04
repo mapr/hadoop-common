@@ -43,8 +43,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.conf.Configuration;
@@ -76,9 +76,9 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 @Unstable
 public class DelegationTokenRenewer extends AbstractService {
   
-  private static final Log LOG = 
-      LogFactory.getLog(DelegationTokenRenewer.class);
-  
+  private static final Logger LOG =
+      LoggerFactory.getLogger(DelegationTokenRenewer.class);
+
   public static final String SCHEME = "hdfs";
 
   // global single timer (daemon)
@@ -376,7 +376,7 @@ public class DelegationTokenRenewer extends AbstractService {
    * @param applicationId added application
    * @param ts tokens
    * @param shouldCancelAtEnd true if tokens should be canceled when the app is
-   * done else false. 
+   * done else false.
    * @param user user
    */
   public void addApplicationAsync(ApplicationId applicationId, Credentials ts,
@@ -526,14 +526,14 @@ public class DelegationTokenRenewer extends AbstractService {
       return super.cancel();
     }
   }
-  
+
   /**
    * set task to renew the token
    */
   @VisibleForTesting
   protected void setTimerForTokenRenewal(DelegationTokenToRenew token)
       throws IOException {
-      
+
     // calculate timer time
     long expiresIn = token.expirationDate - System.currentTimeMillis();
     long renewIn = token.expirationDate - expiresIn/10; // little bit before the expiration

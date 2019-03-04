@@ -18,8 +18,8 @@
 
 package org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
@@ -33,8 +33,8 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerNode;
 @Unstable
 public class FSSchedulerNode extends SchedulerNode {
 
-  private static final Log LOG = LogFactory.getLog(FSSchedulerNode.class);
-
+  private static final Logger LOG =
+      LoggerFactory.getLogger(FSSchedulerNode.class);
   private FSAppAttempt reservedAppSchedulable;
 
   public FSSchedulerNode(RMNode node, boolean usePortForNodeName) {
@@ -68,11 +68,11 @@ public class FSSchedulerNode extends SchedulerNode {
             " on node " + this);
       }
 
-      LOG.info("Updated reserved container " + 
-          container.getContainer().getId() + " on node " + 
+      LOG.info("Updated reserved container " +
+          container.getContainer().getId() + " on node " +
           this + " for application " + application);
     } else {
-      LOG.info("Reserved container " + container.getContainer().getId() + 
+      LOG.info("Reserved container " + container.getContainer().getId() +
           " on node " + this + " for application " + application);
     }
     setReservedContainer(container);
@@ -84,7 +84,7 @@ public class FSSchedulerNode extends SchedulerNode {
       SchedulerApplicationAttempt application) {
     // Cannot unreserve for wrong application...
     ApplicationAttemptId reservedApplication = 
-        getReservedContainer().getContainer().getId().getApplicationAttemptId(); 
+        getReservedContainer().getContainer().getId().getApplicationAttemptId();
     if (!reservedApplication.equals(
         application.getApplicationAttemptId())) {
       throw new IllegalStateException("Trying to unreserve " +  

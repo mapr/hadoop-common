@@ -31,8 +31,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.net.NetworkTopology;
 import org.apache.hadoop.security.SecurityUtilTestHelper;
@@ -93,19 +93,20 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class TestFifoScheduler {
-  private static final Log LOG = LogFactory.getLog(TestFifoScheduler.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(TestFifoScheduler.class);
   private final int GB = 1024;
 
   private ResourceManager resourceManager = null;
-  
+
   private static final RecordFactory recordFactory = 
       RecordFactoryProvider.getRecordFactory(null);
-  
+
   @Before
   public void setUp() throws Exception {
     resourceManager = new ResourceManager();
     Configuration conf = new Configuration();
-    conf.setClass(YarnConfiguration.RM_SCHEDULER, 
+    conf.setClass(YarnConfiguration.RM_SCHEDULER,
         FifoScheduler.class, ResourceScheduler.class);
     resourceManager.init(conf);
   }
@@ -302,7 +303,7 @@ public class TestFifoScheduler {
     
     Method method = scheduler.getClass().getDeclaredMethod("getNodes");
     @SuppressWarnings("unchecked")
-    Map<NodeId, FiCaSchedulerNode> schedulerNodes = 
+    Map<NodeId, FiCaSchedulerNode> schedulerNodes =
         (Map<NodeId, FiCaSchedulerNode>) method.invoke(scheduler);
     assertEquals(schedulerNodes.values().size(), 1);
     
@@ -389,11 +390,11 @@ public class TestFifoScheduler {
     nm_1.heartbeat();
 
     // ResourceRequest priorities
-    Priority priority_0 = 
-      org.apache.hadoop.yarn.server.resourcemanager.resource.Priority.create(0); 
-    Priority priority_1 = 
+    Priority priority_0 =
+      org.apache.hadoop.yarn.server.resourcemanager.resource.Priority.create(0);
+    Priority priority_1 =
       org.apache.hadoop.yarn.server.resourcemanager.resource.Priority.create(1);
-    
+
     // Submit an application
     Application application_0 = new Application("user_0", resourceManager);
     application_0.submit();
@@ -613,7 +614,7 @@ public class TestFifoScheduler {
     Assert.assertFalse(fs.getApplicationAttempt(appAttemptId).isBlacklisted(host));
     rm.stop();
   }
-  
+
   @Test
   public void testGetAppsInQueue() throws Exception {
     Application application_0 = new Application("user_0", resourceManager);
