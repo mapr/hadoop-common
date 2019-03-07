@@ -789,8 +789,7 @@ public class YarnConfiguration extends Configuration {
    * is set to true, but an application does not use the APIs to write to DFS.
    * Instead it just writes it to local file system.
    */
-  public static final String DFS_LOGGING_SUPPORTED = DFS_LOGGING_PREFIX
-    + "supported";
+  public static final String DFS_LOGGING_SUPPORTED = "yarn_dfs_logging_supported";
 
   /**
    * Implementation class for handling DFS logging.
