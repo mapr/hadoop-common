@@ -852,16 +852,6 @@ fi
 # check to see if we have old hadoop config
 checkIncompatibleHadoopConfig
 
-#Always configure hadoop dir
-ConfigureHadoopDir
-ConfigureHadoop
-UpdateFileClientConfig
-ConfigureJMHadoopProperties "${INSTALL_DIR}/conf/hadoop-metrics.properties"
-ConfigureYarnLinuxContainerExecutor
-
-# TODO - this one is incomplete
-ConfigureJMXForHadoop
-
 if [ ! -z "$rm_ip" ]; then
     ConfigureYarnServices "$rm_ip" "$hs_ip"
 elif [[ $isOnlyRoles -ne 1 ]]; then
@@ -871,6 +861,16 @@ fi
 if [ ! -z "$tl_ip" ]; then
     ConfigureTimeLineServer "$tl_ip"
 fi
+
+#Always configure hadoop dir
+ConfigureHadoopDir
+ConfigureHadoop
+UpdateFileClientConfig
+ConfigureJMHadoopProperties "${INSTALL_DIR}/conf/hadoop-metrics.properties"
+ConfigureYarnLinuxContainerExecutor
+
+# TODO - this one is incomplete
+ConfigureJMXForHadoop
 
 if hasRole "nodemanager"; then
     installWardenConfFile nodemanager
