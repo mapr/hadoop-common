@@ -85,7 +85,7 @@ public class ParentQueue extends AbstractCSQueue {
   private Expression label;
   private Queue.QueueLabelPolicy labelPolicy;
 
-  private final RecordFactory recordFactory = 
+  private final RecordFactory recordFactory =
     RecordFactoryProvider.getRecordFactory(null);
 
   public ParentQueue(CapacitySchedulerContext cs,
@@ -576,8 +576,8 @@ public class ParentQueue extends AbstractCSQueue {
     for (Iterator<CSQueue> iter = childQueues.iterator(); iter.hasNext();) {
       CSQueue childQueue = iter.next();
       if(LOG.isDebugEnabled()) {
-        LOG.debug("Trying to assign to queue: " + childQueue.getQueuePath()
-          + " stats: " + childQueue);
+        LOG.debug("Trying to assign to queue: {} stats: {}",
+                childQueue.getQueuePath(), childQueue);
       }
 
       // Get ResourceLimits of child queue before assign containers

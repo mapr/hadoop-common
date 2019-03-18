@@ -76,24 +76,24 @@ public class Application {
   final private ApplicationAttemptId applicationAttemptId;
   final private ResourceManager resourceManager;
   private final static RecordFactory recordFactory = RecordFactoryProvider.getRecordFactory(null);
-  
-  final private Map<Priority, Resource> requestSpec = 
+
+  final private Map<Priority, Resource> requestSpec =
     new TreeMap<Priority, Resource>(
         new org.apache.hadoop.yarn.server.resourcemanager.resource.Priority.Comparator());
-  
-  final private Map<Priority, Map<String, ResourceRequest>> requests = 
+
+  final private Map<Priority, Map<String, ResourceRequest>> requests =
     new TreeMap<Priority, Map<String, ResourceRequest>>(
         new org.apache.hadoop.yarn.server.resourcemanager.resource.Priority.Comparator());
-  
-  final Map<Priority, Set<Task>> tasks = 
+
+  final Map<Priority, Set<Task>> tasks =
     new TreeMap<Priority, Set<Task>>(
         new org.apache.hadoop.yarn.server.resourcemanager.resource.Priority.Comparator());
-  
-  final private Set<ResourceRequest> ask = 
+
+  final private Set<ResourceRequest> ask =
     new TreeSet<ResourceRequest>(
         new org.apache.hadoop.yarn.api.records.ResourceRequest.ResourceRequestComparator());
 
-  final private Map<String, NodeManager> nodes = 
+  final private Map<String, NodeManager> nodes =
     new HashMap<String, NodeManager>();
   
   Resource used = recordFactory.newRecordInstance(Resource.class);
@@ -176,7 +176,7 @@ public class Application {
         new AppAttemptAddedSchedulerEvent(this.applicationAttemptId, false);
     scheduler.handle(addAttemptEvent);
   }
-  
+
   public synchronized void addResourceRequestSpec(
       Priority priority, Resource capability) {
     Resource currentSpec = requestSpec.put(priority, capability);
@@ -202,8 +202,7 @@ public class Application {
       requests = new HashMap<String, ResourceRequest>();
       this.requests.put(priority, requests);
       if(LOG.isDebugEnabled()) {
-        LOG.debug("Added priority=" + priority + " application="
-          + applicationId);
+        LOG.debug("Added priority={} application={}", priority, applicationId);
       }
     }
     
@@ -221,8 +220,7 @@ public class Application {
         applicationId + " at priority " + priority);
     
     if(LOG.isDebugEnabled()) {
-      LOG.debug("addTask: application=" + applicationId
-        + " #asks=" + ask.size());
+      LOG.debug("addTask: application={} #asks={}", applicationId, ask.size());
     }
     
     // Create resource requests
@@ -267,7 +265,7 @@ public class Application {
   }
   
   private synchronized void addResourceRequest(
-      Priority priority, Map<String, ResourceRequest> requests, 
+      Priority priority, Map<String, ResourceRequest> requests,
       String resourceName, Resource capability) {
     ResourceRequest request = requests.get(resourceName);
     if (request == null) {
@@ -284,7 +282,7 @@ public class Application {
     ask.add(
         org.apache.hadoop.yarn.server.utils.BuilderUtils.newResourceRequest(
             request)); // clone to ensure the RM doesn't manipulate the same obj
-    
+
     if(LOG.isDebugEnabled()) {
       LOG.debug("addResourceRequest: applicationId=" + applicationId.getId()
         + " priority=" + priority.getPriority()
@@ -296,12 +294,12 @@ public class Application {
   
   public synchronized List<Container> getResources() throws IOException {
     if(LOG.isDebugEnabled()) {
-      LOG.debug("getResources begin:" + " application=" + applicationId
-        + " #ask=" + ask.size());
+      LOG.debug("getResources begin: application={} #ask={}",
+          applicationId, ask.size());
 
       for (ResourceRequest request : ask) {
-        LOG.debug("getResources:" + " application=" + applicationId
-          + " ask-request=" + request);
+        LOG.debug("getResources: application={} ask-request={}",
+            applicationId, request);
       }
     }
     
@@ -318,8 +316,8 @@ public class Application {
     ask.clear();
     
     if(LOG.isDebugEnabled()) {
-      LOG.debug("getResources() for " + applicationId + ":"
-        + " ask=" + ask.size() + " recieved=" + containers.size());
+      LOG.debug("getResources() for {}: ask={} received={}",
+              applicationId, ask.size(), containers.size());
     }
     
     return containers;
@@ -349,13 +347,13 @@ public class Application {
     assign(getResources());
   }
   
-  private synchronized void assign(Priority priority, NodeType type, 
+  private synchronized void assign(Priority priority, NodeType type,
       List<Container> containers) throws IOException, YarnException {
     for (Iterator<Container> i=containers.iterator(); i.hasNext();) {
       Container container = i.next();
       String host = container.getNodeId().toString();
       
-      if (Resources.equals(requestSpec.get(priority), container.getResource())) { 
+      if (Resources.equals(requestSpec.get(priority), container.getResource())) {
         // See which task can use this container
         for (Iterator<Task> t=tasks.get(priority).iterator(); t.hasNext();) {
           Task task = t.next();
@@ -367,9 +365,9 @@ public class Application {
             
             // Track application resource usage
             Resources.addTo(used, container.getResource());
-            
+
             LOG.info("Assigned container (" + container + ") of type " + type +
-                " to task " + task.getTaskId() + " at priority " + priority + 
+                " to task " + task.getTaskId() + " at priority " + priority +
                 " on node " + nodeManager.getHostName() +
                 ", currently using " + used + " resources");
 
@@ -418,10 +416,10 @@ public class Application {
     }
     
     updateResourceRequest(requests.get(ResourceRequest.ANY));
-    
+
     if(LOG.isDebugEnabled()) {
-      LOG.debug("updateResourceRequests:" + " application=" + applicationId
-        + " #asks=" + ask.size());
+      LOG.debug("updateResourceDemands: application={} #asks={}",
+              applicationId, ask.size());
     }
   }
   
