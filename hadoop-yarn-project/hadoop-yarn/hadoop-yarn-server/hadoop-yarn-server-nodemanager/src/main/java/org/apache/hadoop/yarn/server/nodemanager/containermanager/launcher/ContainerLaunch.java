@@ -24,7 +24,6 @@ import static org.apache.hadoop.fs.CreateFlag.OVERWRITE;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -98,6 +97,10 @@ public class ContainerLaunch implements Callable<Integer> {
 
   private static final String PID_FILE_NAME_FMT = "%s.pid";
   private static final String EXIT_CODE_FILE_SUFFIX = ".exitcode";
+
+  private static final String OOM_SCORE_ADJ_VALUE_VARIABLE = "OOM_SCORE_ADJ_VALUE";
+  private static final String OOM_SCORE_ADJ_COMMAND = "echo $" + OOM_SCORE_ADJ_VALUE_VARIABLE + " > /proc/self/oom_score_adj; ";
+
 
   protected final Dispatcher dispatcher;
   protected final ContainerExecutor exec;
@@ -224,6 +227,16 @@ public class ContainerLaunch implements Callable<Integer> {
         // TODO: Should we instead work via symlinks without this grammar?
         newCmds.add(expandEnvironment(str, containerLogDir));
       }
+
+      //oom_score_adj options
+      if (!Shell.WINDOWS && conf.getBoolean(YarnConfiguration.YARN_NM_CHILD_OOM_SCORE_ADJ_ENABLED,
+              YarnConfiguration.YARN_NM_CHILD_OOM_SCORE_ADJ_ENABLED_DEFAULT)) {
+        environment.put(OOM_SCORE_ADJ_VALUE_VARIABLE,
+                conf.get(YarnConfiguration.YARN_NM_CHILD_OOM_SCORE_ADJ_VALUE,
+                        String.valueOf(YarnConfiguration.YARN_NM_CHILD_OOM_SCORE_ADJ_VALUE_DEFAULT)));
+        newCmds.add(0, OOM_SCORE_ADJ_COMMAND);
+      }
+
       launchContext.setCommands(newCmds);
 
       // Make a copy of env to iterate & do variable expansion
