@@ -329,8 +329,8 @@ function ConfigureTimeLineServer() {
     local YarnTLSecurityProps="${HADOOP_HOME}/etc/hadoop/yarn-timelineserver-security-properties.xml"
     local YSTIMESTAMP=$(date +%F.%H-%M)
     local yarnSiteChange=0
-
-    if [ -f ${FILE} ]; then
+    isSecure=$(head -1 ${MAPR_HOME}/conf/mapr-clusters.conf | grep -o 'secure=\w*' | cut -d= -f2)
+    if [ -f ${YarnSiteFile} ]; then
         logInfo "Backing up \"$HADOOP_HOME/etc/hadoop/yarn-site.xml\" to \"$HADOOP_HOME/etc/hadoop/yarn-site-${YSTIMESTAMP}.xml\""
         cp ${YarnSiteFile} $HADOOP_HOME/etc/hadoop/yarn-site-${YSTIMESTAMP}.xml
     fi
@@ -342,7 +342,7 @@ function ConfigureTimeLineServer() {
               r ${YarnTLProps}
               d
               }" ${YarnSiteFile}
-        echo "</configuration>" >>${YarnSiteFile}
+        echo "</configuration>" >> ${YarnSiteFile}
     fi
     if (grep -Fq "<!--TIMELINE SERVER SECTION-->" ${YarnSiteFile}); then
         sed -i -e "/<name>yarn.timeline-service.hostname<\/name>/!b;n;c\ \ \ \ <value>$1<\/value>" ${YarnSiteFile}
@@ -354,7 +354,7 @@ function ConfigureTimeLineServer() {
                   r ${YarnTLSecurityProps}
                   d
                   }" ${YarnSiteFile}
-            echo "</configuration>" >>${YarnSiteFile}
+            echo "</configuration>" >> ${YarnSiteFile}
         fi
     fi
 

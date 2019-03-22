@@ -183,7 +183,8 @@ public class DelegationTokenAuthenticationFilter
       setHandlerAuthMethod(SaslRpcServer.AuthMethod.KERBEROS);
     }
 
-    if (handler instanceof MultiMechsAuthenticationHandler) {
+    if (handler instanceof MultiMechsAuthenticationHandler ||
+        handler.getClass().isAssignableFrom(MaprDelegationTokenAuthenticationHandler.class)) {
       setHandlerAuthMethod(SaslRpcServer.AuthMethod.KERBEROS);
     }
 
