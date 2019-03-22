@@ -138,9 +138,17 @@ public class AggregatedLogDeletionService extends AbstractService {
         for(FileStatus appDir : fs.listStatus(dir)) {
           if(appDir.isDirectory() && 
               appDir.getModificationTime() < cutoffMillis) {
+            ApplicationId appId = null;
+            try {
+              appId = ConverterUtils.toApplicationId(appDir
+                      .getPath().getName());
+            } catch (IllegalArgumentException e) {
+              LOG.warn("Could not delete log directory " + appDir
+                      .getPath().getName() + " : " + e.getMessage());
+              continue;
+            }
             boolean appTerminated =
-                isApplicationTerminated(ConverterUtils.toApplicationId(appDir
-                  .getPath().getName()), rmClient);
+                    isApplicationTerminated(appId, rmClient);
             if(appTerminated && shouldDeleteLogDir(appDir, cutoffMillis, fs)) {
               try {
                 LOG.info("Deleting aggregated logs in "+appDir.getPath());
