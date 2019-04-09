@@ -54,6 +54,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMApp;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerState;
 import org.apache.hadoop.yarn.server.resourcemanager.rmnode.RMNode;
 import org.apache.hadoop.yarn.server.resourcemanager.rmnode.RMNodeEventType;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacityScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.NodeAddedSchedulerEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.NodeRemovedSchedulerEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEvent;
@@ -69,6 +70,7 @@ import org.mockito.Mockito;
 import java.io.IOException;
 import java.util.HashMap;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -379,6 +381,24 @@ public class TestAbstractYarnScheduler extends ParameterizedSchedulerTestBase {
     } finally {
       rm.stop();
     }
+  }
+
+  @Test
+  public void testRefreshMaximumResourceAllocationShouldReturnSameResourcesAsInArgument() {
+    Configuration configuration = new Configuration();
+    configuration.setInt(YarnConfiguration.RM_WORK_PRESERVING_RECOVERY_SCHEDULING_WAIT_MS, -1);
+
+    CapacityScheduler abstractYarnScheduler = new CapacityScheduler();
+    abstractYarnScheduler.setConf(configuration);
+
+    Resource resource = Resource.newInstance(2048, 4, 5.0);
+
+    abstractYarnScheduler.refreshMaximumAllocation(resource);
+    Resource schedulerResources = abstractYarnScheduler.getMaximumResourceCapability();
+
+    assertEquals(resource.getDisks(), schedulerResources.getDisks(), 0.01);
+    assertEquals(resource.getVirtualCores(), schedulerResources.getVirtualCores());
+    assertEquals(resource.getMemory(), schedulerResources.getMemory());
   }
 
   @Test(timeout = 60000)

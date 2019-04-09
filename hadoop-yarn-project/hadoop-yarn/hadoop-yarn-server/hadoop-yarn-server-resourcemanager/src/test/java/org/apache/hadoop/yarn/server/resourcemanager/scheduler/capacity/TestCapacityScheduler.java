@@ -2353,7 +2353,7 @@ public class TestCapacityScheduler {
         YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES,
         conf.getMaximumAllocation().getVirtualCores());
     assertEquals("cluster max allocation disks",
-        YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES,
+        YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS,
         conf.getMaximumAllocation().getDisks(), 0.01);
 
     CSQueue rootQueue = cs.getRootQueue();

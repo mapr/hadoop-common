@@ -748,7 +748,7 @@ public abstract class AbstractYarnScheduler
       }
       double maxDisks = newMaxAlloc.getDisks();
       if (maxNodeDisks != -1.0) {
-        maxDisks = Math.min(maxVcores, maxNodeDisks);
+        maxDisks = Math.min(maxDisks, maxNodeDisks);
       }
       maximumAllocation = Resources.createResource(maxMemory, maxVcores, maxDisks);
     } finally {
