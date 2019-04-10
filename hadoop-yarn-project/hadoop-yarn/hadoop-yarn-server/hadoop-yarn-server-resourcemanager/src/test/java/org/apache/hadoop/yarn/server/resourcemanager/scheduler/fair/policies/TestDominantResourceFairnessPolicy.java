@@ -38,9 +38,16 @@ import org.junit.Test;
 public class TestDominantResourceFairnessPolicy {
 
   private Comparator<Schedulable> createComparator(int clusterMem,
-      int clusterCpu) {
+                                                   int clusterCpu) {
     DominantResourceFairnessPolicy policy = new DominantResourceFairnessPolicy();
     policy.initialize(BuilderUtils.newResource(clusterMem, clusterCpu));
+    return policy.getComparator();
+  }
+
+  private Comparator<Schedulable> createComparator(int clusterMem,
+                                                   int clusterCpu, int clusterDisk) {
+    DominantResourceFairnessPolicy policy = new DominantResourceFairnessPolicy();
+    policy.initialize(BuilderUtils.newResource(clusterMem, clusterCpu, clusterDisk));
     return policy.getComparator();
   }
   
@@ -53,12 +60,35 @@ public class TestDominantResourceFairnessPolicy {
     return createSchedulable(memUsage, cpuUsage, ResourceWeights.NEUTRAL,
         minMemShare, minCpuShare);
   }
+
+  private Schedulable createSchedulable(int memUsage, int cpuUsage, double diskUsage,
+                                        int minMemShare, int minCpuShare, double minDiskUsage) {
+    return createSchedulable(memUsage, cpuUsage, diskUsage, ResourceWeights.NEUTRAL,
+            minMemShare, minCpuShare, minDiskUsage);
+  }
   
   private Schedulable createSchedulable(int memUsage, int cpuUsage,
       ResourceWeights weights) {
     return createSchedulable(memUsage, cpuUsage, weights, 0, 0);
   }
 
+  private Schedulable createSchedulable(int memUsage, int cpuUsage, double diskUsage) {
+    return createSchedulable(memUsage, cpuUsage, diskUsage, ResourceWeights.NEUTRAL, 0, 0, 0);
+  }
+
+  private Schedulable createSchedulable(int memUsage, int cpuUsage, double diskUsage,
+                                        ResourceWeights weights) {
+    return createSchedulable(memUsage, cpuUsage, diskUsage, weights, 0, 0, 0);
+  }
+
+  private Schedulable createSchedulable(int memUsage, int cpuUsage, double diskUsage,
+                                        ResourceWeights weights, int minMemShare, int minCpuShare, double minDiskUsage) {
+    Resource usage = BuilderUtils.newResource(memUsage, cpuUsage, diskUsage);
+    Resource minShare = BuilderUtils.newResource(minMemShare, minCpuShare, minDiskUsage);
+    return new FakeSchedulable(minShare,
+            Resources.createResource(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE),
+            weights, Resources.none(), usage, 0L);
+  }
   
   private Schedulable createSchedulable(int memUsage, int cpuUsage,
       ResourceWeights weights, int minMemShare, int minCpuShare) {
@@ -159,5 +189,71 @@ public class TestDominantResourceFairnessPolicy {
     assertEquals(.5, shares.getWeight(ResourceType.CPU), .00001);
     assertEquals(ResourceType.CPU, resourceOrder[0]);
     assertEquals(ResourceType.MEMORY, resourceOrder[1]);
+  }
+
+  @Test
+  public void testSameDominantResourceIncludeDisks() {
+    assertTrue(createComparator(8000, 4, 1).compare(
+            createSchedulable(1000, 1, 0.3),
+            createSchedulable(2000, 1, 0.5)) < 0);
+  }
+
+  @Test
+  public void testOneIsNeedyIncludeDisks() {
+    ResourceWeights resourceWeights = new ResourceWeights(1.0f, 1.0f);
+    resourceWeights.setWeight(ResourceType.DISK, 2.0f);
+
+    assertTrue(createComparator(8000, 4, 1).compare(
+            createSchedulable(2000, 1, 0, resourceWeights),
+            createSchedulable(1000, 1, 1, resourceWeights )) < 0);
+  }
+
+  @Test
+  public void testBothAreNeedyIncludeDisks() {
+    assertTrue(createComparator(8000, 100, 2).compare(
+            // dominant share is 2000/8000
+            createSchedulable(2000, 5, 0.7),
+            // dominant share is 4000/8000
+            createSchedulable(4000, 3, 0.3)) < 0);
+    assertTrue(createComparator(8000, 100, 2).compare(
+            // dominant min share is 2/3
+            createSchedulable(2000, 5, 0.3, 3000, 6, 0.5),
+            // dominant min share is 4/5
+            createSchedulable(4000, 3, 0.4, 5000, 4, 0.6)) < 0);
+  }
+
+  @Test
+  public void testUnevenWeightsSameDominantResourceIncludeDisks() {
+    ResourceWeights resourceWeights = new ResourceWeights(2.0f, 1.0f);
+    resourceWeights.setWeight(ResourceType.DISK, 2.0f);
+
+    assertTrue(createComparator(8000, 8, 3).compare(
+            createSchedulable(3000, 1, 2, resourceWeights),
+            createSchedulable(2000, 1, 2)) < 0);
+    assertTrue(createComparator(8000, 8, 3).compare(
+            createSchedulable(1000, 3, 2, resourceWeights),
+            createSchedulable(1000, 2, 2)) < 0);
+    assertTrue(createComparator(8000, 8, 3).compare(
+            createSchedulable(1000, 3, 3, resourceWeights),
+            createSchedulable(1000, 3, 2)) < 0);
+  }
+
+  @Test
+  public void testCalculateSharesIncludeDisks() {
+    Resource used = Resources.createResource(10, 5, 2);
+    Resource capacity = Resources.createResource(100, 10, 8);
+    ResourceType[] resourceOrder = new ResourceType[3];
+    ResourceWeights shares = new ResourceWeights();
+    DominantResourceFairnessPolicy.DominantResourceFairnessComparator comparator =
+            new DominantResourceFairnessPolicy.DominantResourceFairnessComparator();
+    comparator.calculateShares(used, capacity, shares, resourceOrder,
+            ResourceWeights.NEUTRAL);
+
+    assertEquals(.1, shares.getWeight(ResourceType.MEMORY), .00001);
+    assertEquals(.5, shares.getWeight(ResourceType.CPU), .00001);
+    assertEquals(.25, shares.getWeight(ResourceType.DISK), .00001);
+    assertEquals(ResourceType.CPU, resourceOrder[0]);
+    assertEquals(ResourceType.DISK, resourceOrder[1]);
+    assertEquals(ResourceType.MEMORY, resourceOrder[2]);
   }
 }
