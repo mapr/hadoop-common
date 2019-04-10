@@ -145,8 +145,8 @@ public class DominantResourceFairnessPolicy extends SchedulingPolicy {
       // A queue is needy for its min share if its dominant resource
       // (with respect to the cluster capacity) is below its configured min share
       // for that resource
-      boolean s1Needy = sharesOfMinShare1.getWeight(resourceOrder1[0]) < 1.0f;
-      boolean s2Needy = sharesOfMinShare2.getWeight(resourceOrder2[0]) < 1.0f;
+      boolean s1Needy = (sharesOfMinShare1.getWeight(resourceOrder1[0]) < 1.0f) && (sharesOfMinShare1.getWeight(resourceOrder1[0]) != 0.0f);
+      boolean s2Needy = (sharesOfMinShare2.getWeight(resourceOrder2[0]) < 1.0f) && (sharesOfMinShare2.getWeight(resourceOrder1[0]) != 0.0f);
       
       int res = 0;
       if (!s2Needy && !s1Needy) {
@@ -176,10 +176,21 @@ public class DominantResourceFairnessPolicy extends SchedulingPolicy {
      */
     void calculateShares(Resource resource, Resource pool,
         ResourceWeights shares, ResourceType[] resourceOrder, ResourceWeights weights) {
-      shares.setWeight(MEMORY, (float)resource.getMemory() /
-          (pool.getMemory() * weights.getWeight(MEMORY)));
-      shares.setWeight(CPU, (float)resource.getVirtualCores() /
-          (pool.getVirtualCores() * weights.getWeight(CPU)));
+
+      double memoryWeight = (pool.getMemory() * weights.getWeight(MEMORY));
+      if(Math.abs(memoryWeight) < EPSILON) {
+        shares.setWeight(MEMORY, 0.0f);
+      } else {
+        shares.setWeight(MEMORY, (float)(resource.getMemory() / memoryWeight));
+      }
+
+      double cpuWeight= (pool.getVirtualCores() * weights.getWeight(CPU));
+      if (Math.abs(cpuWeight) < EPSILON){
+        shares.setWeight(CPU, 0.0f);
+      } else {
+        shares.setWeight(CPU, (float) (resource.getVirtualCores() / cpuWeight));
+      }
+
       double totalDiskWeight = pool.getDisks() * weights.getWeight(DISK);
       //Check for divide by zero
       if(Math.abs(totalDiskWeight) < EPSILON) {
