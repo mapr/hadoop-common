@@ -84,6 +84,10 @@ public class FairSharePolicy extends SchedulingPolicy {
         return -1;
       }
 
+      // Do not repeat the getResourceUsage calculation
+      Resource resourceUsage1 = s1.getResourceUsage();
+      Resource resourceUsage2 = s2.getResourceUsage();
+
       double minShareRatio1, minShareRatio2;
       double useToWeightRatio1, useToWeightRatio2;
       Resource minShare1 = Resources.min(RESOURCE_CALCULATOR, null,
@@ -91,17 +95,18 @@ public class FairSharePolicy extends SchedulingPolicy {
       Resource minShare2 = Resources.min(RESOURCE_CALCULATOR, null,
           s2.getMinShare(), demand2);
       boolean s1Needy = Resources.lessThan(RESOURCE_CALCULATOR, null,
-          s1.getResourceUsage(), minShare1);
+          resourceUsage1, minShare1);
       boolean s2Needy = Resources.lessThan(RESOURCE_CALCULATOR, null,
-          s2.getResourceUsage(), minShare2);
-      minShareRatio1 = (double) s1.getResourceUsage().getMemory()
+          resourceUsage2, minShare2);
+      minShareRatio1 = (double) resourceUsage1.getMemory()
           / Resources.max(RESOURCE_CALCULATOR, null, minShare1, ONE).getMemory();
-      minShareRatio2 = (double) s2.getResourceUsage().getMemory()
+      minShareRatio2 = (double) resourceUsage2.getMemory()
           / Resources.max(RESOURCE_CALCULATOR, null, minShare2, ONE).getMemory();
-      useToWeightRatio1 = s1.getResourceUsage().getMemory() /
+      useToWeightRatio1 = resourceUsage1.getMemory() /
           s1.getWeights().getWeight(ResourceType.MEMORY);
-      useToWeightRatio2 = s2.getResourceUsage().getMemory() /
+      useToWeightRatio2 = resourceUsage2.getMemory() /
           s2.getWeights().getWeight(ResourceType.MEMORY);
+      
       int res = 0;
       if (s1Needy && !s2Needy)
         res = -1;
