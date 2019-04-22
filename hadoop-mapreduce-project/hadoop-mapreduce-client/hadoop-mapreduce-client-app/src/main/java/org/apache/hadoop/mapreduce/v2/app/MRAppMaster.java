@@ -291,13 +291,14 @@ public class MRAppMaster extends CompositeService {
       newApiCommitter = true;
       LOG.info("Using mapred newApiCommitter.");
     }
-    
+
+    FileSystem fs = getFileSystem(conf);
+
     boolean copyHistory = false;
     committer = createOutputCommitter(conf);
     try {
       String user = UserGroupInformation.getCurrentUser().getShortUserName();
       Path stagingDir = MRApps.getStagingAreaDir(conf, user);
-      FileSystem fs = getFileSystem(conf);
 
       boolean stagingExists = fs.exists(stagingDir);
       Path startCommitFile = MRApps.getStartJobCommitFile(conf, user, jobId);
