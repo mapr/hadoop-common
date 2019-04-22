@@ -43,11 +43,11 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.log4j.WriterAppender;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Sets;
 
@@ -164,53 +164,29 @@ public abstract class GenericTestUtils {
    * @throws AssertionError if the expected string is not found
    */
   public static void assertExceptionContains(String string, Throwable t) {
-    Assert.assertNotNull(E_NULL_THROWABLE, t);
-    String msg = t.toString();
-    if (msg == null) {
-      throw new AssertionError(E_NULL_THROWABLE_STRING, t);
-    }
-    if (!msg.contains(string)) {
-      throw new AssertionError("Expected to find '" + string + "' "
-          + E_UNEXPECTED_EXCEPTION + ":"
-          + StringUtils.stringifyException(t),
-          t);
-    }
+    String msg = t.getMessage();
+    Assert.assertTrue(
+        "Expected to find '" + string + "' but got unexpected exception:"
+        + StringUtils.stringifyException(t), msg.contains(string));
   }  
 
-  /**
-   * Wait for the specified test to return true. The test will be performed
-   * initially and then every {@code checkEveryMillis} until at least
-   * {@code waitForMillis} time has expired. If {@code check} is null or
-   * {@code waitForMillis} is less than {@code checkEveryMillis} this method
-   * will throw an {@link IllegalArgumentException}.
-   *
-   * @param check the test to perform
-   * @param checkEveryMillis how often to perform the test
-   * @param waitForMillis the amount of time after which no more tests will be
-   * performed
-   * @throws TimeoutException if the test does not return true in the allotted
-   * time
-   * @throws InterruptedException if the method is interrupted while waiting
-   */
-  public static void waitFor(Supplier<Boolean> check, int checkEveryMillis,
-      int waitForMillis) throws TimeoutException, InterruptedException {
-    Preconditions.checkNotNull(check, ERROR_MISSING_ARGUMENT);
-    Preconditions.checkArgument(waitForMillis >= checkEveryMillis,
-        ERROR_INVALID_ARGUMENT);
-
+  public static void waitFor(Supplier<Boolean> check,
+      int checkEveryMillis, int waitForMillis)
+      throws TimeoutException, InterruptedException
+  {
     long st = Time.now();
-    boolean result = check.get();
-
-    while (!result && (Time.now() - st < waitForMillis)) {
+    do {
+      boolean result = check.get();
+      if (result) {
+        return;
+      }
+      
       Thread.sleep(checkEveryMillis);
-      result = check.get();
-    }
-
-    if (!result) {
-      throw new TimeoutException("Timed out waiting for condition. " +
-          "Thread diagnostics:\n" +
-          TimedOutTestsListener.buildThreadDiagnosticString());
-    }
+    } while (Time.now() - st < waitForMillis);
+    
+    throw new TimeoutException("Timed out waiting for condition. " +
+        "Thread diagnostics:\n" +
+        TimedOutTestsListener.buildThreadDiagnosticString());
   }
   
   public static class LogCapturer {
@@ -439,21 +415,67 @@ public abstract class GenericTestUtils {
   }
 
   /**
+   * Determine if there are any threads whose name matches the regex.
+   * @param pattern a Pattern object used to match thread names
+   * @return true if there is any thread that matches the pattern
+   */
+  public static boolean anyThreadMatching(Pattern pattern) {
+    ThreadMXBean threadBean = ManagementFactory.getThreadMXBean();
+
+    ThreadInfo[] infos =
+        threadBean.getThreadInfo(threadBean.getAllThreadIds(), 20);
+    for (ThreadInfo info : infos) {
+      if (info == null)
+        continue;
+      if (pattern.matcher(info.getThreadName()).matches()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * Assert that there are no threads running whose name matches the
    * given regular expression.
    * @param regex the regex to match against
    */
   public static void assertNoThreadsMatching(String regex) {
     Pattern pattern = Pattern.compile(regex);
-    ThreadMXBean threadBean = ManagementFactory.getThreadMXBean();
-    
-    ThreadInfo[] infos = threadBean.getThreadInfo(threadBean.getAllThreadIds(), 20);
-    for (ThreadInfo info : infos) {
-      if (info == null) continue;
-      if (pattern.matcher(info.getThreadName()).matches()) {
-        Assert.fail("Leaked thread: " + info + "\n" +
-            Joiner.on("\n").join(info.getStackTrace()));
-      }
+    if (anyThreadMatching(pattern)) {
+      Assert.fail("Leaked thread matches " + regex);
     }
+  }
+
+  /**
+   * Periodically check and wait for any threads whose name match the
+   * given regular expression.
+   *
+   * @param regex the regex to match against.
+   * @param checkEveryMillis time (in milliseconds) between checks.
+   * @param waitForMillis total time (in milliseconds) to wait before throwing
+   *                      a time out exception.
+   * @throws TimeoutException
+   * @throws InterruptedException
+   */
+  public static void waitForThreadTermination(String regex,
+      int checkEveryMillis, final int waitForMillis) throws TimeoutException,
+      InterruptedException {
+    final Pattern pattern = Pattern.compile(regex);
+    waitFor(new Supplier<Boolean>() {
+      @Override public Boolean get() {
+        return !anyThreadMatching(pattern);
+      }
+    }, checkEveryMillis, waitForMillis);
+  }
+
+
+  /**
+   * Skip test if native build profile of Maven is not activated.
+   * Sub-project using this must set 'runningWithNative' property to true
+   * in the definition of native profile in pom.xml.
+   */
+  public static void assumeInNativeProfile() {
+    Assume.assumeTrue(
+        Boolean.valueOf(System.getProperty("runningWithNative", "false")));
   }
 }
