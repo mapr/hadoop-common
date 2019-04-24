@@ -10,6 +10,8 @@ import java.io.FileReader;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 public class MapRCommonSecurityUtil {
 
@@ -19,6 +21,7 @@ public class MapRCommonSecurityUtil {
   private static MapRCommonSecurityUtil s_instance;
   private boolean isClusterSecure = false;
   private boolean isClusterValid = false;
+  private Set<String> clustersNamesList = new HashSet<>();
 
 
   private static final Log LOG = LogFactory.getLog(MapRCommonSecurityUtil.class);
@@ -145,6 +148,8 @@ public class MapRCommonSecurityUtil {
           }
           firstLine = false;
         }
+
+        clustersNamesList.add(thisCluster);
         /*
          * We need to find an entry with a matching cluster name
          */
@@ -204,5 +209,7 @@ public class MapRCommonSecurityUtil {
   public String getClusterName() {
     return currentClusterName;
   }
+
+  public Set<String> getClustersNamesList(){return  clustersNamesList; }
 
 }
