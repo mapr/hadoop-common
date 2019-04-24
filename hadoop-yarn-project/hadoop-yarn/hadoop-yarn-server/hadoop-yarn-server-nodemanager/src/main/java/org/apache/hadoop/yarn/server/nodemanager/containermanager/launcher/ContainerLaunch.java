@@ -442,7 +442,16 @@ public class ContainerLaunch implements Callable<Integer> {
             YarnConfiguration.DEFAULT_NM_CONTAINER_STDERR_PATTERN);
     FSDataInputStream errorFileIS = null;
     try {
-      FileSystem fileSystem = FileSystem.getLocal(conf).getRaw();
+
+      final FileSystem fileSystem;
+      final Map<String, String> env = container.getLaunchContext().getEnvironment();
+
+      if (TaskLogUtil.isDfsLoggingEnabled(env)) {
+        fileSystem = FileSystem.get(conf);
+      } else {
+        fileSystem = FileSystem.getLocal(conf).getRaw();
+      }
+
       FileStatus[] errorFileStatuses = fileSystem
           .globStatus(new Path(containerLogDir, errorFileNamePattern));
       if (errorFileStatuses != null && errorFileStatuses.length != 0) {
