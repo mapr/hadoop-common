@@ -34,6 +34,7 @@ RC=0
 hadoop=2
 hadoopVersion="__VERSION_3DIGIT__"
 yarn_version="${hadoopVersion}"
+isOnlyRoles=0
 
 if [ -e "${MAPR_HOME}/server/common-ecosystem.sh" ]; then
     . "${MAPR_HOME}/server/common-ecosystem.sh"
@@ -754,6 +755,7 @@ if [ ${#} -gt 0 ]; then
                             ;;
                         --R | -R)
                             HADOOP_CONF_ASSUME_RUNNING_CORE=1
+                            isOnlyRoles=1
                             shift 1
                             ;;
                         --RM | -RM)
@@ -786,6 +788,7 @@ if [ ${#} -gt 0 ]; then
                 ;;
             --R | -R)
                 HADOOP_CONF_ASSUME_RUNNING_CORE=1
+                isOnlyRoles=1
                 shift 1
                 ;;
             --customSecure | -c)
