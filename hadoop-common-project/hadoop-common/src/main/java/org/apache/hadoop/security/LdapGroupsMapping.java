@@ -115,7 +115,7 @@ public class LdapGroupsMapping
    */
   public static final String BIND_PASSWORD_KEY = LDAP_CONFIG_PREFIX + ".bind.password";
   public static final String BIND_PASSWORD_DEFAULT = "";
-  
+
   public static final String BIND_PASSWORD_FILE_KEY = BIND_PASSWORD_KEY + ".file";
   public static final String BIND_PASSWORD_FILE_DEFAULT = "";
 
@@ -159,6 +159,9 @@ public class LdapGroupsMapping
 
   private static final Log LOG = LogFactory.getLog(LdapGroupsMapping.class);
 
+  public static final String LDAP_CTX_FACTORY_CLASS_DEFAULT =
+      "com.sun.jndi.ldap.LdapCtxFactory";
+
   private static final SearchControls SEARCH_CONTROLS = new SearchControls();
   static {
     SEARCH_CONTROLS.setSearchScope(SearchControls.SUBTREE_SCOPE);
@@ -166,7 +169,7 @@ public class LdapGroupsMapping
 
   private DirContext ctx;
   private Configuration conf;
-  
+
   private String ldapUrl;
   private boolean useSsl;
   private String keystore;
@@ -178,9 +181,10 @@ public class LdapGroupsMapping
   private String userSearchFilter;
   private String groupMemberAttr;
   private String groupNameAttr;
+  private String ldapCtxFactoryClassName;
 
   public static int RECONNECT_RETRY_COUNT = 3;
-  
+
   /**
    * Returns list of groups for a user.
    * 
@@ -195,9 +199,9 @@ public class LdapGroupsMapping
   public synchronized List<String> getGroups(String user) throws IOException {
     List<String> emptyResults = new ArrayList<String>();
     /*
-     * Normal garbage collection takes care of removing Context instances when they are no longer in use. 
+     * Normal garbage collection takes care of removing Context instances when they are no longer in use.
      * Connections used by Context instances being garbage collected will be closed automatically.
-     * So in case connection is closed and gets CommunicationException, retry some times with new new DirContext/connection. 
+     * So in case connection is closed and gets CommunicationException, retry some times with new new DirContext/connection.
      */
     try {
       return doGetGroups(user);
@@ -213,7 +217,7 @@ public class LdapGroupsMapping
     while (retryCount ++ < RECONNECT_RETRY_COUNT) {
       //reset ctx so that new DirContext can be created with new connection
       this.ctx = null;
-      
+
       try {
         return doGetGroups(user);
       } catch (CommunicationException e) {
@@ -224,10 +228,10 @@ public class LdapGroupsMapping
         return emptyResults;
       }
     }
-    
+
     return emptyResults;
   }
-  
+
   List<String> doGetGroups(String user) throws NamingException {
     List<String> groups = new ArrayList<String>();
 
@@ -261,8 +265,7 @@ public class LdapGroupsMapping
     if (ctx == null) {
       // Set up the initial environment for LDAP connectivity
       Hashtable<String, String> env = new Hashtable<String, String>();
-      env.put(Context.INITIAL_CONTEXT_FACTORY,
-          com.sun.jndi.ldap.LdapCtxFactory.class.getName());
+      env.put(Context.INITIAL_CONTEXT_FACTORY, ldapCtxFactoryClassName);
       env.put(Context.PROVIDER_URL, ldapUrl);
       env.put(Context.SECURITY_AUTHENTICATION, "simple");
 
@@ -311,24 +314,24 @@ public class LdapGroupsMapping
     if (ldapUrl == null || ldapUrl.isEmpty()) {
       throw new RuntimeException("LDAP URL is not configured");
     }
-    
+
     useSsl = conf.getBoolean(LDAP_USE_SSL_KEY, LDAP_USE_SSL_DEFAULT);
     keystore = conf.get(LDAP_KEYSTORE_KEY, LDAP_KEYSTORE_DEFAULT);
-    
+
     keystorePass = getPassword(conf, LDAP_KEYSTORE_PASSWORD_KEY,
         LDAP_KEYSTORE_PASSWORD_DEFAULT);
     if (keystorePass.isEmpty()) {
       keystorePass = extractPassword(conf.get(LDAP_KEYSTORE_PASSWORD_FILE_KEY,
           LDAP_KEYSTORE_PASSWORD_FILE_DEFAULT));
     }
-    
+
     bindUser = conf.get(BIND_USER_KEY, BIND_USER_DEFAULT);
     bindPassword = getPassword(conf, BIND_PASSWORD_KEY, BIND_PASSWORD_DEFAULT);
     if (bindPassword.isEmpty()) {
       bindPassword = extractPassword(
           conf.get(BIND_PASSWORD_FILE_KEY, BIND_PASSWORD_FILE_DEFAULT));
     }
-    
+
     baseDN = conf.get(BASE_DN_KEY, BASE_DN_DEFAULT);
     groupSearchFilter =
         conf.get(GROUP_SEARCH_FILTER_KEY, GROUP_SEARCH_FILTER_DEFAULT);
@@ -343,6 +346,19 @@ public class LdapGroupsMapping
     SEARCH_CONTROLS.setTimeLimit(dirSearchTimeout);
     // Limit the attributes returned to only those required to speed up the search. See HADOOP-10626 for more details.
     SEARCH_CONTROLS.setReturningAttributes(new String[] {groupNameAttr});
+
+    // LDAP_CTX_FACTORY_CLASS_DEFAULT is not open to unnamed modules
+    // in Java 11+, so the default value is set to null to avoid
+    // creating the instance for now.
+    Class<? extends InitialContextFactory> ldapCtxFactoryClass =
+        conf.getClass(LDAP_CTX_FACTORY_CLASS_KEY, null,
+            InitialContextFactory.class);
+    if (ldapCtxFactoryClass != null) {
+      ldapCtxFactoryClassName = ldapCtxFactoryClass.getName();
+    } else {
+      // The default value is set afterwards.
+      ldapCtxFactoryClassName = LDAP_CTX_FACTORY_CLASS_DEFAULT;
+    }
 
     this.conf = conf;
   }
