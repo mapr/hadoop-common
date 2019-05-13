@@ -5,7 +5,7 @@
 
 <property>
   <name>ssl.server.truststore.location</name>
-  <value>{MAPR_HOME}/conf/ssl_truststore</value>
+  <value>/opt/mapr/conf/ssl_truststore</value>
   <description>Truststore to be used by webservers. Must be specified.
   </description>
 </property>
@@ -34,7 +34,7 @@
 
 <property>
   <name>ssl.server.keystore.location</name>
-  <value>{MAPR_HOME}/conf/ssl_keystore</value>
+  <value>/opt/mapr/conf/ssl_keystore</value>
   <description>Keystore to be used by webservers. Must be specified.
   </description>
 </property>

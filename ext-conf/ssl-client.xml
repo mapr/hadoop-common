@@ -4,7 +4,7 @@
 
 <property>
   <name>ssl.client.truststore.location</name>
-  <value>{MAPR_HOME}/conf/ssl_truststore</value>
+  <value>/opt/mapr/conf/ssl_truststore</value>
   <description>Truststore to be used by clients like distcp. Must be
   specified.
   </description>
@@ -34,7 +34,7 @@
 
 <property>
   <name>ssl.client.keystore.location</name>
-  <value>{MAPR_HOME}/conf/ssl_keystore</value>
+  <value>/opt/mapr/conf/ssl_keystore</value>
   <description>Keystore to be used by clients like distcp. Must be
   specified.
   </description>
