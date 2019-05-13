@@ -30,6 +30,7 @@ WARDEN_HEAPSIZE_MIN_KEY="service.heapsize.min"
 WARDEN_HEAPSIZE_MAX_KEY="service.heapsize.max"
 WARDEN_HEAPSIZE_PERCENT_KEY="service.heapsize.percent"
 WARDEN_RUNSTATE_KEY="service.runstate"
+MAPR_CLUSTRERS_CONF_FILE=${MAPR_HOME}/conf/mapr-clusters.conf
 RC=0
 hadoop=2
 hadoopVersion="__VERSION_3DIGIT__"
@@ -75,6 +76,27 @@ function checkIncompatibleHadoopConfig() {
         fi
     fi
 }
+
+function isSecureEnable() {
+    local  __resultvar=$1
+    local result=$(head -1 ${MAPR_CLUSTRERS_CONF_FILE} | grep -o 'secure=\w*' | cut -d= -f2)
+    eval $__resultvar="'$result'"
+}
+
+function UpdateMapredSiteXmlForTezSSL() {
+     isSecureEnable isSecure
+     if [ "$isSecure" == "true" ] || [ "$secureCluster" == "1" ]; then
+        if ! grep -q mapreduce.shuffle.ssl.enabled $hmrConf; then
+            sed -i -e "s|</configuration>|  <property>\n    <name>mapreduce.shuffle.ssl.enabled</name>\n    <value>true</value>\n    </property>\n</configuration>|" $hmrConf
+        else
+            key="<name>mapreduce.shuffle.ssl.enabled<\/name>"
+            value="true"
+            sed -i -e '/'"$key"'/{N
+            s/\('"$key"' *\n* *<value>\)\(.*\)\(<\/value>\)/\1'"$value"'\3/}' "$hmrConf"
+        fi
+    fi
+}
+
 
 function UpdateFileClientConfig() {
     # TODO: figure out if this stays here
@@ -144,6 +166,7 @@ function UpdateFileClientConfig() {
     s/\('"$key"' *\n* *<value>\)\(.*\)\(<\/value>\)/\1'"$value"'\3/
   }' "$hmrConf"
 
+    UpdateMapredSiteXmlForTezSSL
 }
 function ConfigureCommon() {
     # Remove old maprfs jars.
@@ -224,7 +247,7 @@ function CreateRMRestartFile() {
             cat >"$RM_RESTART_FILE" <<-RM_RESTART
               echo "Running RM restart script"
               if ${MAPR_HOME}/initscripts/mapr-warden status > /dev/null 2>&1 ; then
-                  isSecure=$(head -1 ${MAPR_HOME}/conf/mapr-clusters.conf | grep -o 'secure=\w*' | cut -d= -f2)
+                  isSecureEnable isSecure
                   if [ "$isSecure" = "true" ] && [ -f "${MAPR_HOME}/conf/mapruserticket" ]; then
                       export MAPR_TICKETFILE_LOCATION="${MAPR_HOME}/conf/mapruserticket"
                   fi
@@ -281,7 +304,7 @@ function ConfigureYarnServices() {
         fi
     fi
 
-    MAPR_SECURITY_STATUS=$(head -n 1 /opt/mapr/conf/mapr-clusters.conf | grep secure= | sed 's/^.*secure=//' | sed 's/ .*$//')
+    isSecureEnable MAPR_SECURITY_STATUS
     local yarnSiteChange=0
     local YarnSiteFile="${HADOOP_HOME}/etc/hadoop/yarn-site.xml"
     if [ "$MAPR_SECURITY_STATUS" = "true" ]; then
@@ -330,7 +353,7 @@ function ConfigureTimeLineServer() {
     local YarnTLSecurityProps="${HADOOP_HOME}/etc/hadoop/yarn-timelineserver-security-properties.xml"
     local YSTIMESTAMP=$(date +%F.%H-%M)
     local yarnSiteChange=0
-    isSecure=$(head -1 ${MAPR_HOME}/conf/mapr-clusters.conf | grep -o 'secure=\w*' | cut -d= -f2)
+    isSecureEnable isSecure
     if [ -f ${YarnSiteFile} ]; then
         logInfo "Backing up \"$HADOOP_HOME/etc/hadoop/yarn-site.xml\" to \"$HADOOP_HOME/etc/hadoop/yarn-site-${YSTIMESTAMP}.xml\""
         cp ${YarnSiteFile} $HADOOP_HOME/etc/hadoop/yarn-site-${YSTIMESTAMP}.xml
@@ -373,7 +396,7 @@ function ConfigureTimeLineServer() {
                 cat >"$TL_RESTART_FILE" <<-TL_RESTART
                   echo "Running TL restart script"
                   if ${MAPR_HOME}/initscripts/mapr-warden status > /dev/null 2>&1 ; then
-                      isSecure=$(head -1 ${MAPR_HOME}/conf/mapr-clusters.conf | grep -o 'secure=\w*' | cut -d= -f2)
+                      isSecureEnable isSecure
                       if [ "$isSecure" = "true" ] && [ -f "${MAPR_HOME}/conf/mapruserticket" ]; then
                           export MAPR_TICKETFILE_LOCATION="${MAPR_HOME}/conf/mapruserticket"
                       fi
@@ -531,7 +554,7 @@ function ConfigureRunUserForHadoop() {
 
 function ConfigureJMXForHadoop() {
     #TODO
-    # currently collectd's configure script does a bunch of seds into the yarn script to 
+    # currently collectd's configure script does a bunch of seds into the yarn script to
     # enable JMX and set options and ports for JMX.
     #
 
