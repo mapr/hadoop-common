@@ -54,6 +54,7 @@ import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.delegation.web.DelegationTokenAuthenticatedURL;
 import org.apache.hadoop.security.token.delegation.web.DelegationTokenAuthenticator;
 import org.apache.hadoop.security.token.delegation.web.MaprDelegationTokenAuthenticator;
+import org.apache.hadoop.security.token.delegation.web.KerberosDelegationTokenAuthenticator;
 import org.apache.hadoop.security.token.delegation.web.PseudoDelegationTokenAuthenticator;
 import org.apache.hadoop.yarn.api.records.timeline.TimelineDomain;
 import org.apache.hadoop.yarn.api.records.timeline.TimelineDomains;
@@ -271,7 +272,7 @@ public class TimelineClientImpl extends TimelineClient {
         YarnConfiguration.DEFAULT_TIMELINE_SERVICE_CLIENT_SOCKET_TIMEOUT_MS);
     connConfigurator = initConnConfigurator(conf);
     if (UserGroupInformation.isSecurityEnabled()) {
-      authenticator = new MaprDelegationTokenAuthenticator();
+      authenticator = getMaprDelegationTokenAuthenticator();
     } else {
       authenticator = new PseudoDelegationTokenAuthenticator();
     }
@@ -298,6 +299,22 @@ public class TimelineClientImpl extends TimelineClient {
     }
     LOG.info("Timeline service address: " + resURI);
     super.serviceInit(conf);
+  }
+
+  public DelegationTokenAuthenticator getMaprDelegationTokenAuthenticator() {
+    DelegationTokenAuthenticator maprAuthenticator = null;
+    try {
+      maprAuthenticator = new MaprDelegationTokenAuthenticator();
+    } catch (InstantiationException e) {
+      LOG.error("Unable to instantiate class " + maprAuthenticator.getClass().getName(), e);
+    } catch (IllegalAccessException e) {
+      LOG.error("Unable to init class " + maprAuthenticator.getClass().getName(), e);
+    } finally {
+      if (maprAuthenticator == null) {
+        return new KerberosDelegationTokenAuthenticator();
+      }
+    }
+    return maprAuthenticator;
   }
 
   @Override

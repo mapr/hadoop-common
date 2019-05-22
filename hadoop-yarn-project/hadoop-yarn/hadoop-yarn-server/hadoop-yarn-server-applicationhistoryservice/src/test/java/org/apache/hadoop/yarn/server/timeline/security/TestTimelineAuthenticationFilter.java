@@ -19,8 +19,6 @@
 package org.apache.hadoop.yarn.server.timeline.security;
 
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.security.PrivilegedExceptionAction;
@@ -44,12 +42,10 @@ import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.apache.hadoop.security.rpcauth.KerberosAuthMethod;
 import org.apache.hadoop.security.ssl.KeyStoreTestUtil;
 import org.apache.hadoop.security.token.Token;
-import org.apache.hadoop.security.token.delegation.web.KerberosDelegationTokenAuthenticator;
 import org.apache.hadoop.yarn.api.records.timeline.TimelineDomain;
 import org.apache.hadoop.yarn.api.records.timeline.TimelineEntity;
 import org.apache.hadoop.yarn.api.records.timeline.TimelinePutResponse;
 import org.apache.hadoop.yarn.client.api.TimelineClient;
-import org.apache.hadoop.yarn.client.api.impl.TimelineClientImpl;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.security.client.TimelineDelegationTokenIdentifier;
 import org.apache.hadoop.yarn.server.applicationhistoryservice.ApplicationHistoryServer;
@@ -163,8 +159,7 @@ public class TestTimelineAuthenticationFilter {
   }
 
   private TimelineClient createTimelineClientForUGI() {
-    TimelineClientImpl client = spy((TimelineClientImpl) TimelineClient.createTimelineClient());
-   // when(client.getMaprDelegationTokenAuthenticator()).thenReturn(new KerberosDelegationTokenAuthenticator());
+    TimelineClient client = TimelineClient.createTimelineClient();
     client.init(conf);
     client.start();
     return client;
