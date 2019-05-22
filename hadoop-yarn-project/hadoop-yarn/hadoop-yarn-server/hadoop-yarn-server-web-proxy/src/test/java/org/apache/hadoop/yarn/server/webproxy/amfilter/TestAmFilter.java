@@ -198,7 +198,7 @@ public class TestAmFilter {
           return true;
         }
       }
-    }, 500, updateInterval);
+    }, 500, updateInterval + 100);
   }
 
   /**
