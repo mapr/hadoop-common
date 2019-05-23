@@ -71,6 +71,7 @@ import org.apache.hadoop.security.token.TokenIdentifier;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.util.DiskChecker;
+import org.apache.hadoop.util.Shell;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.concurrent.HadoopExecutors;
 import org.apache.hadoop.util.concurrent.HadoopScheduledThreadPoolExecutor;
@@ -502,7 +503,7 @@ public class ResourceLocalizationService extends CompositeService
     }
     String locId = ConverterUtils.toString(c.getContainerId());
     localizerTracker.cleanupPrivLocalizers(locId);
-    
+
     // Delete the container directories
     String userName = c.getUser();
     String containerIDStr = c.toString();
@@ -736,6 +737,7 @@ public class ResourceLocalizationService extends CompositeService
           return; // ignore; already gone
         }
         privLocalizers.remove(locId);
+        LOG.info("Interrupting localizer for " + locId);
         localizer.interrupt();
       }
     }
@@ -787,7 +789,7 @@ public class ResourceLocalizationService extends CompositeService
       // TODO handle failures, cancellation, requests by other containers
       LocalizedResource rsrc = request.getResource();
       LocalResourceRequest key = rsrc.getRequest();
-      LOG.info("Downloading public rsrc:" + key);
+      LOG.info("Downloading public resource: " + key);
       /*
        * Here multiple containers may request the same resource. So we need
        * to start downloading only when
@@ -845,7 +847,16 @@ public class ResourceLocalizationService extends CompositeService
                 + " Either queue is full or threadpool is shutdown.", re);
           }
         } else {
+          if (LOG.isDebugEnabled()) {
+            LOG.debug("Skip downloading resource: " + key + " since it's in"
+                + " state: " + rsrc.getState());
+          }
           rsrc.unlock();
+        }
+      } else {
+        if (LOG.isDebugEnabled()) {
+          LOG.debug("Skip downloading resource: " + key + " since it is locked"
+              + " by other threads");
         }
       }
     }
@@ -859,12 +870,12 @@ public class ResourceLocalizationService extends CompositeService
             Future<Path> completed = queue.take();
             LocalizerResourceRequestEvent assoc = pending.remove(completed);
             try {
-              Path local = completed.get();
               if (null == assoc) {
                 LOG.error("Localized unknown resource to " + completed);
                 // TODO delete
                 return;
               }
+              Path local = completed.get();
               LocalResourceRequest key = assoc.getResource().getRequest();
               publicRsrc.handle(new ResourceLocalizedEvent(key, local, FileUtil
                 .getDU(new File(local.toUri()))));
@@ -884,7 +895,7 @@ public class ResourceLocalizationService extends CompositeService
           }
         }
       } catch(Throwable t) {
-        LOG.fatal("Error: Shutting down", t);
+        LOG.error("Error: Shutting down", t);
       } finally {
         LOG.info("Public cache exiting");
         threadPool.shutdownNow();
@@ -993,12 +1004,22 @@ public class ResourceLocalizationService extends CompositeService
         try {
           req = new LocalResourceRequest(rsrc);
         } catch (URISyntaxException e) {
-          // TODO fail? Already translated several times...
+          LOG.error(
+              "Got exception in parsing URL of LocalResource:"
+                  + rsrc.getResource(), e);
+          continue;
         }
         LocalizerResourceRequestEvent assoc = scheduled.get(req);
         if (assoc == null) {
           // internal error
           LOG.error("Unknown resource reported: " + req);
+          continue;
+        }
+        LocalResourcesTracker tracker =
+            getLocalResourcesTracker(req.getVisibility(), user, applicationId);
+        if (tracker == null) {
+          // This is likely due to a race between heartbeat and
+          // app cleaning up.
           continue;
         }
         switch (stat.getStatus()) {
@@ -1095,6 +1116,44 @@ public class ResourceLocalizationService extends CompositeService
             ContainerLocalizer.getEstimatedSize(rsrc), false);
       return tracker.getPathForLocalization(new LocalResourceRequest(rsrc),
           dirPath, delService);
+    }
+
+    @Override
+    public void interrupt() {
+      boolean destroyedShell = false;
+      try {
+        for (Shell shell : Shell.getAllShells()) {
+          try {
+            if (shell.getWaitingThread() != null &&
+                shell.getWaitingThread().equals(this) &&
+                shell.getProcess() != null &&
+                processIsAlive(shell.getProcess())) {
+              LOG.info("Destroying localization shell process for " +
+                  localizerId);
+              shell.getProcess().destroy();
+              destroyedShell = true;
+              break;
+            }
+          } catch (Exception e) {
+            LOG.warn("Failed to destroy localization shell process for " +
+                localizerId, e);
+          }
+        }
+      } finally {
+        if (!destroyedShell) {
+          super.interrupt();
+        }
+      }
+    }
+
+    private boolean processIsAlive(Process p) {
+      try {
+        p.exitValue();
+        return false;
+      } catch (IllegalThreadStateException e) {
+        // this means the process is still alive
+      }
+      return true;
     }
 
     @Override
@@ -1422,7 +1481,7 @@ public class ResourceLocalizationService extends CompositeService
    * Synchronized method to get a list of initialized local dirs. Method will
    * check each local dir to ensure it has been setup correctly and will attempt
    * to fix any issues it finds.
-   * 
+   *
    * @return list of initialized local dirs
    */
   synchronized private List<String> getInitializedLocalDirs() {
@@ -1495,12 +1554,12 @@ public class ResourceLocalizationService extends CompositeService
     localDirPathFsPermissionsMap.put(sysDir, nmPrivatePermission);
     return localDirPathFsPermissionsMap;
   }
-  
+
   /**
    * Synchronized method to get a list of initialized log dirs. Method will
    * check each local dir to ensure it has been setup correctly and will attempt
    * to fix any issues it finds.
-   * 
+   *
    * @return list of initialized log dirs
    */
   synchronized private List<String> getInitializedLogDirs() {
