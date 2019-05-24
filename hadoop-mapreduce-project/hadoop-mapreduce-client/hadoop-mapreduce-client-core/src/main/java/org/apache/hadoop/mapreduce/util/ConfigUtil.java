@@ -45,7 +45,10 @@ public class ConfigUtil {
     Configuration.addDefaultResource("org.apache.hadoop.mapreduce.conf.MapReduceDefaultProperties");
     Configuration.addDefaultResource("mapred-site.xml");
     Configuration.addDefaultResource("yarn-default.xml");
-    Configuration.addDefaultResource(YarnConfiguration.YARN_DEFAULT_CONFIGURATION_CLASS);
+    if(System.getenv("SKIP_MAPR_SPECIFIC_PROPERTIES") == null ||
+        System.getenv("SKIP_MAPR_SPECIFIC_PROPERTIES").equals("false") ) {
+      Configuration.addDefaultResource(YarnConfiguration.YARN_DEFAULT_CONFIGURATION_CLASS);
+    }
     Configuration.addDefaultResource("yarn-site.xml");
   }
   
