@@ -1,0 +1,28 @@
+{
+  "rack": "rack1",
+  "nodes": [
+    {
+      "node": "node1"
+    },
+    {
+      "node": "node2"
+    },
+    {
+      "node": "node3"
+    }
+  ]
+}
+{
+  "rack": "rack2",
+  "nodes": [
+    {
+      "node": "node4"
+    },
+    {
+      "node": "node5"
+    },
+    {
+      "node": "node6"
+    }
+  ]
+}

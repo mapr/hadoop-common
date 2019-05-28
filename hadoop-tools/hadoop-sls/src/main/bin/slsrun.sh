@@ -72,12 +72,15 @@ parseArgs() {
 
 ###############################################################################
 calculateClasspath() {
-  HADOOP_BASE=`which hadoop`
-  HADOOP_BASE=`dirname $HADOOP_BASE`
-  DEFAULT_LIBEXEC_DIR=${HADOOP_BASE}/../libexec
+  MAPR_HOME="/opt/mapr"
+  HADOOP_VERSION=$(cat ${MAPR_HOME}/hadoop/hadoopversion)
+  HADOOP_BASE="${MAPR_HOME}/hadoop/hadoop-${HADOOP_VERSION}"
+
+  DEFAULT_LIBEXEC_DIR=${HADOOP_BASE}/libexec
   HADOOP_LIBEXEC_DIR=${HADOOP_LIBEXEC_DIR:-$DEFAULT_LIBEXEC_DIR}
   . $HADOOP_LIBEXEC_DIR/hadoop-config.sh
-  export HADOOP_CLASSPATH="${HADOOP_CLASSPATH}:${TOOL_PATH}:html"
+  SLS_HTML="${HADOOP_PREFIX}/share/hadoop/tools/sls/html"
+  export HADOOP_CLASSPATH="${HADOOP_CLASSPATH}:${TOOL_PATH}:${SLS_HTML}"
 }
 ###############################################################################
 runSimulation() {
@@ -100,6 +103,8 @@ runSimulation() {
   if [[ "${printsimulation}" == "true" ]] ; then
     args="${args} -printsimulation"
   fi
+
+  export SKIP_MAPR_SPECIFIC_PROPERTIES="true"
 
   hadoop org.apache.hadoop.yarn.sls.SLSRunner ${args}
 }
