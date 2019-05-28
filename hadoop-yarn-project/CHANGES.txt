@@ -14,6 +14,9 @@ Release 2.8.0 - UNRELEASED
 
   IMPROVEMENTS
 
+    YARN-4579. Allow DefaultContainerExecutor container log directory
+    permissions to be configurable (rchiang via rkanter)
+
     YARN-1050. Document the Fair Scheduler REST API. (Kenji Kikushima and Roman Shaposhnik via kasha)
 
     MAPREDUCE-6478. Add an option to skip cleanupJob stage or ignore cleanup
