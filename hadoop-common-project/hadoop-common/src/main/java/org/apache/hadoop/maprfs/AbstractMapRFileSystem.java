@@ -20,6 +20,7 @@ package org.apache.hadoop.maprfs;
 
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathId;
 
 import java.io.IOException;
@@ -35,4 +36,13 @@ public abstract class AbstractMapRFileSystem extends FileSystem implements Fid {
     public abstract PathId createPathId();
 
     public abstract FSDataOutputStream createFid(String pfid, String file, boolean overwrite) throws IOException;
+
+    /**
+     * This method copies ACEs on source to destination.
+     * @param src path of source
+     * @param dest path of destination
+     * @param recursive to apply recursively or not
+     * @throws IOException if an ACE could not be read/modified
+     */
+    public abstract int copyAce(Path src, Path dest, boolean recursive) throws IOException;
 }
