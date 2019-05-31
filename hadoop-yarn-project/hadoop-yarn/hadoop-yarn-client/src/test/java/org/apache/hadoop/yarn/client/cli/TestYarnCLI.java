@@ -1155,7 +1155,7 @@ public class TestYarnCLI {
     pw.println("\tNode-State : RUNNING");
     pw.println("\tNode-Http-Address : host1:8888");
     pw.println("\tLast-Health-Update : "
-      + DateFormatUtils.format(new Date(0), "E dd/MMM/yy hh:mm:ss:SSzz"));
+      + DateFormatUtils.format(new Date(0), "E dd/MMM/yy hh:mm:ss:SSzz a"));
     pw.println("\tHealth-Report : ");
     pw.println("\tContainers : 0");
     pw.println("\tMemory-Used : 0MB");
@@ -1189,7 +1189,7 @@ public class TestYarnCLI {
     pw.println("\tNode-State : RUNNING");
     pw.println("\tNode-Http-Address : host1:8888");
     pw.println("\tLast-Health-Update : "
-      + DateFormatUtils.format(new Date(0), "E dd/MMM/yy hh:mm:ss:SSzz"));
+      + DateFormatUtils.format(new Date(0), "E dd/MMM/yy hh:mm:ss:SSzz a"));
     pw.println("\tHealth-Report : ");
     pw.println("\tContainers : 0");
     pw.println("\tMemory-Used : 0MB");

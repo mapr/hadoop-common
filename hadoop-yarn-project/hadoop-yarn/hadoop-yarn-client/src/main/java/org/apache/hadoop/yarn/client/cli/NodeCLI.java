@@ -195,7 +195,7 @@ public class NodeCLI extends YarnCLI {
       nodeReportStr.print("\tLast-Health-Update : ");
       nodeReportStr.println(DateFormatUtils.format(
           new Date(nodeReport.getLastHealthReportTime()),
-            "E dd/MMM/yy hh:mm:ss:SSzz"));
+            "E dd/MMM/yy hh:mm:ss:SSzz a"));
       nodeReportStr.print("\tHealth-Report : ");
       nodeReportStr
           .println(nodeReport.getHealthReport());
