@@ -353,6 +353,7 @@ YARN_OPTS="$YARN_OPTS -Dyarn.log.dir=$YARN_LOG_DIR"
 YARN_OPTS="$YARN_OPTS -Dhadoop.log.file=$YARN_LOGFILE"
 YARN_OPTS="$YARN_OPTS -Dyarn.log.file=$YARN_LOGFILE"
 YARN_OPTS="$YARN_OPTS -Dyarn.home.dir=$HADOOP_YARN_HOME"
+YARN_OPTS="$YARN_OPTS -XX:ErrorFile=$(dirname $(cat /proc/sys/kernel/core_pattern))/hs_err_pid_%p.log"
 HADOOP_HOME=$HADOOP_PREFIX
 if $cygwin; then
   HADOOP_HOME=$(cygpath -w "$HADOOP_HOME" 2>/dev/null)
