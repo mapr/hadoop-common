@@ -4,9 +4,6 @@
 
 package org.apache.hadoop.mapred;
 
-import org.apache.hadoop.maprfs.MapRPathId;
-import org.apache.hadoop.util.BaseMapRUtil;
-import org.apache.hadoop.maprfs.AbstractMapRFileSystem;
 import com.google.common.annotations.VisibleForTesting;
 
 import java.nio.ByteBuffer;
@@ -29,8 +26,11 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathId;
 import org.apache.hadoop.io.DataOutputBuffer;
+import org.apache.hadoop.maprfs.AbstractMapRFileSystem;
+import org.apache.hadoop.maprfs.MapRPathId;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.service.ServiceStateException;
+import org.apache.hadoop.util.BaseMapRUtil;
 import org.apache.hadoop.util.Shell.ShellCommandExecutor;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.server.api.ApplicationInitializationContext;
@@ -38,7 +38,6 @@ import org.apache.hadoop.yarn.server.api.ApplicationTerminationContext;
 import org.apache.hadoop.yarn.server.api.ContainerInitializationContext;
 import org.apache.hadoop.yarn.server.api.AuxiliaryService;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
-import org.apache.hadoop.mapred.JobID;
 import org.apache.hadoop.util.ShutdownHookManager;
 import org.apache.hadoop.yarn.server.nodemanager.NodeManager;
 
@@ -53,11 +52,14 @@ public class LocalVolumeAuxService extends AuxiliaryService {
   private static final String MAPR_INSTALL_DIR = BaseMapRUtil.getPathToMaprHome();
   private static final String LOCALHOSTNAME = BaseMapRUtil.getMapRHostName();
 
-  private static final String LOCAL_VOLUME_CREATE_SCRIPT_PATH ="/server/createTTVolume.sh";
-  private static final String LOCAL_VOLUME_CREATE_SCRIPT_LOGFILE_PATH ="/logs/createNMVolume.log";
+  private static final String LOCAL_VOLUME_CREATE_SCRIPT_PATH = "/server/createTTVolume.sh";
+  private static final String LOCAL_VOLUME_CREATE_SCRIPT_LOGFILE_PATH = "/logs/createNMVolume.log";
 
   // used by the script that creates the local volume
   private static final String YARN_ARG = "yarn";
+
+  // used by the script to create staging volume
+  private static final String STAGING_ARG = "staging";
 
   // The below config params should be used by consumers of the meta data as well.
   private static final String MAPR_LOCALOUTPUT_DIR_PARAM = "mapr.localoutput.dir";
@@ -70,7 +72,7 @@ public class LocalVolumeAuxService extends AuxiliaryService {
   private static final String MAPR_UNCOMPRESSED_SUFFIX = ".U";
 
   private static final String VOLUME_HEALTH_CHECK_INTERVAL =
-    "mapreduce.volume.healthcheck.interval";
+      "mapreduce.volume.healthcheck.interval";
 
   /**
    * Priority for the {@link LocalVolumeAuxServiceShutDownHook}. This should be
@@ -79,7 +81,7 @@ public class LocalVolumeAuxService extends AuxiliaryService {
    */
   public static final int LOCAL_VOL_SERVICE_SHUTDOWN_HOOK_PRIORITY =
       NodeManager.SHUTDOWN_HOOK_PRIORITY < Integer.MAX_VALUE - 10
-          ? NodeManager.SHUTDOWN_HOOK_PRIORITY  + 10 : Integer.MAX_VALUE;
+          ? NodeManager.SHUTDOWN_HOOK_PRIORITY + 10 : Integer.MAX_VALUE;
 
 
   enum FidId {
@@ -90,8 +92,8 @@ public class LocalVolumeAuxService extends AuxiliaryService {
     SPILL_U                                 /* nodeManager/spills.U/<jobid>  */
   }
 
-  private String [] fidRoots;
-  private String [] rootDirNames;
+  private String[] fidRoots;
+  private String[] rootDirNames;
   private Configuration conf;
   private FileSystem maprfs;
   protected MapRDirectShuffleMetaData metaData;
@@ -149,22 +151,21 @@ public class LocalVolumeAuxService extends AuxiliaryService {
       final Path volumePath = new Path(getMapRedLocalVolumeMountPath());
       final Path nmPath = new Path(getNodeManagerDirPath());
       try {
-        if (LOG.isDebugEnabled()) {
-          LOG.debug("Checking mapreduce volume " + volumePath);
-        }
+        LOG.debug("Checking mapreduce volume " + volumePath);
+
         maprfs.getFileStatus(volumePath);
-        if (LOG.isDebugEnabled()) {
-          LOG.debug("Done checking mapreduce volume " + volumePath);
-        }
+
+        LOG.debug("Done checking mapreduce volume " + volumePath);
+
         maprfs.getFileStatus(nmPath);
         maprfs.getFileStatus(new Path(nmPath, rootDirNames[FidId.OUTPUT.ordinal()]));
         maprfs.getFileStatus(new Path(nmPath, rootDirNames[FidId.OUTPUT_U.ordinal()]));
         maprfs.getFileStatus(new Path(nmPath, rootDirNames[FidId.SPILL.ordinal()]));
-        maprfs.getFileStatus(new Path(nmPath, rootDirNames[FidId.SPILL_U.ordinal()])); 
+        maprfs.getFileStatus(new Path(nmPath, rootDirNames[FidId.SPILL_U.ordinal()]));
         maprfs.getFileStatus(new Path(nmPath, "fidservers"));
       } catch (Exception e) {
         LOG.error("Failed to get status of mapreduce volume " + volumePath + " or it's subdirectories." +
-                  " Trying to recover", e);
+            " Trying to recover", e);
         try {
           initVolume();
         } catch (Exception innerEx) {
@@ -172,7 +173,7 @@ public class LocalVolumeAuxService extends AuxiliaryService {
           // anymore. Also, no need to log the exception as it is done in
           // initVolume.
           LOG.warn("Exception is thrown while trying to recover local volume." +
-                   " If exception persists for considerable amount of time you may need to restart NM");
+              " If exception persists for considerable amount of time you may need to restart NM");
         }
       }
     }
@@ -180,14 +181,14 @@ public class LocalVolumeAuxService extends AuxiliaryService {
 
   @VisibleForTesting
   protected void setFS(FileSystem fs) {
-	  this.maprfs = fs;
+    this.maprfs = fs;
   }
-  
+
   @VisibleForTesting
   protected void setConf(Configuration conf) {
     this.conf = conf;
   }
-  
+
   @Override
   protected void serviceInit(Configuration conf) throws Exception {
     super.serviceInit(conf);
@@ -210,14 +211,14 @@ public class LocalVolumeAuxService extends AuxiliaryService {
     rootDirNames[FidId.SPILL.ordinal()] = spillDirName;
     String spillUDirName = spillDirName + MAPR_UNCOMPRESSED_SUFFIX;
     rootDirNames[FidId.SPILL_U.ordinal()] = spillUDirName;
- 
+
     this.metaData.setNodeManageHostName(LOCALHOSTNAME);
     this.volumeCheckInterval = conf.getInt(VOLUME_HEALTH_CHECK_INTERVAL,
         this.volumeCheckInterval);
 
     int corePool = YarnConfiguration.DEFAULT_NM_DELETE_THREAD_COUNT;
     if (conf != null) {
-       corePool = conf.getInt(YarnConfiguration.NM_DELETE_THREAD_COUNT,
+      corePool = conf.getInt(YarnConfiguration.NM_DELETE_THREAD_COUNT,
           corePool);
     }
     deletionService = new ScheduledThreadPoolExecutor(corePool);
@@ -239,7 +240,7 @@ public class LocalVolumeAuxService extends AuxiliaryService {
    * <p/>
    * Implementations do not need to be synchronized as the logic
    * in {@link #start()} prevents re-entrancy.
-   *
+   * <p>
    * Initializes local volume and starts off a periodic volume health check
    * task with an initial delay equal to the volumeCheckInterval as we don't
    * want the check to happen immediately.
@@ -258,7 +259,7 @@ public class LocalVolumeAuxService extends AuxiliaryService {
    * Calls an external script to creates a local volume for mapreduce.
    */
   private void initVolume() throws IOException {
-    final String[] args = new String[] {
+    final String[] mapReduceVolumeArgs = new String[] {
         MAPR_INSTALL_DIR + LOCAL_VOLUME_CREATE_SCRIPT_PATH,
         // hostname
         LOCALHOSTNAME,
@@ -270,12 +271,36 @@ public class LocalVolumeAuxService extends AuxiliaryService {
         YARN_ARG
     };
 
+    final String[] stagingVolumeArgs = new String[] {
+        MAPR_INSTALL_DIR + LOCAL_VOLUME_CREATE_SCRIPT_PATH,
+        // hostname
+        LOCALHOSTNAME,
+        // vol mount path
+        getStagingLocalVolumeMountPath(),
+        // full path
+        getStagingLocalVolumeMountPath() + "/nodeManager",
+        // staging volume
+        STAGING_ARG
+    };
+
     // Set the MAPR_MAPREDUCE_MODE to "yarn" since this is in NodeManager
     // and all hadoop commands invoked should invoke the hadoop2 script
-    Map<String, String> env = new HashMap<String, String>();
+    Map<String, String> env = new HashMap<>();
     env.put("MAPR_MAPREDUCE_MODE", "yarn");
-    ShellCommandExecutor shexec = new ShellCommandExecutor(args, null, env);
 
+    executeCommand(mapReduceVolumeArgs, env);
+    executeCommand(stagingVolumeArgs, env);
+
+    try {
+      initMapReduceDirs();
+    } catch (IOException ioe) {
+      LOG.error("Could not initialize directories for mapreduce", ioe);
+      throw ioe; // throw it back to kill NM
+    }
+  }
+
+  private void executeCommand(String[] args, Map<String, String> env) throws IOException {
+    ShellCommandExecutor shexec = new ShellCommandExecutor(args, null, env);
     LOG.info("Checking for local volume." +
         " If volume is not present command will create and mount it." +
         " Command invoked is : " + shexec.toString());
@@ -285,7 +310,7 @@ public class LocalVolumeAuxService extends AuxiliaryService {
     } catch (IOException ioe) {
       int exitCode = shexec.getExitCode();
       if (exitCode != 0) {
-        LOG.error("Failed to create and mount local mapreduce volume at "
+        LOG.error("Failed to create and mount local volume at "
             + args[2] + ". Please see logs at " + MAPR_INSTALL_DIR
             + LOCAL_VOLUME_CREATE_SCRIPT_LOGFILE_PATH);
         LOG.error("Command ran " + shexec.toString());
@@ -330,13 +355,10 @@ public class LocalVolumeAuxService extends AuxiliaryService {
     JobID jobId = new JobID(Long.toString(appId.getClusterTimestamp()), appId.getId());
     final String jobIdStr = jobId.toString();
 
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("In initializeApplication. Application Id: " + appId.getId() + ", Job Id: " + jobIdStr);
-    }
-    if ( jobMetaData.get(jobIdStr) != null ) {
-      if (LOG.isDebugEnabled() ) {
-         LOG.debug("Fids for job: " + jobIdStr + " already created. skipping initializeApplication.");
-      }
+    LOG.debug("In initializeApplication. Application Id: " + appId.getId() + ", Job Id: " + jobIdStr);
+
+    if (jobMetaData.get(jobIdStr) != null) {
+      LOG.debug("Fids for job: " + jobIdStr + " already created. skipping initializeApplication.");
       return;
     }
     LOG.info("initializeApplication for job: " + jobIdStr + " and user: " + jobUser);
@@ -350,9 +372,7 @@ public class LocalVolumeAuxService extends AuxiliaryService {
       jobUserGroup = groupNames[0];
     }
 
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("User: " + jobUser + " Group: " + jobUserGroup);
-    }
+    LOG.debug("User: " + jobUser + " Group: " + jobUserGroup);
 
     readLock.lock();
     try {
@@ -370,13 +390,11 @@ public class LocalVolumeAuxService extends AuxiliaryService {
         MapRPathId dirPathId = new MapRPathId();
         dirPathId.setFid(jobFids[i]);
         dirPathId.setIps(shuffleRootPathId.getIPs());
-        data.putDirPathId(rootDirNames[i],dirPathId);
-        if (LOG.isDebugEnabled()) {
-          LOG.debug(FidId.values()[i].name() + " fid for " + jobIdStr + ": " + jobFids[i]);
-        }
-        if (jobUser != null) {
-          maprfs.setOwnerFid(jobFids[i], jobUser, jobUserGroup);
-        }
+        data.putDirPathId(rootDirNames[i], dirPathId);
+
+        LOG.debug(FidId.values()[i].name() + " fid for " + jobIdStr + ": " + jobFids[i]);
+
+        maprfs.setOwnerFid(jobFids[i], jobUser, jobUserGroup);
       }
       jobMetaData.put(jobIdStr, data);
     } catch (IOException e) {
@@ -396,16 +414,14 @@ public class LocalVolumeAuxService extends AuxiliaryService {
           "Not cleaning up the " + jobIdStr + " directory in the local volume.");
       return;
     }
-    Runnable filesRemoverTask = new Runnable () {
+    Runnable filesRemoverTask = new Runnable() {
       @Override
       public void run() {
         readLock.lock();
         try {
           for (int i = FidId.ROOT.ordinal() + 1; i < fidRoots.length; i++) {
             if (maprfs.deleteFid(fidRoots[i], jobIdStr)) {
-              if (LOG.isDebugEnabled()) {
-                LOG.debug("Deleted " + jobIdStr + " from " + FidId.values()[i]);
-              }
+              LOG.debug("Deleted " + jobIdStr + " from " + FidId.values()[i]);
             } else {
               LOG.warn(jobIdStr + " could not be deleted from " + FidId.values()[i] + ". Parent Fid: " + fidRoots[i]);
             }
@@ -437,9 +453,9 @@ public class LocalVolumeAuxService extends AuxiliaryService {
 
   @Override
   public ByteBuffer getMetaData(ContainerInitializationContext context) {
-    if (context == null || context.getContainerId() == null 
-        || context.getContainerId().getApplicationAttemptId() == null 
-        || context.getContainerId().getApplicationAttemptId().getApplicationId() == null ) {
+    if (context == null || context.getContainerId() == null
+        || context.getContainerId().getApplicationAttemptId() == null
+        || context.getContainerId().getApplicationAttemptId().getApplicationId() == null) {
       LOG.warn("context is null in getMetaData for context. Returning service metadata");
       return getMetaData();
     }
@@ -449,8 +465,8 @@ public class LocalVolumeAuxService extends AuxiliaryService {
 
     MapRDirectShuffleMetaData jobData = jobMetaData.get(jobIdStr);
 
-    if ( jobData == null ) {
-      LOG.warn("Can not find metadata for a job. Returning service metadata");
+    if (jobData == null) {
+      LOG.error("Can not find metadata for a job. Returning service metadata");
       return getMetaData();
     }
 
@@ -469,15 +485,15 @@ public class LocalVolumeAuxService extends AuxiliaryService {
     writeLock.lock();
     try {
       final String shuffleRootFid =
-        maprfs.mkdirsFid(new Path(getNodeManagerDirPath()));
+          maprfs.mkdirsFid(new Path(getNodeManagerDirPath()));
 
       PathId shuffleRootPathId = new MapRPathId();
       if (!(maprfs instanceof AbstractMapRFileSystem)) {
         throw new UnsupportedOperationException("This is not MapRFileSystem implementation, so can not use createFid method");
       }
-      
+
       final FSDataOutputStream fileId =
-        ((AbstractMapRFileSystem)maprfs).createFid(shuffleRootFid, "fidservers", true);
+          ((AbstractMapRFileSystem) maprfs).createFid(shuffleRootFid, "fidservers", true);
       shuffleRootPathId.setFid(shuffleRootFid);
       shuffleRootPathId.setIps(fileId.getFidServers());
       fileId.close();
@@ -491,9 +507,9 @@ public class LocalVolumeAuxService extends AuxiliaryService {
       final PathId ouPid = createDirAndGetPathId(shuffleRootPathId, outputUDirName);
       final PathId sPid = createDirAndGetPathId(shuffleRootPathId, spillDirName);
       final PathId suPid = createDirAndGetPathId(shuffleRootPathId, spillUDirName);
-      
+
       // set all the class data only after all createFid/mkdirsFid operations were successfull
-      
+
       this.metaData.putDirPathId(".", shuffleRootPathId);
       LOG.info("root fid : " + shuffleRootPathId.getFid());
 
@@ -507,7 +523,7 @@ public class LocalVolumeAuxService extends AuxiliaryService {
       fidRoots[FidId.SPILL.ordinal()] = sPid.getFid();
       this.metaData.putDirPathId(spillUDirName, suPid);
       fidRoots[FidId.SPILL_U.ordinal()] = suPid.getFid();
-      
+
     } finally {
       writeLock.unlock();
     }
@@ -515,7 +531,7 @@ public class LocalVolumeAuxService extends AuxiliaryService {
 
 
   private PathId createDirAndGetPathId(
-              PathId parentPathId, String dirName) throws IOException {
+      PathId parentPathId, String dirName) throws IOException {
     String dirFid = maprfs.mkdirsFid(parentPathId.getFid(), dirName);
     PathId dirPathId = new MapRPathId();
     dirPathId.setFid(dirFid);
@@ -528,8 +544,9 @@ public class LocalVolumeAuxService extends AuxiliaryService {
   /**
    * constructs the mapreduce volume mount path.
    * for e.g. "/var/mapr/local/<hostname>/mapred/"
-   * @return
+   *
    * @param mapRLocalVolumesPath
+   * @return
    */
   @VisibleForTesting
   String getMapRedLocalVolumeMountPath() {
@@ -539,13 +556,17 @@ public class LocalVolumeAuxService extends AuxiliaryService {
   /**
    * constructs the path for the nodemanager directory inside the local volume.
    * for e.g. "/var/mapr/local/<hostname>/mapred/nodeManager"
-   * @return
+   *
    * @param mapRLocalVolumesPath
+   * @return
    */
   @VisibleForTesting
   String getNodeManagerDirPath() {
     return this.conf.get("mapr.mapred.localvolume.root.dir.path", getMapRedLocalVolumeMountPath() + "/nodeManager");
   }
 
+  @VisibleForTesting
+  String getStagingLocalVolumeMountPath() {
+    return this.conf.get("mapr.staging.localvolume.mount.path", "/var/mapr/local/" + LOCALHOSTNAME + "/nm-staging");
+  }
 }
-
