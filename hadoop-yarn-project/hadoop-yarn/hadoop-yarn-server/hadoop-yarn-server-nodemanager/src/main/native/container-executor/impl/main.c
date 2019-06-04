@@ -81,6 +81,30 @@ int main(int argc, char **argv) {
   int do_check_setup = 0;
   int do_mount_cgroups = 0;
 
+  char *executable_file = get_executable();
+  if (!executable_file) {
+    fprintf(ERRORFILE,"realpath of executable: %s\n",strerror(errno));
+    flush_and_close_log_files();
+    exit(-1);
+  }
+
+  char *orig_conf_file = HADOOP_CONF_DIR "/" CONF_FILENAME;
+  char *conf_file = resolve_config_path(orig_conf_file, argv[0]);
+
+  if (conf_file == NULL) {
+    free(executable_file);
+    fprintf(ERRORFILE, "Configuration file %s not found.\n", orig_conf_file);
+    flush_and_close_log_files();
+    exit(INVALID_CONFIG_FILE);
+  }
+  if (check_configuration_permissions(conf_file) != 0) {
+    free(executable_file);
+    flush_and_close_log_files();
+    exit(INVALID_CONFIG_FILE);
+  }
+  read_config(conf_file);
+  free(conf_file);
+
   LOGFILE = stdout;
   ERRORFILE = stderr;
 
@@ -93,7 +117,8 @@ int main(int argc, char **argv) {
         }
         do_mount_cgroups = 1;
       } else {
-        display_feature_disabled_message("mount cgroup");
+        fprintf(ERRORFILE, "Feature disabled: mount cgroup");
+        return FEATURE_DISABLED;
       }
     }
   }
@@ -131,31 +156,8 @@ int main(int argc, char **argv) {
 
   char * dir_to_be_deleted = NULL;
 
-  char *executable_file = get_executable();
-  if (!executable_file) {
-    fprintf(ERRORFILE,"realpath of executable: %s\n",strerror(errno));
-    flush_and_close_log_files();
-    exit(-1);
-  }
-
-  char *orig_conf_file = HADOOP_CONF_DIR "/" CONF_FILENAME;
-  char *conf_file = resolve_config_path(orig_conf_file, argv[0]);
   char *local_dirs, *log_dirs;
   char *resources, *resources_key, *resources_value;
-
-  if (conf_file == NULL) {
-    free(executable_file);
-    fprintf(ERRORFILE, "Configuration file %s not found.\n", orig_conf_file);
-    flush_and_close_log_files();
-    exit(INVALID_CONFIG_FILE);
-  }
-  if (check_configuration_permissions(conf_file) != 0) {
-    free(executable_file);
-    flush_and_close_log_files();
-    exit(INVALID_CONFIG_FILE);
-  }
-  read_config(conf_file);
-  free(conf_file);
 
   // look up the node manager group in the config file
   char *nm_group = get_value(NM_GROUP_KEY);

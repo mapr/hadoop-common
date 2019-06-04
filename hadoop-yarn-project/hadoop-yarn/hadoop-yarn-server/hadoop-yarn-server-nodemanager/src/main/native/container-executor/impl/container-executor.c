@@ -943,6 +943,31 @@ int create_log_dirs(const char *app_id, char * const * log_dirs) {
   return 0;
 }
 
+static int is_feature_enabled(const char* feature_key, int default_value) {
+    char *enabled_str = get_value(feature_key);
+    int enabled = default_value;
+
+    if (enabled_str != NULL) {
+        char *end_ptr = NULL;
+        enabled = strtol(enabled_str, &end_ptr, 10);
+
+        if ((enabled_str == end_ptr || *end_ptr != '\0') ||
+            (enabled < 0 || enabled > 1)) {
+              fprintf(LOGFILE, "Illegal value '%s' for '%s' in configuration. "
+              "Using default value: %d.\n", enabled_str, feature_key,
+              default_value);
+              fflush(LOGFILE);
+              free(enabled_str);
+              return default_value;
+        }
+
+        free(enabled_str);
+        return enabled;
+    } else {
+        return default_value;
+    }
+}
+
 int is_mount_cgroups_support_enabled() {
     return is_feature_enabled(MOUNT_CGROUP_SUPPORT_ENABLED_KEY,
                               DEFAULT_MOUNT_CGROUP_SUPPORT_ENABLED);

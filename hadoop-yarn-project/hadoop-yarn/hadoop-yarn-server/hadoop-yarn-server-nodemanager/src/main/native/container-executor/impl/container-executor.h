@@ -54,7 +54,8 @@ enum errorcodes {
   INVALID_CONFIG_FILE =  24,
   SETSID_OPER_FAILED = 25,
   WRITE_PIDFILE_FAILED = 26,
-  WRITE_CGROUP_FAILED = 27
+  WRITE_CGROUP_FAILED = 27,
+  FEATURE_DISABLED = 28
 };
 
 #define NM_GROUP_KEY "yarn.nodemanager.linux-container-executor.group"
