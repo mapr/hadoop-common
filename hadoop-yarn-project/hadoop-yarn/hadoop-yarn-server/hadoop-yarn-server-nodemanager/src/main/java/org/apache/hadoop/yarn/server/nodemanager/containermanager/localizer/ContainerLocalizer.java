@@ -296,6 +296,8 @@ public class ContainerLocalizer {
           List<ResourceLocalizationSpec> newRsrcs = response.getResourceSpecs();
           for (ResourceLocalizationSpec newRsrc : newRsrcs) {
             if (!pendingResources.containsKey(newRsrc.getResource())) {
+              LOG.debug("Adding resource " + newRsrc.getDestinationDirectory().getFile() +
+                  " to pending with timestamp " + newRsrc.getResource().getTimestamp());
               pendingResources.put(newRsrc.getResource(), cs.submit(download(
                 new Path(newRsrc.getDestinationDirectory().getFile()),
                 newRsrc.getResource(), ugi)));

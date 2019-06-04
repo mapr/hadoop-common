@@ -336,6 +336,8 @@ public class YARNRunner implements ClientProtocol {
         .getDefaultFileSystem().resolvePath(rsrcStat.getPath())));
     rsrc.setSize(rsrcStat.getLen());
     rsrc.setTimestamp(rsrcStat.getModificationTime());
+    LOG.debug("Set resource " + rsrc.getResource() + " timestamp from filestatus " +
+        rsrcStat.getPath() + "to " + rsrcStat.getModificationTime() );
     rsrc.setType(type);
     rsrc.setVisibility(LocalResourceVisibility.APPLICATION);
     return rsrc;

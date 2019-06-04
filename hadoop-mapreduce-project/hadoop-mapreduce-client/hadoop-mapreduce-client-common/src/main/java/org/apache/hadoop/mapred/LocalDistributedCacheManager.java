@@ -129,6 +129,7 @@ class LocalDistributedCacheManager {
             new FSDownload(localFSFileContext, ugi, conf, new Path(destPath,
                 Long.toString(uniqueNumberGenerator.incrementAndGet())),
                 resource);
+        LOG.debug("Added resource " + resource.getResource() + " to download with timestamp " + resource.getTimestamp());
         Future<Path> future = exec.submit(download);
         resourcesToPaths.put(resource, future);
       }

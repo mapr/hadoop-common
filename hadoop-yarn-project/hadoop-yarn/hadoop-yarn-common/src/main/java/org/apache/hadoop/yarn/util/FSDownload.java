@@ -251,6 +251,7 @@ public class FSDownload implements Callable<Path> {
     FileSystem sourceFs = sCopy.getFileSystem(conf);
     Path dCopy = new Path(dstdir, "tmp_"+sCopy.getName());
     FileStatus sStat = sourceFs.getFileStatus(sCopy);
+    LOG.debug("Get file status " + sStat.getPath() + " with modification time " + sStat.getModificationTime());
     if (sStat.getModificationTime() != resource.getTimestamp()) {
       throw new IOException("Resource " + sCopy +
           " changed on src filesystem (expected " + resource.getTimestamp() +
@@ -347,6 +348,7 @@ public class FSDownload implements Callable<Path> {
     final Path sCopy;
     try {
       sCopy = ConverterUtils.getPathFromYarnURL(resource.getResource());
+      LOG.debug("Get resource " + resource.getResource() + " with  timestamp " + resource.getTimestamp());
     } catch (URISyntaxException e) {
       throw new IOException("Invalid resource", e);
     }

@@ -825,6 +825,8 @@ public class ResourceLocalizationService extends CompositeService
               pending.put(queue.submit(new FSDownload(lfs, null, conf,
                   publicDirDestPath, resource, request.getContext().getStatCache())),
                   request);
+              LOG.debug("Added resource " + resource.getResource() +
+                  " to pending with timestamp " + resource.getTimestamp());
             }
           } catch (IOException e) {
             rsrc.unlock();
@@ -972,6 +974,7 @@ public class ResourceLocalizationService extends CompositeService
              next.setResource(ConverterUtils.getYarnUrlFromPath(nextRsrc
                .getPath()));
              next.setTimestamp(nextRsrc.getTimestamp());
+             LOG.debug("Set resource " + next.getResource() + " to " + nextRsrc.getTimestamp());
              next.setType(nextRsrc.getType());
              next.setVisibility(evt.getVisibility());
              next.setPattern(evt.getPattern());
