@@ -26,6 +26,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -38,6 +39,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.hadoop.yarn.api.records.NodeToLabelsList;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.nodelabels.CommonNodeLabelsManager;
@@ -121,12 +123,16 @@ public class ClusterCLI extends YarnCLI {
   }
 
   void printClusterNodeLabels() throws YarnException, IOException {
-    Set<String> nodeLabels = null;
+    Set<String> nodeLabels = new HashSet<>();
     if (accessLocal) {
-      nodeLabels =
-          getNodeLabelManagerInstance(getConf()).getClusterNodeLabels();
+      nodeLabels = getNodeLabelManagerInstance(getConf()).getClusterNodeLabels();
     } else {
-      nodeLabels = client.getClusterNodeLabelsNoOp();
+      List<NodeToLabelsList> clusterNodeLabels = client.getClusterNodeLabels();
+      if (clusterNodeLabels != null && !clusterNodeLabels.isEmpty()) {
+        for (NodeToLabelsList ntl : clusterNodeLabels) {
+          nodeLabels.add(ntl.getNode() + " " + ntl.getNodeLabel().toString());
+        }
+      }
     }
     sysout.println(String.format("Node Labels: %s",
         StringUtils.join(sortStrSet(nodeLabels).iterator(), ",")));

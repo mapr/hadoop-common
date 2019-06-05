@@ -27,8 +27,12 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 
+import com.google.common.collect.ImmutableList;
+import org.apache.hadoop.yarn.api.records.NodeToLabelsList;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.nodelabels.CommonNodeLabelsManager;
 import org.junit.Before;
@@ -50,28 +54,63 @@ public class TestClusterCLI {
     sysErr = spy(new PrintStream(sysErrStream));
     System.setOut(sysOut);
   }
-  
+
   @Test
   public void testGetClusterNodeLabels() throws Exception {
     YarnClient client = mock(YarnClient.class);
+
+    class TestNodeToLabelsList extends NodeToLabelsList {
+      private String node;
+      private List<String> labels;
+
+      public TestNodeToLabelsList(String node, List<String> labels) {
+        this.node = node;
+        this.labels = labels;
+      }
+
+      @Override
+      public String getNode() {
+        return node;
+      }
+
+      @Override
+      public void setNode(String node) {
+        this.node = node;
+      }
+
+      @Override
+      public List<String> getNodeLabel() {
+        return labels;
+      }
+
+      @Override
+      public void setNodeLabel(List<String> nodeLabel) {
+        this.labels = nodeLabel;
+      }
+    };
+
+    when(client.getClusterNodeLabels()).thenReturn(ImmutableList.<NodeToLabelsList>of(
+            new TestNodeToLabelsList("node1", Arrays.asList("label1", "label2")),
+            new TestNodeToLabelsList("node2", Arrays.asList("label2", "label3"))));
+
     when(client.getClusterNodeLabelsNoOp()).thenReturn(
         ImmutableSet.of("label1", "label2"));
     ClusterCLI cli = new ClusterCLI();
     cli.setClient(client);
     cli.setSysOutPrintStream(sysOut);
     cli.setSysErrPrintStream(sysErr);
-    
+
     int rc =
         cli.run(new String[] { ClusterCLI.CMD, "-" + ClusterCLI.LIST_LABELS_CMD });
     assertEquals(0, rc);
-    
+
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     PrintWriter pw = new PrintWriter(baos);
-    pw.print("Node Labels: label1,label2");
+    pw.print("Node Labels: node1 [label1, label2],node2 [label2, label3]");
     pw.close();
     verify(sysOut).println(baos.toString("UTF-8"));
   }
-  
+
   @Test
   public void testGetClusterNodeLabelsWithLocalAccess() throws Exception {
     YarnClient client = mock(YarnClient.class);
@@ -98,7 +137,7 @@ public class TestClusterCLI {
     pw.close();
     verify(sysOut).println(baos.toString("UTF-8"));
   }
-  
+
   @Test
   public void testGetEmptyClusterNodeLabels() throws Exception {
     YarnClient client = mock(YarnClient.class);
@@ -118,7 +157,7 @@ public class TestClusterCLI {
     pw.close();
     verify(sysOut).println(baos.toString("UTF-8"));
   }
-  
+
   @Test
   public void testHelp() throws Exception {
     ClusterCLI cli = new ClusterCLI();
@@ -128,7 +167,7 @@ public class TestClusterCLI {
     int rc =
         cli.run(new String[] { "cluster", "--help" });
     assertEquals(0, rc);
-    
+
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     PrintWriter pw = new PrintWriter(baos);
     pw.println("usage: yarn cluster");
