@@ -463,12 +463,9 @@ function ConfigureHadoopMain() {
         HADOOP_VERSION="$2"
     fi
 
-    echo "Configuring Hadoop-"$HADOOP_VERSION" at "$HADOOP_HOME""
     ConfigureCommon
 
     ConfigureHadoop2
-
-    echo "Done configuring Hadoop"
 }
 
 function ConfigureHadoop() {
