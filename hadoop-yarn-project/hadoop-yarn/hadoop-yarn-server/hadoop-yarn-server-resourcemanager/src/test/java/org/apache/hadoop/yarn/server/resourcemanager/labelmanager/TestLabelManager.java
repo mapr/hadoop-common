@@ -185,7 +185,7 @@ public class TestLabelManager {
     Thread.sleep(1000l);
 
     Expression expr = lb.getEffectiveLabelExpr("good && big");
-    assertEquals("(good && big)", expr.toString());
+    assertEquals("(good&&big)", expr.toString());
   }
   
   @Test
@@ -229,7 +229,7 @@ public class TestLabelManager {
         appLabelExpression,
         queueLabelExpression);
     
-    assertEquals("(good && big)", finalExpr.toString());
+    assertEquals("(good&&big)", finalExpr.toString());
   }
   
   @Test
@@ -359,6 +359,10 @@ public class TestLabelManager {
     assertEquals("(High Memory)", labelExpr.toString());
     labelExpr = lb.getEffectiveLabelExpr("\"High Memory\"");
     assertEquals("(High Memory)", labelExpr.toString());
+    labelExpr = lb.getEffectiveLabelExpr("Slow && Fast");
+    assertEquals("(Slow&&Fast)", labelExpr.toString());
+    labelExpr = lb.getEffectiveLabelExpr("Slow A && Slow B && 'Slow C'");
+    assertEquals("((Slow A&&Slow B)&&Slow C)", labelExpr.toString());
 
     labelExpr = lb.getEffectiveLabelExpr("*");
     assertNull(labelExpr);

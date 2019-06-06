@@ -42,6 +42,9 @@ import net.java.dev.eval.Expression;
 public class LabelExpressionHandlingHelper {
 
   private static final Log LOG = LogFactory.getLog(LabelExpressionHandlingHelper.class);
+
+  private static final String SINGLE_QUOTATION_MARK = "'";
+  private static final String DOUBLE_QUOTATION_MARK = "\"";
   
   public LabelExpressionHandlingHelper() {
   }
@@ -75,22 +78,45 @@ public class LabelExpressionHandlingHelper {
    * If a label contains two or more words (such as "High Memory"),
    * we should enclose the name in single or double quotation marks
    * so the whitespace will not be interpreted as a delimiter between two labels.
+   * If a label contains "&&" we should enclose every names in single marks between AND expression
    * @param label The label name
    * @return If the label contains whitespace and doesn't enclose in single or double quotation marks
    * returns label enclosed in single quotation marks, otherwise returns the same label.
    */
   private static String wrapIfNeeded(String label) {
-    final String SINGLE_QUOTATION_MARK = "'";
-    final String DOUBLE_QUOTATION_MARK = "\"";
-    boolean shouldBeWrapped = label.contains(" ") &&
-        !(StringUtils.startsWith(label, SINGLE_QUOTATION_MARK) &&
-        StringUtils.endsWith(label, SINGLE_QUOTATION_MARK) ||
-        StringUtils.startsWith(label, DOUBLE_QUOTATION_MARK) &&
-        StringUtils.endsWith(label, DOUBLE_QUOTATION_MARK));
-    if (shouldBeWrapped) {
-      label = SINGLE_QUOTATION_MARK + label + SINGLE_QUOTATION_MARK;
+    String[] labels = null;
+    if (label.contains("&&")) {
+      labels = label.split("&&");
     }
+    boolean shouldBeWrapped = (labels != null && labels.length > 1) ||
+        (label.contains(" ") && !checkQuotationMarks(label));
+    if (shouldBeWrapped) {
+      if (labels != null && labels.length > 1) {
+        label = "";
+        for (int i = 0; i < labels.length; i++) {
+          labels[i] = labels[i].trim();
+          if (!checkQuotationMarks(labels[i])) {
+            label += SINGLE_QUOTATION_MARK + labels[i] + SINGLE_QUOTATION_MARK;
+          } else {
+            label += labels[i];
+          }
+          if (i != labels.length - 1) {
+            label += " && ";
+          }
+        }
+      } else {
+        label = SINGLE_QUOTATION_MARK + label + SINGLE_QUOTATION_MARK;
+      }
+    }
+    LOG.debug("Final label expression after wrapper: " + label);
     return label;
+  }
+
+  public static boolean checkQuotationMarks(String label) {
+    return (StringUtils.startsWith(label, SINGLE_QUOTATION_MARK) &&
+        StringUtils.endsWith(label, SINGLE_QUOTATION_MARK)) ||
+        (StringUtils.startsWith(label, DOUBLE_QUOTATION_MARK) &&
+            StringUtils.endsWith(label, DOUBLE_QUOTATION_MARK));
   }
 
   static Expression constructAppLabel(Queue.QueueLabelPolicy policy,
