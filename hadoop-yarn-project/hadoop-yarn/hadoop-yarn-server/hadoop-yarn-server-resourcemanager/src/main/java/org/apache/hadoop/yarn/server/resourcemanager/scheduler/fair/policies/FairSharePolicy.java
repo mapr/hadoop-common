@@ -78,10 +78,10 @@ public class FairSharePolicy extends SchedulingPolicy {
       Resource demand2 = s2.getDemand();
       if (demand1.equals(Resources.none()) && Resources.greaterThan(
           RESOURCE_CALCULATOR, null, demand2, Resources.none())) {
-        return -1;
+        return 1;
       } else if (demand2.equals(Resources.none()) && Resources.greaterThan(
           RESOURCE_CALCULATOR, null, demand1, Resources.none())) {
-        return 1;
+        return -1;
       }
 
       // Do not repeat the getResourceUsage calculation
