@@ -43,9 +43,6 @@ public class LabelExpressionHandlingHelper {
 
   private static final Log LOG = LogFactory.getLog(LabelExpressionHandlingHelper.class);
 
-  private static final String SINGLE_QUOTATION_MARK = "'";
-  private static final String DOUBLE_QUOTATION_MARK = "\"";
-  
   public LabelExpressionHandlingHelper() {
   }
 
@@ -61,7 +58,7 @@ public class LabelExpressionHandlingHelper {
         "all".equals(labelExpressionString)) {
       labelExpression = null;
     } else {
-      labelExpressionString = wrapIfNeeded(labelExpressionString);
+      labelExpressionString = parseAndWrapLabel(labelExpressionString);
       try {
         // create an expression, set fillEmptyValues to true and default value 0
         labelExpression = new Expression(labelExpressionString);
@@ -74,49 +71,49 @@ public class LabelExpressionHandlingHelper {
     return labelExpression;
   }
 
+  private static String parseAndWrapLabel(String label) {
+    String[] labels = label.split("\\(|\\)|!|&&|\\|\\|");
+    List<String> cleanLabels = new ArrayList<>();
+    for (int i = 0; i < labels.length; i++) {
+      if (!labels[i].matches(" ||")) {
+        cleanLabels.add(labels[i].trim());
+      }
+    }
+    int startInd;
+    int endInd = 0;
+    for (String tmpLabel : cleanLabels) {
+      startInd = label.indexOf(tmpLabel, endInd);
+      endInd = startInd + tmpLabel.length();
+      String wrappedLabel = wrapIfNeeded(tmpLabel);
+      label = label.substring(0, startInd) + wrappedLabel + label.substring(endInd);
+      if (!wrappedLabel.equals(tmpLabel)) {
+        endInd += 2;
+      }
+    }
+    LOG.debug("Final wrapped label expression: " + label);
+    return label;
+  }
+
   /**
    * If a label contains two or more words (such as "High Memory"),
    * we should enclose the name in single or double quotation marks
    * so the whitespace will not be interpreted as a delimiter between two labels.
-   * If a label contains "&&" we should enclose every names in single marks between AND expression
    * @param label The label name
    * @return If the label contains whitespace and doesn't enclose in single or double quotation marks
    * returns label enclosed in single quotation marks, otherwise returns the same label.
    */
   private static String wrapIfNeeded(String label) {
-    String[] labels = null;
-    if (label.contains("&&")) {
-      labels = label.split("&&");
-    }
-    boolean shouldBeWrapped = (labels != null && labels.length > 1) ||
-        (label.contains(" ") && !checkQuotationMarks(label));
+    final String SINGLE_QUOTATION_MARK = "'";
+    final String DOUBLE_QUOTATION_MARK = "\"";
+    boolean shouldBeWrapped = label.contains(" ") &&
+        !(StringUtils.startsWith(label, SINGLE_QUOTATION_MARK) &&
+            StringUtils.endsWith(label, SINGLE_QUOTATION_MARK) ||
+            StringUtils.startsWith(label, DOUBLE_QUOTATION_MARK) &&
+                StringUtils.endsWith(label, DOUBLE_QUOTATION_MARK));
     if (shouldBeWrapped) {
-      if (labels != null && labels.length > 1) {
-        label = "";
-        for (int i = 0; i < labels.length; i++) {
-          labels[i] = labels[i].trim();
-          if (!checkQuotationMarks(labels[i])) {
-            label += SINGLE_QUOTATION_MARK + labels[i] + SINGLE_QUOTATION_MARK;
-          } else {
-            label += labels[i];
-          }
-          if (i != labels.length - 1) {
-            label += " && ";
-          }
-        }
-      } else {
-        label = SINGLE_QUOTATION_MARK + label + SINGLE_QUOTATION_MARK;
-      }
+      label = SINGLE_QUOTATION_MARK + label + SINGLE_QUOTATION_MARK;
     }
-    LOG.debug("Final label expression after wrapper: " + label);
     return label;
-  }
-
-  public static boolean checkQuotationMarks(String label) {
-    return (StringUtils.startsWith(label, SINGLE_QUOTATION_MARK) &&
-        StringUtils.endsWith(label, SINGLE_QUOTATION_MARK)) ||
-        (StringUtils.startsWith(label, DOUBLE_QUOTATION_MARK) &&
-            StringUtils.endsWith(label, DOUBLE_QUOTATION_MARK));
   }
 
   static Expression constructAppLabel(Queue.QueueLabelPolicy policy,

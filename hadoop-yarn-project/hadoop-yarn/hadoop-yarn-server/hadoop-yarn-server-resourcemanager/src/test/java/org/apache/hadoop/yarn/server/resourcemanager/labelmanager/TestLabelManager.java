@@ -363,6 +363,16 @@ public class TestLabelManager {
     assertEquals("(Slow&&Fast)", labelExpr.toString());
     labelExpr = lb.getEffectiveLabelExpr("Slow A && Slow B && 'Slow C'");
     assertEquals("((Slow A&&Slow B)&&Slow C)", labelExpr.toString());
+    labelExpr = lb.getEffectiveLabelExpr("Slow A && Slow B || 'Slow C'");
+    assertEquals("((Slow A&&Slow B)||Slow C)", labelExpr.toString());
+    labelExpr = lb.getEffectiveLabelExpr("SlowA && !Slow B &&  ! 'Slow C'");
+    assertEquals("((SlowA&&(!Slow B))&&(!Slow C))", labelExpr.toString());
+    labelExpr = lb.getEffectiveLabelExpr("(Slow A && Slow B) ||! 'Slow C'");
+    assertEquals("((Slow A&&Slow B)||(!Slow C))", labelExpr.toString());
+    labelExpr = lb.getEffectiveLabelExpr("!A&&( B && C)");
+    assertEquals("((!A)&&(B&&C))", labelExpr.toString());
+    labelExpr = lb.getEffectiveLabelExpr("! A && ! B && Slow C");
+    assertEquals("(((!A)&&(!B))&&Slow C)", labelExpr.toString());
 
     labelExpr = lb.getEffectiveLabelExpr("*");
     assertNull(labelExpr);
