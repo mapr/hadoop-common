@@ -41,8 +41,7 @@ public abstract class AbstractMapRFileSystem extends FileSystem implements Fid {
      * This method copies ACEs on source to destination.
      * @param src path of source
      * @param dest path of destination
-     * @param recursive to apply recursively or not
      * @throws IOException if an ACE could not be read/modified
      */
-    public abstract int copyAce(Path src, Path dest, boolean recursive) throws IOException;
+    public abstract int copyAce(Path src, Path dest) throws IOException;
 }

@@ -67,6 +67,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormatCounter;
 import org.apache.hadoop.mapreduce.split.JobSplit.TaskSplitIndex;
 import org.apache.hadoop.mapreduce.task.MapContextImpl;
 import org.apache.hadoop.mapreduce.CryptoUtils;
+import org.apache.hadoop.maprfs.AbstractMapRFileSystem;
 import org.apache.hadoop.util.IndexedSortable;
 import org.apache.hadoop.util.IndexedSorter;
 import org.apache.hadoop.util.Progress;
@@ -84,6 +85,12 @@ public class MapTask extends Task {
    */
   public static final int MAP_OUTPUT_INDEX_RECORD_LENGTH = 24;
   public static final int APPROX_HEADER_LENGTH = 150;
+
+  private static final String JOB_ID_CONF = "mapreduce.job.id";
+
+  private static final String MOUNT_PATH_CONF = "mapr.mapred.localvolume.mount.path";
+
+  private static final String DEFAULT_MOUNT_PATH = "/var/mapr/local/node1/mapred";
 
   private TaskSplitIndex splitMetaInfo = new TaskSplitIndex();
 
@@ -311,6 +318,20 @@ public class MapTask extends Task {
     this.umbilical = umbilical;
 
     if (isMapTask()) {
+      FileSystem fileSystem = FileSystem.get(conf);
+
+      if (fileSystem instanceof AbstractMapRFileSystem) {
+        AbstractMapRFileSystem mapRFileSystem = (AbstractMapRFileSystem) fileSystem;
+
+        Path outDir = FileOutputFormat.getOutputPath(conf);
+
+        String relativeMountPath = conf.get(MOUNT_PATH_CONF, DEFAULT_MOUNT_PATH);
+        String jobId = job.get(JOB_ID_CONF);
+        Path shuffleDir = new Path("maprfs:" + relativeMountPath + "/nodeManager/output/" + jobId);
+
+        mapRFileSystem.copyAce(outDir, shuffleDir);
+      }
+
       // If there are no reducers then there won't be any sort. Hence the map 
       // phase will govern the entire attempt's progress.
       if (conf.getNumReduceTasks() == 0) {
