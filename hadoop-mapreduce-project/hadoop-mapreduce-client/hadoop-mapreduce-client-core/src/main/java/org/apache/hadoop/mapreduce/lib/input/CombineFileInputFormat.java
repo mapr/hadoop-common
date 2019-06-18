@@ -98,6 +98,7 @@ public abstract class CombineFileInputFormat<K, V>
   private long maxSplitSize = 0;
   private long minSplitSizeNode = 0;
   private long minSplitSizeRack = 0;
+  private int maxSplitBlocksNum = 0;
 
   // A pool of input paths filters. A split cannot have blocks from files
   // across multiple pools.
@@ -106,6 +107,11 @@ public abstract class CombineFileInputFormat<K, V>
   // mapping from a rack name to the set of Nodes in the rack 
   private HashMap<String, Set<String>> rackToNodes = 
                             new HashMap<String, Set<String>>();
+
+  protected void setMaxBlocksNum(int maxSplitBlocksNum) {
+    this.maxSplitBlocksNum = maxSplitBlocksNum;
+  }
+
   /**
    * Specify the maximum size (in bytes) of each split. Each split is
    * approximately equal to the specified size.
@@ -179,6 +185,7 @@ public abstract class CombineFileInputFormat<K, V>
     long minSizeNode = 0;
     long minSizeRack = 0;
     long maxSize = 0;
+    int maxBlocksNum = 0;
     Configuration conf = job.getConfiguration();
 
     // the values specified by setxxxSplitSize() takes precedence over the
@@ -192,6 +199,13 @@ public abstract class CombineFileInputFormat<K, V>
       minSizeRack = minSplitSizeRack;
     } else {
       minSizeRack = conf.getLong(SPLIT_MINSIZE_PERRACK, 0);
+    }
+    if (maxSplitBlocksNum != 0) {
+      maxBlocksNum = maxSplitBlocksNum;
+    } else {
+      maxBlocksNum = conf.getInt("mapreduce.input.fileinputformat.split.maxblocknum", 0);
+      // If maxBlockSize is not configured, a single split will be generated per
+      // node.
     }
     if (maxSplitSize != 0) {
       maxSize = maxSplitSize;
@@ -239,11 +253,11 @@ public abstract class CombineFileInputFormat<K, V>
         }
       }
       // create splits for all files in this pool.
-      getMoreSplits(job, myPaths, maxSize, minSizeNode, minSizeRack, splits);
+      getMoreSplits(job, myPaths, maxBlocksNum, maxSize, minSizeNode, minSizeRack, splits);
     }
 
     // create splits for all files that are not in any pool.
-    getMoreSplits(job, stats, maxSize, minSizeNode, minSizeRack, splits);
+    getMoreSplits(job, stats, maxBlocksNum, maxSize, minSizeNode, minSizeRack, splits);
 
     // free up rackToNodes map
     rackToNodes.clear();
@@ -254,7 +268,7 @@ public abstract class CombineFileInputFormat<K, V>
    * Return all the splits in the specified set of paths
    */
   private void getMoreSplits(JobContext job, List<FileStatus> stats,
-                             long maxSize, long minSizeNode, long minSizeRack,
+                             int maxBlocksNum, long maxSize, long minSizeNode, long minSizeRack,
                              List<InputSplit> splits)
     throws IOException {
     Configuration conf = job.getConfiguration();
@@ -288,8 +302,8 @@ public abstract class CombineFileInputFormat<K, V>
                                  rackToNodes, maxSize);
       totLength += files[i].getLength();
     }
-    createSplits(nodeToBlocks, blockToNodes, rackToBlocks, totLength, 
-                 maxSize, minSizeNode, minSizeRack, splits, conf);
+    createSplits(nodeToBlocks, blockToNodes, rackToBlocks, totLength,
+             maxBlocksNum, maxSize, minSizeNode, minSizeRack, splits, conf);
   }
 
   /**
@@ -317,6 +331,7 @@ public abstract class CombineFileInputFormat<K, V>
                      Map<OneBlockInfo, String[]> blockToNodes,
                      Map<String, List<OneBlockInfo>> rackToBlocks,
                      long totLength,
+                     int maxBlocksNum,
                      long maxSize,
                      long minSizeNode,
                      long minSizeRack,
@@ -325,6 +340,7 @@ public abstract class CombineFileInputFormat<K, V>
                     ) {
     ArrayList<OneBlockInfo> validBlocks = new ArrayList<OneBlockInfo>();
     long curSplitSize = 0;
+    int curBlockNum = 0;
     
     int totalNodes = nodeToBlocks.size();
     long totalLength = totLength;
@@ -363,15 +379,15 @@ public abstract class CombineFileInputFormat<K, V>
           validBlocks.add(oneblock);
           blockToNodes.remove(oneblock);
           curSplitSize += oneblock.length;
-
+          curBlockNum++;
           // if the accumulated split size exceeds the maximum, then
           // create this split.
-          if (maxSize != 0 && curSplitSize >= maxSize) {
+          if ((maxSize != 0 && curSplitSize >= maxSize) || (maxBlocksNum != 0 && curBlockNum >= maxBlocksNum)) {
             // create an input split and add it to the splits array
             addCreatedSplit(splits, Collections.singleton(node), validBlocks, conf);
             totalLength -= curSplitSize;
             curSplitSize = 0;
-
+            curBlockNum = 0;
             splitsPerNode.add(node);
 
             // Remove entries from blocksInNode so that we don't walk these
@@ -416,6 +432,7 @@ public abstract class CombineFileInputFormat<K, V>
           }
           validBlocks.clear();
           curSplitSize = 0;
+          curBlockNum = 0;
           completedNodes.add(node);
         } else { // No in-flight blocks.
           if (blocksInCurrentNode.size() == 0) {
@@ -468,10 +485,10 @@ public abstract class CombineFileInputFormat<K, V>
             validBlocks.add(oneblock);
             blockToNodes.remove(oneblock);
             curSplitSize += oneblock.length;
-      
+            curBlockNum++;
             // if the accumulated split size exceeds the maximum, then 
             // create this split.
-            if (maxSize != 0 && curSplitSize >= maxSize) {
+            if ((maxSize != 0 && curSplitSize >= maxSize) || (maxBlocksNum != 0 && curBlockNum >= maxBlocksNum)) {
               // create an input split and add it to the splits array
               addCreatedSplit(splits, getHosts(racks), validBlocks, conf);
               createdSplit = true;
@@ -483,6 +500,7 @@ public abstract class CombineFileInputFormat<K, V>
         // if we created a split, then just go to the next rack
         if (createdSplit) {
           curSplitSize = 0;
+          curBlockNum = 0;
           validBlocks.clear();
           racks.clear();
           continue;
@@ -500,6 +518,7 @@ public abstract class CombineFileInputFormat<K, V>
             overflowBlocks.addAll(validBlocks);
           }
         }
+        curBlockNum = 0;
         curSplitSize = 0;
         validBlocks.clear();
         racks.clear();
@@ -515,7 +534,7 @@ public abstract class CombineFileInputFormat<K, V>
     for (OneBlockInfo oneblock : overflowBlocks) {
       validBlocks.add(oneblock);
       curSplitSize += oneblock.length;
-
+      curBlockNum ++;
       // This might cause an exiting rack location to be re-added,
       // but it should be ok.
       for (int i = 0; i < oneblock.racks.length; i++) {
@@ -524,10 +543,11 @@ public abstract class CombineFileInputFormat<K, V>
 
       // if the accumulated split size exceeds the maximum, then 
       // create this split.
-      if (maxSize != 0 && curSplitSize >= maxSize) {
+      if ((maxSize != 0 && curSplitSize >= maxSize) || (maxBlocksNum != 0 && curBlockNum >= maxBlocksNum)) {
         // create an input split and add it to the splits array
         addCreatedSplit(splits, getHosts(racks), validBlocks, conf);
         curSplitSize = 0;
+        curBlockNum = 0;
         validBlocks.clear();
         racks.clear();
       }
