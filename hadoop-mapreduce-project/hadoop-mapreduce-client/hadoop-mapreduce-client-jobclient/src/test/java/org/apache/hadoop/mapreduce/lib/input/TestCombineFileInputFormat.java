@@ -680,6 +680,64 @@ public class TestCombineFileInputFormat {
       assertEquals(9, actual.size());
       assertTrue(actual.containsAll(expected));
 
+      inFormat.setMaxBlocksNum(3);
+      splits = inFormat.getSplits(job);
+      for (InputSplit split : splits) {
+        System.out.println("File split(Test4): " + split);
+      }
+
+      actual.clear();
+
+      for (InputSplit split : splits) {
+        fileSplit = (CombineFileSplit) split;
+        /**
+         * Created 3 splits for each rack.
+         */
+        if (splits.size() == 3) {
+          // first split is on rack3, contains file3 and file4
+          if (split.equals(splits.get(0))) {
+            assertEquals(3, fileSplit.getNumPaths());
+            assertEquals(1, fileSplit.getLocations().length);
+            assertEquals(hosts3[0], fileSplit.getLocations()[0]);
+          }
+          // second split is on rack1, contains file2 and file1
+          if (split.equals(splits.get(1))) {
+            assertEquals(3, fileSplit.getNumPaths());
+            assertEquals(1, fileSplit.getLocations().length);
+            assertEquals(file1.getName(), fileSplit.getPath(0).getName());
+            assertEquals(0, fileSplit.getOffset(0));
+            assertEquals(BLOCKSIZE, fileSplit.getLength(0));
+            assertEquals(file2.getName(), fileSplit.getPath(1).getName());
+            assertEquals(0, fileSplit.getOffset(1));
+            assertEquals(BLOCKSIZE, fileSplit.getLength(1));
+            assertEquals(file2.getName(), fileSplit.getPath(2).getName());
+            assertEquals(BLOCKSIZE, fileSplit.getOffset(2));
+            assertEquals(BLOCKSIZE, fileSplit.getLength(2));
+            assertEquals(hosts1[0], fileSplit.getLocations()[0]);
+          }
+          // third split is on rack1, contains file1
+          if (split.equals(splits.get(2))) {
+            assertEquals(3, fileSplit.getNumPaths());
+            assertEquals(1, fileSplit.getLocations().length);
+            assertEquals(file4.getName(), fileSplit.getPath(0).getName());
+            assertEquals(0, fileSplit.getOffset(0));
+            assertEquals(BLOCKSIZE, fileSplit.getLength(0));
+            assertEquals(hosts2[0], fileSplit.getLocations()[0]);
+          }
+        } else {
+          fail("Split size should be 3.");
+        }
+        for (int i = 0; i < fileSplit.getNumPaths(); i++) {
+          String name = fileSplit.getPath(i).getName();
+          long length = fileSplit.getLength(i);
+          long offset = fileSplit.getOffset(i);
+          actual.add(new Split(name, length, offset));
+        }
+      }
+
+      assertEquals(9, actual.size());
+      assertTrue(actual.containsAll(expected));
+
       // maximum split size is 2 blocks 
       inFormat = new DummyInputFormat();
       inFormat.setMinSplitSizeNode(BLOCKSIZE);
@@ -995,6 +1053,7 @@ public class TestCombineFileInputFormat {
     long minSizeNode = 50;
     long minSizeRack = 50;
     int maxSplitSize = 200; // 4 blocks per split.
+    int maxBlocks = 0;
 
     String[] locations = new String[numNodes];
     for (int i = 0; i < numNodes; i++) {
@@ -1033,7 +1092,7 @@ public class TestCombineFileInputFormat {
     Configuration conf = new Configuration();
     conf.setBoolean(MRJobConfig.MAPREDUCE_MULTI_SPLIT_LOCATIONS_ENABLED, false);
     inFormat.createSplits(nodeToBlocks, blockToNodes, rackToBlocks, totLength,
-        maxSplitSize, minSizeNode, minSizeRack, splits, conf);
+        maxBlocks, maxSplitSize, minSizeNode, minSizeRack, splits, conf);
 
     int expectedSplitCount = (int) (totLength / maxSplitSize);
     assertEquals(expectedSplitCount, splits.size());
@@ -1060,6 +1119,7 @@ public class TestCombineFileInputFormat {
     long totLength = 0;
     long blockSize = 100;
     long maxSize = 200;
+    int maxBlocks = 0;
     long minSizeNode = 50;
     long minSizeRack = 50;
     String[] locations = { "h1", "h2" };
@@ -1088,7 +1148,7 @@ public class TestCombineFileInputFormat {
     Configuration conf = new Configuration();
     conf.setBoolean(MRJobConfig.MAPREDUCE_MULTI_SPLIT_LOCATIONS_ENABLED, false);
     inFormat.createSplits(nodeToBlocks, blockToNodes, rackToBlocks, totLength,  
-                          maxSize, minSizeNode, minSizeRack, splits, conf);
+                          maxBlocks, maxSize, minSizeNode, minSizeRack, splits, conf);
     
     int expectedSplitCount = (int)(totLength/maxSize);
     assertEquals(expectedSplitCount, splits.size());

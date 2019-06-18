@@ -64,6 +64,8 @@ import com.google.common.collect.Lists;
 public abstract class FileInputFormat<K, V> extends InputFormat<K, V> {
   public static final String INPUT_DIR = 
     "mapreduce.input.fileinputformat.inputdir";
+  public static final String BLOCK_MAXNUM =
+      "mapreduce.input.fileinputformat.split.maxblocknum";
   public static final String SPLIT_MAXSIZE = 
     "mapreduce.input.fileinputformat.split.maxsize";
   public static final String SPLIT_MINSIZE = 
@@ -209,6 +211,26 @@ public abstract class FileInputFormat<K, V> extends InputFormat<K, V> {
   public static long getMaxSplitSize(JobContext context) {
     return context.getConfiguration().getLong(SPLIT_MAXSIZE, 
                                               Long.MAX_VALUE);
+  }
+
+  /**
+   * Set the maximum split size
+   * @param job the job to modify
+   * @param number the maximum number of blocks for split
+   */
+  public static void setMaxInputBlockNum(Job job,
+                                          int number) {
+    job.getConfiguration().setLong(BLOCK_MAXNUM, number);
+  }
+
+  /**
+   * Get the maximum split size.
+   * @param context the job to look at.
+   * @return the maximum number of blocks for split can include
+   */
+  public static long getMaxBlockNum(JobContext context) {
+    return context.getConfiguration().getInt(BLOCK_MAXNUM,
+        Integer.MAX_VALUE);
   }
 
   /**
