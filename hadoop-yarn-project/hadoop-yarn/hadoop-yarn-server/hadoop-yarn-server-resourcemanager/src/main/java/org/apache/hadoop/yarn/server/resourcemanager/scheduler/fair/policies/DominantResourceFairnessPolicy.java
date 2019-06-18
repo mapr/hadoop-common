@@ -145,8 +145,8 @@ public class DominantResourceFairnessPolicy extends SchedulingPolicy {
       // A queue is needy for its min share if its dominant resource
       // (with respect to the cluster capacity) is below its configured min share
       // for that resource
-      boolean s1Needy = (sharesOfMinShare1.getWeight(resourceOrder1[0]) < 1.0f) && (sharesOfMinShare1.getWeight(resourceOrder1[0]) != 0.0f);
-      boolean s2Needy = (sharesOfMinShare2.getWeight(resourceOrder2[0]) < 1.0f) && (sharesOfMinShare2.getWeight(resourceOrder1[0]) != 0.0f);
+      boolean s1Needy = sharesOfMinShare1.getWeight(resourceOrder1[0]) < 1.0f;
+      boolean s2Needy = sharesOfMinShare2.getWeight(resourceOrder2[0]) < 1.0f;
       
       int res = 0;
       if (!s2Needy && !s1Needy) {
@@ -161,12 +161,15 @@ public class DominantResourceFairnessPolicy extends SchedulingPolicy {
             resourceOrder1, resourceOrder2);
       }
       if (res == 0) {
-        // Apps are tied in fairness ratio. Break the tie by submit time.
-        res = (int)(s1.getStartTime() - s2.getStartTime());
+        // Apps are tied in fairness ratio. Break the tie by submit time and job
+        // name to get a deterministic ordering, which is useful for unit tests.
+        res = (int) Math.signum(s1.getStartTime() - s2.getStartTime());
+        if (res == 0) {
+          res = s1.getName().compareTo(s2.getName());
+        }
       }
       return res;
     }
-    
     /**
      * Calculates and orders a resource's share of a pool in terms of two vectors.
      * The shares vector contains, for each resource, the fraction of the pool that
@@ -177,26 +180,21 @@ public class DominantResourceFairnessPolicy extends SchedulingPolicy {
     void calculateShares(Resource resource, Resource pool,
         ResourceWeights shares, ResourceType[] resourceOrder, ResourceWeights weights) {
 
-      double memoryWeight = (pool.getMemory() * weights.getWeight(MEMORY));
-      if(Math.abs(memoryWeight) < EPSILON) {
-        shares.setWeight(MEMORY, 0.0f);
-      } else {
-        shares.setWeight(MEMORY, (float)(resource.getMemory() / memoryWeight));
-      }
+      shares.setWeight(MEMORY, (float)resource.getMemory() /
+              (pool.getMemory() * weights.getWeight(MEMORY)));
+      shares.setWeight(CPU, (float)resource.getVirtualCores() /
+              (pool.getVirtualCores() * weights.getWeight(CPU)));
 
-      double cpuWeight= (pool.getVirtualCores() * weights.getWeight(CPU));
-      if (Math.abs(cpuWeight) < EPSILON){
-        shares.setWeight(CPU, 0.0f);
-      } else {
-        shares.setWeight(CPU, (float) (resource.getVirtualCores() / cpuWeight));
-      }
+      float diskWeight = (float)(resource.getDisks() / (pool.getDisks() * weights.getWeight(DISK)));
 
-      double totalDiskWeight = pool.getDisks() * weights.getWeight(DISK);
-      //Check for divide by zero
-      if(Math.abs(totalDiskWeight) < EPSILON) {
-        shares.setWeight(DISK, 0.0f);
+      if (Float.isNaN(diskWeight)){
+        if (resource.getDisks() <= 0) {
+          shares.setWeight(DISK, Float.NEGATIVE_INFINITY);
+        } else {
+          shares.setWeight(DISK, Float.POSITIVE_INFINITY);
+        }
       } else {
-        shares.setWeight(DISK, (float)(resource.getDisks() / totalDiskWeight));
+        shares.setWeight(DISK, diskWeight);
       }
 
       // sort order vector by resource share
