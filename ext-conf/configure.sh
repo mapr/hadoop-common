@@ -247,7 +247,7 @@ function CreateRMRestartFile() {
             cat >"$RM_RESTART_FILE" <<-RM_RESTART
               echo "Running RM restart script"
               if ${MAPR_HOME}/initscripts/mapr-warden status > /dev/null 2>&1 ; then
-                  isSecureEnable isSecure
+                  isSecure=$(head -1 ${MAPR_HOME}/conf/mapr-clusters.conf | grep -o 'secure=\w*' | cut -d= -f2)
                   if [ "$isSecure" = "true" ] && [ -f "${MAPR_HOME}/conf/mapruserticket" ]; then
                       export MAPR_TICKETFILE_LOCATION="${MAPR_HOME}/conf/mapruserticket"
                   fi
@@ -396,7 +396,7 @@ function ConfigureTimeLineServer() {
                 cat >"$TL_RESTART_FILE" <<-TL_RESTART
                   echo "Running TL restart script"
                   if ${MAPR_HOME}/initscripts/mapr-warden status > /dev/null 2>&1 ; then
-                      isSecureEnable isSecure
+                      isSecure=$(head -1 ${MAPR_HOME}/conf/mapr-clusters.conf | grep -o 'secure=\w*' | cut -d= -f2)
                       if [ "$isSecure" = "true" ] && [ -f "${MAPR_HOME}/conf/mapruserticket" ]; then
                           export MAPR_TICKETFILE_LOCATION="${MAPR_HOME}/conf/mapruserticket"
                       fi
@@ -877,7 +877,7 @@ checkIncompatibleHadoopConfig
 
 if [ ! -z "$rm_ip" ]; then
     ConfigureYarnServices "$rm_ip" "$hs_ip"
-elif [[ $isOnlyRoles -ne 1 ]]; then
+elif [ ! -f ${HADOOP_HOME}/etc/hadoop/yarn-site.xml ] || [ "$isOnlyRoles" != "1" ]; then
     # No -RM provided and no -R. Configure MapR-HA for RM.
     ConfigureYarnServices "" "$hs_ip"
 fi
