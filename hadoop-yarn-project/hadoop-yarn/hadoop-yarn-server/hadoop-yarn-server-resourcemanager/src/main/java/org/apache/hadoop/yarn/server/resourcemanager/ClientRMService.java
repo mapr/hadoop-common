@@ -189,6 +189,9 @@ public class ClientRMService extends AbstractService implements
   private ReservationSystem reservationSystem;
   private ReservationInputValidator rValidator;
 
+  // Label manager
+  private LabelManager labelManager;
+
   public ClientRMService(RMContext rmContext, YarnScheduler scheduler,
       RMAppManager rmAppManager, ApplicationACLsManager applicationACLsManager,
       QueueACLsManager queueACLsManager,
@@ -211,6 +214,7 @@ public class ClientRMService extends AbstractService implements
     this.reservationSystem = rmContext.getReservationSystem();
     this.clock = clock;
     this.rValidator = new ReservationInputValidator(clock);
+    this.labelManager = LabelManager.getInstance();
   }
 
   @Override
@@ -1271,22 +1275,18 @@ public class ClientRMService extends AbstractService implements
   @Override
   public GetNodesToLabelsResponse getNodeToLabels(
       GetNodesToLabelsRequest request) throws YarnException, IOException {
-    RMNodeLabelsManager labelsMgr = rmContext.getNodeLabelManager();
     GetNodesToLabelsResponse response =
-        GetNodesToLabelsResponse.newInstance(labelsMgr.getNodeLabels());
+        GetNodesToLabelsResponse.newInstance(labelManager.getNodeToLabels());
     return response;
   }
 
   @Override
   public GetLabelsToNodesResponse getLabelsToNodes(
       GetLabelsToNodesRequest request) throws YarnException, IOException {
-    RMNodeLabelsManager labelsMgr = rmContext.getNodeLabelManager();
     if (request.getNodeLabels() == null || request.getNodeLabels().isEmpty()) {
-      return GetLabelsToNodesResponse.newInstance(
-          labelsMgr.getLabelsToNodes());
+      return GetLabelsToNodesResponse.newInstance(labelManager.getLabelsToNodes(new HashSet<String>()));
     } else {
-      return GetLabelsToNodesResponse.newInstance(
-          labelsMgr.getLabelsToNodes(request.getNodeLabels()));
+      return GetLabelsToNodesResponse.newInstance(labelManager.getLabelsToNodes(request.getNodeLabels()));
     }
   }
 

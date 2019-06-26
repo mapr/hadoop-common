@@ -29,6 +29,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
@@ -122,6 +123,8 @@ import org.apache.hadoop.yarn.factory.providers.RecordFactoryProvider;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
 import org.apache.hadoop.yarn.security.client.RMDelegationTokenIdentifier;
 import org.apache.hadoop.yarn.server.resourcemanager.ahs.RMApplicationHistoryWriter;
+import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManager;
+import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelStorage;
 import org.apache.hadoop.yarn.server.resourcemanager.metrics.SystemMetricsPublisher;
 import org.apache.hadoop.yarn.server.resourcemanager.nodelabels.RMNodeLabelsManager;
 import org.apache.hadoop.yarn.server.resourcemanager.recovery.NullRMStateStore;
@@ -155,6 +158,7 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import org.mockito.Mockito;
 
 public class TestClientRMService {
 
@@ -1432,15 +1436,18 @@ public class TestClientRMService {
       };
     };
     rm.start();
-    RMNodeLabelsManager labelsMgr = rm.getRMContext().getNodeLabelManager();
-    labelsMgr.addToCluserNodeLabels(ImmutableSet.of("x", "y"));
 
-    NodeId node1 = NodeId.newInstance("host1", 1234);
-    NodeId node2 = NodeId.newInstance("host2", 1234);
+    Map<String, List<String>> nodesAndLabels = new HashMap<>();
+    nodesAndLabels.put("host1", Arrays.asList("x"));
+    nodesAndLabels.put("host2", Arrays.asList("y"));
+
+    setLabelNodeDataInLabelStorage(LabelStorage.getInstance(), nodesAndLabels);
+
+    NodeId node1 = NodeId.newInstance("host1", 0);
+    NodeId node2 = NodeId.newInstance("host2", 0);
     Map<NodeId, Set<String>> map = new HashMap<NodeId, Set<String>>();
     map.put(node1, ImmutableSet.of("x"));
     map.put(node2, ImmutableSet.of("y"));
-    labelsMgr.replaceLabelsOnNode(map);
 
     // Create a client.
     Configuration conf = new Configuration();
@@ -1450,12 +1457,6 @@ public class TestClientRMService {
     ApplicationClientProtocol client =
         (ApplicationClientProtocol) rpc.getProxy(
             ApplicationClientProtocol.class, rmAddress, conf);
-
-    // Get node labels collection
-    NoOpGetClusterNodeLabelsResponse response =
-        client.getClusterNodeLabelsNoOp(NoOpGetClusterNodeLabelsRequest.newInstance());
-    Assert.assertTrue(response.getNodeLabels().containsAll(
-        Arrays.asList("x", "y")));
 
     // Get node labels mapping
     GetNodesToLabelsResponse response1 =
@@ -1468,6 +1469,8 @@ public class TestClientRMService {
     
     rpc.stopProxy(client, conf);
     rm.close();
+
+    cleanUpDataInLabelStorage(LabelStorage.getInstance());
   }
 
   @Test
@@ -1481,21 +1484,18 @@ public class TestClientRMService {
       };
     };
     rm.start();
-    RMNodeLabelsManager labelsMgr = rm.getRMContext().getNodeLabelManager();
-    labelsMgr.addToCluserNodeLabels(ImmutableSet.of("x", "y", "z"));
 
-    NodeId node1A = NodeId.newInstance("host1", 1234);
-    NodeId node1B = NodeId.newInstance("host1", 5678);
-    NodeId node2A = NodeId.newInstance("host2", 1234);
-    NodeId node3A = NodeId.newInstance("host3", 1234);
-    NodeId node3B = NodeId.newInstance("host3", 5678);
+    NodeId node1A = NodeId.newInstance("host1", 0);
+    NodeId node1B = NodeId.newInstance("host1", 0);
+    NodeId node2A = NodeId.newInstance("host2", 0);
+    NodeId node3A = NodeId.newInstance("host3", 0);
+    NodeId node3B = NodeId.newInstance("host3", 0);
     Map<NodeId, Set<String>> map = new HashMap<NodeId, Set<String>>();
     map.put(node1A, ImmutableSet.of("x"));
     map.put(node1B, ImmutableSet.of("z"));
     map.put(node2A, ImmutableSet.of("y"));
     map.put(node3A, ImmutableSet.of("y"));
     map.put(node3B, ImmutableSet.of("z"));
-    labelsMgr.replaceLabelsOnNode(map);
 
     // Create a client.
     Configuration conf = new Configuration();
@@ -1506,18 +1506,17 @@ public class TestClientRMService {
         (ApplicationClientProtocol) rpc.getProxy(
             ApplicationClientProtocol.class, rmAddress, conf);
 
-    // Get node labels collection
-    NoOpGetClusterNodeLabelsResponse response =
-        client.getClusterNodeLabelsNoOp(NoOpGetClusterNodeLabelsRequest.newInstance());
-    Assert.assertTrue(response.getNodeLabels().containsAll(
-        Arrays.asList("x", "y", "z")));
+    Map<String, List<String>> nodesAndLabels = new HashMap<>();
+    nodesAndLabels.put("host1", Arrays.asList("x", "z"));
+    nodesAndLabels.put("host2", Arrays.asList("y"));
+    nodesAndLabels.put("host3", Arrays.asList("y", "z"));
+
+    setLabelNodeDataInLabelStorage(LabelStorage.getInstance(), nodesAndLabels);
 
     // Get labels to nodes mapping
     GetLabelsToNodesResponse response1 =
         client.getLabelsToNodes(GetLabelsToNodesRequest.newInstance());
     Map<String, Set<NodeId>> labelsToNodes = response1.getLabelsToNodes();
-    Assert.assertTrue(
-        labelsToNodes.keySet().containsAll(Arrays.asList("x", "y", "z")));
     Assert.assertTrue(
         labelsToNodes.get("x").containsAll(Arrays.asList(node1A)));
     Assert.assertTrue(
@@ -1541,5 +1540,20 @@ public class TestClientRMService {
 
     rpc.stopProxy(client, conf);
     rm.close();
+
+    cleanUpDataInLabelStorage(LabelStorage.getInstance());
+  }
+
+  private void setLabelNodeDataInLabelStorage(LabelStorage storage,
+                                              Map<String, List<String>> nodesAndLabels) throws Exception {
+    Field privateField = LabelStorage.class.getDeclaredField("nodeExpressionLabels");
+    privateField.setAccessible(true);
+    privateField.set(storage, nodesAndLabels);
+  }
+
+  private void cleanUpDataInLabelStorage(LabelStorage storage) throws Exception{
+    Field privateField = LabelStorage.class.getDeclaredField("nodeExpressionLabels");
+    privateField.setAccessible(true);
+    privateField.set(storage, new HashMap<>());
   }
 }

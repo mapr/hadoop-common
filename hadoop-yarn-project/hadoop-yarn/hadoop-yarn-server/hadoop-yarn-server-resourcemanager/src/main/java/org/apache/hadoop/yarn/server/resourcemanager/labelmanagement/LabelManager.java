@@ -18,7 +18,10 @@
 package org.apache.hadoop.yarn.server.resourcemanager.labelmanagement;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -33,6 +36,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.StringUtils;
+import org.apache.hadoop.yarn.api.records.NodeId;
 import org.apache.hadoop.yarn.api.records.NodeToLabelsList;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
 
@@ -72,6 +76,8 @@ public class LabelManager {
   private Timer timer;
   private FileMonitor ttask;
   private volatile boolean isServiceEnabled;
+
+  private LabelStorage storage = LabelStorage.getInstance();
   
   private LabelManager() {
   }
@@ -83,7 +89,7 @@ public class LabelManager {
   void serviceInit(Configuration conf) throws Exception {
     setConfig(conf);
     fs = FileSystem.get(conf);
-    
+
     String labelFilePath = conf.get(NODE_LABELS_FILE, null);
     if (labelFilePath != null) {
       this.labelFile = new Path(labelFilePath);
@@ -95,7 +101,7 @@ public class LabelManager {
       this.labelManagerMonitorInterval = conf.getLong(NODE_LABELS_MONITOR_INTERVAL, 
           DEFAULT_RELOAD_INTERVAL);
     } 
-    LabelStorage.getInstance().storageInit(fs, labelFile);
+    storage.storageInit(fs, labelFile);
   }
   
   void serviceStart() throws Exception {  
@@ -105,7 +111,6 @@ public class LabelManager {
       timer.scheduleAtFixedRate(ttask, 0, labelManagerMonitorInterval);
       isServiceEnabled = true;
     }
-    
   }
   
   void serviceStop() throws Exception {
@@ -133,7 +138,7 @@ public class LabelManager {
         try {
           // check if file is modified
           if (fileChanged()) {
-            LabelStorage.getInstance().loadAndApplyLabels(config);
+            storage.loadAndApplyLabels(config);
           }
         } catch (Exception e) {
           LOG.error("LabelManager Thread got exception: " +
@@ -164,21 +169,69 @@ public class LabelManager {
    */
   @Private
   public void refreshLabels(Configuration conf) throws IOException {
-    LabelStorage.getInstance().loadAndApplyLabels(conf);
+    storage.loadAndApplyLabels(conf);
   }
 
   public Set<String> getLabelsForNode(String node) {
-    return LabelStorage.getInstance().getLabelsForNode(node);
+    return storage.getLabelsForNode(node);
   }
 
   public List<NodeToLabelsList> getLabelsForAllNodes() {
-    return LabelStorage.getInstance().getLabelsForAllNodes();
+    return storage.getLabelsForAllNodes();
   }
 
   public Set<Expression> getLabels() {
-    return LabelStorage.getInstance().getLabels();
+    return storage.getLabels();
   }
 
+  /**
+   * This method converts data from LabelManager data representation to default
+   * apache structure. If labelsToAdd empty or null, this method will return data
+   * about all label and corresponding nodes.
+   * @param labelsToAdd labels needed to add to result.
+   * @return Map of node labels and appropriate nodes
+   */
+  public Map<String, Set<NodeId>> getLabelsToNodes(Set<String> labelsToAdd) {
+    Map<String, Set<NodeId>> labelsToNodes = new HashMap<>();
+
+    for (NodeToLabelsList n : storage.getLabelsForAllNodes()) {
+      NodeId nodeId = NodeId.newInstance(n.getNode(), 0);
+      List<String> nodeLabels = n.getNodeLabel();
+
+      for (String label : nodeLabels) {
+        if ((labelsToAdd == null || labelsToAdd.isEmpty()) ||  (labelsToAdd != null && labelsToAdd.contains(label))) {
+          Set<NodeId> nodeIds = labelsToNodes.get(label);
+          if (nodeIds == null) {
+            nodeIds = new HashSet<>();
+            nodeIds.add(nodeId);
+            labelsToNodes.put(label, nodeIds);
+          } else {
+            nodeIds.add(nodeId);
+            labelsToNodes.remove(label);
+            labelsToNodes.put(label, nodeIds);
+          }
+        }
+      }
+    }
+    return labelsToNodes;
+  }
+
+
+  /**
+   * This method converts data from LabelManager data representation to default apache structure.
+   * @return Map of nodes and appropriate labels
+   */
+  public Map<NodeId, Set<String>> getNodeToLabels() {
+    Map<NodeId, Set<String>> nodeToLabels = new HashMap<>();
+
+    for (NodeToLabelsList n : storage.getLabelsForAllNodes()) {
+      NodeId nodeId = NodeId.newInstance(n.getNode(), 0);
+      Set<String> nodeLabels = new HashSet<>(n.getNodeLabel());
+
+      nodeToLabels.put(nodeId, nodeLabels);
+    }
+    return nodeToLabels;
+  }
   
   public Expression getEffectiveLabelExpr(String labelStr) throws IOException {
     return LabelExpressionHandlingHelper.getEffectiveLabelExpr(labelStr);

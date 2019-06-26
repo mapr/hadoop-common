@@ -106,7 +106,7 @@ public final class LabelStorage {
     
   }
 
-  static LabelStorage getInstance() {
+  public static LabelStorage getInstance() {
     return s_instance;
   }
   
