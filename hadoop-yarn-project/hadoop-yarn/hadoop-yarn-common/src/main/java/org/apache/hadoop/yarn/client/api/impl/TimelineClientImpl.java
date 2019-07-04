@@ -499,13 +499,17 @@ public class TimelineClientImpl extends TimelineClient {
   public ClientResponse doPostingObject(Object object, String path) {
     WebResource webResource = client.resource(resURI);
     if (path == null) {
-      return webResource.accept(MediaType.APPLICATION_JSON)
+      ClientResponse r = webResource.accept(MediaType.APPLICATION_JSON)
           .type(MediaType.APPLICATION_JSON)
           .post(ClientResponse.class, object);
+      r.bufferEntity();
+      return r;
     } else if (path.equals("domain")) {
-      return webResource.path(path).accept(MediaType.APPLICATION_JSON)
+      ClientResponse r = webResource.path(path).accept(MediaType.APPLICATION_JSON)
           .type(MediaType.APPLICATION_JSON)
           .put(ClientResponse.class, object);
+      r.bufferEntity();
+      return r;
     } else {
       throw new YarnRuntimeException("Unknown resource type");
     }
