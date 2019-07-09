@@ -1216,7 +1216,7 @@ public class TestWorkPreservingRMRestart extends ParameterizedSchedulerTestBase 
     assertEquals(RMAppAttemptState.FINISHED, recoveredApp1.getCurrentAppAttempt().getState());
   }
 
-  @Test(timeout = 20000)
+  @Test(timeout = 40000)
   public void testFairSchedulerQueueACLChanged() throws Exception {
     if (getSchedulerType() != SchedulerType.FAIR) {
       return;

@@ -43,6 +43,9 @@ Release 2.8.0 - UNRELEASED
     YARN-4655. Log uncaught exceptions/errors in various thread pools in YARN.
     (Sidharta Seethana via vvasudev)
 
+    YARN-1287. Consolidate MockClocks. 
+    (Sebastian Wong and Anubhav Dhoot via kasha)
+
   OPTIMIZATIONS
 
   BUG FIXES

@@ -50,6 +50,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerEven
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerEventType;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerFinishedEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerImpl;
+import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerState;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ActiveUsersManager;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.NodeType;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.QueueMetrics;
@@ -155,6 +156,8 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
 
     // remove from preemption map if it is completed
     preemptionMap.remove(rmContainer);
+
+    getQueue().decUsedResource(containerResource);
 
     // Clear resource utilization metrics cache.
     lastMemoryAggregateAllocationUpdateTime = -1;
@@ -381,6 +384,7 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
         type, node, priority, request, container);
     Resources.addTo(currentConsumption, container.getResource());
 
+    getQueue().incUsedResource(container.getResource());
     // Update resource requests related to "request" and store in RMContainer
     ((RMContainerImpl) rmContainer).setResourceRequests(resourceRequestList);
 
@@ -480,6 +484,25 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
             .getHttpAddress(), capability, priority, null);
 
     return container;
+  }
+
+  @Override
+  public void recoverContainer(RMContainer rmContainer) {
+      super.recoverContainer(rmContainer);
+
+      if (!rmContainer.getState().equals(RMContainerState.COMPLETED)) {
+        getQueue().incUsedResource(rmContainer.getContainer().getResource());
+      }
+
+    // If not running unmanaged, the first container we recover is always
+    // the AM. Set the amResource for this app and update the leaf queue's AM
+    // usage
+    if (!isAmRunning() && !getUnmanagedAM()) {
+      Resource resource = rmContainer.getAllocatedResource();
+      setAMResource(resource);
+      getQueue().addAMResourceUsage(resource);
+      setAmRunning(true);
+    }
   }
 
   /**
