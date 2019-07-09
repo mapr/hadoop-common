@@ -105,6 +105,8 @@ import org.apache.hadoop.yarn.server.resourcemanager.RMAuditLogger;
 import org.apache.hadoop.yarn.server.resourcemanager.RMAuditLogger.AuditConstants;
 import org.apache.hadoop.yarn.server.resourcemanager.RMServerUtils;
 import org.apache.hadoop.yarn.server.resourcemanager.ResourceManager;
+import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManager;
+import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelStorage;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMApp;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttempt;
 import org.apache.hadoop.yarn.server.resourcemanager.rmnode.RMNode;
@@ -744,9 +746,8 @@ public class RMWebServices {
 
     NodeToLabelsInfo ntl = new NodeToLabelsInfo();
     HashMap<String, NodeLabelsInfo> ntlMap = ntl.getNodeToLabels();
-    Map<NodeId, Set<String>> nodeIdToLabels =   
-      rm.getRMContext().getNodeLabelManager().getNodeLabels();
-      
+    Map<NodeId, Set<String>> nodeIdToLabels = LabelManager.getInstance().getNodeToLabels();
+
     for (Map.Entry<NodeId, Set<String>> nitle : nodeIdToLabels.entrySet()) {
       ntlMap.put(nitle.getKey().toString(), 
         new NodeLabelsInfo(nitle.getValue()));
@@ -797,9 +798,10 @@ public class RMWebServices {
     throws IOException {
     init();
 
-    NodeLabelsInfo ret = 
-      new NodeLabelsInfo(rm.getRMContext().getNodeLabelManager()
-        .getClusterNodeLabels());
+    Set<String> labels = LabelManager.getInstance()
+        .getLabelsToNodes(new HashSet<String>()).keySet();
+
+    NodeLabelsInfo ret = new NodeLabelsInfo(labels);
 
     return ret;
   }

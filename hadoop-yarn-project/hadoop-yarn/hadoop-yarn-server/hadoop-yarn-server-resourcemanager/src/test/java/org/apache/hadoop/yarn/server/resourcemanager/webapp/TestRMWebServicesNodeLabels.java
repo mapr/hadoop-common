@@ -40,6 +40,7 @@ import org.apache.hadoop.yarn.webapp.JerseyTestBase;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.inject.Guice;
@@ -104,6 +105,8 @@ public class TestRMWebServicesNodeLabels extends JerseyTestBase {
         .contextPath("jersey-guice-filter").servletPath("/").build());
   }
 
+  //MapR LBS doesn't support add-node-labels/replace-labels from REST API
+  @Ignore
   @Test
   public void testNodeLabels() throws JSONException, Exception {
     WebResource r = resource();
