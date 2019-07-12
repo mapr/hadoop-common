@@ -320,10 +320,10 @@ public class MapTask extends Task {
     if (isMapTask()) {
       FileSystem fileSystem = FileSystem.get(conf);
 
-      if (fileSystem instanceof AbstractMapRFileSystem) {
-        AbstractMapRFileSystem mapRFileSystem = (AbstractMapRFileSystem) fileSystem;
+      Path outDir = FileOutputFormat.getOutputPath(conf);
 
-        Path outDir = FileOutputFormat.getOutputPath(conf);
+      if (fileSystem instanceof AbstractMapRFileSystem && outDir != null) {
+        AbstractMapRFileSystem mapRFileSystem = (AbstractMapRFileSystem) fileSystem;
 
         String relativeMountPath = conf.get(MOUNT_PATH_CONF, DEFAULT_MOUNT_PATH);
         String jobId = job.get(JOB_ID_CONF);
