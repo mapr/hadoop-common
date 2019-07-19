@@ -73,7 +73,7 @@ public class AppInfo {
   protected long clusterId;
   protected String applicationType;
   protected String applicationTags = "";
-  
+
   // these are only allowed if acls allow
   protected long startedTime;
   protected long finishedTime;
@@ -82,13 +82,15 @@ public class AppInfo {
   protected String amHostHttpAddress;
   protected int allocatedMB;
   protected int allocatedVCores;
+  protected double allocatedDisks;
   protected int runningContainers;
   protected long memorySeconds;
   protected long vcoreSeconds;
-  
+
   // preemption info fields
   protected int preemptedResourceMB;
   protected int preemptedResourceVCores;
+  protected double preemptedDisks;
   protected int numNonAMContainerPreempted;
   protected int numAMContainerPreempted;
 
@@ -159,6 +161,7 @@ public class AppInfo {
           if (resourceReport != null) {
             Resource usedResources = resourceReport.getUsedResources();
             allocatedMB = usedResources.getMemory();
+            allocatedDisks = usedResources.getDisks();
             allocatedVCores = usedResources.getVirtualCores();
             runningContainers = resourceReport.getNumUsedContainers();
           }
@@ -174,6 +177,7 @@ public class AppInfo {
           appMetrics.getNumAMContainersPreempted();
       preemptedResourceMB =
           appMetrics.getResourcePreempted().getMemory();
+      preemptedDisks = appMetrics.getResourcePreempted().getDisks();
       numNonAMContainerPreempted =
           appMetrics.getNumNonAMContainersPreempted();
       preemptedResourceVCores =
@@ -286,13 +290,21 @@ public class AppInfo {
   public int getAllocatedVCores() {
     return this.allocatedVCores;
   }
-  
+
+  public double getAllocatedDisks() {
+    return allocatedDisks;
+  }
+
   public int getPreemptedMB() {
     return preemptedResourceMB;
   }
 
   public int getPreemptedVCores() {
     return preemptedResourceVCores;
+  }
+
+  public double getPreemptedDisks() {
+    return preemptedDisks;
   }
 
   public int getNumNonAMContainersPreempted() {
