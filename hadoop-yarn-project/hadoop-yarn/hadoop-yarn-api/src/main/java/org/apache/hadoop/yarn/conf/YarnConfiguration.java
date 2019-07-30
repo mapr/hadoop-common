@@ -1991,6 +1991,10 @@ public class YarnConfiguration extends Configuration {
     "PATH=%PATH%;%HADOOP_COMMON_HOME%\\bin":
     "LD_LIBRARY_PATH=$HADOOP_COMMON_HOME/lib/native";
 
+  public static final String LIBJVM_SO_PATH = YARN_PREFIX + "libjvm.path";
+
+  public static final String LIBJVM_SO_PATH_DEFAULT = System.getProperty("sun.boot.library.path") + "/server";
+
   public YarnConfiguration() {
     super();
   }

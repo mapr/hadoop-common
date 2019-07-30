@@ -20,6 +20,8 @@ package org.apache.hadoop.yarn.server.nodemanager.containermanager.launcher;
 
 import static org.apache.hadoop.fs.CreateFlag.CREATE;
 import static org.apache.hadoop.fs.CreateFlag.OVERWRITE;
+import static org.apache.hadoop.yarn.conf.YarnConfiguration.LIBJVM_SO_PATH_DEFAULT;
+import static org.apache.hadoop.yarn.conf.YarnConfiguration.LIBJVM_SO_PATH;
 
 import java.io.DataOutputStream;
 import java.io.File;
@@ -317,6 +319,9 @@ public class ContainerLaunch implements Callable<Integer> {
         Apps.setEnvFromInputString(environment,
             YarnConfiguration.HADOOP_NATIVE_LIB_ENV,
             File.pathSeparator);
+
+        String libJvmPath = conf.get(LIBJVM_SO_PATH, LIBJVM_SO_PATH_DEFAULT);
+        Apps.addToEnvironment(environment, Environment.LD_LIBRARY_PATH.name(), libJvmPath, File.pathSeparator);
 
         // Sanitize the container's environment
         sanitizeEnv(environment, containerWorkDir, appDirs, containerLogDirs,
