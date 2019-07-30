@@ -558,6 +558,16 @@ public class FairScheduler extends
       Map<FSAppAttempt, Resource> toPreempt, FSAppAttempt preemptApp) {
     Resource toPreemptResource = toPreempt.get(preemptApp);
     Resource containerResource = container.getContainer().getResource();
+
+    if (toPreemptResource == null){
+      LOG.debug("Don't find "+preemptApp + "at "+toPreempt);
+      toPreemptResource = Resources.none();
+    }
+    if (containerResource == null){
+      LOG.debug("Container "+ container.getContainerId()+" resource equals null");
+      containerResource = Resources.none();
+    }
+
     if (Resources.greaterThan(RESOURCE_CALCULATOR, clusterResource,
         toPreemptResource, containerResource)) { // 1. toPreempt requires more
                                                  // Resource
