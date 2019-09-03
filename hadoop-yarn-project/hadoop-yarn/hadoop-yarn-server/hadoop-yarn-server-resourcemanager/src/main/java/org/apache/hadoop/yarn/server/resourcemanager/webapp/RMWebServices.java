@@ -871,9 +871,9 @@ public class RMWebServices {
     init();
 
     NodeId nid = ConverterUtils.toNodeIdWithDefaultPort(nodeId);
-    return new NodeLabelsInfo(
-      rm.getRMContext().getNodeLabelManager().getLabelsOnNode(nid));
 
+    return new NodeLabelsInfo(
+        LabelManager.getInstance().getLabelsForNode(nid.getHost()));
   }
   
   @POST
