@@ -44,7 +44,7 @@
     </httpfs.tomcat.dist.dir>
     <kerberos.realm>LOCALHOST</kerberos.realm>
     <test.exclude.kerberos.test>**/TestHttpFSWithKerberos.java</test.exclude.kerberos.test>
-    <tomcat.download.url>http://archive.apache.org/dist/tomcat/tomcat-6/v${tomcat.version}/bin/apache-tomcat-${tomcat.version}.tar.gz</tomcat.download.url>
+    <tomcat.download.url>https://archive.apache.org/dist/tomcat/tomcat-8/v${tomcat.version}/bin/apache-tomcat-${tomcat.version}.tar.gz</tomcat.download.url>
   </properties>
 
   <dependencies>
@@ -526,6 +526,9 @@
                     <delete dir="${project.build.directory}/tomcat.exp"/>
                     <delete dir="${httpfs.tomcat.dist.dir}/webapps"/>
                     <mkdir dir="${httpfs.tomcat.dist.dir}/webapps"/>
+                    <delete file="${httpfs.tomcat.dist.dir}/conf/catalina-default.properties"/>
+                    <copy file="${basedir}/src/main/tomcat/catalina-default.properties"
+                          toDir="${httpfs.tomcat.dist.dir}/conf"/>
                     <delete file="${httpfs.tomcat.dist.dir}/conf/server.xml"/>
                     <copy file="${basedir}/src/main/tomcat/server.xml"
                           toDir="${httpfs.tomcat.dist.dir}/conf"/>
