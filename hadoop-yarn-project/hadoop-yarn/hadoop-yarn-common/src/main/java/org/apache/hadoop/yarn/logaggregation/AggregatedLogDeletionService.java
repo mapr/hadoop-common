@@ -109,6 +109,7 @@ public class AggregatedLogDeletionService extends AbstractService {
         for(FileStatus userDir : fs.listStatus(remoteRootLogDir)) {
           if(userDir.isDirectory()) {
             Path userDirPath = new Path(userDir.getPath(), suffix);
+            LOG.debug("Deleting log dirs from path;" + userDirPath);
             deleteOldLogDirsFrom(userDirPath, cutoffMillis, fs, rmClient);
           }
         }
@@ -125,6 +126,7 @@ public class AggregatedLogDeletionService extends AbstractService {
 
       if (dfsLoggingDirs != null) {
         for (Path dfsLoggingDir : dfsLoggingDirs) {
+          LOG.debug("Deleting log dirs from: " + dfsLoggingDir);
           deleteOldLogDirsFrom(dfsLoggingDir, cutoffMillis, fs, rmClient);
         }
       }
@@ -136,6 +138,7 @@ public class AggregatedLogDeletionService extends AbstractService {
         FileSystem fs, ApplicationClientProtocol rmClient) {
       try {
         for(FileStatus appDir : fs.listStatus(dir)) {
+          LOG.debug("Current application directory: " + appDir);
           if(appDir.isDirectory() && 
               appDir.getModificationTime() < cutoffMillis) {
             ApplicationId appId = null;
@@ -149,6 +152,7 @@ public class AggregatedLogDeletionService extends AbstractService {
             }
             boolean appTerminated =
                     isApplicationTerminated(appId, rmClient);
+            LOG.debug("Called shouldDeleteLogDir with " + appDir + " on filesystem: " + fs);
             if(appTerminated && shouldDeleteLogDir(appDir, cutoffMillis, fs)) {
               try {
                 LOG.info("Deleting aggregated logs in "+appDir.getPath());
