@@ -326,7 +326,7 @@ public class TestLogAggregationService extends BaseContainerManagerTest {
     this.conf.set(YarnConfiguration.NM_LOG_DIRS, localLogDir.getAbsolutePath());
     this.conf.set(YarnConfiguration.NM_REMOTE_APP_LOG_DIR,
         this.remoteRootLogDir.getAbsolutePath());
-    
+
     LogAggregationService logAggregationService =
         new LogAggregationService(dispatcher, this.context, this.delSrvc,
                                   super.dirsHandler);
@@ -355,7 +355,7 @@ public class TestLogAggregationService extends BaseContainerManagerTest {
         .exists());
 
     dispatcher.await();
-    
+
     ApplicationEvent expectedEvents[] = new ApplicationEvent[]{
         new ApplicationEvent(
             application1,

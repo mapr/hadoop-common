@@ -62,6 +62,7 @@ import org.apache.hadoop.yarn.server.nodemanager.DeletionService;
 import org.apache.hadoop.yarn.server.nodemanager.LocalDirsHandlerService;
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.application.ApplicationEvent;
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.application.ApplicationEventType;
+import org.apache.hadoop.yarn.server.nodemanager.containermanager.nodelocallogaggregation.NodeLocalMetadataWriter;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -123,6 +124,8 @@ public class AppLogAggregatorImpl implements AppLogAggregator {
   private final Map<ContainerId, ContainerLogAggregator> containerLogAggregators =
       new HashMap<ContainerId, ContainerLogAggregator>();
 
+  private final NodeLocalMetadataWriter metadataWriter;
+
   public AppLogAggregatorImpl(Dispatcher dispatcher,
       DeletionService deletionService, Configuration conf,
       ApplicationId appId, UserGroupInformation userUgi, NodeId nodeId,
@@ -130,7 +133,7 @@ public class AppLogAggregatorImpl implements AppLogAggregator {
       ContainerLogsRetentionPolicy retentionPolicy,
       Map<ApplicationAccessType, String> appAcls,
       LogAggregationContext logAggregationContext, Context context,
-      FileContext lfs) {
+      FileContext lfs, NodeLocalMetadataWriter metadataWriter) {
     this.dispatcher = dispatcher;
     this.conf = conf;
     this.delService = deletionService;
@@ -147,6 +150,7 @@ public class AppLogAggregatorImpl implements AppLogAggregator {
     this.logAggregationContext = logAggregationContext;
     this.context = context;
     this.nodeId = nodeId;
+    this.metadataWriter = metadataWriter;
     int configuredRentionSize =
         conf.getInt(NM_LOG_AGGREGATION_NUM_LOG_FILES_SIZE_PER_APP,
             DEFAULT_NM_LOG_AGGREGATION_NUM_LOG_FILES_SIZE_PER_APP);
@@ -279,6 +283,15 @@ public class AppLogAggregatorImpl implements AppLogAggregator {
         // remove it from containerLogAggregators.
         if (finishedContainers.contains(container)) {
           containerLogAggregators.remove(container);
+        }
+      }
+
+      // Write metadata about completed containers
+      if (YarnConfiguration.isNodeLocalAggregationEnabled(conf)) {
+        try {
+          metadataWriter.write(appId, nodeId, new ArrayList<>(pendingContainerInThisCycle), userUgi.getUserName());
+        } catch (IOException e) {
+          LOG.error("Failed to write metadata info for " + applicationId, e);
         }
       }
 

@@ -19,6 +19,7 @@
 package org.apache.hadoop.yarn.logaggregation;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -66,6 +67,7 @@ public class AggregatedLogDeletionService extends AbstractService {
     private String suffix = null;
     private Path remoteRootLogDir = null;
     private ApplicationClientProtocol rmClient = null;
+    private NodeLocalMetadataReader metadataReader;
     /**
      * Log directories that are specified using a glob instead of
      * specific directory like <code>remoteRoolLogDir</code>.
@@ -82,7 +84,12 @@ public class AggregatedLogDeletionService extends AbstractService {
         throw new YarnRuntimeException(e);
       }
       this.retentionMillis = retentionSecs * 1000;
-      this.suffix = LogAggregationUtils.getRemoteNodeLogDirSuffix(conf);
+      if (YarnConfiguration.isNodeLocalAggregationEnabled(conf)) {
+        this.suffix = LogAggregationUtils.getRemoteNodeLogMetadataDirSuffix(conf);
+        this.metadataReader = new NodeLocalMetadataReader(conf);
+      } else {
+        this.suffix = LogAggregationUtils.getRemoteNodeLogDirSuffix(conf);
+      }
       this.remoteRootLogDir =
         new Path(conf.get(YarnConfiguration.NM_REMOTE_APP_LOG_DIR,
             YarnConfiguration.DEFAULT_NM_REMOTE_APP_LOG_DIR));
@@ -110,7 +117,7 @@ public class AggregatedLogDeletionService extends AbstractService {
           if(userDir.isDirectory()) {
             Path userDirPath = new Path(userDir.getPath(), suffix);
             LOG.debug("Deleting log dirs from path;" + userDirPath);
-            deleteOldLogDirsFrom(userDirPath, cutoffMillis, fs, rmClient);
+            deleteOldLogDirsFrom(userDirPath, cutoffMillis, fs, rmClient, conf, metadataReader, userDir.getPath().getName());
           }
         }
       } catch (IOException e) {
@@ -127,15 +134,15 @@ public class AggregatedLogDeletionService extends AbstractService {
       if (dfsLoggingDirs != null) {
         for (Path dfsLoggingDir : dfsLoggingDirs) {
           LOG.debug("Deleting log dirs from: " + dfsLoggingDir);
-          deleteOldLogDirsFrom(dfsLoggingDir, cutoffMillis, fs, rmClient);
+          deleteOldLogDirsFrom(dfsLoggingDir, cutoffMillis, fs, rmClient, conf, metadataReader, "");
         }
       }
 
       LOG.info("aggregated log deletion finished.");
     }
     
-    private static void deleteOldLogDirsFrom(Path dir, long cutoffMillis, 
-        FileSystem fs, ApplicationClientProtocol rmClient) {
+    private static void deleteOldLogDirsFrom(Path dir, long cutoffMillis,
+                                             FileSystem fs, ApplicationClientProtocol rmClient, Configuration conf, NodeLocalMetadataReader metadataReader, String appOwner) {
       try {
         for(FileStatus appDir : fs.listStatus(dir)) {
           LOG.debug("Current application directory: " + appDir);
@@ -155,6 +162,13 @@ public class AggregatedLogDeletionService extends AbstractService {
             LOG.debug("Called shouldDeleteLogDir with " + appDir + " on filesystem: " + fs);
             if(appTerminated && shouldDeleteLogDir(appDir, cutoffMillis, fs)) {
               try {
+                if (YarnConfiguration.isNodeLocalAggregationEnabled(conf)) {
+                  List<FileStatus> nodeLocalVolumeLogFiles = metadataReader.getAppLogsDirsFileStatusListForApp(appId, appOwner);
+                  for (FileStatus toDelete : nodeLocalVolumeLogFiles) {
+                    LOG.debug("Deleting logs file from: " + toDelete.getPath());
+                    fs.delete(toDelete.getPath(), true);
+                  }
+                }
                 LOG.info("Deleting aggregated logs in "+appDir.getPath());
                 fs.delete(appDir.getPath(), true);
               } catch (IOException e) {

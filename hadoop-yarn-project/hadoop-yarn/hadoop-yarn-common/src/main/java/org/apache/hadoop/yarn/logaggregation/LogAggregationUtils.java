@@ -100,6 +100,23 @@ public class LogAggregationUtils {
         YarnConfiguration.DEFAULT_NM_REMOTE_APP_LOG_DIR_SUFFIX);
   }
 
+  /**
+   * Returns the suffix component of the log metadata dir.
+   * @param conf
+   * @return the suffix which will be appended to the user log dir.
+   */
+  public static String getRemoteNodeLogMetadataDirSuffix(Configuration conf) {
+    return conf.get(YarnConfiguration.NODE_LOCAL_AGGREGATION_METADATA_DIR_NAME,
+        YarnConfiguration.DEFAULT_NODE_LOCAL_AGGREGATION_METADATA_DIR_NAME);
+  }
+
+  public static Path getPathForApplicationOnNode(String applicationId, String nodeId, String appOwner) {
+    Path rootLocalVolumePath = new Path("/var/mapr/local");
+    String logsPathForLocalVolume = "/mapred/nodeManager/logs/";
+
+    return new Path(rootLocalVolumePath, nodeId + logsPathForLocalVolume + "/" + appOwner + "/" + applicationId + "/" + "logs");
+  }
+
   
   /**
    * Converts a nodeId to a form used in the app log file name.

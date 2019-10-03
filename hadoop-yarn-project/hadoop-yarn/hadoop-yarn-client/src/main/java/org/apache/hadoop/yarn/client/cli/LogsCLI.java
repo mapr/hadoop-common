@@ -121,7 +121,7 @@ public class LogsCLI extends Configured implements Tool {
     try {
       int resultCode = verifyApplicationState(appId);
       if (resultCode != 0) {
-        System.out.println("Logs are not avaiable right now.");
+        System.out.println("Logs are not available right now.");
         return resultCode;
       }
     } catch (Exception e) {

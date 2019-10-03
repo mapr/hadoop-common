@@ -39,6 +39,7 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.service.AbstractService;
+import org.apache.hadoop.util.BaseMapRUtil;
 import org.apache.hadoop.util.concurrent.HadoopExecutors;
 import org.apache.hadoop.yarn.api.records.ApplicationAccessType;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -63,6 +64,7 @@ import org.apache.hadoop.yarn.server.nodemanager.containermanager.loghandler.eve
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.apache.hadoop.yarn.server.nodemanager.containermanager.nodelocallogaggregation.NodeLocalMetadataWriter;
 
 public class LogAggregationService extends AbstractService implements
     LogHandler {
@@ -100,6 +102,8 @@ public class LogAggregationService extends AbstractService implements
 
   private final ConcurrentMap<ApplicationId, AppLogAggregator> appLogAggregators;
 
+  private NodeLocalMetadataWriter metadataWriter;
+
   @VisibleForTesting
   ExecutorService threadPool;
   
@@ -126,6 +130,9 @@ public class LogAggregationService extends AbstractService implements
         new ThreadFactoryBuilder()
             .setNameFormat("LogAggregationService #%d")
             .build());
+    if (YarnConfiguration.isNodeLocalAggregationEnabled(conf)) {
+      metadataWriter = new NodeLocalMetadataWriter(conf);
+    }
     super.serviceInit(conf);
   }
 
@@ -232,6 +239,11 @@ public class LogAggregationService extends AbstractService implements
         user, this.remoteRootLogDirSuffix);
   }
 
+  Path getRemoteNodeLogFileForAppForNoneLocalAggregator(ApplicationId appId, String user) {
+    String path = getNodeManagerDirPath() + "/" + this.remoteRootLogDirSuffix + "/" + user + "/" + appId.toString();
+    return new Path(path);
+  }
+
   private void createDir(FileSystem fs, Path path, FsPermission fsPerm)
       throws IOException {
     FsPermission dirPerm = new FsPermission(fsPerm);
@@ -268,35 +280,42 @@ public class LogAggregationService extends AbstractService implements
 
             // Only creating directories if they are missing to avoid
             // unnecessary load on the filesystem from all of the nodes
-            Path appDir = LogAggregationUtils.getRemoteAppLogDir(
-                LogAggregationService.this.remoteRootLogDir, appId, user,
-                LogAggregationService.this.remoteRootLogDirSuffix);
-            appDir = appDir.makeQualified(remoteFS.getUri(),
-                remoteFS.getWorkingDirectory());
+            if (YarnConfiguration.isNodeLocalAggregationEnabled(getConfig())) {
+               Path appDir = getRemoteNodeLogFileForAppForNoneLocalAggregator(appId, user);
+              appDir = appDir.makeQualified(remoteFS.getUri(), remoteFS.getWorkingDirectory());
+              if (!checkExists(remoteFS, appDir, APP_DIR_PERMISSIONS)) {
+                createDir(remoteFS, appDir, APP_DIR_PERMISSIONS);
+              }
+            } else {
+              Path appDir = LogAggregationUtils.getRemoteAppLogDir(
+                      LogAggregationService.this.remoteRootLogDir, appId, user,
+                      LogAggregationService.this.remoteRootLogDirSuffix);
+              appDir = appDir.makeQualified(remoteFS.getUri(),
+                      remoteFS.getWorkingDirectory());
 
-            if (!checkExists(remoteFS, appDir, APP_DIR_PERMISSIONS)) {
-              Path suffixDir = LogAggregationUtils.getRemoteLogSuffixedDir(
-                  LogAggregationService.this.remoteRootLogDir, user,
-                  LogAggregationService.this.remoteRootLogDirSuffix);
-              suffixDir = suffixDir.makeQualified(remoteFS.getUri(),
-                  remoteFS.getWorkingDirectory());
+              if (!checkExists(remoteFS, appDir, APP_DIR_PERMISSIONS)) {
+                Path suffixDir = LogAggregationUtils.getRemoteLogSuffixedDir(
+                        LogAggregationService.this.remoteRootLogDir, user,
+                        LogAggregationService.this.remoteRootLogDirSuffix);
+                suffixDir = suffixDir.makeQualified(remoteFS.getUri(),
+                        remoteFS.getWorkingDirectory());
 
-              if (!checkExists(remoteFS, suffixDir, APP_DIR_PERMISSIONS)) {
-                Path userDir = LogAggregationUtils.getRemoteLogUserDir(
-                    LogAggregationService.this.remoteRootLogDir, user);
-                userDir = userDir.makeQualified(remoteFS.getUri(),
-                    remoteFS.getWorkingDirectory());
+                if (!checkExists(remoteFS, suffixDir, APP_DIR_PERMISSIONS)) {
+                  Path userDir = LogAggregationUtils.getRemoteLogUserDir(
+                          LogAggregationService.this.remoteRootLogDir, user);
+                  userDir = userDir.makeQualified(remoteFS.getUri(),
+                          remoteFS.getWorkingDirectory());
 
-                if (!checkExists(remoteFS, userDir, APP_DIR_PERMISSIONS)) {
-                  createDir(remoteFS, userDir, APP_DIR_PERMISSIONS);
+                  if (!checkExists(remoteFS, userDir, APP_DIR_PERMISSIONS)) {
+                    createDir(remoteFS, userDir, APP_DIR_PERMISSIONS);
+                  }
+
+                  createDir(remoteFS, suffixDir, APP_DIR_PERMISSIONS);
                 }
 
-                createDir(remoteFS, suffixDir, APP_DIR_PERMISSIONS);
+                createDir(remoteFS, appDir, APP_DIR_PERMISSIONS);
               }
-
-              createDir(remoteFS, appDir, APP_DIR_PERMISSIONS);
             }
-
           } catch (IOException e) {
             LOG.error("Failed to setup application log directory for "
                 + appId, e);
@@ -353,11 +372,7 @@ public class LogAggregationService extends AbstractService implements
 
     // New application
     final AppLogAggregator appLogAggregator =
-        new AppLogAggregatorImpl(this.dispatcher, this.deletionService,
-            getConfig(), appId, userUgi, this.nodeId, dirsHandler,
-            getRemoteNodeLogFileForApp(appId, user), logRetentionPolicy,
-            appAcls, logAggregationContext, this.context,
-            getLocalFileContext(getConfig()));
+            getLogAggregator(appId, userUgi, user, logRetentionPolicy, appAcls, logAggregationContext);
     if (this.appLogAggregators.putIfAbsent(appId, appLogAggregator) != null) {
       throw new YarnRuntimeException("Duplicate initApp for " + appId);
     }
@@ -397,6 +412,25 @@ public class LogAggregationService extends AbstractService implements
       FileSystem.closeAllForUGI(userUgi);
     } catch (IOException e) {
       LOG.warn("Failed to close filesystems: ", e);
+    }
+  }
+
+  private AppLogAggregator getLogAggregator(ApplicationId appId, UserGroupInformation userUgi, String user,
+                                            ContainerLogsRetentionPolicy logRetentionPolicy,
+                                            Map<ApplicationAccessType, String> appAcls,
+                                            LogAggregationContext logAggregationContext) {
+    if (YarnConfiguration.isNodeLocalAggregationEnabled(getConfig())) {
+      return new AppLogAggregatorImpl(this.dispatcher, this.deletionService,
+              getConfig(), appId, userUgi, this.nodeId, dirsHandler,
+              new Path(getRemoteNodeLogFileForAppForNoneLocalAggregator(appId, user), "logs"), logRetentionPolicy,
+              appAcls, logAggregationContext, this.context,
+              getLocalFileContext(getConfig()), metadataWriter);
+    } else {
+      return new AppLogAggregatorImpl(this.dispatcher, this.deletionService,
+              getConfig(), appId, userUgi, this.nodeId, dirsHandler,
+              getRemoteNodeLogFileForApp(appId, user), logRetentionPolicy,
+              appAcls, logAggregationContext, this.context,
+              getLocalFileContext(getConfig()), metadataWriter);
     }
   }
 
@@ -494,5 +528,20 @@ public class LogAggregationService extends AbstractService implements
           DEFAULT_NM_LOG_AGGREGATION_THREAD_POOL_SIZE;
     }
     return threadPoolSize;
+  }
+
+  @VisibleForTesting
+  String getMapRedLocalVolumeMountPath() {
+    return getConfig().get("mapr.mapred.localvolume.mount.path", "/var/mapr/local/" + BaseMapRUtil.getMapRHostName() + "/mapred");
+  }
+
+  /**
+   * constructs the path for the nodemanager directory inside the local volume.
+   * for e.g. "/var/mapr/local/<hostname>/mapred/nodeManager"
+   *
+   */
+  @VisibleForTesting
+  String getNodeManagerDirPath() {
+    return getConfig().get("mapr.mapred.localvolume.root.dir.path", getMapRedLocalVolumeMountPath() + "/nodeManager");
   }
 }
