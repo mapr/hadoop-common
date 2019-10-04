@@ -287,6 +287,8 @@ public class CommonConfigurationKeysPublic {
   public static final String HADOOP_HTTP_AUTHENTICATION_TYPE =
     "hadoop.http.authentication.type";
 
+  public static final String HADOOP_WEBAPPS_CUSTOM_HEADERS_PATH = "hadoop.webapps.custom.headers.path";
+
   @Deprecated
   /** Only used by HttpServer. */
   public static final String HADOOP_SSL_ENABLED_KEY = "hadoop.ssl.enabled";
@@ -307,12 +309,12 @@ public class CommonConfigurationKeysPublic {
   /** Class to override Sasl Properties for a connection */
   public static final String  HADOOP_SECURITY_SASL_PROPS_RESOLVER_CLASS =
     "hadoop.security.saslproperties.resolver.class";
-  public static final String HADOOP_SECURITY_CRYPTO_CODEC_CLASSES_KEY_PREFIX = 
+  public static final String HADOOP_SECURITY_CRYPTO_CODEC_CLASSES_KEY_PREFIX =
     "hadoop.security.crypto.codec.classes";
   /** See <a href="{@docRoot}/../core-default.html">core-default.xml</a> */
   public static final String HADOOP_SECURITY_CRYPTO_CIPHER_SUITE_KEY =
     "hadoop.security.crypto.cipher.suite";
-  public static final String HADOOP_SECURITY_CRYPTO_CIPHER_SUITE_DEFAULT = 
+  public static final String HADOOP_SECURITY_CRYPTO_CIPHER_SUITE_DEFAULT =
     "AES/CTR/NoPadding";
   /** See <a href="{@docRoot}/../core-default.html">core-default.xml</a> */
   public static final String HADOOP_SECURITY_CRYPTO_JCE_PROVIDER_KEY =
@@ -325,7 +327,7 @@ public class CommonConfigurationKeysPublic {
   public static final String HADOOP_SECURITY_CRYPTO_JCEKS_KEY_SERIALFILTER =
       "hadoop.security.crypto.jceks.key.serialfilter";
   /** See <a href="{@docRoot}/../core-default.html">core-default.xml</a> */
-  public static final String HADOOP_SECURITY_CRYPTO_BUFFER_SIZE_KEY = 
+  public static final String HADOOP_SECURITY_CRYPTO_BUFFER_SIZE_KEY =
     "hadoop.security.crypto.buffer.size";
   /** Defalt value for HADOOP_SECURITY_CRYPTO_BUFFER_SIZE_KEY */
   public static final int HADOOP_SECURITY_CRYPTO_BUFFER_SIZE_DEFAULT = 8192;
@@ -361,18 +363,18 @@ public class CommonConfigurationKeysPublic {
   public static final int KMS_CLIENT_ENC_KEY_CACHE_EXPIRY_DEFAULT = 43200000;
 
   /** See <a href="{@docRoot}/../core-default.html">core-default.xml</a> */
-  public static final String HADOOP_SECURITY_JAVA_SECURE_RANDOM_ALGORITHM_KEY = 
+  public static final String HADOOP_SECURITY_JAVA_SECURE_RANDOM_ALGORITHM_KEY =
     "hadoop.security.java.secure.random.algorithm";
   /** Defalt value for HADOOP_SECURITY_JAVA_SECURE_RANDOM_ALGORITHM_KEY */
-  public static final String HADOOP_SECURITY_JAVA_SECURE_RANDOM_ALGORITHM_DEFAULT = 
+  public static final String HADOOP_SECURITY_JAVA_SECURE_RANDOM_ALGORITHM_DEFAULT =
     "SHA1PRNG";
   /** See <a href="{@docRoot}/../core-default.html">core-default.xml</a> */
-  public static final String HADOOP_SECURITY_SECURE_RANDOM_IMPL_KEY = 
+  public static final String HADOOP_SECURITY_SECURE_RANDOM_IMPL_KEY =
     "hadoop.security.secure.random.impl";
   /** See <a href="{@docRoot}/../core-default.html">core-default.xml</a> */
-  public static final String HADOOP_SECURITY_SECURE_RANDOM_DEVICE_FILE_PATH_KEY = 
+  public static final String HADOOP_SECURITY_SECURE_RANDOM_DEVICE_FILE_PATH_KEY =
     "hadoop.security.random.device.file.path";
-  public static final String HADOOP_SECURITY_SECURE_RANDOM_DEVICE_FILE_PATH_DEFAULT = 
+  public static final String HADOOP_SECURITY_SECURE_RANDOM_DEVICE_FILE_PATH_DEFAULT =
     "/dev/urandom";
 
   /**

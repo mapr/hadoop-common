@@ -17,6 +17,8 @@
  */
 package org.apache.hadoop.http;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InterruptedIOException;
@@ -55,6 +57,7 @@ import org.apache.hadoop.conf.ConfServlet;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configuration.IntegerRanges;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
+import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.security.AuthenticationFilterInitializer;
 import org.apache.hadoop.security.authentication.util.FileSignerSecretProvider;
 import org.apache.hadoop.security.authentication.util.RandomSignerSecretProvider;
@@ -143,6 +146,7 @@ public final class HttpServer2 implements FilterContainer {
   static final String STATE_DESCRIPTION_ALIVE = " - alive";
   static final String STATE_DESCRIPTION_NOT_LIVE = " - not live";
   private final SignerSecretProvider secretProvider;
+  private static final Properties headers = new Properties();
 
   /**
    * Class to construct instances of HTTP server with specific options.
@@ -429,11 +433,23 @@ public final class HttpServer2 implements FilterContainer {
     }
 
     addDefaultServlets();
+    readHeaders(conf);
 
     if (pathSpecs != null) {
       for (String path : pathSpecs) {
         LOG.info("adding path spec: " + path);
         addFilterPathMapping(path, webAppContext);
+      }
+    }
+  }
+
+  private void readHeaders(Configuration conf) throws IOException {
+    String fileName = conf.get(CommonConfigurationKeysPublic.HADOOP_WEBAPPS_CUSTOM_HEADERS_PATH);
+    if (fileName != null && !fileName.isEmpty()) {
+      File headersConf = new File(fileName);
+      if (headersConf.exists()) {
+        headers.loadFromXML(new FileInputStream(headersConf));
+        LOG.info("Loaded headers from file: " + headersConf.getAbsolutePath());
       }
     }
   }
@@ -1326,6 +1342,9 @@ public final class HttpServer2 implements FilterContainer {
       HttpServletRequestWrapper quoted =
         new RequestQuoter((HttpServletRequest) request);
       HttpServletResponse httpResponse = (HttpServletResponse) response;
+      for (String headerName : headers.stringPropertyNames()) {
+        httpResponse.addHeader(headerName, headers.getProperty(headerName));
+      }
 
       String mime = inferMimeType(request);
       if (mime == null) {

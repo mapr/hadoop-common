@@ -305,6 +305,8 @@ public class CoreDefaultProperties extends Properties
       props.put(CommonConfigurationKeysPublic.LOG_LEVEL_AUTHENTICATOR_CLASS,
           "com.mapr.security.maprauth.MaprAuthenticator");
 
+      props.put(CommonConfigurationKeysPublic.HADOOP_WEBAPPS_CUSTOM_HEADERS_PATH,
+          "etc/hadoop/jetty-headers.xml");
     } else {
       props.put(CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION, // core-default.xml
           UserGroupInformation.AuthenticationMethod.SIMPLE.name());
