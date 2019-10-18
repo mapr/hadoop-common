@@ -35,7 +35,7 @@ import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.ZooDefs.Perms;
-import org.apache.zookeeper.client.ZooKeeperSaslClient;
+import org.apache.zookeeper.client.ZKClientConfig;
 import org.apache.zookeeper.data.ACL;
 import org.apache.zookeeper.data.Id;
 import org.apache.zookeeper.data.Stat;
@@ -258,7 +258,7 @@ public class ZKSignerSecretProvider extends RolloverSignerSecretProvider {
     } catch (KeeperException.BadVersionException bve) {
       LOG.debug("Unable to push to znode; another server already did it");
     } catch (Exception ex) {
-      LOG.error("An unexpected exception occured pushing data to ZooKeeper",
+      LOG.error("An unexpected exception occurred pushing data to ZooKeeper",
               ex);
     }
   }
@@ -350,7 +350,7 @@ public class ZKSignerSecretProvider extends RolloverSignerSecretProvider {
    * This method creates the Curator client and connects to ZooKeeper.
    * @param config configuration properties
    * @return A Curator client
-   * @throws Exception
+   * @throws Exception thrown if an error occurred
    */
   protected CuratorFramework createCuratorClient(Properties config)
           throws Exception {
@@ -364,7 +364,7 @@ public class ZKSignerSecretProvider extends RolloverSignerSecretProvider {
       LOG.info("Connecting to ZooKeeper with SASL/Kerberos"
               + "and using 'sasl' ACLs");
       String principal = setJaasConfiguration(config);
-      System.setProperty(ZooKeeperSaslClient.LOGIN_CONTEXT_NAME_KEY,
+      System.setProperty(ZKClientConfig.LOGIN_CONTEXT_NAME_KEY,
               JAAS_LOGIN_ENTRY_NAME);
       System.setProperty("zookeeper.authProvider.1",
               "org.apache.zookeeper.server.auth.SASLAuthenticationProvider");

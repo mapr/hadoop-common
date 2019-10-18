@@ -140,6 +140,7 @@ public class TestZKClient  {
   @Before
   public void setUp() throws IOException, InterruptedException {
     System.setProperty("zookeeper.preAllocSize", "100");
+    System.setProperty("zookeeper.4lw.commands.whitelist", "*");
     FileTxnLog.setPreallocSize(100 * 1024);
     if (!BASETEST.exists()) {
       BASETEST.mkdirs();
