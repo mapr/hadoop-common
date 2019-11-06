@@ -24,6 +24,7 @@ public class NodeLocalMetadataWriter {
   private final String containersList;
   private final Configuration conf;
   private FileSystem fs;
+  private boolean prefixPathExists;
 
   public NodeLocalMetadataWriter(Configuration conf) {
     this.conf = conf;
@@ -33,21 +34,21 @@ public class NodeLocalMetadataWriter {
         YarnConfiguration.DEFAULT_NODE_LOCAL_AGGREGATION_METADATA_DIR_NAME);
     this.containersList = conf.get(YarnConfiguration.NODE_LOCAL_AGGREGATION_METADATA_FILENAME,
         YarnConfiguration.DEFAULT_NODE_LOCAL_AGGREGATION_METADATA_FILENAME);
-    init(conf);
-  }
-
-  private void init(Configuration conf) {
-    try {
-      fs = FileSystem.get(conf);
-      if (!fs.exists(new Path(prefixPath))) {
-        fs.mkdirs(new Path(prefixPath));
-      }
-    } catch (IOException e) {
-      LOG.info("Cannot init filesystem");
-    }
+    prefixPathExists = false;
   }
 
   public void write(ApplicationId applicationId, NodeId nodeId, List<ContainerId> containers, String appOwner) throws IOException {
+    if (!prefixPathExists) {
+      try {
+        fs = FileSystem.get(conf);
+        if (!fs.exists(new Path(prefixPath))) {
+          fs.mkdirs(new Path(prefixPath));
+        }
+      } catch (IOException e) {
+        LOG.warn("Can't create parent directory for metadata");
+      }
+      prefixPathExists = true;
+    }
     NodeLocalApplicationLogMetadata info = new NodeLocalApplicationLogMetadata();
     info.setApplicationId(applicationId.toString());
     info.setNodeId(nodeId.getHost());
