@@ -79,20 +79,27 @@ public class AggregatedLogsBlock extends HtmlBlock {
       logEntity = containerId.toString();
     }
 
-    if (!conf.getBoolean(YarnConfiguration.LOG_AGGREGATION_ENABLED,
-        YarnConfiguration.DEFAULT_LOG_AGGREGATION_ENABLED)) {
+    if (!(conf.getBoolean(YarnConfiguration.LOG_AGGREGATION_ENABLED,
+        YarnConfiguration.DEFAULT_LOG_AGGREGATION_ENABLED) ||
+        conf.getBoolean(YarnConfiguration.NODE_LOCAL_LOG_AGGREGATION_ENABLED,
+        YarnConfiguration.DEFAULT_NODE_LOCAL_LOG_AGGREGATION_ENABLED))) {
       html.h1()
           ._("Aggregation is not enabled. Try the nodemanager at " + nodeId)
           ._();
       return;
     }
 
-    Path remoteRootLogDir = new Path(conf.get(
-        YarnConfiguration.NM_REMOTE_APP_LOG_DIR,
-        YarnConfiguration.DEFAULT_NM_REMOTE_APP_LOG_DIR));
-    Path remoteAppDir = LogAggregationUtils.getRemoteAppLogDir(
-        remoteRootLogDir, applicationId, appOwner,
-        LogAggregationUtils.getRemoteNodeLogDirSuffix(conf));
+    Path remoteAppDir;
+    if (!YarnConfiguration.isNodeLocalAggregationEnabled(conf)) {
+      Path remoteRootLogDir = new Path(conf.get(
+          YarnConfiguration.NM_REMOTE_APP_LOG_DIR,
+          YarnConfiguration.DEFAULT_NM_REMOTE_APP_LOG_DIR));
+      remoteAppDir = LogAggregationUtils.getRemoteAppLogDir(
+          remoteRootLogDir, applicationId, appOwner,
+          LogAggregationUtils.getRemoteNodeLogDirSuffix(conf));
+    } else {
+      remoteAppDir = LogAggregationUtils.getDirPathForApplicationOnNode(applicationId.toString(), nodeId.getHost(), appOwner);
+    }
     RemoteIterator<FileStatus> nodeFiles;
     try {
       Path qualifiedLogDir =
@@ -120,10 +127,12 @@ public class AggregatedLogsBlock extends HtmlBlock {
         AggregatedLogFormat.LogReader reader = null;
         try {
           FileStatus thisNodeFile = nodeFiles.next();
-          if (!thisNodeFile.getPath().getName()
-            .contains(LogAggregationUtils.getNodeString(nodeId))
-              || thisNodeFile.getPath().getName()
-                .endsWith(LogAggregationUtils.TMP_FILE_SUFFIX)) {
+          if (!conf.getBoolean(YarnConfiguration.NODE_LOCAL_LOG_AGGREGATION_ENABLED,
+              YarnConfiguration.DEFAULT_NODE_LOCAL_LOG_AGGREGATION_ENABLED) &&
+              (!thisNodeFile.getPath().getName()
+                  .contains(LogAggregationUtils.getNodeString(nodeId))
+                  || thisNodeFile.getPath().getName()
+                  .endsWith(LogAggregationUtils.TMP_FILE_SUFFIX))) {
             continue;
           }
           long logUploadedTime = thisNodeFile.getModificationTime();

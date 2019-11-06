@@ -111,10 +111,14 @@ public class LogAggregationUtils {
   }
 
   public static Path getPathForApplicationOnNode(String applicationId, String nodeId, String appOwner) {
+    return new Path(getDirPathForApplicationOnNode(applicationId, nodeId, appOwner) + "/" + "logs");
+  }
+
+  public static Path getDirPathForApplicationOnNode(String applicationId, String nodeId, String appOwner) {
     Path rootLocalVolumePath = new Path("/var/mapr/local");
     String logsPathForLocalVolume = "/mapred/nodeManager/logs/";
 
-    return new Path(rootLocalVolumePath, nodeId + logsPathForLocalVolume + "/" + appOwner + "/" + applicationId + "/" + "logs");
+    return new Path(rootLocalVolumePath, nodeId + logsPathForLocalVolume + "/" + appOwner + "/" + applicationId + "/");
   }
 
   
