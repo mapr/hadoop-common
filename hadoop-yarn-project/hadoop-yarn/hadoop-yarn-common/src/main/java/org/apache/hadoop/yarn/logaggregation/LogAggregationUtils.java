@@ -117,7 +117,9 @@ public class LogAggregationUtils {
   public static Path getDirPathForApplicationOnNode(String applicationId, String nodeId, String appOwner) {
     Path rootLocalVolumePath = new Path("/var/mapr/local");
     String logsPathForLocalVolume = "/mapred/nodeManager/logs/";
-
+    if(nodeId.contains(":")){
+      nodeId = nodeId.substring(0, nodeId.indexOf(":"));
+    }
     return new Path(rootLocalVolumePath, nodeId + logsPathForLocalVolume + "/" + appOwner + "/" + applicationId + "/");
   }
 
