@@ -24,6 +24,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.NodeId;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.apache.hadoop.yarn.conf.YarnDefaultProperties;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -31,6 +32,8 @@ import com.google.common.annotations.VisibleForTesting;
 public class LogAggregationUtils {
 
   public static final String TMP_FILE_SUFFIX = ".tmp";
+
+  public static final String LOG_PATH_FOR_LOCAL_VOLUME = "/mapred/nodeManager/logs/";
 
   /**
    * Constructs the full filename for an application's log file per node.
@@ -115,12 +118,16 @@ public class LogAggregationUtils {
   }
 
   public static Path getDirPathForApplicationOnNode(String applicationId, String nodeId, String appOwner) {
-    Path rootLocalVolumePath = new Path("/var/mapr/local");
-    String logsPathForLocalVolume = "/mapred/nodeManager/logs/";
+    return new Path(getParentLogsPathForLocalVolume(nodeId) + "/" + appOwner + "/" + applicationId + "/");
+  }
+
+  public static Path getParentLogsPathForLocalVolume(String nodeId) {
+    Path rootLocalVolumePath = new Path(YarnDefaultProperties.DEFAULT_MAPR_LOCAL_VOL_PATH);
+    String logsPathForLocalVolume = LOG_PATH_FOR_LOCAL_VOLUME;
     if(nodeId.contains(":")){
       nodeId = nodeId.substring(0, nodeId.indexOf(":"));
     }
-    return new Path(rootLocalVolumePath, nodeId + logsPathForLocalVolume + "/" + appOwner + "/" + applicationId + "/");
+    return new Path(rootLocalVolumePath, nodeId + logsPathForLocalVolume);
   }
 
   

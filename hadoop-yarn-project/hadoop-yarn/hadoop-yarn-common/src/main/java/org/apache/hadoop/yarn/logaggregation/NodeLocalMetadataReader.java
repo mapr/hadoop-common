@@ -11,6 +11,7 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.apache.hadoop.yarn.conf.YarnDefaultProperties;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -83,9 +84,8 @@ public class NodeLocalMetadataReader {
   public List<FileStatus> getLogsDirsFileStatusListForApp(ApplicationId appId, String appOwner) throws IOException {
     Map<String, List<String>> nodeToContainersMetadata = getLogMetadataForApplication(appId.toString(), appOwner);
 
-    // todo remove hardcode
-    Path rootLocalVolumePath = new Path("/var/mapr/local");
-    String logsPathForLocalVolume = "/mapred/nodeManager/logs/";
+    Path rootLocalVolumePath = new Path(YarnDefaultProperties.DEFAULT_MAPR_LOCAL_VOL_PATH);
+    String logsPathForLocalVolume = LogAggregationUtils.LOG_PATH_FOR_LOCAL_VOLUME;
 
     FileSystem fs = FileSystem.get(conf);
 
@@ -100,9 +100,8 @@ public class NodeLocalMetadataReader {
   public List<FileStatus> getAppLogsDirsFileStatusListForApp(ApplicationId appId, String appOwner) throws IOException {
     Map<String, List<String>> nodeToContainersMetadata = getLogMetadataForApplication(appId.toString(), appOwner);
 
-    // todo remove hardcode
-    Path rootLocalVolumePath = new Path("/var/mapr/local");
-    String logsPathForLocalVolume = "/mapred/nodeManager/logs/";
+    Path rootLocalVolumePath = new Path(YarnDefaultProperties.DEFAULT_MAPR_LOCAL_VOL_PATH);
+    String logsPathForLocalVolume = LogAggregationUtils.LOG_PATH_FOR_LOCAL_VOLUME;
 
     FileSystem fs = FileSystem.get(conf);
 

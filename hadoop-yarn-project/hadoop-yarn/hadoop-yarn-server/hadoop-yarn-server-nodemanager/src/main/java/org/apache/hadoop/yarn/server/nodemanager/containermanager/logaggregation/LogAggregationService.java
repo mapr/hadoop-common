@@ -47,6 +47,7 @@ import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.api.records.LogAggregationContext;
 import org.apache.hadoop.yarn.api.records.NodeId;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.apache.hadoop.yarn.conf.YarnDefaultProperties;
 import org.apache.hadoop.yarn.event.Dispatcher;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 import org.apache.hadoop.yarn.logaggregation.ContainerLogsRetentionPolicy;
@@ -196,11 +197,17 @@ public class LogAggregationService extends AbstractService implements
       throw new YarnRuntimeException("Unable to get Remote FileSystem instance", e);
     }
     boolean remoteExists = true;
+    Path logDir;
+    if(YarnConfiguration.isNodeLocalAggregationEnabled(conf)){
+      logDir = LogAggregationUtils.getParentLogsPathForLocalVolume(nodeId.getHost());
+    } else {
+      logDir = this.remoteRootLogDir;
+    }
     try {
       FsPermission perms =
-          remoteFS.getFileStatus(this.remoteRootLogDir).getPermission();
+          remoteFS.getFileStatus(logDir).getPermission();
       if (!perms.equals(TLDIR_PERMISSIONS)) {
-        LOG.warn("Remote Root Log Dir [" + this.remoteRootLogDir
+        LOG.warn("Remote Root Log Dir [" + logDir
             + "] already exist, but with incorrect permissions. "
             + "Expected: [" + TLDIR_PERMISSIONS + "], Found: [" + perms
             + "]." + " The cluster may have problems with multiple users.");
@@ -210,14 +217,14 @@ public class LogAggregationService extends AbstractService implements
     } catch (IOException e) {
       throw new YarnRuntimeException(
           "Failed to check permissions for dir ["
-              + this.remoteRootLogDir + "]", e);
+              + logDir + "]", e);
     }
     if (!remoteExists) {
-      LOG.warn("Remote Root Log Dir [" + this.remoteRootLogDir
+      LOG.warn("Remote Root Log Dir [" + logDir
           + "] does not exist. Attempting to create it.");
       try {
         Path qualified =
-            this.remoteRootLogDir.makeQualified(remoteFS.getUri(),
+            logDir.makeQualified(remoteFS.getUri(),
                 remoteFS.getWorkingDirectory());
         remoteFS.mkdirs(qualified, new FsPermission(TLDIR_PERMISSIONS));
         remoteFS.setPermission(qualified, new FsPermission(TLDIR_PERMISSIONS));
@@ -532,7 +539,9 @@ public class LogAggregationService extends AbstractService implements
 
   @VisibleForTesting
   String getMapRedLocalVolumeMountPath() {
-    return getConfig().get("mapr.mapred.localvolume.mount.path", "/var/mapr/local/" + BaseMapRUtil.getMapRHostName() + "/mapred");
+    return getConfig().get("mapr.mapred.localvolume.mount.path",
+        YarnDefaultProperties.DEFAULT_MAPR_LOCAL_VOL_PATH + "/" +
+        BaseMapRUtil.getMapRHostName() + "/mapred");
   }
 
   /**
