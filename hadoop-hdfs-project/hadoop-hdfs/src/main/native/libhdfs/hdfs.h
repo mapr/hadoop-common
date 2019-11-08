@@ -180,6 +180,18 @@ extern  "C" {
      LIBHDFS_EXTERNAL
      hdfsFS hdfsConnectAsUser(const char* nn, tPort port, const char *user);
 
+    /**
+     * hdfsConnectAsUid - Connect to a hdfs file system as a specific user
+     * identified by a uid.
+     * Connect to the hdfs.
+     * @param nn   The NameNode.  See hdfsBuilderSetNameNode for details.
+     * @param port The port on which the server is listening.
+     * @param uid the user identifier (this is hadoop domain user).
+     * @return Returns a handle to the filesystem or NULL on error.
+     */
+     LIBHDFS_EXTERNAL
+     hdfsFS hdfsConnectAsUid(const char* nn, tPort port, uid_t uid);
+
     /** 
      * hdfsConnect - Connect to a hdfs file system.
      * Connect to the hdfs.
