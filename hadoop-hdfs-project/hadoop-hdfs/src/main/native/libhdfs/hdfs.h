@@ -23,6 +23,8 @@
 #include <fcntl.h> /* for O_RDONLY, O_WRONLY */
 #include <stdint.h> /* for uint64_t, etc. */
 #include <time.h> /* for time_t */
+#include <unistd.h>
+#include <sys/types.h>
 
 /*
  * Support export of DLL symbols during libhdfs build, and import of DLL symbols
