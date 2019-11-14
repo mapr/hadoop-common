@@ -292,8 +292,10 @@ public class AggregatedLogDeletionService extends AbstractService {
   
   private void scheduleLogDeletionTask() throws IOException {
     Configuration conf = getConfig();
-    if (!conf.getBoolean(YarnConfiguration.LOG_AGGREGATION_ENABLED,
-          YarnConfiguration.DEFAULT_LOG_AGGREGATION_ENABLED)
+    if (!(conf.getBoolean(YarnConfiguration.LOG_AGGREGATION_ENABLED,
+          YarnConfiguration.DEFAULT_LOG_AGGREGATION_ENABLED) ||
+        conf.getBoolean(YarnConfiguration.NODE_LOCAL_LOG_AGGREGATION_ENABLED,
+            YarnConfiguration.DEFAULT_NODE_LOCAL_LOG_AGGREGATION_ENABLED))
         && !TaskLogUtil.isDfsLoggingEnabled()) {
 
       // Log aggregation is not enabled so don't bother

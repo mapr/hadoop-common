@@ -246,12 +246,7 @@ public class LogCLIHelpers implements Configurable {
     NodeLocalMetadataReader metadataReader = new NodeLocalMetadataReader(conf);
 
     List<FileStatus> logFilesFileStatusList;
-    try {
-      logFilesFileStatusList = metadataReader.getLogsDirsFileStatusListForApp(appId, appOwner);
-    } catch (FileNotFoundException fnf) {
-      logDirNotExist("Remote node local dirs for application logs");
-      return -1;
-    }
+    logFilesFileStatusList = metadataReader.getLogsDirsFileStatusListForApp(appId, appOwner);
 
     boolean foundAnyLogs = false;
     //while (nodeFiles.hasNext()) {

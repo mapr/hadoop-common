@@ -92,7 +92,11 @@ public class NodeLocalMetadataReader {
     List<FileStatus> fileStatusList = new ArrayList<>();
     for (Map.Entry<String, List<String>> e : nodeToContainersMetadata.entrySet()) {
       Path finalPath = new Path(rootLocalVolumePath, e.getKey() + logsPathForLocalVolume + appOwner + "/" + appId + "/logs");
-      fileStatusList.add(fs.getFileStatus(finalPath));
+      try{
+        fileStatusList.add(fs.getFileStatus(finalPath));
+      } catch (IOException ex){
+        LOG.warn(ex);
+      }
     }
     return fileStatusList;
   }
@@ -108,7 +112,11 @@ public class NodeLocalMetadataReader {
     List<FileStatus> fileStatusList = new ArrayList<>();
     for (Map.Entry<String, List<String>> e : nodeToContainersMetadata.entrySet()) {
       Path finalPath = new Path(rootLocalVolumePath, e.getKey() + logsPathForLocalVolume + appOwner + "/" + appId);
-      fileStatusList.add(fs.getFileStatus(finalPath));
+      try{
+        fileStatusList.add(fs.getFileStatus(finalPath));
+      } catch (IOException ex){
+        LOG.warn(ex);
+      }
     }
     return fileStatusList;
   }
