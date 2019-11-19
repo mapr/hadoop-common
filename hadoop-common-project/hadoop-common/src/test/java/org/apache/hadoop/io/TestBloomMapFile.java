@@ -28,7 +28,8 @@ import java.util.Collections;
 import java.util.List;
 
 import junit.framework.TestCase;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocalFileSystem;
@@ -42,8 +43,12 @@ import org.apache.hadoop.io.compress.Compressor;
 import org.apache.hadoop.io.compress.Decompressor;
 import org.apache.hadoop.util.Progressable;
 import org.junit.Assert;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TestBloomMapFile extends TestCase {
+  private static final Logger LOG =
+          LoggerFactory.getLogger(TestBloomMapFile.class);
   private static Configuration conf = new Configuration();
   private static final Path TEST_ROOT = new Path(
       System.getProperty("test.build.data", "/tmp"),
@@ -102,7 +107,7 @@ public class TestBloomMapFile extends TestCase {
       System.out.println("False positives: " + falsePos);
       assertTrue(falsePos < 2);
     } finally {
-      IOUtils.cleanup(null, writer, reader);
+      IOUtils.cleanupWithLogger(LOG, writer, reader);
     }
   }
 
@@ -131,7 +136,7 @@ public class TestBloomMapFile extends TestCase {
       reader.close();
       fs.delete(qualifiedDirName, true);
     } finally {
-      IOUtils.cleanup(null, writer, reader);
+      IOUtils.cleanupWithLogger(LOG, writer, reader);
     }
   }
 
@@ -165,7 +170,7 @@ public class TestBloomMapFile extends TestCase {
     } catch (Exception ex) {
       fail("unexpect ex in testDeleteFile !!!");
     } finally {
-      IOUtils.cleanup(null, writer);
+      IOUtils.cleanupWithLogger(LOG, writer);
     }
   }
   
@@ -193,12 +198,12 @@ public class TestBloomMapFile extends TestCase {
     } catch (Exception ex) {
       fail("unexpect ex in testIOExceptionInWriterConstructor !!!");
     } finally {
-      IOUtils.cleanup(null, writer, reader);
+      IOUtils.cleanupWithLogger(LOG, writer, reader);
     }
   }
 
   /**
-   *  test {@link BloomMapFile.Reader.get()} method 
+   *  test {@link BloomMapFile.Reader.get()} method
    */
   public void testGetBloomMapFile() {
     int SIZE = 10;
@@ -227,7 +232,7 @@ public class TestBloomMapFile extends TestCase {
     } catch (Exception ex) {
       fail("unexpect ex in testGetBloomMapFile !!!");
     } finally {
-      IOUtils.cleanup(null, writer, reader);
+      IOUtils.cleanupWithLogger(LOG, writer, reader);
     }
   }
 
@@ -275,7 +280,7 @@ public class TestBloomMapFile extends TestCase {
     } catch (Exception ex) {
       fail("testBloomMapFileConstructors error !!!");
     } finally {
-      IOUtils.cleanup(null, writer);
+      IOUtils.cleanupWithLogger(LOG, writer);
     }
   }
 

@@ -41,13 +41,15 @@ import org.apache.hadoop.util.Progressable;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.*;
 
 import static org.mockito.Mockito.*;
 
 public class TestMapFile {
-  
+  private static final Logger LOG = LoggerFactory.getLogger(TestMapFile.class);
   private static final Path TEST_DIR = new Path(
       System.getProperty("test.build.data", "/tmp"),
       TestMapFile.class.getSimpleName());
@@ -187,7 +189,7 @@ public class TestMapFile {
       closest = (Text) reader.getClosest(key, value, true);
       assertEquals(new Text("91"), closest);
     } finally {
-      IOUtils.cleanup(null, writer, reader);
+      IOUtils.cleanupWithLogger(LOG, writer, reader);
     }
   }
   
@@ -211,7 +213,7 @@ public class TestMapFile {
       reader = createReader(TEST_PREFIX, IntWritable.class);
       assertEquals(new IntWritable((SIZE - 1) / 2), reader.midKey());
     } finally {
-      IOUtils.cleanup(null, writer, reader);
+      IOUtils.cleanupWithLogger(LOG, writer, reader);
     }
   }
   
@@ -233,7 +235,7 @@ public class TestMapFile {
     } catch (IOException ex) {
       fail("testRename error " + ex);
     } finally {
-      IOUtils.cleanup(null, writer);
+      IOUtils.cleanupWithLogger(LOG, writer);
     }
   }
   
@@ -265,7 +267,7 @@ public class TestMapFile {
       assertEquals("testRenameWithException invalid IOExceptionMessage !!!",
           ex.getMessage(), ERROR_MESSAGE);
     } finally {
-      IOUtils.cleanup(null, writer);
+      IOUtils.cleanupWithLogger(LOG, writer);
     }
   }
 
@@ -292,7 +294,7 @@ public class TestMapFile {
       assertTrue("testRenameWithFalse invalid IOExceptionMessage error !!!", ex
           .getMessage().startsWith(ERROR_MESSAGE));
     } finally {
-      IOUtils.cleanup(null, writer);
+      IOUtils.cleanupWithLogger(LOG, writer);
     }
   }
   
@@ -319,7 +321,7 @@ public class TestMapFile {
       assertTrue("testWriteWithFailDirCreation ex error !!!", ex.getMessage()
           .startsWith(ERROR_MESSAGE));
     } finally {
-      IOUtils.cleanup(null, writer);
+      IOUtils.cleanupWithLogger(LOG, writer);
     }
   }
 
@@ -347,7 +349,7 @@ public class TestMapFile {
     } catch (IOException ex) {
       fail("testOnFinalKey error !!!");
     } finally {
-      IOUtils.cleanup(null, writer, reader);
+      IOUtils.cleanupWithLogger(LOG, writer, reader);
     }
   }
   
@@ -392,7 +394,7 @@ public class TestMapFile {
     } catch (IOException ex) {
       /* Should be thrown to pass the test */
     } finally {
-      IOUtils.cleanup(null, writer, reader);
+      IOUtils.cleanupWithLogger(LOG, writer, reader);
     }
   }
   
@@ -410,7 +412,7 @@ public class TestMapFile {
     } catch (IOException ex) {
       /* Should be thrown to pass the test */
     } finally {
-      IOUtils.cleanup(null, writer);
+      IOUtils.cleanupWithLogger(LOG, writer);
     }
   }
   
@@ -451,7 +453,7 @@ public class TestMapFile {
     } catch (IOException ex) {
       fail("reader seek error !!!");
     } finally {
-      IOUtils.cleanup(null, writer, reader);
+      IOUtils.cleanupWithLogger(LOG, writer, reader);
     }
   }
 
@@ -482,7 +484,7 @@ public class TestMapFile {
     } catch (Exception ex) {
       fail("testFix error !!!");
     } finally {
-      IOUtils.cleanup(null, writer);
+      IOUtils.cleanupWithLogger(LOG, writer);
     }
   }
   /**
@@ -531,7 +533,7 @@ public class TestMapFile {
     } catch (IOException e) {
       fail(e.getMessage());
     } finally {
-      IOUtils.cleanup(null, writer, reader);
+      IOUtils.cleanupWithLogger(LOG, writer, reader);
     }
   }
   
@@ -550,7 +552,7 @@ public class TestMapFile {
     } catch (Exception e) {
       fail("fail in testKeyLessWriterCreation. Other ex !!!");
     } finally {
-      IOUtils.cleanup(null, writer);
+      IOUtils.cleanupWithLogger(LOG, writer);
     }
   }
   /**
@@ -579,7 +581,7 @@ public class TestMapFile {
     } catch (Exception e) {
       fail("fail in testPathExplosionWriterCreation. Other ex !!!");
     } finally {
-      IOUtils.cleanup(null, writer);
+      IOUtils.cleanupWithLogger(LOG, writer);
     }
   }
 
@@ -600,7 +602,7 @@ public class TestMapFile {
     } catch (Exception e) {
       fail("testDescOrderWithThrowExceptionWriterAppend other ex throw !!!");
     } finally {
-      IOUtils.cleanup(null, writer);
+      IOUtils.cleanupWithLogger(LOG, writer);
     }
   }
 
@@ -619,7 +621,7 @@ public class TestMapFile {
     } catch (Exception ex) {
       fail("testMainMethodMapFile error !!!");
     } finally {
-      IOUtils.cleanup(null, writer);
+      IOUtils.cleanupWithLogger(null, writer);
     }
   }
 
@@ -688,7 +690,7 @@ public class TestMapFile {
       closest = (Text) reader.getClosest(key, value, true);
       assertEquals(new Text("90"), closest);
     } finally {
-      IOUtils.cleanup(null, writer, reader);
+      IOUtils.cleanupWithLogger(LOG, writer, reader);
     }
   }
 
@@ -711,7 +713,7 @@ public class TestMapFile {
       reader = new MapFile.Reader(qualifiedDirName, conf);
       assertEquals(new IntWritable(1), reader.midKey());
     } finally {
-      IOUtils.cleanup(null, writer, reader);
+      IOUtils.cleanupWithLogger(LOG, writer, reader);
     }
   }
 

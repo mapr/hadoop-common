@@ -49,14 +49,14 @@ public class DiskChecker {
       super(msg);
     }
   }
-      
-  /** 
+
+  /**
    * The semantics of mkdirsWithExistsCheck method is different from the mkdirs
    * method provided in the Sun's java.io.File class in the following way:
    * While creating the non-existent parent directories, this method checks for
    * the existence of those directories if the mkdir fails at any point (since
    * that directory might have just been created by some other process).
-   * If both mkdir() and the exists() check fails for any seemingly 
+   * If both mkdir() and the exists() check fails for any seemingly
    * non-existent directory, then we signal an error; Sun's mkdir would signal
    * an error (return false) if a directory it is attempting to create already
    * exists or the mkdir fails.
@@ -74,7 +74,7 @@ public class DiskChecker {
       return false;
     }
     String parent = canonDir.getParent();
-    return (parent != null) && 
+    return (parent != null) &&
            (mkdirsWithExistsCheck(new File(parent)) &&
                                       (canonDir.mkdir() || canonDir.exists()));
   }
@@ -92,11 +92,11 @@ public class DiskChecker {
       }
     }
   }
-  
+
   /**
    * Create the directory if it doesn't exist and check that dir is readable,
    * writable and executable
-   *  
+   *
    * @param dir
    * @throws DiskErrorException
    */
@@ -160,7 +160,7 @@ public class DiskChecker {
   /**
    * Checks that the given file is a directory and that the current running
    * process can read, write, and execute it.
-   * 
+   *
    * @param dir File to check
    * @throws DiskErrorException if dir is not a directory, not readable, not
    *   writable, or not executable
@@ -177,7 +177,7 @@ public class DiskChecker {
   /**
    * Checks that the current running process can read, write, and execute the
    * given directory by using methods of the File object.
-   * 
+   *
    * @param dir File to check
    * @throws DiskErrorException if dir is not readable, not writable, or not
    *   executable
