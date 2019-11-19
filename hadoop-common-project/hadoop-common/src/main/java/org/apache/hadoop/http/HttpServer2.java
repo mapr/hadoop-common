@@ -82,12 +82,10 @@ import org.eclipse.jetty.server.RequestLog;
 import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.server.SessionManager;
 import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.server.handler.RequestLogHandler;
-import org.eclipse.jetty.server.session.AbstractSessionManager;
 import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.FilterHolder;
@@ -369,7 +367,8 @@ public final class HttpServer2 implements FilterContainer {
       conn.addConnectionFactory(connFactory);
       configureChannelConnector(conn);
 
-      SslContextFactory sslContextFactory = new SslContextFactory();
+      SslContextFactory.Server sslContextFactory =
+          new SslContextFactory.Server();
       sslContextFactory.setNeedClientAuth(needsClientAuth);
       sslContextFactory.setKeyManagerPassword(keyPassword);
       if (keyStore != null) {
@@ -433,12 +432,9 @@ public final class HttpServer2 implements FilterContainer {
       threadPool.setMaxThreads(maxThreads);
     }
 
-    SessionManager sm = webAppContext.getSessionHandler().getSessionManager();
-    if (sm instanceof AbstractSessionManager) {
-      AbstractSessionManager asm = (AbstractSessionManager)sm;
-      asm.setHttpOnly(true);
-      asm.getSessionCookieConfig().setSecure(true);
-    }
+    SessionHandler handler = webAppContext.getSessionHandler();
+    handler.setHttpOnly(true);
+    handler.getSessionCookieConfig().setSecure(true);
 
     ContextHandlerCollection contexts = new ContextHandlerCollection();
     RequestLog requestLog = HttpRequestLog.getRequestLog(name);
@@ -1044,13 +1040,37 @@ public final class HttpServer2 implements FilterContainer {
    * @return
    */
   private static BindException constructBindException(ServerConnector listener,
-                                                      IOException ex) {
+      IOException ex) {
     BindException be = new BindException("Port in use: "
             + listener.getHost() + ":" + listener.getPort());
     if (ex != null) {
       be.initCause(ex);
     }
     return be;
+  }
+
+  /**
+   * Bind using single configured port. If findPort is true, we will try to bind
+   * after incrementing port till a free port is found.
+   * @param listener jetty listener.
+   * @param port port which is set in the listener.
+   * @throws Exception
+   */
+  private void bindForSinglePort(ServerConnector listener, int port)
+      throws Exception {
+    while (true) {
+      try {
+        bindListener(listener);
+        break;
+      } catch (IOException ex) {
+        if (port == 0 || !findPort) {
+          throw constructBindException(listener, ex);
+        }
+      }
+      // try the next port number
+      listener.setPort(++port);
+      Thread.sleep(100);
+    }
   }
 
   /**
@@ -1062,13 +1082,13 @@ public final class HttpServer2 implements FilterContainer {
    */
   private void bindForPortRange(ServerConnector listener, int startPort)
       throws Exception {
-    BindException bindException = null;
+    IOException ioException = null;
     try {
       bindListener(listener);
       return;
-    } catch (BindException ex) {
+    } catch (IOException ex) {
       // Ignore exception.
-      bindException = ex;
+      ioException = ex;
     }
     for(Integer port : portRanges) {
       if (port == startPort) {
@@ -1081,10 +1101,10 @@ public final class HttpServer2 implements FilterContainer {
         return;
       } catch (BindException ex) {
         // Ignore exception. Move to next port.
-        bindException = ex;
+        ioException = ex;
       }
     }
-    throw constructBindException(listener, bindException);
+    throw constructBindException(listener, ioException);
   }
 
   /**

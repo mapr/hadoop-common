@@ -32,7 +32,7 @@
   <properties>
     <failIfNoTests>false</failIfNoTests>
     <maven.test.redirectTestOutputToFile>true</maven.test.redirectTestOutputToFile>
-    <jetty.version>9.3.11.v20160721</jetty.version>
+    <jetty.version>9.4.28.v20200408</jetty.version>
     <test.exclude>_</test.exclude>
     <test.exclude.pattern>_</test.exclude.pattern>
 
@@ -62,8 +62,6 @@
 
     <!-- jersey version -->
     <jersey.version>1.9</jersey.version>
-
-    <jetty.version>9.3.11.v20160721</jetty.version>
 
     <!-- jackson versions -->
     <jackson.version>1.9.13</jackson.version>
