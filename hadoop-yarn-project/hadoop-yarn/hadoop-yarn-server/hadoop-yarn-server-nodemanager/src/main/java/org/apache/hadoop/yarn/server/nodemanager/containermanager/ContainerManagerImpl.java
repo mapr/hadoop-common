@@ -58,6 +58,7 @@ import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.service.Service;
 import org.apache.hadoop.service.ServiceStateChangeListener;
 import org.apache.hadoop.util.StringUtils;
+import org.apache.hadoop.yarn.util.SystemClock;
 import org.apache.hadoop.yarn.api.ContainerManagementProtocol;
 import org.apache.hadoop.yarn.api.protocolrecords.GetContainerStatusesRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetContainerStatusesResponse;
@@ -172,8 +173,11 @@ public class ContainerManagerImpl extends CompositeService implements
   private boolean serviceStopped = false;
   private final ReadLock readLock;
   private final WriteLock writeLock;
+  private final Thread containerStuckProcessor;
 
   private long waitForContainersOnShutdownMillis;
+  private long timeoutForLocalizingContainer;
+  private long checkIntervalForLocalizingContainer;
 
   public ContainerManagerImpl(Context context, ContainerExecutor exec,
       DeletionService deletionContext, NodeStatusUpdater nodeStatusUpdater,
@@ -218,6 +222,9 @@ public class ContainerManagerImpl extends CompositeService implements
     
     addService(dispatcher);
 
+    this.containerStuckProcessor = new Thread(new containerStuckProcessor());
+    this.containerStuckProcessor.setName("ContainerManager Stuck Processor");
+
     ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
     this.readLock = lock.readLock();
     this.writeLock = lock.writeLock();
@@ -244,8 +251,60 @@ public class ContainerManagerImpl extends CompositeService implements
             YarnConfiguration.DEFAULT_NM_PROCESS_KILL_WAIT_MS) +
         SHUTDOWN_CLEANUP_SLOP_MS;
 
+    timeoutForLocalizingContainer =
+        conf.getLong(YarnConfiguration.TIMEOUT_LOCALIZING_CONTAINER,
+            YarnConfiguration.DEFAULT_TIMEOUT_LOCALIZING_CONTAINER) * 1000;
+    checkIntervalForLocalizingContainer =
+        conf.getLong(YarnConfiguration.CHECK_INTERVAL_LOCALIZING_CONTAINER,
+            YarnConfiguration.DEFAULT_CHECK_INTERVAL_LOCALIZING_CONTAINER);
+
     super.serviceInit(conf);
     recover();
+  }
+
+  private final class containerStuckProcessor implements Runnable {
+    @Override
+    public void run() {
+      LOG.info("Started thread to check the lifetime container in localizing state");
+      SystemClock clock = new SystemClock();
+      Map<ContainerId, Long> currentContainers;
+      Map<ContainerId, Long> previousContainers = new HashMap<>();
+      while (!serviceStopped && !Thread.currentThread().isInterrupted()) {
+        try {
+          currentContainers = new HashMap<>();
+          for (Container container : context.getContainers().values()) {
+            ContainerId containerID = container.getContainerId();
+            if (container.getContainerState() ==
+                org.apache.hadoop.yarn.server.nodemanager.containermanager.container.ContainerState.LOCALIZING) {
+              long time = previousContainers.get(containerID) != null ?
+                  previousContainers.get(containerID) : clock.getTime();
+              if (clock.getTime() - time > timeoutForLocalizingContainer) {
+                context.getNMStateStore().storeContainerKilled(containerID);
+                dispatcher.getEventHandler().handle(
+                    new ContainerKillEvent(containerID,
+                        ContainerExitStatus.KILLED_BY_APPMASTER,
+                        "Container in localizing state killed by the ApplicationMaster."));
+
+                NMAuditLogger.logSuccess(container.getUser(),
+                    AuditConstants.STOP_CONTAINER, "ContainerManageImpl", containerID
+                        .getApplicationAttemptId().getApplicationId(), containerID);
+                nodeStatusUpdater.sendOutofBandHeartBeat();
+                continue;
+              }
+              currentContainers.put(containerID, time);
+            }
+          }
+        } catch (IOException e) {
+          LOG.error("Returning, interrupted: " + e);
+          return;
+        }
+        previousContainers = currentContainers;
+        try {
+          Thread.sleep(checkIntervalForLocalizingContainer);
+        } catch (InterruptedException ie) {
+        }
+      }
+    }
   }
 
   @SuppressWarnings("unchecked")
@@ -455,6 +514,9 @@ public class ContainerManagerImpl extends CompositeService implements
     this.context.getNMTokenSecretManager().setNodeId(nodeId);
     this.context.getContainerTokenSecretManager().setNodeId(nodeId);
 
+    if (checkIntervalForLocalizingContainer != YarnConfiguration.DEFAULT_CHECK_INTERVAL_LOCALIZING_CONTAINER) {
+      this.containerStuckProcessor.start();
+    }
     // start remaining services
     super.serviceStart();
 
@@ -497,6 +559,10 @@ public class ContainerManagerImpl extends CompositeService implements
     this.writeLock.lock();
     try {
       serviceStopped = true;
+      if (checkIntervalForLocalizingContainer != YarnConfiguration.DEFAULT_CHECK_INTERVAL_LOCALIZING_CONTAINER) {
+        this.containerStuckProcessor.interrupt();
+        this.containerStuckProcessor.join();
+      }
       if (context != null) {
         cleanUpApplicationsOnNMShutDown();
       }

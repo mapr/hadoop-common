@@ -1317,6 +1317,18 @@ public class YarnConfiguration extends Configuration {
   public static final long DEFAULT_NM_PROCESS_KILL_WAIT_MS =
       2000;
 
+  /** Timeout for container in localizing state before kill */
+  public static final String TIMEOUT_LOCALIZING_CONTAINER =
+      NM_PREFIX + "timeout-localizing-container";
+  public static final long DEFAULT_TIMEOUT_LOCALIZING_CONTAINER =
+      1800;
+
+  /** Interval between check time of localizing state*/
+  public static final String CHECK_INTERVAL_LOCALIZING_CONTAINER =
+      NM_PREFIX + "check-interval-localizing-container.ms";
+  public static final long DEFAULT_CHECK_INTERVAL_LOCALIZING_CONTAINER =
+      -1;
+
   /** Max time to wait to establish a connection to RM */
   public static final String RESOURCEMANAGER_CONNECT_MAX_WAIT_MS =
       RM_PREFIX + "connect.max-wait.ms";
