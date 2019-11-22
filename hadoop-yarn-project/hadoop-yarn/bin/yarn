@@ -336,6 +336,22 @@ else
 fi
 
 # cygwin path translation
+
+function getCoresDirectory() {
+  #Function to check core_pattern and figure out cores_dir
+  coresDir=$(dirname "$(cat /proc/sys/kernel/core_pattern)")
+  coresDir=`echo $coresDir | cut -d ' ' -f1`
+  if [ ${coresDir:0:1} == "|" ] || [ ${coresDir:0:1} ==  "." ] || [ $coresDir == "/" ]; then
+    if [ ! -z "$MAPR_CORES_DIR" ]; then
+      echo "$MAPR_CORES_DIR"
+    else
+      echo "/opt/cores"
+    fi
+  else
+    echo $coresDir
+  fi
+}
+
 if $cygwin; then
   CLASSPATH=$(cygpath -p -w "$CLASSPATH" 2>/dev/null)
   HADOOP_LOG_DIR=$(cygpath -w "$HADOOP_LOG_DIR" 2>/dev/null)
@@ -353,7 +369,7 @@ YARN_OPTS="$YARN_OPTS -Dyarn.log.dir=$YARN_LOG_DIR"
 YARN_OPTS="$YARN_OPTS -Dhadoop.log.file=$YARN_LOGFILE"
 YARN_OPTS="$YARN_OPTS -Dyarn.log.file=$YARN_LOGFILE"
 YARN_OPTS="$YARN_OPTS -Dyarn.home.dir=$HADOOP_YARN_HOME"
-YARN_OPTS="$YARN_OPTS -XX:ErrorFile=$(dirname $(cat /proc/sys/kernel/core_pattern))/hs_err_pid_%p.log"
+YARN_OPTS="$YARN_OPTS -XX:ErrorFile=$(getCoresDirectory)/hs_err_pid_%p.log"
 HADOOP_HOME=$HADOOP_PREFIX
 if $cygwin; then
   HADOOP_HOME=$(cygpath -w "$HADOOP_HOME" 2>/dev/null)
