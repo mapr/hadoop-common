@@ -36,12 +36,12 @@ public class KerberosBugWorkAroundLoginModule extends Krb5LoginModule {
   public void initialize(Subject subject, CallbackHandler ch,
       Map<String, ?> sharedState, Map<String, ?> options) {
     String ticketCache = System.getenv("KRB5CCNAME");
-      if (ticketCache != null) {
-    Map<String, Object> newOptions = new HashMap<String, Object>();
-    newOptions.putAll(options);
-    newOptions.put("ticketCache", ticketCache);
-    options = newOptions;
-     }
+    if (ticketCache != null && "true".equalsIgnoreCase((String)options.get("useTicketCache"))) {
+      Map<String, Object> newOptions = new HashMap<String, Object>();
+      newOptions.putAll(options);
+      newOptions.put("ticketCache", ticketCache);
+      options = newOptions;
+    }
     super.initialize(subject, ch, sharedState, options);
   }
 }
