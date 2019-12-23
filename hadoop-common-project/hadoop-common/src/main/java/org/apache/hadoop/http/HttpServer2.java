@@ -122,6 +122,16 @@ public final class HttpServer2 implements FilterContainer {
       = "hadoop.http.filter.initializers";
   public static final String HTTP_MAX_THREADS = "hadoop.http.max.threads";
 
+  // idle timeout in milliseconds
+  static final String HTTP_LOW_RESOURCE_MAX_IDLE_TIME_MS_KEY =
+      "hadoop.http.low_resource_max_idle_time.ms";
+  public static final int HTTP_LOW_RESOURCE_MAX_IDLE_TIME_MS_DEFAULT = 10000;
+
+  // idle timeout in milliseconds
+  static final String HTTP_MAX_IDLE_TIME_MS_KEY =
+      "hadoop.http.max_idle_time.ms";
+  public static final int HTTP_MAX_IDLE_TIME_MS_DEFAULT = -1;
+
   // The ServletContext attribute where the daemon Configuration
   // gets stored.
   public static final String CONF_CONTEXT_ATTRIBUTE = "hadoop.conf";
@@ -147,6 +157,8 @@ public final class HttpServer2 implements FilterContainer {
   static final String STATE_DESCRIPTION_NOT_LIVE = " - not live";
   private final SignerSecretProvider secretProvider;
   private static final Properties headers = new Properties();
+  private static int lowResourceMaxIdleTime;
+  private static int maxIdleTime;
 
   /**
    * Class to construct instances of HTTP server with specific options.
@@ -311,6 +323,9 @@ public final class HttpServer2 implements FilterContainer {
         FilterInitializer initializer = new HadoopCoreAuthenticationFilterInitializer();
         initializer.initFilter(server, conf);
       }
+      lowResourceMaxIdleTime = conf.getInt(HTTP_LOW_RESOURCE_MAX_IDLE_TIME_MS_KEY,
+          HTTP_LOW_RESOURCE_MAX_IDLE_TIME_MS_DEFAULT);
+      maxIdleTime = conf.getInt(HTTP_MAX_IDLE_TIME_MS_KEY, HTTP_MAX_IDLE_TIME_MS_DEFAULT);
 
       for (URI ep : endpoints) {
         final Connector listener;
@@ -540,10 +555,13 @@ public final class HttpServer2 implements FilterContainer {
   @InterfaceAudience.Private
   public static Connector createDefaultChannelConnector() {
     SelectChannelConnector ret = new SelectChannelConnectorWithSafeStartup();
-    ret.setLowResourceMaxIdleTime(10000);
+    ret.setLowResourceMaxIdleTime(lowResourceMaxIdleTime);
     ret.setAcceptQueueSize(128);
     ret.setResolveNames(false);
     ret.setUseDirectBuffers(false);
+    if (maxIdleTime != -1) {
+      ret.setMaxIdleTime(maxIdleTime);
+    }
     if(Shell.WINDOWS) {
       // result of setting the SO_REUSEADDR flag is different on Windows
       // http://msdn.microsoft.com/en-us/library/ms740621(v=vs.85).aspx
