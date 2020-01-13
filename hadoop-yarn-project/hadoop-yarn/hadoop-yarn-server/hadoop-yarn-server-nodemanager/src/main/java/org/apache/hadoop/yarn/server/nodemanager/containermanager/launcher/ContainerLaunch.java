@@ -81,6 +81,8 @@ import org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.Cont
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.ResourceLocalizationService;
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.security.ExternalTokenLocalizer;
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.security.ExternalTokenLocalizerFactory;
+import org.apache.hadoop.yarn.server.nodemanager.executor.ContainerSignalContext;
+import org.apache.hadoop.yarn.server.nodemanager.executor.ContainerStartContext;
 import org.apache.hadoop.yarn.server.nodemanager.util.ProcessIdFileReader;
 import org.apache.hadoop.yarn.util.Apps;
 import org.apache.hadoop.yarn.util.AuxiliaryServiceHelper;
@@ -294,6 +296,7 @@ public class ContainerLaunch implements Callable<Integer> {
             + dirsHandler.getDisksHealthReport(false));
       }
 
+      List<String> containerLocalDirs = new ArrayList<>(localDirs.size());
       try {
         // /////////// Write out the container-script in the nmPrivate space.
         List<Path> appDirs = new ArrayList<Path>(localDirs.size());
@@ -302,6 +305,14 @@ public class ContainerLaunch implements Callable<Integer> {
           Path userdir = new Path(usersdir, user);
           Path appsdir = new Path(userdir, ContainerLocalizer.APPCACHE);
           appDirs.add(new Path(appsdir, appIdStr));
+
+          String containerLocalDir = localDir + Path.SEPARATOR +
+              ContainerLocalizer.USERCACHE + Path.SEPARATOR + user
+              + Path.SEPARATOR
+              + ContainerLocalizer.APPCACHE + Path.SEPARATOR + appIdStr
+              + Path.SEPARATOR;
+
+          containerLocalDirs.add(containerLocalDir);
         }
         containerScriptOutStream =
           lfs.create(nmPrivateContainerScriptPath,
@@ -326,11 +337,11 @@ public class ContainerLaunch implements Callable<Integer> {
         // Sanitize the container's environment
         sanitizeEnv(environment, containerWorkDir, appDirs, containerLogDirs,
           localResources, nmPrivateClasspathJarDir);
-        
+
         // Write out the environment
         exec.writeLaunchEnv(containerScriptOutStream, environment, localResources,
             launchContext.getCommands());
-        
+
         // /////////// End of writing out container-script
 
         // /////////// Write out the container-tokens in the nmPrivate space.
@@ -375,9 +386,21 @@ public class ContainerLaunch implements Callable<Integer> {
           extTokenEnvVar = extTokenLocalizer.getTokenEnvVar();
         }
 
-        ret = exec.launchContainer(container, nmPrivateContainerScriptPath,
-                nmPrivateTokensPath, extTokenPath, extTokenEnvVar, user,
-                appIdStr, containerWorkDir, localDirs, logDirs);
+        ret = exec.launchContainer(new ContainerStartContext.Builder()
+            .setContainer(container)
+            .setLocalizedResources(localResources)
+            .setNmPrivateContainerScriptPath(nmPrivateContainerScriptPath)
+            .setNmPrivateTokensPath(nmPrivateTokensPath)
+            .setExtTokenPath(extTokenPath)
+            .setExtTokenEnvVar(extTokenEnvVar)
+            .setUser(user)
+            .setAppId(appIdStr)
+            .setContainerWorkDir(containerWorkDir)
+            .setLocalDirs(localDirs)
+            .setLogDirs(logDirs)
+            .setContainerLocalDirs(containerLocalDirs)
+            .setContainerLogDirs(containerLogDirs)
+            .build());
       }
     } catch (Throwable e) {
       LOG.warn("Failed to launch container.", e);
@@ -575,7 +598,13 @@ public class ContainerLaunch implements Callable<Integer> {
           ? Signal.TERM
           : Signal.KILL;
 
-        boolean result = exec.signalContainer(user, processId, signal);
+        boolean result = exec.signalContainer(
+            new ContainerSignalContext.Builder()
+                .setContainer(container)
+                .setUser(user)
+                .setPid(processId)
+                .setSignal(signal)
+                .build());
 
         LOG.debug("Sent signal " + signal + " to pid " + processId
           + " as user " + user
@@ -673,6 +702,8 @@ public class ContainerLaunch implements Callable<Integer> {
 
     public abstract void command(List<String> command) throws IOException;
 
+    public abstract void whitelistedEnv(String key, String value) throws IOException;
+
     public abstract void env(String key, String value) throws IOException;
 
     public final void symlink(Path src, Path dst) throws IOException {
@@ -731,6 +762,11 @@ public class ContainerLaunch implements Callable<Integer> {
     }
 
     @Override
+    public void whitelistedEnv(String key, String value) {
+      line("export ", key, "=${", key, ":-", "\"", value, "\"}");
+    }
+
+    @Override
     public void env(String key, String value) {
       line("export ", key, "=\"", value, "\"");
     }
@@ -768,6 +804,12 @@ public class ContainerLaunch implements Callable<Integer> {
     @Override
     public void command(List<String> command) throws IOException {
       lineWithLenCheck("@call ", StringUtils.join(" ", command));
+      errorCheck();
+    }
+
+    @Override
+    public void whitelistedEnv(String key, String value) throws IOException {
+      lineWithLenCheck("@set ", key, "=", value);
       errorCheck();
     }
 

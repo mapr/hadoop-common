@@ -37,10 +37,11 @@ public class TestYarnConfigurationFields extends TestConfigurationFieldsBase {
   public void initializeMemberVariables() {
     xmlFilename = new String("yarn-default.xml");
     configurationClasses = new Class[] { YarnConfiguration.class };
-        
+
 
     // Allocate for usage
     configurationPropsToSkipCompare = new HashSet<String>();
+    configurationPrefixToSkipCompare = new HashSet<String>();
 
     // Set error modes
     errorIfMissingConfigProps = true;
@@ -79,6 +80,12 @@ public class TestYarnConfigurationFields extends TestConfigurationFieldsBase {
     configurationPropsToSkipCompare
         .add(YarnConfiguration
 	    .YARN_SECURITY_SERVICE_AUTHORIZATION_RESOURCETRACKER_PROTOCOL);
+
+     // Ignore NodeManager "work in progress" variables
+    configurationPrefixToSkipCompare
+              .add(YarnConfiguration.NM_MEMORY_RESOURCE_PREFIX);
+    configurationPrefixToSkipCompare
+              .add(YarnConfiguration.NM_CPU_RESOURCE_ENABLED);
 
     // Allocate for usage
     xmlPropsToSkipCompare = new HashSet<String>();

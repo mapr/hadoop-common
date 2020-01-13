@@ -735,6 +735,19 @@ function checkCoreUp() {
     return $rc
 }
 
+# MAPRYARN-212
+function checkTCFileForNodManager() {
+    tc_path=/sbin/tc
+
+    if [[ ! -f  $tc_path ]]; then
+        if [ -f "/usr/sbin/tc" ]; then
+            ln -s /usr/sbin/tc $tc_path
+        else
+             logWarn "Hadoop: Warning - /sbin/tc don't  exist, so you should create link ln -s file /sbin/tc, where file is path to the tc. (Need for cgroups! )"
+        fi
+    fi
+}
+
 # typically called from master configure.sh with the following arguments
 #
 # configure.sh  ....
@@ -874,6 +887,9 @@ fi
 
 # check to see if we have old hadoop config
 checkIncompatibleHadoopConfig
+
+# check is tc path correct. Need for cgroups at the NodeManager
+checkTCFileForNodManager
 
 if [ ! -z "$rm_ip" ]; then
     ConfigureYarnServices "$rm_ip" "$hs_ip"

@@ -45,6 +45,7 @@ import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.util.concurrent.HadoopScheduledThreadPoolExecutor;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.proto.YarnServerNodemanagerRecoveryProtos.DeletionServiceDeleteTaskProto;
+import org.apache.hadoop.yarn.server.nodemanager.executor.DeletionAsUserContext;
 import org.apache.hadoop.yarn.server.nodemanager.recovery.NMNullStateStoreService;
 import org.apache.hadoop.yarn.server.nodemanager.recovery.NMStateStoreService;
 import org.apache.hadoop.yarn.server.nodemanager.recovery.NMStateStoreService.RecoveredDeletionServiceState;
@@ -261,10 +262,16 @@ public class DeletionService extends AbstractService {
         try {
           LOG.debug("Deleting path: [" + subDir + "] as user: [" + user + "]");
           if (baseDirs == null || baseDirs.size() == 0) {
-            delService.exec.deleteAsUser(user, subDir, (Path[])null);
+            delService.exec.deleteAsUser(new DeletionAsUserContext.Builder()
+                .setUser(user)
+                .setSubDir(subDir)
+                .build());
           } else {
-            delService.exec.deleteAsUser(user, subDir,
-              baseDirs.toArray(new Path[0]));
+            delService.exec.deleteAsUser(new DeletionAsUserContext.Builder()
+                .setUser(user)
+                .setSubDir(subDir)
+                .setBasedirs(baseDirs.toArray(new Path[0]))
+                .build());
           }
         } catch (IOException e) {
           error = true;

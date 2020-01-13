@@ -56,6 +56,7 @@ import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.ContainerLocalizer;
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.ResourceLocalizationService;
+import org.apache.hadoop.yarn.server.nodemanager.executor.LocalizerStartContext;
 
 /**
  * Windows secure container executor (WSCE).
@@ -643,29 +644,31 @@ public class WindowsSecureContainerExecutor extends DefaultContainerExecutor {
     return dst;
   }
 
- @Override
- public void startLocalizer(Path nmPrivateContainerTokens,
-     Path nmPrivateExtTokensPath, String extTokensEnvVar,
-     InetSocketAddress nmAddr, String user, String appId, String locId,
-     LocalDirsHandlerService dirsHandler) throws IOException,
-     InterruptedException {
-   
-     List<String> localDirs = dirsHandler.getLocalDirs();
-     List<String> logDirs = dirsHandler.getLogDirs();
-     
-     Path classpathJarPrivateDir = dirsHandler.getLocalPathForWrite(
-         ResourceLocalizationService.NM_PRIVATE_DIR);
-     createUserLocalDirs(localDirs, user);
-     createUserCacheDirs(localDirs, user);
-     createAppDirs(localDirs, user, appId);
-     createAppLogDirs(appId, logDirs, user);
+  @Override
+  public void startLocalizer(LocalizerStartContext ctx) throws IOException,
+      InterruptedException {
+    Path nmPrivateContainerTokensPath = ctx.getNmPrivateContainerTokens();
+    InetSocketAddress nmAddr = ctx.getNmAddr();
+    String user = ctx.getUser();
+    String appId = ctx.getAppId();
+    String locId = ctx.getLocId();
+    LocalDirsHandlerService dirsHandler = ctx.getDirsHandler();
+    List<String> localDirs = dirsHandler.getLocalDirs();
+    List<String> logDirs = dirsHandler.getLogDirs();
 
-     Path appStorageDir = getWorkingDir(localDirs, user, appId);
-     
-     String tokenFn = String.format(
-         ContainerLocalizer.TOKEN_FILE_NAME_FMT, locId);
-     Path tokenDst = new Path(appStorageDir, tokenFn);
-     copyFile(nmPrivateContainerTokens, tokenDst, user);
+    Path classpathJarPrivateDir = dirsHandler.getLocalPathForWrite(
+        ResourceLocalizationService.NM_PRIVATE_DIR);
+    createUserLocalDirs(localDirs, user);
+    createUserCacheDirs(localDirs, user);
+    createAppDirs(localDirs, user, appId);
+    createAppLogDirs(appId, logDirs, user);
+
+    Path appStorageDir = getWorkingDir(localDirs, user, appId);
+
+    String tokenFn = String.format(
+        ContainerLocalizer.TOKEN_FILE_NAME_FMT, locId);
+    Path tokenDst = new Path(appStorageDir, tokenFn);
+    copyFile(nmPrivateContainerTokensPath, tokenDst, user);
 
      File cwdApp = new File(appStorageDir.toString());
      if (LOG.isDebugEnabled()) {
@@ -698,7 +701,8 @@ public class WindowsSecureContainerExecutor extends DefaultContainerExecutor {
      if (javaLibPath != null) {
        command.add("-Djava.library.path=" + javaLibPath);
      }
-     
+     command.addAll(ContainerLocalizer.getJavaOpts(getConf()));
+
      ContainerLocalizer.buildMainArgs(command, user, appId, locId, nmAddr, 
          localDirs);
      

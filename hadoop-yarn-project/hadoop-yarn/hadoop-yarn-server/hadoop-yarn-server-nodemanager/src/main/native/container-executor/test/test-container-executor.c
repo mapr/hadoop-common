@@ -42,8 +42,8 @@
 #define TEST_ROOT TMPDIR "/test-container-executor"
 
 #define DONT_TOUCH_FILE "dont-touch-me"
-#define NM_LOCAL_DIRS       TEST_ROOT "/local-1," TEST_ROOT "/local-2," \
-               TEST_ROOT "/local-3," TEST_ROOT "/local-4," TEST_ROOT "/local-5"
+#define NM_LOCAL_DIRS       TEST_ROOT "/local-1%" TEST_ROOT "/local-2%" \
+               TEST_ROOT "/local-3%" TEST_ROOT "/local-4%" TEST_ROOT "/local-5"
 #define NM_LOG_DIRS         TEST_ROOT "/logs/userlogs"
 #define ARRAY_SIZE 1000
 
@@ -156,7 +156,7 @@ void check_pid_file(const char* pid_file, pid_t mypid) {
   }
 
   char myPidBuf[33];
-  snprintf(myPidBuf, 33, "%d", mypid);
+  snprintf(myPidBuf, 33, "%d", mypid + 1);
   if (strncmp(pidBuf, myPidBuf, strlen(myPidBuf)) != 0) {
     printf("FAIL: failed to find matching pid in pid file\n");
     printf("FAIL: Expected pid %d : Got %.*s", mypid, (int)bytes, pidBuf);

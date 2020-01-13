@@ -70,6 +70,7 @@ import org.apache.hadoop.yarn.server.nodemanager.containermanager.ContainerManag
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.application.ApplicationState;
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.container.Container;
 import org.apache.hadoop.yarn.server.nodemanager.metrics.NodeManagerMetrics;
+import org.apache.hadoop.yarn.server.nodemanager.util.NodeManagerHardwareUtils;
 import org.apache.hadoop.yarn.util.YarnVersionInfo;
 import org.apache.hadoop.yarn.util.resource.ResourceCalculator;
 
@@ -151,18 +152,16 @@ public class NodeStatusUpdaterImpl extends AbstractService implements
 
   @Override
   protected void serviceInit(Configuration conf) throws Exception {
-    int memoryMb = 
-        conf.getInt(
-            YarnConfiguration.NM_PMEM_MB, YarnConfiguration.DEFAULT_NM_PMEM_MB);
-    float vMemToPMem =             
+    int memoryMb = NodeManagerHardwareUtils.getContainerMemoryMB(conf);
+    float vMemToPMem =
         conf.getFloat(
             YarnConfiguration.NM_VMEM_PMEM_RATIO, 
             YarnConfiguration.DEFAULT_NM_VMEM_PMEM_RATIO); 
     int virtualMemoryMb = (int)Math.ceil(memoryMb * vMemToPMem);
     
-    int virtualCores =
-        conf.getInt(
-            YarnConfiguration.NM_VCORES, YarnConfiguration.DEFAULT_NM_VCORES);
+    int virtualCores = NodeManagerHardwareUtils.getVCores(conf);
+    LOG.info("Nodemanager resources: memory set to " + memoryMb + "MB.");
+    LOG.info("Nodemanager resources: vcores set to " + virtualCores + ".");
 
     double disks =
         conf.getDouble(
@@ -215,6 +214,7 @@ public class NodeStatusUpdaterImpl extends AbstractService implements
 
     // NodeManager is the last service to start, so NodeId is available.
     this.nodeId = this.context.getNodeId();
+    LOG.info("Node ID assigned is : " + this.nodeId);
     this.httpPort = this.context.getHttpPort();
     this.nodeManagerVersionId = YarnVersionInfo.getVersion();
     try {
@@ -614,7 +614,7 @@ public class NodeStatusUpdaterImpl extends AbstractService implements
           try {
             NodeHeartbeatResponse response = null;
             NodeStatus nodeStatus = getNodeStatus(lastHeartBeatID);
-            
+
             NodeHeartbeatRequest request =
                 NodeHeartbeatRequest.newInstance(nodeStatus,
                   NodeStatusUpdaterImpl.this.context
@@ -738,7 +738,7 @@ public class NodeStatusUpdaterImpl extends AbstractService implements
       DEFAULT_REDUCE_MEMORY_MB );
 
     // Round up memory
-    requiredMemory = ResourceCalculator.roundUp(requiredMemory, 
+    requiredMemory = ResourceCalculator.roundUp(requiredMemory,
       conf.getInt("yarn.scheduler.minimum-allocation-mb",
         DEFAULT_SCHEDULER_MINIMUM_ALLOCATION_MB));
 

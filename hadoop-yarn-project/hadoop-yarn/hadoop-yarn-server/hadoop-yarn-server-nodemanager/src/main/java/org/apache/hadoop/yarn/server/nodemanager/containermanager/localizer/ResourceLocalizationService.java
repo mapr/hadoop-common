@@ -126,6 +126,7 @@ import org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.secu
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.security.ExternalTokenLocalizerFactory;
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.security.LocalizerTokenIdentifier;
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.security.LocalizerTokenSecretManager;
+import org.apache.hadoop.yarn.server.nodemanager.executor.LocalizerStartContext;
 import org.apache.hadoop.yarn.server.nodemanager.recovery.NMStateStoreService;
 import org.apache.hadoop.yarn.server.nodemanager.recovery.NMStateStoreService.LocalResourceTrackerState;
 import org.apache.hadoop.yarn.server.nodemanager.recovery.NMStateStoreService.RecoveredLocalizationState;
@@ -457,6 +458,10 @@ public class ResourceLocalizationService extends CompositeService
                   .getApplicationId());
       for (LocalResourceRequest req : e.getValue()) {
         tracker.handle(new ResourceRequestEvent(req, e.getKey(), ctxt));
+        if (LOG.isDebugEnabled()) {
+          LOG.debug("Localizing " + req.getPath() +
+              " for container " + c.getContainerId());
+        }
       }
     }
   }
@@ -476,10 +481,14 @@ public class ResourceLocalizationService extends CompositeService
     ResourceRetentionSet retain =
       new ResourceRetentionSet(delService, cacheTargetSize);
     retain.addResources(publicRsrc);
-    LOG.debug("Resource cleanup (public) " + retain);
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("Resource cleanup (public) " + retain);
+    }
     for (LocalResourcesTracker t : privateRsrc.values()) {
       retain.addResources(t);
-      LOG.debug("Resource cleanup " + t.getUser() + ":" + retain);
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("Resource cleanup " + t.getUser() + ":" + retain);
+      }
     }
     //TODO Check if appRsrcs should also be added to the retention set.
   }
@@ -1091,7 +1100,9 @@ public class ResourceLocalizationService extends CompositeService
           LOG.error("Inorrect path for PRIVATE localization."
               + next.getResource().getFile(), e);
         } catch (URISyntaxException e) {
-            //TODO fail? Already translated several times...
+          LOG.error(
+              "Got exception in parsing URL of LocalResource:"
+                  + next.getResource(), e);
         }
       }
 
@@ -1199,15 +1210,17 @@ public class ResourceLocalizationService extends CompositeService
             extTokenEnvVar = extTokenLocalizer.getTokenEnvVar();
           }
 
-          exec.startLocalizer(nmPrivateCTokensPath,
-              extTokenPath, extTokenEnvVar,
-              localizationServerAddress,
-              context.getUser(),
-              ConverterUtils.toString(
-                  context.getContainerId().
-                  getApplicationAttemptId().getApplicationId()),
-              localizerId,
-              dirsHandler);
+          exec.startLocalizer(new LocalizerStartContext.Builder()
+              .setNmPrivateContainerTokens(nmPrivateCTokensPath)
+              .setExtTokenPath(extTokenPath)
+              .setExtTokenEnvVar(extTokenEnvVar)
+              .setNmAddr(localizationServerAddress)
+              .setUser(context.getUser())
+              .setAppId(ConverterUtils.toString(context.getContainerId()
+                  .getApplicationAttemptId().getApplicationId()))
+              .setLocId(localizerId)
+              .setDirsHandler(dirsHandler)
+              .build());
         } else {
           throw new IOException("All disks failed. "
               + dirsHandler.getDisksHealthReport(false));

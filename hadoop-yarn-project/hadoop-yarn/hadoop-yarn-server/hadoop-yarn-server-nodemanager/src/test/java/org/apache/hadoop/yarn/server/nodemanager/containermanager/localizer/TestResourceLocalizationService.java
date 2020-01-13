@@ -68,6 +68,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.hadoop.fs.Options;
 import org.apache.hadoop.util.Shell;
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.container.ContainerState;
+import org.apache.hadoop.yarn.server.nodemanager.executor.LocalizerStartContext;
 import org.junit.Assert;
 
 import org.apache.commons.io.FileUtils;
@@ -948,11 +949,16 @@ public class TestResourceLocalizationService {
       dispatcher.await();
       String appStr = ConverterUtils.toString(appId);
       String ctnrStr = c.getContainerId().toString();
-      ArgumentCaptor<Path> tokenPathCaptor = ArgumentCaptor.forClass(Path.class);
-      verify(exec).startLocalizer(tokenPathCaptor.capture(), (Path) eq(null), (String) eq(null),
-          isA(InetSocketAddress.class), eq("user0"), eq(appStr), eq(ctnrStr),
-          isA(LocalDirsHandlerService.class));
-      Path localizationTokenPath = tokenPathCaptor.getValue();
+      ArgumentCaptor<LocalizerStartContext> contextCaptor = ArgumentCaptor
+          .forClass(LocalizerStartContext.class);
+      verify(exec).startLocalizer(contextCaptor.capture());
+
+      LocalizerStartContext context = contextCaptor.getValue();
+      Path localizationTokenPath = context.getNmPrivateContainerTokens();
+
+      assertEquals("user0", context.getUser());
+      assertEquals(appStr, context.getAppId());
+      assertEquals(ctnrStr, context.getLocId());
 
       // heartbeat from localizer
       LocalResourceStatus rsrc1success = mock(LocalResourceStatus.class);
@@ -1100,11 +1106,8 @@ public class TestResourceLocalizationService {
     private volatile boolean stopLocalization = false;
     private AtomicInteger numLocalizers = new AtomicInteger(0);
     @Override
-    public void startLocalizer(Path nmPrivateContainerTokensPath,
-                               Path nmPrivateExtTokensPath, String extTokensEnvVar,
-                               InetSocketAddress nmAddr, String user, String appId, String locId,
-                               LocalDirsHandlerService dirsHandler)
-        throws IOException, InterruptedException {
+    public void startLocalizer(LocalizerStartContext ctx)
+            throws IOException, InterruptedException {
       numLocalizers.incrementAndGet();
       while (!stopLocalization) {
         Thread.yield();
@@ -1370,7 +1373,7 @@ public class TestResourceLocalizationService {
     private AtomicInteger numLocalizers = new AtomicInteger(0);
 
     @Override
-    public synchronized void startLocalizer(Path nmPrivateContainerTokensPath, Path nmPrivateExtTokensPath, String extTokensEnvVar, InetSocketAddress nmAddr, String user, String appId, String locId, LocalDirsHandlerService dirsHandler) throws IOException, InterruptedException {
+    public synchronized void startLocalizer(LocalizerStartContext ctx) throws IOException, InterruptedException {
       numLocalizers.incrementAndGet();
       Shell.ShellCommandExecutor shexec = new Shell.ShellCommandExecutor(
           new String[]{"bash", "-c", "sleep 300"});

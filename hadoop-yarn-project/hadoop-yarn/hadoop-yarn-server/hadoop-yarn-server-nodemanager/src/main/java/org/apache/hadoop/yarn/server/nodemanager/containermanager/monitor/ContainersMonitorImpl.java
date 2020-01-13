@@ -121,14 +121,11 @@ public class ContainersMonitorImpl extends AbstractService implements
         YarnConfiguration.NM_CONTAINER_METRICS_UNREGISTER_DELAY_MS,
         YarnConfiguration.DEFAULT_NM_CONTAINER_METRICS_UNREGISTER_DELAY_MS);
 
-    long configuredPMemForContainers = conf.getLong(
-        YarnConfiguration.NM_PMEM_MB,
-        YarnConfiguration.DEFAULT_NM_PMEM_MB) * 1024 * 1024l;
+    long configuredPMemForContainers =
+        NodeManagerHardwareUtils.getContainerMemoryMB(conf) * 1024 * 1024L;
 
-    long configuredVCoresForContainers = conf.getLong(
-        YarnConfiguration.NM_VCORES,
-        YarnConfiguration.DEFAULT_NM_VCORES);
-
+    long configuredVCoresForContainers =
+        NodeManagerHardwareUtils.getVCores(conf);
 
     // Setting these irrespective of whether checks are enabled. Required in
     // the UI.

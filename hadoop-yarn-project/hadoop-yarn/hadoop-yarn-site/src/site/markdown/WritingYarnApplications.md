@@ -68,7 +68,7 @@ Following are the important interfaces:
 
 * Under very rare circumstances, programmer may want to directly use the 3 protocols to implement an application. However, note that *such behaviors are no longer encouraged for general use cases*.
 
-Writing a Simple Yarn Application
+Writing a Simple YARN Application
 ---------------------------------
 
 ### Writing a simple Client
@@ -588,4 +588,4 @@ Useful Links
 Sample Code
 -----------
 
-Yarn distributed shell: in `hadoop-yarn-applications-distributedshell` project after you set up your development environment.
+YARN distributed shell: in `hadoop-yarn-applications-distributedshell` project after you set up your development environment.

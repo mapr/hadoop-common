@@ -55,7 +55,20 @@ enum errorcodes {
   SETSID_OPER_FAILED = 25,
   WRITE_PIDFILE_FAILED = 26,
   WRITE_CGROUP_FAILED = 27,
-  FEATURE_DISABLED = 28
+  TRAFFIC_CONTROL_EXECUTION_FAILED = 28,
+  FEATURE_DISABLED = 29
+};
+
+enum operations {
+  CHECK_SETUP = 1,
+  MOUNT_CGROUPS = 2,
+  TRAFFIC_CONTROL_MODIFY_STATE = 3,
+  TRAFFIC_CONTROL_READ_STATE = 4,
+  TRAFFIC_CONTROL_READ_STATS = 5,
+  RUN_AS_USER_INITIALIZE_CONTAINER = 6,
+  RUN_AS_USER_LAUNCH_CONTAINER = 7,
+  RUN_AS_USER_SIGNAL_CONTAINER = 8,
+  RUN_AS_USER_DELETE = 9
 };
 
 #define NM_GROUP_KEY "yarn.nodemanager.linux-container-executor.group"
@@ -226,3 +239,22 @@ int is_mount_cgroups_support_enabled();
  */
 int setup_external_token(int ext_cred_fd, const char *ext_cred_file,
     const char *dest_dir, const char *ext_cred_env_var);
+
+/**
+ * Run a batch of tc commands that modify interface configuration
+ */
+int traffic_control_modify_state(char *command_file);
+
+/**
+ * Run a batch of tc commands that read interface configuration. Output is
+ * written to standard output and it is expected to be read and parsed by the
+ * calling process.
+ */
+int traffic_control_read_state(char *command_file);
+
+/**
+ * Run a batch of tc commands that read interface stats. Output is
+ * written to standard output and it is expected to be read and parsed by the
+ * calling process.
+ */
+int traffic_control_read_stats(char *command_file);

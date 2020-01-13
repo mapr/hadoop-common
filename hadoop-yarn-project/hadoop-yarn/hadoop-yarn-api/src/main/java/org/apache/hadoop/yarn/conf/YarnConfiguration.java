@@ -138,7 +138,7 @@ public class YarnConfiguration extends Configuration {
   public static final String ALL_IFACE_LISTEN_ADDRESS = "0.0.0.0";
   public static final String RM_IS_ALL_IFACES = RM_PREFIX + "all-ifaces";
   public static final boolean DEFAULT_RM_IS_ALL_IFACES = true;
-  
+
   /** The address of the applications manager interface in the RM.*/
   public static final String RM_ADDRESS = 
     RM_PREFIX + "address";
@@ -322,7 +322,7 @@ public class YarnConfiguration extends Configuration {
   public static final String RM_AM_MASTER_KEY_RETRY_INTERVAL_MS =
           RM_PREFIX + "am.client-token-master-key.retry-interval-ms";
   public static final int DEFAULT_RM_AM_MASTER_KEY_RETRY_INTERVAL_MS = 1000;
-  
+
   /** The keytab for the resource manager.*/
   public static final String RM_KEYTAB = 
     RM_PREFIX + "keytab";
@@ -470,7 +470,7 @@ public class YarnConfiguration extends Configuration {
 
   /** Custom HA scheme(s) config */
   public static final String CUSTOM_RM_HA_ENABLED= RM_HA_PREFIX + "custom-ha-enabled";
-  
+
   public static final String CUSTOM_RM_HA_RMFINDER= RM_HA_PREFIX + "custom-ha-rmaddressfinder";
   public static final boolean DEFAULT_CUSTOM_RM_HA_ENABLED = false;
 
@@ -872,6 +872,17 @@ public class YarnConfiguration extends Configuration {
   public static final long DEFAULT_LOG_AGGREGATION_RETAIN_CHECK_INTERVAL_SECONDS = -1;
 
   /**
+   * How long for ResourceManager to wait for NodeManager to report its
+   * log aggregation status. If waiting time of which the log aggregation status
+   * is reported from NodeManager exceeds the configured value, RM will report
+   * log aggregation status for this NodeManager as TIME_OUT
+   */
+  public static final String LOG_AGGREGATION_STATUS_TIME_OUT_MS =
+      YARN_PREFIX + "log-aggregation-status.time-out.ms";
+  public static final long DEFAULT_LOG_AGGREGATION_STATUS_TIME_OUT_MS
+      = 10 * 60 * 1000;
+
+  /**
    * Number of seconds to retain logs on the NodeManager. Only applicable if Log
    * aggregation is disabled
    */
@@ -913,9 +924,13 @@ public class YarnConfiguration extends Configuration {
   public static final String YARN_TRACKING_URL_GENERATOR = 
       YARN_PREFIX + "tracking.url.generator";
 
-  /** Amount of memory in GB that can be allocated for containers.*/
+  /** Amount of memory in MB that can be allocated for containers.*/
   public static final String NM_PMEM_MB = NM_PREFIX + "resource.memory-mb";
   public static final int DEFAULT_NM_PMEM_MB = 8 * 1024;
+
+  /** Amount of memory in MB that has been reserved for non-yarn use. */
+  public static final String NM_SYSTEM_RESERVED_PMEM_MB = NM_PREFIX
+      + "resource.system-reserved-memory-mb";
 
   /** Specifies whether physical memory check is enabled. */
   public static final String NM_PMEM_CHECK_ENABLED = NM_PREFIX
@@ -936,15 +951,126 @@ public class YarnConfiguration extends Configuration {
   public static final String NM_VCORES = NM_PREFIX + "resource.cpu-vcores";
   public static final int DEFAULT_NM_VCORES = 8;
 
+  /** Count logical processors(like hyperthreads) as cores. */
+  public static final String NM_COUNT_LOGICAL_PROCESSORS_AS_CORES = NM_PREFIX
+      + "resource.count-logical-processors-as-cores";
+  public static final boolean DEFAULT_NM_COUNT_LOGICAL_PROCESSORS_AS_CORES =
+      false;
+
+  /** Multiplier to convert physical cores to vcores. */
+  public static final String NM_PCORES_VCORES_MULTIPLIER = NM_PREFIX
+      + "resource.pcores-vcores-multiplier";
+  public static final float DEFAULT_NM_PCORES_VCORES_MULTIPLIER = 1.0f;
+
   /** Percentage of overall CPU which can be allocated for containers. */
   public static final String NM_RESOURCE_PERCENTAGE_PHYSICAL_CPU_LIMIT =
       NM_PREFIX + "resource.percentage-physical-cpu-limit";
   public static final int DEFAULT_NM_RESOURCE_PERCENTAGE_PHYSICAL_CPU_LIMIT =
       100;
-  
+
   /** Number of disks which can be allocated for containers.*/
   public static final String NM_DISKS = NM_PREFIX + "resource.io-spindles";
   public static final double DEFAULT_NM_DISKS = 0;
+
+  /** Enable or disable node hardware capability detection. */
+  public static final String NM_ENABLE_HARDWARE_CAPABILITY_DETECTION =
+      NM_PREFIX + "resource.detect-hardware-capabilities";
+  public static final boolean DEFAULT_NM_ENABLE_HARDWARE_CAPABILITY_DETECTION =
+      false;
+
+  @Private
+  public static final String NM_MEMORY_RESOURCE_PREFIX = NM_PREFIX
+      + "resource.memory.";
+
+  @Private
+  public static final String NM_MEMORY_RESOURCE_ENABLED =
+      NM_MEMORY_RESOURCE_PREFIX + "enabled";
+  @Private
+  public static final boolean DEFAULT_NM_MEMORY_RESOURCE_ENABLED = false;
+
+  @Private
+  public static final String NM_MEMORY_RESOURCE_CGROUPS_SWAPPINESS =
+      NM_MEMORY_RESOURCE_PREFIX + "cgroups.swappiness";
+  @Private
+  public static final int DEFAULT_NM_MEMORY_RESOURCE_CGROUPS_SWAPPINESS = 0;
+
+  @Private
+  public static final String NM_MEMORY_RESOURCE_CGROUPS_SOFT_LIMIT_PERCENTAGE =
+      NM_MEMORY_RESOURCE_PREFIX + "cgroups.soft-limit-percentage";
+  @Private
+  public static final float
+      DEFAULT_NM_MEMORY_RESOURCE_CGROUPS_SOFT_LIMIT_PERCENTAGE =
+      90.0f;
+
+  @Private
+  public static final String NM_CPU_RESOURCE_PREFIX = NM_PREFIX
+      + "resource.cpu.";
+
+  /** Enable cpu isolation. */
+  @Private
+  public static final String NM_CPU_RESOURCE_ENABLED =
+      NM_CPU_RESOURCE_PREFIX + "enabled";
+
+  @Private
+  public static final boolean DEFAULT_NM_CPU_RESOURCE_ENABLED = false;
+
+  /**
+   * Prefix for disk configurations. Work in progress: This configuration
+   * parameter may be changed/removed in the future.
+   */
+  @Private
+  public static final String NM_DISK_RESOURCE_PREFIX = NM_PREFIX
+      + "resource.disk.";
+  /**
+   * This setting controls if resource handling for disk operations is enabled.
+   * Work in progress: This configuration parameter may be changed/removed in
+   * the future
+   */
+  @Private
+  public static final String NM_DISK_RESOURCE_ENABLED = NM_DISK_RESOURCE_PREFIX
+      + "enabled";
+  /** Disk as a resource is disabled by default. **/
+  @Private
+  public static final boolean DEFAULT_NM_DISK_RESOURCE_ENABLED = false;
+
+  public static final String NM_NETWORK_RESOURCE_PREFIX = NM_PREFIX
+      + "resource.network.";
+
+  /**
+   * This setting controls if resource handling for network bandwidth is
+   * enabled. Work in progress: This configuration parameter may be
+   * changed/removed in the future
+   */
+  @Private
+  public static final String NM_NETWORK_RESOURCE_ENABLED =
+      NM_NETWORK_RESOURCE_PREFIX + "enabled";
+  /** Network as a resource is disabled by default **/
+  @Private
+  public static final boolean DEFAULT_NM_NETWORK_RESOURCE_ENABLED = false;
+
+  /** Specifies the interface to be used for applying network throttling rules **/
+  /* Work in progress: This configuration parameter may be changed/removed in the future */
+  @Private
+  public static final String NM_NETWORK_RESOURCE_INTERFACE =
+      NM_NETWORK_RESOURCE_PREFIX + "interface";
+  @Private
+  public static final String DEFAULT_NM_NETWORK_RESOURCE_INTERFACE = "eth0";
+
+  /** Specifies the total available outbound bandwidth on the node **/
+  /* Work in progress: This configuration parameter may be changed/removed in the future */
+  @Private
+  public static final String NM_NETWORK_RESOURCE_OUTBOUND_BANDWIDTH_MBIT =
+      NM_NETWORK_RESOURCE_PREFIX + "outbound-bandwidth-mbit";
+  @Private
+  public static final int DEFAULT_NM_NETWORK_RESOURCE_OUTBOUND_BANDWIDTH_MBIT = 1000;
+
+  /** Specifies the total outbound bandwidth available to YARN containers. defaults to
+   * NM_NETWORK_RESOURCE_OUTBOUND_BANDWIDTH_MBIT if not specified.
+   */
+  /* Work in progress: This configuration parameter may be changed/removed in the future */
+  @Private
+  public static final String NM_NETWORK_RESOURCE_OUTBOUND_BANDWIDTH_YARN_MBIT =
+      NM_NETWORK_RESOURCE_PREFIX + "outbound-bandwidth-yarn-mbit";
 
   /** NM Webapp address.**/
   public static final String NM_WEBAPP_ADDRESS = NM_PREFIX + "webapp.address";
@@ -954,7 +1080,7 @@ public class YarnConfiguration extends Configuration {
   
   public static final String NM_WEBAPP_IS_ALL_IFACES = NM_PREFIX + "webapp.all-ifaces";
   public static final boolean DEFAULT_NM_WEBAPP_IS_ALL_IFACES = true;
-  
+
   /** NM Webapp https address.**/
   public static final String NM_WEBAPP_HTTPS_ADDRESS = NM_PREFIX
       + "webapp.https.address";
@@ -1085,6 +1211,13 @@ public class YarnConfiguration extends Configuration {
   /** The arguments to pass to the health check script.*/
   public static final String NM_HEALTH_CHECK_SCRIPT_OPTS = 
     NM_PREFIX + "health-checker.script.opts";
+
+  /** The JVM options used on forking ContainerLocalizer process
+      by container executor. */
+  public static final String NM_CONTAINER_LOCALIZER_JAVA_OPTS_KEY =
+      NM_PREFIX + "container-localizer.java.opts";
+  public static final String NM_CONTAINER_LOCALIZER_JAVA_OPTS_DEFAULT =
+      "-Xmx256m";
 
   /** The Docker image name(For DockerContainerExecutor).*/
   public static final String NM_DOCKER_CONTAINER_EXECUTOR_IMAGE_NAME =
@@ -1521,7 +1654,7 @@ public class YarnConfiguration extends Configuration {
   public static final String TIMELINE_SERVICE_IS_ALL_IFACES =
       TIMELINE_SERVICE_PREFIX + "webapp.all-ifaces";
   public static final boolean DEFAULT_TIMELINE_SERVICE_IS_ALL_IFACES = true;
-  
+
   public static final int DEFAULT_TIMELINE_SERVICE_PORT = 10200;
   public static final String DEFAULT_TIMELINE_SERVICE_ADDRESS = "0.0.0.0:"
       + DEFAULT_TIMELINE_SERVICE_PORT;

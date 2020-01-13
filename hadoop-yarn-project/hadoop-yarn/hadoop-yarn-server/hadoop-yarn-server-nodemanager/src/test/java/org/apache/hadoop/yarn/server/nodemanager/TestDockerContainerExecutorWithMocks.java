@@ -18,7 +18,6 @@
 
 package org.apache.hadoop.yarn.server.nodemanager;
 
-import com.google.common.base.Strings;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -32,6 +31,7 @@ import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.api.records.ContainerLaunchContext;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.container.Container;
+import org.apache.hadoop.yarn.server.nodemanager.executor.ContainerStartContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -143,9 +143,18 @@ public class TestDockerContainerExecutorWithMocks {
     Path pidFile = new Path(workDir, "pid.txt");
 
     dockerContainerExecutor.activateContainer(cId, pidFile);
-    dockerContainerExecutor.launchContainer(container, scriptPath, tokensPath,
-        null, null, appSubmitter, appId, workDir, dirsHandler.getLocalDirs(),
-        dirsHandler.getLogDirs());
+    dockerContainerExecutor.launchContainer(new ContainerStartContext.Builder()
+        .setContainer(container)
+        .setNmPrivateContainerScriptPath(scriptPath)
+        .setNmPrivateTokensPath(tokensPath)
+        .setExtTokenPath(null)
+        .setExtTokenEnvVar(null)
+        .setUser(appSubmitter)
+        .setAppId(appId)
+        .setContainerWorkDir(workDir)
+        .setLocalDirs(dirsHandler.getLocalDirs())
+        .setLogDirs(dirsHandler.getLogDirs())
+        .build());
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -175,9 +184,19 @@ public class TestDockerContainerExecutorWithMocks {
     Path pidFile = new Path(workDir, "pid.txt");
 
     dockerContainerExecutor.activateContainer(cId, pidFile);
-    dockerContainerExecutor.launchContainer(container, scriptPath, tokensPath,
-      null, null, appSubmitter, appId, workDir, dirsHandler.getLocalDirs(),
-      dirsHandler.getLogDirs());
+    dockerContainerExecutor.launchContainer(
+        new ContainerStartContext.Builder()
+            .setContainer(container)
+            .setNmPrivateContainerScriptPath(scriptPath)
+            .setNmPrivateTokensPath(tokensPath)
+            .setExtTokenPath(null)
+            .setExtTokenEnvVar(null)
+            .setUser(appSubmitter)
+            .setAppId(appId)
+            .setContainerWorkDir(workDir)
+            .setLocalDirs(dirsHandler.getLocalDirs())
+            .setLogDirs(dirsHandler.getLogDirs())
+            .build());
   }
 
   @Test
@@ -205,9 +224,19 @@ public class TestDockerContainerExecutorWithMocks {
     Path pidFile = new Path(workDir, "pid");
 
     dockerContainerExecutor.activateContainer(cId, pidFile);
-    int ret = dockerContainerExecutor.launchContainer(container, scriptPath, tokensPath,
-        null, null, appSubmitter, appId, workDir, dirsHandler.getLocalDirs(),
-        dirsHandler.getLogDirs());
+    int ret = dockerContainerExecutor.launchContainer(
+        new ContainerStartContext.Builder()
+            .setContainer(container)
+            .setNmPrivateContainerScriptPath(scriptPath)
+            .setNmPrivateTokensPath(tokensPath)
+            .setExtTokenPath(null)
+            .setExtTokenEnvVar(null)
+            .setUser(appSubmitter)
+            .setAppId(appId)
+            .setContainerWorkDir(workDir)
+            .setLocalDirs(dirsHandler.getLocalDirs())
+            .setLogDirs(dirsHandler.getLogDirs())
+            .build());
     assertEquals(0, ret);
     //get the script
     Path sessionScriptPath = new Path(workDir,

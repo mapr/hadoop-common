@@ -24,6 +24,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -32,6 +33,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -41,7 +43,6 @@ import java.util.Set;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.security.User;
 import org.apache.hadoop.security.rpcauth.KerberosAuthMethod;
-import org.junit.Assert;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -62,8 +63,15 @@ import org.apache.hadoop.yarn.server.nodemanager.ContainerExecutor.Signal;
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.container.Container;
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.ContainerLocalizer;
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.ResourceLocalizationService;
+import org.apache.hadoop.yarn.server.nodemanager.executor.ContainerReacquisitionContext;
+import org.apache.hadoop.yarn.server.nodemanager.executor.ContainerSignalContext;
+import org.apache.hadoop.yarn.server.nodemanager.executor.ContainerStartContext;
+import org.apache.hadoop.yarn.server.nodemanager.executor.DeletionAsUserContext;
+import org.apache.hadoop.yarn.server.nodemanager.executor.LocalizerStartContext;
 import org.apache.hadoop.yarn.server.nodemanager.util.LCEResourcesHandler;
 import org.junit.After;
+import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -91,10 +99,10 @@ import org.junit.Test;
  * > sudo chmod 444 /etc/hadoop/container-executor.cfg
  * </code></pre>
  * 
- * <li>Move the binary and set proper permissions on it. It needs to be owned 
- * by root, the group needs to be the group configured in container-executor.cfg, 
+ * <li>Move the binary and set proper permissions on it. It needs to be owned
+ * by root, the group needs to be the group configured in container-executor.cfg,
  * and it needs the setuid bit set. (The build will also overwrite it so you
- * need to move it to a place that you can support it. 
+ * need to move it to a place that you can support it.
  * <br><pre><code>
  * > cp ./hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-nodemanager/src/main/c/container-executor/container-executor /tmp/
  * > sudo chown root:mapred /tmp/container-executor
@@ -105,16 +113,35 @@ import org.junit.Test;
  * needs to be part of the group from the config.
  * <br><pre><code>
  * mvn test -Dtest=TestLinuxContainerExecutor -Dapplication.submitter=nobody -Dcontainer-executor.path=/tmp/container-executor
- * </code></pre>
+ * </code>
+ * </pre>
+ *
+ * <li>The test suite also contains tests to test mounting of CGroups. By
+ * default, these tests are not run. To run them, add -Dcgroups.mount=<mount-point>
+ * Please note that the test does not unmount the CGroups at the end of the test,
+ * since that requires root permissions. <br>
+ *
+ * <li>The tests that are run are sensitive to directory permissions. All parent
+ * directories must be searchable by the user that the tasks are run as. If you
+ * wish to run the tests in a different directory, please set it using
+ * -Dworkspace.dir
+ *
  * </ol>
  */
 public class TestLinuxContainerExecutor {
   private static final Log LOG = LogFactory
-      .getLog(TestLinuxContainerExecutor.class);
-  
-  private static File workSpace = new File("target",
-      TestLinuxContainerExecutor.class.getName() + "-workSpace");
-  
+    .getLog(TestLinuxContainerExecutor.class);
+
+  private static File workSpace;
+  static {
+    String basedir = System.getProperty("workspace.dir");
+    if(basedir == null || basedir.isEmpty()) {
+      basedir = "target";
+    }
+    workSpace = new File(basedir,
+        TestLinuxContainerExecutor.class.getName() + "-workSpace");
+  }
+
   private LinuxContainerExecutor exec = null;
   private String appSubmitter = null;
   private LocalDirsHandlerService dirsHandler;
@@ -139,9 +166,15 @@ public class TestLinuxContainerExecutor {
       conf.setClass("fs.AbstractFileSystem.file.impl",
         org.apache.hadoop.fs.local.LocalFs.class,
         org.apache.hadoop.fs.AbstractFileSystem.class);
-      conf.set(YarnConfiguration.NM_NONSECURE_MODE_LOCAL_USER_KEY, "xuan");
-      LOG.info("Setting "+YarnConfiguration.NM_LINUX_CONTAINER_EXECUTOR_PATH
-          +"="+exec_path);
+
+      appSubmitter = System.getProperty("application.submitter");
+      if (appSubmitter == null || appSubmitter.isEmpty()) {
+        appSubmitter = "nobody";
+      }
+
+      conf.set(YarnConfiguration.NM_NONSECURE_MODE_LOCAL_USER_KEY, appSubmitter);
+      LOG.info("Setting " + YarnConfiguration.NM_LINUX_CONTAINER_EXECUTOR_PATH
+          + "=" + exec_path);
       conf.set(YarnConfiguration.NM_LINUX_CONTAINER_EXECUTOR_PATH, exec_path);
       exec = new LinuxContainerExecutor();
       exec.setConf(conf);
@@ -149,10 +182,14 @@ public class TestLinuxContainerExecutor {
       conf.set(YarnConfiguration.NM_LOG_DIRS, logDir.getAbsolutePath());
       dirsHandler = new LocalDirsHandlerService();
       dirsHandler.init(conf);
-    }
-    appSubmitter = System.getProperty("application.submitter");
-    if(appSubmitter == null || appSubmitter.isEmpty()) {
-      appSubmitter = "nobody";
+      List<String> localDirs = dirsHandler.getLocalDirs();
+      for (String dir : localDirs) {
+        Path userDir = new Path(dir, ContainerLocalizer.USERCACHE);
+        files.mkdir(userDir, new FsPermission("777"), false);
+        // $local/filecache
+        Path fileDir = new Path(dir, ContainerLocalizer.FILECACHE);
+        files.mkdir(fileDir, new FsPermission("777"), false);
+      }
     }
   }
 
@@ -162,6 +199,66 @@ public class TestLinuxContainerExecutor {
         new Path(workSpace.getAbsolutePath()), true);
   }
 
+  private void cleanupUserAppCache(String user) throws Exception {
+    List<String> localDirs = dirsHandler.getLocalDirs();
+    for (String dir : localDirs) {
+      Path usercachedir = new Path(dir, ContainerLocalizer.USERCACHE);
+      Path userdir = new Path(usercachedir, user);
+      Path appcachedir = new Path(userdir, ContainerLocalizer.APPCACHE);
+      exec.deleteAsUser(new DeletionAsUserContext.Builder()
+          .setUser(user)
+          .setSubDir(appcachedir)
+          .build());
+      FileContext.getLocalFSFileContext().delete(usercachedir, true);
+    }
+  }
+
+  private void cleanupUserFileCache(String user) {
+    List<String> localDirs = dirsHandler.getLocalDirs();
+    for (String dir : localDirs) {
+      Path filecache = new Path(dir, ContainerLocalizer.FILECACHE);
+      Path filedir = new Path(filecache, user);
+      exec.deleteAsUser(new DeletionAsUserContext.Builder()
+          .setUser(user)
+          .setSubDir(filedir)
+          .build());
+    }
+  }
+
+  private void cleanupLogDirs(String user) {
+    List<String> logDirs = dirsHandler.getLogDirs();
+    for (String dir : logDirs) {
+      String appId = "APP_" + id;
+      String containerId = "CONTAINER_" + (id - 1);
+      Path appdir = new Path(dir, appId);
+      Path containerdir = new Path(appdir, containerId);
+      exec.deleteAsUser(new DeletionAsUserContext.Builder()
+          .setUser(user)
+          .setSubDir(containerdir)
+          .build());
+    }
+  }
+
+  private void cleanupAppFiles(String user) throws Exception {
+    cleanupUserAppCache(user);
+    cleanupUserFileCache(user);
+    cleanupLogDirs(user);
+
+    String[] files =
+        { "launch_container.sh", "container_tokens", "touch-file" };
+    Path ws = new Path(workSpace.toURI());
+    for (String file : files) {
+      File f = new File(workSpace, file);
+      if (f.exists()) {
+        exec.deleteAsUser(new DeletionAsUserContext.Builder()
+            .setUser(user)
+            .setSubDir(new Path(file))
+            .setBasedirs(ws)
+            .build());
+      }
+    }
+  }
+
   private boolean shouldRun() {
     if(exec == null) {
       LOG.warn("Not running test because container-executor.path is not set");
@@ -169,7 +266,7 @@ public class TestLinuxContainerExecutor {
     }
     return true;
   }
-  
+
   private String writeScriptFile(String ... cmd) throws IOException {
     File f = File.createTempFile("TestLinuxContainerExecutor", ".sh");
     f.deleteOnExit();
@@ -185,25 +282,26 @@ public class TestLinuxContainerExecutor {
     p.close();
     return f.getAbsolutePath();
   }
-  
+
   private int id = 0;
+
   private synchronized int getNextId() {
     id += 1;
     return id;
   }
-  
+
   private ContainerId getNextContainerId() {
     ContainerId cId = mock(ContainerId.class);
     String id = "CONTAINER_"+getNextId();
     when(cId.toString()).thenReturn(id);
     return cId;
   }
-  
+
 
   private int runAndBlock(String ... cmd) throws IOException {
     return runAndBlock(getNextContainerId(), cmd);
   }
-  
+
   private int runAndBlock(ContainerId cId, String ... cmd) throws IOException {
     String appId = "APP_"+getNextId();
     Container container = mock(Container.class);
@@ -214,7 +312,7 @@ public class TestLinuxContainerExecutor {
     when(container.getLaunchContext()).thenReturn(context);
 
     when(context.getEnvironment()).thenReturn(env);
-    
+
     String script = writeScriptFile(cmd);
 
     Path scriptPath = new Path(script);
@@ -223,17 +321,25 @@ public class TestLinuxContainerExecutor {
     Path pidFile = new Path(workDir, "pid.txt");
 
     exec.activateContainer(cId, pidFile);
-    return exec.launchContainer(container, scriptPath, tokensPath,
-        null, null,
-        appSubmitter, appId, workDir, dirsHandler.getLocalDirs(),
-        dirsHandler.getLogDirs());
+    return exec.launchContainer(new ContainerStartContext.Builder()
+        .setContainer(container)
+        .setNmPrivateContainerScriptPath(scriptPath)
+        .setNmPrivateTokensPath(tokensPath)
+        .setExtTokenPath(null)
+        .setExtTokenEnvVar(null)
+        .setUser(appSubmitter)
+        .setAppId(appId)
+        .setContainerWorkDir(workDir)
+        .setLocalDirs(dirsHandler.getLocalDirs())
+        .setLogDirs(dirsHandler.getLogDirs())
+        .build());
   }
-  
+
   @Test
   public void testContainerLocalizer() throws Exception {
-    if (!shouldRun()) {
-      return;
-    }
+
+    Assume.assumeTrue(shouldRun());
+
     List<String> localDirs = dirsHandler.getLocalDirs();
     List<String> logDirs = dirsHandler.getLogDirs();
     for (String localDir : localDirs) {
@@ -269,8 +375,16 @@ public class TestLinuxContainerExecutor {
     };
     exec.setConf(conf);
 
-    exec.startLocalizer(nmPrivateContainerTokensPath, null, null, nmAddr,
-      appSubmitter, appId, locId, dirsHandler);
+    exec.startLocalizer(new LocalizerStartContext.Builder()
+        .setNmPrivateContainerTokens(nmPrivateContainerTokensPath)
+        .setExtTokenPath(null)
+        .setExtTokenEnvVar(null)
+        .setNmAddr(nmAddr)
+        .setUser(appSubmitter)
+        .setAppId(appId)
+        .setLocId(locId)
+        .setDirsHandler(dirsHandler)
+        .build());
 
     String locId2 = "container_01_02";
     Path nmPrivateContainerTokensPath2 =
@@ -279,32 +393,67 @@ public class TestLinuxContainerExecutor {
               + Path.SEPARATOR
               + String.format(ContainerLocalizer.TOKEN_FILE_NAME_FMT, locId2));
     files.create(nmPrivateContainerTokensPath2, EnumSet.of(CREATE, OVERWRITE));
-    exec.startLocalizer(nmPrivateContainerTokensPath2, null, null, nmAddr,
-      appSubmitter, appId, locId2, dirsHandler);
+
+    exec.startLocalizer(new LocalizerStartContext.Builder()
+            .setNmPrivateContainerTokens(nmPrivateContainerTokensPath2)
+            .setExtTokenPath(null)
+            .setExtTokenEnvVar(null)
+            .setNmAddr(nmAddr)
+            .setUser(appSubmitter)
+            .setAppId(appId)
+            .setLocId(locId2)
+            .setDirsHandler(dirsHandler)
+            .build());
+
+
+    cleanupUserAppCache(appSubmitter);
   }
-  
+
   @Test
-  public void testContainerLaunch() throws IOException {
-    if (!shouldRun()) {
-      return;
-    }
+  public void testContainerLaunch() throws Exception {
+    Assume.assumeTrue(shouldRun());
+    String expectedRunAsUser =
+        conf.get(YarnConfiguration.NM_NONSECURE_MODE_LOCAL_USER_KEY,
+          YarnConfiguration.DEFAULT_NM_NONSECURE_MODE_LOCAL_USER);
 
     File touchFile = new File(workSpace, "touch-file");
     int ret = runAndBlock("touch", touchFile.getAbsolutePath());
-    
+
     assertEquals(0, ret);
-    FileStatus fileStatus = FileContext.getLocalFSFileContext().getFileStatus(
+    FileStatus fileStatus =
+        FileContext.getLocalFSFileContext().getFileStatus(
           new Path(touchFile.getAbsolutePath()));
-    assertEquals(appSubmitter, fileStatus.getOwner());
+    assertEquals(expectedRunAsUser, fileStatus.getOwner());
+    cleanupAppFiles(expectedRunAsUser);
+
+  }
+   @Test
+   public void testNonSecureRunAsSubmitter() throws Exception {
+
+      Assume.assumeTrue(shouldRun());
+      Assume.assumeFalse(UserGroupInformation.isSecurityEnabled());
+      String expectedRunAsUser = appSubmitter;
+      conf.set(YarnConfiguration.NM_NONSECURE_MODE_LIMIT_USERS, "false");
+      exec.setConf(conf);
+      File touchFile = new File(workSpace, "touch-file");
+      int ret = runAndBlock("touch", touchFile.getAbsolutePath());
+
+      assertEquals(0, ret);
+      FileStatus fileStatus =
+      FileContext.getLocalFSFileContext().getFileStatus(
+                         new Path(touchFile.getAbsolutePath()));
+      assertEquals(expectedRunAsUser, fileStatus.getOwner());
+      cleanupAppFiles(expectedRunAsUser);
+      // reset conf
+      conf.unset(YarnConfiguration.NM_NONSECURE_MODE_LIMIT_USERS);
+      exec.setConf(conf);
   }
 
   @Test
   public void testContainerKill() throws Exception {
-    if (!shouldRun()) {
-      return;
-    }
-    
-    final ContainerId sleepId = getNextContainerId();   
+    Assume.assumeTrue(shouldRun());
+
+    final ContainerId sleepId = getNextContainerId();
     Thread t = new Thread() {
       public void run() {
         try {
@@ -318,7 +467,7 @@ public class TestLinuxContainerExecutor {
     t.start();
 
     assertTrue(t.isAlive());
-   
+
     String pid = null;
     int count = 10;
     while ((pid = exec.getProcessId(sleepId)) == null && count > 0) {
@@ -329,15 +478,55 @@ public class TestLinuxContainerExecutor {
     assertNotNull(pid);
 
     LOG.info("Going to killing the process.");
-    exec.signalContainer(appSubmitter, pid, Signal.TERM);
+    exec.signalContainer(new ContainerSignalContext.Builder()
+        .setUser(appSubmitter)
+        .setPid(pid)
+        .setSignal(Signal.TERM)
+        .build());
     LOG.info("sleeping for 100ms to let the sleep be killed");
     Thread.sleep(100);
-    
+
     assertFalse(t.isAlive());
+    cleanupAppFiles(appSubmitter);
+  }
+
+  @Test
+  public void testCGroups() throws Exception {
+    Assume.assumeTrue(shouldRun());
+    String cgroupsMount = System.getProperty("cgroups.mount");
+    Assume.assumeTrue((cgroupsMount != null) && !cgroupsMount.isEmpty());
+
+    assertTrue("Cgroups mount point does not exist", new File(
+        cgroupsMount).exists());
+    List<String> cgroupKVs = new ArrayList<>();
+
+    String hierarchy = "hadoop-yarn";
+    String[] controllers = { "cpu", "net_cls" };
+    for (String controller : controllers) {
+      cgroupKVs.add(controller + "=" + cgroupsMount + "/" + controller);
+      assertTrue(new File(cgroupsMount, controller).exists());
+    }
+
+    try {
+      exec.mountCgroups(cgroupKVs, hierarchy);
+      for (String controller : controllers) {
+        assertTrue(controller + " cgroup not mounted", new File(
+            cgroupsMount + "/" + controller + "/tasks").exists());
+        assertTrue(controller + " cgroup hierarchy not created",
+            new File(cgroupsMount + "/" + controller + "/" + hierarchy).exists());
+        assertTrue(controller + " cgroup hierarchy created incorrectly",
+            new File(cgroupsMount + "/" + controller + "/" + hierarchy
+                + "/tasks").exists());
+      }
+    } catch (IOException ie) {
+      fail("Couldn't mount cgroups " + ie.toString());
+      throw ie;
+    }
   }
 
   @Test
   public void testLocalUser() throws Exception {
+    Assume.assumeTrue(shouldRun());
     try {
       //nonsecure default
       Configuration conf = new YarnConfiguration();
@@ -385,6 +574,7 @@ public class TestLinuxContainerExecutor {
 
   @Test
   public void testNonsecureUsernamePattern() throws Exception {
+    Assume.assumeTrue(shouldRun());
     try {
       //nonsecure default
       Configuration conf = new YarnConfiguration();
@@ -396,13 +586,13 @@ public class TestLinuxContainerExecutor {
       lce.verifyUsernamePattern("foo");
       try {
         lce.verifyUsernamePattern("foo/x");
-        Assert.fail();
+        fail();
       } catch (IllegalArgumentException ex) {
-        //NOP        
+        //NOP
       } catch (Throwable ex) {
-        Assert.fail(ex.toString());
+        fail(ex.toString());
       }
-      
+
       //nonsecure custom setting
       conf.set(YarnConfiguration.NM_NONSECURE_MODE_USER_PATTERN_KEY, "foo");
       lce = new LinuxContainerExecutor();
@@ -410,11 +600,11 @@ public class TestLinuxContainerExecutor {
       lce.verifyUsernamePattern("foo");
       try {
         lce.verifyUsernamePattern("bar");
-        Assert.fail();
+        fail();
       } catch (IllegalArgumentException ex) {
-        //NOP        
+        //NOP
       } catch (Throwable ex) {
-        Assert.fail(ex.toString());
+        fail(ex.toString());
       }
 
       //secure, pattern matching does not kick in.
@@ -440,6 +630,7 @@ public class TestLinuxContainerExecutor {
 
   @Test(timeout=10000)
   public void testPostExecuteAfterReacquisition() throws Exception {
+    Assume.assumeTrue(shouldRun());
     // make up some bogus container ID
     ApplicationId appId = ApplicationId.newInstance(12345, 67890);
     ApplicationAttemptId attemptId =
@@ -456,8 +647,11 @@ public class TestLinuxContainerExecutor {
     } catch (IOException e) {
       // expected if LCE isn't setup right, but not necessary for this test
     }
-    lce.reacquireContainer("foouser", cid);
-    Assert.assertTrue("postExec not called after reacquisition",
+    lce.reacquireContainer(new ContainerReacquisitionContext.Builder()
+        .setUser("foouser")
+        .setContainerId(cid)
+        .build());
+    assertTrue("postExec not called after reacquisition",
         TestResourceHandler.postExecContainers.contains(cid));
   }
 
