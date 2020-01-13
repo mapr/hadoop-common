@@ -88,7 +88,8 @@ public class WebAppProxyServlet extends HttpServlet {
         "Accept-Encoding",
         "Accept-Language",
         "Accept-Charset",
-        "Content-Type"));
+        "Content-Type",
+        "Authorization"));
 
   public static final String PROXY_USER_COOKIE_NAME = "proxy-user";
 
