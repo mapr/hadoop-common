@@ -56,7 +56,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.protobuf.BlockingService;
 import com.google.protobuf.CodedOutputStream;
 import com.google.protobuf.Descriptors.MethodDescriptor;
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.GeneratedMessageV3;
 import com.google.protobuf.Message;
 import com.google.protobuf.ServiceException;
 import com.google.protobuf.TextFormat;
@@ -310,7 +310,7 @@ public class ProtobufRpcEngine implements RpcEngine {
    * Protobuf. Several methods on {@link org.apache.hadoop.ipc.Server and RPC} 
    * use type Writable as a wrapper to work across multiple RpcEngine kinds.
    */
-  private static abstract class RpcMessageWithHeader<T extends GeneratedMessage>
+  private static abstract class RpcMessageWithHeader<T extends GeneratedMessageV3>
     implements RpcWrapper {
     T requestHeader;
     Message theRequest; // for clientSide, the request is here
