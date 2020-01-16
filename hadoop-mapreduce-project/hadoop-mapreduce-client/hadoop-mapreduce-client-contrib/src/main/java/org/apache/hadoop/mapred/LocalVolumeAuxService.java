@@ -8,6 +8,7 @@ import com.google.common.annotations.VisibleForTesting;
 
 import java.nio.ByteBuffer;
 import java.io.IOException;
+import java.util.Date;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
@@ -74,6 +76,8 @@ public class LocalVolumeAuxService extends AuxiliaryService {
   private static final String VOLUME_HEALTH_CHECK_INTERVAL =
       "mapreduce.volume.healthcheck.interval";
 
+  private static final String SPILL_EXPIRATION_DATE =  "mapr.localspill.expiration.date";
+
   /**
    * Priority for the {@link LocalVolumeAuxServiceShutDownHook}. This should be
    * higher than {@link NodeManager#SHUTDOWN_HOOK_PRIORITY} so that {@link ShutdownHookManager}
@@ -119,6 +123,11 @@ public class LocalVolumeAuxService extends AuxiliaryService {
    * Volume check interval (in milliseconds).
    */
   private int volumeCheckInterval = 60 * 1000;
+
+  /**
+   * Spill data expiration date (in days)
+   */
+  private int spillExpirationDate = 30;
 
   protected LocalVolumeAuxService() {
     super(SERVICE_NAME);
@@ -207,7 +216,7 @@ public class LocalVolumeAuxService extends AuxiliaryService {
     rootDirNames[FidId.OUTPUT.ordinal()] = outputDirName;
     String outputUDirName = outputDirName + MAPR_UNCOMPRESSED_SUFFIX;
     rootDirNames[FidId.OUTPUT_U.ordinal()] = outputUDirName;
-    String spillDirName = conf.get(MAPR_LOCALSPILL_DIR_PARAM, MAPR_LOCALSPILL_DIR_DEFAULT);
+    String spillDirName = getSpillDirName();
     rootDirNames[FidId.SPILL.ordinal()] = spillDirName;
     String spillUDirName = spillDirName + MAPR_UNCOMPRESSED_SUFFIX;
     rootDirNames[FidId.SPILL_U.ordinal()] = spillUDirName;
@@ -215,6 +224,8 @@ public class LocalVolumeAuxService extends AuxiliaryService {
     this.metaData.setNodeManageHostName(LOCALHOSTNAME);
     this.volumeCheckInterval = conf.getInt(VOLUME_HEALTH_CHECK_INTERVAL,
         this.volumeCheckInterval);
+
+    spillExpirationDate = conf.getInt(SPILL_EXPIRATION_DATE, spillExpirationDate);
 
     int corePool = YarnConfiguration.DEFAULT_NM_DELETE_THREAD_COUNT;
     if (conf != null) {
@@ -224,6 +235,13 @@ public class LocalVolumeAuxService extends AuxiliaryService {
     deletionService = new ScheduledThreadPoolExecutor(corePool);
     deletionService.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
     deletionService.setKeepAliveTime(60L, TimeUnit.SECONDS);
+
+    deletionService.execute(new Runnable() {
+      @Override
+      public void run() {
+        deleteStaleData();
+      }
+    });
 
     // Register a shutdown hook with priority greater than that of the NodeManager. This ensures that
     // the LocalVolumeService becomes aware of the NM process being shutdown *before*
@@ -541,6 +559,32 @@ public class LocalVolumeAuxService extends AuxiliaryService {
     return dirPathId;
   }
 
+  private void deleteStaleData() {
+    String spillDirPath = getNodeManagerDirPath() + "/" + getSpillDirName();
+    String spillUDirPath = spillDirPath + MAPR_UNCOMPRESSED_SUFFIX;
+    try {
+      cleanUpSpillDirectory(maprfs.listStatus(new Path(spillDirPath)));
+      cleanUpSpillDirectory(maprfs.listStatus(new Path(spillUDirPath)));
+    } catch (IOException e) {
+      LOG.warn("Unable to locate spill files directory!");
+    }
+  }
+
+  private void cleanUpSpillDirectory(FileStatus[] spillDirs) {
+    long borderToDelete = new Date().getTime() - TimeUnit.DAYS.toMillis(spillExpirationDate);
+    if (spillDirs != null && spillDirs.length > 1) {
+      for (FileStatus dir : spillDirs) {
+        if (dir.getModificationTime() < borderToDelete) {
+          try {
+            maprfs.delete(dir.getPath(), true);
+          } catch (IOException e) {
+            LOG.warn("Unable to delete spill files: " + dir.getPath());
+          }
+        }
+      }
+    }
+  }
+
   /**
    * constructs the mapreduce volume mount path.
    * for e.g. "/var/mapr/local/<hostname>/mapred/"
@@ -568,5 +612,9 @@ public class LocalVolumeAuxService extends AuxiliaryService {
   @VisibleForTesting
   String getStagingLocalVolumeMountPath() {
     return this.conf.get("mapr.staging.localvolume.mount.path", "/var/mapr/local/" + LOCALHOSTNAME + "/nm-staging");
+  }
+
+  private String getSpillDirName() {
+    return conf.get(MAPR_LOCALSPILL_DIR_PARAM, MAPR_LOCALSPILL_DIR_DEFAULT);
   }
 }
