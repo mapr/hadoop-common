@@ -227,18 +227,12 @@ public class NodeManagerHardwareUtils {
     * And MapR Filesystem user 4 CPU core by default.*/
     float physicalCores =
             NodeManagerHardwareUtils.getContainersCPUs(plugin, conf);
-    if (cores==0 && physicalCores <= 4.0){
-      cores = (int) Math.min(YarnConfiguration.DEFAULT_NM_VCORES,physicalCores);
+    if (cores <= 0 && physicalCores <= 4.0) {
+      cores = (int) Math.min(YarnConfiguration.DEFAULT_NM_VCORES, physicalCores);
       message = "Illegal value for " + YarnConfiguration.NM_VCORES
-              + ". Value must be greater than 0."
-              + " Further the variable "+ YarnConfiguration.NM_VCORES+"="+cores;
+          + ". Value must be greater than 0."
+          + " Further the variable " + YarnConfiguration.NM_VCORES + "=" + cores;
       LOG.warn(message);
-    }
-
-    if(cores <= 0) {
-      message = "Illegal value for " + YarnConfiguration.NM_VCORES
-          + ". Value must be greater than 0.";
-      throw new IllegalArgumentException(message);
     }
 
     return cores;
