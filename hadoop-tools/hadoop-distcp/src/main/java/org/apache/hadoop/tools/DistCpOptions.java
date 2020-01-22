@@ -73,6 +73,11 @@ public class DistCpOptions {
   // beginning of distcp.
   private boolean targetPathExists = true;
 
+  // Size of chunk in number of blocks when splitting large file into chunks
+  // to copy in parallel. Default is 0 and file are not splitted.
+  private int blocksPerChunk = 0;
+
+
   private long minFileSize = DistCpConstants.DEFAULT_MIN_FILE_SIZE;
   private long maxFileSize = DistCpConstants.DEFAULT_MAX_FILE_SIZE;
   
@@ -144,6 +149,7 @@ public class DistCpOptions {
       this.targetPathExists = that.getTargetPathExists();
       this.minFileSize = that.minFileSize;
       this.maxFileSize = that.maxFileSize;
+      this.blocksPerChunk = that.blocksPerChunk;
     }
   }
 
@@ -570,6 +576,18 @@ public class DistCpOptions {
     return this.targetPathExists = targetPathExists;
   }
 
+  public final void setBlocksPerChunk(int csize) {
+    this.blocksPerChunk = csize;
+  }
+
+  public final int getBlocksPerChunk() {
+    return blocksPerChunk;
+  }
+
+  public final boolean splitLargeFile() {
+    return blocksPerChunk > 0;
+  }
+
   public void validate(DistCpOptionSwitch option, boolean value) {
 
     boolean syncFolder = (option == DistCpOptionSwitch.SYNC_FOLDERS ?
@@ -648,6 +666,8 @@ public class DistCpOptions {
         String.valueOf(minFileSize));
     DistCpOptionSwitch.addToConf(conf, DistCpOptionSwitch.MAX_FILE_SIZE,
         String.valueOf(maxFileSize));
+    DistCpOptionSwitch.addToConf(conf, DistCpOptionSwitch.BLOCKS_PER_CHUNK,
+        String.valueOf(blocksPerChunk));
   }
 
   /**
@@ -670,6 +690,7 @@ public class DistCpOptions {
         ", targetPath=" + targetPath +
         ", targetPathExists=" + targetPathExists +
         ", preserveRawXattrs=" + preserveRawXattrs +
+        ", blocksPerChunk=" + blocksPerChunk +
         '}';
   }
 

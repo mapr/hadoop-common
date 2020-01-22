@@ -156,4 +156,8 @@ public class FSDataOutputStream extends DataOutputStream
   public long[] getFidServers() throws IOException {
     throw new UnsupportedOperationException();
   }
+
+  public void seek(long pos) throws IOException{
+    throw new UnsupportedOperationException();
+  }
 }

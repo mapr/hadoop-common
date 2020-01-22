@@ -142,12 +142,22 @@ public abstract class CopyListing extends Configured {
     Configuration config = getConf();
     FileSystem fs = pathToListFile.getFileSystem(config);
 
-    Path sortedList = DistCpUtils.sortListing(fs, config, pathToListFile);
+    final boolean splitLargeFile = options.splitLargeFile();
+    // When splitLargeFile is enabled, we don't randomize the copylist
+    // earlier, so we don't do the sorting here. For a file that has
+    // multiple entries due to split, we check here that their
+    // <chunkOffset, chunkLength> is continuous.
+    //
+    Path checkPath = splitLargeFile ?
+        pathToListFile : DistCpUtils.sortListing(fs, config, pathToListFile);
+
 
     SequenceFile.Reader reader = new SequenceFile.Reader(
-                          config, SequenceFile.Reader.file(sortedList));
+                          config, SequenceFile.Reader.file(checkPath));
     try {
       Text lastKey = new Text("*"); //source relative path can never hold *
+      long lastChunkOffset = -1;
+      long lastChunkLength = -1;
       CopyListingFileStatus lastFileStatus = new CopyListingFileStatus();
 
       Text currentKey = new Text();
@@ -157,8 +167,21 @@ public abstract class CopyListing extends Configured {
         if (currentKey.equals(lastKey)) {
           CopyListingFileStatus currentFileStatus = new CopyListingFileStatus();
           reader.getCurrentValue(currentFileStatus);
-          throw new DuplicateFileException("File " + lastFileStatus.getPath() + " and " +
-              currentFileStatus.getPath() + " would cause duplicates. Aborting");
+          if (!splitLargeFile) {
+            throw new DuplicateFileException("File " + lastFileStatus.getPath()
+                + " and " + currentFileStatus.getPath()
+                + " would cause duplicates. Aborting");
+          } else {
+            if (lastChunkOffset + lastChunkLength !=
+                currentFileStatus.getChunkOffset()) {
+              throw new InvalidInputException("File " + lastFileStatus.getPath()
+                  + " " + lastChunkOffset + "," + lastChunkLength
+                  + " and " + currentFileStatus.getPath()
+                  + " " + currentFileStatus.getChunkOffset() + ","
+                  + currentFileStatus.getChunkLength()
+                  + " are not continuous. Aborting");
+            }
+          }
         }
         reader.getCurrentValue(lastFileStatus);
         if (options.shouldPreserve(DistCpOptions.FileAttribute.ACL)) {
@@ -178,6 +201,10 @@ public abstract class CopyListing extends Configured {
           }
         }
         lastKey.set(currentKey);
+        if (splitLargeFile) {
+          lastChunkOffset = lastFileStatus.getChunkOffset();
+          lastChunkLength = lastFileStatus.getChunkLength();
+        }
       }
     } finally {
       IOUtils.closeStream(reader);

@@ -60,6 +60,14 @@ public final class CopyListingFileStatus extends FileStatus {
   private List<AclEntry> aclEntries;
   private Map<String, byte[]> xAttrs;
 
+  // <chunkOffset, chunkLength> represents the offset and length of a file
+  // chunk in number of bytes.
+  // used when splitting a large file to chunks to copy in parallel.
+  // If a file is not large enough to split, chunkOffset would be 0 and
+  // chunkLength would be the length of the file.
+  private long chunkOffset = 0;
+  private long chunkLength = Long.MAX_VALUE;
+
   /**
    * Default constructor.
    */
@@ -75,6 +83,25 @@ public final class CopyListingFileStatus extends FileStatus {
   public CopyListingFileStatus(FileStatus fileStatus) throws IOException {
     super(fileStatus);
   }
+
+  /**
+   * Creates a new CopyListingFileStatus by copying the members of the given
+   * CopyListingFileStatus.
+   *
+   * @param other CopyListingFileStatus to copy
+   */
+  public CopyListingFileStatus(CopyListingFileStatus other)
+      throws IOException {
+    this(other, other.getChunkOffset(), other.getChunkLength());
+  }
+
+  public CopyListingFileStatus(FileStatus fileStatus,
+                               long chunkOffset, long chunkLength) throws IOException {
+    super(fileStatus);
+    this.chunkOffset = chunkOffset;
+    this.chunkLength = chunkLength;
+  }
+
 
   /**
    * Returns the full logical ACL.
@@ -113,6 +140,31 @@ public final class CopyListingFileStatus extends FileStatus {
     this.xAttrs = xAttrs;
   }
 
+  public long getChunkOffset() {
+    return chunkOffset;
+  }
+
+  public void setChunkOffset(long offset) {
+    this.chunkOffset = offset;
+  }
+
+  public long getChunkLength() {
+    return chunkLength;
+  }
+
+  public void setChunkLength(long chunkLength) {
+    this.chunkLength = chunkLength;
+  }
+
+  public boolean isSplit() {
+    return getChunkLength() != Long.MAX_VALUE &&
+        getChunkLength() != getLen();
+  }
+
+  public long getSizeToCopy() {
+    return isSplit() ? getChunkLength() : getLen();
+  }
+
   @Override
   public void write(DataOutput out) throws IOException {
     super.write(out);
@@ -148,6 +200,8 @@ public final class CopyListingFileStatus extends FileStatus {
     } else {
       out.writeInt(NO_XATTRS);
     }
+    out.writeLong(chunkOffset);
+    out.writeLong(chunkLength);
   }
 
   @Override
@@ -186,6 +240,8 @@ public final class CopyListingFileStatus extends FileStatus {
     } else {
       xAttrs = null;
     }
+    chunkOffset = in.readLong();
+    chunkLength = in.readLong();
   }
 
   @Override
@@ -210,8 +266,14 @@ public final class CopyListingFileStatus extends FileStatus {
   public String toString() {
     StringBuilder sb = new StringBuilder(super.toString());
     sb.append('{');
-    sb.append("aclEntries = " + aclEntries);
-    sb.append(", xAttrs = " + xAttrs);
+    sb.append(this.getPath().toString());
+    sb.append(" length = ").append(this.getLen());
+    sb.append(" aclEntries = ").append(aclEntries);
+    sb.append(", xAttrs = ").append(xAttrs);
+    if (isSplit()) {
+      sb.append(", chunkOffset = ").append(this.getChunkOffset());
+      sb.append(", chunkLength = ").append(this.getChunkLength());
+    }
     sb.append('}');
     return sb.toString();
   }

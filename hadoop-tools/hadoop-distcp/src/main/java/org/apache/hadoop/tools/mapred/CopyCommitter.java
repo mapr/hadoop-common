@@ -27,12 +27,15 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.ipc.RemoteException;
 import org.apache.hadoop.mapreduce.*;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputCommitter;
 import org.apache.hadoop.tools.*;
 import org.apache.hadoop.tools.DistCpOptions.FileAttribute;
 import org.apache.hadoop.tools.util.DistCpUtils;
+import org.apache.hadoop.tools.DistCpOptionSwitch;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -57,7 +60,9 @@ public class CopyCommitter extends FileOutputCommitter {
   private boolean syncFolder = false;
   private boolean overwrite = false;
   private boolean targetPathExists = true;
-  
+
+  private boolean ignoreFailures = false;
+
   /**
    * Create a output committer
    *
@@ -77,7 +82,10 @@ public class CopyCommitter extends FileOutputCommitter {
     syncFolder = conf.getBoolean(DistCpConstants.CONF_LABEL_SYNC_FOLDERS, false);
     overwrite = conf.getBoolean(DistCpConstants.CONF_LABEL_OVERWRITE, false);
     targetPathExists = conf.getBoolean(DistCpConstants.CONF_LABEL_TARGET_PATH_EXISTS, true);
-    
+    ignoreFailures = conf.getBoolean(DistCpOptionSwitch.IGNORE_FAILURES.getConfigLabel(), false);
+
+    renameSpitFiles(conf, jobContext);
+
     super.commitJob(jobContext);
 
     cleanupTempFiles(jobContext);
@@ -101,6 +109,46 @@ public class CopyCommitter extends FileOutputCommitter {
       cleanup(conf);
     }
   }
+
+  private void renameSpitFiles(Configuration conf, JobContext jobContext) throws IOException {
+    Path targetRoot = new Path(conf.get(DistCpConstants.CONF_LABEL_TARGET_WORK_PATH));
+    String spath = conf.get(DistCpConstants.CONF_LABEL_LISTING_FILE_PATH);
+    Path sourceListing = new Path(spath);
+    FileSystem fs = targetRoot.getFileSystem(conf);
+
+    SequenceFile.Reader sourceReader = new SequenceFile.Reader(conf, SequenceFile.Reader.file(sourceListing));
+    try {
+      CopyListingFileStatus srcFileStatus = new CopyListingFileStatus();
+      Text srcRelPath = new Text();
+      // Iterate over every source path that was copied.
+      while (sourceReader.next(srcRelPath, srcFileStatus)) {
+        LOG.info(srcFileStatus.getPath().toString());
+        if (srcFileStatus.isDirectory() || !srcFileStatus.isSplit()) {
+          continue;
+        }
+        if (fs.exists(targetRoot) && fs.isDirectory(targetRoot)) {
+          Path tmpTargetFile = new Path(targetRoot.toString() + "/" + ".distcp.tmp." +
+              srcFileStatus.getPath().getName() + "." + jobContext.getJobID().toString());
+          Path targetFile = new Path(targetRoot.toString() + "/" + srcFileStatus.getPath().getName());
+          renameTmpTarget(fs, tmpTargetFile, targetFile);
+        } else {
+          Path tmpTargetFile = new Path(targetRoot.getParent() + "/" + ".distcp.tmp." +
+              targetRoot.getName() + "." + jobContext.getJobID().toString());
+          renameTmpTarget(fs, tmpTargetFile, targetRoot);
+        }
+      }
+    } finally {
+      IOUtils.closeStream(sourceReader);
+    }
+  }
+
+  private void renameTmpTarget(FileSystem fs, Path tmpTargetFile, Path targetFile) throws IOException {
+    if (fs.exists(tmpTargetFile) && !fs.rename(tmpTargetFile, targetFile)) {
+      throw new IOException("Failed to promote tmp-file:" + tmpTargetFile
+          + " to: " + targetFile);
+    }
+  }
+
 
   /** {@inheritDoc} */
   @Override
@@ -158,6 +206,19 @@ public class CopyCommitter extends FileOutputCommitter {
     } catch (IOException ignore) {
       LOG.error("Exception encountered ", ignore);
     }
+  }
+
+  private boolean isFileNotFoundException(IOException e) {
+    if (e instanceof FileNotFoundException) {
+      return true;
+    }
+
+    if (e instanceof RemoteException) {
+      return ((RemoteException) e).unwrapRemoteException()
+          instanceof FileNotFoundException;
+    }
+
+    return false;
   }
 
   // This method changes the target-directories' file-attributes (owner,

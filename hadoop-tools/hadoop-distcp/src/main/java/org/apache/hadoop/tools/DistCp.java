@@ -34,6 +34,7 @@ import org.apache.hadoop.mapreduce.Cluster;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.JobSubmissionFiles;
+import org.apache.hadoop.tools.DistCpOptions.FileAttribute;
 import org.apache.hadoop.tools.CopyListing.*;
 import org.apache.hadoop.tools.mapred.CopyMapper;
 import org.apache.hadoop.tools.mapred.CopyOutputFormat;
@@ -113,6 +114,7 @@ public class DistCp extends Configured implements Tool {
     
     try {
       inputOptions = (OptionsParser.parse(argv));
+      setOptionsForSplitLargeFile();
       setTargetPathExists();
       LOG.info("Input Options: " + inputOptions);
     } catch (Throwable e) {
@@ -219,6 +221,28 @@ public class DistCp extends Configured implements Tool {
     getConf().setBoolean(DistCpConstants.CONF_LABEL_TARGET_PATH_EXISTS, 
         targetExists);
   }
+
+  /**
+   * Set up needed options for splitting large files.
+   */
+  private void setOptionsForSplitLargeFile() throws IOException {
+    if (!inputOptions.splitLargeFile()) {
+      return;
+    }
+    Path target = inputOptions.getTargetPath();
+    FileSystem targetFS = target.getFileSystem(getConf());
+
+    LOG.info("Enabling preserving blocksize since "
+        + DistCpOptionSwitch.BLOCKS_PER_CHUNK.getSwitch() + " is passed.");
+    inputOptions.preserve(FileAttribute.BLOCKSIZE);
+
+    LOG.info("Set " +
+        DistCpOptionSwitch.APPEND.getSwitch()
+        + " to false since " + DistCpOptionSwitch.BLOCKS_PER_CHUNK.getSwitch()
+        + " is passed.");
+    inputOptions.setAppend(false);
+  }
+
   /**
    * Create Job object for submitting it, with all the configuration
    *

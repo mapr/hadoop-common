@@ -37,6 +37,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.tools.CopyListingFileStatus;
 import org.apache.hadoop.tools.DistCpConstants;
 import org.apache.hadoop.tools.DistCpOptions.FileAttribute;
 import org.apache.hadoop.tools.mapred.CopyMapper.FileAction;
@@ -90,7 +91,7 @@ public class RetriableFileCopyCommand extends RetriableCommand {
   @Override
   protected Object doExecute(Object... arguments) throws Exception {
     assert arguments.length == 4 : "Unexpected argument list.";
-    FileStatus source = (FileStatus)arguments[0];
+    CopyListingFileStatus source = (CopyListingFileStatus)arguments[0];
     assert !source.isDirectory() : "Unexpected file-status. Expected file.";
     Path target = (Path)arguments[1];
     Mapper.Context context = (Mapper.Context)arguments[2];
@@ -99,44 +100,49 @@ public class RetriableFileCopyCommand extends RetriableCommand {
     return doCopy(source, target, context, fileAttributes);
   }
 
-  private long doCopy(FileStatus sourceFileStatus, Path target,
+  private long doCopy(CopyListingFileStatus source, Path target,
       Mapper.Context context, EnumSet<FileAttribute> fileAttributes)
       throws IOException {
     final boolean toAppend = action == FileAction.APPEND;
-    Path targetPath = toAppend ? target : getTmpFile(target, context);
+    Path targetPath = toAppend ? target : DistCpUtils.getTmpFile(target, context, source.isSplit());
     final Configuration configuration = context.getConfiguration();
     FileSystem targetFS = target.getFileSystem(configuration);
 
     try {
       if (LOG.isDebugEnabled()) {
-        LOG.debug("Copying " + sourceFileStatus.getPath() + " to " + target);
+        LOG.debug("Copying " + source.getPath() + " to " + target);
         LOG.debug("Target file path: " + targetPath);
       }
-      if (sourceFileStatus.isSymlink()) {
-        final FileSystem symlinkSourceFS = sourceFileStatus.getSymlink().getFileSystem(configuration);
-        sourceFileStatus = symlinkSourceFS.getFileStatus(sourceFileStatus.getSymlink());
+      if (source.isSymlink()) {
+        final FileSystem symlinkSourceFS = source.getSymlink().getFileSystem(configuration);
+        source = (CopyListingFileStatus)symlinkSourceFS.getFileStatus(source.getSymlink());
       }
-      final Path sourcePath = sourceFileStatus.getPath();
+      final Path sourcePath = source.getPath();
       final FileSystem sourceFS = sourcePath.getFileSystem(configuration);
       final FileChecksum sourceChecksum = fileAttributes
           .contains(FileAttribute.CHECKSUMTYPE) ? sourceFS
           .getFileChecksum(sourcePath) : null;
 
-      final long offset = action == FileAction.APPEND ? targetFS.getFileStatus(
-          target).getLen() : 0;
-      long bytesRead = copyToFile(targetPath, targetFS, sourceFileStatus,
+      long offset = (action == FileAction.APPEND) ?
+          targetFS.getFileStatus(target).getLen() :
+          source.getChunkOffset();
+      long bytesRead = copyToFile(targetPath, targetFS, source,
           offset, context, fileAttributes, sourceChecksum);
 
-      compareFileLengths(sourceFileStatus, targetPath, configuration, bytesRead
-          + offset);
+      if (!source.isSplit()) {
+        compareFileLengths(source, targetPath, configuration, bytesRead
+            + offset);
+      }
       //At this point, src&dest lengths are same. if length==0, we skip checksum
       if ((bytesRead != 0) && (!skipCrc)) {
-        compareCheckSums(sourceFS, sourceFileStatus.getPath(), sourceChecksum,
-            targetFS, targetPath);
+        if (!source.isSplit()) {
+          compareCheckSums(sourceFS, source.getPath(), sourceChecksum,
+              targetFS, targetPath);
+        }
       }
       // it's not append case, thus we first write to a temporary file, rename
       // it to the target path.
-      if (!toAppend) {
+      if (!toAppend && !source.isSplit()) {
         promoteTmpToTarget(targetPath, target, targetFS);
       }
       return bytesRead;
@@ -144,7 +150,7 @@ public class RetriableFileCopyCommand extends RetriableCommand {
       // note that for append case, it is possible that we append partial data
       // and then fail. In that case, for the next retry, we either reuse the
       // partial appended data if it is good or we overwrite the whole file
-      if (!toAppend && targetFS.exists(targetPath)) {
+      if (!toAppend && targetFS.exists(targetPath) && !source.isSplit()) {
         targetFS.delete(targetPath, false);
       }
     }
@@ -164,13 +170,13 @@ public class RetriableFileCopyCommand extends RetriableCommand {
   }
 
   private long copyToFile(Path targetPath, FileSystem targetFS,
-      FileStatus sourceFileStatus, long sourceOffset, Mapper.Context context,
+      CopyListingFileStatus sourceFileStatus, long sourceOffset, Mapper.Context context,
       EnumSet<FileAttribute> fileAttributes, final FileChecksum sourceChecksum)
       throws IOException {
     FsPermission permission = FsPermission.getFileDefault().applyUMask(
         FsPermission.getUMask(targetFS.getConf()));
     final OutputStream outStream;
-    if (action == FileAction.OVERWRITE) {
+    if (action == FileAction.OVERWRITE && !(sourceFileStatus.isSplit() && targetFS.exists(targetPath))) {
       final short repl = getReplicationFactor(fileAttributes, sourceFileStatus,
           targetFS, targetPath);
       final long blockSize = getBlockSize(fileAttributes, sourceFileStatus,
@@ -179,10 +185,12 @@ public class RetriableFileCopyCommand extends RetriableCommand {
           EnumSet.of(CreateFlag.CREATE, CreateFlag.OVERWRITE),
           BUFFER_SIZE, repl, blockSize, context,
           getChecksumOpt(fileAttributes, sourceChecksum));
+      out.seek(sourceFileStatus.getChunkOffset());
       outStream = new BufferedOutputStream(out);
     } else {
-      outStream = new BufferedOutputStream(targetFS.append(targetPath,
-          BUFFER_SIZE));
+      FSDataOutputStream out = targetFS.append(targetPath, BUFFER_SIZE);
+      out.seek(sourceFileStatus.getChunkOffset());
+      outStream = new BufferedOutputStream(out);
     }
     return copyBytes(sourceFileStatus, sourceOffset, outStream, BUFFER_SIZE,
         context);
@@ -228,36 +236,38 @@ public class RetriableFileCopyCommand extends RetriableCommand {
     }
   }
 
-  private Path getTmpFile(Path target, Mapper.Context context) {
-    Path targetWorkPath = new Path(context.getConfiguration().
-        get(DistCpConstants.CONF_LABEL_TARGET_WORK_PATH));
-
-    Path root = target.equals(targetWorkPath)? targetWorkPath.getParent() : targetWorkPath;
-    LOG.info("Creating temp file: " +
-        new Path(root, ".distcp.tmp." + context.getTaskAttemptID().toString()));
-    return new Path(root, ".distcp.tmp." + context.getTaskAttemptID().toString());
-  }
-
   @VisibleForTesting
-  long copyBytes(FileStatus sourceFileStatus, long sourceOffset,
+  long copyBytes(CopyListingFileStatus source2, long sourceOffset,
       OutputStream outStream, int bufferSize, Mapper.Context context)
       throws IOException {
-    Path source = sourceFileStatus.getPath();
+    Path source = source2.getPath();
     byte buf[] = new byte[bufferSize];
     ThrottledInputStream inStream = null;
     long totalBytesRead = 0;
 
+    long chunkLength = source2.getChunkLength();
+    boolean finished = false;
+
     try {
       inStream = getInputStream(source, context.getConfiguration());
-      int bytesRead = readBytes(inStream, buf, sourceOffset);
+      seekIfRequired(inStream, sourceOffset);
+      int bytesRead = readBytes(inStream, buf);
       while (bytesRead >= 0) {
+        if (chunkLength > 0 &&
+            (totalBytesRead + bytesRead) >= chunkLength) {
+          bytesRead = (int) (chunkLength - totalBytesRead);
+          finished = true;
+        }
         totalBytesRead += bytesRead;
         if (action == FileAction.APPEND) {
           sourceOffset += bytesRead;
         }
         outStream.write(buf, 0, bytesRead);
-        updateContextStatus(totalBytesRead, context, sourceFileStatus);
-        bytesRead = readBytes(inStream, buf, sourceOffset);
+        updateContextStatus(totalBytesRead, context, source2);
+        if (finished) {
+          break;
+        }
+        bytesRead = readBytes(inStream, buf);
       }
       outStream.close();
       outStream = null;
@@ -280,13 +290,20 @@ public class RetriableFileCopyCommand extends RetriableCommand {
     context.setStatus(message.toString());
   }
 
-  private static int readBytes(ThrottledInputStream inStream, byte buf[],
-      long position) throws IOException {
+  private static int readBytes(ThrottledInputStream inStream, byte[] buf)
+      throws IOException {
     try {
-      if (position == 0) {
-        return inStream.read(buf);
-      } else {
-        return inStream.read(position, buf, 0, buf.length);
+      return inStream.read(buf);
+    } catch (IOException e) {
+      throw new CopyReadException(e);
+    }
+  }
+
+  private static void seekIfRequired(ThrottledInputStream inStream,
+                                     long sourceOffset) throws IOException {
+    try {
+      if (sourceOffset != inStream.getPos()) {
+        inStream.seek(sourceOffset);
       }
     } catch (IOException e) {
       throw new CopyReadException(e);
