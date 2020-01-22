@@ -18,6 +18,7 @@
 
 package org.apache.hadoop.tools.mapred;
 
+import org.apache.hadoop.maprfs.AbstractMapRFileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -107,9 +108,14 @@ public class CopyCommitter extends FileOutputCommitter {
         DistCpConstants.CONF_LABEL_TARGET_PATH_EXISTS, true);
     ignoreFailures = conf.getBoolean(
         DistCpOptionSwitch.IGNORE_FAILURES.getConfigLabel(), false);
-
-    if (blocksPerChunk > 0) {
-      concatFileChunks(conf);
+    Path targetRoot = new Path(conf.get(DistCpConstants.CONF_LABEL_TARGET_WORK_PATH));
+    final FileSystem targetFS = targetRoot.getFileSystem(conf);
+    if (!(targetFS instanceof AbstractMapRFileSystem)) {
+      if (blocksPerChunk > 0) {
+        concatFileChunks(conf);
+      }
+    } else {
+      renameSpitFiles(conf, jobContext);
     }
 
     super.commitJob(jobContext);
@@ -136,6 +142,45 @@ public class CopyCommitter extends FileOutputCommitter {
     }
     finally {
       cleanup(conf);
+    }
+  }
+
+  private void renameSpitFiles(Configuration conf, JobContext jobContext) throws IOException {
+    Path targetRoot = new Path(conf.get(DistCpConstants.CONF_LABEL_TARGET_WORK_PATH));
+    String spath = conf.get(DistCpConstants.CONF_LABEL_LISTING_FILE_PATH);
+    Path sourceListing = new Path(spath);
+    FileSystem fs = targetRoot.getFileSystem(conf);
+
+    SequenceFile.Reader sourceReader = new SequenceFile.Reader(conf, SequenceFile.Reader.file(sourceListing));
+    try {
+      CopyListingFileStatus srcFileStatus = new CopyListingFileStatus();
+      Text srcRelPath = new Text();
+      // Iterate over every source path that was copied.
+      while (sourceReader.next(srcRelPath, srcFileStatus)) {
+        LOG.info(srcFileStatus.getPath().toString());
+        if (srcFileStatus.isDirectory() || !srcFileStatus.isSplit()) {
+          continue;
+        }
+        if (fs.exists(targetRoot) && fs.isDirectory(targetRoot)) {
+          Path tmpTargetFile = new Path(targetRoot.toString() + "/" + ".distcp.tmp." +
+                  srcFileStatus.getPath().getName() + "." + jobContext.getJobID().toString());
+          Path targetFile = new Path(targetRoot.toString() + "/" + srcFileStatus.getPath().getName());
+          renameTmpTarget(fs, tmpTargetFile, targetFile);
+        } else {
+          Path tmpTargetFile = new Path(targetRoot.getParent() + "/" + ".distcp.tmp." +
+                  targetRoot.getName() + "." + jobContext.getJobID().toString());
+          renameTmpTarget(fs, tmpTargetFile, targetRoot);
+        }
+      }
+    } finally {
+      IOUtils.closeStream(sourceReader);
+    }
+  }
+
+  private void renameTmpTarget(FileSystem fs, Path tmpTargetFile, Path targetFile) throws IOException {
+    if (fs.exists(tmpTargetFile) && !fs.rename(tmpTargetFile, targetFile)) {
+      throw new IOException("Failed to promote tmp-file:" + tmpTargetFile
+              + " to: " + targetFile);
     }
   }
 

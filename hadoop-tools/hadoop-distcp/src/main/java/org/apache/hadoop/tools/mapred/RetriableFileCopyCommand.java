@@ -40,6 +40,7 @@ import org.apache.hadoop.fs.Options.ChecksumOpt;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.io.IOUtils;
+import org.apache.hadoop.maprfs.AbstractMapRFileSystem;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.tools.CopyListingFileStatus;
 import org.apache.hadoop.tools.DistCpConstants;
@@ -131,16 +132,15 @@ public class RetriableFileCopyCommand extends RetriableCommand {
       FileStatus sourceStatus)
       throws IOException {
     LOG.info("Copying {} to {}", source.getPath(), target);
-
+    final Configuration configuration = context.getConfiguration();
+    FileSystem targetFS = target.getFileSystem(configuration);
+    final boolean splitMFSFile = targetFS instanceof AbstractMapRFileSystem && source.isSplit();
     final boolean toAppend = action == FileAction.APPEND;
-    final boolean useTempTarget = !toAppend && !directWrite;
+    final boolean useTempTarget = !toAppend && !directWrite && !splitMFSFile;
     Path targetPath = useTempTarget ? getTempFile(target, context) : target;
 
     LOG.info("Writing to {} target file path {}", useTempTarget ? "temporary"
         : "direct", targetPath);
-
-    final Configuration configuration = context.getConfiguration();
-    FileSystem targetFS = target.getFileSystem(configuration);
 
     try {
       final Path sourcePath = source.getPath();
@@ -212,7 +212,9 @@ public class RetriableFileCopyCommand extends RetriableCommand {
       ecPolicy = ((HdfsFileStatus) sourceStatus).getErasureCodingPolicy();
     }
     final OutputStream outStream;
-    if (action == FileAction.OVERWRITE) {
+    final boolean mfsSplit = targetFS instanceof AbstractMapRFileSystem &&
+            source.isSplit() && targetFS.exists(targetPath);
+    if (action == FileAction.OVERWRITE && !mfsSplit) {
       // If there is an erasure coding policy set on the target directory,
       // files will be written to the target directory using the same EC policy.
       // The replication factor of the source file is ignored and not preserved.
@@ -238,10 +240,12 @@ public class RetriableFileCopyCommand extends RetriableCommand {
         }
         out = builder.build();
       }
-      outStream = new BufferedOutputStream(out);
+        out.seek(source.getChunkOffset());
+        outStream = new BufferedOutputStream(out);
     } else {
-      outStream = new BufferedOutputStream(targetFS.append(targetPath,
-          copyBufferSize));
+      FSDataOutputStream out = targetFS.append(targetPath, copyBufferSize);
+      out.seek(source.getChunkOffset());
+      outStream = new BufferedOutputStream(out);
     }
     return copyBytes(source, sourceOffset, outStream, copyBufferSize,
         context);

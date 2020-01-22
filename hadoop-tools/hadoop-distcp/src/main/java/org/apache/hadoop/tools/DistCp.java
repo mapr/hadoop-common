@@ -32,6 +32,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.maprfs.AbstractMapRFileSystem;
 import org.apache.hadoop.mapreduce.Cluster;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobContext;
@@ -267,17 +268,19 @@ public class DistCp extends Configured implements Tool {
 
     final Path target = context.getTargetPath();
     final FileSystem targetFS = target.getFileSystem(getConf());
-    try {
-      Path[] src = null;
-      Path tgt = null;
-      targetFS.concat(tgt, src);
-    } catch (UnsupportedOperationException use) {
-      throw new UnsupportedOperationException(
-          DistCpOptionSwitch.BLOCKS_PER_CHUNK.getSwitch() +
-              " is not supported since the target file system doesn't" +
-              " support concat.", use);
-    } catch (Exception e) {
-      // Ignore other exception
+    if (!(targetFS instanceof AbstractMapRFileSystem)) {
+      try {
+        Path[] src = null;
+        Path tgt = null;
+        targetFS.concat(tgt, src);
+      } catch (UnsupportedOperationException use) {
+        throw new UnsupportedOperationException(
+                DistCpOptionSwitch.BLOCKS_PER_CHUNK.getSwitch() +
+                        " is not supported since the target file system doesn't" +
+                        " support concat.", use);
+      } catch (Exception e) {
+        // Ignore other exception
+      }
     }
 
     LOG.info("Set " +

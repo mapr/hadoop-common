@@ -190,4 +190,8 @@ public class FSDataOutputStream extends DataOutputStream
     throw new UnsupportedOperationException();
   }
 
+  public void seek(long pos) throws IOException{
+    throw new UnsupportedOperationException();
+  }
+
 }
