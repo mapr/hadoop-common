@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.EnumSet;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.hadoop.maprfs.AbstractMapRFileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -195,8 +196,13 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
         return;
       }
 
-      FileAction action = checkUpdate(sourceFS, sourceCurrStatus, target,
-          targetStatus);
+      FileAction action = null;
+      if (!sourceCurrStatus.isSplit()){
+        action = checkUpdate(sourceFS, sourceCurrStatus, target,
+                targetStatus);
+      } else {
+        action = FileAction.OVERWRITE;
+      }
 
       Path tmpTarget = target;
       if (action == FileAction.SKIP) {
@@ -213,7 +219,7 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
                   0 : targetStatus.getLen())));
         }
       } else {
-        if (sourceCurrStatus.isSplit()) {
+        if (sourceCurrStatus.isSplit() && !(targetFS instanceof AbstractMapRFileSystem)) {
           tmpTarget = DistCpUtils.getSplitChunkPath(target, sourceCurrStatus);
         }
         if (LOG.isDebugEnabled()) {
@@ -222,8 +228,16 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
         copyFileWithRetry(description, sourceCurrStatus, tmpTarget,
             targetStatus, context, action, fileAttributes);
       }
-      DistCpUtils.preserve(target.getFileSystem(conf), tmpTarget,
-          sourceCurrStatus, fileAttributes, preserveRawXattrs);
+      if (!sourceCurrStatus.isSplit()) {
+        DistCpUtils.preserve(target.getFileSystem(conf), tmpTarget,
+                sourceCurrStatus, fileAttributes, preserveRawXattrs);
+      } else {
+        if (targetFS instanceof AbstractMapRFileSystem) {
+          tmpTarget = DistCpUtils.getTmpFile(target, context, sourceCurrStatus.isSplit());
+          DistCpUtils.preserve(tmpTarget.getFileSystem(conf), tmpTarget,
+                  sourceCurrStatus, fileAttributes, preserveRawXattrs);
+        }
+      }
     } catch (IOException exception) {
       handleFailures(exception, sourceFileStatus, target, context);
     }
