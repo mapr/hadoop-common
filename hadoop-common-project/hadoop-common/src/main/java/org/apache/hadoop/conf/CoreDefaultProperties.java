@@ -400,7 +400,7 @@ public class CoreDefaultProperties extends Properties
     props.put("hadoop.ssl.hostname.verifier", // core-default.xml
         HADOOP_SSL_HOSTNAME_VERIFIER);
   }
-  public static final String SSL_EXCLUDE_INSECURE_PROTOCOLS = "SSLv3,TLSv1";
+  public static final String SSL_EXCLUDE_INSECURE_PROTOCOLS = "SSLv3,TLSv1,TLSv1.1";
   static {
     props.put("hadoop.ssl.exclude.insecure.protocols", // core-default.xml
         SSL_EXCLUDE_INSECURE_PROTOCOLS);
