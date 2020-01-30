@@ -438,10 +438,22 @@ public class LocalVolumeAuxService extends AuxiliaryService {
         readLock.lock();
         try {
           for (int i = FidId.ROOT.ordinal() + 1; i < fidRoots.length; i++) {
-            if (maprfs.deleteFid(fidRoots[i], jobIdStr)) {
-              LOG.debug("Deleted " + jobIdStr + " from " + FidId.values()[i]);
+            final String fidRoot = fidRoots[i];
+            final FidId fidId = FidId.values()[i];
+            if (maprfs.deleteFid(fidRoot, jobIdStr)) {
+              LOG.debug("Deleted " + jobIdStr + " from " + fidId);
             } else {
-              LOG.warn(jobIdStr + " could not be deleted from " + FidId.values()[i] + ". Parent Fid: " + fidRoots[i]);
+              LOG.warn(jobIdStr + " was failed to delete from " + fidId + ". Parent Fid: " + fidRoot + ". There will be another attempt after 3 hours.");
+              deletionService.schedule(new Runnable() {
+                @Override
+                public void run() {
+                  try {
+                    maprfs.deleteFid(fidRoot, jobIdStr);
+                  } catch (IOException e) {
+                    LOG.warn(jobIdStr + " could not be deleted from " + fidId + ". Parent Fid: " + fidRoot);
+                  }
+                }
+              }, 3, TimeUnit.HOURS);
             }
           }
         } catch (Throwable t) {
