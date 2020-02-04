@@ -496,7 +496,7 @@ public class LocalVolumeAuxService extends AuxiliaryService {
     MapRDirectShuffleMetaData jobData = jobMetaData.get(jobIdStr);
 
     if (jobData == null) {
-      LOG.warn("Can not find metadata for a job. Returning service metadata");
+      LOG.debug("Can not find metadata for a job. Returning service metadata");
       return getMetaData();
     }
 
