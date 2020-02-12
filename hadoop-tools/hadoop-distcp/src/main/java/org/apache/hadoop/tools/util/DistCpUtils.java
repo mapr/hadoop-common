@@ -449,6 +449,17 @@ public class DistCpUtils {
     return copyListingFileStatus;
   }
 
+  public static FileStatus getOriginalFileStatus(FileStatus sourceStatus, Configuration conf){
+    try {
+      if(sourceStatus.isSymlink()){
+        final FileSystem symlinkSourceFS = sourceStatus.getSymlink().getFileSystem(conf);
+        return symlinkSourceFS.getFileStatus(sourceStatus.getSymlink());
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return sourceStatus;
+  }
   /**
    * Sort sequence file containing FileStatus and Text as key and value respecitvely
    *

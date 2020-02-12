@@ -192,12 +192,12 @@ public class SimpleCopyListing extends CopyListing {
 
         FileStatus rootStatus = sourceFS.getFileStatus(path);
         Path sourcePathRoot = computeSourceRootPath(rootStatus, options);
-
         FileStatus[] sourceFiles = sourceFS.listStatus(path);
         boolean explore = (sourceFiles != null && sourceFiles.length > 0);
         if (!explore || rootStatus.isDirectory()) {
+          FileStatus tmpRootStatus = DistCpUtils.getOriginalFileStatus(rootStatus, getConf());
           LinkedList<CopyListingFileStatus> rootCopyListingStatus =
-            DistCpUtils.toCopyListingFileStatus(sourceFS, rootStatus,
+            DistCpUtils.toCopyListingFileStatus(sourceFS, tmpRootStatus,
                 preserveAcls, preserveXAttrs, preserveRawXAttrs,
                 options.getBlocksPerChunk());
           writeToFileListingRoot(fileListWriter, rootCopyListingStatus,
@@ -209,21 +209,18 @@ public class SimpleCopyListing extends CopyListing {
             if (LOG.isDebugEnabled()) {
               LOG.debug("Recording source-path: " + sourceStatus.getPath() + " for copy.");
             }
-   /*         CopyListingFileStatus sourceCopyListingStatus =
-              DistCpUtils.toCopyListingFileStatus(sourceFS, sourceStatus,
-                  preserveAcls && sourceStatus.isDirectory(),
-                  preserveXAttrs && sourceStatus.isDirectory(),
-                  preserveRawXAttrs && sourceStatus.isDirectory());
-            writeToFileListing(fileListWriter, sourceCopyListingStatus,
-                sourcePathRoot, options);*/
-
+            FileStatus tmpSourceStatus = DistCpUtils.getOriginalFileStatus(sourceStatus, getConf());
             LinkedList<CopyListingFileStatus> sourceCopyListingStatus =
-                DistCpUtils.toCopyListingFileStatus(sourceFS, sourceStatus,
-                    preserveAcls && sourceStatus.isDirectory(),
-                    preserveXAttrs && sourceStatus.isDirectory(),
-                    preserveRawXAttrs && sourceStatus.isDirectory(),
+                DistCpUtils.toCopyListingFileStatus(sourceFS, tmpSourceStatus,
+                    preserveAcls && tmpSourceStatus.isDirectory(),
+                    preserveXAttrs && tmpSourceStatus.isDirectory(),
+                    preserveRawXAttrs && tmpSourceStatus.isDirectory(),
                     options.getBlocksPerChunk());
             for (CopyListingFileStatus fs : sourceCopyListingStatus) {
+              if(sourceStatus.isSymlink()){
+                fs.setPath(sourceStatus.getPath());
+                fs.setSymlink(sourceStatus.getSymlink());
+              }
               writeToFileListing(fileListWriter, fs, sourcePathRoot, options);
             }
 
@@ -415,11 +412,12 @@ public class SimpleCopyListing extends CopyListing {
             LOG.debug("Recording source-path: " + child.getPath() + " for copy.");
           }
           if (retry == 0) {
+            FileStatus tmpChildStatus = DistCpUtils.getOriginalFileStatus(child, getConf());
             LinkedList<CopyListingFileStatus> childCopyListingStatus =
-                DistCpUtils.toCopyListingFileStatus(sourceFS, child,
-                preserveAcls && child.isDirectory(),
-                preserveXAttrs && child.isDirectory(),
-                preserveRawXattrs && child.isDirectory(),
+                DistCpUtils.toCopyListingFileStatus(sourceFS, tmpChildStatus,
+                preserveAcls && tmpChildStatus.isDirectory(),
+                preserveXAttrs && tmpChildStatus.isDirectory(),
+                preserveRawXattrs && tmpChildStatus.isDirectory(),
                     options.getBlocksPerChunk());
             for (CopyListingFileStatus fs : childCopyListingStatus) {
               writeToFileListing(fileListWriter, fs, sourcePathRoot, options);

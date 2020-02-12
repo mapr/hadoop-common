@@ -113,10 +113,6 @@ public class RetriableFileCopyCommand extends RetriableCommand {
         LOG.debug("Copying " + source.getPath() + " to " + target);
         LOG.debug("Target file path: " + targetPath);
       }
-      if (source.isSymlink()) {
-        final FileSystem symlinkSourceFS = source.getSymlink().getFileSystem(configuration);
-        source = (CopyListingFileStatus)symlinkSourceFS.getFileStatus(source.getSymlink());
-      }
       final Path sourcePath = source.getPath();
       final FileSystem sourceFS = sourcePath.getFileSystem(configuration);
       final FileChecksum sourceChecksum = fileAttributes

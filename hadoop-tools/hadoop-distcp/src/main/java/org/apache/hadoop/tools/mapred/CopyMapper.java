@@ -242,8 +242,9 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
         sourceFS = sourcePath.getFileSystem(conf);
         final boolean preserveXAttrs =
             fileAttributes.contains(FileAttribute.XATTR);
+        FileStatus tmpSourceStatus = DistCpUtils.getOriginalFileStatus(sourceFileStatus, conf);
         sourceCurrStatus = DistCpUtils.toCopyListingFileStatusHelper(sourceFS,
-            sourceFS.getFileStatus(sourcePath),
+            sourceFS.getFileStatus(tmpSourceStatus.getPath()),
             fileAttributes.contains(FileAttribute.ACL),
             preserveXAttrs, preserveRawXattrs,
             sourceFileStatus.getChunkOffset(),
@@ -304,7 +305,7 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
         copyFileWithRetry(description, sourceCurrStatus, target, context,
             action, fileAttributes);
         if(!sourceCurrStatus.isSplit()){
-        DistCpUtils.preserve(target.getFileSystem(conf), target,
+          DistCpUtils.preserve(target.getFileSystem(conf), target,
             sourceCurrStatus, fileAttributes, preserveRawXattrs);
         }else {
           Path tmpTarget = DistCpUtils.getTmpFile(target, context, sourceCurrStatus.isSplit());
