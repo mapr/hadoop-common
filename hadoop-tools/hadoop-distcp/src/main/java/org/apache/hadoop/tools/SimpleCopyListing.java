@@ -420,6 +420,10 @@ public class SimpleCopyListing extends CopyListing {
                 preserveRawXattrs && tmpChildStatus.isDirectory(),
                     options.getBlocksPerChunk());
             for (CopyListingFileStatus fs : childCopyListingStatus) {
+              if(child.isSymlink()){
+                fs.setPath(child.getPath());
+                fs.setSymlink(child.getSymlink());
+              }
               writeToFileListing(fileListWriter, fs, sourcePathRoot, options);
             }
 
