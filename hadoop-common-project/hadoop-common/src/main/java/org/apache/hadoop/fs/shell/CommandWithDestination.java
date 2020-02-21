@@ -45,6 +45,7 @@ import org.apache.hadoop.fs.permission.AclEntry;
 import org.apache.hadoop.fs.permission.AclUtil;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.io.IOUtils;
+import org.apache.hadoop.maprfs.AbstractMapRFileSystem;
 
 import static org.apache.hadoop.fs.CreateFlag.CREATE;
 import static org.apache.hadoop.fs.CreateFlag.LAZY_PERSIST;
@@ -106,13 +107,14 @@ abstract class CommandWithDestination extends FsCommand {
       preserve(FileAttribute.TIMESTAMPS);
       preserve(FileAttribute.OWNERSHIP);
       preserve(FileAttribute.PERMISSION);
+      preserve(FileAttribute.EXP);
     } else {
       preserveStatus.clear();
     }
   }
   
   protected static enum FileAttribute {
-    TIMESTAMPS, OWNERSHIP, PERMISSION, ACL, XATTR;
+    TIMESTAMPS, OWNERSHIP, PERMISSION, ACL, XATTR, EXP;
 
     public static FileAttribute getAttribute(char symbol) {
       for (FileAttribute attribute : values()) {
@@ -443,6 +445,12 @@ abstract class CommandWithDestination extends FsCommand {
             target.fs.setXAttr(target.path, entry.getKey(), entry.getValue());
           }
         }
+      }
+    }
+    if (shouldPreserve(FileAttribute.EXP)) {
+      if (src.fs instanceof AbstractMapRFileSystem && target != null) {
+        AbstractMapRFileSystem mapRFileSystem = (AbstractMapRFileSystem) src.fs;
+        mapRFileSystem.copyAce(src.path, target.path);
       }
     }
   }

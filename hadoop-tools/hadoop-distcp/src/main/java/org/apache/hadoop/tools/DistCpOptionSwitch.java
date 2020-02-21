@@ -204,7 +204,7 @@ public enum DistCpOptionSwitch {
       new Option("filesizemax", true, "Limit the file size to be < n bytes "
         + "(default 8 exbibyte)"));
 
-  public static final String PRESERVE_STATUS_DEFAULT = "-prbugpct";
+  public static final String PRESERVE_STATUS_DEFAULT = "-prbugpcte";
   private final String confLabel;
   private final Option option;
 

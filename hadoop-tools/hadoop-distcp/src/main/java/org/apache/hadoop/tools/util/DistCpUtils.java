@@ -46,6 +46,7 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.maprfs.AbstractMapRFileSystem;
 import org.apache.hadoop.tools.CopyListing.AclsNotSupportedException;
 import org.apache.hadoop.tools.CopyListing.XAttrsNotSupportedException;
 import org.apache.hadoop.tools.CopyListingFileStatus;
@@ -224,6 +225,10 @@ public class DistCpUtils {
     } else if (attributes.contains(FileAttribute.PERMISSION) &&
       !srcFileStatus.getPermission().equals(targetFileStatus.getPermission())) {
       targetFS.setPermission(path, srcFileStatus.getPermission());
+    }
+
+    if(attributes.contains(FileAttribute.EXP) && targetFS instanceof AbstractMapRFileSystem){
+      ((AbstractMapRFileSystem) targetFS).copyAce(srcFileStatus.getPath(), path);
     }
 
     final boolean preserveXAttrs = attributes.contains(FileAttribute.XATTR);

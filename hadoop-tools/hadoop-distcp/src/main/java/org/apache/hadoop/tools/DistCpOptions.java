@@ -82,7 +82,7 @@ public class DistCpOptions {
   private long maxFileSize = DistCpConstants.DEFAULT_MAX_FILE_SIZE;
   
   public static enum FileAttribute{
-    REPLICATION, BLOCKSIZE, USER, GROUP, PERMISSION, CHECKSUMTYPE, ACL, XATTR, TIMES;
+    REPLICATION, BLOCKSIZE, USER, GROUP, PERMISSION, CHECKSUMTYPE, ACL, XATTR, TIMES, EXP;
 
     public static FileAttribute getAttribute(char symbol) {
       for (FileAttribute attribute : values()) {
