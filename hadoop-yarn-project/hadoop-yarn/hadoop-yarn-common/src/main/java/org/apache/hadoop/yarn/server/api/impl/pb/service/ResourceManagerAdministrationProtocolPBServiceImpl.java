@@ -28,6 +28,8 @@ import org.apache.hadoop.yarn.api.protocolrecords.impl.pb.GetClusterNodeLabelsRe
 import org.apache.hadoop.yarn.api.protocolrecords.impl.pb.RefreshClusterNodeLabelsRequestPBImpl;
 import org.apache.hadoop.yarn.api.protocolrecords.impl.pb.RefreshClusterNodeLabelsResponsePBImpl;
 import org.apache.hadoop.yarn.exceptions.YarnException;
+import org.apache.hadoop.yarn.proto.YarnServerResourceManagerServiceProtos.AddToClusterMaprNodeLabelsRequestProto;
+import org.apache.hadoop.yarn.proto.YarnServerResourceManagerServiceProtos.AddToClusterMaprNodeLabelsResponseProto;
 import org.apache.hadoop.yarn.proto.YarnServerResourceManagerServiceProtos.AddToClusterNodeLabelsRequestProto;
 import org.apache.hadoop.yarn.proto.YarnServerResourceManagerServiceProtos.AddToClusterNodeLabelsResponseProto;
 import org.apache.hadoop.yarn.proto.YarnServerResourceManagerServiceProtos.GetGroupsForUserRequestProto;
@@ -44,10 +46,14 @@ import org.apache.hadoop.yarn.proto.YarnServerResourceManagerServiceProtos.Refre
 import org.apache.hadoop.yarn.proto.YarnServerResourceManagerServiceProtos.RefreshSuperUserGroupsConfigurationResponseProto;
 import org.apache.hadoop.yarn.proto.YarnServerResourceManagerServiceProtos.RefreshUserToGroupsMappingsRequestProto;
 import org.apache.hadoop.yarn.proto.YarnServerResourceManagerServiceProtos.RefreshUserToGroupsMappingsResponseProto;
+import org.apache.hadoop.yarn.proto.YarnServerResourceManagerServiceProtos.RemoveFromClusterMaprNodeLabelsRequestProto;
+import org.apache.hadoop.yarn.proto.YarnServerResourceManagerServiceProtos.RemoveFromClusterMaprNodeLabelsResponseProto;
 import org.apache.hadoop.yarn.proto.YarnServerResourceManagerServiceProtos.RemoveFromClusterNodeLabelsRequestProto;
 import org.apache.hadoop.yarn.proto.YarnServerResourceManagerServiceProtos.RemoveFromClusterNodeLabelsResponseProto;
 import org.apache.hadoop.yarn.proto.YarnServerResourceManagerServiceProtos.ReplaceLabelsOnNodeRequestProto;
 import org.apache.hadoop.yarn.proto.YarnServerResourceManagerServiceProtos.ReplaceLabelsOnNodeResponseProto;
+import org.apache.hadoop.yarn.proto.YarnServerResourceManagerServiceProtos.ReplaceMaprLabelsOnNodeRequestProto;
+import org.apache.hadoop.yarn.proto.YarnServerResourceManagerServiceProtos.ReplaceMaprLabelsOnNodeResponseProto;
 import org.apache.hadoop.yarn.proto.YarnServerResourceManagerServiceProtos.UpdateNodeResourceRequestProto;
 import org.apache.hadoop.yarn.proto.YarnServerResourceManagerServiceProtos.UpdateNodeResourceResponseProto;
 import org.apache.hadoop.yarn.proto.YarnServiceProtos.GetClusterNodeLabelsRequestProto;
@@ -56,6 +62,7 @@ import org.apache.hadoop.yarn.proto.YarnServiceProtos.RefreshClusterNodeLabelsRe
 import org.apache.hadoop.yarn.proto.YarnServiceProtos.RefreshClusterNodeLabelsResponseProto;
 import org.apache.hadoop.yarn.server.api.ResourceManagerAdministrationProtocol;
 import org.apache.hadoop.yarn.server.api.ResourceManagerAdministrationProtocolPB;
+import org.apache.hadoop.yarn.server.api.protocolrecords.AddToClusterMaprNodeLabelsResponse;
 import org.apache.hadoop.yarn.server.api.protocolrecords.AddToClusterNodeLabelsResponse;
 import org.apache.hadoop.yarn.server.api.protocolrecords.RefreshAdminAclsResponse;
 import org.apache.hadoop.yarn.server.api.protocolrecords.RefreshNodesResponse;
@@ -63,9 +70,13 @@ import org.apache.hadoop.yarn.server.api.protocolrecords.RefreshQueuesResponse;
 import org.apache.hadoop.yarn.server.api.protocolrecords.RefreshServiceAclsResponse;
 import org.apache.hadoop.yarn.server.api.protocolrecords.RefreshSuperUserGroupsConfigurationResponse;
 import org.apache.hadoop.yarn.server.api.protocolrecords.RefreshUserToGroupsMappingsResponse;
+import org.apache.hadoop.yarn.server.api.protocolrecords.RemoveFromClusterMaprNodeLabelsResponse;
 import org.apache.hadoop.yarn.server.api.protocolrecords.RemoveFromClusterNodeLabelsResponse;
 import org.apache.hadoop.yarn.server.api.protocolrecords.ReplaceLabelsOnNodeResponse;
+import org.apache.hadoop.yarn.server.api.protocolrecords.ReplaceMaprLabelsOnNodeResponse;
 import org.apache.hadoop.yarn.server.api.protocolrecords.UpdateNodeResourceResponse;
+import org.apache.hadoop.yarn.server.api.protocolrecords.impl.pb.AddToClusterMaprNodeLabelsRequestPBImpl;
+import org.apache.hadoop.yarn.server.api.protocolrecords.impl.pb.AddToClusterMaprNodeLabelsResponsePBImpl;
 import org.apache.hadoop.yarn.server.api.protocolrecords.impl.pb.AddToClusterNodeLabelsRequestPBImpl;
 import org.apache.hadoop.yarn.server.api.protocolrecords.impl.pb.AddToClusterNodeLabelsResponsePBImpl;
 import org.apache.hadoop.yarn.server.api.protocolrecords.impl.pb.RefreshAdminAclsRequestPBImpl;
@@ -80,10 +91,14 @@ import org.apache.hadoop.yarn.server.api.protocolrecords.impl.pb.RefreshSuperUse
 import org.apache.hadoop.yarn.server.api.protocolrecords.impl.pb.RefreshSuperUserGroupsConfigurationResponsePBImpl;
 import org.apache.hadoop.yarn.server.api.protocolrecords.impl.pb.RefreshUserToGroupsMappingsRequestPBImpl;
 import org.apache.hadoop.yarn.server.api.protocolrecords.impl.pb.RefreshUserToGroupsMappingsResponsePBImpl;
+import org.apache.hadoop.yarn.server.api.protocolrecords.impl.pb.RemoveFromClusterMaprNodeLabelsRequestPBImpl;
+import org.apache.hadoop.yarn.server.api.protocolrecords.impl.pb.RemoveFromClusterMaprNodeLabelsResponsePBImpl;
 import org.apache.hadoop.yarn.server.api.protocolrecords.impl.pb.RemoveFromClusterNodeLabelsRequestPBImpl;
 import org.apache.hadoop.yarn.server.api.protocolrecords.impl.pb.RemoveFromClusterNodeLabelsResponsePBImpl;
 import org.apache.hadoop.yarn.server.api.protocolrecords.impl.pb.ReplaceLabelsOnNodeRequestPBImpl;
 import org.apache.hadoop.yarn.server.api.protocolrecords.impl.pb.ReplaceLabelsOnNodeResponsePBImpl;
+import org.apache.hadoop.yarn.server.api.protocolrecords.impl.pb.ReplaceMaprLabelsOnNodeRequestPBImpl;
+import org.apache.hadoop.yarn.server.api.protocolrecords.impl.pb.ReplaceMaprLabelsOnNodeResponsePBImpl;
 import org.apache.hadoop.yarn.server.api.protocolrecords.impl.pb.UpdateNodeResourceRequestPBImpl;
 import org.apache.hadoop.yarn.server.api.protocolrecords.impl.pb.UpdateNodeResourceResponsePBImpl;
 
@@ -247,6 +262,22 @@ public class ResourceManagerAdministrationProtocolPBServiceImpl implements Resou
   }
 
   @Override
+  public AddToClusterMaprNodeLabelsResponseProto addToClusterMaprNodeLabels(RpcController controller, AddToClusterMaprNodeLabelsRequestProto proto)
+      throws ServiceException {
+    AddToClusterMaprNodeLabelsRequestPBImpl request =
+        new AddToClusterMaprNodeLabelsRequestPBImpl(proto);
+    try {
+      AddToClusterMaprNodeLabelsResponse response =
+          real.addToClusterMaprNodeLabels(request);
+      return ((AddToClusterMaprNodeLabelsResponsePBImpl) response).getProto();
+    } catch (YarnException e) {
+      throw new ServiceException(e);
+    } catch (IOException e) {
+      throw new ServiceException(e);
+    }
+  }
+
+  @Override
   public RemoveFromClusterNodeLabelsResponseProto removeFromClusterNodeLabels(
       RpcController controller, RemoveFromClusterNodeLabelsRequestProto proto)
       throws ServiceException {
@@ -256,6 +287,22 @@ public class ResourceManagerAdministrationProtocolPBServiceImpl implements Resou
       RemoveFromClusterNodeLabelsResponse response =
           real.removeFromClusterNodeLabels(request);
       return ((RemoveFromClusterNodeLabelsResponsePBImpl) response).getProto();
+    } catch (YarnException e) {
+      throw new ServiceException(e);
+    } catch (IOException e) {
+      throw new ServiceException(e);
+    }
+  }
+
+  @Override
+  public RemoveFromClusterMaprNodeLabelsResponseProto removeFromClusterMaprNodeLabels(RpcController controller,
+      RemoveFromClusterMaprNodeLabelsRequestProto proto) throws ServiceException {
+    RemoveFromClusterMaprNodeLabelsRequestPBImpl request =
+        new RemoveFromClusterMaprNodeLabelsRequestPBImpl(proto);
+    try {
+      RemoveFromClusterMaprNodeLabelsResponse response =
+          real.removeFromClusterMaprNodeLabels(request);
+      return ((RemoveFromClusterMaprNodeLabelsResponsePBImpl) response).getProto();
     } catch (YarnException e) {
       throw new ServiceException(e);
     } catch (IOException e) {
@@ -278,6 +325,19 @@ public class ResourceManagerAdministrationProtocolPBServiceImpl implements Resou
       throw new ServiceException(e);
     }
   }
+
+  @Override
+  public ReplaceMaprLabelsOnNodeResponseProto replaceMaprLabelsOnNodes(RpcController controller, ReplaceMaprLabelsOnNodeRequestProto proto)
+      throws ServiceException {
+    ReplaceMaprLabelsOnNodeRequestPBImpl request = new ReplaceMaprLabelsOnNodeRequestPBImpl(proto);
+    try {
+      ReplaceMaprLabelsOnNodeResponse response = real.replaceMaprLabelsOnNode(request);
+      return ((ReplaceMaprLabelsOnNodeResponsePBImpl) response).getProto();
+    } catch (YarnException | IOException e) {
+      throw new ServiceException(e);
+    }
+  }
+
   public GetClusterNodeLabelsResponseProto getClusterNodeLabels(
   RpcController controller, GetClusterNodeLabelsRequestProto proto)
     throws ServiceException {

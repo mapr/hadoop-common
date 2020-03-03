@@ -66,6 +66,8 @@ import org.apache.hadoop.yarn.ipc.YarnRPC;
 import org.apache.hadoop.yarn.security.ConfiguredYarnAuthorizer;
 import org.apache.hadoop.yarn.security.YarnAuthorizationProvider;
 import org.apache.hadoop.yarn.server.api.ResourceManagerAdministrationProtocol;
+import org.apache.hadoop.yarn.server.api.protocolrecords.AddToClusterMaprNodeLabelsRequest;
+import org.apache.hadoop.yarn.server.api.protocolrecords.AddToClusterMaprNodeLabelsResponse;
 import org.apache.hadoop.yarn.server.api.protocolrecords.AddToClusterNodeLabelsRequest;
 import org.apache.hadoop.yarn.server.api.protocolrecords.AddToClusterNodeLabelsResponse;
 import org.apache.hadoop.yarn.server.api.protocolrecords.RefreshAdminAclsRequest;
@@ -80,10 +82,14 @@ import org.apache.hadoop.yarn.server.api.protocolrecords.RefreshSuperUserGroupsC
 import org.apache.hadoop.yarn.server.api.protocolrecords.RefreshSuperUserGroupsConfigurationResponse;
 import org.apache.hadoop.yarn.server.api.protocolrecords.RefreshUserToGroupsMappingsRequest;
 import org.apache.hadoop.yarn.server.api.protocolrecords.RefreshUserToGroupsMappingsResponse;
+import org.apache.hadoop.yarn.server.api.protocolrecords.RemoveFromClusterMaprNodeLabelsRequest;
+import org.apache.hadoop.yarn.server.api.protocolrecords.RemoveFromClusterMaprNodeLabelsResponse;
 import org.apache.hadoop.yarn.server.api.protocolrecords.RemoveFromClusterNodeLabelsRequest;
 import org.apache.hadoop.yarn.server.api.protocolrecords.RemoveFromClusterNodeLabelsResponse;
 import org.apache.hadoop.yarn.server.api.protocolrecords.ReplaceLabelsOnNodeRequest;
 import org.apache.hadoop.yarn.server.api.protocolrecords.ReplaceLabelsOnNodeResponse;
+import org.apache.hadoop.yarn.server.api.protocolrecords.ReplaceMaprLabelsOnNodeRequest;
+import org.apache.hadoop.yarn.server.api.protocolrecords.ReplaceMaprLabelsOnNodeResponse;
 import org.apache.hadoop.yarn.server.api.protocolrecords.UpdateNodeResourceRequest;
 import org.apache.hadoop.yarn.server.api.protocolrecords.UpdateNodeResourceResponse;
 import org.apache.hadoop.yarn.server.resourcemanager.reservation.ReservationSystem;
@@ -653,6 +659,47 @@ public class AdminService extends CompositeService implements
     }
   }
 
+  public AddToClusterMaprNodeLabelsResponse addToClusterMaprNodeLabels(AddToClusterMaprNodeLabelsRequest request)
+      throws YarnException, IOException {
+    String argName = "addToClusterMaprNodeLabels";
+    final String msg = "add labels.";
+    UserGroupInformation user = checkAcls(argName);
+
+    checkRMStatus(user.getShortUserName(), argName, msg);
+
+    AddToClusterMaprNodeLabelsResponse response =
+        recordFactory.newRecordInstance(AddToClusterMaprNodeLabelsResponse.class);
+    try {
+      LabelManager.getInstance().addToClusterNodeLabels(request.getNodeLabels());
+      RMAuditLogger
+          .logSuccess(user.getShortUserName(), argName, "AdminService");
+      return response;
+    } catch (IOException ioe) {
+      throw logAndWrapException(ioe, user.getShortUserName(), argName, msg);
+    }
+  }
+
+  @Override
+  public RemoveFromClusterMaprNodeLabelsResponse removeFromClusterMaprNodeLabels(
+      RemoveFromClusterMaprNodeLabelsRequest request) throws YarnException, IOException {
+    String argName = "removeFromClusterMaprNodeLabels";
+    final String msg = "remove labels.";
+    UserGroupInformation user = checkAcls(argName);
+
+    checkRMStatus(user.getShortUserName(), argName, msg);
+
+    RemoveFromClusterMaprNodeLabelsResponse response =
+        recordFactory.newRecordInstance(RemoveFromClusterMaprNodeLabelsResponse.class);
+    try {
+      LabelManager.getInstance().removeFromClusterNodeLabels(request.getNodeLabels());
+      RMAuditLogger
+          .logSuccess(user.getShortUserName(), argName, "AdminService");
+      return response;
+    } catch (IOException ioe) {
+      throw logAndWrapException(ioe, user.getShortUserName(), argName, msg);
+    }
+  }
+
   @Override
   public RemoveFromClusterNodeLabelsResponse removeFromClusterNodeLabels(
       RemoveFromClusterNodeLabelsRequest request) throws YarnException, IOException {
@@ -672,6 +719,25 @@ public class AdminService extends CompositeService implements
     } catch (IOException ioe) {
       throw logAndWrapException(ioe, user.getShortUserName(), argName, msg);
     }
+  }
+
+  @Override
+  public ReplaceMaprLabelsOnNodeResponse replaceMaprLabelsOnNode(
+      ReplaceMaprLabelsOnNodeRequest request) throws YarnException, IOException {
+    String argName = "replaceMaprLabelsOnNode";
+    final String msg = "set node to labels.";
+    UserGroupInformation user = checkAcls(argName);
+
+    checkRMStatus(user.getShortUserName(), argName, msg);
+
+    ReplaceMaprLabelsOnNodeResponse response =
+        recordFactory.newRecordInstance(ReplaceMaprLabelsOnNodeResponse.class);
+    try {
+      LabelManager.getInstance().replaceLabelsOnNode(request.getLabels());
+    } catch (IOException e) {
+      throw logAndWrapException(e, user.getShortUserName(), argName, msg);
+    }
+    return response;
   }
 
   @Override
@@ -719,7 +785,7 @@ public class AdminService extends CompositeService implements
 	  recordFactory.newRecordInstance(GetClusterNodeLabelsResponse.class);
 
     LabelManager labelManager = LabelManager.getInstance();
-    List<NodeToLabelsList> clusterNodeLabels = labelManager.getLabelsForAllNodes();
+    List<NodeToLabelsList> clusterNodeLabels = labelManager.getLabelsForAllNodes(false);
 
     response.setClusterNodeLabels(clusterNodeLabels);
     return response;

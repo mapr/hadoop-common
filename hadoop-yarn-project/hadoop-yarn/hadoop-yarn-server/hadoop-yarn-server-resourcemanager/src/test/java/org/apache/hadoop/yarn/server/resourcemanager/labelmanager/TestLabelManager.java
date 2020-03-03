@@ -17,12 +17,21 @@
  */
 package org.apache.hadoop.yarn.server.resourcemanager.labelmanager;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
 import java.util.Set;
 
 import net.java.dev.eval.Expression;
@@ -32,6 +41,7 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.service.Service;
+import org.apache.hadoop.yarn.api.records.NodeToLabelsList;
 import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManagementService;
 import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManager;
 import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManager.LabelApplicabilityStatus;
@@ -430,19 +440,19 @@ public class TestLabelManager {
     labels = lb.getLabels();
     assertTrue(labels.isEmpty());
   }
-  
+
   @Test
   public void testBadLabels() throws Exception {
     LabelManager lb = LabelManager.getInstance();
-    
+
     Queue.QueueLabelPolicy policy = Queue.QueueLabelPolicy.AND;
     Expression queueLabelExpression = lb.getEffectiveLabelExpr("good && big");
     Expression appLabelExpression = lb.getEffectiveLabelExpr("badlabel");
-    
+
     Expression finalExpr = lb.constructAppLabel(policy,
         appLabelExpression,
         queueLabelExpression);
-    
+
     assertEquals("((good&&big)&&badlabel)", finalExpr.toString());
 
     try {
@@ -451,8 +461,153 @@ public class TestLabelManager {
     } catch (IOException e) {
       // show go here
     }
-   }
-  
+  }
+
+  @Test
+  public void testAddLabels_ok() throws Exception {
+    LabelManager lb = LabelManager.getInstance();
+
+    String existedNode = "perfnode1*";
+    Set<String> existedLabels = ImmutableSet.of("right", "good", "fantastic");
+    String nodeName1 = "node04.cluster.com";
+    String nodeName2 = "node05.cluster.com";
+    String label1 = "fast";
+    String label2 = "slow";
+    String arg = nodeName1 + "=" + label1 + "; " + nodeName2 + "=" + label2;
+
+    lb.addToClusterNodeLabels(arg);
+
+    lb.refreshLabels(conf);
+
+    Set<String> labelsForNode1 = lb.getLabelsForNode(nodeName1);
+    Set<String> labelsForNode2 = lb.getLabelsForNode(nodeName2);
+    Set<String> existed = lb.getLabelsForNode(existedNode);
+
+    assertNotNull(labelsForNode1);
+    assertNotNull(labelsForNode2);
+    assertNotNull(existed);
+    assertTrue(labelsForNode1.contains(label1));
+    assertTrue(labelsForNode2.contains(label2));
+    assertTrue(existed.containsAll(existedLabels));
+  }
+
+  @Test
+  public void testAddLabels_badLabel() throws Exception {
+    LabelManager lb = LabelManager.getInstance();
+
+    String node = "node1";
+    String badLabel = "1label";
+
+    List<NodeToLabelsList> labelsForAllNodes = ImmutableList.copyOf(lb.getLabelsForAllNodes(false));
+
+    try {
+      lb.addToClusterNodeLabels(node + "=" + badLabel);
+      fail("IOException is expected!");
+    } catch (IOException e) {
+    }
+
+    assertEquals(lb.getLabelsForAllNodes(false), labelsForAllNodes);
+  }
+
+  @Test
+  public void testRemoveLabels_ok() throws Exception {
+    LabelManager lb = LabelManager.getInstance();
+
+    String node = "perfnode1*";
+    String node2 = "perfnode15*";
+    String label1 = "right";
+    String label2 = "good";
+    String label3 = "fantastic";
+
+    assertNotNull(lb.getLabelsForNode(node));
+    assertTrue(lb.getLabelsForNode(node).containsAll(ImmutableSet.of(label1, label2, label3)));
+
+    lb.removeFromClusterNodeLabels(node + "=" + label1);
+    lb.refreshLabels(conf);
+    assertFalse(lb.getLabelsForNode(node).contains(label1));
+
+    lb.removeFromClusterNodeLabels(node + "=" + label2 + "," + label3);
+    lb.refreshLabels(conf);
+    assertNull(lb.getLabelsForNode(node));
+
+    lb.removeFromClusterNodeLabels(node2 + "=*");
+    lb.refreshLabels(conf);
+    assertNull(lb.getLabelsForNode(node2));
+    assertTrue(lb.getLabelsForAllNodes(false).size() > 0);
+
+    lb.removeFromClusterNodeLabels("*");
+    lb.refreshLabels(conf);
+    assertTrue(fs.exists(new Path(LABEL_FILE)));
+    assertTrue(lb.getLabelsForAllNodes(false).isEmpty());
+  }
+
+  @Test
+  public void testRemoveLabels_bad() throws Exception {
+    LabelManager lb = LabelManager.getInstance();
+
+    String node = "perfnode1*";
+    String label1 = "right";
+    String label2 = "good";
+    String label3 = "fantastic";
+
+    assertNotNull(lb.getLabelsForNode(node));
+    assertTrue(lb.getLabelsForNode(node).containsAll(ImmutableSet.of(label1, label2, label3)));
+
+    lb.removeFromClusterNodeLabels(node);
+
+    assertNotNull(lb.getLabelsForNode(node));
+    assertTrue(lb.getLabelsForNode(node).containsAll(ImmutableSet.of(label1, label2, label3)));
+  }
+
+  @Test
+  public void testReplaceLabels_ok() throws Exception {
+    LabelManager lb = LabelManager.getInstance();
+
+    String node = "perfnode1*";
+    String node2 = "perfnode15*";
+    String label1 = "right";
+    String label2 = "good";
+    String label3 = "fantastic";
+    String testLabel1 = "testLabel1";
+    String testLabel2 = "testLabel2";
+    String testLabel3 = "testLabel3";
+
+    lb.replaceLabelsOnNode(node + "=" + label1 + "|" + testLabel1);
+    lb.refreshLabels(conf);
+    assertFalse(lb.getLabelsForNode(node).contains(label1));
+    assertTrue(lb.getLabelsForNode(node).contains(testLabel1));
+
+    lb.replaceLabelsOnNode(node + "=" + label3 + "|" + testLabel3 + "," + testLabel1 + "|" + label1);
+    lb.refreshLabels(conf);
+    assertFalse(lb.getLabelsForNode(node).containsAll(ImmutableSet.of(label3, testLabel1)));
+    assertTrue(lb.getLabelsForNode(node).containsAll(ImmutableSet.of(testLabel3, label1)));
+
+    lb.replaceLabelsOnNode("*=" + label2 + "|" + testLabel2);
+    lb.refreshLabels(conf);
+    assertTrue(lb.getLabelsForNode(node).contains(testLabel2) && lb.getLabelsForNode(node2).contains(testLabel2));
+    assertFalse(lb.getLabelsForNode(node).contains(label2) && lb.getLabelsForNode(node2).contains(label2));
+  }
+
+  @Test
+  public void testReplaceLabels_notExistedAndBadLabels() throws Exception {
+    LabelManager lb = LabelManager.getInstance();
+    String node = "perfnode1*";
+    String label = "good";
+    String badLabel = "1asdasdasd";
+
+    lb.replaceLabelsOnNode(node + "=" + badLabel + "|" + label);
+    lb.refreshLabels(conf);
+    assertNotNull(lb.getLabelsForNode(node));
+    assertTrue(lb.getLabelsForNode(node).contains(label));
+    assertFalse(lb.getLabelsForNode(node).contains(badLabel));
+
+    try {
+      lb.replaceLabelsOnNode(node + "=" + label + "|" + badLabel);
+      fail("Expected IOException! Cause: label syntax is wrong.");
+    } catch (IOException e) {
+    }
+  }
+
   //@Test - Use only when testing performance
   public void testPerformance() throws Exception {
     fs.delete(new Path(LABEL_FILE), false);

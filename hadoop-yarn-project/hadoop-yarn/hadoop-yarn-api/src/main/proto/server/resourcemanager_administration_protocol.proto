@@ -41,8 +41,11 @@ service ResourceManagerAdministrationProtocolService {
   rpc getGroupsForUser(GetGroupsForUserRequestProto) returns (GetGroupsForUserResponseProto);
   rpc updateNodeResource (UpdateNodeResourceRequestProto) returns (UpdateNodeResourceResponseProto);
   rpc addToClusterNodeLabels(AddToClusterNodeLabelsRequestProto) returns (AddToClusterNodeLabelsResponseProto);
+  rpc addToClusterMaprNodeLabels(AddToClusterMaprNodeLabelsRequestProto) returns (AddToClusterMaprNodeLabelsResponseProto);
   rpc removeFromClusterNodeLabels(RemoveFromClusterNodeLabelsRequestProto) returns (RemoveFromClusterNodeLabelsResponseProto);
+  rpc removeFromClusterMaprNodeLabels(RemoveFromClusterMaprNodeLabelsRequestProto) returns (RemoveFromClusterMaprNodeLabelsResponseProto);
   rpc replaceLabelsOnNodes(ReplaceLabelsOnNodeRequestProto) returns (ReplaceLabelsOnNodeResponseProto);
+  rpc replaceMaprLabelsOnNodes(ReplaceMaprLabelsOnNodeRequestProto) returns (ReplaceMaprLabelsOnNodeResponseProto);
   rpc getClusterNodeLabels(GetClusterNodeLabelsRequestProto) returns (GetClusterNodeLabelsResponseProto);
   rpc refreshClusterNodeLabels(RefreshClusterNodeLabelsRequestProto) returns (RefreshClusterNodeLabelsResponseProto);
 

@@ -18,6 +18,8 @@
 package org.apache.hadoop.yarn.server.resourcemanager.labelmanagement;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -25,9 +27,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import net.java.dev.eval.Expression;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
@@ -38,6 +40,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.yarn.api.records.NodeId;
 import org.apache.hadoop.yarn.api.records.NodeToLabelsList;
+import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
 
 /**
@@ -63,6 +66,10 @@ public class LabelManager {
   public static final String NODE_LABELS_MONITOR_INTERVAL = 
       "node.labels.monitor.interval";
   public static final long DEFAULT_RELOAD_INTERVAL = 2*60*1000l;
+
+  private static final Pattern LABEL_PATTERN = Pattern
+      .compile("^[a-zA-Z][0-9a-zA-Z-_]*");
+  private static final int MAX_LABEL_LENGTH = 255;
 
   private FileSystem fs;
   
@@ -94,9 +101,8 @@ public class LabelManager {
     if (labelFilePath != null) {
       this.labelFile = new Path(labelFilePath);
       if (!fs.exists(labelFile)) {
-          LOG.warn("Could not find node label file " + fs.makeQualified(labelFile) + 
-                   ". Node labels will not be set.");
-          this.labelFile = null;
+        LOG.warn("Could not find node label file " + fs.makeQualified(labelFile) +
+            ". Node labels will not be set.");
       }
       this.labelManagerMonitorInterval = conf.getLong(NODE_LABELS_MONITOR_INTERVAL, 
           DEFAULT_RELOAD_INTERVAL);
@@ -164,6 +170,84 @@ public class LabelManager {
     return false;
   }
 
+  public void addToClusterNodeLabels(String args) throws IOException, YarnException {
+    Map<String, List<String>> labels = buildNodeLabelsMapFromStr(args);
+    for (List<String> labelsList : labels.values()) {
+      checkLabels(labelsList);
+    }
+    storage.addNodeLabels(labels);
+  }
+
+  private Map<String, List<String>> buildNodeLabelsMapFromStr(String args) {
+    Map<String, List<String>> map = new HashMap<>();
+
+    String[] lines = args.split(";");
+
+    for (String line : lines) {
+      String[] pair = line.split("=");
+
+      String hostname = pair[0].trim();
+      List<String> labelsList = null;
+      if (pair.length > 1) {
+        String[] labels = pair[1].split(",");
+        labelsList = Arrays.stream(labels)
+            .map(String::trim)
+            .collect(Collectors.toList());
+      }
+      map.put(hostname, labelsList);
+    }
+    return map;
+  }
+
+  public void removeFromClusterNodeLabels(String args) throws IOException {
+    // always contains the only one object
+    Map<String, List<String>> map = buildNodeLabelsMapFromStr(args);
+    Object[] hostnames = map.keySet().toArray();
+    String hostname = (String) hostnames[0];
+    List<String> labels = map.get(hostname);
+    if (!hostname.equals("*") && (labels == null || labels.isEmpty())) {
+      LOG.error("Node-labels are not specified!");
+      return;
+    }
+    storage.removeNodeLabels(hostname, labels);
+  }
+
+  public void replaceLabelsOnNode(String args) throws IOException {
+    String[] arr = args.split("=");
+    String hostname = arr[0].trim();
+    Map<String, String> labels = buildMapForReplaceLabels(arr[1]);
+    checkLabels(labels.values());
+    storage.replaceLabelsOnNode(hostname, labels);
+  }
+
+  private void checkLabels(Collection<String> labels) throws IOException {
+    for (String label : labels) {
+      if (label == null || label.isEmpty() || label.length() > MAX_LABEL_LENGTH) {
+        throw new IOException("label added is empty or exceeds "
+            + MAX_LABEL_LENGTH + " character(s)");
+      }
+      if (!LABEL_PATTERN.matcher(label).matches()) {
+        throw new IOException("label name should only contains "
+            + "{0-9, a-z, A-Z, -, _} and should not started with {0-9,-,_}"
+            + ", now it is=" + label);
+      }
+    }
+  }
+
+  private Map<String, String> buildMapForReplaceLabels(String args) throws IOException {
+    Map<String, String> labels = new HashMap<>();
+    String[] pairs = args.split(",");
+    try {
+      for (String pair : pairs) {
+        String[] split = pair.split("\\|");
+        labels.put(split[0], split[1]);
+      }
+    } catch (RuntimeException e) {
+      throw new IOException("Wrong syntax of arguments. Abort.");
+    }
+    return labels;
+  }
+
   /**
    * Read a line from file and parse node identifier and labels.
    */
@@ -176,8 +260,8 @@ public class LabelManager {
     return storage.getLabelsForNode(node);
   }
 
-  public List<NodeToLabelsList> getLabelsForAllNodes() {
-    return storage.getLabelsForAllNodes();
+  public List<NodeToLabelsList> getLabelsForAllNodes(boolean globSupport) {
+    return storage.getLabelsForAllNodes(globSupport);
   }
 
   public Set<Expression> getLabels() {
@@ -194,7 +278,7 @@ public class LabelManager {
   public Map<String, Set<NodeId>> getLabelsToNodes(Set<String> labelsToAdd) {
     Map<String, Set<NodeId>> labelsToNodes = new HashMap<>();
 
-    for (NodeToLabelsList n : storage.getLabelsForAllNodes()) {
+    for (NodeToLabelsList n : storage.getLabelsForAllNodes(true)) {
       NodeId nodeId = NodeId.newInstance(n.getNode(), 0);
       List<String> nodeLabels = n.getNodeLabel();
 
@@ -216,7 +300,6 @@ public class LabelManager {
     return labelsToNodes;
   }
 
-
   /**
    * This method converts data from LabelManager data representation to default apache structure.
    * @return Map of nodes and appropriate labels
@@ -224,7 +307,7 @@ public class LabelManager {
   public Map<NodeId, Set<String>> getNodeToLabels() {
     Map<NodeId, Set<String>> nodeToLabels = new HashMap<>();
 
-    for (NodeToLabelsList n : storage.getLabelsForAllNodes()) {
+    for (NodeToLabelsList n : storage.getLabelsForAllNodes(true)) {
       NodeId nodeId = NodeId.newInstance(n.getNode(), 0);
       Set<String> nodeLabels = new HashSet<>(n.getNodeLabel());
 

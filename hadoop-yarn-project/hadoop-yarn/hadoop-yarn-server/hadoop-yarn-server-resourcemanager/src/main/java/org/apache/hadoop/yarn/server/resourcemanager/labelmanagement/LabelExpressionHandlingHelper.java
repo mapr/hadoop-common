@@ -177,7 +177,7 @@ public class LabelExpressionHandlingHelper {
   static List<String> getNodesForLabel(Expression label) throws IOException {
 
     List<String> nodesForLabel = new ArrayList<>();
-    List<NodeToLabelsList> labelsForAllNodes = LabelStorage.getInstance().getLabelsForAllNodes();
+    List<NodeToLabelsList> labelsForAllNodes = LabelStorage.getInstance().getLabelsForAllNodes(true);
     LabelManager lb = LabelManager.getInstance();
     LabelApplicabilityStatus blackListStatus;
 

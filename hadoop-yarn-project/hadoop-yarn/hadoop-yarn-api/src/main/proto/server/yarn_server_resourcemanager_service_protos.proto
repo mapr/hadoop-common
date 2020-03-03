@@ -79,22 +79,42 @@ message AddToClusterNodeLabelsRequestProto {
   repeated string nodeLabels = 1;
 }
 
+message AddToClusterMaprNodeLabelsRequestProto {
+  required string nodeLabels = 1;
+}
+
 message AddToClusterNodeLabelsResponseProto {
+}
+
+message AddToClusterMaprNodeLabelsResponseProto {
 }
 
 message RemoveFromClusterNodeLabelsRequestProto {
   repeated string nodeLabels = 1;
 }
 
+message RemoveFromClusterMaprNodeLabelsRequestProto {
+  required string nodeLabels = 1;
+}
+
 message RemoveFromClusterNodeLabelsResponseProto {
+}
+
+message RemoveFromClusterMaprNodeLabelsResponseProto {
 }
 
 message ReplaceLabelsOnNodeRequestProto {
   repeated NodeIdToLabelsProto nodeToLabels = 1;
 }
 
+message ReplaceMaprLabelsOnNodeRequestProto {
+  required string labels = 1;
+}
+
 message ReplaceLabelsOnNodeResponseProto {
-  
+}
+
+message ReplaceMaprLabelsOnNodeResponseProto {
 }
 
 //////////////////////////////////////////////////////////////////

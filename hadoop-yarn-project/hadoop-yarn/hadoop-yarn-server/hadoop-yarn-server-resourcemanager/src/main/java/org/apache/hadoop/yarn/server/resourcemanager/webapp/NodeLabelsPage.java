@@ -48,7 +48,7 @@ public class NodeLabelsPage extends RmView {
 
     @Override
     protected void render(Block html) {
-      List<NodeToLabelsList> labelsForAllNodes = LabelManager.getInstance().getLabelsForAllNodes();
+      List<NodeToLabelsList> labelsForAllNodes = LabelManager.getInstance().getLabelsForAllNodes(true);
 
       Map<String, Integer> labelNumNodesMap = getLabelNumNodesMap(labelsForAllNodes);
 

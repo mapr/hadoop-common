@@ -18,7 +18,9 @@
 
 package org.apache.hadoop.yarn.client.cli;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.argThat;
@@ -37,13 +39,14 @@ import org.apache.hadoop.ha.HAServiceProtocol;
 import org.apache.hadoop.ha.HAServiceStatus;
 import org.apache.hadoop.ha.HAServiceTarget;
 import org.apache.hadoop.service.Service.STATE;
+import org.apache.hadoop.yarn.api.protocolrecords.RefreshClusterNodeLabelsRequest;
 import org.apache.hadoop.yarn.api.records.NodeId;
-import org.apache.hadoop.yarn.client.cli.RMAdminCLI;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.nodelabels.CommonNodeLabelsManager;
 import org.apache.hadoop.yarn.nodelabels.DummyCommonNodeLabelsManager;
 import org.apache.hadoop.yarn.server.api.ResourceManagerAdministrationProtocol;
+import org.apache.hadoop.yarn.server.api.protocolrecords.AddToClusterMaprNodeLabelsRequest;
 import org.apache.hadoop.yarn.server.api.protocolrecords.AddToClusterNodeLabelsRequest;
 import org.apache.hadoop.yarn.server.api.protocolrecords.AddToClusterNodeLabelsResponse;
 import org.apache.hadoop.yarn.server.api.protocolrecords.RefreshAdminAclsRequest;
@@ -52,6 +55,8 @@ import org.apache.hadoop.yarn.server.api.protocolrecords.RefreshQueuesRequest;
 import org.apache.hadoop.yarn.server.api.protocolrecords.RefreshServiceAclsRequest;
 import org.apache.hadoop.yarn.server.api.protocolrecords.RefreshSuperUserGroupsConfigurationRequest;
 import org.apache.hadoop.yarn.server.api.protocolrecords.RefreshUserToGroupsMappingsRequest;
+import org.apache.hadoop.yarn.server.api.protocolrecords.RemoveFromClusterMaprNodeLabelsRequest;
+import org.apache.hadoop.yarn.server.api.protocolrecords.ReplaceMaprLabelsOnNodeRequest;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -288,7 +293,11 @@ public class TestRMAdminCLI {
               "yarn rmadmin [-refreshQueues] [-refreshNodes] [-refreshSuper" +
               "UserGroupsConfiguration] [-refreshUserToGroupsMappings] " +
               "[-refreshAdminAcls] [-showLabels] [-refreshLabels] " + 
-              "[-refreshServiceAcl] [-getGroup [username]] [-help [cmd]]"));
+              "[-refreshServiceAcl] [-getGroup [username]] " +
+              "[-addToClusterMaprNodeLabels [\"node1=label1[,label2...; node2=label1,...]\"] " +
+              "[-removeFromClusterMaprNodeLabels [node1=label1[,label2...]]] " +
+              "[-replaceLabelsOnNodes [node1=label1|label2[,label3|label4,...]]] " +
+              "[-help [cmd]]"));
       assertTrue(dataOut
           .toString()
           .contains(
@@ -316,6 +325,24 @@ public class TestRMAdminCLI {
           .contains(
               "-refreshServiceAcl: Reload the service-level authorization" +
               " policy file"));
+      assertTrue(dataOut
+      .toString()
+      .contains(
+          "-addToClusterMaprNodeLabels [\"node1=label1[,label2...; node2=label1,...]\"]:"
+              + " add to cluster new node labels"
+      ));
+      assertTrue(dataOut
+      .toString()
+      .contains(
+          "-removeFromClusterMaprNodeLabels [node1=label1[,label2...]]: remove labels from the nodes. "
+              + "Set '*' instead of hostname to remove labels from all nodes."
+      ));
+      assertTrue(dataOut
+          .toString()
+      .contains(
+          "replaceMaprLabelsOnNodes [node1=label1|label2[,label3|label4,...]]: "
+              + "replace labels on a specific node. Set '*' instead of hostname to replace labels on all nodes"
+      ));
       assertTrue(dataOut
           .toString()
           .contains(
@@ -352,6 +379,12 @@ public class TestRMAdminCLI {
               "[-failover [--forcefence] [--forceactive] " +
               "<serviceId> <serviceId>]",
           dataErr, 0);
+      testError(new String[] { "-help", "-addToClusterMaprNodeLabels" },
+          "Usage: yarn rmadmin [-addToClusterMaprNodeLabels [\"node1=label1[,label2...; node2=label1,...]\"]", dataErr, 0);
+      testError(new String[] { "-help", "-removeFromClusterMaprNodeLabels" },
+          "Usage: yarn rmadmin [-removeFromClusterMaprNodeLabels [node1=label1[,label2...]]]", dataErr, 0);
+      testError(new String[] { "-help", "-replaceMaprLabelsOnNodes" },
+          "Usage: yarn rmadmin [-replaceMaprLabelsOnNodes [node1=label1|label2[,label3|label4,...]]]", dataErr, 0);
 
       testError(new String[] { "-help", "-badParameter" },
           "Usage: yarn rmadmin", dataErr, 0);
@@ -366,10 +399,14 @@ public class TestRMAdminCLI {
               "UserGroupsConfiguration] [-refreshUserToGroupsMappings] " +
               "[-refreshAdminAcls] [-showLabels] [-refreshLabels] [-refreshServiceAcl] [-getGroup" +
               " [username]] " +
+              "[-addToClusterMaprNodeLabels [\"node1=label1[,label2...; node2=label1,...]\"] " +
+              "[-removeFromClusterMaprNodeLabels [node1=label1[,label2...]]] " +
+              "[-replaceLabelsOnNodes [node1=label1|label2[,label3|label4,...]]] " +
               "[-transitionToActive [--forceactive] <serviceId>] " +
               "[-transitionToStandby <serviceId>] [-failover" +
               " [--forcefence] [--forceactive] <serviceId> <serviceId>] " +
-              "[-getServiceState <serviceId>] [-checkHealth <serviceId>] [-help [cmd]]";
+              "[-getServiceState <serviceId>] [-checkHealth <serviceId>] " +
+              "[-help [cmd]]";
       String actualHelpMsg = dataOut.toString();
       assertTrue(String.format("Help messages: %n " + actualHelpMsg + " %n doesn't include expected " +
           "messages: %n" + expectedHelpMsg), actualHelpMsg.contains(expectedHelpMsg
@@ -578,6 +615,30 @@ public class TestRMAdminCLI {
     } finally {
       rmAdminCLIWithHAEnabled.setErrOut(System.err);
     }
+  }
+
+  @Test
+  public void testAddToClusterMaprNodeLabels() throws Exception {
+    String[] args = { "-addToClusterMaprNodeLabels", "node1=all" };
+    rmAdminCLI.run(args);
+    verify(admin).addToClusterMaprNodeLabels(eq(AddToClusterMaprNodeLabelsRequest.newInstance(args[1])));
+    verify(admin).refreshClusterNodeLabels(any(RefreshClusterNodeLabelsRequest.class));
+  }
+
+  @Test
+  public void testRemoveFromClusterMaprNodeLabels()  throws Exception {
+    String[] args = { "-removeFromClusterMaprNodeLabels", "node1=all" };
+    rmAdminCLI.run(args);
+    verify(admin).removeFromClusterMaprNodeLabels(eq(RemoveFromClusterMaprNodeLabelsRequest.newInstance(args[1])));
+    verify(admin).refreshClusterNodeLabels(any(RefreshClusterNodeLabelsRequest.class));
+  }
+
+  @Test
+  public void testReplaceMaprLabelsOnNodes() throws Exception {
+    String[] args = { "-replaceMaprLabelsOnNodes", "node1=all|slow" };
+    rmAdminCLI.run(args);
+    verify(admin).replaceMaprLabelsOnNode(ReplaceMaprLabelsOnNodeRequest.newInstance(args[1]));
+    verify(admin).refreshClusterNodeLabels(any(RefreshClusterNodeLabelsRequest.class));
   }
 
 }

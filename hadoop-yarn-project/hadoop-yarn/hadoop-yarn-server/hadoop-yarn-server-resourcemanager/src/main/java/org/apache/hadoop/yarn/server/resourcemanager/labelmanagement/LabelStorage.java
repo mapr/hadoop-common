@@ -18,8 +18,10 @@
 package org.apache.hadoop.yarn.server.resourcemanager.labelmanagement;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,7 +33,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+import java.util.stream.Collectors;
 import net.java.dev.eval.Expression;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -41,6 +43,7 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.yarn.api.records.NodeToLabelsList;
+import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.factory.providers.RecordFactoryProvider;
 
 @Private
@@ -55,11 +58,11 @@ import org.apache.hadoop.yarn.factory.providers.RecordFactoryProvider;
 public final class LabelStorage {
 
   private static final Log LOG = LogFactory.getLog(LabelStorage.class);
-  
+
   public static final Pattern regex = Pattern.compile("[^\\s,\"']+|\"([^\"]*)\"|'([^']*)'");
   public static final Pattern alpha_num = Pattern.compile("^[A-Za-z0-9_ ]+$");
   public static final Pattern keywords = Pattern.compile("^int$|^abs$|^pow$");
-  
+
   private FileSystem fs;
 
   private Path labelFile = null;
@@ -73,12 +76,18 @@ public final class LabelStorage {
    * This Map has to change atomically during reload and therefore 
    * had to be protected by lock versus be ConcurrentHashMap
    */
-  private Map<String,List<String>> nodeExpressionLabels = new HashMap<String,List<String>>();
-  
+  private Map<String, List<String>> nodeExpressionLabels = new HashMap<String,List<String>>();
+
+  /**
+   * Duplicate of nodeExpressionLabels map without glob pre-processing.
+   * Used to remove and replace existing labels.
+   */
+  private Map<String, List<String>> nodeNoGlobExpressionLabels = new HashMap<>();
+
   /**
    * Map to hold mapping between real node and labels - this will ensure
    * that if we evaluated this node already to the set of labels
-   * there is no need to reevaluate it again unless content of the file with labels 
+   * there is no need to reevaluate it again unless content of the file with labels
    * changed
    */
   private Map<String, Set<String>> nodeToLabelsMap = new ConcurrentHashMap<String,Set<String>>();
@@ -123,15 +132,18 @@ public final class LabelStorage {
     String labelFilePath = conf.get(LabelManager.NODE_LABELS_FILE, null);
     labelFile = labelFilePath == null ? null : new Path(labelFilePath);
     
-    if (labelFile == null || !fs.exists(labelFile)) {
+    if (labelFile == null || !fs.exists(labelFile) || fs.getContentSummary(labelFile).getLength() == 0) {
       synchronized (nodeExpressionLabels) {
-        nodeExpressionLabels.clear();
+        synchronized (nodeNoGlobExpressionLabels) {
+          nodeExpressionLabels.clear();
+          nodeNoGlobExpressionLabels.clear();
+        }
       }
       synchronized (labels) {
         labels.clear();
       }
       nodeToLabelsMap.clear();
-      LOG.info("Labels file does not exist: " + labelFile +". Labels are cleaned up.");
+      LOG.info("Labels file is empty or does not exist: " + labelFile +". Labels are cleaned up.");
       
       return;
     }
@@ -140,9 +152,11 @@ public final class LabelStorage {
     try {
       String str = null;
       Map<String,List<String>> nodeNotifierLabelsTmp = new HashMap<String,List<String>>();
+      Map<String,List<String>> nodeNoGlobNotifierLabelsTmp = new HashMap<String,List<String>>();
       Map<String, BigDecimal> labelEvalFillersTmp = new HashMap<String, BigDecimal>();
       int lineno = 0;
       String nodeIdentifier;
+      String noGlobNodeIdentifier;
       while (true) {
         // scan each line
         str = sin.readLine();
@@ -156,10 +170,11 @@ public final class LabelStorage {
         }
         if (tokens[0].startsWith("/") && tokens[0].endsWith("/")) {
           nodeIdentifier = tokens[0].replaceAll("^\\/|\\/$", "");
+          noGlobNodeIdentifier = tokens[0].replaceAll("^\\/|\\/$", "");
         } else {
           // its a glob support only * and ?
-          nodeIdentifier = tokens[0].replaceAll("\\*",".*");
-          nodeIdentifier = nodeIdentifier.replaceAll("\\?",".");
+          nodeIdentifier = globSupport(tokens[0]);
+          noGlobNodeIdentifier = tokens[0];
         }
         List<String> nodeLabels = new ArrayList<String>();
         Matcher regexMatcher = regex.matcher(tokens[1]);
@@ -184,6 +199,7 @@ public final class LabelStorage {
         if (LOG.isDebugEnabled()) {
           LOG.debug("nodeIdentifier :" + nodeIdentifier + " labels :" + nodeLabels);
         }
+        nodeNoGlobNotifierLabelsTmp.put(noGlobNodeIdentifier, nodeLabels);
         nodeNotifierLabelsTmp.put(nodeIdentifier, nodeLabels);
       }
 
@@ -191,21 +207,28 @@ public final class LabelStorage {
       // No interference between multiple threads trying to modify state
       synchronized ( nodeExpressionLabels ) {
         synchronized ( labelEvalFillers ) {
-          nodeExpressionLabels.clear();
-          nodeExpressionLabels.putAll(nodeNotifierLabelsTmp);
+          synchronized (nodeNoGlobExpressionLabels) {
+            nodeExpressionLabels.clear();
+            nodeNoGlobExpressionLabels.clear();
+            nodeExpressionLabels.putAll(nodeNotifierLabelsTmp);
+            nodeNoGlobExpressionLabels.putAll(nodeNoGlobNotifierLabelsTmp);
 
-          labelEvalFillers.clear();
-          labelEvalFillers.putAll(labelEvalFillersTmp);
-          // restart process of filling up following Collections
-          nodeToLabelsMap.clear();
-          nodeNoMatchers.clear();
+            labelEvalFillers.clear();
+            labelEvalFillers.putAll(labelEvalFillersTmp);
+            // restart process of filling up following Collections
+            nodeToLabelsMap.clear();
+            nodeNoMatchers.clear();
+          }
+
         }
       }
       updateClusterLabels();
-      
+
+      nodeNoGlobNotifierLabelsTmp.clear();
       nodeNotifierLabelsTmp.clear();
       labelEvalFillersTmp.clear();
       nodeNotifierLabelsTmp = null; // hint to GC it
+      nodeNoGlobNotifierLabelsTmp = null;
       labelEvalFillersTmp = null;
     } finally {
       sin.close();
@@ -260,11 +283,17 @@ public final class LabelStorage {
     return nodeLabels;
   }
 
-  List<NodeToLabelsList> getLabelsForAllNodes() {
+  List<NodeToLabelsList> getLabelsForAllNodes(boolean globSupport) {
     Map<String,List<String>> nodeNotifierLabelsTmp = new HashMap<String,List<String>>();
 
-    synchronized (nodeExpressionLabels) {
-      nodeNotifierLabelsTmp.putAll(nodeExpressionLabels);
+    if (globSupport) {
+      synchronized (nodeExpressionLabels) {
+        nodeNotifierLabelsTmp.putAll(nodeExpressionLabels);
+      }
+    } else {
+      synchronized (nodeNoGlobExpressionLabels) {
+        nodeNotifierLabelsTmp.putAll(nodeNoGlobExpressionLabels);
+      }
     }
 
     List<NodeToLabelsList> nodeToLabelsList= new ArrayList<NodeToLabelsList>();
@@ -298,7 +327,7 @@ public final class LabelStorage {
   private void updateClusterLabels() {
     Set<Expression> allLabels = new HashSet<>();
     Expression labelExpression = null;
-    List<NodeToLabelsList> labelsForAllNodes = getLabelsForAllNodes();
+    List<NodeToLabelsList> labelsForAllNodes = getLabelsForAllNodes(true);
     for (NodeToLabelsList nodeToLabelsList : labelsForAllNodes) {
       for (String label : nodeToLabelsList.getNodeLabel()) {
         try {
@@ -322,4 +351,133 @@ public final class LabelStorage {
   public Set<Expression> getLabels() {
     return new HashSet<>(labels);
   }
+
+  public void addNodeLabels(Map<String, List<String>> newLabels) throws IOException, YarnException {
+    if (null == labelFile) {
+      LOG.error("Label-based scheduling is not enabled. Specify the path to the node.labels file");
+      return;
+    }
+
+    Map<String, List<String>> modifiedLabels = new HashMap<>(nodeNoGlobExpressionLabels);
+
+    Set<String> hostnames = new HashSet<>(newLabels.keySet());
+    for (String hostname : hostnames) {
+      if (modifiedLabels.containsKey(hostname)) {
+        if (newLabels.get(hostname).equals(modifiedLabels.get(hostname))) {
+          LOG.warn("Labels for node [" + hostname + "] already defined! Ignoring.");
+        } else {
+          modifiedLabels.get(hostname).addAll(newLabels.get(hostname));
+          modifiedLabels.replace(hostname,
+              modifiedLabels.get(hostname).stream().distinct().collect(Collectors.toList()));
+        }
+        newLabels.remove(hostname);
+      }
+    }
+    modifiedLabels.putAll(newLabels);
+    if (!modifiedLabels.isEmpty()) {
+      List<String> newLabelsList = packNodeLabelsToList(modifiedLabels);
+      writeToFile(newLabelsList);
+    }
+  }
+
+  private void writeToFile(List<String> nodeLabels) throws IOException {
+    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(fs.create(labelFile, true)));
+    for (String label : nodeLabels) {
+      writer.write(label);
+      writer.newLine();
+    }
+    writer.flush();
+    writer.close();
+  }
+
+  public void replaceLabelsOnNode(String nodeName, Map<String, String> labelsForReplace) throws IOException {
+    Map<String, List<String>> modifiedLabels = new HashMap<>(nodeNoGlobExpressionLabels);
+    if (!nodeName.equals("*") && !modifiedLabels.containsKey(nodeName)) {
+      LOG.error("Hostname [" + nodeName + "] does not exists in current configuration!");
+      return;
+    }
+
+    fs.delete(labelFile, false);
+    nodeExpressionLabels.clear();
+
+    try {
+      if (nodeName.equals("*")) {
+        modifiedLabels.forEach((hostname, labels) -> labels.replaceAll(label -> labelsForReplace.getOrDefault(label, label)));
+        writeToFile(packNodeLabelsToList(modifiedLabels));
+      } else {
+        List<String> currentLabels = modifiedLabels.get(nodeName);
+        currentLabels.replaceAll(s -> labelsForReplace.getOrDefault(s, s));
+        writeToFile(packNodeLabelsToList(modifiedLabels));
+      }
+    } catch (Exception e) {
+      writeToFile(packNodeLabelsToList(nodeNoGlobExpressionLabels));
+      throw e;
+    }
+  }
+
+  public void removeNodeLabels(String nodeName, List<String> labelsForRemove) throws IOException {
+    Map<String, List<String>> modifiedLabels = new HashMap<>(nodeNoGlobExpressionLabels);
+
+    if (!nodeName.equals("*") && !modifiedLabels.containsKey(nodeName)) {
+      LOG.error("Hostname [" + nodeName + "] does not exists in current configuration!");
+      return;
+    }
+
+    fs.delete(labelFile, false);
+    nodeExpressionLabels.clear();
+
+    try {
+      Map<String, List<String>> nodeLabelsToWrite = null;
+      if (nodeName.equals("*") && (labelsForRemove == null || labelsForRemove.isEmpty())) {
+        fs.create(labelFile, true);
+      } else if (labelsForRemove.size() == 1 && labelsForRemove.contains("*")) {
+        modifiedLabels.remove(nodeName);
+        nodeLabelsToWrite = modifiedLabels;
+      } else {
+        if (nodeName.equals("*")) {
+          modifiedLabels.forEach((hostname, nodeLabels) -> labelsForRemove.forEach(nodeLabels::remove));
+          nodeLabelsToWrite = clearEmptyNodes(modifiedLabels);
+        } else {
+          List<String> nodeLabels = modifiedLabels.get(nodeName);
+          labelsForRemove.forEach(nodeLabels::remove);
+          nodeLabelsToWrite = clearEmptyNodes(modifiedLabels);
+        }
+      }
+      if (nodeLabelsToWrite != null && !nodeLabelsToWrite.isEmpty()) {
+        writeToFile(packNodeLabelsToList(nodeLabelsToWrite));
+      }
+    } catch (IOException e) {
+      writeToFile(packNodeLabelsToList(nodeNoGlobExpressionLabels));
+      throw e;
+    }
+  }
+
+  private Map<String, List<String>> clearEmptyNodes(Map<String, List<String>> labels) {
+    Set<String> hostnames = new HashSet<>(labels.keySet());
+    for (String hostname : hostnames) {
+      if (labels.get(hostname).isEmpty()) {
+        labels.remove(hostname);
+      }
+    }
+    return labels;
+  }
+
+  private List<String> packNodeLabelsToList(Map<String, List<String>> map) {
+    List<String> nodeLabels = new ArrayList<>();
+
+    map.forEach((hostname, labels) -> {
+      StringBuilder line = new StringBuilder(hostname);
+      for (String label : labels) {
+        line.append(" ").append(label);
+      }
+      nodeLabels.add(line.toString());
+    });
+
+    return nodeLabels;
+  }
+
+  private String globSupport(String str) {
+    return str.replaceAll("\\*",".*").replaceAll("\\?",".");
+  }
+
 }

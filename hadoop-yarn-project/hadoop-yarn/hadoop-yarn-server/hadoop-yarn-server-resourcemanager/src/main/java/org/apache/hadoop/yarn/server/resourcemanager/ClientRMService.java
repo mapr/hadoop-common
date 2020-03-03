@@ -1107,7 +1107,7 @@ public class ClientRMService extends AbstractService implements
 
     LabelManager labelManager = LabelManager.getInstance();
     List<NodeToLabelsList> clusterNodeLabels = null;
-    clusterNodeLabels = labelManager.getLabelsForAllNodes();
+    clusterNodeLabels = labelManager.getLabelsForAllNodes(false);
 
     response.setClusterNodeLabels(clusterNodeLabels);
     return response;
