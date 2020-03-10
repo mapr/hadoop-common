@@ -1082,6 +1082,14 @@ extern  "C" {
     int hdfsGetXattr(hdfsFS fs, const char* path, const char *name, 
                            char *val, size_t size);
 
+    /**
+     * hdfsSetTicketAndKeyFile - sets ticket and key file in global security object
+     * @param fname   Location of Ticket and Key file
+     * @return        On success returns 0 or error
+     */
+
+     int hdfsSetTicketAndKeyFile(const char *fname);
+
 #ifdef __cplusplus
 }
 #endif
