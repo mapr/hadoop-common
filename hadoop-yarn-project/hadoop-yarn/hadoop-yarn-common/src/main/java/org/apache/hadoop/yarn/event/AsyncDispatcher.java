@@ -245,7 +245,7 @@ public class AsyncDispatcher extends AbstractService implements Dispatcher {
     if (eventHandlingThread != null) {
       eventHandlingThread.interrupt();
       try {
-        eventHandlingThread.join();
+        eventHandlingThread.join(3000);
       } catch (InterruptedException ie) {
         LOG.warn("Interrupted Exception while stopping", ie);
       }
