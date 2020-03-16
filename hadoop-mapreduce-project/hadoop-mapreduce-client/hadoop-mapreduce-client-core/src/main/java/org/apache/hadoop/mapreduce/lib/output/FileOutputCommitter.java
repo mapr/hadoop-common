@@ -91,8 +91,6 @@ public class FileOutputCommitter extends OutputCommitter {
   private final boolean skipCleanup;
   private final boolean ignoreCleanupFailures;
 
-  private boolean debugReduceKeys = false;
-
   /**
    * Create a file output committer
    * @param outputPath the job's output path, or null if you want the output
@@ -105,10 +103,6 @@ public class FileOutputCommitter extends OutputCommitter {
     this(outputPath, (JobContext)context);
     if (outputPath != null) {
       workPath = getTaskAttemptPath(context, outputPath);
-    }
-    if(debugReduceKeys){
-      LOG.info("ADDITIONALLY: Work path for FileOutputCommitter: " + this.workPath);
-      LOG.info("ADDITIONALLY: Output path for FileOutputCommitter: " + this.outputPath);
     }
   }
   
@@ -123,7 +117,6 @@ public class FileOutputCommitter extends OutputCommitter {
   public FileOutputCommitter(Path outputPath, 
                              JobContext context) throws IOException {
     Configuration conf = context.getConfiguration();
-    debugReduceKeys = conf.getBoolean("debug.reduce.keys", false);
     algorithmVersion =
         conf.getInt(FILEOUTPUTCOMMITTER_ALGORITHM_VERSION,
                     FILEOUTPUTCOMMITTER_ALGORITHM_VERSION_DEFAULT);
@@ -590,13 +583,6 @@ public class FileOutputCommitter extends OutputCommitter {
               committedTaskPath);
         } else {
           // directly merge everything from taskAttemptPath to output directory
-          if(debugReduceKeys){
-            LOG.info("ADDITIONALLY commitTask method: Task attempt directory: "
-                    + taskAttemptDirStatus.getPath().toString()
-                    + " exists: " + fs.exists(taskAttemptDirStatus.getPath()));
-            LOG.info("ADDITIONALLY commitTask method: Output path:"
-                    + outputPath + " exists: " + fs.exists(outputPath));
-          }
           mergePaths(fs, taskAttemptDirStatus, outputPath);
           LOG.info("Saved output of task '" + attemptId + "' to " +
               outputPath);
@@ -626,10 +612,6 @@ public class FileOutputCommitter extends OutputCommitter {
         taskAttemptPath = getTaskAttemptPath(context);
       }
       FileSystem fs = taskAttemptPath.getFileSystem(context.getConfiguration());
-      if(debugReduceKeys){
-        LOG.info("ADDITIONALLY abortTask method: Task attempt path: " + taskAttemptPath.toString()
-                + " exists: " + fs.exists(taskAttemptPath));
-      }
       if(!fs.delete(taskAttemptPath, true)) {
         LOG.warn("Could not delete "+taskAttemptPath);
       }
@@ -656,10 +638,6 @@ public class FileOutputCommitter extends OutputCommitter {
         taskAttemptPath = getTaskAttemptPath(context);
       }
       FileSystem fs = taskAttemptPath.getFileSystem(context.getConfiguration());
-      if(debugReduceKeys){
-        LOG.info("ADDITIONALLY needsTaskCommit method: Task attempt path: " + taskAttemptPath.toString()
-                + " exists: " + fs.exists(taskAttemptPath));
-      }
       return fs.exists(taskAttemptPath);
     }
     return false;
@@ -712,13 +690,6 @@ public class FileOutputCommitter extends OutputCommitter {
             LOG.warn(attemptId+" had no output to recover.");
         }
       } else {
-        if(debugReduceKeys){
-          LOG.info("ADDITIONALLY recoverTask method: Previous committed task path: " +
-                  previousCommittedTaskPath.toString()
-                  + " exists: " + fs.exists(previousCommittedTaskPath));
-          LOG.info("ADDITIONALLY recoverTask method: Output path: " +
-                  outputPath.toString() + " exists: " + fs.exists(outputPath));
-        }
         // essentially a no-op, but for backwards compatibility
         // after upgrade to the new fileOutputCommitter,
         // check if there are any output left in committedTaskPath
