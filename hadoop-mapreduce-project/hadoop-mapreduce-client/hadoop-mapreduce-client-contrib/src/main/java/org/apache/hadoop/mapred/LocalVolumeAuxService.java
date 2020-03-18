@@ -336,13 +336,6 @@ public class LocalVolumeAuxService extends AuxiliaryService {
       }
       throw ioe;
     }
-
-    try {
-      initMapReduceDirs();
-    } catch (IOException ioe) {
-      LOG.error("Could not initialize directories for mapreduce", ioe);
-      throw ioe; // throw it back to kill NM
-    }
   }
 
   @Override
