@@ -90,6 +90,15 @@ esac
 HADOOP_LIBEXEC_DIR=${HADOOP_LIBEXEC_DIR:-$DEFAULT_LIBEXEC_DIR}
 . $HADOOP_LIBEXEC_DIR/yarn-config.sh
 
+if [ -z "$BASEMAPR" ]; then
+  BASEMAPR="/opt/mapr"
+fi
+
+isSecured="false"
+if [ -f "$BASEMAPR/conf/mapr-clusters.conf" ]; then
+  isSecured=$(head -1 $BASEMAPR/conf/mapr-clusters.conf | grep -o 'secure=\w*' | cut -d= -f2)
+fi
+
 function print_usage(){
   echo "Usage: yarn [--config confdir] [COMMAND | CLASSNAME]"
   echo "  CLASSNAME                             run the class named CLASSNAME"
@@ -170,6 +179,22 @@ if [ ! -d "$HADOOP_CONF_DIR" ]; then
   echo No HADOOP_CONF_DIR set. 
   echo Please specify it either in yarn-env.sh or in the environment.
   exit 1
+fi
+
+#Enable JMX for MaprMonitoring
+if [ -z "$JMX_OPTS" ]; then
+  if [ "$isSecured" = "true" ]; then
+    JMX_OPTS="-Dcom.sun.management.jmxremote \
+                        -Dcom.sun.management.jmxremote.authenticate=true \
+                        -Dcom.sun.management.jmxremote.password.file=$BASEMAPR/conf/jmxremote.password \
+                        -Dcom.sun.management.jmxremote.access.file=$BASEMAPR/conf/jmxremote.access \
+                        -Dcom.sun.management.jmxremote.ssl=false"
+  else
+    JMX_OPTS="-Dcom.sun.management.jmxremote \
+                        -Dcom.sun.management.jmxremote.authenticate=false \
+                        -Dcom.sun.management.jmxremote.ssl=false \
+                        -Dcom.sun.management.jmxremote.port"
+  fi
 fi
 
 CLASSPATH="${HADOOP_CONF_DIR}:${YARN_CONF_DIR}:${CLASSPATH}"
@@ -272,7 +297,7 @@ elif [ "$COMMAND" = "resourcemanager" ] ; then
   CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/JPam-1.1.jar
 
   CLASS='org.apache.hadoop.yarn.server.resourcemanager.ResourceManager'
-  YARN_OPTS="$YARN_OPTS $YARN_RESOURCEMANAGER_OPTS"
+  YARN_OPTS="$YARN_OPTS $YARN_RESOURCEMANAGER_OPTS $JMX_OPTS=8025"
   if [ "$YARN_RESOURCEMANAGER_HEAPSIZE" != "" ]; then
     JAVA_HEAP_MAX="-Xmx""$YARN_RESOURCEMANAGER_HEAPSIZE""m"
   fi
@@ -306,7 +331,7 @@ elif [ "$COMMAND" = "nodemanager" ] ; then
   CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/JPam-1.1.jar
 
   CLASS='org.apache.hadoop.yarn.server.nodemanager.NodeManager'
-  YARN_OPTS="$YARN_OPTS -server $YARN_NODEMANAGER_OPTS"
+  YARN_OPTS="$YARN_OPTS -server $YARN_NODEMANAGER_OPTS $JMX_OPTS=8027"
   if [ "$YARN_NODEMANAGER_HEAPSIZE" != "" ]; then
     JAVA_HEAP_MAX="-Xmx""$YARN_NODEMANAGER_HEAPSIZE""m"
   fi
