@@ -23,7 +23,6 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -54,7 +53,7 @@ public class KerberosUtil {
       ? "com.ibm.security.auth.module.Krb5LoginModule"
       : "org.apache.hadoop.security.login.KerberosBugWorkAroundLoginModule";
   }
-  
+
   public static Oid getOidInstance(String oidName) 
       throws ClassNotFoundException, GSSException, NoSuchFieldException,
       IllegalAccessException {
@@ -72,24 +71,81 @@ public class KerberosUtil {
     return (Oid)oidField.get(oidClass);
   }
 
-  public static String getDefaultRealm() 
-      throws ClassNotFoundException, NoSuchMethodException, 
-      IllegalArgumentException, IllegalAccessException, 
+  /**
+   * Return the default realm for this JVM.
+   *
+   * @return The default realm
+   * @throws IllegalArgumentException If the default realm does not exist.
+   * @throws ClassNotFoundException Not thrown. Exists for compatibility.
+   * @throws NoSuchMethodException Not thrown. Exists for compatibility.
+   * @throws IllegalAccessException Not thrown. Exists for compatibility.
+   * @throws InvocationTargetException Not thrown. Exists for compatibility.
+   */
+  public static String getDefaultRealm()
+      throws ClassNotFoundException, NoSuchMethodException,
+      IllegalArgumentException, IllegalAccessException,
       InvocationTargetException {
-    Object kerbConf;
-    Class<?> classRef;
-    Method getInstanceMethod;
-    Method getDefaultRealmMethod;
-    if (System.getProperty("java.vendor").contains("IBM")) {
-      classRef = Class.forName("com.ibm.security.krb5.internal.Config");
-    } else {
-      classRef = Class.forName("sun.security.krb5.Config");
+    // Any name is okay.
+    return new KerberosPrincipal("tmp", 1).getRealm();
+  }
+
+  /**
+   * Return the default realm for this JVM.
+   * If the default realm does not exist, this method returns null.
+   *
+   * @return The default realm
+   */
+  public static String getDefaultRealmProtected() {
+    try {
+      return getDefaultRealm();
+    } catch (Exception e) {
+      //silently catch everything
+      return null;
     }
-    getInstanceMethod = classRef.getMethod("getInstance", new Class[0]);
-    kerbConf = getInstanceMethod.invoke(classRef, new Object[0]);
-    getDefaultRealmMethod = classRef.getDeclaredMethod("getDefaultRealm",
-         new Class[0]);
-    return (String)getDefaultRealmMethod.invoke(kerbConf, new Object[0]);
+  }
+
+  /*
+   * For a Service Host Principal specification, map the host's domain
+   * to kerberos realm, as specified by krb5.conf [domain_realm] mappings.
+   * Unfortunately the mapping routines are private to the security.krb5
+   * package, so have to construct a PrincipalName instance to derive the realm.
+   *
+   * Many things can go wrong with Kerberos configuration, and this is not
+   * the place to be throwing exceptions to help debug them.  Nor do we choose
+   * to make potentially voluminous logs on every call to a communications API.
+   * So we simply swallow all exceptions from the underlying libraries and
+   * return null if we can't get a good value for the realmString.
+   *
+   * @param shortprinc A service principal name with host fqdn as instance, e.g.
+   *     "HTTP/myhost.mydomain"
+   * @return String value of Kerberos realm, mapped from host fqdn
+   *     May be default realm, or may be null.
+   */
+  public static String getDomainRealm(String shortprinc) {
+    Class<?> classRef;
+    Object principalName; //of type sun.security.krb5.PrincipalName or IBM equiv
+    String realmString = null;
+    try {
+      if (IBM_JAVA) {
+        classRef = Class.forName("com.ibm.security.krb5.PrincipalName");
+      } else {
+        classRef = Class.forName("sun.security.krb5.PrincipalName");
+      }
+      int tKrbNtSrvHst = classRef.getField("KRB_NT_SRV_HST").getInt(null);
+      principalName = classRef.getConstructor(String.class, int.class).
+          newInstance(shortprinc, tKrbNtSrvHst);
+      realmString = (String)classRef.getMethod("getRealmString", new Class[0]).
+          invoke(principalName, new Object[0]);
+    } catch (RuntimeException rte) {
+      //silently catch everything
+    } catch (Exception e) {
+      //silently return default realm (which may itself be null)
+    }
+    if (null == realmString || realmString.equals("")) {
+      return getDefaultRealmProtected();
+    } else {
+      return realmString;
+    }
   }
 
   /* Return fqdn of the current host */
