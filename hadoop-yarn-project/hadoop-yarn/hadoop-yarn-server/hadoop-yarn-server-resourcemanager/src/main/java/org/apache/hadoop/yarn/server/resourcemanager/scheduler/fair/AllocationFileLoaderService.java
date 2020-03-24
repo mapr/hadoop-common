@@ -435,7 +435,7 @@ public class AllocationFileLoaderService extends AbstractService {
       Map<String, String> queueLabels,
       Map<String, Queue.QueueLabelPolicy> queueLabelPolicies) 
       throws AllocationConfigurationException {
-    String queueName = element.getAttribute("name");
+    String queueName = element.getAttribute("name").trim();
 
     if (queueName.contains(".")) {
       throw new AllocationConfigurationException("Bad fair scheduler config "
