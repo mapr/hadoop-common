@@ -36,6 +36,7 @@ hadoop=2
 hadoopVersion="__VERSION_3DIGIT__"
 yarn_version="${hadoopVersion}"
 isOnlyRoles=0
+clientNode=0
 
 if [ -e "${MAPR_HOME}/server/common-ecosystem.sh" ]; then
     . "${MAPR_HOME}/server/common-ecosystem.sh"
@@ -756,15 +757,11 @@ function checkTCFileForNodManager() {
 # is not the active one, we will be getting 0s for the stats.
 #
 
-#sets MAPR_USER/MAPR_GROUP/logfile
-#initialize the common library
-initCfgEnv
-
 # Parse the arguments
 usage="usage: $0 [-help] [-EC <commonEcoOpts>] [-customSecure] [-secure] [-unsecure] [-R]"
 if [ ${#} -gt 0 ]; then
     # we have arguments - run as as standalone - need to get params and
-    OPTS=$(getopt -a -o chsuz:C: -l EC: -l help -l R -l customSecure -l unsecure -l secure -- "$@")
+    OPTS=$(getopt -a -o chsuz:C: -l EC: -l help -l R -l customSecure -l unsecure -l secure  -l client -l g: -l u -l TL: -- "$@")
     if [ $? != 0 ]; then
         echo -e ${usage}
         return 2 2>/dev/null || exit 2
@@ -782,10 +779,6 @@ if [ ${#} -gt 0 ]; then
                 eval set -- "${ecOpts[@]} --"
                 while (($#)); do
                     case "$1" in
-                        --OT | -OT)
-                            nodelist="$2"
-                            shift 2
-                            ;;
                         --R | -R)
                             HADOOP_CONF_ASSUME_RUNNING_CORE=1
                             isOnlyRoles=1
@@ -803,9 +796,17 @@ if [ ${#} -gt 0 ]; then
                             tl_ip=$2
                             shift 2
                             ;;
-                        --noStreams | -noStreams)
-                            useStreams=0
-                            shift
+                        --client | -c)
+                            clientNode=1
+                            shift 1
+                            ;;
+                        -g)
+                            MAPR_GROUP=$2
+                            shift 2
+                            ;;
+                        -u)
+                            MAPR_USER=$2
+                            shift 2
                             ;;
                         --)
                             shift
@@ -848,6 +849,18 @@ if [ ${#} -gt 0 ]; then
                 secureCluster=0
                 shift 1
                 ;;
+            --client | -c)
+                clientNode=1
+                shift 1
+                ;;
+            -g)
+                MAPR_GROUP=$2
+                shift 2
+                ;;
+            -u)
+                MAPR_USER=$2
+                shift 2
+                ;;
             --help | -h)
                 echo -e ${usage}
                 return 2 2>/dev/null || exit 2
@@ -864,8 +877,17 @@ if [ ${#} -gt 0 ]; then
     done
 fi
 
-if [ -z "$zk_nodelist" ]; then
-    zk_nodelist=$(getZKServers)
+if [ "$clientNode" != "1" ]; then
+    #sets MAPR_USER/MAPR_GROUP/logfile
+    #initialize the common library
+    initCfgEnv
+
+    if [ -z "$zk_nodelist" ]; then
+        zk_nodelist=$(getZKServers)
+    fi
+else
+    [ -z "$MAPR_USER" ] && MAPR_USER="mapr"
+    [ -z "$MAPR_GROUP" ] && MAPR_GROUP="mapr"
 fi
 
 # save off a copy of existing config file(s) - this I believe is partly anway handled by some of the java jars - verify there are no others- FIXME
@@ -888,8 +910,10 @@ fi
 # check to see if we have old hadoop config
 checkIncompatibleHadoopConfig
 
-# check is tc path correct. Need for cgroups at the NodeManager
-checkTCFileForNodManager
+if [ "$clientNode" != "1" ]; then
+    # check is tc path correct. Need for cgroups at the NodeManager
+    checkTCFileForNodManager
+fi
 
 if [ ! -z "$rm_ip" ]; then
     ConfigureYarnServices "$rm_ip" "$hs_ip"
