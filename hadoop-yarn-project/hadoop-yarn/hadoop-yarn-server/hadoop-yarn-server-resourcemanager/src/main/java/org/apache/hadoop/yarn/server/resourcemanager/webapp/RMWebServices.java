@@ -790,6 +790,31 @@ public class RMWebServices {
 
     return Response.status(Status.OK).build();
   }
+
+  @POST
+  @Path("/replace-mapr-node-labels")
+  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+  public Response replaceMaprLabelsOnNodes(
+      final NodeLabelsInfo newNodeLabels,
+      @Context HttpServletRequest hsr)
+      throws IOException {
+    init();
+
+    UserGroupInformation callerUGI = getCallerUserGroupInformation(hsr, true);
+    if (callerUGI == null) {
+      String msg = "Unable to obtain user name, user not authenticated for"
+          + " post to .../replace-mapr-node-labels";
+      throw new AuthorizationException(msg);
+    }
+    if (!rm.getRMContext().getNodeLabelManager().checkAccess(callerUGI)) {
+      String msg = "User " + callerUGI.getShortUserName() + " not authorized"
+          + " for post to .../replace-mapr-node-labels ";
+      throw new AuthorizationException(msg);
+    }
+
+    LabelManager.getInstance().replaceLabelsOnNode(buildArgsExpression(newNodeLabels.getNodeLabels()));
+    return Response.ok().build();
+  }
   
   @GET
   @Path("/get-node-labels")
@@ -833,6 +858,37 @@ public class RMWebServices {
     return Response.status(Status.OK).build();
 
   }
+
+  @POST
+  @Path("/add-mapr-node-labels")
+  public Response addToClusterMaprNodeLabels(final NodeLabelsInfo newNodeLabels,
+      @Context HttpServletRequest hsr) throws Exception {
+    init();
+
+    UserGroupInformation callerUGI = getCallerUserGroupInformation(hsr, true);
+    if (callerUGI == null) {
+      String msg = "Unable to obtain user name, user not authenticated for"
+          + " post to .../add-mapr-node-labels";
+      throw new AuthorizationException(msg);
+    }
+    if (!rm.getRMContext().getNodeLabelManager().checkAccess(callerUGI)) {
+      String msg = "User " + callerUGI.getShortUserName() + " not authorized"
+          + " for post to .../add-mapr-node-labels ";
+      throw new AuthorizationException(msg);
+    }
+
+    LabelManager.getInstance().addToClusterNodeLabels(buildArgsExpression(newNodeLabels.getNodeLabels()));
+    return Response.ok().build();
+  }
+
+  private String buildArgsExpression(Collection<String> collection) {
+    StringBuilder nodeLabels = new StringBuilder();
+    for (String nodeLabel : collection) {
+      nodeLabels.append(nodeLabel);
+      nodeLabels.append(";");
+    }
+    return nodeLabels.toString();
+  }
   
   @POST
   @Path("/remove-node-labels")
@@ -861,7 +917,31 @@ public class RMWebServices {
     return Response.status(Status.OK).build();
 
   }
-  
+
+  @POST
+  @Path("/remove-mapr-node-labels")
+  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+  public Response removeFromClusterMaprNodeLabels(final NodeLabelsInfo oldNodeLabels,
+      @Context HttpServletRequest hsr)
+      throws Exception {
+    init();
+
+    UserGroupInformation callerUGI = getCallerUserGroupInformation(hsr, true);
+    if (callerUGI == null) {
+      String msg = "Unable to obtain user name, user not authenticated for"
+          + " post to .../remove-mapr-node-labels";
+      throw new AuthorizationException(msg);
+    }
+    if (!rm.getRMContext().getNodeLabelManager().checkAccess(callerUGI)) {
+      String msg = "User " + callerUGI.getShortUserName() + " not authorized"
+          + " for post to .../remove-mapr-node-labels ";
+      throw new AuthorizationException(msg);
+    }
+
+    LabelManager.getInstance().removeFromClusterNodeLabels(buildArgsExpression(oldNodeLabels.getNodeLabels()));
+    return null;
+  }
+
   @GET
   @Path("/nodes/{nodeId}/get-labels")
   @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
@@ -908,6 +988,31 @@ public class RMWebServices {
     
     return Response.status(Status.OK).build();
 
+  }
+
+  @POST
+  @Path("/nodes/{nodeId}/replace-mapr-labels")
+  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+  public Response replaceMaprLabelsOnNode(NodeLabelsInfo newNodeLabelsInfo,
+      @Context HttpServletRequest hsr, @PathParam("nodeId") String nodeId)
+      throws Exception {
+    init();
+
+    UserGroupInformation callerUGI = getCallerUserGroupInformation(hsr, true);
+    if (callerUGI == null) {
+      String msg = "Unable to obtain user name, user not authenticated for"
+          + " post to .../nodes/nodeid/replace-mapr-labels";
+      throw new AuthorizationException(msg);
+    }
+
+    if (!rm.getRMContext().getNodeLabelManager().checkAccess(callerUGI)) {
+      String msg = "User " + callerUGI.getShortUserName() + " not authorized"
+          + " for post to .../nodes/nodeid/replace-mapr-labels";
+      throw new AuthorizationException(msg);
+    }
+    String args = nodeId + "=" + buildArgsExpression(newNodeLabelsInfo.getNodeLabels());
+    LabelManager.getInstance().replaceLabelsOnNode(args);
+    return Response.ok().build();
   }
 
   protected Response killApp(RMApp app, UserGroupInformation callerUGI,

@@ -55,7 +55,7 @@ import org.apache.hadoop.yarn.factory.providers.RecordFactoryProvider;
  * of Label related information
  *
  */
-public final class LabelStorage {
+public final class  LabelStorage {
 
   private static final Log LOG = LogFactory.getLog(LabelStorage.class);
 
@@ -390,61 +390,62 @@ public final class LabelStorage {
     writer.close();
   }
 
-  public void replaceLabelsOnNode(String nodeName, Map<String, String> labelsForReplace) throws IOException {
+  public void replaceLabelsOnNode(Map<String, Map<String, String>> labelsForReplace) throws IOException {
     Map<String, List<String>> modifiedLabels = new HashMap<>(nodeNoGlobExpressionLabels);
-    if (!nodeName.equals("*") && !modifiedLabels.containsKey(nodeName)) {
-      LOG.error("Hostname [" + nodeName + "] does not exists in current configuration!");
-      return;
-    }
 
     fs.delete(labelFile, false);
     nodeExpressionLabels.clear();
-
     try {
-      if (nodeName.equals("*")) {
-        modifiedLabels.forEach((hostname, labels) -> labels.replaceAll(label -> labelsForReplace.getOrDefault(label, label)));
-        writeToFile(packNodeLabelsToList(modifiedLabels));
-      } else {
-        List<String> currentLabels = modifiedLabels.get(nodeName);
-        currentLabels.replaceAll(s -> labelsForReplace.getOrDefault(s, s));
-        writeToFile(packNodeLabelsToList(modifiedLabels));
+      for (String nodeName : labelsForReplace.keySet()) {
+        if (!nodeName.equals("*") && !modifiedLabels.containsKey(nodeName)) {
+          LOG.error("Hostname [" + nodeName + "] does not exists in current configuration!");
+          continue;
+        }
+
+        if (nodeName.equals("*")) {
+          modifiedLabels.forEach((hostname, labels) -> labels.replaceAll(label -> labelsForReplace.get("*").getOrDefault(label, label)));
+        } else {
+          List<String> currentLabels = modifiedLabels.get(nodeName);
+          currentLabels.replaceAll(label -> labelsForReplace.get(nodeName).getOrDefault(label, label));
+        }
       }
+      writeToFile(packNodeLabelsToList(modifiedLabels));
     } catch (Exception e) {
       writeToFile(packNodeLabelsToList(nodeNoGlobExpressionLabels));
       throw e;
     }
+
   }
 
-  public void removeNodeLabels(String nodeName, List<String> labelsForRemove) throws IOException {
+  public void removeNodeLabels(Map<String, List<String>> oldLabels) throws IOException {
     Map<String, List<String>> modifiedLabels = new HashMap<>(nodeNoGlobExpressionLabels);
-
-    if (!nodeName.equals("*") && !modifiedLabels.containsKey(nodeName)) {
-      LOG.error("Hostname [" + nodeName + "] does not exists in current configuration!");
-      return;
-    }
 
     fs.delete(labelFile, false);
     nodeExpressionLabels.clear();
 
     try {
-      Map<String, List<String>> nodeLabelsToWrite = null;
-      if (nodeName.equals("*") && (labelsForRemove == null || labelsForRemove.isEmpty())) {
+      if ((oldLabels.keySet().size() == 1 && oldLabels.containsKey("*")) &&
+          (oldLabels.get("*") == null || oldLabels.get("*").isEmpty())) {
         fs.create(labelFile, true);
-      } else if (labelsForRemove.size() == 1 && labelsForRemove.contains("*")) {
-        modifiedLabels.remove(nodeName);
-        nodeLabelsToWrite = modifiedLabels;
+        return;
+      } else if (oldLabels.keySet().size() == 1 && oldLabels.containsKey("*")) {
+        modifiedLabels.values().forEach(list -> list.removeAll(oldLabels.get("*")));
+        clearEmptyNodes(modifiedLabels);
       } else {
-        if (nodeName.equals("*")) {
-          modifiedLabels.forEach((hostname, nodeLabels) -> labelsForRemove.forEach(nodeLabels::remove));
-          nodeLabelsToWrite = clearEmptyNodes(modifiedLabels);
-        } else {
-          List<String> nodeLabels = modifiedLabels.get(nodeName);
-          labelsForRemove.forEach(nodeLabels::remove);
-          nodeLabelsToWrite = clearEmptyNodes(modifiedLabels);
+        Set<String> hostnames = new HashSet<>(oldLabels.keySet());
+        for (String hostname : hostnames) {
+          if (modifiedLabels.containsKey(hostname)) {
+            if (oldLabels.get(hostname).size() == 1 && oldLabels.get(hostname).contains("*")) {
+              modifiedLabels.remove(hostname);
+            } else {
+              modifiedLabels.get(hostname).removeAll(oldLabels.get(hostname));
+            }
+          }
         }
+        clearEmptyNodes(modifiedLabels);
       }
-      if (nodeLabelsToWrite != null && !nodeLabelsToWrite.isEmpty()) {
-        writeToFile(packNodeLabelsToList(nodeLabelsToWrite));
+      if (!modifiedLabels.isEmpty()) {
+        writeToFile(packNodeLabelsToList(modifiedLabels));
       }
     } catch (IOException e) {
       writeToFile(packNodeLabelsToList(nodeNoGlobExpressionLabels));

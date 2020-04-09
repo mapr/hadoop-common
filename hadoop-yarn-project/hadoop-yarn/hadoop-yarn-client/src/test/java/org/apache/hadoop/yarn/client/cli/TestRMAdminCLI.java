@@ -295,8 +295,8 @@ public class TestRMAdminCLI {
               "[-refreshAdminAcls] [-showLabels] [-refreshLabels] " + 
               "[-refreshServiceAcl] [-getGroup [username]] " +
               "[-addToClusterMaprNodeLabels [\"node1=label1[,label2...; node2=label1,...]\"] " +
-              "[-removeFromClusterMaprNodeLabels [node1=label1[,label2...]]] " +
-              "[-replaceLabelsOnNodes [node1=label1|label2[,label3|label4,...]]] " +
+              "[-removeFromClusterMaprNodeLabels [node1=label1[,label2...;node2=label3...]]] " +
+              "[-replaceLabelsOnNodes [node1=label1|label2[,label3|label4,...[;node2=label5|label6...]]]] " +
               "[-help [cmd]]"));
       assertTrue(dataOut
           .toString()
@@ -334,13 +334,13 @@ public class TestRMAdminCLI {
       assertTrue(dataOut
       .toString()
       .contains(
-          "-removeFromClusterMaprNodeLabels [node1=label1[,label2...]]: remove labels from the nodes. "
+          "-removeFromClusterMaprNodeLabels [node1=label1[,label2...;node2=label3...]]: remove labels from the nodes. "
               + "Set '*' instead of hostname to remove labels from all nodes."
       ));
       assertTrue(dataOut
           .toString()
       .contains(
-          "replaceMaprLabelsOnNodes [node1=label1|label2[,label3|label4,...]]: "
+          "-replaceMaprLabelsOnNodes [node1=label1|label2[,label3|label4,...[;node2=label5|label6...]]]: "
               + "replace labels on a specific node. Set '*' instead of hostname to replace labels on all nodes"
       ));
       assertTrue(dataOut
@@ -382,9 +382,9 @@ public class TestRMAdminCLI {
       testError(new String[] { "-help", "-addToClusterMaprNodeLabels" },
           "Usage: yarn rmadmin [-addToClusterMaprNodeLabels [\"node1=label1[,label2...; node2=label1,...]\"]", dataErr, 0);
       testError(new String[] { "-help", "-removeFromClusterMaprNodeLabels" },
-          "Usage: yarn rmadmin [-removeFromClusterMaprNodeLabels [node1=label1[,label2...]]]", dataErr, 0);
+          "Usage: yarn rmadmin [-removeFromClusterMaprNodeLabels [node1=label1[,label2...;node2=label3...]]]", dataErr, 0);
       testError(new String[] { "-help", "-replaceMaprLabelsOnNodes" },
-          "Usage: yarn rmadmin [-replaceMaprLabelsOnNodes [node1=label1|label2[,label3|label4,...]]]", dataErr, 0);
+          "Usage: yarn rmadmin [-replaceMaprLabelsOnNodes [node1=label1|label2[,label3|label4,...[;node2=label5|label6...]]]]", dataErr, 0);
 
       testError(new String[] { "-help", "-badParameter" },
           "Usage: yarn rmadmin", dataErr, 0);
@@ -400,8 +400,8 @@ public class TestRMAdminCLI {
               "[-refreshAdminAcls] [-showLabels] [-refreshLabels] [-refreshServiceAcl] [-getGroup" +
               " [username]] " +
               "[-addToClusterMaprNodeLabels [\"node1=label1[,label2...; node2=label1,...]\"] " +
-              "[-removeFromClusterMaprNodeLabels [node1=label1[,label2...]]] " +
-              "[-replaceLabelsOnNodes [node1=label1|label2[,label3|label4,...]]] " +
+              "[-removeFromClusterMaprNodeLabels [node1=label1[,label2...;node2=label3...]]] " +
+              "[-replaceLabelsOnNodes [node1=label1|label2[,label3|label4,...[;node2=label5|label6...]]]] " +
               "[-transitionToActive [--forceactive] <serviceId>] " +
               "[-transitionToStandby <serviceId>] [-failover" +
               " [--forcefence] [--forceactive] <serviceId> <serviceId>] " +
@@ -622,7 +622,6 @@ public class TestRMAdminCLI {
     String[] args = { "-addToClusterMaprNodeLabels", "node1=all" };
     rmAdminCLI.run(args);
     verify(admin).addToClusterMaprNodeLabels(eq(AddToClusterMaprNodeLabelsRequest.newInstance(args[1])));
-    verify(admin).refreshClusterNodeLabels(any(RefreshClusterNodeLabelsRequest.class));
   }
 
   @Test
@@ -630,7 +629,6 @@ public class TestRMAdminCLI {
     String[] args = { "-removeFromClusterMaprNodeLabels", "node1=all" };
     rmAdminCLI.run(args);
     verify(admin).removeFromClusterMaprNodeLabels(eq(RemoveFromClusterMaprNodeLabelsRequest.newInstance(args[1])));
-    verify(admin).refreshClusterNodeLabels(any(RefreshClusterNodeLabelsRequest.class));
   }
 
   @Test
@@ -638,7 +636,6 @@ public class TestRMAdminCLI {
     String[] args = { "-replaceMaprLabelsOnNodes", "node1=all|slow" };
     rmAdminCLI.run(args);
     verify(admin).replaceMaprLabelsOnNode(ReplaceMaprLabelsOnNodeRequest.newInstance(args[1]));
-    verify(admin).refreshClusterNodeLabels(any(RefreshClusterNodeLabelsRequest.class));
   }
 
 }

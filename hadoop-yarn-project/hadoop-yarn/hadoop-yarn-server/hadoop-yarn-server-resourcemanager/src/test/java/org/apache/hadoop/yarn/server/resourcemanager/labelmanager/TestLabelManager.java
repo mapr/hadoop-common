@@ -515,9 +515,13 @@ public class TestLabelManager {
 
     String node = "perfnode1*";
     String node2 = "perfnode15*";
+    String node3 = "perfnode201*";
+    String node4 = "perfnode204*";
     String label1 = "right";
     String label2 = "good";
     String label3 = "fantastic";
+    String label4 = "slow";
+    String label5 = "big";
 
     assertNotNull(lb.getLabelsForNode(node));
     assertTrue(lb.getLabelsForNode(node).containsAll(ImmutableSet.of(label1, label2, label3)));
@@ -535,6 +539,11 @@ public class TestLabelManager {
     assertNull(lb.getLabelsForNode(node2));
     assertTrue(lb.getLabelsForAllNodes(false).size() > 0);
 
+    lb.removeFromClusterNodeLabels(node3 + "=" + label4 + ";" + node4 + "=" + label2 + ","  + label5);
+    lb.refreshLabels(conf);
+    assertNull(lb.getLabelsForNode(node3));
+    assertNull(lb.getLabelsForNode(node4));
+
     lb.removeFromClusterNodeLabels("*");
     lb.refreshLabels(conf);
     assertTrue(fs.exists(new Path(LABEL_FILE)));
@@ -549,11 +558,13 @@ public class TestLabelManager {
     String label1 = "right";
     String label2 = "good";
     String label3 = "fantastic";
+    String nonExistingLabel = "left";
 
     assertNotNull(lb.getLabelsForNode(node));
     assertTrue(lb.getLabelsForNode(node).containsAll(ImmutableSet.of(label1, label2, label3)));
 
-    lb.removeFromClusterNodeLabels(node);
+    lb.removeFromClusterNodeLabels(node + "=" + nonExistingLabel);
+    lb.refreshLabels(conf);
 
     assertNotNull(lb.getLabelsForNode(node));
     assertTrue(lb.getLabelsForNode(node).containsAll(ImmutableSet.of(label1, label2, label3)));
@@ -565,12 +576,22 @@ public class TestLabelManager {
 
     String node = "perfnode1*";
     String node2 = "perfnode15*";
+    String node3 = "perfnode201*";
+    String node4 = "perfnode204*";
     String label1 = "right";
     String label2 = "good";
     String label3 = "fantastic";
+    String label4 = "slow";
     String testLabel1 = "testLabel1";
     String testLabel2 = "testLabel2";
     String testLabel3 = "testLabel3";
+
+    lb.replaceLabelsOnNode(node3 + "=" + label4 + "|" + testLabel1 + ";" + node4 + "=" + label2 + "|" + testLabel2);
+    lb.refreshLabels(conf);
+    assertFalse(lb.getLabelsForNode(node3).contains(label4));
+    assertFalse(lb.getLabelsForNode(node4).contains(label2));
+    assertTrue(lb.getLabelsForNode(node3).contains(testLabel1));
+    assertTrue(lb.getLabelsForNode(node4).contains(testLabel2));
 
     lb.replaceLabelsOnNode(node + "=" + label1 + "|" + testLabel1);
     lb.refreshLabels(conf);

@@ -176,6 +176,7 @@ public class LabelManager {
       checkLabels(labelsList);
     }
     storage.addNodeLabels(labels);
+    refreshLabels(config);
   }
 
   private Map<String, List<String>> buildNodeLabelsMapFromStr(String args) {
@@ -200,24 +201,14 @@ public class LabelManager {
   }
 
   public void removeFromClusterNodeLabels(String args) throws IOException {
-    // always contains the only one object
-    Map<String, List<String>> map = buildNodeLabelsMapFromStr(args);
-    Object[] hostnames = map.keySet().toArray();
-    String hostname = (String) hostnames[0];
-    List<String> labels = map.get(hostname);
-    if (!hostname.equals("*") && (labels == null || labels.isEmpty())) {
-      LOG.error("Node-labels are not specified!");
-      return;
-    }
-    storage.removeNodeLabels(hostname, labels);
+    Map<String, List<String>> nodeLabels = buildNodeLabelsMapFromStr(args);
+    storage.removeNodeLabels(nodeLabels);
+    refreshLabels(config);
   }
 
   public void replaceLabelsOnNode(String args) throws IOException {
-    String[] arr = args.split("=");
-    String hostname = arr[0].trim();
-    Map<String, String> labels = buildMapForReplaceLabels(arr[1]);
-    checkLabels(labels.values());
-    storage.replaceLabelsOnNode(hostname, labels);
+    storage.replaceLabelsOnNode(buildMapForReplace(args));
+    refreshLabels(config);
   }
 
   private void checkLabels(Collection<String> labels) throws IOException {
@@ -234,18 +225,25 @@ public class LabelManager {
     }
   }
 
-  private Map<String, String> buildMapForReplaceLabels(String args) throws IOException {
-    Map<String, String> labels = new HashMap<>();
-    String[] pairs = args.split(",");
+  private Map<String, Map<String, String>> buildMapForReplace(String args) throws IOException {
+    Map<String, Map<String, String>> labelsForReplace = new HashMap<>();
     try {
-      for (String pair : pairs) {
-        String[] split = pair.split("\\|");
-        labels.put(split[0], split[1]);
+      String[] lines = args.split(";");
+      for (String line : lines) {
+        String[] pair = line.split("=");
+        String[] labelPairs = pair[1].split(",");
+        Map<String, String> labels = new HashMap<>();
+        for (String labelPair : labelPairs) {
+          String[] split = labelPair.split("\\|");
+          labels.put(split[0].trim(), split[1].trim());
+        }
+        checkLabels(labels.values());
+        labelsForReplace.put(pair[0].trim(), labels);
       }
     } catch (RuntimeException e) {
       throw new IOException("Wrong syntax of arguments. Abort.");
     }
-    return labels;
+    return labelsForReplace;
   }
 
   /**
