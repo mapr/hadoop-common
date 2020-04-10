@@ -19,6 +19,7 @@
 package org.apache.hadoop.yarn.client.api.impl;
 
 import java.io.IOException;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -323,7 +324,7 @@ public class YarnClientImpl extends YarnClient {
     if (tokens != null) {
       dibb.reset(tokens);
       credentials.readTokenStorageStream(dibb);
-      tokens.rewind();
+      ((Buffer)tokens).rewind();
     }
     // If the timeline delegation token is already in the CLC, no need to add
     // one more

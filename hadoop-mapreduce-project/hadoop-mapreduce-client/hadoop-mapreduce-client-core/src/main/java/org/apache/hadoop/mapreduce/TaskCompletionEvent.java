@@ -21,6 +21,7 @@ package org.apache.hadoop.mapreduce;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
@@ -274,7 +275,7 @@ public class TaskCompletionEvent implements Writable{
       ByteBuffer value = entry.getValue();
       // get clone of the value
       ByteBuffer dup = value.duplicate();
-      dup.rewind();
+      ((Buffer)dup).rewind();
       int count = dup.remaining();
       final byte[] copy = new byte[count];
       dup.get(copy);

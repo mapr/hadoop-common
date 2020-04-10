@@ -19,6 +19,7 @@
 package org.apache.hadoop.mapreduce.v2.api.records.impl.pb;
 
 
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.List;
@@ -185,17 +186,17 @@ public class TaskAttemptCompletionEventPBImpl extends ProtoBase<TaskAttemptCompl
    * ByteBuffer
    */
   public static ByteBuffer convertGeneralFromProtoFormat(ByteString byteString) {
-    int capacity = byteString.asReadOnlyByteBuffer().rewind().remaining();
+    int capacity = ((Buffer)byteString.asReadOnlyByteBuffer()).rewind().remaining();
     byte[] b = new byte[capacity];
     byteString.asReadOnlyByteBuffer().get(b, 0, capacity);
     return ByteBuffer.wrap(b);
   }
 
   public static ByteString convertGeneralToProtoFormat(ByteBuffer byteBuffer) {
-    int oldPos = byteBuffer.position();
-    byteBuffer.rewind();
+    int oldPos = ((Buffer)byteBuffer).position();
+    ((Buffer)byteBuffer).rewind();
     ByteString bs = ByteString.copyFrom(byteBuffer);
-    byteBuffer.position(oldPos);
+    ((Buffer)byteBuffer).position(oldPos);
     return bs;
   }
 

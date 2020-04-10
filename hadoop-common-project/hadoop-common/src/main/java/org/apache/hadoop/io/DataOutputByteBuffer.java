@@ -20,6 +20,7 @@ package org.apache.hadoop.io;
 
 import java.io.DataOutputStream;
 import java.io.OutputStream;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.ArrayList;
@@ -91,11 +92,11 @@ public class DataOutputByteBuffer extends DataOutputStream {
     }
     void reset() {
       length = 0;
-      current.rewind();
+      ((java.nio.Buffer)current).rewind();
       inactive.add(0, current);
       for (int i = active.size() - 1; i >= 0; --i) {
         ByteBuffer b = active.remove(i);
-        b.rewind();
+        ((java.nio.Buffer)b).rewind();
         inactive.add(0, b);
       }
       current = inactive.remove(0);

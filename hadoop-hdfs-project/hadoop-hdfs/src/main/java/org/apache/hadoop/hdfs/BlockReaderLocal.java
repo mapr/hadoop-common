@@ -18,6 +18,7 @@
 package org.apache.hadoop.hdfs;
 
 import java.io.IOException;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.EnumSet;
@@ -258,8 +259,8 @@ class BlockReaderLocal implements BlockReader {
   private synchronized void createDataBufIfNeeded() {
     if (dataBuf == null) {
       dataBuf = bufferPool.getBuffer(maxAllocatedChunks * bytesPerChecksum);
-      dataBuf.position(0);
-      dataBuf.limit(0);
+      ((Buffer)dataBuf).position(0);
+      ((Buffer)dataBuf).limit(0);
     }
   }
 
@@ -277,8 +278,8 @@ class BlockReaderLocal implements BlockReader {
   private synchronized void createChecksumBufIfNeeded() {
     if (checksumBuf == null) {
       checksumBuf = bufferPool.getBuffer(maxAllocatedChunks * checksumSize);
-      checksumBuf.position(0);
-      checksumBuf.limit(0);
+      ((Buffer)checksumBuf).position(0);
+      ((Buffer)checksumBuf).limit(0);
     }
   }
 

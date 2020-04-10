@@ -21,6 +21,7 @@ package org.apache.hadoop.io;
 import java.io.IOException;
 import java.io.DataInput;
 import java.io.DataOutput;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
@@ -160,7 +161,7 @@ public class Text extends BinaryComparable
       ByteBuffer src = ByteBuffer.wrap(this.bytes,0,this.length);
       ByteBuffer tgt = encode(what);
       byte b = tgt.get();
-      src.position(start);
+      ((Buffer)src).position(start);
           
       while (src.hasRemaining()) {
         if (b == src.get()) { // matching first byte

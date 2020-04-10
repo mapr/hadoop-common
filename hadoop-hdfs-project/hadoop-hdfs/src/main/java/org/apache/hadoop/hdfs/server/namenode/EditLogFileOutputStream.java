@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
@@ -55,7 +56,7 @@ public class EditLogFileOutputStream extends EditLogOutputStream {
   private static boolean shouldSkipFsyncForTests = false;
 
   static {
-    fill.position(0);
+    ((Buffer)fill).position(0);
     for (int i = 0; i < fill.capacity(); i++) {
       fill.put(FSEditLogOpCodes.OP_INVALID.getOpCode());
     }

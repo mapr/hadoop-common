@@ -334,9 +334,9 @@ public class ZlibDecompressor implements Decompressor {
       n = inflateBytesDirect();
       presliced.position(presliced.position() + n);
       if (compressedDirectBufLen > 0) {
-        src.position(compressedDirectBufOff);
+        ((Buffer)src).position(compressedDirectBufOff);
       } else {
-        src.position(src.limit());
+        ((Buffer)src).position(src.limit());
       }
     } finally {
       compressedDirectBuf = originalCompressed;

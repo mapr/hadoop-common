@@ -24,6 +24,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URISyntaxException;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -987,7 +988,7 @@ public class ContainerManagerImpl extends CompositeService implements
 
     if (tokens != null) {
       DataInputByteBuffer buf = new DataInputByteBuffer();
-      tokens.rewind();
+      ((Buffer)tokens).rewind();
       buf.reset(tokens);
       credentials.readTokenStorageStream(buf);
       if (LOG.isDebugEnabled()) {

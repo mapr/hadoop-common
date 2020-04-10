@@ -20,6 +20,7 @@ package org.apache.hadoop.crypto;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.EnumSet;
@@ -471,7 +472,7 @@ public abstract class CryptoStreamsTestBase {
     int n = ((ByteBufferReadable) in).read(buf);
     Assert.assertEquals(bufPos + n, buf.position());
     byte[] readData = new byte[n];
-    buf.rewind();
+    ((Buffer)buf).rewind();
     buf.position(bufPos);
     buf.get(readData);
     byte[] expectedData = new byte[n];
@@ -571,7 +572,7 @@ public abstract class CryptoStreamsTestBase {
     int nRead = ((ByteBufferReadable) in).read(buf);
     Assert.assertEquals(nRead, buf.position());
     readData = new byte[nRead];
-    buf.rewind();
+    ((Buffer)buf).rewind();
     buf.get(readData);
     expectedData = new byte[nRead];
     System.arraycopy(data, (int)pos, expectedData, 0, nRead);
@@ -602,7 +603,7 @@ public abstract class CryptoStreamsTestBase {
     nRead = ((ByteBufferReadable) in).read(buf);
     Assert.assertEquals(nRead, buf.position());
     readData = new byte[nRead];
-    buf.rewind();
+    ((Buffer)buf).rewind();
     buf.get(readData);
     expectedData = new byte[nRead];
     System.arraycopy(data, (int)pos, expectedData, 0, nRead);

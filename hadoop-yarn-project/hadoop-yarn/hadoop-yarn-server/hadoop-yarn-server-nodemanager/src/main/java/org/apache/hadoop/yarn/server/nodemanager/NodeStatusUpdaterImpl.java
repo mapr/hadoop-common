@@ -20,6 +20,7 @@ package org.apache.hadoop.yarn.server.nodemanager;
 
 import java.io.IOException;
 import java.net.ConnectException;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -588,7 +589,7 @@ public class NodeStatusUpdaterImpl extends AbstractService implements
       Credentials credentials = new Credentials();
       DataInputByteBuffer buf = new DataInputByteBuffer();
       ByteBuffer buffer = entry.getValue();
-      buffer.rewind();
+      ((Buffer)buffer).rewind();
       buf.reset(buffer);
       credentials.readTokenStorageStream(buf);
       map.put(entry.getKey(), credentials);

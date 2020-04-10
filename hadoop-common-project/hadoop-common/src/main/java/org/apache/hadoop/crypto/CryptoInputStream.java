@@ -22,6 +22,7 @@ import java.io.FileInputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.security.GeneralSecurityException;
@@ -249,7 +250,7 @@ public class CryptoInputStream extends FilterInputStream implements
        * The plain text and cipher text have a 1:1 mapping, they start at the 
        * same position.
        */
-      outBuffer.position(padding);
+      ((Buffer)outBuffer).position(padding);
     }
   }
   
@@ -269,7 +270,7 @@ public class CryptoInputStream extends FilterInputStream implements
        */
       updateDecryptor(decryptor, position, iv);
       padding = getPadding(position);
-      inBuffer.position(padding);
+      ((Buffer)inBuffer).position(padding);
     }
     return padding;
   }
@@ -297,12 +298,12 @@ public class CryptoInputStream extends FilterInputStream implements
    */
   private void resetStreamOffset(long offset) throws IOException {
     streamOffset = offset;
-    inBuffer.clear();
-    outBuffer.clear();
-    outBuffer.limit(0);
+    ((Buffer)inBuffer).clear();
+    ((Buffer)outBuffer).clear();
+    ((Buffer)outBuffer).limit(0);
     updateDecryptor(decryptor, offset, iv);
     padding = getPadding(offset);
-    inBuffer.position(padding); // Set proper position for input data.
+    ((Buffer)inBuffer).position(padding); // Set proper position for input data.
   }
   
   @Override
@@ -350,7 +351,7 @@ public class CryptoInputStream extends FilterInputStream implements
       byte[] iv = initIV.clone();
       updateDecryptor(decryptor, position, iv);
       byte padding = getPadding(position);
-      inBuffer.position(padding); // Set proper position for input data.
+      ((Buffer)inBuffer).position(padding); // Set proper position for input data.
       
       int n = 0;
       while (n < length) {
@@ -405,7 +406,7 @@ public class CryptoInputStream extends FilterInputStream implements
       if (pos <= streamOffset && pos >= (streamOffset - outBuffer.remaining())) {
         int forward = (int) (pos - (streamOffset - outBuffer.remaining()));
         if (forward > 0) {
-          outBuffer.position(outBuffer.position() + forward);
+          ((Buffer)outBuffer).position(outBuffer.position() + forward);
         }
       } else {
         ((Seekable) in).seek(pos);
@@ -427,7 +428,7 @@ public class CryptoInputStream extends FilterInputStream implements
       return 0;
     } else if (n <= outBuffer.remaining()) {
       int pos = outBuffer.position() + (int) n;
-      outBuffer.position(pos);
+      ((Buffer)outBuffer).position(pos);
       return n;
     } else {
       /*
@@ -466,9 +467,9 @@ public class CryptoInputStream extends FilterInputStream implements
         int toRead = buf.remaining();
         if (toRead <= unread) {
           final int limit = outBuffer.limit();
-          outBuffer.limit(outBuffer.position() + toRead);
+          ((Buffer)outBuffer).limit(outBuffer.position() + toRead);
           buf.put(outBuffer);
-          outBuffer.limit(limit);
+          ((Buffer)outBuffer).limit(limit);
           return toRead;
         } else {
           buf.put(outBuffer);
@@ -497,7 +498,7 @@ public class CryptoInputStream extends FilterInputStream implements
       if (buf.hasArray()) {
         n = read(buf.array(), buf.position(), buf.remaining());
         if (n > 0) {
-          buf.position(buf.position() + n);
+          ((Buffer)buf).position(buf.position() + n);
         }
       } else {
         byte[] tmp = new byte[buf.remaining()];
@@ -521,21 +522,21 @@ public class CryptoInputStream extends FilterInputStream implements
     final int limit = buf.limit();
     int len = 0;
     while (len < n) {
-      buf.position(start + len);
-      buf.limit(start + len + Math.min(n - len, inBuffer.remaining()));
+      ((Buffer)buf).position(start + len);
+      ((Buffer)buf).limit(start + len + Math.min(n - len, inBuffer.remaining()));
       inBuffer.put(buf);
       // Do decryption
       try {
         decrypt(decryptor, inBuffer, outBuffer, padding);
-        buf.position(start + len);
-        buf.limit(limit);
+        ((Buffer)buf).position(start + len);
+        ((Buffer)buf).limit(limit);
         len += outBuffer.remaining();
         buf.put(outBuffer);
       } finally {
         padding = afterDecryption(decryptor, inBuffer, streamOffset - (n - len), iv);
       }
     }
-    buf.position(pos);
+    ((Buffer)buf).position(pos);
   }
   
   @Override

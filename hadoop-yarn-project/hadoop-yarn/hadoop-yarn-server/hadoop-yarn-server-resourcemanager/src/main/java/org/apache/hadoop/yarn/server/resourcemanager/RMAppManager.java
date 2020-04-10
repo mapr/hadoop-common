@@ -18,6 +18,7 @@
 package org.apache.hadoop.yarn.server.resourcemanager;
 
 import java.io.IOException;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.Map;
@@ -417,7 +418,7 @@ public class RMAppManager implements EventHandler<RMAppManagerEvent>,
     if (tokens != null) {
       dibb.reset(tokens);
       credentials.readTokenStorageStream(dibb);
-      tokens.rewind();
+      ((Buffer)tokens).rewind();
     }
     return credentials;
   }

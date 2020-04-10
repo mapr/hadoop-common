@@ -36,6 +36,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.channels.CancelledKeyException;
 import java.nio.channels.Channels;
@@ -1553,7 +1554,7 @@ public abstract class Server {
           int version = connectionHeaderBuf.get(0);
           // TODO we should add handler for service class later
           this.setServiceClass(connectionHeaderBuf.get(1));
-          dataLengthBuffer.flip();
+          ((Buffer)dataLengthBuffer).flip();
           
           // Check if it looks like the user is hitting an IPC port
           // with an HTTP GET - this is a common error, so we can
@@ -1577,14 +1578,14 @@ public abstract class Server {
           // this may switch us into SIMPLE
           authProtocol = initializeAuthContext(connectionHeaderBuf.get(2));          
           
-          dataLengthBuffer.clear();
+          ((Buffer)dataLengthBuffer).clear();
           connectionHeaderBuf = null;
           connectionHeaderRead = true;
           continue;
         }
         
         if (data == null) {
-          dataLengthBuffer.flip();
+          ((Buffer)dataLengthBuffer).flip();
           dataLength = dataLengthBuffer.getInt();
           checkDataLength(dataLength);
           data = ByteBuffer.allocate(dataLength);
@@ -1593,8 +1594,8 @@ public abstract class Server {
         count = channelRead(channel, data);
         
         if (data.remaining() == 0) {
-          dataLengthBuffer.clear();
-          data.flip();
+          ((Buffer)dataLengthBuffer).clear();
+          ((Buffer)data).flip();
           boolean isHeaderRead = connectionContextRead;
           processOneRpc(data.array());
           data = null;
@@ -1785,7 +1786,7 @@ public abstract class Server {
         }
 
         if (unwrappedData == null) {
-          unwrappedDataLengthBuffer.flip();
+          ((Buffer)unwrappedDataLengthBuffer).flip();
           int unwrappedDataLength = unwrappedDataLengthBuffer.getInt();
           unwrappedData = ByteBuffer.allocate(unwrappedDataLength);
         }
@@ -1795,8 +1796,8 @@ public abstract class Server {
           return;
 
         if (unwrappedData.remaining() == 0) {
-          unwrappedDataLengthBuffer.clear();
-          unwrappedData.flip();
+          ((Buffer)unwrappedDataLengthBuffer).clear();
+          ((Buffer)unwrappedData).flip();
           processOneRpc(unwrappedData.array());
           unwrappedData = null;
         }
@@ -2678,7 +2679,7 @@ public abstract class Server {
     while (buf.remaining() > 0) {
       try {
         int ioSize = Math.min(buf.remaining(), NIO_BUFFER_LIMIT);
-        buf.limit(buf.position() + ioSize);
+        ((Buffer)buf).limit(buf.position() + ioSize);
         
         ret = (readCh == null) ? writeCh.write(buf) : readCh.read(buf); 
         
@@ -2687,7 +2688,7 @@ public abstract class Server {
         }
 
       } finally {
-        buf.limit(originalLimit);        
+        ((Buffer)buf).limit(originalLimit);
       }
     }
 

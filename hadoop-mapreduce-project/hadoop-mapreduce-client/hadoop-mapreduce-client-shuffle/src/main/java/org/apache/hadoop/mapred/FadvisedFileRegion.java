@@ -21,6 +21,7 @@ package org.apache.hadoop.mapred;
 import java.io.FileDescriptor;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.WritableByteChannel;
@@ -121,8 +122,8 @@ public class FadvisedFileRegion extends DefaultFileRegion {
         //We can read more than we need if the actualCount is not multiple 
         //of the byteBuffer size and file is big enough. In that case we cannot
         //use flip method but we need to set buffer limit manually to trans.
-        byteBuffer.limit((int)trans);
-        byteBuffer.position(0);
+        ((Buffer)byteBuffer).limit((int)trans);
+        ((Buffer)byteBuffer).position(0);
         position += trans; 
         trans = 0;
       }

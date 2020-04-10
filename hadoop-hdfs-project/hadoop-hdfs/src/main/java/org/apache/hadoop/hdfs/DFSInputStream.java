@@ -20,6 +20,7 @@ package org.apache.hadoop.hdfs;
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -763,8 +764,8 @@ implements ByteBufferReadable, CanSetDropBehind, CanSetReadahead,
       } finally {
         if (!success) {
           // Reset to original state so that retries work correctly.
-          buf.position(oldpos);
-          buf.limit(oldlimit);
+          ((Buffer)buf).position(oldpos);
+          ((Buffer)buf).limit(oldlimit);
         }
       } 
     }
@@ -1789,8 +1790,8 @@ implements ByteBufferReadable, CanSetDropBehind, CanSetReadahead,
     try {
       seek(curPos + length);
       buffer = clientMmap.getMappedByteBuffer().asReadOnlyBuffer();
-      buffer.position((int)blockPos);
-      buffer.limit((int)(blockPos + length));
+      ((Buffer)buffer).position((int)blockPos);
+      ((Buffer)buffer).limit((int)(blockPos + length));
       getExtendedReadBuffers().put(buffer, clientMmap);
       synchronized (infoLock) {
         readStatistics.addZeroCopyBytes(length);

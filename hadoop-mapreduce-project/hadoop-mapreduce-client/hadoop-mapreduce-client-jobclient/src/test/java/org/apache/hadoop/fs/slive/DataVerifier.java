@@ -21,6 +21,7 @@ package org.apache.hadoop.fs.slive;
 import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.IOException;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 
 /**
@@ -181,9 +182,9 @@ class DataVerifier {
     for (long i = 0; i < size; ++i) {
       cmpBuf.put(buf.get());
       if (!cmpBuf.hasRemaining()) {
-        cmpBuf.rewind();
+        ((Buffer)cmpBuf).rewind();
         long receivedData = cmpBuf.getLong();
-        cmpBuf.rewind();
+        ((Buffer)cmpBuf).rewind();
         long expected = hasher.generate(hashOffset);
         hashOffset += BYTES_PER_LONG;
         if (receivedData == expected) {
@@ -204,12 +205,12 @@ class DataVerifier {
       long expected = hasher.generate(hashOffset);
       ByteBuffer tempBuf = ByteBuffer.wrap(new byte[BYTES_PER_LONG]);
       tempBuf.putLong(expected);
-      tempBuf.position(curSize);
+      ((Buffer)tempBuf).position(curSize);
       while (tempBuf.hasRemaining()) {
         tempBuf.put((byte) 0);
       }
-      cmpBuf.rewind();
-      tempBuf.rewind();
+      ((Buffer)cmpBuf).rewind();
+      ((Buffer)tempBuf).rewind();
       if (cmpBuf.equals(tempBuf)) {
         ++chunksSame;
       } else {
@@ -336,7 +337,7 @@ class DataVerifier {
       }
       // read it in
       try {
-        readBuf.rewind();
+        ((Buffer)readBuf).rewind();
         long startTime = Timer.now();
         in.readFully(readBuf.array(), 0, bufSize);
         readTime += Timer.elapsed(startTime);
@@ -350,7 +351,7 @@ class DataVerifier {
       bytesLeft -= bufSize;
       bufLeft -= bufSize;
       // verify what we read
-      readBuf.rewind();
+      ((Buffer)readBuf).rewind();
       // figure out the expected hash offset start point
       long vOffset = determineOffset(bufRead);
       // now update for new position
@@ -389,7 +390,7 @@ class DataVerifier {
       in.readFully(headerBuf.array());
       elapsed += Timer.elapsed(startTime);
     }
-    headerBuf.rewind();
+    ((Buffer)headerBuf).rewind();
     long hashValue = headerBuf.getLong();
     long byteAvailable = headerBuf.getLong();
     if (byteAvailable < 0) {

@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
@@ -145,7 +146,7 @@ public class TestIOUtils {
       for (int i = 0; i < input.length; i++) {
         assertEquals(input[i], output[i]);
       }
-      buf.rewind();
+      ((Buffer)buf).rewind();
       IOUtils.writeFully(fc, buf, HALFWAY);
       for (int i = 0; i < HALFWAY; i++) {
         assertEquals(input[i], output[i]);

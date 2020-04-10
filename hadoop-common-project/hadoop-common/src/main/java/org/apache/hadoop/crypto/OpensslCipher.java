@@ -17,6 +17,7 @@
  */
 package org.apache.hadoop.crypto;
 
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.security.NoSuchAlgorithmException;
 import java.util.StringTokenizer;
@@ -208,8 +209,8 @@ public final class OpensslCipher {
         "Direct buffers are required.");
     int len = update(context, input, input.position(), input.remaining(),
         output, output.position(), output.remaining());
-    input.position(input.limit());
-    output.position(output.position() + len);
+    ((Buffer)input).position(input.limit());
+    ((Buffer)output).position(output.position() + len);
     return len;
   }
   

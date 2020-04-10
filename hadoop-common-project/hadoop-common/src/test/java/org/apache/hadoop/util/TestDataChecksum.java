@@ -17,6 +17,7 @@
  */
 package org.apache.hadoop.util;
 
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
@@ -95,9 +96,9 @@ public class TestDataChecksum {
       corruptBufferOffset(checksumBuf, 0);
       checksum.verifyChunkedSums(dataBuf, checksumBuf, "fake file", 0);
       corruptBufferOffset(dataBuf, 0);
-      dataBuf.limit(dataBuf.limit() + 1);
+      ((Buffer)dataBuf).limit(dataBuf.limit() + 1);
       corruptBufferOffset(dataBuf, dataLength + DATA_OFFSET_IN_BUFFER);
-      dataBuf.limit(dataBuf.limit() - 1);
+      ((Buffer)dataBuf).limit(dataBuf.limit() - 1);
       checksum.verifyChunkedSums(dataBuf, checksumBuf, "fake file", 0);
 
       // Make sure bad checksums fail - error at beginning of array
@@ -194,7 +195,7 @@ public class TestDataChecksum {
     newBuf.mark();
     newBuf.put(dataBuf);
     newBuf.reset();
-    newBuf.limit(dataBuf.limit());
+    ((Buffer)newBuf).limit(dataBuf.limit());
     return newBuf;
   }
 }

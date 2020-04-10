@@ -19,6 +19,7 @@
 package org.apache.hadoop.yarn.server.resourcemanager.recovery.records.impl.pb;
 
 import java.io.IOException;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 
 import org.apache.commons.logging.Log;
@@ -367,7 +368,7 @@ public class ApplicationAttemptStateDataPBImpl extends
       Credentials credentials = null;
       if (appAttemptTokens != null) {
         credentials = new Credentials();
-        appAttemptTokens.rewind();
+        ((Buffer)appAttemptTokens).rewind();
         dibb.reset(appAttemptTokens);
         credentials.readTokenStorageStream(dibb);
       }

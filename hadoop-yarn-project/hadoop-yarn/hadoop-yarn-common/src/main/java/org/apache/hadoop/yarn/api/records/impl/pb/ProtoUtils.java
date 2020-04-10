@@ -18,6 +18,7 @@
 
 package org.apache.hadoop.yarn.api.records.impl.pb;
 
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 
 import org.apache.hadoop.classification.InterfaceAudience.Private;
@@ -185,7 +186,7 @@ public class ProtoUtils {
    * ByteBuffer
    */
   public static ByteBuffer convertFromProtoFormat(ByteString byteString) {
-    int capacity = byteString.asReadOnlyByteBuffer().rewind().remaining();
+    int capacity = ((Buffer)byteString.asReadOnlyByteBuffer()).rewind().remaining();
     byte[] b = new byte[capacity];
     byteString.asReadOnlyByteBuffer().get(b, 0, capacity);
     return ByteBuffer.wrap(b);
@@ -193,10 +194,10 @@ public class ProtoUtils {
 
   public static ByteString convertToProtoFormat(ByteBuffer byteBuffer) {
 //    return ByteString.copyFrom((ByteBuffer)byteBuffer.duplicate().rewind());
-    int oldPos = byteBuffer.position();
-    byteBuffer.rewind();
+    int oldPos = ((Buffer)byteBuffer).position();
+    ((Buffer)byteBuffer).rewind();
     ByteString bs = ByteString.copyFrom(byteBuffer);
-    byteBuffer.position(oldPos);
+    ((Buffer)byteBuffer).position(oldPos);
     return bs;
   }
 

@@ -20,6 +20,7 @@ package org.apache.hadoop.fs.slive;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.Random;
 
@@ -172,11 +173,11 @@ class DataWriter {
     ByteBuffer buf = ByteBuffer.wrap(new byte[BYTES_PER_LONG]);
     buf.putLong(hasher.generate(offset));
     ByteBuffer allBytes = ByteBuffer.wrap(new byte[byteAm]);
-    buf.rewind();
+    ((Buffer)buf).rewind();
     for (int i = 0; i < byteAm; ++i) {
       allBytes.put(buf.get());
     }
-    allBytes.rewind();
+    ((Buffer)allBytes).rewind();
     return new GenerateResult(offset, allBytes);
   }
 
@@ -207,13 +208,13 @@ class DataWriter {
     long offset = startOffset;
     ByteBuffer buf = ByteBuffer.wrap(new byte[BYTES_PER_LONG]);
     for (long i = 0; i < byteAm; i += BYTES_PER_LONG) {
-      buf.rewind();
+      ((Buffer)buf).rewind();
       buf.putLong(hasher.generate(offset));
-      buf.rewind();
+      ((Buffer)buf).rewind();
       allBytes.put(buf);
       offset += BYTES_PER_LONG;
     }
-    allBytes.rewind();
+    ((Buffer)allBytes).rewind();
     return new GenerateResult(offset, allBytes);
   }
 
@@ -282,7 +283,7 @@ class DataWriter {
         leftOverBuf.put(genData.getBuffer());
       }
       // do the write of both
-      leftOverBuf.rewind();
+      ((Buffer)leftOverBuf).rewind();
       {
         byte[] buf = leftOverBuf.array();
         long startTime = Timer.now();
@@ -359,7 +360,7 @@ class DataWriter {
     long hash = rnd.nextLong();
     buf.putLong(hash);
     buf.putLong(fileSize);
-    buf.rewind();
+    ((Buffer)buf).rewind();
     byte[] headerData = buf.array();
     long elapsed = 0;
     {

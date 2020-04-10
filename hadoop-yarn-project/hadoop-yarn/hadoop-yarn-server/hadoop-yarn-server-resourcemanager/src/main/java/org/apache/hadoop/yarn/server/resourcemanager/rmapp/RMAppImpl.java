@@ -21,6 +21,7 @@ package org.apache.hadoop.yarn.server.resourcemanager.rmapp;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Collections;
@@ -1390,7 +1391,7 @@ public class RMAppImpl implements RMApp, Recoverable {
     if (tokens != null) {
       dibb.reset(tokens);
       credentials.readTokenStorageStream(dibb);
-      tokens.rewind();
+      ((Buffer)tokens).rewind();
     }
     return credentials;
   }

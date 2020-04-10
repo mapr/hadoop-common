@@ -305,7 +305,7 @@ public class SnappyDecompressor implements Decompressor {
       n = decompressBytesDirect();
       presliced.position(presliced.position() + n);
       // SNAPPY always consumes the whole buffer or throws an exception
-      src.position(src.limit());
+      ((Buffer)src).position(src.limit());
       finished = true;
     } finally {
       compressedDirectBuf = originalCompressed;

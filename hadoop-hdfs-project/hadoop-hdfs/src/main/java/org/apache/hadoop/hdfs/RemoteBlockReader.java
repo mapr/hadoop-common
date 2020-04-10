@@ -22,6 +22,7 @@ import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.EnumSet;
 
@@ -207,7 +208,7 @@ public class RemoteBlockReader extends FSInputChecker implements BlockReader {
     } else {
       checksumBytes.clear();
     }
-    checksumBytes.limit(requiredSize);
+    ((Buffer)checksumBytes).limit(requiredSize);
   }
   
   @Override

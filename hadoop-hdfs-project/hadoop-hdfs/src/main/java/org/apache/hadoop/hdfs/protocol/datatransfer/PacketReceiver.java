@@ -21,6 +21,7 @@ import java.io.Closeable;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 
@@ -129,8 +130,8 @@ public class PacketReceiver implements Closeable {
     // DATA       the actual block data
     Preconditions.checkState(curHeader == null || !curHeader.isLastPacketInBlock());
 
-    curPacketBuf.clear();
-    curPacketBuf.limit(PacketHeader.PKT_LENGTHS_LEN);
+    ((Buffer)curPacketBuf).clear();
+    ((Buffer)curPacketBuf).limit(PacketHeader.PKT_LENGTHS_LEN);
     doReadFully(ch, in, curPacketBuf);
     curPacketBuf.flip();
     int payloadLen = curPacketBuf.getInt();
@@ -164,13 +165,13 @@ public class PacketReceiver implements Closeable {
     // read it.
     reallocPacketBuf(PacketHeader.PKT_LENGTHS_LEN +
         dataPlusChecksumLen + headerLen);
-    curPacketBuf.clear();
-    curPacketBuf.position(PacketHeader.PKT_LENGTHS_LEN);
-    curPacketBuf.limit(PacketHeader.PKT_LENGTHS_LEN +
+    ((Buffer)curPacketBuf).clear();
+    ((Buffer)curPacketBuf).position(PacketHeader.PKT_LENGTHS_LEN);
+    ((Buffer)curPacketBuf).limit(PacketHeader.PKT_LENGTHS_LEN +
         dataPlusChecksumLen + headerLen);
     doReadFully(ch, in, curPacketBuf);
-    curPacketBuf.flip();
-    curPacketBuf.position(PacketHeader.PKT_LENGTHS_LEN);
+    ((Buffer)curPacketBuf).flip();
+    ((Buffer)curPacketBuf).position(PacketHeader.PKT_LENGTHS_LEN);
 
     // Extract the header from the front of the buffer (after the length prefixes)
     byte[] headerBuf = new byte[headerLen];
@@ -236,19 +237,19 @@ public class PacketReceiver implements Closeable {
       " rem=" + curPacketBuf.remaining();
 
     // Slice the checksums.
-    curPacketBuf.position(lenThroughHeader);
-    curPacketBuf.limit(lenThroughChecksums);
+    ((Buffer)curPacketBuf).position(lenThroughHeader);
+    ((Buffer)curPacketBuf).limit(lenThroughChecksums);
     curChecksumSlice = curPacketBuf.slice();
 
     // Slice the data.
-    curPacketBuf.position(lenThroughChecksums);
-    curPacketBuf.limit(lenThroughData);
+    ((Buffer)curPacketBuf).position(lenThroughChecksums);
+    ((Buffer)curPacketBuf).limit(lenThroughData);
     curDataSlice = curPacketBuf.slice();
     
     // Reset buffer to point to the entirety of the packet (including
     // length prefixes)
-    curPacketBuf.position(0);
-    curPacketBuf.limit(lenThroughData);
+    ((Buffer)curPacketBuf).position(0);
+    ((Buffer)curPacketBuf).limit(lenThroughData);
   }
 
   

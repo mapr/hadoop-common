@@ -20,6 +20,7 @@ package org.apache.hadoop.crypto;
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 
@@ -171,7 +172,7 @@ public class CryptoOutputStream extends FilterOutputStream implements
        * The plain text and cipher text have a 1:1 mapping, they start at the 
        * same position.
        */
-      outBuffer.position(padding);
+      ((Buffer)outBuffer).position(padding);
       padding = 0;
     }
     final int len = outBuffer.remaining();
@@ -202,7 +203,7 @@ public class CryptoOutputStream extends FilterOutputStream implements
         streamOffset / codec.getCipherSuite().getAlgorithmBlockSize();
     padding =
         (byte)(streamOffset % codec.getCipherSuite().getAlgorithmBlockSize());
-    inBuffer.position(padding); // Set proper position for input data.
+    ((Buffer)inBuffer).position(padding); // Set proper position for input data.
     codec.calculateIV(initIV, counter, iv);
     encryptor.init(key, iv);
   }
