@@ -47,6 +47,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.RunJar;
 import org.apache.hadoop.util.Shell;
 import org.apache.hadoop.util.StringUtils;
+import org.apache.hadoop.util.Time;
 import org.apache.hadoop.yarn.api.records.LocalResource;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
 
@@ -254,9 +255,12 @@ public class FSDownload implements Callable<Path> {
     FileStatus sStat = sourceFs.getFileStatus(sCopy);
     LOG.debug("Get file status " + sStat.getPath() + " with modification time " + sStat.getModificationTime());
     if (sStat.getModificationTime() != resource.getTimestamp()) {
-      throw new IOException("Resource " + sCopy +
-          " changed on src filesystem (expected " + resource.getTimestamp() +
-          ", was " + sStat.getModificationTime());
+      throw new IOException("Resource " + sCopy + " changed on src filesystem" +
+          " - expected: " +
+          "\"" + Times.formatISO8601(resource.getTimestamp()) + "\"" +
+          ", was: " +
+          "\"" + Times.formatISO8601(sStat.getModificationTime()) + "\"" +
+          ", current time: " + "\"" + Times.formatISO8601(Time.now()) + "\"");
     }
     if (resource.getVisibility() == LocalResourceVisibility.PUBLIC) {
       if (!isPublic(sourceFs, sCopy, sStat, statCache)) {
