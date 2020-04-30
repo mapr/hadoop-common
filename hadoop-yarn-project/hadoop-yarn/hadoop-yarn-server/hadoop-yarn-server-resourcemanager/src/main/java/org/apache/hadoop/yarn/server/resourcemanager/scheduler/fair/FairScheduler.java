@@ -626,16 +626,16 @@ public class FairScheduler extends
     Resource resDueToMinShare = Resources.none();
     Resource resDueToFairShare = Resources.none();
     if (curTime - sched.getLastTimeAtMinShare() > minShareTimeout) {
-      Resource target = Resources.min(RESOURCE_CALCULATOR, clusterResource,
-          sched.getMinShare(), sched.getDemand());
-      resDueToMinShare = Resources.max(RESOURCE_CALCULATOR, clusterResource,
-          Resources.none(), Resources.subtract(target, sched.getResourceUsage()));
+      Resource target = Resources.componentwiseMin(
+              sched.getMinShare(), sched.getDemand());
+      resDueToMinShare =
+              Resources.subtractFromNonNegative(target, sched.getResourceUsage());
     }
     if (curTime - sched.getLastTimeAtFairShareThreshold() > fairShareTimeout) {
-      Resource target = Resources.min(RESOURCE_CALCULATOR, clusterResource,
-          sched.getFairShare(), sched.getDemand());
-      resDueToFairShare = Resources.max(RESOURCE_CALCULATOR, clusterResource,
-          Resources.none(), Resources.subtract(target, sched.getResourceUsage()));
+      Resource target = Resources.componentwiseMin(
+              sched.getFairShare(), sched.getDemand());
+      resDueToFairShare =
+              Resources.subtractFromNonNegative(target, sched.getResourceUsage());
     }
     Resource resToPreempt = Resources.max(RESOURCE_CALCULATOR, clusterResource,
         resDueToMinShare, resDueToFairShare);
