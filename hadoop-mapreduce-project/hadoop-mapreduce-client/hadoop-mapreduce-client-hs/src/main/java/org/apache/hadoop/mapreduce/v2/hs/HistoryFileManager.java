@@ -852,6 +852,7 @@ public class HistoryFileManager extends AbstractService {
     // case where we are looking for a particular job.
     List<FileStatus> userDirList = JobHistoryUtils.localGlobber(
         intermediateDoneDirFc, intermediateDoneDirPath, "");
+    int timeout = conf.getInt(JHAdminConfig.MR_HISTORY_INTERMEDIATE_DONE_SCAN_TIMEOUT, 0);
     LOG.debug("Scanning intermediate dirs");
     for (FileStatus userDir : userDirList) {
       String name = userDir.getPath().getName();
@@ -863,7 +864,13 @@ public class HistoryFileManager extends AbstractService {
           dir = old;
         }
       }
-      dir.scanIfNeeded(userDir);
+      if (timeout != 0) {
+        if (System.currentTimeMillis() - dir.scanTime > timeout) {
+          dir.scanIfNeeded(userDir);
+        }
+      } else {
+        dir.scanIfNeeded(userDir);
+      }
     }
   }
 

@@ -237,4 +237,6 @@ public class JHAdminConfig {
   public static final String DEFAULT_MR_HS_JHIST_FORMAT =
       "json";
 
+  public static final String MR_HISTORY_INTERMEDIATE_DONE_SCAN_TIMEOUT =
+      MR_HISTORY_PREFIX + "intermediate-done-scan-timeout";
 }
