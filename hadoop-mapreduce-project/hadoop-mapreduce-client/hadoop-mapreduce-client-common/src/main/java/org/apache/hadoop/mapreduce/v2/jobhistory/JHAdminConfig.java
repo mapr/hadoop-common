@@ -283,4 +283,7 @@ public class JHAdminConfig {
   public static final String MR_HS_LOADED_JOBS_TASKS_MAX =
       MR_HISTORY_PREFIX + "loadedjob.tasks.max";
   public static final int DEFAULT_MR_HS_LOADED_JOBS_TASKS_MAX = -1;
+
+  public static final String MR_HISTORY_INTERMEDIATE_DONE_SCAN_TIMEOUT =
+      MR_HISTORY_PREFIX + "intermediate-done-scan-timeout";
 }
