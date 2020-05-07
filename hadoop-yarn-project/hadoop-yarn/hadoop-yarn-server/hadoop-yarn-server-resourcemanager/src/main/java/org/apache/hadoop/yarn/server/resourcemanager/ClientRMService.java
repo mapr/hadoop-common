@@ -32,6 +32,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang.math.LongRange;
@@ -157,7 +158,6 @@ import org.apache.hadoop.yarn.util.Records;
 import org.apache.hadoop.yarn.util.UTCClock;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 
 /**
@@ -1074,12 +1074,13 @@ public class ClientRMService extends AbstractService implements
         new RMAppMoveEvent(applicationId, request.getTargetQueue(), future));
     
     try {
-      Futures.get(future, YarnException.class);
-    } catch (YarnException ex) {
+      future.get();
+    } catch (InterruptedException ex) {
+      ex.printStackTrace();
+    } catch (ExecutionException ex) {
       RMAuditLogger.logFailure(callerUGI.getShortUserName(),
-          AuditConstants.MOVE_APP_REQUEST, "UNKNOWN", "ClientRMService",
-          ex.getMessage());
-      throw ex;
+              AuditConstants.MOVE_APP_REQUEST, "UNKNOWN", "ClientRMService",
+              ex.getMessage());
     }
 
     RMAuditLogger.logSuccess(callerUGI.getShortUserName(), 

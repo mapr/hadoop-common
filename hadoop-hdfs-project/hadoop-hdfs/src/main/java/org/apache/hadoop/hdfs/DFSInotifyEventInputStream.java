@@ -18,7 +18,7 @@
 
 package org.apache.hadoop.hdfs;
 
-import com.google.common.collect.Iterators;
+import java.util.Collections;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.hdfs.inotify.EventBatch;
@@ -77,7 +77,7 @@ public class DFSInotifyEventInputStream {
         long lastReadTxid) throws IOException {
     this.traceSampler = traceSampler;
     this.namenode = namenode;
-    this.it = Iterators.emptyIterator();
+    this.it = Collections.emptyIterator();
     this.lastReadTxid = lastReadTxid;
   }
 
