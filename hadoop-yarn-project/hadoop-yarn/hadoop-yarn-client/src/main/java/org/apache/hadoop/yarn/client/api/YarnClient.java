@@ -23,6 +23,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
@@ -484,7 +485,7 @@ public abstract class YarnClient extends AbstractService {
    * @throws IOException
    */
   public abstract void moveApplicationAcrossQueues(ApplicationId appId,
-      String queue) throws YarnException, IOException;
+      String queue) throws YarnException, IOException, InterruptedException, ExecutionException;
 
   /**
    * <p>

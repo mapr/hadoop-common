@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -1156,7 +1157,13 @@ public class RMWebServices {
             MoveApplicationAcrossQueuesRequest req =
                 MoveApplicationAcrossQueuesRequest.newInstance(appid,
                   reqTargetQueue);
-            rm.getClientRMService().moveApplicationAcrossQueues(req);
+            try {
+              rm.getClientRMService().moveApplicationAcrossQueues(req);
+            } catch (InterruptedException e) {
+              e.printStackTrace();
+            } catch (ExecutionException e) {
+              e.printStackTrace();
+            }
             return null;
           }
         });

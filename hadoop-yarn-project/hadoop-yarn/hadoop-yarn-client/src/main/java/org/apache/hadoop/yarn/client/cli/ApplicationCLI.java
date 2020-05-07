@@ -27,6 +27,7 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
@@ -453,7 +454,7 @@ public class ApplicationCLI extends YarnCLI {
    * Moves the application with the given ID to the given queue.
    */
   private void moveApplicationAcrossQueues(String applicationId, String queue)
-      throws YarnException, IOException {
+      throws YarnException, IOException, InterruptedException, ExecutionException {
     ApplicationId appId = ConverterUtils.toApplicationId(applicationId);
     ApplicationReport appReport = client.getApplicationReport(appId);
     if (appReport.getYarnApplicationState() == YarnApplicationState.FINISHED

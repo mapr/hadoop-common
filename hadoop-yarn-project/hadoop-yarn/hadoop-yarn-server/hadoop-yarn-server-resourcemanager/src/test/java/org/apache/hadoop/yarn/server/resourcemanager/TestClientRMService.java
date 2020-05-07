@@ -44,6 +44,7 @@ import java.util.Set;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -555,7 +556,7 @@ public class TestClientRMService {
   }
   
   @Test (expected = ApplicationNotFoundException.class)
-  public void testMoveAbsentApplication() throws YarnException {
+  public void testMoveAbsentApplication() throws YarnException, InterruptedException, ExecutionException {
     RMContext rmContext = mock(RMContext.class);
     when(rmContext.getRMApps()).thenReturn(
         new ConcurrentHashMap<ApplicationId, RMApp>());

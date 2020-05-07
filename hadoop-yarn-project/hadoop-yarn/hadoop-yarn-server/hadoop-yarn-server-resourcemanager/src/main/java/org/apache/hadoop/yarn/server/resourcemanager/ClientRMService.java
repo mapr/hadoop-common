@@ -1022,7 +1022,7 @@ public class ClientRMService extends AbstractService implements
   @SuppressWarnings("unchecked")
   @Override
   public MoveApplicationAcrossQueuesResponse moveApplicationAcrossQueues(
-      MoveApplicationAcrossQueuesRequest request) throws YarnException {
+      MoveApplicationAcrossQueuesRequest request) throws YarnException, InterruptedException, ExecutionException {
     ApplicationId applicationId = request.getApplicationId();
 
     UserGroupInformation callerUGI;
@@ -1075,12 +1075,11 @@ public class ClientRMService extends AbstractService implements
     
     try {
       future.get();
-    } catch (InterruptedException ex) {
-      ex.printStackTrace();
-    } catch (ExecutionException ex) {
+    } catch ( InterruptedException | ExecutionException ex) {
       RMAuditLogger.logFailure(callerUGI.getShortUserName(),
               AuditConstants.MOVE_APP_REQUEST, "UNKNOWN", "ClientRMService",
               ex.getMessage());
+      throw ex;
     }
 
     RMAuditLogger.logSuccess(callerUGI.getShortUserName(), 

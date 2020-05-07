@@ -23,6 +23,7 @@ import static org.junit.Assert.fail;
 
 import java.security.AccessControlException;
 import java.security.PrivilegedExceptionAction;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -87,7 +88,7 @@ public class TestMoveApplication {
           MoveApplicationAcrossQueuesRequest.newInstance(
               application.getApplicationId(), "newqueue"));
       fail("Should have hit exception");
-    } catch (YarnException ex) {
+    } catch (InterruptedException | ExecutionException ex) {
       assertEquals("Move not supported", ex.getCause().getMessage());
     }
   }

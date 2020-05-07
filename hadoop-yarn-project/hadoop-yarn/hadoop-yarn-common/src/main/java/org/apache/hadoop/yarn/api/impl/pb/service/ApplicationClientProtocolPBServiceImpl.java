@@ -19,6 +19,7 @@
 package org.apache.hadoop.yarn.api.impl.pb.service;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.security.proto.SecurityProtos.CancelDelegationTokenRequestProto;
@@ -358,6 +359,10 @@ public class ApplicationClientProtocolPBServiceImpl implements ApplicationClient
     } catch (YarnException e) {
       throw new ServiceException(e);
     } catch (IOException e) {
+      throw new ServiceException(e);
+    } catch (InterruptedException e) {
+      throw new ServiceException(e);
+    } catch (ExecutionException e) {
       throw new ServiceException(e);
     }
   }

@@ -19,6 +19,7 @@
 package org.apache.hadoop.yarn.api;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.hadoop.classification.InterfaceAudience.Public;
 import org.apache.hadoop.classification.InterfaceStability.Stable;
@@ -275,7 +276,7 @@ public interface ApplicationClientProtocol extends ApplicationBaseProtocol {
   @Unstable
   @Idempotent
   public MoveApplicationAcrossQueuesResponse moveApplicationAcrossQueues(
-      MoveApplicationAcrossQueuesRequest request) throws YarnException, IOException;
+      MoveApplicationAcrossQueuesRequest request) throws YarnException, IOException, ExecutionException, InterruptedException;
 
   /**
    * <p>
