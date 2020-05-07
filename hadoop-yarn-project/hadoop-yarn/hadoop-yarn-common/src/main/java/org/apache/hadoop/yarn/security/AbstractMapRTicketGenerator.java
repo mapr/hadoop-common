@@ -33,11 +33,11 @@ public abstract class AbstractMapRTicketGenerator {
     }
 
     ApplicationId appId = appCtx.getApplicationId();
-      try {
+    try {
       generateMapRLoginTicket(appId, username, conf);
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   public void removeToken(ApplicationId appId, Configuration conf) {
