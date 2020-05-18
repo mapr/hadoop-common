@@ -1,0 +1,50 @@
+#!/bin/bash
+
+function createSymlinks() {
+  ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/etc/hadoop/ssl-client.xml __PREFIX__/conf/ssl-client.xml
+  ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/etc/hadoop/ssl-server.xml __PREFIX__/conf/ssl-server.xml
+
+  rm -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/failureaccess-*
+  ln -sf __PREFIX__/lib/failureaccess-* __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  rm -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/guava-*
+  ln -sf __PREFIX__/lib/guava-* __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  rm -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/slf4j*
+  ln -sf __PREFIX__/lib/slf4j* __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  ln -sf __PREFIX__/lib/mapr-hbase-* __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  ln -sf __PREFIX__/lib/mysql-connector-java-*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  rm -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/maprfs-*.jar
+  ln -sf __PREFIX__/lib/maprfs-*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  ln -sf __PREFIX__/lib/mapr-java-utils-*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  ln -sf __PREFIX__/lib/mapr-tools*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  ln -sf __PREFIX__/lib/jackson-annotations-2.*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  ln -sf __PREFIX__/lib/jackson-core-2.*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  ln -sf __PREFIX__/lib/jackson-databind-2.*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  ln -sf __PREFIX__/lib/json-*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  ln -sf __PREFIX__/lib/central-logging-*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  ln -sf __PREFIX__/lib/libMapRClient.so __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  ln -sf __PREFIX__/lib/libMapRClient.so __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/lib/native/
+  ln -sf __PREFIX__/lib/libjpam.so __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/lib/native
+
+  ln -sf __PREFIX__/lib/maprdb-*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  ln -sf __PREFIX__/lib/mapr-stream*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  ln -sf __PREFIX__/lib/antlr4-runtime-*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  ln -sf __PREFIX__/lib/ojai-*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+
+  ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/yarn/hadoop-yarn-api-__VERSION_3DIGIT__*.jar __PREFIX__/lib/.
+  ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/htrace-*.jar  __PREFIX__/lib/
+  ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/commons-io-2.4.jar __PREFIX__/lib/commons-io-2.4.jar
+  ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/hadoop-auth-__VERSION_3DIGIT__*.jar __PREFIX__/lib/hadoop-auth-__VERSION_3DIGIT__.jar
+
+  COMMONS_CONFIG_ABSOLUTE=$(find __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib -name "commons-configuration*.jar" -print -quit)
+  COMMONS_CONFIG_BASENAME=$(basename ${COMMONS_CONFIG_ABSOLUTE})
+  ln -sf ${COMMONS_CONFIG_ABSOLUTE} __PREFIX__/lib/${COMMONS_CONFIG_BASENAME}
+
+  ls __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/hadoop-common-__VERSION_3DIGIT__*.jar | grep -v "tests" | xargs -I {} ln -sf {} __PREFIX__/lib/.
+
+}
+
+# check to see if we have old hadoop config
+if [ -f "__PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/etc/hadoop/.not_configured_yet" ]; then
+  createSymlinks
+  rm -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/.not_configured_yet
+fi
