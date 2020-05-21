@@ -94,6 +94,107 @@ if [ -f "${HADOOP_CONF_DIR}/mapred-env.sh" ]; then
   . "${HADOOP_CONF_DIR}/mapred-env.sh"
 fi
 
+#Enable JMX for MaprMonitoring # tag for older collectd - do not remove
+function logJmxMsg() {
+    echo $* >> "${YARN_JMX_LOG_FILE:-${HADOOP_HOME}/logs/${COMMAND}_jmx_options.log}"
+}
+
+if [ "$COMMAND" = "historyserver" ]; then
+
+    isSecure="false"
+    if [ -f "${MAPR_HOME}/conf/mapr-clusters.conf" ]; then
+      isSecure=$(head -1 ${MAPR_HOME}/conf/mapr-clusters.conf | grep -o 'secure=\w*' | cut -d= -f2)
+    fi
+
+    #Mapr JMX handling
+    MAPR_JMX_YARN_HISTORYSERVER_PORT=${MAPR_JMX_YARN_HISTORYSERVER_PORT:-8024}
+    if [ -z "$MAPR_JMXLOCALBINDING" ]; then
+        MAPR_JMXLOCALBINDING="false"
+    fi
+
+    if [ -z "$MAPR_JMXAUTH" ]; then
+        MAPR_JMXAUTH="false"
+    fi
+
+    if [ -z "$MAPR_JMXSSL" ]; then
+        MAPR_JMXSSL="false"
+    fi
+
+    if [ -z "$MAPR_JMXDISABLE" ] && [ -z "$MAPR_JMXLOCALHOST" ] && [ -z "$MAPR_JMXREMOTEHOST" ]; then
+        logJmxMsg "No MapR JMX options given - defaulting to local binding"
+    fi
+
+    if [ -z "$MAPR_JMXDISABLE" ] || [ "$MAPR_JMXDISABLE" = 'false' ]; then
+        # default setting for localBinding
+        MAPR_JMX_OPTS="-Dcom.sun.management.jmxremote"
+        if [ "$MAPR_JMXAUTH" = "true" ]; then
+            if [ "$isSecure" = "true" ]; then
+                if [ -f "$MAPR_HOME/conf/jmxremote.password" ] && [ -f "$MAPR_HOME/conf/jmxremote.access" ]; then
+                    MAPR_JMX_OPTS="$MAPR_JMX_OPTS -Dcom.sun.management.jmxremote.authenticate=true \
+                        -Dcom.sun.management.jmxremote.password.file=$MAPR_HOME/conf/jmxremote.password \
+                        -Dcom.sun.management.jmxremote.access.file=$MAPR_HOME/conf/jmxremote.access"
+                else
+                    logJmxMsg "JMX password and/or access files missing - not starting since we are in secure mode"
+                    exit 1
+                fi
+            else
+                logJmxMsg "JMX Authentication configured - not starting since we are not in secure mode"
+                exit 1
+            fi
+        else
+            MAPR_JMX_OPTS="$MAPR_JMX_OPTS -Dcom.sun.management.jmxremote.authenticate=false"
+        fi
+
+        if [ "$MAPR_JMXLOCALHOST" = "true" ] && [ "$MAPR_JMXREMOTEHOST" = "true" ]; then
+            logJmxMsg "WARNING: Both MAPR_JMXLOCALHOST and MAPR_JMXREMOTEHOST options are enabled - defaulting to MAPR_JMXLOCALHOST config"
+            MAPR_JMXREMOTEHOST=false
+        fi
+        if [ "$MAPR_JMXLOCALHOST" = "true" ] || [ "$MAPR_JMXREMOTEHOST" = "true" ]; then
+            if [ "$MAPR_JMXSSL" = "true" ]; then
+                MAPR_JMX_OPTS="$MAPR_JMX_OPTS -Dcom.sun.management.jmxremote.ssl=true"
+            else
+                MAPR_JMX_OPTS="$MAPR_JMX_OPTS -Dcom.sun.management.jmxremote.ssl=false"
+            fi
+
+            if [ "$MAPR_JMXLOCALHOST" = "true" ]; then
+                MAPR_JMX_OPTS="$MAPR_JMX_OPTS -Djava.rmi.server.hostname=localhost \
+                    -Dcom.sun.management.jmxremote.host=localhost \
+                    -Dcom.sun.management.jmxremote.local.only=true"
+            fi
+
+            # only enable is explicitly specified
+            if [ -n "$MAPR_JMX_YARN_HISTORYSERVER_ENABLE" ] && [ "$MAPR_JMX_YARN_HISTORYSERVER_ENABLE" = "true" ]; then
+                MAPR_JMX_PORT=${MAPR_JMX_YARN_HISTORYSERVER_PORT}
+            else
+                MAPR_JMX_PORT=""
+                MAPR_JMX_OPTS=""
+            fi
+
+            if [ -z "$MAPR_JMX_OPTS" ]; then
+                logJmxMsg "WARNING: JMX disabled for $COMMAND"
+            elif [ -z "$MAPR_JMX_PORT" ]; then
+                logJmxMsg "WARNING: No JMX port given for $COMMAND - disabling TCP base JMX service"
+                MAPR_JMX_OPTS=""
+            else
+                if [ "$MAPR_JMXLOCALHOST" = "true" ]; then
+                    logJmxMsg "Enabling TCP JMX for $COMMAND only on localhost port $MAPR_JMX_PORT"
+                else
+                    logJmxMsg "Enabling TCP JMX for $COMMAND on port $MAPR_JMX_PORT"
+                fi
+                MAPR_JMX_OPTS="$MAPR_JMX_OPTS -Dcom.sun.management.jmxremote.port=$MAPR_JMX_PORT"
+            fi
+        fi
+
+        if [ "$MAPR_JMXLOCALBINDING" = "true" ] && [ -z "$MAPR_JMX_OPTS" ]; then
+            logJmxMsg "Enabling JMX local binding only"
+            MAPR_JMX_OPTS="-Dcom.sun.management.jmxremote"
+        fi
+    else
+        logJmxMsg "JMX disabled by user request"
+        MAPR_JMX_OPTS=""
+    fi
+fi
+
 if [ "$COMMAND" = "job" ] ; then
   CLASS=org.apache.hadoop.mapred.JobClient
   HADOOP_OPTS="$HADOOP_OPTS $HADOOP_CLIENT_OPTS"
@@ -202,6 +303,7 @@ if $cygwin; then
 fi
 
 HADOOP_OPTS="$HADOOP_OPTS -Dhadoop.security.logger=${HADOOP_SECURITY_LOGGER:-INFO,NullAppender}"
+HADOOP_OPTS_JMX="$HADOOP_OPTS $MAPR_JMX_OPTS"
 
 export CLASSPATH
-exec "$JAVA" -Dproc_$COMMAND $JAVA_HEAP_MAX $HADOOP_OPTS $CLASS "$@"
+exec "$JAVA" -Dproc_$COMMAND $JAVA_HEAP_MAX $HADOOP_OPTS_JMX $CLASS "$@"

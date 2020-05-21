@@ -29,7 +29,7 @@
 #                              appended at the beginning of YARN's final
 #                              classpath instead of at the end.
 #
-#   YARN_HEAPSIZE  The maximum amount of heap to use, in MB. 
+#   YARN_HEAPSIZE  The maximum amount of heap to use, in MB.
 #                    Default is 1000.
 #
 #   YARN_{COMMAND}_HEAPSIZE overrides YARN_HEAPSIZE for a given command
@@ -39,12 +39,12 @@
 #                           they take precedence.
 #
 #   YARN_OPTS      Extra Java runtime options.
-#   
+#
 #   YARN_CLIENT_OPTS         when the respective command is run.
-#   YARN_{COMMAND}_OPTS etc  YARN_NODEMANAGER_OPTS applies to NodeManager 
-#                              for e.g.  YARN_CLIENT_OPTS applies to 
-#                              more than one command (fs, dfs, fsck, 
-#                              dfsadmin etc)  
+#   YARN_{COMMAND}_OPTS etc  YARN_NODEMANAGER_OPTS applies to NodeManager
+#                              for e.g.  YARN_CLIENT_OPTS applies to
+#                              more than one command (fs, dfs, fsck,
+#                              dfsadmin etc)
 #
 #   YARN_CONF_DIR  Alternate conf dir. Default is ${HADOOP_YARN_HOME}/conf.
 #
@@ -89,15 +89,6 @@ esac
 
 HADOOP_LIBEXEC_DIR=${HADOOP_LIBEXEC_DIR:-$DEFAULT_LIBEXEC_DIR}
 . $HADOOP_LIBEXEC_DIR/yarn-config.sh
-
-if [ -z "$BASEMAPR" ]; then
-  BASEMAPR="/opt/mapr"
-fi
-
-isSecured="false"
-if [ -f "$BASEMAPR/conf/mapr-clusters.conf" ]; then
-  isSecured=$(head -1 $BASEMAPR/conf/mapr-clusters.conf | grep -o 'secure=\w*' | cut -d= -f2)
-fi
 
 function print_usage(){
   echo "Usage: yarn [--config confdir] [COMMAND | CLASSNAME]"
@@ -158,14 +149,15 @@ if [ "$JAVA_HOME" != "" ]; then
   #echo "run java in $JAVA_HOME"
   JAVA_HOME=$JAVA_HOME
 fi
-  
+
 if [ "$JAVA_HOME" = "" ]; then
   echo "Error: JAVA_HOME is not set."
   exit 1
 fi
 
 JAVA=$JAVA_HOME/bin/java
-JAVA_HEAP_MAX=-Xmx1000m 
+JAVA_HEAP_MAX=-Xmx1000m
+#Enable JMX for MaprMonitoring # tag for older collectd - do not remove
 
 # check envvars which might override default args
 if [ "$YARN_HEAPSIZE" != "" ]; then
@@ -176,26 +168,152 @@ fi
 
 # CLASSPATH initially contains $HADOOP_CONF_DIR & $YARN_CONF_DIR
 if [ ! -d "$HADOOP_CONF_DIR" ]; then
-  echo No HADOOP_CONF_DIR set. 
+  echo No HADOOP_CONF_DIR set.
   echo Please specify it either in yarn-env.sh or in the environment.
   exit 1
 fi
 
-#Enable JMX for MaprMonitoring
-if [ -z "$JMX_OPTS" ]; then
-  if [ "$isSecured" = "true" ]; then
-    JMX_OPTS="-Dcom.sun.management.jmxremote \
-                        -Dcom.sun.management.jmxremote.authenticate=true \
-                        -Dcom.sun.management.jmxremote.password.file=$BASEMAPR/conf/jmxremote.password \
-                        -Dcom.sun.management.jmxremote.access.file=$BASEMAPR/conf/jmxremote.access \
-                        -Dcom.sun.management.jmxremote.ssl=false"
-  else
-    JMX_OPTS="-Dcom.sun.management.jmxremote \
-                        -Dcom.sun.management.jmxremote.authenticate=false \
-                        -Dcom.sun.management.jmxremote.ssl=false \
-                        -Dcom.sun.management.jmxremote.port"
-  fi
+if [ "$COMMAND" = "nodemanager" ] || [ "$COMMAND" = "resourcemanager" ] || \
+   [ "$COMMAND" = "timelineserver" ] || [ "$COMMAND" = "sharedcachemanager" ]; then
+    LOG_JMX_MSGS=1
+else
+    LOG_JMX_MSGS=0
 fi
+
+isSecure="false"
+if [ -f "${MAPR_HOME}/conf/mapr-clusters.conf" ]; then
+  isSecure=$(head -1 ${MAPR_HOME}/conf/mapr-clusters.conf | grep -o 'secure=\w*' | cut -d= -f2)
+fi
+
+function logJmxMsg()
+{
+    [ $LOG_JMX_MSGS -eq 1 ] && echo $* >> "${YARN_JMX_LOG_FILE:-${HADOOP_HOME}/logs/${COMMAND}_jmx_options.log}"
+}
+
+#Mapr JMX handling
+MAPR_JMX_YARN_NODEMANAGER_PORT=${MAPR_JMX_YARN_NODEMANAGER_PORT:-8027}
+MAPR_JMX_YARN_PROXYSERVER_PORT=${MAPR_JMX_YARN_PROXYSERVER_PORT:-8026}
+MAPR_JMX_YARN_RESOURCEMANAGER_PORT=${MAPR_JMX_YARN_RESOURCEMANAGER_PORT:-8025}
+MAPR_JMX_YARN_SHAREDCACHEMANAGER_PORT=${MAPR_JMX_YARN_SHAREDCACHEMANAGER_PORT:-8028}
+MAPR_JMX_YARN_TIMELINESERVER_PORT=${MAPR_JMX_YARN_TIMELINESERVER_PORT:-8029}
+if [ -z "$MAPR_JMXLOCALBINDING" ]; then
+    MAPR_JMXLOCALBINDING="false"
+fi
+
+if [ -z "$MAPR_JMXAUTH" ]; then
+    MAPR_JMXAUTH="false"
+fi
+
+if [ -z "$MAPR_JMXSSL" ]; then
+    MAPR_JMXSSL="false"
+fi
+
+if [ -z "$MAPR_JMXDISABLE" ] && [ -z "$MAPR_JMXLOCALHOST" ] && [ -z "$MAPR_JMXREMOTEHOST" ]; then
+    logJmxMsg "No MapR JMX options given - defaulting to local binding"
+fi
+
+if [ -z "$MAPR_JMXDISABLE" ] || [ "$MAPR_JMXDISABLE" = 'false' ]; then
+    # default setting for localBinding
+    MAPR_JMX_OPTS="-Dcom.sun.management.jmxremote"
+    if [ "$MAPR_JMXAUTH" = "true" ]; then
+        if [ "$isSecure" = "true" ]; then
+            if [ -f "$MAPR_HOME/conf/jmxremote.password" ] && [ -f "$MAPR_HOME/conf/jmxremote.access" ]; then
+                MAPR_JMX_OPTS="$MAPR_JMX_OPTS -Dcom.sun.management.jmxremote.authenticate=true \
+                    -Dcom.sun.management.jmxremote.password.file=$MAPR_HOME/conf/jmxremote.password \
+                    -Dcom.sun.management.jmxremote.access.file=$MAPR_HOME/conf/jmxremote.access"
+            else
+                logJmxMsg "JMX password and/or access files missing - not starting since we are in secure mode"
+                exit 1
+            fi
+        else
+            logJmxMsg "JMX Authentication configured - not starting since we are not in secure mode"
+            exit 1
+        fi
+    else
+        MAPR_JMX_OPTS="$MAPR_JMX_OPTS -Dcom.sun.management.jmxremote.authenticate=false"
+    fi
+
+    if [ "$MAPR_JMXLOCALHOST" = "true" ] && [ "$MAPR_JMXREMOTEHOST" = "true" ]; then
+        logJmxMsg "WARNING: Both MAPR_JMXLOCALHOST and MAPR_JMXREMOTEHOST options are enabled - defaulting to MAPR_JMXLOCALHOST config"
+        MAPR_JMXREMOTEHOST=false
+    fi
+    if [ "$MAPR_JMXLOCALHOST" = "true" ] || [ "$MAPR_JMXREMOTEHOST" = "true" ]; then
+        if [ "$MAPR_JMXSSL" = "true" ]; then
+            MAPR_JMX_OPTS="$MAPR_JMX_OPTS -Dcom.sun.management.jmxremote.ssl=true"
+        else
+            MAPR_JMX_OPTS="$MAPR_JMX_OPTS -Dcom.sun.management.jmxremote.ssl=false"
+        fi
+
+        if [ "$MAPR_JMXLOCALHOST" = "true" ]; then
+            MAPR_JMX_OPTS="$MAPR_JMX_OPTS -Djava.rmi.server.hostname=localhost \
+                -Dcom.sun.management.jmxremote.host=localhost \
+                -Dcom.sun.management.jmxremote.local.only=true"
+        fi
+
+        case "$COMMAND" in
+            resourcemanager)
+                if [ -z "$MAPR_JMX_YARN_RESOURCEMANAGER_ENABLE" ] || [ "$MAPR_JMX_YARN_RESOURCEMANAGER_ENABLE" = "true" ]; then
+                    MAPR_JMX_PORT=${MAPR_JMX_YARN_RESOURCEMANAGER_PORT}
+                else
+                    MAPR_JMX_PORT=""
+                    MAPR_JMX_OPTS=""
+                fi;;
+            nodemanager)
+                if [ -z "$MAPR_JMX_YARN_NODEMANAGER_ENABLE" ] || [ "$MAPR_JMX_YARN_NODEMANAGER_ENABLE" = "true" ]; then
+                    MAPR_JMX_PORT=${MAPR_JMX_YARN_NODEMANAGER_PORT}
+                else
+                    MAPR_JMX_PORT=""
+                    MAPR_JMX_OPTS=""
+                fi;;
+            timelineserver)
+                # only enable is explicitly specified
+                if [ -n "$MAPR_JMX_YARN_TIMELINESERVER_ENABLE" ] && [ "$MAPR_JMX_YARN_TIMELINESERVER_ENABLE" = "true" ]; then
+                    MAPR_JMX_PORT=${MAPR_JMX_YARN_TIMELINESERVER_PORT}
+                else
+                    MAPR_JMX_PORT=""
+                    MAPR_JMX_OPTS=""
+                fi;;
+            sharedcachemanager)
+                # only enable is explicitly specified
+                if [ -n "$MAPR_JMX_YARN_SHAREDCACHEMANAGER_ENABLE" ] && [ "$MAPR_JMX_YARN_SHAREDCACHEMANAGER_ENABLE" = "true" ]; then
+                    MAPR_JMX_PORT=${MAPR_JMX_YARN_SHAREDCACHEMANAGER_PORT}
+                else
+                    MAPR_JMX_PORT=""
+                    MAPR_JMX_OPTS=""
+                fi;;
+            proxyserver)
+                if [ -n "$MAPR_JMX_YARN_PROXYSERVER_ENABLE" ] && [ "$MAPR_JMX_YARN_PROXYSERVER_ENABLE" = "true" ]; then
+                    MAPR_JMX_PORT=${MAPR_JMX_YARN_PROXYSERVER_PORT}
+                else
+                    MAPR_JMX_PORT=""
+                    MAPR_JMX_OPTS=""
+                fi;;
+        esac
+        if [ -z "$MAPR_JMX_OPTS" ]; then
+            logJmxMsg "WARNING: JMX disabled for $COMMAND"
+        elif [ -z "$MAPR_JMX_PORT" ]; then
+            logJmxMsg "WARNING: No JMX port given for $COMMAND - disabling TCP base JMX service"
+            MAPR_JMX_OPTS=""
+        else
+            if [ "$MAPR_JMXLOCALHOST" = "true" ]; then
+                logJmxMsg "Enabling TCP JMX for $COMMAND only on localhost port $MAPR_JMX_PORT"
+            else
+                logJmxMsg "Enabling TCP JMX for $COMMAND on port $MAPR_JMX_PORT"
+            fi
+            MAPR_JMX_OPTS="$MAPR_JMX_OPTS -Dcom.sun.management.jmxremote.port=$MAPR_JMX_PORT"
+        fi
+    fi
+
+    if [ "$MAPR_JMXLOCALBINDING" = "true" ] && [ -z "$MAPR_JMX_OPTS" ]; then
+        logJmxMsg "Enabling JMX local binding only"
+        MAPR_JMX_OPTS="-Dcom.sun.management.jmxremote"
+    fi
+else
+    logJmxMsg "JMX disabled by user request"
+    MAPR_JMX_OPTS=""
+fi
+
+YARN_OPTS="$YARN_OPTS $MAPR_JMX_OPTS"
 
 CLASSPATH="${HADOOP_CONF_DIR}:${YARN_CONF_DIR}:${CLASSPATH}"
 
@@ -280,8 +398,8 @@ elif [ "$COMMAND" = "rmadmin" ] ; then
 elif [ "$COMMAND" = "scmadmin" ] ; then
   CLASS='org.apache.hadoop.yarn.client.SCMAdmin'
   YARN_OPTS="$YARN_OPTS $YARN_CLIENT_OPTS"
-elif [ "$COMMAND" = "application" ] || 
-     [ "$COMMAND" = "applicationattempt" ] || 
+elif [ "$COMMAND" = "application" ] ||
+     [ "$COMMAND" = "applicationattempt" ] ||
      [ "$COMMAND" = "container" ]; then
   CLASS=org.apache.hadoop.yarn.client.cli.ApplicationCLI
   YARN_OPTS="$YARN_OPTS $YARN_CLIENT_OPTS"
@@ -297,7 +415,7 @@ elif [ "$COMMAND" = "resourcemanager" ] ; then
   CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/JPam-1.1.jar
 
   CLASS='org.apache.hadoop.yarn.server.resourcemanager.ResourceManager'
-  YARN_OPTS="$YARN_OPTS $YARN_RESOURCEMANAGER_OPTS $JMX_OPTS=8025"
+  YARN_OPTS="$YARN_OPTS $YARN_RESOURCEMANAGER_OPTS"
   if [ "$YARN_RESOURCEMANAGER_HEAPSIZE" != "" ]; then
     JAVA_HEAP_MAX="-Xmx""$YARN_RESOURCEMANAGER_HEAPSIZE""m"
   fi
@@ -313,7 +431,7 @@ elif [ "$COMMAND" = "historyserver" ] ; then
 elif [ "$COMMAND" = "timelineserver" ] ; then
   CLASSPATH=${CLASSPATH}:$YARN_CONF_DIR/timelineserver-config/log4j.properties
   CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/JPam-1.1.jar
-   
+
   CLASS='org.apache.hadoop.yarn.server.applicationhistoryservice.ApplicationHistoryServer'
   YARN_OPTS="$YARN_OPTS $YARN_TIMELINESERVER_OPTS"
   if [ "$YARN_TIMELINESERVER_HEAPSIZE" != "" ]; then
@@ -331,7 +449,7 @@ elif [ "$COMMAND" = "nodemanager" ] ; then
   CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/JPam-1.1.jar
 
   CLASS='org.apache.hadoop.yarn.server.nodemanager.NodeManager'
-  YARN_OPTS="$YARN_OPTS -server $YARN_NODEMANAGER_OPTS $JMX_OPTS=8027"
+  YARN_OPTS="$YARN_OPTS -server $YARN_NODEMANAGER_OPTS"
   if [ "$YARN_NODEMANAGER_HEAPSIZE" != "" ]; then
     JAVA_HEAP_MAX="-Xmx""$YARN_NODEMANAGER_HEAPSIZE""m"
   fi
@@ -408,6 +526,6 @@ if [ "x$JAVA_LIBRARY_PATH" != "x" ]; then
     JAVA_LIBRARY_PATH=$(cygpath -w "$JAVA_LIBRARY_PATH" 2>/dev/null)
   fi
   YARN_OPTS="$YARN_OPTS -Djava.library.path=$JAVA_LIBRARY_PATH"
-fi  
+fi
 
 exec "$JAVA" -Dproc_$COMMAND $JAVA_HEAP_MAX $YARN_OPTS -classpath "$CLASSPATH" $CLASS "$@"
