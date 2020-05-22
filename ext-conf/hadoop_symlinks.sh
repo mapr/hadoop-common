@@ -49,6 +49,17 @@ function copyMaprConfFiles() {
     rm -f __PREFIX__/conf/hadoop_version
   fi
   cp __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/etc/hadoop/hadoop_version __PREFIX__/conf/hadoop_version
+
+  DAEMON_CONF=__PREFIX__/conf/daemon.conf
+  if [ -f "$DAEMON_CONF" ]; then
+    MAPR_USER=$( awk -F = '$1 == "mapr.daemon.user" { print $2 }' $DAEMON_CONF)
+    MAPR_GROUP=$( awk -F = '$1 == "mapr.daemon.group" { print $2 }' $DAEMON_CONF)
+    if [ ! -z "$MAPR_USER" ]; then
+      chown ${MAPR_USER}:${MAPR_GROUP} __PREFIX__/conf/hadoop_version
+    else
+      chown mapr:mapr __PREFIX__/conf/hadoop_version
+    fi
+  fi
 }
 
 # check to see if we have old hadoop config
