@@ -43,8 +43,17 @@ function createSymlinks() {
 
 }
 
+function copyMaprConfFiles() {
+  sed -i "s/^yarn_version=.*$/yarn_version=__VERSION_3DIGIT__/" __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/etc/hadoop/hadoop_version
+  if [ -f __PREFIX__/conf/hadoop_version ]; then
+    rm -f __PREFIX__/conf/hadoop_version
+  fi
+  cp __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/etc/hadoop/hadoop_version __PREFIX__/conf/hadoop_version
+}
+
 # check to see if we have old hadoop config
 if [ -f "__PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/etc/hadoop/.not_configured_yet" ]; then
   createSymlinks
+  copyMaprConfFiles
   rm -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/.not_configured_yet
 fi
