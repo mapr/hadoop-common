@@ -471,7 +471,7 @@ public class TestLabelManager {
     Set<String> existedLabels = ImmutableSet.of("right", "good", "fantastic");
     String nodeName1 = "node04.cluster.com";
     String nodeName2 = "node05.cluster.com";
-    String label1 = "fast";
+    String label1 = "_fast A1";
     String label2 = "slow";
     String arg = nodeName1 + "=" + label1 + "; " + nodeName2 + "=" + label2;
 
@@ -517,11 +517,13 @@ public class TestLabelManager {
     String node2 = "perfnode15*";
     String node3 = "perfnode201*";
     String node4 = "perfnode204*";
+    String node5 = "perfnode200.*";
     String label1 = "right";
     String label2 = "good";
     String label3 = "fantastic";
     String label4 = "slow";
     String label5 = "big";
+    String label6 = "Production Machines";
 
     assertNotNull(lb.getLabelsForNode(node));
     assertTrue(lb.getLabelsForNode(node).containsAll(ImmutableSet.of(label1, label2, label3)));
@@ -543,6 +545,8 @@ public class TestLabelManager {
     lb.refreshLabels(conf);
     assertNull(lb.getLabelsForNode(node3));
     assertNull(lb.getLabelsForNode(node4));
+
+    assertTrue(lb.getLabelsForNode(node5).contains(label6));
 
     lb.removeFromClusterNodeLabels("*");
     lb.refreshLabels(conf);
@@ -582,7 +586,7 @@ public class TestLabelManager {
     String label2 = "good";
     String label3 = "fantastic";
     String label4 = "slow";
-    String testLabel1 = "testLabel1";
+    String testLabel1 = "test Label1";
     String testLabel2 = "testLabel2";
     String testLabel3 = "testLabel3";
 
@@ -607,6 +611,13 @@ public class TestLabelManager {
     lb.refreshLabels(conf);
     assertTrue(lb.getLabelsForNode(node).contains(testLabel2) && lb.getLabelsForNode(node2).contains(testLabel2));
     assertFalse(lb.getLabelsForNode(node).contains(label2) && lb.getLabelsForNode(node2).contains(label2));
+
+    assertEquals(3, lb.getLabelsForNode(node).size());
+    assertTrue(lb.getLabelsForNode(node).containsAll(ImmutableList.of(testLabel2, testLabel3)));
+    lb.replaceLabelsOnNode(node + "=" + testLabel2 + "|" + testLabel3);
+    assertEquals(2, lb.getLabelsForNode(node).size());
+    assertTrue(lb.getLabelsForNode(node).contains(testLabel3));
+    assertFalse(lb.getLabelsForNode(node).contains(testLabel2));
   }
 
   @Test

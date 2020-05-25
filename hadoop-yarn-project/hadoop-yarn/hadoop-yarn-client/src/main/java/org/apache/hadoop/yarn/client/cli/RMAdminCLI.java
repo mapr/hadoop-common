@@ -107,13 +107,13 @@ public class RMAdminCLI extends HAAdmin {
                   "ResoureceManager will reload the authorization policy file."))
           .put("-getGroups", new UsageInfo("[username]",
               "Get the groups which given user belongs to."))
-          .put("-addToClusterMaprNodeLabels", new UsageInfo("[\"node1=label1[,label2...; node2=label1,...]\"]",
+          .put("-addToClusterMaprNodeLabels", new UsageInfo("\"node1=label1[,label2...; node2=label1,...]\"",
                   "add to cluster new node labels"))
-          .put("-removeFromClusterMaprNodeLabels", new UsageInfo("[node1=label1[,label2...;node2=label3...]]",
+          .put("-removeFromClusterMaprNodeLabels", new UsageInfo("\"node1=label1[,label2...;node2=label3...]\"",
               "remove labels from the nodes. Set '*' instead of hostname to remove labels from all nodes. \n\t\t"
                   + "Set '*' instead labels to remove node. Set '*' instead all args to remove everything."))
           .put("-replaceMaprLabelsOnNodes",
-              new UsageInfo("[node1=label1|label2[,label3|label4,...[;node2=label5|label6...]]]",
+              new UsageInfo("\"node1=label1|label2[,label3|label4,...[;node2=label5|label6...]]\"",
               "replace labels on a specific node. Set '*' instead of hostname to replace labels on all nodes"))
           .build();
 /*          .put("-addToClusterNodeLabels",
@@ -237,9 +237,9 @@ public class RMAdminCLI extends HAAdmin {
       " [-refreshLabels]" +
       " [-refreshServiceAcl]" +
       " [-getGroup [username]]" +
-      " [-addToClusterMaprNodeLabels [\"node1=label1[,label2...; node2=label1,...]\"]" +
-      " [-removeFromClusterMaprNodeLabels [node1=label1[,label2...;node2=label3...]]]" +
-      " [-replaceLabelsOnNodes [node1=label1|label2[,label3|label4,...[;node2=label5|label6...]]]]");
+      " [-addToClusterMaprNodeLabels \"node1=label1[,label2...; node2=label1,...]\"]" +
+      " [-removeFromClusterMaprNodeLabels \"node1=label1[,label2...;node2=label3...]\"]" +
+      " [-replaceLabelsOnNodes \"node1=label1|label2[,label3|label4,...[;node2=label5|label6...]]\"]");
 /*      " [[-addToClusterNodeLabels [label1,label2,label3]]" +
       " [-replaceLabelsOnNode [node1[:port]=label1,label2 node2[:port]=label1]" +
       " [-directlyAccessNodeLabelStore]]");

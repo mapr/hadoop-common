@@ -102,7 +102,7 @@ public class LabelExpressionHandlingHelper {
    * @return If the label contains whitespace and doesn't enclose in single or double quotation marks
    * returns label enclosed in single quotation marks, otherwise returns the same label.
    */
-  private static String wrapIfNeeded(String label) {
+  public static String wrapIfNeeded(String label) {
     final String SINGLE_QUOTATION_MARK = "'";
     final String DOUBLE_QUOTATION_MARK = "\"";
     boolean shouldBeWrapped = label.contains(" ") &&

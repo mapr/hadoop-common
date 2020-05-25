@@ -68,7 +68,7 @@ public class LabelManager {
   public static final long DEFAULT_RELOAD_INTERVAL = 2*60*1000l;
 
   private static final Pattern LABEL_PATTERN = Pattern
-      .compile("^[a-zA-Z][0-9a-zA-Z-_]*");
+      .compile("^[^0-9][0-9a-zA-Z-_ ]+[']?$");
   private static final int MAX_LABEL_LENGTH = 255;
 
   private FileSystem fs;
@@ -193,6 +193,7 @@ public class LabelManager {
         String[] labels = pair[1].split(",");
         labelsList = Arrays.stream(labels)
             .map(String::trim)
+            .map(LabelExpressionHandlingHelper::wrapIfNeeded)
             .collect(Collectors.toList());
       }
       map.put(hostname, labelsList);
@@ -219,8 +220,8 @@ public class LabelManager {
       }
       if (!LABEL_PATTERN.matcher(label).matches()) {
         throw new IOException("label name should only contains "
-            + "{0-9, a-z, A-Z, -, _} and should not started with {0-9,-,_}"
-            + ", now it is=" + label);
+            + "{0-9, a-z, A-Z, -, _} and should not started with a digit"
+            + ", now it is = " + label);
       }
     }
   }
@@ -235,9 +236,12 @@ public class LabelManager {
         Map<String, String> labels = new HashMap<>();
         for (String labelPair : labelPairs) {
           String[] split = labelPair.split("\\|");
+          LabelExpressionHandlingHelper.wrapIfNeeded(split[0]);
+          LabelExpressionHandlingHelper.wrapIfNeeded(split[1]);
           labels.put(split[0].trim(), split[1].trim());
         }
         checkLabels(labels.values());
+
         labelsForReplace.put(pair[0].trim(), labels);
       }
     } catch (RuntimeException e) {

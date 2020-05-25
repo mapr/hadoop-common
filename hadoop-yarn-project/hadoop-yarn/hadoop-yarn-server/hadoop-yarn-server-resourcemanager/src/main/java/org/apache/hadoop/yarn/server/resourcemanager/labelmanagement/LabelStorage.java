@@ -60,7 +60,7 @@ public final class  LabelStorage {
   private static final Log LOG = LogFactory.getLog(LabelStorage.class);
 
   public static final Pattern regex = Pattern.compile("[^\\s,\"']+|\"([^\"]*)\"|'([^']*)'");
-  public static final Pattern alpha_num = Pattern.compile("^[A-Za-z0-9_ ]+$");
+  public static final Pattern alpha_num = Pattern.compile("^[^0-9][A-Za-z0-9_ ]+$");
   public static final Pattern keywords = Pattern.compile("^int$|^abs$|^pow$");
 
   private FileSystem fs;
@@ -409,12 +409,13 @@ public final class  LabelStorage {
           currentLabels.replaceAll(label -> labelsForReplace.get(nodeName).getOrDefault(label, label));
         }
       }
+      modifiedLabels.forEach((node, labels) -> modifiedLabels.replace(node,
+          labels.stream().distinct().collect(Collectors.toList())));
       writeToFile(packNodeLabelsToList(modifiedLabels));
     } catch (Exception e) {
       writeToFile(packNodeLabelsToList(nodeNoGlobExpressionLabels));
       throw e;
     }
-
   }
 
   public void removeNodeLabels(Map<String, List<String>> oldLabels) throws IOException {
@@ -469,7 +470,7 @@ public final class  LabelStorage {
     map.forEach((hostname, labels) -> {
       StringBuilder line = new StringBuilder(hostname);
       for (String label : labels) {
-        line.append(" ").append(label);
+        line.append(" ").append(LabelExpressionHandlingHelper.wrapIfNeeded(label));
       }
       nodeLabels.add(line.toString());
     });

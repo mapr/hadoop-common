@@ -294,9 +294,9 @@ public class TestRMAdminCLI {
               "UserGroupsConfiguration] [-refreshUserToGroupsMappings] " +
               "[-refreshAdminAcls] [-showLabels] [-refreshLabels] " + 
               "[-refreshServiceAcl] [-getGroup [username]] " +
-              "[-addToClusterMaprNodeLabels [\"node1=label1[,label2...; node2=label1,...]\"] " +
-              "[-removeFromClusterMaprNodeLabels [node1=label1[,label2...;node2=label3...]]] " +
-              "[-replaceLabelsOnNodes [node1=label1|label2[,label3|label4,...[;node2=label5|label6...]]]] " +
+              "[-addToClusterMaprNodeLabels \"node1=label1[,label2...; node2=label1,...]\"] " +
+              "[-removeFromClusterMaprNodeLabels \"node1=label1[,label2...;node2=label3...]\"] " +
+              "[-replaceLabelsOnNodes \"node1=label1|label2[,label3|label4,...[;node2=label5|label6...]]\"] " +
               "[-help [cmd]]"));
       assertTrue(dataOut
           .toString()
@@ -328,19 +328,19 @@ public class TestRMAdminCLI {
       assertTrue(dataOut
       .toString()
       .contains(
-          "-addToClusterMaprNodeLabels [\"node1=label1[,label2...; node2=label1,...]\"]:"
+          "-addToClusterMaprNodeLabels \"node1=label1[,label2...; node2=label1,...]\":"
               + " add to cluster new node labels"
       ));
       assertTrue(dataOut
       .toString()
       .contains(
-          "-removeFromClusterMaprNodeLabels [node1=label1[,label2...;node2=label3...]]: remove labels from the nodes. "
+          "-removeFromClusterMaprNodeLabels \"node1=label1[,label2...;node2=label3...]\": remove labels from the nodes. "
               + "Set '*' instead of hostname to remove labels from all nodes."
       ));
       assertTrue(dataOut
           .toString()
       .contains(
-          "-replaceMaprLabelsOnNodes [node1=label1|label2[,label3|label4,...[;node2=label5|label6...]]]: "
+          "-replaceMaprLabelsOnNodes \"node1=label1|label2[,label3|label4,...[;node2=label5|label6...]]\": "
               + "replace labels on a specific node. Set '*' instead of hostname to replace labels on all nodes"
       ));
       assertTrue(dataOut
@@ -380,11 +380,11 @@ public class TestRMAdminCLI {
               "<serviceId> <serviceId>]",
           dataErr, 0);
       testError(new String[] { "-help", "-addToClusterMaprNodeLabels" },
-          "Usage: yarn rmadmin [-addToClusterMaprNodeLabels [\"node1=label1[,label2...; node2=label1,...]\"]", dataErr, 0);
+          "Usage: yarn rmadmin [-addToClusterMaprNodeLabels \"node1=label1[,label2...; node2=label1,...]\"]", dataErr, 0);
       testError(new String[] { "-help", "-removeFromClusterMaprNodeLabels" },
-          "Usage: yarn rmadmin [-removeFromClusterMaprNodeLabels [node1=label1[,label2...;node2=label3...]]]", dataErr, 0);
+          "Usage: yarn rmadmin [-removeFromClusterMaprNodeLabels \"node1=label1[,label2...;node2=label3...]\"]", dataErr, 0);
       testError(new String[] { "-help", "-replaceMaprLabelsOnNodes" },
-          "Usage: yarn rmadmin [-replaceMaprLabelsOnNodes [node1=label1|label2[,label3|label4,...[;node2=label5|label6...]]]]", dataErr, 0);
+          "Usage: yarn rmadmin [-replaceMaprLabelsOnNodes \"node1=label1|label2[,label3|label4,...[;node2=label5|label6...]]\"]", dataErr, 0);
 
       testError(new String[] { "-help", "-badParameter" },
           "Usage: yarn rmadmin", dataErr, 0);
@@ -399,9 +399,9 @@ public class TestRMAdminCLI {
               "UserGroupsConfiguration] [-refreshUserToGroupsMappings] " +
               "[-refreshAdminAcls] [-showLabels] [-refreshLabels] [-refreshServiceAcl] [-getGroup" +
               " [username]] " +
-              "[-addToClusterMaprNodeLabels [\"node1=label1[,label2...; node2=label1,...]\"] " +
-              "[-removeFromClusterMaprNodeLabels [node1=label1[,label2...;node2=label3...]]] " +
-              "[-replaceLabelsOnNodes [node1=label1|label2[,label3|label4,...[;node2=label5|label6...]]]] " +
+              "[-addToClusterMaprNodeLabels \"node1=label1[,label2...; node2=label1,...]\"] " +
+              "[-removeFromClusterMaprNodeLabels \"node1=label1[,label2...;node2=label3...]\"] " +
+              "[-replaceLabelsOnNodes \"node1=label1|label2[,label3|label4,...[;node2=label5|label6...]]\"] " +
               "[-transitionToActive [--forceactive] <serviceId>] " +
               "[-transitionToStandby <serviceId>] [-failover" +
               " [--forcefence] [--forceactive] <serviceId> <serviceId>] " +
