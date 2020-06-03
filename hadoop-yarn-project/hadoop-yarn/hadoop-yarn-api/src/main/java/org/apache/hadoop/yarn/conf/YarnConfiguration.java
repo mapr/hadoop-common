@@ -1819,6 +1819,12 @@ public class YarnConfiguration extends Configuration {
   public static final String TIMELINE_SERVICE_CLIENT_RETRY_INTERVAL_MS =
       TIMELINE_SERVICE_CLIENT_PREFIX + "retry-interval-ms";
 
+  /** Timeline client authentication, max retries */
+  public static final String TIMELINE_SERVICE_CLIENT_MAX_AUTH_RETRIES =
+          TIMELINE_SERVICE_CLIENT_PREFIX + "max-auth-retries";
+
+  public static final int DEFAULT_TIMELINE_SERVICE_CLIENT_MAX_AUTH_RETRIES = 3;
+
   public static final long
       DEFAULT_TIMELINE_SERVICE_CLIENT_RETRY_INTERVAL_MS = 1000;
 

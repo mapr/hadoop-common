@@ -113,6 +113,8 @@ public class TimelineClientImpl extends TimelineClient {
   private UserGroupInformation authUgi;
   private String doAsUser;
   private SSLFactory sslFactory;
+  private int maxAuthRetries;
+
 
   @Private
   @VisibleForTesting
@@ -280,6 +282,8 @@ public class TimelineClientImpl extends TimelineClient {
     token = new DelegationTokenAuthenticatedURL.Token();
 
     connectionRetry = new TimelineClientConnectionRetry(conf);
+    maxAuthRetries = conf.getInt(YarnConfiguration.TIMELINE_SERVICE_CLIENT_MAX_AUTH_RETRIES,
+            YarnConfiguration.DEFAULT_TIMELINE_SERVICE_CLIENT_MAX_AUTH_RETRIES);
     client = new Client(new URLConnectionClientHandler(
         new TimelineURLConnectionFactory()), cc);
     TimelineJerseyRetryFilter retryFilter = new TimelineJerseyRetryFilter();
@@ -421,8 +425,24 @@ public class TimelineClientImpl extends TimelineClient {
             final URI serviceURI = isTokenServiceAddrEmpty ? resURI
                 : new URI(scheme, null, address.getHostName(),
                 address.getPort(), RESOURCE_URI_STR, null, null);
-            return authUrl
-                .renewDelegationToken(serviceURI.toURL(), token, doAsUser);
+            int retryCounter = 0;
+            while (retryCounter < maxAuthRetries) {
+              try {
+                return authUrl
+                        .renewDelegationToken(serviceURI.toURL(), token, doAsUser);
+              } catch (AuthenticationException e) {
+                Thread.sleep(1000L);
+                retryCounter++;
+                LOG.error("Renew delegation token failed on retry " + retryCounter + " of " + maxAuthRetries);
+                if (retryCounter >= maxAuthRetries) {
+                  throw new IOException(e);
+                }
+                if (LOG.isDebugEnabled()) {
+                  e.printStackTrace();
+                }
+              }
+            }
+            return 0L;
           }
         };
     return (Long) operateDelegationToken(renewDTAction);
