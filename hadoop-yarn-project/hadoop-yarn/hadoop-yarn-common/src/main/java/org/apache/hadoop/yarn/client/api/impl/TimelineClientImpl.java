@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Evolving;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.Token;
@@ -100,6 +101,8 @@ public class TimelineClientImpl extends TimelineClient {
   private String timelineServiceAddress;
   private String authType;
 
+  private int maxAuthRetries;
+
   @Private
   @VisibleForTesting
   TimelineConnector connector;
@@ -130,6 +133,8 @@ public class TimelineClientImpl extends TimelineClient {
     }
     token = new DelegationTokenAuthenticatedURL.Token();
     connector = createTimelineConnector();
+    maxAuthRetries = conf.getInt(YarnConfiguration.TIMELINE_SERVICE_CLIENT_MAX_AUTH_RETRIES,
+            YarnConfiguration.DEFAULT_TIMELINE_SERVICE_CLIENT_MAX_AUTH_RETRIES);
 
     if (YarnConfiguration.useHttps(conf)) {
       timelineServiceAddress =
@@ -246,13 +251,27 @@ public class TimelineClientImpl extends TimelineClient {
           public Token<TimelineDelegationTokenIdentifier> run()
               throws Exception {
             DelegationTokenAuthenticatedURL authUrl =
-                connector.getDelegationTokenAuthenticatedURL();
-            // TODO we should add retry logic here if timelineServiceAddress is
-            // not available immediately.
-            return (Token) authUrl.getDelegationToken(
-                TimelineConnector.constructResURI(getConfig(),
-                    getTimelineServiceAddress(), RESOURCE_URI_STR_V1).toURL(),
-                token, renewer, doAsUser);
+                    connector.getDelegationTokenAuthenticatedURL();
+            int retryCounter = 0;
+            while (retryCounter < maxAuthRetries) {
+              try {
+                return (Token) authUrl.getDelegationToken(
+                        TimelineConnector.constructResURI(getConfig(),
+                                getTimelineServiceAddress(), RESOURCE_URI_STR_V1).toURL(),
+                        token, renewer, doAsUser);
+              } catch (AuthenticationException e) {
+                Thread.sleep(1000L);
+                retryCounter++;
+                LOG.error("Get delegation token failed on retry " + retryCounter + " of " + maxAuthRetries);
+                if (retryCounter >= maxAuthRetries) {
+                  throw new IOException(e);
+                }
+                if (LOG.isDebugEnabled()) {
+                  e.printStackTrace();
+                }
+              }
+            }
+            return null;
           }
         };
     return (Token<TimelineDelegationTokenIdentifier>) connector
@@ -296,8 +315,24 @@ public class TimelineClientImpl extends TimelineClient {
                     getTimelineServiceAddress(), RESOURCE_URI_STR_V1)
                 : new URI(scheme, null, address.getHostName(),
                     address.getPort(), RESOURCE_URI_STR_V1, null, null);
-            return authUrl
-                .renewDelegationToken(serviceURI.toURL(), token, doAsUser);
+            int retryCounter = 0;
+            while (retryCounter < maxAuthRetries) {
+              try {
+                return authUrl
+                        .renewDelegationToken(serviceURI.toURL(), token, doAsUser);
+              } catch (AuthenticationException e) {
+                Thread.sleep(1000L);
+                retryCounter++;
+                LOG.error("Renew delegation token failed on retry " + retryCounter + " of " + maxAuthRetries);
+                if (retryCounter >= maxAuthRetries) {
+                  throw new IOException(e);
+                }
+                if (LOG.isDebugEnabled()) {
+                  e.printStackTrace();
+                }
+              }
+            }
+            return 0L;
           }
         };
     return (Long) connector.operateDelegationToken(renewDTAction);
