@@ -23,27 +23,27 @@
   </formats>
   <includeBaseDirectory>false</includeBaseDirectory>
   <fileSets>
-    <fileSet>
-      <directory>../hadoop-pipes/src/main/native/pipes/api/hadoop</directory>
-      <includes>
-        <include>*.hh</include>
-      </includes>
-      <outputDirectory>/include</outputDirectory>
-    </fileSet>
-    <fileSet>
-      <directory>../hadoop-pipes/src/main/native/utils/api/hadoop</directory>
-      <includes>
-        <include>*.hh</include>
-      </includes>
-      <outputDirectory>/include</outputDirectory>
-    </fileSet>
-    <fileSet>
-      <directory>../hadoop-pipes/target/native</directory>
-      <includes>
-        <include>*.a</include>
-      </includes>
-      <outputDirectory>lib/native</outputDirectory>
-    </fileSet>
+    <!--    <fileSet>
+          <directory>../hadoop-pipes/src/main/native/pipes/api/hadoop</directory>
+          <includes>
+            <include>*.hh</include>
+          </includes>
+          <outputDirectory>/include</outputDirectory>
+        </fileSet>
+          <fileSet>
+           <directory>../hadoop-pipes/src/main/native/utils/api/hadoop</directory>
+           <includes>
+             <include>*.hh</include>
+           </includes>
+           <outputDirectory>/include</outputDirectory>
+         </fileSet>
+        <fileSet>
+           <directory>../hadoop-pipes/target/native</directory>
+           <includes>
+             <include>*.a</include>
+           </includes>
+           <outputDirectory>lib/native</outputDirectory>
+         </fileSet>-->
     <fileSet>
       <directory>../hadoop-archives/target</directory>
       <outputDirectory>/share/hadoop/${hadoop.component}/sources</outputDirectory>
@@ -117,7 +117,7 @@
         <exclude>org.apache.hadoop:hadoop-hdfs</exclude>
         <exclude>org.apache.hadoop:hadoop-mapreduce</exclude>
         <!-- pipes is native stuff, this just keeps pom from being package-->
-        <exclude>org.apache.hadoop:hadoop-pipes</exclude>
+   <!--     <exclude>org.apache.hadoop:hadoop-pipes</exclude> -->
         <!-- use slf4j from common to avoid multiple binding warnings -->
         <exclude>org.slf4j:slf4j-api</exclude>
         <exclude>org.slf4j:slf4j-log4j12</exclude>

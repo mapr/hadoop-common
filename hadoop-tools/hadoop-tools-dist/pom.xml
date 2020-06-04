@@ -70,13 +70,13 @@
       <artifactId>hadoop-gridmix</artifactId>
       <scope>compile</scope>
     </dependency>
-    <dependency>
+ <!--   <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-pipes</artifactId>
       <scope>compile</scope>
       <type>pom</type>
       <version>${project.version}</version>
-    </dependency>
+    </dependency> -->
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-openstack</artifactId>
