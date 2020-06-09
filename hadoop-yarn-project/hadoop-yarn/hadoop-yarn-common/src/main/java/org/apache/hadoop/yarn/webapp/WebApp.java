@@ -26,7 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
+import com.google.common.base.CharMatcher;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.http.HttpServer2;
@@ -260,7 +260,7 @@ public abstract class WebApp extends ServletModule {
 
   static String getPrefix(String pathSpec) {
     int start = 0;
-    while (StringUtils.isAnyBlank(Character.toString(pathSpec.charAt(start)))) {
+    while (CharMatcher.whitespace().matches(pathSpec.charAt(start))) {
       ++start;
     }
     if (pathSpec.charAt(start) != '/') {
@@ -276,7 +276,7 @@ public abstract class WebApp extends ServletModule {
     char c;
     do {
       c = pathSpec.charAt(--ci);
-    } while (c == '/' || StringUtils.isAnyBlank(Character.toString(c)));
+    } while (c == '/' || CharMatcher.whitespace().matches(c));
     return pathSpec.substring(start, ci + 1);
   }
 

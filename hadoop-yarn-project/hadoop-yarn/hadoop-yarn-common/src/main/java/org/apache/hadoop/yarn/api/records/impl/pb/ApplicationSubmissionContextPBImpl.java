@@ -21,6 +21,7 @@ package org.apache.hadoop.yarn.api.records.impl.pb;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.google.common.base.CharMatcher;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.util.StringUtils;
@@ -272,7 +273,7 @@ extends ApplicationSubmissionContext {
             "maximum allowed length of a tag is " +
             YarnConfiguration.APPLICATION_MAX_TAG_LENGTH);
       }
-      if (!org.apache.commons.lang3.StringUtils.isAsciiPrintable(tag)) {
+      if (!CharMatcher.ascii().matchesAllOf(tag)) {
         throw new IllegalArgumentException("A tag can only have ASCII " +
             "characters! Invalid tag - " + tag);
       }
