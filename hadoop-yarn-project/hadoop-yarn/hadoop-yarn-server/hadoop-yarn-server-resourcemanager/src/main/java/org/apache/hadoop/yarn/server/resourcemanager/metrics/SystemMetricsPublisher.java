@@ -22,6 +22,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -34,6 +38,7 @@ import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.api.records.timeline.TimelineEntity;
 import org.apache.hadoop.yarn.api.records.timeline.TimelineEvent;
+import org.apache.hadoop.yarn.api.records.timeline.TimelinePutResponse;
 import org.apache.hadoop.yarn.client.api.TimelineClient;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.event.AsyncDispatcher;
@@ -67,6 +72,14 @@ public class SystemMetricsPublisher extends CompositeService {
   private Dispatcher dispatcher;
   private TimelineClient client;
   private boolean publishSystemMetrics;
+  private LinkedBlockingQueue<TimelineEntity> entityQueue;
+  private ExecutorService sendEventThreadPool;
+  private int dispatcherPoolSize;
+  private int dispatcherBatchSize;
+  private int putEventInterval;
+  private volatile boolean stopped = false;
+  private PutEventThread putEventThread;
+  private Object sendEntityLock;
 
   public SystemMetricsPublisher() {
     super(SystemMetricsPublisher.class.getName());
@@ -79,7 +92,18 @@ public class SystemMetricsPublisher extends CompositeService {
             YarnConfiguration.DEFAULT_TIMELINE_SERVICE_ENABLED) &&
         conf.getBoolean(YarnConfiguration.RM_SYSTEM_METRICS_PUBLISHER_ENABLED,
             YarnConfiguration.DEFAULT_RM_SYSTEM_METRICS_PUBLISHER_ENABLED);
-
+    putEventInterval =
+        conf.getInt(YarnConfiguration.RM_SYSTEM_METRICS_PUBLISHER_INTERVAL,
+            YarnConfiguration.DEFAULT_RM_SYSTEM_METRICS_PUBLISHER_INTERVAL)
+            * 1000;
+    dispatcherPoolSize = conf.getInt(
+        YarnConfiguration.RM_SYSTEM_METRICS_PUBLISHER_DISPATCHER_POOL_SIZE,
+        YarnConfiguration.
+            DEFAULT_RM_SYSTEM_METRICS_PUBLISHER_DISPATCHER_POOL_SIZE);
+    dispatcherBatchSize = conf.getInt(
+        YarnConfiguration.RM_SYSTEM_METRICS_PUBLISHER_DISPATCHER_BATCH_SIZE,
+        YarnConfiguration.
+            DEFAULT_RM_SYSTEM_METRICS_PUBLISHER_DISPATCHER_BATCH_SIZE);
     if (publishSystemMetrics) {
       client = TimelineClient.createTimelineClient();
       addIfService(client);
@@ -89,10 +113,38 @@ public class SystemMetricsPublisher extends CompositeService {
           new ForwardingEventHandler());
       addIfService(dispatcher);
       LOG.info("YARN system metrics publishing service is enabled");
+      putEventThread = new PutEventThread();
+      sendEventThreadPool = Executors.newFixedThreadPool(dispatcherPoolSize);
+      entityQueue = new LinkedBlockingQueue<>(dispatcherBatchSize + 1);
+      sendEntityLock = new Object();
     } else {
       LOG.info("YARN system metrics publishing service is not enabled");
     }
     super.serviceInit(conf);
+  }
+
+  protected void serviceStart() throws Exception {
+    if (publishSystemMetrics) {
+      putEventThread.start();
+    }
+    super.serviceStart();
+  }
+
+  protected void serviceStop() throws Exception {
+    super.serviceStop();
+    if (publishSystemMetrics) {
+      stopped = true;
+      putEventThread.interrupt();
+      sendEventThreadPool.shutdown();
+      try {
+        putEventThread.join();
+        if (!sendEventThreadPool.awaitTermination(3, TimeUnit.SECONDS)) {
+          sendEventThreadPool.shutdownNow();
+        }
+      } catch (InterruptedException e) {
+        sendEventThreadPool.shutdownNow();
+      }
+    }
   }
 
   @SuppressWarnings("unchecked")
@@ -158,7 +210,7 @@ public class SystemMetricsPublisher extends CompositeService {
 
   @SuppressWarnings("unchecked")
   public void appAttemptFinished(RMAppAttempt appAttempt,
-      RMAppAttemptState appAttemtpState, RMApp app, long finishedTime) {
+      RMAppAttemptState appAttemptState, RMApp app, long finishedTime) {
     if (publishSystemMetrics) {
       ContainerId container = (appAttempt.getMasterContainer() == null) ? null
           : appAttempt.getMasterContainer().getId();
@@ -171,7 +223,7 @@ public class SystemMetricsPublisher extends CompositeService {
               // app will get the final status from app attempt, or create one
               // based on app state if it doesn't exist
               app.getFinalApplicationStatus(),
-              RMServerUtils.createApplicationAttemptState(appAttemtpState),
+              RMServerUtils.createApplicationAttemptState(appAttemptState),
               finishedTime,
               container));
     }
@@ -205,10 +257,7 @@ public class SystemMetricsPublisher extends CompositeService {
 
   protected Dispatcher createDispatcher(Configuration conf) {
     MultiThreadedDispatcher dispatcher =
-        new MultiThreadedDispatcher(
-            conf.getInt(
-                YarnConfiguration.RM_SYSTEM_METRICS_PUBLISHER_DISPATCHER_POOL_SIZE,
-                YarnConfiguration.DEFAULT_RM_SYSTEM_METRICS_PUBLISHER_DISPATCHER_POOL_SIZE));
+        new MultiThreadedDispatcher(dispatcherPoolSize);
     dispatcher.setDrainEventsOnStop();
     return dispatcher;
   }
@@ -437,24 +486,67 @@ public class SystemMetricsPublisher extends CompositeService {
     return entity;
   }
 
-  private void putEntity(TimelineEntity entity) {
+  public void putEntity(TimelineEntity entity) {
     try {
-      if (LOG.isDebugEnabled()) {
-        LOG.debug("Publishing the entity " + entity.getEntityId() +
-            ", JSON-style content: " + TimelineUtils.dumpTimelineRecordtoJSON(entity));
-      }
-      client.putEntities(entity);
-    } catch (Exception e) {
+      entityQueue.put(entity);
+    } catch (InterruptedException e) {
       LOG.error("Error when publishing entity [" + entity.getEntityType() + ","
-          + entity.getEntityId() + "]", e);
+              + entity.getEntityId() + "]", e);
+    }
+    if (entityQueue.size() > dispatcherBatchSize) {
+      synchronized (sendEntityLock) {
+        if (entityQueue.size() > dispatcherBatchSize) {
+          SendEntity task = new SendEntity();
+          sendEventThreadPool.submit(task);
+        }
+      }
     }
   }
 
-  /**
-   * EventHandler implementation which forward events to SystemMetricsPublisher.
-   * Making use of it, SystemMetricsPublisher can avoid to have a public handle
-   * method.
-   */
+  private class SendEntity implements Runnable {
+
+    private ArrayList<TimelineEntity> buffer;
+
+    public SendEntity() {
+      buffer = new ArrayList();
+      entityQueue.drainTo(buffer);
+    }
+
+    @Override
+    public void run() {
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("send batch events:" + String.valueOf(buffer.size()));
+      }
+      if (buffer.isEmpty()) {
+        return;
+      }
+      TimelinePutResponse response = null;
+      try {
+        response = client.putEntities(buffer.toArray(new TimelineEntity[0]));
+      } catch (Exception e) {
+        LOG.error("Error when publishing entity", e);
+      }
+      if (response != null) {
+        List<TimelinePutResponse.TimelinePutError> errors = response.getErrors();
+        if (errors == null || errors.size() == 0) {
+          LOG.debug("Timeline entities are successfully put");
+        } else {
+          for (TimelinePutResponse.TimelinePutError error : errors) {
+            LOG.error(
+                    "Error when publishing entity [" + error.getEntityType() + ","
+                            + error.getEntityId() + "], server side error code: "
+                            + error.getErrorCode());
+          }
+        }
+      }
+    }
+  }
+
+      /**
+       * EventHandler implementation which forward events to SystemMetricsPublisher.
+       * Making use of it, SystemMetricsPublisher can avoid to have a public handle
+       * method.
+       */
   private final class ForwardingEventHandler implements
       EventHandler<SystemMetricsEvent> {
 
@@ -519,4 +611,37 @@ public class SystemMetricsPublisher extends CompositeService {
 
   }
 
+  private class PutEventThread extends Thread {
+    public PutEventThread() {
+      super("PutEventThread");
+    }
+
+    @Override
+    public void run() {
+      LOG.info("system metrics publisher will put events every " +
+              String.valueOf(putEventInterval) + " seconds");
+      while (!stopped && !Thread.currentThread().isInterrupted()) {
+        if (System.currentTimeMillis() % putEventInterval >= 1000) {
+          try {
+            Thread.sleep(500);
+          } catch (InterruptedException e) {
+            LOG.warn(SystemMetricsPublisher.class.getName()
+                    + " is interrupted. Exiting.");
+            break;
+          }
+          continue;
+        }
+        LOG.debug("put entities by PutEventThread");
+        SendEntity task = new SendEntity();
+        sendEventThreadPool.submit(task);
+        try {
+          Thread.sleep(1000);
+        } catch (InterruptedException e) {
+          LOG.warn(SystemMetricsPublisher.class.getName()
+                  + " is interrupted. Exiting.");
+          break;
+        }
+      }
+    }
+  }
 }

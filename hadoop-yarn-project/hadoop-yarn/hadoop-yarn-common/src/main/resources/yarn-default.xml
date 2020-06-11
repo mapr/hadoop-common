@@ -723,6 +723,25 @@
     <value>10</value>
   </property>
 
+  <property>
+    <description>
+      the size of system metrics publisher sending events in one request.
+    </description>
+    <name>yarn.resourcemanager.system-metrics-publisher.batch-size</name>
+    <value>100</value>
+  </property>
+
+  <property>
+    <description>
+      When enable batch publishing, we must avoid that the publisher waits for a batch
+      to be filled up and hold events in buffer for long time. So we add another thread
+      which send event's in the buffer periodically. This config sets the interval of the
+      cyclical sending thread.
+    </description>
+    <name>yarn.resourcemanager.system-metrics-publisher.interval-seconds</name>
+    <value>5</value>
+  </property>
+
   <!-- Node Manager Configs -->
   <property>
     <description>The hostname of the NM.</description>

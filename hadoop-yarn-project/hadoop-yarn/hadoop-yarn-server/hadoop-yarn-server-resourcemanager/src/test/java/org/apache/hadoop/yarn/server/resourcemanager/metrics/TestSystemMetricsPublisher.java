@@ -75,6 +75,8 @@ public class TestSystemMetricsPublisher {
     conf.setInt(
         YarnConfiguration.RM_SYSTEM_METRICS_PUBLISHER_DISPATCHER_POOL_SIZE,
         2);
+    conf.setInt(YarnConfiguration.RM_SYSTEM_METRICS_PUBLISHER_INTERVAL,
+        1);
 
     timelineServer = new ApplicationHistoryServer();
     timelineServer.init(conf);

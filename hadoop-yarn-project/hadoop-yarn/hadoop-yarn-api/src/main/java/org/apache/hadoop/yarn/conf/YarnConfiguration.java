@@ -397,6 +397,16 @@ public class YarnConfiguration extends Configuration {
   public static final int DEFAULT_RM_SYSTEM_METRICS_PUBLISHER_DISPATCHER_POOL_SIZE =
       10;
 
+  public static final String RM_SYSTEM_METRICS_PUBLISHER_DISPATCHER_BATCH_SIZE =
+      RM_PREFIX + "system-metrics-publisher.batch-size";
+  public static final int
+      DEFAULT_RM_SYSTEM_METRICS_PUBLISHER_DISPATCHER_BATCH_SIZE =
+      100;
+  public static final String RM_SYSTEM_METRICS_PUBLISHER_INTERVAL =
+      RM_PREFIX + "system-metrics-publisher.interval-seconds";
+  public static final int DEFAULT_RM_SYSTEM_METRICS_PUBLISHER_INTERVAL =
+      5;
+
   //RM delegation token related keys
   public static final String RM_DELEGATION_KEY_UPDATE_INTERVAL_KEY =
     RM_PREFIX + "delegation.key.update-interval";
