@@ -360,7 +360,7 @@ public class TestScheduler {
     String args[] = new String[]{
             "-inputsls", inputTracesPath,
             "-output", slsOutputDir.getAbsolutePath()};
-    SLSRunner.main(args);
+    SLSRunner.run(args);
   }
 
   private void stopServices(ResourceManager rm, ResourceSchedulerWrapper resourceScheduler, SLSWebApp web) throws Exception {

@@ -106,6 +106,8 @@ public class SLSRunner {
 
   static SLSRunner sls;
 
+  private static boolean exitAtTheFinish = false;
+
   public SLSRunner(boolean isSLS, String inputTraces[], String nodeFile,
                    String outputDir, Set<String> trackedApps,
                    boolean printsimulation)
@@ -484,10 +486,13 @@ public class SLSRunner {
     if (remainingApps == 0) {
       LOG.info("SLSRunner tears down.");
       runner.stop();
+      if (exitAtTheFinish) {
+        System.exit(0);
+      }
     }
   }
 
-  public static void main(String args[]) throws Exception {
+  public static void run(String args[]) throws Exception {
     Options options = new Options();
     options.addOption("inputrumen", true, "input rumen files");
     options.addOption("inputsls", true, "input sls files");
@@ -538,5 +543,10 @@ public class SLSRunner {
     sls = new SLSRunner(isSLS, inputFiles, nodeFile, output,
         trackedJobSet, cmd.hasOption("printsimulation"));
     sls.start();
+  }
+
+  public static void main(String[] args) throws Exception {
+    exitAtTheFinish = true;
+    run(args);
   }
 }
