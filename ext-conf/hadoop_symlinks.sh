@@ -32,7 +32,6 @@ function createSymlinks() {
 
   ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/yarn/hadoop-yarn-api-__VERSION_3DIGIT__*.jar __PREFIX__/lib/.
   ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/htrace-*.jar  __PREFIX__/lib/
-  ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/commons-io-2.4.jar __PREFIX__/lib/commons-io-2.4.jar
   ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/hadoop-auth-__VERSION_3DIGIT__*.jar __PREFIX__/lib/hadoop-auth-__VERSION_3DIGIT__.jar
 
   COMMONS_CONFIG_ABSOLUTE=$(find __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib -name "commons-configuration*.jar" -print -quit)
