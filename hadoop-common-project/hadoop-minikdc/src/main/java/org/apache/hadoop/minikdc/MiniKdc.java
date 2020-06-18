@@ -264,12 +264,6 @@ public class MiniKdc {
     LOG.info("---------------------------------------------------------------");
     this.conf = conf;
     port = Integer.parseInt(conf.getProperty(KDC_PORT));
-    if (port == 0) {
-      ServerSocket ss = new ServerSocket(0, 1, InetAddress.getByName
-              (conf.getProperty(KDC_BIND_ADDRESS)));
-      port = ss.getLocalPort();
-      ss.close();
-    }
     String orgName= conf.getProperty(ORG_NAME);
     String orgDomain = conf.getProperty(ORG_DOMAIN);
     realm = orgName.toUpperCase(Locale.ENGLISH) + "."
