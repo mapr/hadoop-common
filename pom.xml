@@ -90,8 +90,6 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xs
     <distMgmtSnapshotsUrl>${env.MAPR_MAVEN_REPO}</distMgmtSnapshotsUrl>
     <distMgmtStagingId>apache.staging.https</distMgmtStagingId>
     <distMgmtStagingName>Apache Release Distribution Repository</distMgmtStagingName>
-    <!-- mapr_fix -->
-    <mapr.version>6.0.0-mapr-SNAPSHOT</mapr.version>
     <distMgmtStagingUrl>${env.MAPR_RELEASES_REPO}</distMgmtStagingUrl>
 
     <!-- platform encoding override -->
@@ -522,13 +520,6 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xs
      <dependencies>
     <!-- MapR dependencies defined at top level to avoid adding them in multiple pom files -->
     <!-- mapr_fix -->
-    <dependency>
-      <groupId>com.mapr.hadoop</groupId>
-      <artifactId>maprfs</artifactId>
-      <version>${mapr.version}</version>
-      <scope>test</scope>
-    </dependency>
-
     <dependency>
       <groupId>org.json</groupId>
       <artifactId>json</artifactId>
