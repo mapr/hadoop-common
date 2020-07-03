@@ -35,6 +35,7 @@ import org.apache.hadoop.io.nativeio.NativeIO;
 import org.apache.hadoop.io.nativeio.NativeIOException;
 import org.apache.hadoop.io.nativeio.NativeIO.POSIX.Stat;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.authorize.AccessControlList;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -275,11 +276,13 @@ public class SecureIOUtils {
         UserGroupInformation ugi =
             UserGroupInformation.createRemoteUser(expectedOwner);
         final String adminsGroupString = "Administrators";
-        success = owner.equals(adminsGroupString)
-            && Arrays.asList(ugi.getGroupNames()).contains(adminsGroupString);
+        success = (owner.equals(adminsGroupString)
+            && Arrays.asList(ugi.getGroupNames()).contains(adminsGroupString)) || checkIfUserYarnAdmin(expectedOwner);
       } else if (expectedGroup != null &&
               !expectedGroup.equals(group)) {
-        success = false;
+        if (!checkIfUserYarnAdmin(expectedOwner)) {
+          success = false;
+        }
       }
     }
     if (!success) {
@@ -289,6 +292,16 @@ public class SecureIOUtils {
               "expected owner '" + expectedOwner + "' nor " + 
               "expected group '" + expectedGroup + "'");
     }
+  }
+
+  private static boolean checkIfUserYarnAdmin(String user) {
+    Configuration conf = new Configuration();
+    String yarnAclEnable = conf.get("yarn.acl.enable");
+    if ("true".equals(yarnAclEnable)) {
+      AccessControlList accessControlList = new AccessControlList(conf.get("yarn.admin.acl"));
+      return accessControlList.getUsers().contains(user);
+    }
+    return false;
   }
 
   /**
