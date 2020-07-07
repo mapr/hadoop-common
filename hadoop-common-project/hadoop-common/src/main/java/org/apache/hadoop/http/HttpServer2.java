@@ -367,6 +367,9 @@ public final class HttpServer2 implements FilterContainer {
         }
         listener.setHost(ep.getHost());
         listener.setPort(ep.getPort() == -1 ? 0 : ep.getPort());
+        if (maxIdleTime != -1) {
+          listener.setMaxIdleTime(maxIdleTime);
+        }
         server.addListener(listener);
       }
       server.loadListeners();
@@ -559,9 +562,6 @@ public final class HttpServer2 implements FilterContainer {
     ret.setAcceptQueueSize(128);
     ret.setResolveNames(false);
     ret.setUseDirectBuffers(false);
-    if (maxIdleTime != -1) {
-      ret.setMaxIdleTime(maxIdleTime);
-    }
     if(Shell.WINDOWS) {
       // result of setting the SO_REUSEADDR flag is different on Windows
       // http://msdn.microsoft.com/en-us/library/ms740621(v=vs.85).aspx
