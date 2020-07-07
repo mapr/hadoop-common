@@ -618,8 +618,8 @@ public class SystemMetricsPublisher extends CompositeService {
 
     @Override
     public void run() {
-      LOG.info("system metrics publisher will put events every " +
-              String.valueOf(putEventInterval) + " seconds");
+      LOG.info("System metrics publisher will put events every " +
+              putEventInterval/1000 + " seconds");
       while (!stopped && !Thread.currentThread().isInterrupted()) {
         if (System.currentTimeMillis() % putEventInterval >= 1000) {
           try {
@@ -631,7 +631,7 @@ public class SystemMetricsPublisher extends CompositeService {
           }
           continue;
         }
-        LOG.debug("put entities by PutEventThread");
+        LOG.debug("Put entities by PutEventThread");
         SendEntity task = new SendEntity();
         sendEventThreadPool.submit(task);
         try {
