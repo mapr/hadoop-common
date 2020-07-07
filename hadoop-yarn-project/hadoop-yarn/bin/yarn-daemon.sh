@@ -132,7 +132,8 @@ case $startStop in
       echo rsync from $YARN_MASTER
       rsync -a -e ssh --delete --exclude=.svn --exclude='logs/*' --exclude='contrib/hod/logs/*' $YARN_MASTER/ "$HADOOP_YARN_HOME"
     fi
-
+    #CORE-443: Changed UMask for CentOS 8
+    umask 022
     hadoop_rotate_log $log
     echo starting $command, logging to $log
     cd "$HADOOP_YARN_HOME"
