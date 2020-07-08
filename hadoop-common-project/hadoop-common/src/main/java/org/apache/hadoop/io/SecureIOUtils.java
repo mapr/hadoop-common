@@ -278,7 +278,7 @@ public class SecureIOUtils {
         final String adminsGroupString = "Administrators";
         success = (owner.equals(adminsGroupString)
             && Arrays.asList(ugi.getGroupNames()).contains(adminsGroupString)) ||
-            checkIfUserYarnAdmin(expectedOwner);
+            checkIfUserYarnAdmin(expectedOwner, ugi.getGroupNames());
       } else if (expectedGroup != null &&
               !expectedGroup.equals(group)) {
         if (!checkIfUserYarnAdmin(expectedOwner, ugi.getGroupNames())) {
@@ -295,7 +295,7 @@ public class SecureIOUtils {
     }
   }
 
-  private static boolean checkIfUserYarnAdmin(String user, String... expectedGroups) {
+  private static boolean checkIfUserYarnAdmin(String user, String[] expectedGroups) {
     Configuration conf = new Configuration();
     String yarnAclEnable = conf.get("yarn.acl.enable");
     if ("true".equals(yarnAclEnable)) {
