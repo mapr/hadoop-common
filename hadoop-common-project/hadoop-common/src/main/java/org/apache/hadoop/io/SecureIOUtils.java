@@ -272,15 +272,16 @@ public class SecureIOUtils {
     boolean success = true;
     if (expectedOwner != null &&
         !expectedOwner.equals(owner)) {
+      UserGroupInformation ugi =
+          UserGroupInformation.createRemoteUser(expectedOwner);
       if (Path.WINDOWS) {
-        UserGroupInformation ugi =
-            UserGroupInformation.createRemoteUser(expectedOwner);
         final String adminsGroupString = "Administrators";
         success = (owner.equals(adminsGroupString)
-            && Arrays.asList(ugi.getGroupNames()).contains(adminsGroupString)) || checkIfUserYarnAdmin(expectedOwner);
+            && Arrays.asList(ugi.getGroupNames()).contains(adminsGroupString)) ||
+            checkIfUserYarnAdmin(expectedOwner);
       } else if (expectedGroup != null &&
               !expectedGroup.equals(group)) {
-        if (!checkIfUserYarnAdmin(expectedOwner)) {
+        if (!checkIfUserYarnAdmin(expectedOwner, ugi.getGroupNames())) {
           success = false;
         }
       }
@@ -294,12 +295,20 @@ public class SecureIOUtils {
     }
   }
 
-  private static boolean checkIfUserYarnAdmin(String user) {
+  private static boolean checkIfUserYarnAdmin(String user, String... expectedGroups) {
     Configuration conf = new Configuration();
     String yarnAclEnable = conf.get("yarn.acl.enable");
     if ("true".equals(yarnAclEnable)) {
       AccessControlList accessControlList = new AccessControlList(conf.get("yarn.admin.acl"));
-      return accessControlList.getUsers().contains(user);
+      if (accessControlList.isAllAllowed() || accessControlList.getUsers().contains(user)) {
+        return true;
+      } else if (expectedGroups.length > 0) {
+        for (String expectedGroup : expectedGroups) {
+          if (accessControlList.getGroups().contains(expectedGroup)) {
+            return true;
+          }
+        }
+      }
     }
     return false;
   }
