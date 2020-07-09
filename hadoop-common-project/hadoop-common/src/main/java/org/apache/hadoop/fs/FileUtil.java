@@ -51,6 +51,7 @@ import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.nativeio.NativeIO;
+import org.apache.hadoop.maprfs.AbstractMapRFileSystem;
 import org.apache.hadoop.util.Shell;
 import org.apache.hadoop.util.Shell.ShellCommandExecutor;
 import org.apache.hadoop.util.StringUtils;
@@ -379,6 +380,10 @@ public class FileUtil {
         IOUtils.closeStream(in);
         throw e;
       }
+    }
+    if (srcFS instanceof AbstractMapRFileSystem && dst != null) {
+      AbstractMapRFileSystem mapRFileSystem = (AbstractMapRFileSystem) srcFS;
+      mapRFileSystem.copyAce(src, dst);
     }
     if (deleteSource) {
       return srcFS.delete(src, true);
