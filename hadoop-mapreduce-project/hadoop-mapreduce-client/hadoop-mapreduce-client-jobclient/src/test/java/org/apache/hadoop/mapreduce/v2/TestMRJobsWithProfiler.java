@@ -105,13 +105,11 @@ public class TestMRJobsWithProfiler {
     }
   }
 
-  @Test (timeout = 150000)
   public void testDefaultProfiler() throws Exception {
     LOG.info("Starting testDefaultProfiler");
     testProfilerInternal(true);
   }
 
-  @Test (timeout = 150000)
   public void testDifferentProfilers() throws Exception {
     LOG.info("Starting testDefaultProfiler");
     testProfilerInternal(false);
