@@ -342,7 +342,8 @@ abstract public class Command extends Configured {
    *           if anything goes wrong in the user-implementation
    */
   protected boolean isPathRecursable(PathData item) throws IOException {
-    return item.stat.isDirectory();
+    return item.stat.isDirectory() ||
+        (item.stat.isSymlink() && item.fs.getFileStatus(item.stat.getSymlink()).isDirectory());
   }
 
   /**
@@ -375,6 +376,10 @@ abstract public class Command extends Configured {
   protected void recursePath(PathData item) throws IOException {
     try {
       depth++;
+      if(item.stat.isSymlink()){
+        item = new PathData(item.stat.getSymlink().toString(), item.fs.getConf());
+
+      }
       processPaths(item, item.getDirectoryContents());
     } finally {
       depth--;

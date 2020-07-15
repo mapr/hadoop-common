@@ -353,6 +353,9 @@ public class FileUtil {
                              boolean deleteSource,
                              boolean overwrite,
                              Configuration conf) throws IOException {
+    if(srcStatus.isSymlink()){
+      srcStatus = srcFS.getFileStatus(srcStatus.getSymlink());
+    }
     Path src = srcStatus.getPath();
     dst = checkDest(src.getName(), dstFS, dst, overwrite);
     if (srcStatus.isDirectory()) {

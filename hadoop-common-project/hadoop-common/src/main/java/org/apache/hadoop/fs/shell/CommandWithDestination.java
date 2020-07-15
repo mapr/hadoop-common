@@ -257,7 +257,8 @@ abstract class CommandWithDestination extends FsCommand {
    * @throws IOException if anything goes wrong
    */
   protected void processPath(PathData src, PathData dst) throws IOException {
-    if (src.stat.isFile() || src.stat.isSymlink()) {
+    if (src.stat.isFile() ||
+        (src.stat.isSymlink() && !src.fs.getFileStatus(src.stat.getSymlink()).isDirectory())) {
       copyFileToTarget(src, dst);
     } else if (src.stat.isDirectory() && !isRecursive()) {
       throw new PathIsDirectoryException(src.toString());
