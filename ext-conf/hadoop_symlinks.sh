@@ -8,8 +8,8 @@ function createSymlinks() {
   ln -sf __PREFIX__/lib/failureaccess-* __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
   rm -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/guava-*
   ln -sf __PREFIX__/lib/guava-* __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
-  rm -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/slf4j*
-  ln -sf __PREFIX__/lib/slf4j* __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  rm -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/slf4j-api*
+  ln -sf __PREFIX__/lib/slf4j-api* __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
   ln -sf __PREFIX__/lib/mapr-hbase-* __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
   ln -sf __PREFIX__/lib/mysql-connector-java-*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
   rm -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/maprfs-*.jar
