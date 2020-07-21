@@ -89,8 +89,9 @@ RUN apt-get -q update \
 # OpenJDK 8
 #######
 # hadolint ignore=DL3008
-RUN apt-get -q update \
-    && apt-get -q install -y --no-install-recommends openjdk-8-jdk libbcprov-java \
+RUN add-apt-repository -y ppa:openjdk-r/ppa \
+    && apt-get -q update \
+    && apt-get -q install -y --no-install-recommends openjdk-11-jdk libbcprov-java \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -167,7 +168,8 @@ RUN apt-get -q update \
 # Install pylint at fixed version (2.0.0 removed python2 support)
 # https://github.com/PyCQA/pylint/issues/2294
 ####
-RUN pip2 install pylint==1.9.2
+RUN pip install --upgrade pip \
+    && pip2 install pylint==1.9.2
 
 ####
 # Install dateutil.parser
