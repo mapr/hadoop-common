@@ -83,6 +83,32 @@ extern  "C" {
         kObjectKindDirectory = 'D',
     } tObjectKind;
 
+    /**
+     * ACE related data structures
+     */
+
+    typedef enum FSAccessType {
+      // ACEs for files
+      FileAccessTypeStart = 1,
+      AceRead = 1,
+      AceWrite = 2,
+      AceExecute = 3,
+      FileAccessTypeEnd = 3,
+
+      // ACEs for directories
+      AceDirAccessTypeStart = 20,
+      AceReadDir = 20,
+      AceAddChild = 21,
+      AceDeleteChild = 22,
+      AceLookupDir = 23,
+      AceDirAccessTypeEnd = 23,
+    } FSAccessType;
+
+    typedef struct hdfsAce {
+      FSAccessType accessType;
+      char *booleanExpression;
+      char *postFixExpression;
+    } hdfsAce;
 
     /**
      * The C reflection of org.apache.org.hadoop.FileSystem .
@@ -1088,7 +1114,45 @@ extern  "C" {
      * @return        On success returns 0 or error
      */
 
-     int hdfsSetTicketAndKeyFile(const char *fname);
+    int hdfsSetTicketAndKeyFile(const char *fname);
+
+    /** 
+     * hdfsSetAces - sets ACEs for given file path
+
+     * @param fs The configured filesystem handle.
+     * @param path the path to the file
+     * @param list the pointer to list of aces
+     * @param numEntries number of entries in the list
+     * @param isSet if true existing aces will be discarded,
+                    else merges existing aces with current aces
+     * @param isRecursive to set aces recursively 
+     * @return On success zero will be returned, on failure errno will be returned
+     */
+    LIBHDFS_EXTERNAL
+    int hdfsSetAces(hdfsFS fs, const char *path, hdfsAce *list, int numEntries,
+                    bool isSet, bool isRecursive);
+
+    /** 
+     * hdfsGetAces - gest ACEs on the given file path
+
+     * @param fs The configured filesystem handle.
+     * @param path the path to the file
+     * @param numEntries number ace entries will be filled
+     * @return On success pointer to array of aces will be returned, 
+               On Failure NULL be returned 
+     */
+    LIBHDFS_EXTERNAL
+    hdfsAce* hdfsGetAces(hdfsFS fs, const char *path, int *numEntries);
+
+    /** 
+     * hdfsDeleteAces - deletes aces on the given file path
+
+     * @param fs The configured filesystem handle.
+     * @param path the path to the file
+     * @return On success zero will be returned, on failure errno will be returned
+     */
+    LIBHDFS_EXTERNAL
+    int hdfsDeleteAces(hdfsFS fs, const char *path); 
 
 #ifdef __cplusplus
 }
