@@ -182,6 +182,7 @@ extern  "C" {
      LIBHDFS_EXTERNAL
      hdfsFS hdfsConnectAsUser(const char* nn, tPort port, const char *user);
 
+#ifndef WIN32
     /**
      * hdfsConnectAsUid - Connect to a hdfs file system as a specific user
      * identified by a uid.
@@ -193,6 +194,7 @@ extern  "C" {
      */
      LIBHDFS_EXTERNAL
      hdfsFS hdfsConnectAsUid(const char* nn, tPort port, uid_t uid);
+#endif
 
     /** 
      * hdfsConnect - Connect to a hdfs file system.
