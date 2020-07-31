@@ -223,9 +223,9 @@ public class MapReduceChildJVM {
       vargs.add(" | ");
       vargs.add(dfsLoggingHandler.getStdOutCommand(stdout));
 
-      vargs.add(" ; exit $PIPESTATUS ) 2>&1 | ");
+      vargs.add(" ; exit $? ) 2>&1 | ");
       vargs.add(dfsLoggingHandler.getStdOutCommand(stderr));
-      vargs.add(" ; exit $PIPESTATUS");
+      vargs.add(" ; exit $?");
     } else {
       vargs.add("1>" + getTaskLogFile(TaskLog.LogName.STDOUT));
       vargs.add("2>" + getTaskLogFile(TaskLog.LogName.STDERR));

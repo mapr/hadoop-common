@@ -575,7 +575,7 @@ public class TaskLog {
         mergedCmd.append(stdout);
       }
 
-      mergedCmd.append(" ; exit $PIPESTATUS ) 2>&1 | ");
+      mergedCmd.append(" ; exit $? ) 2>&1 | ");
       mergedCmd.append(tailCommand);
       mergedCmd.append(" -c ");
       mergedCmd.append(tailLength);
@@ -588,15 +588,15 @@ public class TaskLog {
         mergedCmd.append(stderr);
       }
 
-      mergedCmd.append(" ; exit $PIPESTATUS");
+      mergedCmd.append(" ; exit $?");
     } else {
       if (TaskLogUtil.isDfsLoggingEnabled()) {
         mergedCmd.append(" | ");
         mergedCmd.append(dfsLoggingHandler.getStdOutCommand(stdout));
 
-        mergedCmd.append(" ; exit $PIPESTATUS ) 2>&1 | ");
+        mergedCmd.append(" ; exit $? ) 2>&1 | ");
         mergedCmd.append(dfsLoggingHandler.getStdOutCommand(stderr));
-        mergedCmd.append(" ; exit $PIPESTATUS");
+        mergedCmd.append(" ; exit $?");
       } else {
         mergedCmd.append(" 1>> ");
         mergedCmd.append(stdout);

@@ -468,11 +468,11 @@ public class YARNRunner implements ClientProtocol {
       vargs.add(dfsLoggingHandler.getStdOutCommand(
             ApplicationConstants.LOG_DIR_EXPANSION_VAR
             + Path.SEPARATOR + ApplicationConstants.STDOUT));
-      vargs.add(" ; exit $PIPESTATUS ) 2>&1 | ");
+      vargs.add(" ; exit $? ) 2>&1 | ");
       vargs.add(dfsLoggingHandler.getStdOutCommand(
             ApplicationConstants.LOG_DIR_EXPANSION_VAR
             + Path.SEPARATOR + ApplicationConstants.STDERR));
-      vargs.add(" ; exit $PIPESTATUS");
+      vargs.add(" ; exit $?");
     } else {
       vargs.add("1>" + ApplicationConstants.LOG_DIR_EXPANSION_VAR
           + Path.SEPARATOR + ApplicationConstants.STDOUT);
