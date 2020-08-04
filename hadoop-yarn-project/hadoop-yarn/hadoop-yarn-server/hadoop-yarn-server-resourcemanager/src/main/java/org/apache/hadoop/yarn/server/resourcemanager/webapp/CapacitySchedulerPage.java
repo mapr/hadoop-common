@@ -648,7 +648,9 @@ class CapacitySchedulerPage extends RmView {
           "    var queues = $('.q', data.rslt.obj);",
           "    var q = '^' + queues.first().text();",
           "    q += queues.length == 1 ? '$' : '\\\\.';",
-          "    $('#apps').dataTable().fnFilter(q, 4, true);",
+          // Update this filter column index for queue if new columns are added
+          // Current index for queue column is 5
+          "    $('#apps').dataTable().fnFilter(q, 5, true);",
           "  });",
           "  $('#cs').show();",
           "});").__().
