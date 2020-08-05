@@ -70,6 +70,10 @@ public class TestCGroupsBlkioResourceHandlerImpl {
     when(
       mockCGroupsHandler.getPathForCGroupTasks(
         CGroupsHandler.CGroupController.BLKIO, id)).thenReturn(path);
+    when(
+      mockCGroupsHandler.getPathForCGroupParam(
+         CGroupsHandler.CGroupController.BLKIO, id,
+         "bfq."+CGroupsHandler.CGROUP_PARAM_BLKIO_WEIGHT)).thenReturn("some_path");
 
     List<PrivilegedOperation> ret =
         cGroupsBlkioResourceHandlerImpl.preStart(mockContainer);

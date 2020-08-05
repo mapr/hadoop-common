@@ -131,9 +131,16 @@ public class CGroupsBlkioResourceHandlerImpl implements DiskResourceHandler {
     String cgroupId = container.getContainerId().toString();
     cGroupsHandler
       .createCGroup(CGroupsHandler.CGroupController.BLKIO, cgroupId);
+
+    String cGroupWeightFileName="bfq."+CGroupsHandler.CGROUP_PARAM_BLKIO_WEIGHT;
+    if (Files.notExists(Paths.get(cGroupsHandler.getPathForCGroupParam(
+            CGroupsHandler.CGroupController.BLKIO,
+            cgroupId, cGroupWeightFileName)))){
+      cGroupWeightFileName=CGroupsHandler.CGROUP_PARAM_BLKIO_WEIGHT;
+    }
     try {
       cGroupsHandler.updateCGroupParam(CGroupsHandler.CGroupController.BLKIO,
-          cgroupId, CGroupsHandler.CGROUP_PARAM_BLKIO_WEIGHT, DEFAULT_WEIGHT);
+          cgroupId, cGroupWeightFileName, DEFAULT_WEIGHT);
     } catch (ResourceHandlerException re) {
       cGroupsHandler.deleteCGroup(CGroupsHandler.CGroupController.BLKIO,
           cgroupId);
