@@ -32,8 +32,8 @@ function createSymlinks() {
   rm -f  __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/zookeeper-3.*.jar
   ln -sf __PREFIX__/lib/zookeeper-3.*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
   ln -sf __PREFIX__/lib/libMapRClient.so __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
-  ln -sf __PREFIX__/lib/libMapRClient.so __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/lib/native/
-  ln -sf __PREFIX__/lib/libjpam.so __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/lib/native
+  ln -sf __PREFIX__/lib/libMapRClient.so __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/lib/native/ > /dev/null 2>&1
+  ln -sf __PREFIX__/lib/libjpam.so __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/lib/native > /dev/null 2>&1
 
   ln -sf __PREFIX__/lib/maprdb-*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
   ln -sf __PREFIX__/lib/mapr-stream*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
@@ -58,11 +58,11 @@ function createSymlinks() {
 }
 
 function copyMaprConfFiles() {
-  sed -i "s/^yarn_version=.*$/yarn_version=__VERSION_3DIGIT__/" __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/etc/hadoop/hadoop_version
+  sed -i "s/^yarn_version=.*$/yarn_version=__VERSION_3DIGIT__/" __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/etc/hadoop/hadoop_version > /dev/null 2>&1
   if [ -f __PREFIX__/conf/hadoop_version ]; then
     rm -f __PREFIX__/conf/hadoop_version
   fi
-  cp __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/etc/hadoop/hadoop_version __PREFIX__/conf/hadoop_version
+  cp __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/etc/hadoop/hadoop_version __PREFIX__/conf/hadoop_version > /dev/null 2>&1
 
   DAEMON_CONF=__PREFIX__/conf/daemon.conf
   if [ -f "$DAEMON_CONF" ]; then
