@@ -76,11 +76,12 @@
     <curator.version>4.2.0</curator.version>
     <findbugs.version>3.0.0</findbugs.version>
     <slf4j.version>1.7.25</slf4j.version>
+    <dnsjava.version>2.1.7</dnsjava.version>
 
     <tomcat.version>9.0.36</tomcat.version>
 
     <!-- define the Java language version used by the compiler -->
-    <javac.version>1.8</javac.version>
+    <javac.version>11</javac.version>
 
     <!-- The java version enforced by the maven enforcer -->
     <!-- more complex patterns can be used here, such as
@@ -802,6 +803,12 @@
       </dependency>
 
       <dependency>
+        <groupId>dnsjava</groupId>
+        <artifactId>dnsjava</artifactId>
+        <version>${dnsjava.version}</version>
+      </dependency>
+
+      <dependency>
         <groupId>org.apache.zookeeper</groupId>
         <artifactId>zookeeper</artifactId>
         <version>${zookeeper.version}</version>
@@ -1156,7 +1163,7 @@
               <version>[3.0.0,)</version>
             </requireMavenVersion>
             <requireJavaVersion>
-              <version>1.6</version>
+              <version>[11,)</version>
             </requireJavaVersion>
           </rules>
         </configuration>
