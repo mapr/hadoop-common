@@ -35,6 +35,7 @@ import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
+import javax.naming.spi.InitialContextFactory;
 
 import org.apache.commons.io.Charsets;
 import org.apache.commons.logging.Log;
@@ -158,6 +159,9 @@ public class LdapGroupsMapping
   public static final int DIRECTORY_SEARCH_TIMEOUT_DEFAULT = 10000; // 10s
 
   private static final Log LOG = LogFactory.getLog(LdapGroupsMapping.class);
+
+  public static final String LDAP_CTX_FACTORY_CLASS_KEY =
+      LDAP_CONFIG_PREFIX + ".ctx.factory.class";
 
   public static final String LDAP_CTX_FACTORY_CLASS_DEFAULT =
       "com.sun.jndi.ldap.LdapCtxFactory";
