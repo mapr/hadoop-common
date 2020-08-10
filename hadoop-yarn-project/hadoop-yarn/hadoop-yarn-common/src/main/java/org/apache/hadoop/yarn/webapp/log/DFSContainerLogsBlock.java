@@ -33,8 +33,8 @@ import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.apache.hadoop.yarn.util.TaskLogUtil;
 import org.apache.hadoop.yarn.webapp.NotFoundException;
 import org.apache.hadoop.yarn.webapp.YarnWebParams;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet.PRE;
+import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet;
+import org.apache.hadoop.yarn.webapp.hamlet2.Hamlet.PRE;
 import org.apache.hadoop.yarn.webapp.view.HtmlBlock;
 
 /**
@@ -51,8 +51,8 @@ public class DFSContainerLogsBlock extends HtmlBlock
   protected void render(Block html) {
     if (!TaskLogUtil.isDfsLoggingEnabled()) {
       html.h1()
-        ._("Logs not found. DFS Logging is not enabled.")
-        ._();
+        .__("Logs not found. DFS Logging is not enabled.")
+        .__();
       return;
     }
 
@@ -120,11 +120,11 @@ public class DFSContainerLogsBlock extends HtmlBlock
       try {
         long toRead = end - start;
         if (toRead < length) {
-          html.p()._("Showing " + toRead + " bytes. Click ")
+          html.p().__("Showing " + toRead + " bytes. Click ")
             .a(url("logs", $(NM_NODENAME), $(CONTAINER_ID),
                   $(ENTITY_STRING), $(APP_OWNER),
                   logFile.getName(), "?start=0"), "here").
-            _(" for full log")._();
+            __(" for full log").__();
         }
 
         IOUtils.skipFully(logByteStream, start);
@@ -138,12 +138,12 @@ public class DFSContainerLogsBlock extends HtmlBlock
 
         while ((len = reader.read(cbuf, 0, currentToRead)) > 0
             && toRead > 0) {
-          pre._(new String(cbuf, 0, len));
+          pre.__(new String(cbuf, 0, len));
           toRead = toRead - len;
           currentToRead = toRead > bufferSize ? bufferSize : (int) toRead;
             }
 
-        pre._();
+        pre.__();
         reader.close();
 
       } catch (IOException e) {
@@ -181,7 +181,7 @@ public class DFSContainerLogsBlock extends HtmlBlock
                   $(ENTITY_STRING), $(APP_OWNER),
                   logName, "?start=-4096"),
                 logName + " : Total file length is "
-                + length + " bytes.")._();
+                + length + " bytes.").__();
         }
       }
     }

@@ -21,9 +21,7 @@ env=${BASEMAPR}/conf/env.sh
 # export JAVA_HOME=/home/y/libexec/jdk1.6.0/
 
 #MFS-6760: Fix warnings when using jdk 11
-if [ -n "$MAPR_COMMON_JAVA_OPTS" ]; then
-   HADOOP_OPTS="$HADOOP_OPTS $MAPR_COMMON_JAVA_OPTS"
-fi
+HADOOP_OPTS="$HADOOP_OPTS $MAPR_COMMON_JAVA_OPTS"
 
 export HADOOP_JOB_HISTORYSERVER_HEAPSIZE=1000
 

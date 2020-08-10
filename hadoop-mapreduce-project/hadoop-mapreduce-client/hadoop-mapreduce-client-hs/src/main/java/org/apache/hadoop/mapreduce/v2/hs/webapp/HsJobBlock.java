@@ -100,7 +100,7 @@ public class HsJobBlock extends HtmlBlock {
       for(String diag: diagnostics) {
         b.append(diag);
       }
-      infoBlock._("Diagnostics:", b.toString());
+      infoBlock.__("Diagnostics:", b.toString());
     }
 
     if(job.getNumMaps() > 0) {

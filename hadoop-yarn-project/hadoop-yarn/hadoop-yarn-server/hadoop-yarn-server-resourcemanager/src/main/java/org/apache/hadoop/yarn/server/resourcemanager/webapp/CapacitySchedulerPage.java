@@ -96,7 +96,7 @@ class CapacitySchedulerPage extends RmView {
           _("Accessible Node Labels:", StringUtils.join(",", lqinfo.getNodeLabels())).
           _("Preemption:", lqinfo.getPreemptionDisabled() ? "disabled" : "enabled");
 
-      html._(InfoBlock.class);
+      html.__(InfoBlock.class);
 
       // clear the info contents so this queue's info doesn't accumulate into another queue's info
       ri.clear();

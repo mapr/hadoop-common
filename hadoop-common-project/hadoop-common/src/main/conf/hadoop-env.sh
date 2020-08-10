@@ -114,6 +114,4 @@ env=${BASEMAPR}/conf/env.sh
 [ -f $env ] && . $env
 
 #MFS-6760: Fix warnings when using jdk 11
-if [ -n "$MAPR_COMMON_JAVA_OPTS" ]; then
-   HADOOP_OPTS="$HADOOP_OPTS $MAPR_COMMON_JAVA_OPTS"
-fi
+HADOOP_OPTS="$HADOOP_OPTS $MAPR_COMMON_JAVA_OPTS"

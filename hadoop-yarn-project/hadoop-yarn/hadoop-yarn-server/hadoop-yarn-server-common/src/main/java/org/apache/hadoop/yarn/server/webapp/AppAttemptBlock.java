@@ -136,18 +136,18 @@ public class AppAttemptBlock extends HtmlBlock {
       node = appAttempt.getHost() + ":" + appAttempt.getRpcPort();
     }
     info("Application Attempt Overview")
-      ._(
+      .__(
         "Application Attempt State:",
         appAttempt.getAppAttemptState() == null ? UNAVAILABLE : appAttempt
           .getAppAttemptState())
-      ._(
+      .__(
         "AM Container:",
         appAttempt.getAmContainerId() == null || containers == null
             || !hasAMContainer(appAttemptReport.getAMContainerId(), containers)
             ? null : root_url("container", appAttempt.getAmContainerId()),
         String.valueOf(appAttempt.getAmContainerId()))
-      ._("Node:", node)
-      ._(
+      .__("Node:", node)
+      .__(
         "Tracking URL:",
         appAttempt.getTrackingUrl() == null
             || appAttempt.getTrackingUrl() == UNAVAILABLE ? null
@@ -159,7 +159,7 @@ public class AppAttemptBlock extends HtmlBlock {
                 || appAttempt.getAppAttemptState() == YarnApplicationAttemptState.FAILED
                 || appAttempt.getAppAttemptState() == YarnApplicationAttemptState.KILLED
                 ? "History" : "ApplicationMaster")
-      ._("Diagnostics Info:", appAttempt.getDiagnosticsInfo() == null ?
+      .__("Diagnostics Info:", appAttempt.getDiagnosticsInfo() == null ?
           "" : appAttempt.getDiagnosticsInfo());
 
     if (exceptionWhenGetContainerReports) {
