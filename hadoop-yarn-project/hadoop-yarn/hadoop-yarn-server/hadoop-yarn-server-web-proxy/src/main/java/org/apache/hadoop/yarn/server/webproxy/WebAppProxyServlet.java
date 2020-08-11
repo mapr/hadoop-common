@@ -142,14 +142,16 @@ public class WebAppProxyServlet extends HttpServlet {
           + WebAppUtils.getAHSWebAppURLWithoutScheme(conf),
           "applicationhistory", "app");
     this.httpClientBuilder = HttpClientBuilder.create();
-    final SSLFactory sslFactory = new SSLFactory(SSLFactory.Mode.CLIENT, conf);
-    try {
-      sslFactory.init();
-      httpClientBuilder.setSSLSocketFactory(new SSLConnectionSocketFactory(
-          sslFactory.createSSLSocketFactory(), sslFactory.getHostnameVerifier()));
-    } catch (Exception e) {
-      sslFactory.destroy();
-      throw new RuntimeException(e);
+    if (YarnConfiguration.useHttps(conf)) {
+      final SSLFactory sslFactory = new SSLFactory(SSLFactory.Mode.CLIENT, conf);
+      try {
+        sslFactory.init();
+        httpClientBuilder.setSSLSocketFactory(new SSLConnectionSocketFactory(
+            sslFactory.createSSLSocketFactory(), sslFactory.getHostnameVerifier()));
+      } catch (Exception e) {
+        sslFactory.destroy();
+        throw new RuntimeException(e);
+      }
     }
   }
 
