@@ -396,7 +396,7 @@ public class TimelineClientImpl extends TimelineClient {
               } catch (AuthenticationException e) {
                 Thread.sleep(1000L);
                 retryCounter++;
-                LOG.error("Renew delegation token failed on retry " + retryCounter + " of " + maxAuthRetries);
+                LOG.error("Get delegation token failed on retry " + retryCounter + " of " + maxAuthRetries);
                 if (retryCounter >= maxAuthRetries) {
                   throw new IOException(e);
                 }
