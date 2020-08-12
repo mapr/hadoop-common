@@ -388,8 +388,24 @@ public class TimelineClientImpl extends TimelineClient {
             DelegationTokenAuthenticatedURL authUrl =
                 new DelegationTokenAuthenticatedURL(authenticator,
                     connConfigurator);
-            return (Token) authUrl.getDelegationToken(
-                resURI.toURL(), token, renewer, doAsUser);
+            int retryCounter = 0;
+            while (retryCounter < maxAuthRetries) {
+              try {
+                return (Token) authUrl.getDelegationToken(
+                    resURI.toURL(), token, renewer, doAsUser);
+              } catch (AuthenticationException e) {
+                Thread.sleep(1000L);
+                retryCounter++;
+                LOG.error("Renew delegation token failed on retry " + retryCounter + " of " + maxAuthRetries);
+                if (retryCounter >= maxAuthRetries) {
+                  throw new IOException(e);
+                }
+                if (LOG.isDebugEnabled()) {
+                  e.printStackTrace();
+                }
+              }
+            }
+            return null;
           }
         };
     return (Token<TimelineDelegationTokenIdentifier>) operateDelegationToken(getDTAction);
