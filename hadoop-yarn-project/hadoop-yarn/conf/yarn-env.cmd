@@ -58,3 +58,4 @@ if defined JAVA_LIBRARY_PATH (
   set YARN_OPTS=%YARN_OPTS% -Djava.library.path=%JAVA_LIBRARY_PATH%
 )
 set YARN_OPTS=%YARN_OPTS% -Dyarn.policy.file=%YARN_POLICYFILE%
+set YARN_OPTS=%YARN_OPTS% %MAPR_COMMON_JAVA_OPTS%
