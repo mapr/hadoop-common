@@ -22,6 +22,8 @@ env=${BASEMAPR}/conf/env.sh
 
 #MFS-6760: Fix warnings when using jdk 11
 HADOOP_OPTS="$HADOOP_OPTS $MAPR_COMMON_JAVA_OPTS"
+#MAPRHADOOP-107: Set ParallelGC by default on jdk11
+HADOOP_OPTS="$HADOOP_OPTS -XX:+UseParallelGC"
 
 export HADOOP_JOB_HISTORYSERVER_HEAPSIZE=1000
 
