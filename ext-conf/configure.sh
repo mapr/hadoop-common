@@ -45,6 +45,10 @@ else
     exit 0
 fi
 
+if [ "$(uname)" == "Darwin" ] && [ -z "$FLAGS_GETOPT_CMD" ]; then
+    FLAGS_GETOPT_CMD="$(brew --prefix gnu-getopt)/bin/getopt"
+fi
+
 INSTALL_DIR=${MAPR_HOME}
 SERVER_DIR=${INSTALL_DIR}/server
 . ${SERVER_DIR}/configure-common.sh
@@ -761,7 +765,10 @@ function checkTCFileForNodManager() {
 usage="usage: $0 [-help] [-EC <commonEcoOpts>] [-customSecure] [-secure] [-unsecure] [-R]"
 if [ ${#} -gt 0 ]; then
     # we have arguments - run as as standalone - need to get params and
-    OPTS=$(getopt -a -o chsuz:C: -l EC: -l help -l R -l customSecure -l unsecure -l secure  -l client -l g: -l u -l TL: -- "$@")
+    case "$OSTYPE" in
+        darwin*)  OPTS=$($FLAGS_GETOPT_CMD -a -o chsuz:C: -l EC: -l help -l R -l customSecure -l unsecure -l secure  -l client -l g: -l u -l TL: -- "$@") ;;
+        *)        OPTS=$(getopt -a -o chsuz:C: -l EC: -l help -l R -l customSecure -l unsecure -l secure  -l client -l g: -l u -l TL: -- "$@") ;;
+    esac
     if [ $? != 0 ]; then
         echo -e ${usage}
         return 2 2>/dev/null || exit 2
@@ -930,7 +937,9 @@ ConfigureHadoopDir
 ConfigureHadoop
 UpdateFileClientConfig
 ConfigureJMHadoopProperties "${INSTALL_DIR}/conf/hadoop-metrics.properties"
-ConfigureYarnLinuxContainerExecutor
+if [ "$(uname)" != "Darwin" ]; then
+    ConfigureYarnLinuxContainerExecutor
+fi
 
 # TODO - this one is incomplete
 ConfigureJMXForHadoop
