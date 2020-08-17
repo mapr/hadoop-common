@@ -236,9 +236,8 @@ public class LabelManager {
         Map<String, String> labels = new HashMap<>();
         for (String labelPair : labelPairs) {
           String[] split = labelPair.split("\\|");
-          LabelExpressionHandlingHelper.wrapIfNeeded(split[0]);
-          LabelExpressionHandlingHelper.wrapIfNeeded(split[1]);
-          labels.put(split[0].trim(), split[1].trim());
+          labels.put(LabelExpressionHandlingHelper.wrapIfNeeded(split[0]).trim(),
+                  LabelExpressionHandlingHelper.wrapIfNeeded(split[1]).trim());
         }
         checkLabels(labels.values());
 

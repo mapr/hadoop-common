@@ -42,6 +42,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.service.Service;
 import org.apache.hadoop.yarn.api.records.NodeToLabelsList;
+import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelExpressionHandlingHelper;
 import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManagementService;
 import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManager;
 import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManager.LabelApplicabilityStatus;
@@ -139,13 +140,13 @@ public class TestLabelManager {
     assertNotNull(labels);
     assertEquals(2, labels.size());
     assertTrue(labels.contains("big"));
-    assertTrue(labels.contains("Production Machines"));
+    assertTrue(labels.contains(LabelExpressionHandlingHelper.wrapIfNeeded("Production Machines")));
 
     labels = lb.getLabelsForNode("perfnode203.abc.qa.lab");
     assertNotNull(labels);
     assertEquals(2, labels.size());
     assertTrue(labels.contains("big"));
-    assertTrue(labels.contains("Development Machines"));
+    assertTrue(labels.contains(LabelExpressionHandlingHelper.wrapIfNeeded("Development Machines")));
 
     labels = lb.getLabelsForNode("node-33.lab");
     assertNotNull(labels);
@@ -289,13 +290,13 @@ public class TestLabelManager {
     assertNotNull(labels);
     assertEquals(2, labels.size());
     assertTrue(labels.contains("big"));
-    assertTrue(labels.contains("Production Machines"));
+    assertTrue(labels.contains(LabelExpressionHandlingHelper.wrapIfNeeded("Production Machines")));
 
     labels = lb.getLabelsForNode("perfnode203.abc.qa.lab");
     assertNotNull(labels);
     assertEquals(2, labels.size());
     assertTrue(labels.contains("big"));
-    assertTrue(labels.contains("Development Machines"));
+    assertTrue(labels.contains(LabelExpressionHandlingHelper.wrapIfNeeded("Development Machines")));
 
     labels = lb.getLabelsForNode("node-33.lab");
     assertNotNull(labels);
@@ -334,13 +335,13 @@ public class TestLabelManager {
     assertNotNull(labels);
     assertEquals(2, labels.size());
     assertTrue(labels.contains("big"));
-    assertTrue(labels.contains("Prod Machines"));
+    assertTrue(labels.contains(LabelExpressionHandlingHelper.wrapIfNeeded("Prod Machines")));
 
     labels = lb.getLabelsForNode("perfnode203.abc.qa.lab");
     assertNotNull(labels);
     assertEquals(2, labels.size());
     assertTrue(labels.contains("small"));
-    assertTrue(labels.contains("Dev Machines"));
+    assertTrue(labels.contains(LabelExpressionHandlingHelper.wrapIfNeeded("Dev Machines")));
 
     labels = lb.getLabelsForNode("perfnode151.perf.lab");
     assertNotNull(labels);
@@ -475,20 +476,28 @@ public class TestLabelManager {
     String label2 = "slow";
     String arg = nodeName1 + "=" + label1 + "; " + nodeName2 + "=" + label2;
 
+    String nodeName3 = "node06.cluster.com";
+    String label31 = "label AAA";
+    String label32 = "label-777";
+    arg = arg + "; "+ nodeName3 + "=" + label31 + ", " + label32;
+
     lb.addToClusterNodeLabels(arg);
 
     lb.refreshLabels(conf);
 
     Set<String> labelsForNode1 = lb.getLabelsForNode(nodeName1);
     Set<String> labelsForNode2 = lb.getLabelsForNode(nodeName2);
+    Set<String> labelsForNode3 = lb.getLabelsForNode(nodeName3);
     Set<String> existed = lb.getLabelsForNode(existedNode);
 
     assertNotNull(labelsForNode1);
     assertNotNull(labelsForNode2);
     assertNotNull(existed);
-    assertTrue(labelsForNode1.contains(label1));
+    assertTrue(labelsForNode1.contains(LabelExpressionHandlingHelper.wrapIfNeeded(label1)));
     assertTrue(labelsForNode2.contains(label2));
     assertTrue(existed.containsAll(existedLabels));
+    assertTrue(labelsForNode3.contains(LabelExpressionHandlingHelper.wrapIfNeeded(label31)));
+    assertTrue(labelsForNode3.contains(label32));
   }
 
   @Test
@@ -546,7 +555,22 @@ public class TestLabelManager {
     assertNull(lb.getLabelsForNode(node3));
     assertNull(lb.getLabelsForNode(node4));
 
-    assertTrue(lb.getLabelsForNode(node5).contains(label6));
+    assertTrue(lb.getLabelsForNode(node5).contains(LabelExpressionHandlingHelper.wrapIfNeeded(label6)));
+
+    String nodeName6 = "node06.cluster.com";
+    String label61 = "label-777";
+    String label62 = "label AAA";
+
+    lb.addToClusterNodeLabels(nodeName6 + "=" + label3);
+    lb.refreshLabels(conf);
+    lb.addToClusterNodeLabels(nodeName6 + "=" + label61 + ", " + label62);
+    lb.refreshLabels(conf);
+    lb.removeFromClusterNodeLabels(nodeName6 + "=" + label61);
+    lb.refreshLabels(conf);
+    assertFalse(lb.getLabelsForNode(nodeName6).contains(label61));
+    lb.removeFromClusterNodeLabels(nodeName6 + "=" + label62);
+    lb.refreshLabels(conf);
+    assertFalse(lb.getLabelsForNode(nodeName6).contains(label62));
 
     lb.removeFromClusterNodeLabels("*");
     lb.refreshLabels(conf);
@@ -594,17 +618,17 @@ public class TestLabelManager {
     lb.refreshLabels(conf);
     assertFalse(lb.getLabelsForNode(node3).contains(label4));
     assertFalse(lb.getLabelsForNode(node4).contains(label2));
-    assertTrue(lb.getLabelsForNode(node3).contains(testLabel1));
+    assertTrue(lb.getLabelsForNode(node3).contains(LabelExpressionHandlingHelper.wrapIfNeeded(testLabel1)));
     assertTrue(lb.getLabelsForNode(node4).contains(testLabel2));
 
     lb.replaceLabelsOnNode(node + "=" + label1 + "|" + testLabel1);
     lb.refreshLabels(conf);
     assertFalse(lb.getLabelsForNode(node).contains(label1));
-    assertTrue(lb.getLabelsForNode(node).contains(testLabel1));
+    assertTrue(lb.getLabelsForNode(node).contains(LabelExpressionHandlingHelper.wrapIfNeeded(testLabel1)));
 
     lb.replaceLabelsOnNode(node + "=" + label3 + "|" + testLabel3 + "," + testLabel1 + "|" + label1);
     lb.refreshLabels(conf);
-    assertFalse(lb.getLabelsForNode(node).containsAll(ImmutableSet.of(label3, testLabel1)));
+    assertFalse(lb.getLabelsForNode(node).containsAll(ImmutableSet.of(label3, LabelExpressionHandlingHelper.wrapIfNeeded(testLabel1))));
     assertTrue(lb.getLabelsForNode(node).containsAll(ImmutableSet.of(testLabel3, label1)));
 
     lb.replaceLabelsOnNode("*=" + label2 + "|" + testLabel2);

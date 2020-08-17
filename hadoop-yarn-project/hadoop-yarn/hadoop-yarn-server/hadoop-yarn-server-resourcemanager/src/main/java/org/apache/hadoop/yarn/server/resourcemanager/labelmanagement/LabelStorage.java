@@ -60,7 +60,7 @@ public final class  LabelStorage {
   private static final Log LOG = LogFactory.getLog(LabelStorage.class);
 
   public static final Pattern regex = Pattern.compile("[^\\s,\"']+|\"([^\"]*)\"|'([^']*)'");
-  public static final Pattern alpha_num = Pattern.compile("^[^0-9][A-Za-z0-9_ ]+$");
+  public static final Pattern alpha_num = Pattern.compile("^[^0-9][A-Za-z0-9-_ ]+$");
   public static final Pattern keywords = Pattern.compile("^int$|^abs$|^pow$");
 
   private FileSystem fs;
@@ -190,8 +190,8 @@ public final class  LabelStorage {
           if (term != null 
               && alpha_num.matcher(term).matches() 
               && !keywords.matcher(term).matches()) {
-            nodeLabels.add(term);
-            labelEvalFillersTmp.put(term, BigDecimal.ZERO);
+            nodeLabels.add(LabelExpressionHandlingHelper.wrapIfNeeded(term));
+            labelEvalFillersTmp.put(LabelExpressionHandlingHelper.wrapIfNeeded(term), BigDecimal.ZERO);
           } else {
             LOG.warn("Invalid node label: '" + term + "'");
           }
