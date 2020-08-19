@@ -89,19 +89,19 @@ extern  "C" {
 
     typedef enum HDFSAccessType {
       // ACEs for files
-      FileAccessTypeStart = 1,
-      AceRead = 1,
-      AceWrite = 2,
-      AceExecute = 3,
-      FileAccessTypeEnd = 3,
+      HdfsFileAccessTypeStart = 1,
+      HdfsAceRead = 1,
+      HdfsAceWrite = 2,
+      HdfsAceExecute = 3,
+      HdfsFileAccessTypeEnd = 3,
 
       // ACEs for directories
-      AceDirAccessTypeStart = 20,
-      AceReadDir = 20,
-      AceAddChild = 21,
-      AceDeleteChild = 22,
-      AceLookupDir = 23,
-      AceDirAccessTypeEnd = 23,
+      HdfsAceDirAccessTypeStart = 20,
+      HdfsAceReadDir = 20,
+      HdfsAceAddChild = 21,
+      HdfsAceDeleteChild = 22,
+      HdfsAceLookupDir = 23,
+      HdfsAceDirAccessTypeEnd = 23,
     } HDFSAccessType;
 
     typedef struct hdfsAce {
