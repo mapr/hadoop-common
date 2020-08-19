@@ -67,6 +67,9 @@
     <jackson.version>1.9.13</jackson.version>
     <jackson2.version>2.2.3</jackson2.version>
 
+    <!-- commons-lang3 version -->
+    <commons-lang3.version>3.9</commons-lang3.version>
+
     <!-- ProtocolBuffer version, used to verify the protoc version and -->
     <!-- define the protobuf JAR version                               -->
     <protobuf.version>3.11.1</protobuf.version>
@@ -379,6 +382,12 @@
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-aws</artifactId>
         <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-lang3</artifactId>
+        <version>${commons-lang3.version}</version>
       </dependency>
 
       <dependency>
