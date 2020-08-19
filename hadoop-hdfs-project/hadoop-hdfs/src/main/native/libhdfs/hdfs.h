@@ -1125,14 +1125,14 @@ extern  "C" {
      * @param path the path to the file
      * @param list the pointer to list of aces
      * @param numEntries number of entries in the list
-     * @param isSet if true existing aces will be discarded,
-                    else merges existing aces with current aces
+     * @param isSet if 1 (true) existing aces will be discarded,
+                    else if 0 (false) merges existing aces with current aces
      * @param isRecursive to set aces recursively 
      * @return On success zero will be returned, on failure errno will be returned
      */
     LIBHDFS_EXTERNAL
     int hdfsSetAces(hdfsFS fs, const char *path, hdfsAce *list, int numEntries,
-                    bool isSet, bool isRecursive);
+                    int isSet, int isRecursive);
 
     /** 
      * hdfsGetAces - gest ACEs on the given file path
