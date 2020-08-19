@@ -87,7 +87,7 @@ extern  "C" {
      * ACE related data structures
      */
 
-    typedef enum FSAccessType {
+    typedef enum HDFSAccessType {
       // ACEs for files
       FileAccessTypeStart = 1,
       AceRead = 1,
@@ -102,10 +102,10 @@ extern  "C" {
       AceDeleteChild = 22,
       AceLookupDir = 23,
       AceDirAccessTypeEnd = 23,
-    } FSAccessType;
+    } HDFSAccessType;
 
     typedef struct hdfsAce {
-      FSAccessType accessType;
+      HDFSAccessType accessType;
       char *booleanExpression;
       char *postFixExpression;
     } hdfsAce;
