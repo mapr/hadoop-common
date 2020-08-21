@@ -208,8 +208,12 @@ if [ -z "$MAPR_JMXSSL" ]; then
     MAPR_JMXSSL="false"
 fi
 
+if [ -z "$MAPR_AUTH_LOGIN_CONFIG_FILE" ]; then
+    MAPR_AUTH_LOGIN_CONFIG_FILE="${MAPR_HOME:-/opt/mapr}/conf/mapr.login.conf"
+fi
+
 if [ -z "$MAPR_JMX_LOGIN_CONFIG" ]; then
-    MAPR_JMX_LOGIN_CONFIG="hadoop_simple"
+    MAPR_JMX_LOGIN_CONFIG="JMX_AGENT_LOGIN"
 fi
 
 if [ -z "$MAPR_JMXDISABLE" ] && [ -z "$MAPR_JMXLOCALHOST" ] && [ -z "$MAPR_JMXREMOTEHOST" ]; then
@@ -225,32 +229,33 @@ if [ -z "$MAPR_JMXDISABLE" ] || [ "$MAPR_JMXDISABLE" = 'false' ]; then
         MAPR_JMXREMOTEHOST=false
     fi
 
+    if [ "$isSecure" = "true" ] && [ "$MAPR_JMXREMOTEHOST" = "true" ]; then
+        JMX_JAR=$(echo ${MAPR_HOME:-/opt/mapr}/lib/jmxagent*)
+        if [ -n "$JMX_JAR" ] && [ -f ${JMX_JAR} ]; then
+            MAPR_JMX_OPTS="-javaagent:$JMX_JAR -Dmapr.jmx.agent.login.config=$MAPR_JMX_LOGIN_CONFIG"
+            MAPR_JMXAUTH="true"
+        else
+            echo "jmxagent jar file missed"
+            exit 1
+        fi
+    fi
+
     if [ "$MAPR_JMXAUTH" = "true" ]; then
         if [ "$isSecure" = "true" ]; then
-            if [ "$MAPR_JMXREMOTEHOST" = "true" ]; then
-                if [ -f "${MAPR_HOME:-/opt/mapr}/conf/mapr.login.conf" ] && \
-                   [ -f "${MAPR_HOME:-/opt/mapr}/conf/jmxremote.access" ]; then
-                      MAPR_JMX_OPTS="$MAPR_JMX_OPTS -Dcom.sun.management.jmxremote.authenticate=true \
-                          -Djava.security.auth.login.config=${MAPR_HOME:-/opt/mapr}/conf/mapr.login.conf \
-                          -Dmapr.jmx.agent.login.config=$MAPR_JMX_LOGIN_CONFIG \
-                          -Dcom.sun.management.jmxremote.access.file=${MAPR_HOME:-/opt/mapr}/conf/jmxremote.access"
-                else
-                    logJmxMsg "JMX login config or access file missing - not starting since we are in secure mode"
-                    exit 1
-                fi
+            if [ -f "$MAPR_AUTH_LOGIN_CONFIG_FILE" ] && \
+               [ -f "${MAPR_HOME:-/opt/mapr}/conf/jmxremote.access" ]; then
+              MAPR_JMX_OPTS="$MAPR_JMX_OPTS -Dcom.sun.management.jmxremote.authenticate=true \
+                -Djava.security.auth.login.config=$MAPR_AUTH_LOGIN_CONFIG_FILE \
+                -Dcom.sun.management.jmxremote.access.file=${MAPR_HOME:-/opt/mapr}/conf/jmxremote.access"
             else
-                if [ -f "${MAPR_HOME:-/opt/mapr}/conf/jmxremote.password" ] && \
-                   [ -f "${MAPR_HOME:-/opt/mapr}/conf/jmxremote.access" ]; then
-                       MAPR_JMX_OPTS="$MAPR_JMX_OPTS -Dcom.sun.management.jmxremote.authenticate=true \
-                          -Dcom.sun.management.jmxremote.password.file=${MAPR_HOME:-/opt/mapr}/conf/jmxremote.password \
-                          -Dcom.sun.management.jmxremote.access.file=${MAPR_HOME:-/opt/mapr}/conf/jmxremote.access"
-                else
-                    logJmxMsg "JMX password and/or access files missing - not starting since we are in secure mode"
-                    exit 1
-                fi
+              echo "JMX login config or access file missing - not starting since we are in secure mode"
+              exit 1
+            fi
+            if [ "$MAPR_JMXREMOTEHOST" = "false" ]; then
+              MAPR_JMX_OPTS="$MAPR_JMX_OPTS -Dcom.sun.management.jmxremote.login.config=$MAPR_JMX_LOGIN_CONFIG"
             fi
         else
-            logJmxMsg "JMX Authentication configured - not starting since we are not in secure mode"
+            echo "JMX Authentication configured - not starting since we are not in secure mode"
             exit 1
         fi
     else
@@ -258,23 +263,17 @@ if [ -z "$MAPR_JMXDISABLE" ] || [ "$MAPR_JMXDISABLE" = 'false' ]; then
     fi
 
     if [ "$MAPR_JMXLOCALHOST" = "true" ] || [ "$MAPR_JMXREMOTEHOST" = "true" ]; then
-        if [ "$MAPR_JMXSSL" = "true" ]; then
-            MAPR_JMX_OPTS="$MAPR_JMX_OPTS -Dcom.sun.management.jmxremote.ssl=true"
+        if [ "$MAPR_JMXSSL" = "true" ] && [ "$MAPR_JMXLOCALHOST" = "true" ]; then
+            echo "WARNING: ssl is not supported in localhost. Setting default to false"
+            MAPR_JMX_OPTS="$MAPR_JMX_OPTS -Dcom.sun.management.jmxremote.ssl=false"
         else
             MAPR_JMX_OPTS="$MAPR_JMX_OPTS -Dcom.sun.management.jmxremote.ssl=false"
         fi
 
         if [ "$MAPR_JMXLOCALHOST" = "true" ]; then
             MAPR_JMX_OPTS="$MAPR_JMX_OPTS -Djava.rmi.server.hostname=localhost \
-                -Dcom.sun.management.jmxremote.host=localhost \
-                -Dcom.sun.management.jmxremote.local.only=true"
-        else
-            if [ -f "${MAPR_HOME:-/opt/mapr}/lib/jmxagent.jar" ]; then
-                MAPR_JMX_OPTS="-javaagent:${MAPR_HOME:-/opt/mapr}/lib/jmxagent.jar $MAPR_JMX_OPTS"
-            else
-                logJmxMsg "jmxagent.jar file missed"
-                exit 1
-            fi
+              -Dcom.sun.management.jmxremote.host=localhost \
+              -Dcom.sun.management.jmxremote.local.only=true"
         fi
 
         case "$COMMAND" in
@@ -322,12 +321,16 @@ if [ -z "$MAPR_JMXDISABLE" ] || [ "$MAPR_JMXDISABLE" = 'false' ]; then
             logJmxMsg "WARNING: No JMX port given for $COMMAND - disabling TCP base JMX service"
             MAPR_JMX_OPTS=""
         else
-            if [ "$MAPR_JMXLOCALHOST" = "true" ]; then
-                MAPR_JMX_OPTS="$MAPR_JMX_OPTS -Dcom.sun.management.jmxremote.port=$MAPR_JMX_PORT"
-                logJmxMsg "Enabling TCP JMX for $COMMAND only on localhost port $MAPR_JMX_PORT"
-            else
+            if [ "$MAPR_JMXREMOTEHOST" = "true" ] && [ "$isSecure" = "true" ]; then
                 MAPR_JMX_OPTS="$MAPR_JMX_OPTS -Dmapr.jmx.agent.port=$MAPR_JMX_PORT"
                 logJmxMsg "Enabling TCP JMX for $COMMAND on port $MAPR_JMX_PORT"
+            else
+                if [ "$MAPR_JMXLOCALHOST" = "true" ]; then
+                    logJmxMsg "Enabling TCP JMX for $COMMAND only on localhost port $MAPR_JMX_PORT"
+                else
+                    logJmxMsg "Enabling TCP JMX for $COMMAND on port $MAPR_JMX_PORT"
+                fi
+                MAPR_JMX_OPTS="$MAPR_JMX_OPTS -Dcom.sun.management.jmxremote.port=$MAPR_JMX_PORT"
             fi
         fi
     fi
