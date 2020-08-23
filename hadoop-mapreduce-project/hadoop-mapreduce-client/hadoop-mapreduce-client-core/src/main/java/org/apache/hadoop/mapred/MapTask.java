@@ -322,7 +322,7 @@ public class MapTask extends Task {
 
       Path outDir = FileOutputFormat.getOutputPath(conf);
 
-      if (fileSystem instanceof AbstractMapRFileSystem && outDir != null) {
+      if (fileSystem instanceof AbstractMapRFileSystem && outDir != null && fileSystem.exists(outDir)) {
         AbstractMapRFileSystem mapRFileSystem = (AbstractMapRFileSystem) fileSystem;
 
         String relativeMountPath = conf.get(MOUNT_PATH_CONF, DEFAULT_MOUNT_PATH);
