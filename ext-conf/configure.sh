@@ -429,9 +429,9 @@ function ConfigureYarnLinuxContainerExecutor() {
     # Set the MapR specific values in container-executor.cfg
     FILENAME="container-executor.cfg"
     FILE=${HADOOP_HOME}/etc/hadoop/${FILENAME}
-    sed -i -e "s/^\(yarn\.nodemanager\.linux-container-executor\.group\)=#.*$/\1=${MAPR_GROUP}/" ${FILE}
-    sed -i -e "s/^\(min\.user\.id\)=1000#.*$/\1=500/" ${FILE}
-    sed -i -e "s/^\(allowed\.system\.users\)=#.*$/\1=${MAPR_USER}/" ${FILE}
+    sed -i -e "s/^\(yarn\.nodemanager\.linux-container-executor\.group\)=.*$/\1=${MAPR_GROUP}/" ${FILE}
+    sed -i -e "s/^\(min\.user\.id\)=.*$/\1=500/" ${FILE}
+    sed -i -e "s/^\(allowed\.system\.users\)=.*$/\1=${MAPR_USER}/" ${FILE}
 
     # Change ownership and mode for container-executor binary.
     chown root:${MAPR_GROUP} ${HADOOP_HOME}/bin/container-executor
