@@ -171,6 +171,9 @@ public class Client {
   // Debug flag
   boolean debugFlag = false;
 
+  //Flag to indicate whether to use default GC for current jdk version or Parallel GC
+  boolean useDefaultGC = false;
+
   // Timeline domain ID
   private String domainId = null;
 
@@ -272,6 +275,7 @@ public class Client {
       "If failure count reaches to maxAppAttempts, " +
       "the application will be failed.");
     opts.addOption("debug", false, "Dump out debug information");
+    opts.addOption("useDefaultGC", false, "Use default GC instead Parallel GC");
     opts.addOption("domain", true, "ID of the timeline domain where the "
         + "timeline entities will be put");
     opts.addOption("view_acls", true, "Users and groups that allowed to "
@@ -332,6 +336,11 @@ public class Client {
 
     if (cliParser.hasOption("debug")) {
       debugFlag = true;
+
+    }
+
+    if (cliParser.hasOption("useDefaultGC")) {
+      useDefaultGC = true;
 
     }
 
@@ -620,7 +629,11 @@ public class Client {
     vargs.add(Environment.JAVA_HOME.$$() + "/bin/java");
     // Set Xmx based on am memory size
     vargs.add("-Xmx" + amMemory + "m");
-    // Set class name 
+    vargs.add("--add-opens java.base/java.lang=ALL-UNNAMED");
+    if (!useDefaultGC) {
+      vargs.add("-XX:+UseParallelGC");
+    }
+    // Set class name
     vargs.add(appMasterMainClass);
     // Set params for Application Master
     vargs.add("--container_memory " + String.valueOf(containerMemory));
