@@ -540,9 +540,6 @@ function ConfigureRunUserForHadoopInternal() {
     CURR_USER=$1
     [ -d "${HADOOP_DIR}/logs" ] && chown $CURR_USER "${HADOOP_DIR}/logs" >>$logFile 2>&1
     [ -d "${HADOOP_DIR}/logs" ] && [ "$(ls -A ${HADOOP_DIR}/logs)" ] && chown $CURR_USER "${HADOOP_DIR}/logs/"* >>$logFile 2>&1
-    [ -d "${HADOOP_DIR}/pids" ] && chown -R $CURR_USER "${HADOOP_DIR}/pids" >>$logFile 2>&1
-    [ -d "${HADOOP_DIR}/conf" ] && chown -R $CURR_USER "${HADOOP_DIR}/conf" >>$logFile 2>&1
-    [ -d "${HADOOP_DIR}/conf.new" ] && chown -R $CURR_USER "${HADOOP_DIR}/conf.new" >>$logFile 2>&1
     [ -d "${HADOOP_DIR}/etc/hadoop" ] && find "${HADOOP_DIR}/etc/hadoop" -type f | grep -v container-executor.cfg | xargs chown $CURR_USER >>$logFile 2>&1
 }
 
