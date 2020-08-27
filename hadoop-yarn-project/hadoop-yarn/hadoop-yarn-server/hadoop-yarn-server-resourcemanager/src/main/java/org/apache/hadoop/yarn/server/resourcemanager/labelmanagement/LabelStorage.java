@@ -190,8 +190,8 @@ public final class  LabelStorage {
           if (term != null 
               && alpha_num.matcher(term).matches() 
               && !keywords.matcher(term).matches()) {
-            nodeLabels.add(LabelExpressionHandlingHelper.wrapIfNeeded(term));
-            labelEvalFillersTmp.put(LabelExpressionHandlingHelper.wrapIfNeeded(term), BigDecimal.ZERO);
+            nodeLabels.add(term);
+            labelEvalFillersTmp.put(term, BigDecimal.ZERO);
           } else {
             LOG.warn("Invalid node label: '" + term + "'");
           }

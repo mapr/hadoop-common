@@ -193,7 +193,7 @@ public class LabelManager {
         String[] labels = pair[1].split(",");
         labelsList = Arrays.stream(labels)
             .map(String::trim)
-            .map(LabelExpressionHandlingHelper::wrapIfNeeded)
+            .map(LabelManager::deleteQuotes)
             .collect(Collectors.toList());
       }
       map.put(hostname, labelsList);
@@ -236,8 +236,7 @@ public class LabelManager {
         Map<String, String> labels = new HashMap<>();
         for (String labelPair : labelPairs) {
           String[] split = labelPair.split("\\|");
-          labels.put(LabelExpressionHandlingHelper.wrapIfNeeded(split[0]).trim(),
-                  LabelExpressionHandlingHelper.wrapIfNeeded(split[1]).trim());
+          labels.put(deleteQuotes(split[0].trim()),deleteQuotes(split[1].trim()));
         }
         checkLabels(labels.values());
 
@@ -249,6 +248,16 @@ public class LabelManager {
     return labelsForReplace;
   }
 
+  public static String deleteQuotes(String label){
+    final String SINGLE_QUOTATION_MARK = "'";
+    if (org.apache.commons.lang.StringUtils.startsWith(label, SINGLE_QUOTATION_MARK)){
+      label = label.substring(1);
+    }
+    if (org.apache.commons.lang.StringUtils.endsWith(label, SINGLE_QUOTATION_MARK)){
+      label = label.substring(0,label.length()-1);
+    }
+    return label;
+  }
   /**
    * Read a line from file and parse node identifier and labels.
    */
