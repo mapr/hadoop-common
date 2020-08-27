@@ -41,6 +41,7 @@ function createSymlinks() {
   ln -sf __PREFIX__/lib/antlr4-runtime-*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
   ln -sf __PREFIX__/lib/ojai-*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
   ln -sf __PREFIX__/lib/mapr-security-*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  ln -sf __PREFIX__/lib/jmxagent*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
 
   ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/audience-annotations-0.*.jar __PREFIX__/lib/
   ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/commons-cli-1.*.jar __PREFIX__/lib/
