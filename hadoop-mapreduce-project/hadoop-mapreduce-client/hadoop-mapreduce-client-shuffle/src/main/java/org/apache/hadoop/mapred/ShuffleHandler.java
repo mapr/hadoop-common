@@ -126,7 +126,7 @@ import org.jboss.netty.handler.codec.http.QueryStringDecoder;
 import org.jboss.netty.handler.ssl.SslHandler;
 import org.jboss.netty.handler.stream.ChunkedWriteHandler;
 import org.jboss.netty.util.CharsetUtil;
-import org.mortbay.jetty.HttpHeaders;
+import org.eclipse.jetty.http.HttpHeader;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -136,7 +136,7 @@ import com.google.protobuf.ByteString;
 public class ShuffleHandler extends AuxiliaryService {
 
   private static final Log LOG = LogFactory.getLog(ShuffleHandler.class);
-  
+
   public static final String SHUFFLE_MANAGE_OS_CACHE = "mapreduce.shuffle.manage.os.cache";
   public static final boolean DEFAULT_SHUFFLE_MANAGE_OS_CACHE = true;
 
@@ -675,7 +675,7 @@ public class ShuffleHandler extends AuxiliaryService {
       indexCache = new IndexCache(new JobConf(conf));
       this.port = conf.getInt(SHUFFLE_PORT_CONFIG_KEY, DEFAULT_SHUFFLE_PORT);
     }
-    
+
     public void setPort(int port) {
       this.port = port;
     }
@@ -901,13 +901,15 @@ public class ShuffleHandler extends AuxiliaryService {
         boolean keepAliveParam, long contentLength) {
       if (!connectionKeepAliveEnabled && !keepAliveParam) {
         LOG.info("Setting connection close header...");
-        response.headers().set(HttpHeaders.CONNECTION, CONNECTION_CLOSE);
+        response.headers().set(HttpHeaders.CONNECTION.asString(),
+                CONNECTION_CLOSE);
       } else {
-        response.headers().set(HttpHeaders.CONTENT_LENGTH,
+        response.headers().set(HttpHeaders.CONTENT_LENGTH.asString(),
                 String.valueOf(contentLength));
-        response.headers().set(HttpHeaders.CONNECTION, HttpHeaders.KEEP_ALIVE);
-        response.headers().set(HttpHeaders.KEEP_ALIVE, "timeout="
-            + connectionKeepAliveTimeOut);
+        response.headers().set(HttpHeaders.CONNECTION.asString(),
+                HttpHeaders.KEEP_ALIVE.asString());
+        response.headers().set(HttpHeaders.KEEP_ALIVE.asString(),
+                "timeout=" + connectionKeepAliveTimeOut);
         LOG.info("Content Length in shuffle : " + contentLength);
       }
     }

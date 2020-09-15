@@ -24,6 +24,7 @@ import org.apache.hadoop.crypto.key.KeyProvider.KeyVersion;
 import org.apache.hadoop.crypto.key.KeyProviderCryptoExtension;
 import org.apache.hadoop.crypto.key.KeyProviderCryptoExtension.EncryptedKeyVersion;
 import org.apache.hadoop.crypto.key.kms.KMSRESTConstants;
+import org.apache.hadoop.http.JettyUtils;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.crypto.key.kms.KMSClientProvider;
@@ -97,7 +98,7 @@ public class KMS {
   @POST
   @Path(KMSRESTConstants.KEYS_RESOURCE)
   @Consumes(MediaType.APPLICATION_JSON)
-  @Produces(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8)
   @SuppressWarnings("unchecked")
   public Response createKey(Map jsonKey) throws Exception {
     KMSWebApp.getAdminCallsMeter().mark();
@@ -182,7 +183,7 @@ public class KMS {
   @POST
   @Path(KMSRESTConstants.KEY_RESOURCE + "/{name:.*}")
   @Consumes(MediaType.APPLICATION_JSON)
-  @Produces(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8)
   public Response rolloverKey(@PathParam("name") final String name,
       Map jsonMaterial) throws Exception {
     KMSWebApp.getAdminCallsMeter().mark();
@@ -221,7 +222,7 @@ public class KMS {
 
   @GET
   @Path(KMSRESTConstants.KEYS_METADATA_RESOURCE)
-  @Produces(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8)
   public Response getKeysMetadata(@QueryParam(KMSRESTConstants.KEY)
       List<String> keyNamesList) throws Exception {
     KMSWebApp.getAdminCallsMeter().mark();
@@ -246,7 +247,7 @@ public class KMS {
 
   @GET
   @Path(KMSRESTConstants.KEYS_NAMES_RESOURCE)
-  @Produces(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8)
   public Response getKeyNames() throws Exception {
     KMSWebApp.getAdminCallsMeter().mark();
     UserGroupInformation user = HttpUserGroupInformation.get();
@@ -275,7 +276,7 @@ public class KMS {
   @GET
   @Path(KMSRESTConstants.KEY_RESOURCE + "/{name:.*}/" +
       KMSRESTConstants.METADATA_SUB_RESOURCE)
-  @Produces(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8)
   public Response getMetadata(@PathParam("name") final String name)
       throws Exception {
     UserGroupInformation user = HttpUserGroupInformation.get();
@@ -300,7 +301,7 @@ public class KMS {
   @GET
   @Path(KMSRESTConstants.KEY_RESOURCE + "/{name:.*}/" +
       KMSRESTConstants.CURRENT_VERSION_SUB_RESOURCE)
-  @Produces(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8)
   public Response getCurrentVersion(@PathParam("name") final String name)
       throws Exception {
     UserGroupInformation user = HttpUserGroupInformation.get();
@@ -324,7 +325,7 @@ public class KMS {
 
   @GET
   @Path(KMSRESTConstants.KEY_VERSION_RESOURCE + "/{versionName:.*}")
-  @Produces(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8)
   public Response getKeyVersion(
       @PathParam("versionName") final String versionName) throws Exception {
     UserGroupInformation user = HttpUserGroupInformation.get();
@@ -352,7 +353,7 @@ public class KMS {
   @GET
   @Path(KMSRESTConstants.KEY_RESOURCE + "/{name:.*}/" +
       KMSRESTConstants.EEK_SUB_RESOURCE)
-  @Produces(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8)
   public Response generateEncryptedKeys(
           @PathParam("name") final String name,
           @QueryParam(KMSRESTConstants.EEK_OP) String edekOp,
@@ -405,7 +406,7 @@ public class KMS {
   @POST
   @Path(KMSRESTConstants.KEY_VERSION_RESOURCE + "/{versionName:.*}/" +
       KMSRESTConstants.EEK_SUB_RESOURCE)
-  @Produces(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8)
   public Response decryptEncryptedKey(
       @PathParam("versionName") final String versionName,
       @QueryParam(KMSRESTConstants.EEK_OP) String eekOp,
@@ -457,7 +458,7 @@ public class KMS {
   @GET
   @Path(KMSRESTConstants.KEY_RESOURCE + "/{name:.*}/" +
       KMSRESTConstants.VERSIONS_SUB_RESOURCE)
-  @Produces(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8)
   public Response getKeyVersions(@PathParam("name") final String name)
       throws Exception {
     UserGroupInformation user = HttpUserGroupInformation.get();

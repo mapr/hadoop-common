@@ -29,6 +29,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.http.JettyUtils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.server.resourcemanager.MockRM;
@@ -129,7 +130,8 @@ public class TestRMWebServicesNodeLabels extends JerseyTestBase {
         r.path("ws").path("v1").path("cluster")
             .path("get-node-labels").queryParam("user.name", userName)
             .accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
-    assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_JSON_TYPE + "; " + JettyUtils.UTF_8,
+            response.getType());
     json = response.getEntity(JSONObject.class);
     assertEquals("a", json.getString("nodeLabels"));
     
@@ -146,7 +148,8 @@ public class TestRMWebServicesNodeLabels extends JerseyTestBase {
         r.path("ws").path("v1").path("cluster")
             .path("get-node-labels").queryParam("user.name", userName)
             .accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
-    assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_JSON_TYPE + "; " + JettyUtils.UTF_8,
+            response.getType());
     json = response.getEntity(JSONObject.class);
     jarr = json.getJSONArray("nodeLabels");
     assertEquals(2, jarr.length());
@@ -169,7 +172,8 @@ public class TestRMWebServicesNodeLabels extends JerseyTestBase {
             .path("nodes").path("nid:0")
             .path("get-labels").queryParam("user.name", userName)
             .accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
-    assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_JSON_TYPE + "; " + JettyUtils.UTF_8,
+            response.getType());
     json = response.getEntity(JSONObject.class);
     assertEquals("a", json.getString("nodeLabels"));
 
@@ -191,7 +195,8 @@ public class TestRMWebServicesNodeLabels extends JerseyTestBase {
             .path("nodes").path("nid:0")
             .path("get-labels").queryParam("user.name", userName)
             .accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
-    assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_JSON_TYPE + "; " + JettyUtils.UTF_8,
+            response.getType());
     json = response.getEntity(JSONObject.class);
     assertEquals("b", json.getString("nodeLabels"));
             
@@ -214,7 +219,8 @@ public class TestRMWebServicesNodeLabels extends JerseyTestBase {
         r.path("ws").path("v1").path("cluster")
             .path("get-node-to-labels").queryParam("user.name", userName)
             .accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
-    assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_JSON_TYPE + "; " + JettyUtils.UTF_8,
+            response.getType());
     ntli = response.getEntity(NodeToLabelsInfo.class);
     nli = ntli.getNodeToLabels().get("nid:0");
     assertEquals(1, nli.getNodeLabels().size());
@@ -236,7 +242,8 @@ public class TestRMWebServicesNodeLabels extends JerseyTestBase {
             .path("nodes").path("nid:0")
             .path("get-labels").queryParam("user.name", userName)
             .accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
-    assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_JSON_TYPE + "; " + JettyUtils.UTF_8,
+            response.getType());
     json = response.getEntity(JSONObject.class);
     assertEquals("", json.getString("nodeLabels"));
     
@@ -258,7 +265,8 @@ public class TestRMWebServicesNodeLabels extends JerseyTestBase {
             .path("nodes").path("nid:0")
             .path("get-labels").queryParam("user.name", userName)
             .accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
-    assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_JSON_TYPE + "; " + JettyUtils.UTF_8,
+            response.getType());
     json = response.getEntity(JSONObject.class);
     assertEquals("a", json.getString("nodeLabels"));
     
@@ -278,7 +286,8 @@ public class TestRMWebServicesNodeLabels extends JerseyTestBase {
             .path("nodes").path("nid:0")
             .path("get-labels").queryParam("user.name", userName)
             .accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
-    assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_JSON_TYPE + "; " + JettyUtils.UTF_8,
+            response.getType());
     json = response.getEntity(JSONObject.class);
     assertEquals("a", json.getString("nodeLabels"));
     
@@ -295,7 +304,9 @@ public class TestRMWebServicesNodeLabels extends JerseyTestBase {
         r.path("ws").path("v1").path("cluster")
             .path("get-node-labels").queryParam("user.name", userName)
             .accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
-    assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getType());
+
+    assertEquals(MediaType.APPLICATION_JSON_TYPE + "; " + JettyUtils.UTF_8,
+            response.getType());
     json = response.getEntity(JSONObject.class);
     jarr = json.getJSONArray("nodeLabels");
     assertEquals(2, jarr.length());
@@ -313,10 +324,11 @@ public class TestRMWebServicesNodeLabels extends JerseyTestBase {
         r.path("ws").path("v1").path("cluster")
             .path("get-node-labels").queryParam("user.name", userName)
             .accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
-    assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_JSON_TYPE + "; " + JettyUtils.UTF_8,
+            response.getType());
     json = response.getEntity(JSONObject.class);
     assertEquals("a", json.getString("nodeLabels"));
-    
+
     
     // Remove cluster label with post
     response =
@@ -331,7 +343,8 @@ public class TestRMWebServicesNodeLabels extends JerseyTestBase {
         r.path("ws").path("v1").path("cluster")
             .path("get-node-labels").queryParam("user.name", userName)
             .accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
-    assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_JSON_TYPE + "; " + JettyUtils.UTF_8,
+            response.getType());
     String res = response.getEntity(String.class);
     assertTrue(res.equals("null"));
   }

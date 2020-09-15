@@ -62,7 +62,7 @@ import org.apache.hadoop.fs.azure.metrics.ErrorMetricUpdater;
 import org.apache.hadoop.fs.azure.metrics.ResponseReceivedMetricUpdater;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.fs.permission.PermissionStatus;
-import org.mortbay.util.ajax.JSON;
+import org.eclipse.jetty.util.ajax.JSON;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.microsoft.azure.storage.CloudStorageAccount;

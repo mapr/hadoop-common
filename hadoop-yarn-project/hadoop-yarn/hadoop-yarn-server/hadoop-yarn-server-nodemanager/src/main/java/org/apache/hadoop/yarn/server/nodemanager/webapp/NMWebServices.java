@@ -38,6 +38,7 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.hadoop.classification.InterfaceAudience.Public;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
+import org.apache.hadoop.http.JettyUtils;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.exceptions.YarnException;
@@ -93,14 +94,16 @@ public class NMWebServices {
   }
 
   @GET
-  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+  @Produces({ MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+      MediaType.APPLICATION_XML + "; " + JettyUtils.UTF_8 })
   public NodeInfo get() {
     return getNodeInfo();
   }
 
   @GET
   @Path("/info")
-  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+  @Produces({ MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+      MediaType.APPLICATION_XML + "; " + JettyUtils.UTF_8 })
   public NodeInfo getNodeInfo() {
     init();
     return new NodeInfo(this.nmContext, this.rview);
@@ -108,7 +111,8 @@ public class NMWebServices {
 
   @GET
   @Path("/apps")
-  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+  @Produces({ MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+      MediaType.APPLICATION_XML + "; " + JettyUtils.UTF_8 })
   public AppsInfo getNodeApps(@QueryParam("state") String stateQuery,
       @QueryParam("user") String userQuery) {
     init();
@@ -139,7 +143,8 @@ public class NMWebServices {
 
   @GET
   @Path("/apps/{appid}")
-  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+  @Produces({ MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+      MediaType.APPLICATION_XML + "; " + JettyUtils.UTF_8 })
   public AppInfo getNodeApp(@PathParam("appid") String appId) {
     init();
     ApplicationId id = ConverterUtils.toApplicationId(recordFactory, appId);
@@ -156,7 +161,8 @@ public class NMWebServices {
 
   @GET
   @Path("/containers")
-  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+  @Produces({ MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+          MediaType.APPLICATION_XML + "; " + JettyUtils.UTF_8})
   public ContainersInfo getNodeContainers() {
     init();
     ContainersInfo allContainers = new ContainersInfo();
@@ -175,7 +181,8 @@ public class NMWebServices {
 
   @GET
   @Path("/containers/{containerid}")
-  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+  @Produces({ MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+          MediaType.APPLICATION_XML + "; " + JettyUtils.UTF_8 })
   public ContainerInfo getNodeContainer(@PathParam("containerid") String id) {
     ContainerId containerId = null;
     init();
@@ -193,14 +200,14 @@ public class NMWebServices {
         .toString(), webapp.name());
 
   }
-  
+
   /**
-   * Returns the contents of a container's log file in plain text. 
+   * Returns the contents of a container's log file in plain text.
    *
    * Only works for containers that are still in the NodeManager's memory, so
    * logs are no longer available after the corresponding application is no
    * longer running.
-   * 
+   *
    * @param containerIdStr
    *    The container ID
    * @param filename
@@ -210,7 +217,7 @@ public class NMWebServices {
    */
   @GET
   @Path("/containerlogs/{containerid}/{filename}")
-  @Produces({ MediaType.TEXT_PLAIN })
+  @Produces({ MediaType.TEXT_PLAIN + "; " + JettyUtils.UTF_8 })
   @Public
   @Unstable
   public Response getLogs(@PathParam("containerid") String containerIdStr,
@@ -231,11 +238,11 @@ public class NMWebServices {
     } catch (YarnException ex) {
       return Response.serverError().entity(ex.getMessage()).build();
     }
-    
+
     try {
       final InputStream fis = ContainerLogsUtils.openLogFileForRead(
           containerIdStr, logFile, request.getRemoteUser(), nmContext);
-      
+
       StreamingOutput stream = new StreamingOutput() {
         @Override
         public void write(OutputStream os) throws IOException,
@@ -249,7 +256,7 @@ public class NMWebServices {
           os.flush();
         }
       };
-      
+
       return Response.ok(stream).build();
     } catch (IOException ex) {
       return Response.serverError().entity(ex.getMessage()).build();

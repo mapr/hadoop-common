@@ -69,7 +69,7 @@ import org.apache.hadoop.yarn.util.Records;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mortbay.log.Log;
+import org.eclipse.jetty.util.log.Log;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -316,11 +316,11 @@ public class TestYarnCLI {
     pw.println("\t                                   ");
     pw.close();
     String appReportStr = baos.toString("UTF-8");
-    Log.info("ExpectedOutput");
-    Log.info("["+appReportStr+"]");
-    Log.info("OutputFrom command");
+    Log.getLog().info("ExpectedOutput");
+    Log.getLog().info("["+appReportStr+"]");
+    Log.getLog().info("OutputFrom command");
     String actualOutput = sysOutStream.toString();
-    Log.info("["+actualOutput+"]");
+    Log.getLog().info("["+actualOutput+"]");
     Assert.assertEquals(appReportStr, sysOutStream.toString());
   }
   
@@ -855,7 +855,7 @@ public class TestYarnCLI {
       Assert.fail("Unexpected exception: " + e);
     }
   }
-  
+
   @Test
   public void testMoveApplicationAcrossQueues() throws Exception {
     ApplicationCLI cli = createAndGetAppCLI();
@@ -1062,7 +1062,7 @@ public class TestYarnCLI {
     states = nodeStates.toArray(new NodeState[0]);
     when(client.getNodeReports(states))
         .thenReturn(getNodeReports(nodeReports, nodeStates));
-    result = cli.run(new String[] { "-list", "--states", 
+    result = cli.run(new String[] { "-list", "--states",
                                         "NEW,RUNNING,LOST,REBOOTED" });
     assertEquals(0, result);
     verify(client).getNodeReports(states);

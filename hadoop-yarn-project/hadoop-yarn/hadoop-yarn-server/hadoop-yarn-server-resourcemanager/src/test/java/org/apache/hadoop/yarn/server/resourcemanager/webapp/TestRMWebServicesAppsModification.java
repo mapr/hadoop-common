@@ -46,6 +46,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.http.JettyUtils;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.security.authentication.server.AuthenticationFilter;
@@ -336,9 +337,9 @@ public class TestRMWebServicesAppsModification extends JerseyTestBase {
             .constructWebResource("apps", app.getApplicationId().toString(),
               "state").accept(mediaType).get(ClientResponse.class);
       assertEquals(Status.OK, response.getClientResponseStatus());
-      if (mediaType.equals(MediaType.APPLICATION_JSON)) {
+      if (mediaType.contains(MediaType.APPLICATION_JSON)) {
         verifyAppStateJson(response, RMAppState.ACCEPTED);
-      } else if (mediaType.equals(MediaType.APPLICATION_XML)) {
+      } else if (mediaType.contains(MediaType.APPLICATION_XML)) {
         verifyAppStateXML(response, RMAppState.ACCEPTED);
       }
     }
@@ -378,7 +379,7 @@ public class TestRMWebServicesAppsModification extends JerseyTestBase {
           continue;
         }
         assertEquals(Status.ACCEPTED, response.getClientResponseStatus());
-        if (mediaType.equals(MediaType.APPLICATION_JSON)) {
+        if (mediaType.contains(MediaType.APPLICATION_JSON)) {
           verifyAppStateJson(response, RMAppState.FINAL_SAVING,
             RMAppState.KILLED, RMAppState.KILLING, RMAppState.ACCEPTED);
         } else {
@@ -479,7 +480,8 @@ public class TestRMWebServicesAppsModification extends JerseyTestBase {
   protected static void verifyAppStateJson(ClientResponse response,
       RMAppState... states) throws JSONException {
 
-    assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_JSON_TYPE + "; " + JettyUtils.UTF_8,
+        response.getType().toString());
     JSONObject json = response.getEntity(JSONObject.class);
     assertEquals("incorrect number of elements", 1, json.length());
     String responseState = json.getString("state");
@@ -496,7 +498,8 @@ public class TestRMWebServicesAppsModification extends JerseyTestBase {
   protected static void verifyAppStateXML(ClientResponse response,
       RMAppState... appStates) throws ParserConfigurationException,
       IOException, SAXException {
-    assertEquals(MediaType.APPLICATION_XML_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_XML_TYPE + "; " + JettyUtils.UTF_8,
+        response.getType().toString());
     String xml = response.getEntity(String.class);
     DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
     DocumentBuilder db = dbf.newDocumentBuilder();
@@ -658,10 +661,10 @@ public class TestRMWebServicesAppsModification extends JerseyTestBase {
       throws JSONException, ParserConfigurationException, IOException,
       SAXException {
     String ret = "";
-    if (resp.getType().equals(MediaType.APPLICATION_JSON_TYPE)) {
+    if (resp.getType().toString().contains(MediaType.APPLICATION_JSON)) {
       JSONObject json = resp.getEntity(JSONObject.class);
       ret = validateGetNewApplicationJsonResponse(json);
-    } else if (resp.getType().equals(MediaType.APPLICATION_XML_TYPE)) {
+    } else if (resp.getType().toString().contains(MediaType.APPLICATION_XML)) {
       String xml = resp.getEntity(String.class);
       ret = validateGetNewApplicationXMLResponse(xml);
     } else {
@@ -960,7 +963,7 @@ public class TestRMWebServicesAppsModification extends JerseyTestBase {
       if(!isCapacityScheduler) {
         expectedQueue = "root." + webserviceUserName;
       }
-      if (contentType.equals(MediaType.APPLICATION_JSON)) {
+      if (contentType.contains(MediaType.APPLICATION_JSON)) {
         verifyAppQueueJson(response, expectedQueue);
       } else {
         verifyAppQueueXML(response, expectedQueue);
@@ -1021,7 +1024,7 @@ public class TestRMWebServicesAppsModification extends JerseyTestBase {
         if(!isCapacityScheduler) {
           expectedQueue = "root.test";
         }
-        if (mediaType.equals(MediaType.APPLICATION_JSON)) {
+        if (mediaType.contains(MediaType.APPLICATION_JSON)) {
           verifyAppQueueJson(response, expectedQueue);
         } else {
           verifyAppQueueXML(response, expectedQueue);
@@ -1061,7 +1064,8 @@ public class TestRMWebServicesAppsModification extends JerseyTestBase {
       verifyAppQueueJson(ClientResponse response, String queue)
           throws JSONException {
 
-    assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_JSON_TYPE + "; " + JettyUtils.UTF_8,
+        response.getType().toString());
     JSONObject json = response.getEntity(JSONObject.class);
     assertEquals("incorrect number of elements", 1, json.length());
     String responseQueue = json.getString("queue");
@@ -1071,7 +1075,8 @@ public class TestRMWebServicesAppsModification extends JerseyTestBase {
   protected static void
       verifyAppQueueXML(ClientResponse response, String queue)
           throws ParserConfigurationException, IOException, SAXException {
-    assertEquals(MediaType.APPLICATION_XML_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_XML_TYPE + "; " + JettyUtils.UTF_8,
+        response.getType().toString());
     String xml = response.getEntity(String.class);
     DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
     DocumentBuilder db = dbf.newDocumentBuilder();

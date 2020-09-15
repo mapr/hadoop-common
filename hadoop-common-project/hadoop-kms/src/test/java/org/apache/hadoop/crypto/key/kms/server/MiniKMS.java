@@ -20,13 +20,19 @@ package org.apache.hadoop.crypto.key.kms.server;
 import com.google.common.base.Preconditions;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.crypto.key.kms.KMSRESTConstants;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.security.ssl.SslSocketConnectorSecure;
-import org.mortbay.jetty.Connector;
-import org.mortbay.jetty.Server;
-import org.mortbay.jetty.security.SslSocketConnector;
-import org.mortbay.jetty.webapp.WebAppContext;
+import org.apache.hadoop.http.JettyUtils;
+import org.apache.hadoop.util.ThreadUtil;
+import org.eclipse.jetty.http.HttpVersion;
+import org.eclipse.jetty.server.ConnectionFactory;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.SecureRequestCustomizer;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.SslConnectionFactory;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.eclipse.jetty.webapp.WebAppContext;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -34,11 +40,8 @@ import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Writer;
-import java.net.InetAddress;
+import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.ServerSocket;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.UUID;
 
@@ -49,23 +52,28 @@ public class MiniKMS {
       boolean ssl = keyStore != null;
       InetAddress localhost = InetAddress.getByName("localhost");
       String host = "localhost";
-      ServerSocket ss = new ServerSocket((inPort < 0) ? 0 : inPort, 50, localhost);
-      int port = ss.getLocalPort();
-      ss.close();
-      Server server = new Server(0);
-      if (!ssl) {
-        server.getConnectors()[0].setHost(host);
-        server.getConnectors()[0].setPort(port);
-      } else {
-        SslSocketConnector c = new SslSocketConnectorSecure();
-        c.setHost(host);
-        c.setPort(port);
-        c.setNeedClientAuth(false);
-        c.setKeystore(keyStore);
-        c.setKeystoreType("jks");
-        c.setKeyPassword(password);
-        server.setConnectors(new Connector[]{c});
+      Server server = new Server();
+      ServerConnector conn = new ServerConnector(server);
+      HttpConfiguration httpConfig = new HttpConfiguration();
+      httpConfig.setRequestHeaderSize(JettyUtils.HEADER_SIZE);
+      httpConfig.setResponseHeaderSize(JettyUtils.HEADER_SIZE);
+      httpConfig.setSecureScheme("https");
+      httpConfig.addCustomizer(new SecureRequestCustomizer());
+      ConnectionFactory connFactory = new HttpConnectionFactory(httpConfig);
+      conn.addConnectionFactory(connFactory);
+      conn.setHost(host);
+      conn.setPort(inPort);
+      if (ssl) {
+        SslContextFactory sslContextFactory = new SslContextFactory();
+        sslContextFactory.setNeedClientAuth(false);
+        sslContextFactory.setKeyStorePath(keyStore);
+        sslContextFactory.setKeyStoreType("jks");
+        sslContextFactory.setKeyStorePassword(password);
+        conn.addFirstConnectionFactory(
+            new SslConnectionFactory(sslContextFactory,
+            HttpVersion.HTTP_1_1.asString()));
       }
+      server.addConnector(conn);
       return server;
     } catch (Exception ex) {
       throw new RuntimeException("Could not start embedded servlet container, "
@@ -74,13 +82,13 @@ public class MiniKMS {
   }
 
   private static URL getJettyURL(Server server) {
-    boolean ssl = server.getConnectors()[0].getClass()
-        == SslSocketConnectorSecure.class;
+    boolean ssl = server.getConnectors()[0]
+        .getConnectionFactory(SslConnectionFactory.class) != null;
     try {
       String scheme = (ssl) ? "https" : "http";
       return new URL(scheme + "://" +
-          server.getConnectors()[0].getHost() + ":" +
-          server.getConnectors()[0].getPort());
+          ((ServerConnector)server.getConnectors()[0]).getHost() + ":"
+          + ((ServerConnector)server.getConnectors()[0]).getLocalPort());
     } catch (MalformedURLException ex) {
       throw new RuntimeException("It should never happen, " + ex.getMessage(),
           ex);
@@ -214,7 +222,7 @@ public class MiniKMS {
     if (webXmlInJar) {
       context.setClassLoader(cl);
     }
-    jetty.addHandler(context);
+    jetty.setHandler(context);
     jetty.start();
     kmsURL = new URL(getJettyURL(jetty), "kms");
   }

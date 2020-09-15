@@ -37,6 +37,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.http.JettyUtils;
 import org.apache.hadoop.mapreduce.MRJobConfig;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.mapreduce.v2.app.AppContext;
@@ -158,7 +159,8 @@ public class TestAMWebServicesJobConf extends JerseyTestBase {
       ClientResponse response = r.path("ws").path("v1").path("mapreduce")
           .path("jobs").path(jobId).path("conf")
           .accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
-      assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getType());
+      assertEquals(MediaType.APPLICATION_JSON_TYPE + "; " + JettyUtils.UTF_8,
+          response.getType().toString());
       JSONObject json = response.getEntity(JSONObject.class);
       assertEquals("incorrect number of elements", 1, json.length());
       JSONObject info = json.getJSONObject("conf");
@@ -176,7 +178,8 @@ public class TestAMWebServicesJobConf extends JerseyTestBase {
       ClientResponse response = r.path("ws").path("v1").path("mapreduce")
           .path("jobs").path(jobId).path("conf/")
           .accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
-      assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getType());
+      assertEquals(MediaType.APPLICATION_JSON_TYPE + "; " + JettyUtils.UTF_8,
+          response.getType().toString());
       JSONObject json = response.getEntity(JSONObject.class);
       assertEquals("incorrect number of elements", 1, json.length());
       JSONObject info = json.getJSONObject("conf");
@@ -193,7 +196,8 @@ public class TestAMWebServicesJobConf extends JerseyTestBase {
 
       ClientResponse response = r.path("ws").path("v1").path("mapreduce")
           .path("jobs").path(jobId).path("conf").get(ClientResponse.class);
-      assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getType());
+      assertEquals(MediaType.APPLICATION_JSON_TYPE + "; " + JettyUtils.UTF_8,
+          response.getType().toString());
       JSONObject json = response.getEntity(JSONObject.class);
       assertEquals("incorrect number of elements", 1, json.length());
       JSONObject info = json.getJSONObject("conf");
@@ -211,7 +215,8 @@ public class TestAMWebServicesJobConf extends JerseyTestBase {
       ClientResponse response = r.path("ws").path("v1").path("mapreduce")
           .path("jobs").path(jobId).path("conf")
           .accept(MediaType.APPLICATION_XML).get(ClientResponse.class);
-      assertEquals(MediaType.APPLICATION_XML_TYPE, response.getType());
+      assertEquals(MediaType.APPLICATION_XML_TYPE + "; " + JettyUtils.UTF_8,
+          response.getType().toString());
       String xml = response.getEntity(String.class);
       DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
       DocumentBuilder db = dbf.newDocumentBuilder();

@@ -32,7 +32,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.junit.Assert;
-
+import org.apache.hadoop.http.JettyUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
@@ -234,7 +234,8 @@ public class TestNMWebServices extends JerseyTestBase {
     ClientResponse response = r.path("ws").path("v1").path("node")
         .accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
 
-    assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+        response.getType().toString());
     JSONObject json = response.getEntity(JSONObject.class);
     verifyNodeInfo(json);
   }
@@ -245,7 +246,8 @@ public class TestNMWebServices extends JerseyTestBase {
     ClientResponse response = r.path("ws").path("v1").path("node/")
         .accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
 
-    assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+        response.getType().toString());
     JSONObject json = response.getEntity(JSONObject.class);
     verifyNodeInfo(json);
   }
@@ -257,7 +259,8 @@ public class TestNMWebServices extends JerseyTestBase {
     ClientResponse response = r.path("ws").path("v1").path("node")
         .get(ClientResponse.class);
 
-    assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+        response.getType().toString());
     JSONObject json = response.getEntity(JSONObject.class);
     verifyNodeInfo(json);
   }
@@ -267,7 +270,8 @@ public class TestNMWebServices extends JerseyTestBase {
     WebResource r = resource();
     ClientResponse response = r.path("ws").path("v1").path("node").path("info")
         .accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
-    assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+        response.getType().toString());
     JSONObject json = response.getEntity(JSONObject.class);
     verifyNodeInfo(json);
   }
@@ -278,7 +282,8 @@ public class TestNMWebServices extends JerseyTestBase {
     ClientResponse response = r.path("ws").path("v1").path("node")
         .path("info/").accept(MediaType.APPLICATION_JSON)
         .get(ClientResponse.class);
-    assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+        response.getType().toString());
     JSONObject json = response.getEntity(JSONObject.class);
     verifyNodeInfo(json);
   }
@@ -289,7 +294,8 @@ public class TestNMWebServices extends JerseyTestBase {
     WebResource r = resource();
     ClientResponse response = r.path("ws").path("v1").path("node").path("info")
         .get(ClientResponse.class);
-    assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+        response.getType().toString());
     JSONObject json = response.getEntity(JSONObject.class);
     verifyNodeInfo(json);
   }
@@ -300,7 +306,8 @@ public class TestNMWebServices extends JerseyTestBase {
     ClientResponse response = r.path("ws").path("v1").path("node")
         .path("info/").accept(MediaType.APPLICATION_XML)
         .get(ClientResponse.class);
-    assertEquals(MediaType.APPLICATION_XML_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_XML+ "; " + JettyUtils.UTF_8,
+        response.getType().toString());
     String xml = response.getEntity(String.class);
     DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
     DocumentBuilder db = dbf.newDocumentBuilder();
@@ -311,7 +318,7 @@ public class TestNMWebServices extends JerseyTestBase {
     assertEquals("incorrect number of elements", 1, nodes.getLength());
     verifyNodesXML(nodes);
   }
-  
+
   @Test
   public void testContainerLogs() throws IOException {
     WebResource r = resource();
@@ -349,7 +356,7 @@ public class TestNMWebServices extends JerseyTestBase {
         .accept(MediaType.TEXT_PLAIN).get(ClientResponse.class);
     String responseText = response.getEntity(String.class);
     assertEquals(logMessage, responseText);
-    
+
     // ask for file that doesn't exist
     response = r.path("ws").path("v1").path("node")
         .path("containerlogs").path(containerIdStr).path("uhhh")
@@ -357,7 +364,7 @@ public class TestNMWebServices extends JerseyTestBase {
     Assert.assertEquals(Status.NOT_FOUND.getStatusCode(), response.getStatus());
     responseText = response.getEntity(String.class);
     assertTrue(responseText.contains("Cannot find this log on the local disk."));
-    
+
     // After container is completed, it is removed from nmContext
     nmContext.getContainers().remove(containerId);
     Assert.assertNull(nmContext.getContainers().get(containerId));

@@ -52,6 +52,7 @@ import org.apache.hadoop.hdfs.util.PersistentLongFile;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.net.DNS;
 import org.apache.hadoop.util.Time;
+import org.eclipse.jetty.util.ajax.JSON;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -115,7 +116,7 @@ public class NNStorage extends Storage implements Closeable,
   }
 
   protected String blockpoolID = ""; // id of the block pool
-  
+
   /**
    * flag that controls if we try to restore failed storages
    */
@@ -236,7 +237,7 @@ public class NNStorage extends Storage implements Closeable,
         StorageDirectory sd = it.next();
         File root = sd.getRoot();
         LOG.info("currently disabled dir " + root.getAbsolutePath() +
-                 "; type="+sd.getStorageDirType() 
+                 "; type="+sd.getStorageDirType()
                  + ";canwrite="+FileUtil.canWrite(root));
         if(root.exists() && FileUtil.canWrite(root)) {
           LOG.info("restoring dir " + sd.getRoot().getAbsolutePath());
@@ -342,7 +343,7 @@ public class NNStorage extends Storage implements Closeable,
 
   /**
    * Checks the consistency of a URI, in particular if the scheme
-   * is specified 
+   * is specified
    * @param u URI whose consistency is being checked.
    */
   private static void checkSchemeConsistency(URI u) throws IOException {
@@ -910,9 +911,9 @@ public class NNStorage extends Storage implements Closeable,
    * 
    * clusterID is a persistent attribute of the cluster.
    * It is generated when the cluster is created and remains the same
-   * during the life cycle of the cluster.  When a new name node is formated, if 
-   * this is a new cluster, a new clusterID is geneated and stored.  Subsequent 
-   * name node must be given the same ClusterID during its format to be in the 
+   * during the life cycle of the cluster.  When a new name node is formated, if
+   * this is a new cluster, a new clusterID is geneated and stored.  Subsequent
+   * name node must be given the same ClusterID during its format to be in the
    * same cluster.
    * When a datanode register it receive the clusterID and stick with it.
    * If at any point, name node or data node tries to join another cluster, it 

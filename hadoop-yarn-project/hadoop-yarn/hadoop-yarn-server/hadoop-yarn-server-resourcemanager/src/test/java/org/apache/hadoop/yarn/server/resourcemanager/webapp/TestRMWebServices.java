@@ -37,6 +37,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.http.JettyUtils;
 import org.apache.hadoop.service.Service.STATE;
 import org.apache.hadoop.util.VersionInfo;
 import org.apache.hadoop.yarn.api.protocolrecords.GetApplicationsRequest;
@@ -135,7 +136,8 @@ public class TestRMWebServices extends JerseyTestBase {
     WebResource r = resource();
     ClientResponse response = r.path("ws").path("v1").path("cluster")
         .path("info").accept("application/xml").get(ClientResponse.class);
-    assertEquals(MediaType.APPLICATION_XML_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_XML + "; " + JettyUtils.UTF_8,
+        response.getType().toString());
     String xml = response.getEntity(String.class);
     verifyClusterInfoXML(xml);
   }
@@ -195,7 +197,8 @@ public class TestRMWebServices extends JerseyTestBase {
     ClientResponse response = r.path("ws").path("v1").path("cluster")
         .accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
 
-    assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+        response.getType().toString());
     JSONObject json = response.getEntity(JSONObject.class);
     verifyClusterInfo(json);
   }
@@ -207,7 +210,8 @@ public class TestRMWebServices extends JerseyTestBase {
     ClientResponse response = r.path("ws").path("v1").path("cluster/")
         .accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
 
-    assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+        response.getType().toString());
     JSONObject json = response.getEntity(JSONObject.class);
     verifyClusterInfo(json);
   }
@@ -219,7 +223,8 @@ public class TestRMWebServices extends JerseyTestBase {
     ClientResponse response = r.path("ws").path("v1").path("cluster")
         .get(ClientResponse.class);
 
-    assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+        response.getType().toString());
     JSONObject json = response.getEntity(JSONObject.class);
     verifyClusterInfo(json);
   }
@@ -231,7 +236,8 @@ public class TestRMWebServices extends JerseyTestBase {
         .path("info").accept(MediaType.APPLICATION_JSON)
         .get(ClientResponse.class);
 
-    assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+        response.getType().toString());
     JSONObject json = response.getEntity(JSONObject.class);
     verifyClusterInfo(json);
   }
@@ -244,7 +250,8 @@ public class TestRMWebServices extends JerseyTestBase {
         .path("info/").accept(MediaType.APPLICATION_JSON)
         .get(ClientResponse.class);
 
-    assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+        response.getType().toString());
     JSONObject json = response.getEntity(JSONObject.class);
     verifyClusterInfo(json);
   }
@@ -255,7 +262,8 @@ public class TestRMWebServices extends JerseyTestBase {
     ClientResponse response = r.path("ws").path("v1").path("cluster")
         .path("info").get(ClientResponse.class);
 
-    assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+        response.getType().toString());
     JSONObject json = response.getEntity(JSONObject.class);
     verifyClusterInfo(json);
   }
@@ -339,7 +347,8 @@ public class TestRMWebServices extends JerseyTestBase {
         .path("metrics").accept(MediaType.APPLICATION_JSON)
         .get(ClientResponse.class);
 
-    assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+        response.getType().toString());
     JSONObject json = response.getEntity(JSONObject.class);
     verifyClusterMetricsJSON(json);
   }
@@ -351,7 +360,8 @@ public class TestRMWebServices extends JerseyTestBase {
         .path("metrics/").accept(MediaType.APPLICATION_JSON)
         .get(ClientResponse.class);
 
-    assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+        response.getType().toString());
     JSONObject json = response.getEntity(JSONObject.class);
     verifyClusterMetricsJSON(json);
   }
@@ -362,7 +372,8 @@ public class TestRMWebServices extends JerseyTestBase {
     ClientResponse response = r.path("ws").path("v1").path("cluster")
         .path("metrics").get(ClientResponse.class);
 
-    assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+        response.getType().toString());
     JSONObject json = response.getEntity(JSONObject.class);
     verifyClusterMetricsJSON(json);
   }
@@ -372,7 +383,8 @@ public class TestRMWebServices extends JerseyTestBase {
     WebResource r = resource();
     ClientResponse response = r.path("ws").path("v1").path("cluster")
         .path("metrics").accept("application/xml").get(ClientResponse.class);
-    assertEquals(MediaType.APPLICATION_XML_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_XML + "; " + JettyUtils.UTF_8,
+        response.getType().toString());
     String xml = response.getEntity(String.class);
     verifyClusterMetricsXML(xml);
   }
@@ -505,7 +517,8 @@ public class TestRMWebServices extends JerseyTestBase {
         .path("scheduler").accept(MediaType.APPLICATION_JSON)
         .get(ClientResponse.class);
 
-    assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+        response.getType().toString());
     JSONObject json = response.getEntity(JSONObject.class);
     verifyClusterSchedulerFifo(json);
   }
@@ -517,7 +530,8 @@ public class TestRMWebServices extends JerseyTestBase {
         .path("scheduler/").accept(MediaType.APPLICATION_JSON)
         .get(ClientResponse.class);
 
-    assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+        response.getType().toString());
     JSONObject json = response.getEntity(JSONObject.class);
     verifyClusterSchedulerFifo(json);
   }
@@ -528,7 +542,8 @@ public class TestRMWebServices extends JerseyTestBase {
     ClientResponse response = r.path("ws").path("v1").path("cluster")
         .path("scheduler").get(ClientResponse.class);
 
-    assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+        response.getType().toString());
     JSONObject json = response.getEntity(JSONObject.class);
     verifyClusterSchedulerFifo(json);
   }
@@ -540,7 +555,8 @@ public class TestRMWebServices extends JerseyTestBase {
         .path("scheduler").accept(MediaType.APPLICATION_XML)
         .get(ClientResponse.class);
 
-    assertEquals(MediaType.APPLICATION_XML_TYPE, response.getType());
+    assertEquals(MediaType.APPLICATION_XML + "; " + JettyUtils.UTF_8,
+        response.getType().toString());
     String xml = response.getEntity(String.class);
     verifySchedulerFifoXML(xml);
   }

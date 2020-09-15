@@ -30,7 +30,7 @@ import junit.framework.TestCase;
 import org.apache.hadoop.metrics.MetricsServlet.TagsMetricsPair;
 import org.apache.hadoop.metrics.spi.NoEmitMetricsContext;
 import org.apache.hadoop.metrics.spi.OutputRecord;
-import org.mortbay.util.ajax.JSON;
+import org.eclipse.jetty.util.ajax.JSON;
 
 public class TestMetricsServlet extends TestCase {
   MetricsContext nc1;

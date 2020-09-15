@@ -57,6 +57,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
+import org.apache.hadoop.http.JettyUtils;
 import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.security.Credentials;
@@ -198,14 +199,16 @@ public class RMWebServices {
   }
 
   @GET
-  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+  @Produces({ MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+      MediaType.APPLICATION_XML + "; " + JettyUtils.UTF_8 })
   public ClusterInfo get() {
     return getClusterInfo();
   }
 
   @GET
   @Path("/info")
-  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+  @Produces({ MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+      MediaType.APPLICATION_XML + "; " + JettyUtils.UTF_8 })
   public ClusterInfo getClusterInfo() {
     init();
     return new ClusterInfo(this.rm);
@@ -213,7 +216,8 @@ public class RMWebServices {
 
   @GET
   @Path("/metrics")
-  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+  @Produces({ MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+      MediaType.APPLICATION_XML + "; " + JettyUtils.UTF_8 })
   public ClusterMetricsInfo getClusterMetricsInfo() {
     init();
     return new ClusterMetricsInfo(this.rm);
@@ -221,7 +225,8 @@ public class RMWebServices {
 
   @GET
   @Path("/scheduler")
-  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+  @Produces({ MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+      MediaType.APPLICATION_XML + "; " + JettyUtils.UTF_8 })
   public SchedulerTypeInfo getSchedulerInfo() {
     init();
     ResourceScheduler rs = rm.getResourceScheduler();
@@ -247,7 +252,8 @@ public class RMWebServices {
    */
   @GET
   @Path("/nodes")
-  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+  @Produces({ MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+      MediaType.APPLICATION_XML + "; " + JettyUtils.UTF_8 })
   public NodesInfo getNodes(@QueryParam("states") String states) {
     init();
     ResourceScheduler sched = this.rm.getResourceScheduler();
@@ -283,7 +289,8 @@ public class RMWebServices {
 
   @GET
   @Path("/nodes/{nodeId}")
-  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+  @Produces({ MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+      MediaType.APPLICATION_XML + "; " + JettyUtils.UTF_8 })
   public NodeInfo getNode(@PathParam("nodeId") String nodeId) {
     init();
     if (nodeId == null || nodeId.isEmpty()) {
@@ -312,7 +319,8 @@ public class RMWebServices {
 
   @GET
   @Path("/apps")
-  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+  @Produces({ MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+      MediaType.APPLICATION_XML + "; " + JettyUtils.UTF_8 })
   public AppsInfo getApps(@Context HttpServletRequest hsr,
       @QueryParam("state") String stateQuery,
       @QueryParam("states") Set<String> statesQuery,
@@ -490,7 +498,8 @@ public class RMWebServices {
 
   @GET
   @Path("/appstatistics")
-  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+  @Produces({ MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+      MediaType.APPLICATION_XML + "; " + JettyUtils.UTF_8 })
   public ApplicationStatisticsInfo getAppStatistics(
       @Context HttpServletRequest hsr,
       @QueryParam("states") Set<String> stateQueries,
@@ -610,7 +619,8 @@ public class RMWebServices {
 
   @GET
   @Path("/apps/{appid}")
-  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+  @Produces({ MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+      MediaType.APPLICATION_XML + "; " + JettyUtils.UTF_8 })
   public AppInfo getApp(@Context HttpServletRequest hsr,
       @PathParam("appid") String appId) {
     init();
@@ -631,7 +641,8 @@ public class RMWebServices {
 
   @GET
   @Path("/apps/{appid}/appattempts")
-  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+  @Produces({ MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+          MediaType.APPLICATION_XML + "; " + JettyUtils.UTF_8 })
   public AppAttemptsInfo getAppAttempts(@PathParam("appid") String appId) {
 
     init();
@@ -659,7 +670,8 @@ public class RMWebServices {
 
   @GET
   @Path("/apps/{appid}/state")
-  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+  @Produces({ MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+      MediaType.APPLICATION_XML + "; " + JettyUtils.UTF_8 })
   public AppState getAppState(@Context HttpServletRequest hsr,
       @PathParam("appid") String appId) throws AuthorizationException {
     init();
@@ -690,7 +702,8 @@ public class RMWebServices {
 
   @PUT
   @Path("/apps/{appid}/state")
-  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+  @Produces({ MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+      MediaType.APPLICATION_XML + "; " + JettyUtils.UTF_8 })
   @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
   public Response updateAppState(AppState targetState,
       @Context HttpServletRequest hsr, @PathParam("appid") String appId)
@@ -740,8 +753,9 @@ public class RMWebServices {
   
   @GET
   @Path("/get-node-to-labels")
-  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-  public NodeToLabelsInfo getNodeToLabels(@Context HttpServletRequest hsr) 
+  @Produces({ MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+          MediaType.APPLICATION_XML + "; " + JettyUtils.UTF_8 })
+  public NodeToLabelsInfo getNodeToLabels(@Context HttpServletRequest hsr)
     throws IOException {
     init();
 
@@ -750,22 +764,23 @@ public class RMWebServices {
     Map<NodeId, Set<String>> nodeIdToLabels = LabelManager.getInstance().getNodeToLabels();
 
     for (Map.Entry<NodeId, Set<String>> nitle : nodeIdToLabels.entrySet()) {
-      ntlMap.put(nitle.getKey().toString(), 
+      ntlMap.put(nitle.getKey().toString(),
         new NodeLabelsInfo(nitle.getValue()));
     }
 
     return ntl;
   }
-  
+
   @POST
   @Path("/replace-node-to-labels")
-  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+  @Produces({ MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+          MediaType.APPLICATION_XML + "; " + JettyUtils.UTF_8 })
   public Response replaceLabelsOnNodes(
     final NodeToLabelsInfo newNodeToLabels,
-    @Context HttpServletRequest hsr) 
+    @Context HttpServletRequest hsr)
     throws IOException {
     init();
-    
+
     UserGroupInformation callerUGI = getCallerUserGroupInformation(hsr, true);
     if (callerUGI == null) {
       String msg = "Unable to obtain user name, user not authenticated for"
@@ -777,16 +792,16 @@ public class RMWebServices {
         + " for post to .../replace-node-to-labels ";
       throw new AuthorizationException(msg);
     }
-    
-    Map<NodeId, Set<String>> nodeIdToLabels = 
+
+    Map<NodeId, Set<String>> nodeIdToLabels =
       new HashMap<NodeId, Set<String>>();
 
-    for (Map.Entry<String, NodeLabelsInfo> nitle : 
+    for (Map.Entry<String, NodeLabelsInfo> nitle :
       newNodeToLabels.getNodeToLabels().entrySet()) {
      nodeIdToLabels.put(ConverterUtils.toNodeIdWithDefaultPort(nitle.getKey()),
        new HashSet<String>(nitle.getValue().getNodeLabels()));
     }
-    
+
     rm.getRMContext().getNodeLabelManager().replaceLabelsOnNode(nodeIdToLabels);
 
     return Response.status(Status.OK).build();
@@ -794,7 +809,8 @@ public class RMWebServices {
 
   @POST
   @Path("/replace-mapr-node-labels")
-  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+  @Produces({ MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+          MediaType.APPLICATION_XML + "; " + JettyUtils.UTF_8 })
   public Response replaceMaprLabelsOnNodes(
       final NodeLabelsInfo newNodeLabels,
       @Context HttpServletRequest hsr)
@@ -816,10 +832,11 @@ public class RMWebServices {
     LabelManager.getInstance().replaceLabelsOnNode(buildArgsExpression(newNodeLabels.getNodeLabels()));
     return Response.ok().build();
   }
-  
+
   @GET
   @Path("/get-node-labels")
-  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+  @Produces({ MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+      MediaType.APPLICATION_XML + "; " + JettyUtils.UTF_8 })
   public NodeLabelsInfo getClusterNodeLabels(@Context HttpServletRequest hsr) 
     throws IOException {
     init();
@@ -834,7 +851,8 @@ public class RMWebServices {
   
   @POST
   @Path("/add-node-labels")
-  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+  @Produces({ MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+      MediaType.APPLICATION_XML + "; " + JettyUtils.UTF_8 })
   public Response addToClusterNodeLabels(final NodeLabelsInfo newNodeLabels,
       @Context HttpServletRequest hsr)
       throws Exception {
@@ -890,15 +908,16 @@ public class RMWebServices {
     }
     return nodeLabels.toString();
   }
-  
+
   @POST
   @Path("/remove-node-labels")
-  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+  @Produces({ MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+          MediaType.APPLICATION_XML + "; " + JettyUtils.UTF_8 })
   public Response removeFromCluserNodeLabels(final NodeLabelsInfo oldNodeLabels,
       @Context HttpServletRequest hsr)
       throws Exception {
     init();
-    
+
     UserGroupInformation callerUGI = getCallerUserGroupInformation(hsr, true);
     if (callerUGI == null) {
       String msg = "Unable to obtain user name, user not authenticated for"
@@ -910,11 +929,11 @@ public class RMWebServices {
         + " for post to .../remove-node-labels ";
       throw new AuthorizationException(msg);
     }
-    
+
     rm.getRMContext().getNodeLabelManager()
         .removeFromClusterNodeLabels(new HashSet<String>(
           oldNodeLabels.getNodeLabels()));
-            
+
     return Response.status(Status.OK).build();
 
   }
@@ -945,9 +964,10 @@ public class RMWebServices {
 
   @GET
   @Path("/nodes/{nodeId}/get-labels")
-  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+  @Produces({ MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+      MediaType.APPLICATION_XML + "; " + JettyUtils.UTF_8 })
   public NodeLabelsInfo getLabelsOnNode(@Context HttpServletRequest hsr,
-                                  @PathParam("nodeId") String nodeId) 
+                                  @PathParam("nodeId") String nodeId)
     throws IOException {
     init();
 
@@ -956,7 +976,7 @@ public class RMWebServices {
     return new NodeLabelsInfo(
         LabelManager.getInstance().getLabelsForNode(nid.getHost()));
   }
-  
+
   @POST
   @Path("/nodes/{nodeId}/replace-labels")
   @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
@@ -964,7 +984,7 @@ public class RMWebServices {
       @Context HttpServletRequest hsr, @PathParam("nodeId") String nodeId)
       throws Exception {
     init();
-    
+
     UserGroupInformation callerUGI = getCallerUserGroupInformation(hsr, true);
     if (callerUGI == null) {
       String msg = "Unable to obtain user name, user not authenticated for"
@@ -977,16 +997,16 @@ public class RMWebServices {
         + " for post to .../nodes/nodeid/replace-labels";
       throw new AuthorizationException(msg);
     }
-    
+
     NodeId nid = ConverterUtils.toNodeIdWithDefaultPort(nodeId);
-    
+
     Map<NodeId, Set<String>> newLabelsForNode = new HashMap<NodeId,
       Set<String>>();
-    
+
     newLabelsForNode.put(nid, new HashSet<String>(newNodeLabelsInfo.getNodeLabels()));
-    
+
     rm.getRMContext().getNodeLabelManager().replaceLabelsOnNode(newLabelsForNode);
-    
+
     return Response.status(Status.OK).build();
 
   }
@@ -1071,7 +1091,8 @@ public class RMWebServices {
 
   @GET
   @Path("/apps/{appid}/queue")
-  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+  @Produces({ MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+      MediaType.APPLICATION_XML + "; " + JettyUtils.UTF_8 })
   public AppQueue getAppQueue(@Context HttpServletRequest hsr,
       @PathParam("appid") String appId) throws AuthorizationException {
     init();
@@ -1098,7 +1119,8 @@ public class RMWebServices {
 
   @PUT
   @Path("/apps/{appid}/queue")
-  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+  @Produces({ MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+      MediaType.APPLICATION_XML + "; " + JettyUtils.UTF_8 })
   @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
   public Response updateAppQueue(AppQueue targetQueue,
       @Context HttpServletRequest hsr, @PathParam("appid") String appId)
@@ -1253,7 +1275,8 @@ public class RMWebServices {
    */
   @POST
   @Path("/apps/new-application")
-  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+  @Produces({ MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+      MediaType.APPLICATION_XML + "; " + JettyUtils.UTF_8 })
   public Response createNewApplication(@Context HttpServletRequest hsr)
       throws AuthorizationException, IOException, InterruptedException {
     init();
@@ -1290,7 +1313,8 @@ public class RMWebServices {
    */
   @POST
   @Path("/apps")
-  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+  @Produces({ MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+      MediaType.APPLICATION_XML + "; " + JettyUtils.UTF_8 })
   @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
   public Response submitApplication(ApplicationSubmissionContextInfo newApp,
       @Context HttpServletRequest hsr) throws AuthorizationException,
@@ -1535,7 +1559,8 @@ public class RMWebServices {
 
   @POST
   @Path("/delegation-token")
-  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+  @Produces({ MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+      MediaType.APPLICATION_XML + "; " + JettyUtils.UTF_8 })
   @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
   public Response postDelegationToken(DelegationToken tokenData,
       @Context HttpServletRequest hsr) throws AuthorizationException,
@@ -1553,7 +1578,8 @@ public class RMWebServices {
 
   @POST
   @Path("/delegation-token/expiration")
-  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+  @Produces({ MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+      MediaType.APPLICATION_XML + "; " + JettyUtils.UTF_8 })
   @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
   public Response
       postDelegationTokenExpiration(@Context HttpServletRequest hsr)
@@ -1671,7 +1697,8 @@ public class RMWebServices {
   // the logs can extract tokens which are meant to be secret
   @DELETE
   @Path("/delegation-token")
-  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+  @Produces({ MediaType.APPLICATION_JSON + "; " + JettyUtils.UTF_8,
+      MediaType.APPLICATION_XML + "; " + JettyUtils.UTF_8 })
   public Response cancelDelegationToken(@Context HttpServletRequest hsr)
       throws AuthorizationException, IOException, InterruptedException,
       Exception {

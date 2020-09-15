@@ -38,12 +38,14 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.webapp.util.WebAppUtils;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mortbay.jetty.Server;
-import org.mortbay.jetty.servlet.Context;
-import org.mortbay.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,13 +67,14 @@ public class TestWebAppProxyServlet {
   @BeforeClass
   public static void start() throws Exception {
     server = new Server(0);
-    Context context = new Context();
+    ((QueuedThreadPool)server.getThreadPool()).setMaxThreads(10);
+    ServletContextHandler context = new ServletContextHandler();
     context.setContextPath("/foo");
     server.setHandler(context);
     context.addServlet(new ServletHolder(TestServlet.class), "/bar");
-    server.getConnectors()[0].setHost("localhost");
+    ((ServerConnector)server.getConnectors()[0]).setHost("localhost");
     server.start();
-    originalPort = server.getConnectors()[0].getLocalPort();
+    originalPort = ((ServerConnector)server.getConnectors()[0]).getLocalPort();
     LOG.info("Running embedded servlet container at: http://localhost:"
         + originalPort);
   }
@@ -105,8 +108,8 @@ public class TestWebAppProxyServlet {
   public void testWebAppProxyServlet() throws Exception {
 
     configuration.set(YarnConfiguration.PROXY_ADDRESS, "localhost:9090");
-    // overriding num of web server threads, see HttpServer.HTTP_MAXTHREADS 
-    configuration.setInt("hadoop.http.max.threads", 5);
+    // overriding num of web server threads, see HttpServer.HTTP_MAXTHREADS
+    configuration.setInt("hadoop.http.max.threads", 10);
     WebAppProxyServerForTest proxy = new WebAppProxyServerForTest(originalPort);
     proxy.init(configuration);
     proxy.start();
@@ -217,7 +220,7 @@ public class TestWebAppProxyServlet {
   public void testAppReportForEmptyTrackingUrl() throws Exception {
     configuration.set(YarnConfiguration.PROXY_ADDRESS, "localhost:9090");
     // overriding num of web server threads, see HttpServer.HTTP_MAXTHREADS
-    configuration.setInt("hadoop.http.max.threads", 5);
+    configuration.setInt("hadoop.http.max.threads", 10);
     WebAppProxyServerForTest proxy = new WebAppProxyServerForTest(originalPort);
     proxy.init(configuration);
     proxy.start();
