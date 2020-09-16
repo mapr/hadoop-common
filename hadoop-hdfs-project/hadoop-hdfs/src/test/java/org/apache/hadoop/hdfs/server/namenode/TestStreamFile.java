@@ -32,6 +32,7 @@ import java.util.Vector;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletOutputStream;
+import javax.servlet.WriteListener;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -45,9 +46,9 @@ import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.server.common.JspHelper;
 import org.apache.hadoop.net.NetUtils;
+import org.eclipse.jetty.server.InclusiveByteRange;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.mortbay.jetty.InclusiveByteRange;
 
 /*
  * Mock input stream class that always outputs the current position of the stream. 
@@ -149,7 +150,7 @@ public class TestStreamFile {
   @SuppressWarnings("unchecked")
   private List<InclusiveByteRange> strToRanges(String s, int contentLength) {
     List<String> l = Arrays.asList(new String[]{"bytes="+s});
-    Enumeration<?> e = (new Vector<String>(l)).elements();
+    Enumeration<String> e = (new Vector<String>(l)).elements();
     return InclusiveByteRange.satisfiableRanges(e, contentLength);
   }
   
@@ -309,5 +310,13 @@ public class TestStreamFile {
     public void write(int b) throws IOException {
       buffer.append((char) b);
     }
+
+    @Override
+    public boolean isReady() {
+      return false;
+    }
+
+    @Override
+    public void setWriteListener(WriteListener writeListener){}
   }
 }

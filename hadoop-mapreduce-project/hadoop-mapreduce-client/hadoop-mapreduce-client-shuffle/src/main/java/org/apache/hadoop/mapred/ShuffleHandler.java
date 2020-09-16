@@ -901,14 +901,14 @@ public class ShuffleHandler extends AuxiliaryService {
         boolean keepAliveParam, long contentLength) {
       if (!connectionKeepAliveEnabled && !keepAliveParam) {
         LOG.info("Setting connection close header...");
-        response.headers().set(HttpHeaders.CONNECTION.asString(),
+        response.headers().set(HttpHeader.CONNECTION.asString(),
                 CONNECTION_CLOSE);
       } else {
-        response.headers().set(HttpHeaders.CONTENT_LENGTH.asString(),
+        response.headers().set(HttpHeader.CONTENT_LENGTH.asString(),
                 String.valueOf(contentLength));
-        response.headers().set(HttpHeaders.CONNECTION.asString(),
-                HttpHeaders.KEEP_ALIVE.asString());
-        response.headers().set(HttpHeaders.KEEP_ALIVE.asString(),
+        response.headers().set(HttpHeader.CONNECTION.asString(),
+                HttpHeader.KEEP_ALIVE.asString());
+        response.headers().set(HttpHeader.KEEP_ALIVE.asString(),
                 "timeout=" + connectionKeepAliveTimeOut);
         LOG.info("Content Length in shuffle : " + contentLength);
       }

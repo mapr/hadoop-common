@@ -90,7 +90,6 @@ import org.junit.Test;
 import org.junit.rules.TestName;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatcher;
-import org.mortbay.log.Log;
 
 public class TestProportionalCapacityPreemptionPolicy {
 

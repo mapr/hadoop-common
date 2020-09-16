@@ -43,9 +43,9 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.Capacity
 import org.apache.hadoop.yarn.util.resource.DefaultResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.ResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.Resources;
+import org.eclipse.jetty.util.log.Log;
 import org.junit.Before;
 import org.junit.Test;
-import org.mortbay.log.Log;
 
 public class TestGreedyReservationAgent {
 
@@ -62,7 +62,7 @@ public class TestGreedyReservationAgent {
 
     long seed = rand.nextLong();
     rand.setSeed(seed);
-    Log.info("Running with seed: " + seed);
+    Log.getLog().info("Running with seed: " + seed);
 
     // setting completely loose quotas
     long timeWindow = 1000000L;
