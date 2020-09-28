@@ -185,7 +185,7 @@ public class TestTimelineWebServices extends JerseyTestBase {
         .accept(MediaType.APPLICATION_JSON)
         .get(ClientResponse.class);
     assertEquals(MediaType.APPLICATION_JSON_TYPE + "; " + JettyUtils.UTF_8,
-            response.getType());
+            response.getType().toString());
     TimelineWebServices.AboutInfo about =
         response.getEntity(TimelineWebServices.AboutInfo.class);
     Assert.assertNotNull(about);
