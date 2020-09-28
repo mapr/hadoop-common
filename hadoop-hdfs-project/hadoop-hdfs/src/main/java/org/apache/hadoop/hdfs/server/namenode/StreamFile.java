@@ -149,12 +149,12 @@ public class StreamFile extends DfsServlet {
                 InclusiveByteRange.to416HeaderRangeString(contentLength));
     } else {
       InclusiveByteRange singleSatisfiableRange = ranges.get(0);
-      long singleLength = singleSatisfiableRange.getSize(contentLength);
+      long singleLength = singleSatisfiableRange.getSize();
       response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT);
       response.setHeader("Content-Range", 
         singleSatisfiableRange.toHeaderRangeString(contentLength));
       copyFromOffset(in, out,
-                     singleSatisfiableRange.getFirst(contentLength),
+                     singleSatisfiableRange.getFirst(),
                      singleLength);
     }
   }
