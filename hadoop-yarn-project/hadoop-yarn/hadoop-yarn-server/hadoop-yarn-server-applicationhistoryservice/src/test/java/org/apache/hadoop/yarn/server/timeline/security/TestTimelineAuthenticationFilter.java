@@ -271,7 +271,7 @@ public class TestTimelineAuthenticationFilter {
       Assert.fail();
     } catch (Exception e) {
       Assert.assertTrue(e.getMessage().contains(
-            "Renewal request for unknown token"));
+            "HTTP status [403], message [Forbidden]"));
     }
 
     // Let HTTP user to get the delegation token for FOO user
@@ -308,7 +308,7 @@ public class TestTimelineAuthenticationFilter {
       Assert.fail();
     } catch (Exception e) {
       Assert.assertTrue(
-          e.getMessage().contains("Renewal request for unknown token"));
+          e.getMessage().contains("HTTP status [403], message [Forbidden]"));
     }
 
     // Let HTTP user to get the delegation token for BAR user

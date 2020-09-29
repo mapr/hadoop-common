@@ -597,6 +597,10 @@ public final class HttpServer2 implements FilterContainer {
         params.put("org.eclipse.jetty.servlet.Default.aliases", "true");
       }
       logContext.setDisplayName("logs");
+      SessionHandler handler = new SessionHandler();
+      handler.setHttpOnly(true);
+      handler.getSessionCookieConfig().setSecure(true);
+      logContext.setSessionHandler(handler);
       setContextAttributes(logContext, conf);
       addNoCacheFilter(logContext);
       defaultContexts.put(logContext, true);
@@ -607,6 +611,10 @@ public final class HttpServer2 implements FilterContainer {
     staticContext.setResourceBase(appDir + "/static");
     staticContext.addServlet(DefaultServlet.class, "/*");
     staticContext.setDisplayName("static");
+    SessionHandler handler = new SessionHandler();
+    handler.setHttpOnly(true);
+    handler.getSessionCookieConfig().setSecure(true);
+    staticContext.setSessionHandler(handler);
     setContextAttributes(staticContext, conf);
     defaultContexts.put(staticContext, true);
   }
