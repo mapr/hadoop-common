@@ -126,6 +126,8 @@ env=${BASEMAPR}/conf/env.sh
 YARN_OPTS="$YARN_OPTS $MAPR_COMMON_JAVA_OPTS"
 #MAPRHADOOP-107: Set ParallelGC by default on jdk11
 YARN_OPTS="$YARN_OPTS -XX:+UseParallelGC"
+#MAPRHADOOP-119: Skip "Logging initialized" messages
+YARN_OPTS="$YARN_OPTS -Dorg.eclipse.jetty.util.log.announce=false"
 
 YARN_RESOURCEMANAGER_OPTS="$YARN_RESOURCEMANAGER_OPTS -Dfs.cache.lru.enable=true"
 export YARN_RESOURCEMANAGER_OPTS="${YARN_RESOURCEMANAGER_OPTS} ${MAPR_LOGIN_OPTS}"

@@ -24,6 +24,8 @@ env=${BASEMAPR}/conf/env.sh
 HADOOP_OPTS="$HADOOP_OPTS $MAPR_COMMON_JAVA_OPTS"
 #MAPRHADOOP-107: Set ParallelGC by default on jdk11
 HADOOP_OPTS="$HADOOP_OPTS -XX:+UseParallelGC"
+#MAPRHADOOP-119: Skip "Logging initialized" messages
+HADOOP_OPTS="$HADOOP_OPTS -Dorg.eclipse.jetty.util.log.announce=false"
 
 export HADOOP_JOB_HISTORYSERVER_HEAPSIZE=1000
 

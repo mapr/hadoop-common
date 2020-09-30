@@ -115,3 +115,5 @@ env=${BASEMAPR}/conf/env.sh
 
 #MFS-6760: Fix warnings when using jdk 11
 HADOOP_OPTS="$HADOOP_OPTS $MAPR_COMMON_JAVA_OPTS"
+#MAPRHADOOP-119: Skip "Logging initialized" messages
+HADOOP_OPTS="$HADOOP_OPTS -Dorg.eclipse.jetty.util.log.announce=false"
