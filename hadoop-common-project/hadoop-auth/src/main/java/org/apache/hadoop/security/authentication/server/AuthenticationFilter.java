@@ -175,7 +175,7 @@ public class AuthenticationFilter implements Filter {
   private long validity;
   private String cookieDomain;
   private String cookiePath;
-  private boolean isInitializedByTomcat;
+  private boolean destroySecretProvider;
 
   /**
    * Configuration prefix value for properties.
@@ -258,7 +258,7 @@ public class AuthenticationFilter implements Filter {
         secretProvider = constructSecretProvider(
             filterConfig.getServletContext(),
             config, false);
-        isInitializedByTomcat = true;
+        destroySecretProvider = true;
       } catch (Exception ex) {
         throw new ServletException(ex);
       }
@@ -387,7 +387,7 @@ public class AuthenticationFilter implements Filter {
       authHandler.destroy();
       authHandler = null;
     }
-    if (secretProvider != null && isInitializedByTomcat) {
+    if (secretProvider != null && destroySecretProvider) {
       secretProvider.destroy();
       secretProvider = null;
     }

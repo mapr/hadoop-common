@@ -383,5 +383,26 @@ public class CommonConfigurationKeysPublic {
    */
   public static final String LOG_LEVEL_AUTHENTICATOR_CLASS =
     "hadoop.log.level.authenticator.class";
+
+  /**
+   * @see
+   * <a href="{@docRoot}/../hadoop-project-dist/hadoop-common/core-default.xml">
+   * core-default.xml</a>
+   */
+  public static final String HADOOP_SECURITY_SENSITIVE_CONFIG_KEYS =
+          "hadoop.security.sensitive-config-keys";
+  public static final String HADOOP_SECURITY_SENSITIVE_CONFIG_KEYS_DEFAULT =
+          String.join(",",
+                  "secret$",
+                  "password$",
+                  "ssl.keystore.pass$",
+                  "fs.s3.*[Ss]ecret.?[Kk]ey",
+                  "fs.s3a.*.server-side-encryption.key",
+                  "fs.azure\\.account.key.*",
+                  "credential$",
+                  "oauth.*secret",
+                  "oauth.*password",
+                  "oauth.*token",
+                  HADOOP_SECURITY_SENSITIVE_CONFIG_KEYS);
 }
 
