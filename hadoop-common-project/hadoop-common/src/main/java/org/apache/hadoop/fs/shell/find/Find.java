@@ -29,6 +29,7 @@ import java.util.Set;
 
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.shell.CommandFactory;
 import org.apache.hadoop.fs.shell.CommandFormat;
@@ -377,7 +378,7 @@ public class Find extends FsCommand {
     }
     if (item.stat.isSymlink()) {
       PathData linkedItem =
-          new PathData(item.fs.resolvePath(item.stat.getSymlink()).toString(),
+          new PathData(item.fs.resolvePath(FileUtil.checkAndFixSymlinkPath(item)).toString(),
               getConf());
       if (linkedItem.stat.isDirectory()) {
         if (getOptions().isFollowLink()) {

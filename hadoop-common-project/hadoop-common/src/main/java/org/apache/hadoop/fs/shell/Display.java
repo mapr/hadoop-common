@@ -42,6 +42,7 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileChecksum;
 import org.apache.hadoop.fs.FileContext;
 import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathIsDirectoryException;
 import org.apache.hadoop.io.DataInputBuffer;
@@ -90,12 +91,13 @@ class Display extends FsCommand {
 
     @Override
     protected void processPath(PathData item) throws IOException {
-      if (item.stat.isDirectory()) {
+      if (item.stat.isDirectory() ||
+          (item.stat.isSymlink() && item.fs.getFileStatus(FileUtil.checkAndFixSymlinkPath(item)).isDirectory())) {
         throw new PathIsDirectoryException(item.toString());
       }
       
       item.fs.setVerifyChecksum(verifyChecksum);
-      printToStdout(getInputStream(item));
+      printToStdout(getInputStream(FileUtil.checkItemForSymlink(item)));
     }
 
     private void printToStdout(InputStream in) throws IOException {

@@ -33,6 +33,7 @@ import java.util.NoSuchElementException;
 import org.apache.hadoop.fs.CreateFlag;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.FilterFileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathExistsException;
@@ -258,7 +259,7 @@ abstract class CommandWithDestination extends FsCommand {
    */
   protected void processPath(PathData src, PathData dst) throws IOException {
     if (src.stat.isFile() ||
-        (src.stat.isSymlink() && !src.fs.getFileStatus(src.stat.getSymlink()).isDirectory())) {
+        (src.stat.isSymlink() && !src.fs.getFileStatus(FileUtil.checkAndFixSymlinkPath(src)).isDirectory())) {
       copyFileToTarget(src, dst);
     } else if (src.stat.isDirectory() && !isRecursive()) {
       throw new PathIsDirectoryException(src.toString());
@@ -318,14 +319,17 @@ abstract class CommandWithDestination extends FsCommand {
    */ 
   protected void copyFileToTarget(PathData src, PathData target)
       throws IOException {
+    Path srcPath = src.stat.isSymlink() ? FileUtil.checkAndFixSymlinkPath(src) : src.path;
     final boolean preserveRawXattrs =
-        checkPathsForReservedRaw(src.path, target.path);
+        checkPathsForReservedRaw(srcPath, target.path);
     src.fs.setVerifyChecksum(verifyChecksum);
     InputStream in = null;
     try {
-      in = src.fs.open(src.path);
+      in = src.fs.open(srcPath);
       copyStreamToTarget(in, target);
-      preserveAttributes(src, target, preserveRawXattrs);
+      preserveAttributes(src.stat.isSymlink() ?
+          new PathData(srcPath.toString(), src.fs.getConf()) : src,
+          target, preserveRawXattrs);
     } finally {
       IOUtils.closeStream(in);
     }

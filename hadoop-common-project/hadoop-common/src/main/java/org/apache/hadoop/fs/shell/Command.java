@@ -30,6 +30,7 @@ import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathNotFoundException;
 import org.apache.hadoop.util.StringUtils;
@@ -343,7 +344,7 @@ abstract public class Command extends Configured {
    */
   protected boolean isPathRecursable(PathData item) throws IOException {
     return item.stat.isDirectory() ||
-        (item.stat.isSymlink() && item.fs.getFileStatus(item.stat.getSymlink()).isDirectory());
+        (item.stat.isSymlink() && item.fs.getFileStatus(FileUtil.checkAndFixSymlinkPath(item)).isDirectory());
   }
 
   /**
@@ -377,8 +378,7 @@ abstract public class Command extends Configured {
     try {
       depth++;
       if(item.stat.isSymlink()){
-        item = new PathData(item.stat.getSymlink().toString(), item.fs.getConf());
-
+        item = new PathData(FileUtil.checkAndFixSymlinkPath(item).toString(), item.fs.getConf());
       }
       processPaths(item, item.getDirectoryContents());
     } finally {

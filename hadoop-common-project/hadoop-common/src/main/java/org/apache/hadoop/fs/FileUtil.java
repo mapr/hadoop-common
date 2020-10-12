@@ -47,6 +47,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.permission.ChmodParser;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.fs.shell.PathData;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.nativeio.NativeIO;
 import org.apache.hadoop.maprfs.AbstractMapRFileSystem;
@@ -171,6 +172,15 @@ public class FileUtil {
     } catch (IOException x) {
       return "";
     }
+  }
+
+  public static Path checkAndFixSymlinkPath(PathData path) throws IOException {
+    return path.stat.getSymlink().toString().startsWith("/") ? path.stat.getSymlink() :
+        new Path(path.stat.getPath().getParent(), path.stat.getSymlink());
+  }
+
+  public static PathData checkItemForSymlink(PathData item) throws IOException {
+    return item.stat.isSymlink() ? new PathData(FileUtil.checkAndFixSymlinkPath(item).toString(), item.fs.getConf()) : item;
   }
 
   /*

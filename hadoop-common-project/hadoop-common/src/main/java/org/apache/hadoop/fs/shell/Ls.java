@@ -114,7 +114,7 @@ class Ls extends FsCommand {
         stat.getGroup(),
         formatSize(stat.getLen()),
         dateFormat.format(new Date(stat.getModificationTime())),
-        item
+        stat.isSymlink() ? item + " -> " + stat.getSymlink() : item
     );
     output.append(line).append("\n");
   }
