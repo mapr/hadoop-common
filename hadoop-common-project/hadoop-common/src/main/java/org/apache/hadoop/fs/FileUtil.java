@@ -180,7 +180,23 @@ public class FileUtil {
   }
 
   public static PathData checkItemForSymlink(PathData item) throws IOException {
-    return item.stat.isSymlink() ? new PathData(FileUtil.checkAndFixSymlinkPath(item).toString(), item.fs.getConf()) : item;
+    try{
+    if (item.stat != null && item.stat.isSymlink()) {
+      Path path = FileUtil.checkAndFixSymlinkPath(item);
+      Configuration conf = item.fs.getConf();
+      item = new PathData(path.toString(), conf);
+
+    }
+  }catch (NullPointerException e){
+    throw new IOException(item.path.toString());
+    }
+
+    return item;
+    //return item.stat.isSymlink() ? new PathData(FileUtil.checkAndFixSymlinkPath(item).toString(), item.fs.getConf()) : item;
+  }
+
+  public static PathData checkPathForSymlink(Path path, Configuration conf) throws IOException {
+    return checkItemForSymlink(new PathData(path.toString(), conf));
   }
 
   /*

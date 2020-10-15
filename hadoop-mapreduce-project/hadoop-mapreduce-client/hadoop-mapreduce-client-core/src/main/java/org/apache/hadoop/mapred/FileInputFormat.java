@@ -35,6 +35,7 @@ import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
@@ -255,8 +256,8 @@ public abstract class FileInputFormat<K, V> implements InputFormat<K, V> {
     List<FileStatus> result = new ArrayList<FileStatus>();
     List<IOException> errors = new ArrayList<IOException>();
     for (Path p: dirs) {
-      FileSystem fs = p.getFileSystem(job); 
-      FileStatus[] matches = fs.globStatus(p, inputFilter);
+      FileSystem fs = p.getFileSystem(job);
+      FileStatus[] matches = fs.globStatus(FileUtil.checkPathForSymlink(p, fs.getConf()).path, inputFilter);
       if (matches == null) {
         errors.add(new IOException("Input path does not exist: " + p));
       } else if (matches.length == 0) {
@@ -320,7 +321,8 @@ public abstract class FileInputFormat<K, V> implements InputFormat<K, V> {
     job.setLong(NUM_INPUT_FILES, files.length);
     long totalSize = 0;                           // compute total size
     for (FileStatus file: files) {                // check we have valid files
-      if (file.isDirectory()) {
+      if (file.isDirectory() ||
+          FileUtil.checkPathForSymlink(file.getPath(), job).stat.isDirectory()) {
         throw new IOException("Not a file: "+ file.getPath());
       }
       totalSize += file.getLen();
@@ -334,6 +336,7 @@ public abstract class FileInputFormat<K, V> implements InputFormat<K, V> {
     ArrayList<FileSplit> splits = new ArrayList<FileSplit>(numSplits);
     NetworkTopology clusterMap = new NetworkTopology();
     for (FileStatus file: files) {
+      file = FileUtil.checkPathForSymlink(file.getPath(), job).stat;
       Path path = file.getPath();
       long length = file.getLen();
       if (length != 0) {

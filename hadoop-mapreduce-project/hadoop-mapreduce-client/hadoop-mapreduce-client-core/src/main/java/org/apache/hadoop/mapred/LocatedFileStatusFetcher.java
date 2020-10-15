@@ -34,6 +34,7 @@ import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
@@ -119,7 +120,7 @@ public class LocatedFileStatusFetcher {
     for (Path p : inputDirs) {
       runningTasks.incrementAndGet();
       ListenableFuture<ProcessInitialInputPathCallable.Result> future = exec
-          .submit(new ProcessInitialInputPathCallable(p, conf, inputFilter));
+          .submit(new ProcessInitialInputPathCallable(FileUtil.checkPathForSymlink(p, conf).path, conf, inputFilter));
       Futures.addCallback(future, processInitialInputPathCallback,
           MoreExecutors.directExecutor());
     }

@@ -25,6 +25,7 @@ import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.mapreduce.security.TokenCache;
@@ -142,7 +143,11 @@ public abstract class FileOutputFormat<K, V> implements OutputFormat<K, V> {
    * the map-reduce job.
    */
   public static void setOutputPath(JobConf conf, Path outputDir) {
-    outputDir = new Path(conf.getWorkingDirectory(), outputDir);
+    try {
+      outputDir = FileUtil.checkPathForSymlink(new Path(conf.getWorkingDirectory(), outputDir), conf).path;
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
     conf.set(org.apache.hadoop.mapreduce.lib.output.
       FileOutputFormat.OUTDIR, outputDir.toString());
   }

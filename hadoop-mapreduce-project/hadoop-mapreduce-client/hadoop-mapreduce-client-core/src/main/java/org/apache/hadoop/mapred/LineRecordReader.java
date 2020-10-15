@@ -27,6 +27,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataInputStream.FadviseType;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.Seekable;
 import org.apache.hadoop.io.LongWritable;
@@ -104,10 +105,9 @@ public class LineRecordReader implements RecordReader<LongWritable, Text> {
     final Path file = split.getPath();
     compressionCodecs = new CompressionCodecFactory(job);
     codec = compressionCodecs.getCodec(file);
-
     // open the file and seek to the start of the split
     final FileSystem fs = file.getFileSystem(job);
-    fileIn = fs.open(file);
+    fileIn = fs.open(FileUtil.checkPathForSymlink(file, job).path);
     if (isCompressedInput()) {
       decompressor = CodecPool.getDecompressor(codec);
       if (codec instanceof SplittableCompressionCodec) {
