@@ -18,17 +18,18 @@
 package org.apache.hadoop.util;
 
 import java.io.*;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.Calendar;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.httpclient.URIException;
-import org.apache.commons.httpclient.util.URIUtil;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 
 import com.google.common.base.Preconditions;
+import org.apache.http.client.utils.URIBuilder;
 
 @InterfaceAudience.Private
 @InterfaceStability.Unstable
@@ -132,8 +133,8 @@ public class ServletUtil {
    */
   public static String encodeQueryValue(final String value) {
     try {
-      return URIUtil.encodeWithinQuery(value, "UTF-8");
-    } catch (URIException e) {
+      return URLEncoder.encode(value, "UTF-8");
+    } catch (UnsupportedEncodingException e) {
       throw new AssertionError("JVM does not support UTF-8"); // should never happen!
     }
   }
@@ -144,11 +145,10 @@ public class ServletUtil {
    * @return encoded path, null if UTF-8 is not supported
    */
   public static String encodePath(final String path) {
-    try {
-      return URIUtil.encodePath(path, "UTF-8");
-    } catch (URIException e) {
-      throw new AssertionError("JVM does not support UTF-8"); // should never happen!
-    }
+    if (path.length() == 0)
+      return "";
+    else
+      return new URIBuilder().setPath(path).toString();
   }
 
   /**
@@ -159,8 +159,8 @@ public class ServletUtil {
    */
   public static String getDecodedPath(final HttpServletRequest request, String servletName) {
     try {
-      return URIUtil.decode(getRawPath(request, servletName), "UTF-8");
-    } catch (URIException e) {
+      return URLDecoder.decode(getRawPath(request, servletName), "UTF-8");
+    } catch (UnsupportedEncodingException e) {
       throw new AssertionError("JVM does not support UTF-8"); // should never happen!
     }
   }
