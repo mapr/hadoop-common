@@ -16,11 +16,14 @@ function createSymlinks() {
   ln -sf __PREFIX__/lib/maprfs-*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
   ln -sf __PREFIX__/lib/mapr-java-utils-*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
   ln -sf __PREFIX__/lib/mapr-tools*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
-  ln -sf __PREFIX__/lib/jackson-annotations-2.*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
   rm -f  __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/jackson-core-asl-1.*.jar
   rm -f  __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/jackson-jaxrs-1.*.jar
   rm -f  __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/jackson-mapper-asl-1.*.jar
   rm -f  __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/jackson-xc-1.*.jar
+  rm -f  __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/jackson-annotations-2.*.jar
+  rm -f  __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/jackson-core-2.*.jar
+  rm -f  __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/jackson-databind-2.*.jar
+  ln -sf __PREFIX__/lib/jackson-annotations-2.*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
   ln -sf __PREFIX__/lib/jackson-core-2.*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
   ln -sf __PREFIX__/lib/jackson-core-asl-1.*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
   ln -sf __PREFIX__/lib/jackson-databind-2.*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
