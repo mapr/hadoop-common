@@ -342,25 +342,25 @@ class ClusterJspHelper {
     }
   
     public String getClusterId(String props) throws IOException {
-      return getProperty(props, "ClusterId").getTextValue();
+      return getProperty(props, "ClusterId").asText();
     }
     
     public NamenodeStatus getNamenodeStatus(String props) throws IOException,
         MalformedObjectNameException, NumberFormatException {
       NamenodeStatus nn = new NamenodeStatus();
       nn.host = host;
-      nn.filesAndDirectories = getProperty(props, "TotalFiles").getLongValue();
-      nn.capacity = getProperty(props, "Total").getLongValue();
-      nn.free = getProperty(props, "Free").getLongValue();
-      nn.bpUsed = getProperty(props, "BlockPoolUsedSpace").getLongValue();
-      nn.nonDfsUsed = getProperty(props, "NonDfsUsedSpace").getLongValue();
-      nn.blocksCount = getProperty(props, "TotalBlocks").getLongValue();
+      nn.filesAndDirectories = getProperty(props, "TotalFiles").asLong();
+      nn.capacity = getProperty(props, "Total").asLong();
+      nn.free = getProperty(props, "Free").asLong();
+      nn.bpUsed = getProperty(props, "BlockPoolUsedSpace").asLong();
+      nn.nonDfsUsed = getProperty(props, "NonDfsUsedSpace").asLong();
+      nn.blocksCount = getProperty(props, "TotalBlocks").asLong();
       nn.missingBlocksCount = getProperty(props, "NumberOfMissingBlocks")
-          .getLongValue();
+          .asLong();
       nn.httpAddress = httpAddress.toURL();
       getLiveNodeCount(getProperty(props, "LiveNodes").asText(), nn);
       getDeadNodeCount(getProperty(props, "DeadNodes").asText(), nn);
-      nn.softwareVersion = getProperty(props, "SoftwareVersion").getTextValue();
+      nn.softwareVersion = getProperty(props, "SoftwareVersion").asText();
       return nn;
     }
     
