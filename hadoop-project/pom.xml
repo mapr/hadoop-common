@@ -592,7 +592,7 @@
       <dependency>
         <groupId>org.mortbay.jetty</groupId>
         <artifactId>jetty-servlet-tester</artifactId>
-        <version>${jetty.version}</version>
+        <version>6.1.26</version>
       </dependency>
       <dependency>
         <groupId>commons-logging</groupId>
