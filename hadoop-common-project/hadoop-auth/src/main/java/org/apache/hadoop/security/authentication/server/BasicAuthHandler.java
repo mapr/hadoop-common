@@ -11,11 +11,12 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BasicAuthHandler extends MultiMechsAuthenticationHandler {
 
-  private static final Logger LOG = Logger.getLogger(BasicAuthHandler.class);
+  private static Logger LOG = LoggerFactory.getLogger(BasicAuthHandler.class);
   private static final String BASIC_AUTH = "Basic";
   private final String passwordAuthenticationClass = "com.mapr.login.PasswordAuthentication";
 

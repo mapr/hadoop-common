@@ -25,13 +25,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod;
 
 public class RpcAuthRegistry {
-  private static final Log LOG =
-      LogFactory.getLog(RpcAuthRegistry.class);
+  private static final Logger LOG =
+          LoggerFactory.getLogger(RpcAuthRegistry.class);
   private static final Map<Byte, RpcAuthMethod> authMethods =
       new LinkedHashMap<Byte, RpcAuthMethod>();
   private static final Map<String, RpcAuthMethod> loginModuleMap =

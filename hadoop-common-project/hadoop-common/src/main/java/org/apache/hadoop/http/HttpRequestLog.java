@@ -92,7 +92,7 @@ public class HttpRequestLog {
         return new CustomRequestLog(logWriter,
             CustomRequestLog.EXTENDED_NCSA_FORMAT);
       } else {
-        LOG.warn("Jetty request log for " + loggerName + " was of the wrong class");
+        LOG.warn("Jetty request log for {} was of the wrong class", loggerName);
         return null;
       }
     } else {

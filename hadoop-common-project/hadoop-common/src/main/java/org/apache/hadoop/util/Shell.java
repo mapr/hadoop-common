@@ -33,8 +33,8 @@ import java.util.TimerTask;
 import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.security.alias.JavaKeyStoreProvider;
@@ -51,7 +51,7 @@ import org.apache.hadoop.security.alias.JavaKeyStoreProvider;
 abstract public class Shell {
   private static final Map<Shell, Object> CHILD_SHELLS =
       Collections.synchronizedMap(new WeakHashMap<Shell, Object>());
-  public static final Log LOG = LogFactory.getLog(Shell.class);
+  protected static final Logger LOG = LoggerFactory.getLogger(Shell.class);
   
   /**
    * java.version is enforced via maven-enforcer-plugin.

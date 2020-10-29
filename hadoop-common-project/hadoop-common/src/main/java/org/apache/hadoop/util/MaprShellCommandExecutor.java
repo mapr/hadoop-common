@@ -3,8 +3,8 @@ package org.apache.hadoop.util;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -15,7 +15,7 @@ import java.util.Map;
  * By defaults add maprcli prefix and -json suffix to all commands
  */
 public class MaprShellCommandExecutor {
-  private static final Log LOG = LogFactory.getLog(MaprShellCommandExecutor.class);
+  private static final Logger LOG = LoggerFactory.getLogger(MaprShellCommandExecutor.class);
   private static final String DATA_FIELD = "data";
 
   private final JsonParser parser = new JsonParser();

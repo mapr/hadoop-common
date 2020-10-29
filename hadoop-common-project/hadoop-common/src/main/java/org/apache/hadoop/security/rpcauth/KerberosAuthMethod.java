@@ -18,8 +18,8 @@
 
 package org.apache.hadoop.security.rpcauth;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.ipc.protobuf.IpcConnectionContextProtos.UserInformationProto.Builder;
 import org.apache.hadoop.security.AccessControlException;
@@ -41,7 +41,7 @@ import java.security.PrivilegedExceptionAction;
 import java.util.Map;
 
 public final class KerberosAuthMethod extends RpcAuthMethod {
-  public static final Log LOG = LogFactory.getLog(KerberosAuthMethod.class);
+  private static final Logger LOG = LoggerFactory.getLogger(KerberosAuthMethod.class);
 
   static final RpcAuthMethod INSTANCE = new KerberosAuthMethod();
   private KerberosAuthMethod() {

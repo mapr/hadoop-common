@@ -1,7 +1,7 @@
 package org.apache.hadoop.util;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -16,7 +16,7 @@ public class BaseMapRUtil {
   public static final String HOST_NAME_FILE_PATH = getPathToMaprHome() + "/hostname";
   private static String hostname = null;
 
-  private static final Log LOG = LogFactory.getLog(BaseMapRUtil.class);
+  private static final Logger LOG = LoggerFactory.getLogger(BaseMapRUtil.class);
 
   public static String getPathToMaprHome() {
     String maprHome = System.getenv(MAPR_ENV_VAR);

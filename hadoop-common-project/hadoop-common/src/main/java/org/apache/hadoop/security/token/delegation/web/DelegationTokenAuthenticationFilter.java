@@ -19,8 +19,8 @@ package org.apache.hadoop.security.token.delegation.web;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
@@ -79,7 +79,7 @@ import java.util.Properties;
 public class DelegationTokenAuthenticationFilter
     extends AuthenticationFilter {
 
-  private static final Log LOG = LogFactory.getLog(DelegationTokenAuthenticationFilter.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DelegationTokenAuthenticationFilter.class);
 
   private static final String APPLICATION_JSON_MIME = "application/json";
   private static final String ERROR_EXCEPTION_JSON = "exception";

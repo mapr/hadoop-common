@@ -18,7 +18,8 @@
 
 package org.apache.hadoop.util;
 
-import org.apache.commons.logging.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.hadoop.conf.Configuration;
 
@@ -39,7 +40,7 @@ import java.util.concurrent.Executors;
  * so as to not block execution of the plugged service.
  */
 public class PluginDispatcher<T extends ServicePlugin> {
-  public static final Log LOG = LogFactory.getLog(PluginDispatcher.class.getName());
+  private static final Logger LOG = LoggerFactory.getLogger(PluginDispatcher.class.getName());
 
   private final List<T> plugins;
   private Executor executor;

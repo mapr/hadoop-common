@@ -21,6 +21,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.permission.*;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.Shell;
+import org.apache.hadoop.test.GenericTestUtils;
 import org.slf4j.event.Level;
 
 import java.io.*;
@@ -38,8 +39,7 @@ public class TestLocalFileSystemPermission extends TestCase {
 
   {
     try {
-      ((org.apache.commons.logging.impl.Log4JLogger)FileSystem.LOG).getLogger()
-      .setLevel(org.apache.log4j.Level.DEBUG);
+      GenericTestUtils.setLogLevel(FileSystem.LOG, Level.DEBUG);
     }
     catch(Exception e) {
       System.out.println("Cannot change log level\n"

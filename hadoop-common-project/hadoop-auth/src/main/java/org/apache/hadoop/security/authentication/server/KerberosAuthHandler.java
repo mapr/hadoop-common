@@ -37,14 +37,15 @@ import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
 import org.apache.hadoop.security.authentication.util.KerberosName;
 import org.apache.hadoop.security.authentication.util.KerberosUtil;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.ietf.jgss.GSSContext;
 import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSManager;
 
 public class KerberosAuthHandler extends MultiMechsAuthenticationHandler {
 
-  private static final Logger LOG = Logger.getLogger(KerberosAuthHandler.class);
+  private static final Logger LOG = LoggerFactory.getLogger(KerberosAuthHandler.class);
 
   protected GSSManager gssManager;
   protected LoginContext loginContext;

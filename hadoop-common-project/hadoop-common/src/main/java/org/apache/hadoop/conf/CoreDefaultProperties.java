@@ -4,9 +4,8 @@
 package org.apache.hadoop.conf;
 
 import org.apache.hadoop.security.authentication.util.MapRSignerSecretProvider;
-import org.apache.hadoop.security.authentication.util.RandomSignerSecretProvider;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -52,7 +51,7 @@ import java.util.Properties;
 
 public class CoreDefaultProperties extends Properties
 {
-  private static final Log LOG = LogFactory.getLog(CoreDefaultProperties.class);
+  private static final Logger LOG = LoggerFactory.getLogger(CoreDefaultProperties.class);
 
   private static final String ShimLoader = "com.mapr.fs.ShimLoader";
   private static final String JVMProperties = "com.mapr.baseutils.JVMProperties";

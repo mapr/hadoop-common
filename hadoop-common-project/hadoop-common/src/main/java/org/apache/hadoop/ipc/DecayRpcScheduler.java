@@ -30,9 +30,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.metrics2.util.MBeans;
@@ -82,7 +82,7 @@ public class DecayRpcScheduler implements RpcScheduler, DecayRpcSchedulerMXBean 
   public static final String DECAYSCHEDULER_UNKNOWN_IDENTITY =
     "IdentityProvider.Unknown";
 
-  public static final Log LOG = LogFactory.getLog(DecayRpcScheduler.class);
+  public static final Logger LOG = LoggerFactory.getLogger(DecayRpcScheduler.class);
 
   // Track the number of calls for each schedulable identity
   private final ConcurrentHashMap<Object, AtomicLong> callCounts =

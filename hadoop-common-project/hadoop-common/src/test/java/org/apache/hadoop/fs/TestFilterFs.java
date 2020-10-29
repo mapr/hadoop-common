@@ -22,9 +22,9 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URI;
 import java.util.Iterator;
-import org.slf4j.Logger;
 
 import junit.framework.TestCase;
+import org.slf4j.Logger;
 
 public class TestFilterFs extends TestCase {
 

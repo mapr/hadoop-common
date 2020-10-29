@@ -28,8 +28,8 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
@@ -53,8 +53,8 @@ import com.google.common.collect.Lists;
 public class NetworkTopology {
   public final static String DEFAULT_RACK = "/default-rack";
   public final static int DEFAULT_HOST_LEVEL = 2;
-  public static final Log LOG = 
-    LogFactory.getLog(NetworkTopology.class);
+  public static final Logger LOG =
+          LoggerFactory.getLogger(NetworkTopology.class);
     
   public static class InvalidTopologyException extends RuntimeException {
     private static final long serialVersionUID = 1L;

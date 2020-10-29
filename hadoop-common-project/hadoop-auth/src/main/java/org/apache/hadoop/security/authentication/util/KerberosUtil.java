@@ -37,7 +37,8 @@ import org.apache.kerby.kerberos.kerb.keytab.Keytab;
 import org.apache.kerby.kerberos.kerb.type.base.PrincipalName;
 import org.ietf.jgss.GSSException;
 import org.ietf.jgss.Oid;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.crypto.Cipher;
 import javax.security.auth.kerberos.KerberosPrincipal;
@@ -45,7 +46,7 @@ import javax.security.auth.kerberos.KerberosTicket;
 import javax.security.auth.kerberos.KeyTab;
 
 public class KerberosUtil {
-  private static final Logger LOG = Logger.getLogger(KerberosUtil.class);
+  private static Logger LOG = LoggerFactory.getLogger(KerberosUtil.class);
 
   /* Return the Kerberos login module name */
   public static String getKrb5LoginModuleName() {

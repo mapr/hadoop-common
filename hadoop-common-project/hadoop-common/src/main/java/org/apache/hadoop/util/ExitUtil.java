@@ -17,8 +17,8 @@
  */
 package org.apache.hadoop.util;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 
@@ -28,7 +28,7 @@ import org.apache.hadoop.classification.InterfaceStability;
 @InterfaceAudience.LimitedPrivate({"HDFS", "MapReduce"})
 @InterfaceStability.Unstable
 public final class ExitUtil {
-  private final static Log LOG = LogFactory.getLog(ExitUtil.class.getName());
+  private static final Logger LOG = LoggerFactory.getLogger(ExitUtil.class.getName());
   private static volatile boolean systemExitDisabled = false;
   private static volatile boolean systemHaltDisabled = false;
   private static volatile ExitException firstExitException;
@@ -124,7 +124,7 @@ public final class ExitUtil {
     LOG.info("Exiting with status " + status);
     if (systemExitDisabled) {
       ExitException ee = new ExitException(status, msg);
-      LOG.fatal("Terminate called", ee);
+      LOG.error("Terminate called", ee);
       if (null == firstExitException) {
         firstExitException = ee;
       }
@@ -147,7 +147,7 @@ public final class ExitUtil {
     LOG.info("Halt with status " + status + " Message: " + msg);
     if (systemHaltDisabled) {
       HaltException ee = new HaltException(status, msg);
-      LOG.fatal("Halt called", ee);
+      LOG.error("Halt called", ee);
       if (null == firstHaltException) {
         firstHaltException = ee;
       }

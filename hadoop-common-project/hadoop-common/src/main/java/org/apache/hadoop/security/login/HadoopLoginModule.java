@@ -35,8 +35,8 @@ import javax.security.auth.kerberos.KerberosPrincipal;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.security.User;
 
@@ -46,7 +46,7 @@ import org.apache.hadoop.security.User;
  */
 @InterfaceAudience.Private
 public class HadoopLoginModule implements LoginModule {
-  private static final Log LOG = LogFactory.getLog(HadoopLoginModule.class);
+  private static final Logger LOG = LoggerFactory.getLogger(HadoopLoginModule.class);
 
   private static final Class<? extends Principal> OS_PRINCIPAL_CLASS;
 

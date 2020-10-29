@@ -55,8 +55,8 @@ import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.classification.MapRModified;
@@ -88,7 +88,7 @@ import org.apache.hadoop.util.Time;
 @InterfaceStability.Evolving
 @MapRModified
 public class UserGroupInformation {
-  private static final Log LOG =  LogFactory.getLog(UserGroupInformation.class);
+  private static final Logger LOG = LoggerFactory.getLogger(UserGroupInformation.class);
   /**
    * Percentage of the ticket window to use before we renew ticket.
    */

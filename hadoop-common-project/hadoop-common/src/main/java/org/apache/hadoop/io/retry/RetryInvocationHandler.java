@@ -26,10 +26,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.io.retry.FailoverProxyProvider.ProxyInfo;
 import org.apache.hadoop.io.retry.RetryPolicy.RetryAction;
@@ -48,7 +46,8 @@ import com.google.common.annotations.VisibleForTesting;
  */
 @InterfaceAudience.Private
 public class RetryInvocationHandler<T> implements RpcInvocationHandler {
-  public static final Log LOG = LogFactory.getLog(RetryInvocationHandler.class);
+  public static final Logger LOG = LoggerFactory.getLogger(
+          RetryInvocationHandler.class);
   private final FailoverProxyProvider<T> proxyProvider;
 
   /**

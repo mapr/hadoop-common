@@ -204,7 +204,7 @@ public class ReflectionUtils {
    * Log the current thread stacks at INFO level.
    * @param log the logger that logs the stack trace
    * @param title a descriptive title for the call stacks
-   * @param minInterval the minimum time from the last 
+   * @param minInterval the minimum time from the last
    */
   public static void logThreadInfo(Log log,
                                    String title,
@@ -241,7 +241,7 @@ public class ReflectionUtils {
     boolean dumpStack = false;
     if (log.isInfoEnabled()) {
       synchronized (ReflectionUtils.class) {
-        long now = Time.monotonicNow();
+        long now = Time.now();
         if (now - previousLogTime >= minInterval * 1000) {
           previousLogTime = now;
           dumpStack = true;

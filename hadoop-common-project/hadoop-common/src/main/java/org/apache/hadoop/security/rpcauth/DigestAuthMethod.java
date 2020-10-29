@@ -35,8 +35,8 @@ import javax.security.sasl.SaslClient;
 import javax.security.sasl.SaslServer;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.SaslRpcServer;
@@ -52,7 +52,7 @@ import org.apache.hadoop.security.token.TokenIdentifier;
 // hadoop is deprecating SaslRpcServer.AuthMethod which has DIGEST already
 // deprecated.
 public final class DigestAuthMethod extends RpcAuthMethod {
-  private static final Log LOG = LogFactory.getLog(DigestAuthMethod.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DigestAuthMethod.class);
 
   static final RpcAuthMethod INSTANCE = new DigestAuthMethod();
   private DigestAuthMethod() {
