@@ -57,7 +57,7 @@ import org.apache.hadoop.hdfs.server.protocol.VolumeFailureSummary;
 import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.test.PathUtils;
 import org.apache.hadoop.util.Time;
-import org.apache.log4j.Level;
+import org.slf4j.event.Level;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -82,7 +82,7 @@ public class TestBPOfferService {
   private long secondCallTime = 0;
 
   static {
-    GenericTestUtils.setLogLevel(DataNode.LOG, Level.ALL);
+    GenericTestUtils.setLogLevel(DataNode.LOG, Level.TRACE);
   }
 
   private DatanodeProtocolClientSideTranslatorPB mockNN1;

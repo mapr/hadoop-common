@@ -314,7 +314,7 @@ import org.slf4j.LoggerFactory;
 @Metrics(context="dfs")
 public class FSNamesystem implements Namesystem, FSNamesystemMBean,
   NameNodeMXBean {
-  public static final org.slf4j.Logger LOG = LoggerFactory.getLogger(FSNamesystem.class);
+  public static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(FSNamesystem.class);
 
   private static final ThreadLocal<StringBuilder> auditBuffer =
     new ThreadLocal<StringBuilder>() {
@@ -381,7 +381,7 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
    * perm=&lt;permissions (optional)&gt;
    * </code>
    */
-  public static final Log auditLog = LogFactory.getLog(
+  public static final org.slf4j.Logger auditLog = LoggerFactory.getLogger(
       FSNamesystem.class.getName() + ".audit");
 
   static final int DEFAULT_MAX_CORRUPT_FILEBLOCKS_RETURNED = 100;

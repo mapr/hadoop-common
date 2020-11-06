@@ -33,8 +33,8 @@ import org.apache.hadoop.hdfs.server.namenode.FSEditLogOp;
 import org.apache.hadoop.io.DataOutputBuffer;
 import java.io.IOException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Output stream for BookKeeper Journal.
@@ -47,7 +47,7 @@ import org.apache.commons.logging.LogFactory;
  */
 class BookKeeperEditLogOutputStream
   extends EditLogOutputStream implements AddCallback {
-  static final Log LOG = LogFactory.getLog(BookKeeperEditLogOutputStream.class);
+  static final Logger LOG = LoggerFactory.getLogger(BookKeeperEditLogOutputStream.class);
 
   private final DataOutputBuffer bufCurrent;
   private final AtomicInteger outstandingRequests;

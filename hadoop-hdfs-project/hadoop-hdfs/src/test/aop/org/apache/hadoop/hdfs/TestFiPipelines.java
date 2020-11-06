@@ -22,9 +22,8 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.util.Random;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.impl.Log4JLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fi.FiTestUtil;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -34,13 +33,12 @@ import org.apache.hadoop.hdfs.server.datanode.DataNode;
 import org.apache.hadoop.hdfs.server.namenode.FSNamesystem;
 import org.apache.hadoop.hdfs.server.namenode.NameNode;
 import org.apache.hadoop.test.GenericTestUtils;
-import org.apache.log4j.Level;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 public class TestFiPipelines {
-  public static final Log LOG = LogFactory.getLog(TestFiPipelines.class);
+  public static final Logger LOG = LoggerFactory.getLogger(TestFiPipelines.class);
 
   private static short REPL_FACTOR = 3;
   private static final int RAND_LIMIT = 2000;
@@ -234,14 +232,15 @@ public class TestFiPipelines {
   }
 
   private static void initLoggers() {
-    ((Log4JLogger) NameNode.stateChangeLog).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger) LogFactory.getLog(FSNamesystem.class)).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger) DataNode.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger) TestFiPipelines.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger) DFSClient.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger) FiTestUtil.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger) BlockReceiverAspects.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger) DFSClientAspects.LOG).getLogger().setLevel(Level.ALL);
+
+    GenericTestUtils.setLogLevel(NameNode.stateChangeLog, Level.ALL);
+    GenericTestUtils.setLogLevel(LogFactory.getLog(FSNamesystem.class) Level.ALL);
+    GenericTestUtils.setLogLevel(DataNode.LOG, Level.ALL);
+    GenericTestUtils.setLogLevel(TestFiPipelines.LOG, Level.ALL);
+    GenericTestUtils.setLogLevel(DFSClient.LOG, Level.ALL);
+    GenericTestUtils.setLogLevel(FiTestUtil.LOG, Level.ALL);
+    GenericTestUtils.setLogLevel(BlockReceiverAspects.LOG, Level.ALL);
+    GenericTestUtils.setLogLevel(DFSClientAspects.LOG, Level.ALL);
   }
 
 }

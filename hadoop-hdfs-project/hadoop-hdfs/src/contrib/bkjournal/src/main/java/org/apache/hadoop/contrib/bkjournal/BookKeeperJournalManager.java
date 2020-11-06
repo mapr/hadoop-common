@@ -60,8 +60,8 @@ import com.google.protobuf.TextFormat;
 import static com.google.common.base.Charsets.UTF_8;
 
 import org.apache.commons.io.Charsets;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 /**
  * BookKeeper Journal Manager
@@ -111,7 +111,7 @@ import com.google.common.annotations.VisibleForTesting;
  * </ul>
  */
 public class BookKeeperJournalManager implements JournalManager {
-  static final Log LOG = LogFactory.getLog(BookKeeperJournalManager.class);
+  static final Logger LOG = LoggerFactory.getLogger(BookKeeperJournalManager.class);
 
   public static final String BKJM_OUTPUT_BUFFER_SIZE
     = "dfs.namenode.bookkeeperjournal.output-buffer-size";

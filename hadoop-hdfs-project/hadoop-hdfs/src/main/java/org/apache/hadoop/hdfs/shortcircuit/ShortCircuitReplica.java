@@ -23,8 +23,8 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.hdfs.ExtendedBlockId;
 import org.apache.hadoop.hdfs.server.datanode.BlockMetadataHeader;
@@ -46,7 +46,7 @@ import com.google.common.base.Preconditions;
  */
 @InterfaceAudience.Private
 public class ShortCircuitReplica {
-  public static final Log LOG = LogFactory.getLog(ShortCircuitCache.class);
+  public static final Logger LOG = LoggerFactory.getLogger(ShortCircuitCache.class);
 
   /**
    * Identifies this ShortCircuitReplica object.
@@ -253,7 +253,7 @@ public class ShortCircuitReplica {
         suffix += "  munmapped.";
       }
     }
-    IOUtils.cleanup(LOG, dataStream, metaStream);
+    IOUtils.cleanupWithLogger(LOG, dataStream, metaStream);
     if (slot != null) {
       cache.scheduleSlotReleaser(slot);
       if (LOG.isTraceEnabled()) {

@@ -47,6 +47,7 @@ import org.apache.hadoop.hdfs.web.WebHdfsTestUtil;
 import org.apache.hadoop.hdfs.web.WebHdfsFileSystem;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.test.PathUtils;
 import org.apache.log4j.Appender;
 import org.apache.log4j.AsyncAppender;
@@ -286,9 +287,7 @@ public class TestAuditLogs {
 
   /** Sets up log4j logger for auditlogs */
   private void setupAuditLogs() throws IOException {
-    Logger logger = ((Log4JLogger) FSNamesystem.auditLog).getLogger();
-    // enable logging now that the test is ready to run
-    logger.setLevel(Level.INFO);
+      GenericTestUtils.setLogLevel(FSNamesystem.auditLog, Level.INFO);
   }
   
   private void configureAuditLogs() throws IOException {

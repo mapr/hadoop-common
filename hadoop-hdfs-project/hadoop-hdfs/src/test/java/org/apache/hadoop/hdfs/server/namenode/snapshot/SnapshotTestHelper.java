@@ -32,8 +32,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -68,7 +68,7 @@ import org.junit.Assert;
  * Helper for writing snapshot related tests
  */
 public class SnapshotTestHelper {
-  public static final Log LOG = LogFactory.getLog(SnapshotTestHelper.class);
+  public static final Logger LOG = LoggerFactory.getLogger(SnapshotTestHelper.class);
 
   /** Disable the logs that are not very useful for snapshot related tests. */
   public static void disableLogs() {
@@ -78,15 +78,18 @@ public class SnapshotTestHelper {
         "org.apache.hadoop.hdfs.server.datanode.fsdataset.impl.FsDatasetAsyncDiskService",
     };
     for(String n : lognames) {
-      GenericTestUtils.disableLog(LogFactory.getLog(n));
+      GenericTestUtils.disableLog(LoggerFactory.getLogger(n));
     }
-    
-    GenericTestUtils.disableLog(LogFactory.getLog(UserGroupInformation.class));
-    GenericTestUtils.disableLog(LogFactory.getLog(BlockManager.class));
-    GenericTestUtils.disableLog(LogFactory.getLog(FSNamesystem.class));
-    GenericTestUtils.disableLog(LogFactory.getLog(DirectoryScanner.class));
-    GenericTestUtils.disableLog(LogFactory.getLog(MetricsSystemImpl.class));
-    
+
+    GenericTestUtils.disableLog(LoggerFactory.getLogger(
+        UserGroupInformation.class));
+    GenericTestUtils.disableLog(LoggerFactory.getLogger(BlockManager.class));
+    GenericTestUtils.disableLog(LoggerFactory.getLogger(FSNamesystem.class));
+    GenericTestUtils.disableLog(LoggerFactory.getLogger(
+        DirectoryScanner.class));
+    GenericTestUtils.disableLog(LoggerFactory.getLogger(
+        MetricsSystemImpl.class));
+
     GenericTestUtils.disableLog(BlockScanner.LOG);
     GenericTestUtils.disableLog(HttpServer2.LOG);
     GenericTestUtils.disableLog(DataNode.LOG);

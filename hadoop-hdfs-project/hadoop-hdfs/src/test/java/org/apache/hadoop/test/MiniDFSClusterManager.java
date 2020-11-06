@@ -32,8 +32,8 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
@@ -58,8 +58,8 @@ import org.eclipse.jetty.util.ajax.JSON;
  * $HADOOP_HOME/bin/hadoop jar $HADOOP_HOME/share/hadoop/hdfs/hadoop-hdfs-0.24.0-SNAPSHOT-tests.jar org.apache.hadoop.test.MiniDFSClusterManager -options...
  */
 public class MiniDFSClusterManager {
-  private static final Log LOG =
-    LogFactory.getLog(MiniDFSClusterManager.class);
+  private static final Logger LOG =
+    LoggerFactory.getLogger(MiniDFSClusterManager.class);
 
   private MiniDFSCluster dfs;
   private String writeDetails;

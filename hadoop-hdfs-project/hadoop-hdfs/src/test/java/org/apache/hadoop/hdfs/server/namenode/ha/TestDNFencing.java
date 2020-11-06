@@ -59,7 +59,7 @@ import org.apache.hadoop.hdfs.server.protocol.StorageBlockReport;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.test.GenericTestUtils.DelayAnswer;
-import org.apache.log4j.Level;
+import org.slf4j.event.Level;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -80,7 +80,7 @@ public class TestDNFencing {
   private FileSystem fs;
 
   static {
-    DFSTestUtil.setNameNodeLogLevel(Level.ALL);
+    DFSTestUtil.setNameNodeLogLevel(Level.TRACE);
   }
   
   @Before

@@ -58,7 +58,7 @@ import org.apache.hadoop.hdfs.server.protocol.NamespaceInfo;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.test.GenericTestUtils;
-import org.apache.log4j.Level;
+import org.slf4j.event.Level;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -83,7 +83,7 @@ public class TestQuorumJournalManager {
   private final List<QuorumJournalManager> toClose = Lists.newLinkedList();
   
   static {
-    GenericTestUtils.setLogLevel(ProtobufRpcEngine.LOG, Level.ALL);
+    GenericTestUtils.setLogLevel(ProtobufRpcEngine.LOG, Level.TRACE);
   }
 
   @Before

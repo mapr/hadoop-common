@@ -19,8 +19,8 @@ package org.apache.hadoop.hdfs;
 
 import java.util.HashMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.client.impl.DfsClientConf;
@@ -39,7 +39,7 @@ import com.google.common.annotations.VisibleForTesting;
  */
 @InterfaceAudience.Private
 public class ClientContext {
-  private static final Log LOG = LogFactory.getLog(ClientContext.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ClientContext.class);
 
   /**
    * Global map of context names to caches contexts.

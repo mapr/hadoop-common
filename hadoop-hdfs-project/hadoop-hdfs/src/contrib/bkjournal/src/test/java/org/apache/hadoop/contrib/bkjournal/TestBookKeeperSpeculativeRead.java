@@ -26,8 +26,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.bookkeeper.proto.BookieServer;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.server.namenode.EditLogInputStream;
 import org.apache.hadoop.hdfs.server.namenode.EditLogOutputStream;
@@ -43,8 +43,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class TestBookKeeperSpeculativeRead {
-  private static final Log LOG = LogFactory
-      .getLog(TestBookKeeperSpeculativeRead.class);
+  private static final Logger LOG = LoggerFactory
+      .getLogger(TestBookKeeperSpeculativeRead.class);
 
   private ZooKeeper zkc;
   private static BKJMUtil bkutil;

@@ -20,8 +20,8 @@ package org.apache.hadoop.hdfs.client;
 import java.io.IOException;
 import java.net.URI;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
@@ -39,7 +39,7 @@ import org.apache.hadoop.io.IOUtils;
 @InterfaceAudience.Public
 @InterfaceStability.Evolving
 public class HdfsUtils {
-  private static final Log LOG = LogFactory.getLog(HdfsUtils.class);
+  private static final Logger LOG = LoggerFactory.getLogger(HdfsUtils.class);
 
   /**
    * Is the HDFS healthy?
@@ -81,7 +81,7 @@ public class HdfsUtils {
       }
       return false;
     } finally {
-      IOUtils.cleanup(LOG, fs);
+      IOUtils.cleanupWithLogger(LOG, fs);
     }
   }
 }

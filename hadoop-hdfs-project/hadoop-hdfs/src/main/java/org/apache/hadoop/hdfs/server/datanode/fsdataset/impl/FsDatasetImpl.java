@@ -48,8 +48,8 @@ import javax.management.ObjectName;
 import javax.management.StandardMBean;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -125,7 +125,7 @@ import com.google.common.collect.Sets;
  ***************************************************/
 @InterfaceAudience.Private
 class FsDatasetImpl implements FsDatasetSpi<FsVolumeImpl> {
-  static final Log LOG = LogFactory.getLog(FsDatasetImpl.class);
+  static final Logger LOG = LoggerFactory.getLogger(FsDatasetImpl.class);
   private final static boolean isNativeIOAvailable;
   static {
     isNativeIOAvailable = NativeIO.isAvailable();
@@ -958,7 +958,7 @@ class FsDatasetImpl implements FsDatasetSpi<FsVolumeImpl> {
       checksum.calculateChunkedSums(data, 0, offset, crcs, 0);
       metaOut.write(crcs, 0, 4);
     } finally {
-      IOUtils.cleanup(LOG, metaOut);
+      IOUtils.cleanupWithLogger(LOG, metaOut);
     }
   }
 

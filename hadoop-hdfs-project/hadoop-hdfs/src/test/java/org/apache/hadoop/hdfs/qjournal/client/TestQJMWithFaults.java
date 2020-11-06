@@ -51,7 +51,7 @@ import org.apache.hadoop.hdfs.util.Holder;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.test.GenericTestUtils;
-import org.apache.log4j.Level;
+import org.slf4j.event.Level;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -207,7 +207,7 @@ public class TestQJMWithFaults {
       // If the user specifies a seed, then we should gather all the
       // IPC trace information so that debugging is easier. This makes
       // the test run about 25% slower otherwise.
-      GenericTestUtils.setLogLevel(ProtobufRpcEngine.LOG, Level.ALL);
+      GenericTestUtils.setLogLevel(ProtobufRpcEngine.LOG, Level.TRACE);
     } else {
       seed = new Random().nextLong();
     }

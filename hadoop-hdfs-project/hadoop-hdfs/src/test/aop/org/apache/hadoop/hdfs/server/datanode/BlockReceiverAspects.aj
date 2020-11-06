@@ -21,8 +21,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fi.DataTransferTestUtil;
 import org.apache.hadoop.fi.Pipeline;
 import org.apache.hadoop.fi.PipelineTest;
@@ -41,7 +41,7 @@ import org.apache.hadoop.util.DiskChecker.DiskOutOfSpaceException;
  * class 
  */
 privileged public aspect BlockReceiverAspects {
-  public static final Log LOG = LogFactory.getLog(BlockReceiverAspects.class);
+  public static final Logger LOG = LoggerFactory.getLogger(BlockReceiverAspects.class);
 
   BlockReceiver BlockReceiver.PacketResponder.getReceiver(){
     LOG.info("FI: getReceiver() " + getClass().getName());

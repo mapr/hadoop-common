@@ -37,15 +37,7 @@ import org.junit.Test;
  * This class tests that blocks can be larger than 2GB
  */
 public class TestLargeBlock {
-/**
-  {
-    ((Log4JLogger)DataNode.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger)LeaseManager.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger)FSNamesystem.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger)DFSClient.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger)TestLargeBlock.LOG).getLogger().setLevel(Level.ALL);
-  }
- */
+
   private static final Logger LOG =
       LoggerFactory.getLogger(TestLargeBlock.class);
 

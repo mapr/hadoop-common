@@ -23,8 +23,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Random;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.impl.Log4JLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.ContentSummary;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -38,14 +38,14 @@ import org.apache.hadoop.hdfs.protocol.LocatedBlocks;
 import org.apache.hadoop.hdfs.server.datanode.DataNode;
 import org.apache.hadoop.hdfs.server.datanode.FSDataset;
 import org.apache.hadoop.io.IOUtils;
-import org.apache.log4j.Level;
+import org.slf4j.event.Level;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class TestFiHftp {
-  final Log LOG = FileSystem.LOG;
+  final Logger LOG = FileSystem.LOG;
   {
-    ((Log4JLogger)LOG).getLogger().setLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(LOG, Level.ALL);
   }
 
   static final short DATANODE_NUM = 1;

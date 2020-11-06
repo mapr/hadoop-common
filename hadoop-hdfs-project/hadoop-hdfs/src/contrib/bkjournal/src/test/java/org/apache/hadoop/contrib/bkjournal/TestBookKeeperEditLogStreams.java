@@ -25,8 +25,8 @@ import java.io.IOException;
 import org.apache.bookkeeper.client.BookKeeper;
 import org.apache.bookkeeper.client.LedgerHandle;
 import org.apache.bookkeeper.conf.ClientConfiguration;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 import org.apache.zookeeper.ZooKeeper;
 import org.junit.AfterClass;
@@ -37,7 +37,7 @@ import org.junit.Test;
  * Unit test for the bkjm's streams
  */
 public class TestBookKeeperEditLogStreams {
-  static final Log LOG = LogFactory.getLog(TestBookKeeperEditLogStreams.class);
+  static final Logger LOG = LoggerFactory.getLogger(TestBookKeeperEditLogStreams.class);
 
   private static BKJMUtil bkutil;
   private final static int numBookies = 3;

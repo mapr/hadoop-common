@@ -28,8 +28,8 @@ import java.nio.channels.ReadableByteChannel;
 import java.util.EnumSet;
 import java.util.UUID;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.fs.ReadOption;
 import org.apache.hadoop.hdfs.net.Peer;
@@ -85,7 +85,7 @@ import org.apache.htrace.core.Tracer;
 @InterfaceAudience.Private
 public class RemoteBlockReader2  implements BlockReader {
 
-  static final Log LOG = LogFactory.getLog(RemoteBlockReader2.class);
+  static final Logger LOG = LoggerFactory.getLogger(RemoteBlockReader2.class);
 
   final private Peer peer;
   final private DatanodeID datanodeID;

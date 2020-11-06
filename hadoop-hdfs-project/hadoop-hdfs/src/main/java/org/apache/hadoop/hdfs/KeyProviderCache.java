@@ -24,8 +24,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.crypto.key.KeyProvider;
 
@@ -37,7 +37,7 @@ import com.google.common.cache.RemovalNotification;
 
 public class KeyProviderCache {
 
-  public static final Log LOG = LogFactory.getLog(KeyProviderCache.class);
+  public static final Logger LOG = LoggerFactory.getLogger(KeyProviderCache.class);
 
   private final Cache<URI, KeyProvider> cache;
 

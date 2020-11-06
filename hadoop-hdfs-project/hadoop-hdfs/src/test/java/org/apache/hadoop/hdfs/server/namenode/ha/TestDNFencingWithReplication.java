@@ -20,8 +20,6 @@ package org.apache.hadoop.hdfs.server.namenode.ha;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.impl.Log4JLogger;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -33,11 +31,12 @@ import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.test.MultithreadedTestUtil.RepeatingTestThread;
 import org.apache.hadoop.test.MultithreadedTestUtil.TestContext;
-import org.apache.log4j.Level;
+import org.slf4j.event.Level;
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.google.common.base.Supplier;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -46,11 +45,10 @@ import com.google.common.base.Supplier;
  */
 public class TestDNFencingWithReplication {
   static {
-    ((Log4JLogger)FSNamesystem.auditLog).getLogger().setLevel(Level.WARN);
-    ((Log4JLogger)Server.LOG).getLogger().setLevel(Level.FATAL);
-    ((Log4JLogger)LogFactory.getLog(
-        "org.apache.hadoop.io.retry.RetryInvocationHandler"))
-        .getLogger().setLevel(Level.FATAL);
+    GenericTestUtils.setLogLevel(FSNamesystem.auditLog, Level.WARN);
+    GenericTestUtils.setLogLevel(Server.LOG, Level.ERROR);
+    GenericTestUtils.setLogLevel(LoggerFactory.getLogger(
+            "org.apache.hadoop.io.retry.RetryInvocationHandler"), Level.ERROR);
   }
 
   private static final int NUM_THREADS = 20;

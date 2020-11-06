@@ -29,7 +29,7 @@ import java.net.URI;
 import java.util.EnumSet;
 import java.util.Iterator;
 
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.fs.Options.ChecksumOpt;
@@ -43,7 +43,7 @@ import org.junit.Test;
 
 public class TestFilterFileSystem {
 
-  private static final Log LOG = FileSystem.LOG;
+  private static final Logger LOG = FileSystem.LOG;
   private static final Configuration conf = new Configuration();
 
   @BeforeClass

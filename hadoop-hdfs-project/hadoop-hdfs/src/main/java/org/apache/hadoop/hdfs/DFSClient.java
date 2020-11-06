@@ -56,8 +56,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.net.SocketFactory;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.HadoopIllegalArgumentException;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
@@ -204,7 +204,7 @@ import org.apache.htrace.core.Tracer;
 @InterfaceAudience.Private
 public class DFSClient implements java.io.Closeable, RemotePeerFactory,
     DataEncryptionKeyFactory {
-  public static final Log LOG = LogFactory.getLog(DFSClient.class);
+  public static final Logger LOG = LoggerFactory.getLogger(DFSClient.class);
   public static final long SERVER_DEFAULTS_VALIDITY_PERIOD = 60 * 60 * 1000L; // 1 hour
   static final int TCP_WINDOW_SIZE = 128 * 1024; // 128 KB
 
@@ -3087,7 +3087,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
       return peer;
     } finally {
       if (!success) {
-        IOUtils.cleanup(LOG, peer);
+        IOUtils.cleanupWithLogger(LOG, peer);
         IOUtils.closeSocket(sock);
       }
     }

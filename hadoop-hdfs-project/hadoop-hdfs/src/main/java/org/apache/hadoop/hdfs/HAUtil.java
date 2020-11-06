@@ -31,8 +31,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.HadoopIllegalArgumentException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -58,8 +58,8 @@ import com.google.common.collect.Lists;
 
 public class HAUtil {
   
-  private static final Log LOG = 
-    LogFactory.getLog(HAUtil.class);
+  private static final Logger LOG =
+    LoggerFactory.getLogger(HAUtil.class);
   
   private static final DelegationTokenSelector tokenSelector =
       new DelegationTokenSelector();

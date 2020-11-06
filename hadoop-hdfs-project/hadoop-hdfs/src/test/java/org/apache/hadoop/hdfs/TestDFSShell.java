@@ -53,7 +53,7 @@ import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.hadoop.test.GenericTestUtils;
-import org.apache.log4j.Level;
+import org.slf4j.event.Level;
 import org.junit.Test;
 
 import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.FS_TRASH_INTERVAL_KEY;
@@ -1493,7 +1493,7 @@ public class TestDFSShell {
 
   @Test (timeout = 30000)
   public void testGet() throws IOException {
-    GenericTestUtils.setLogLevel(FSInputChecker.LOG, Level.ALL);
+    GenericTestUtils.setLogLevel(FSInputChecker.LOG, Level.TRACE);
 
     final String fname = "testGet.txt";
     Path root = new Path("/test/get");

@@ -27,8 +27,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
@@ -51,8 +51,8 @@ import com.google.common.base.Preconditions;
 public class ConfiguredFailoverProxyProvider<T> extends
     AbstractNNFailoverProxyProvider<T> {
   
-  private static final Log LOG =
-      LogFactory.getLog(ConfiguredFailoverProxyProvider.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(ConfiguredFailoverProxyProvider.class);
   
   interface ProxyFactory<T> {
     T createProxy(Configuration conf, InetSocketAddress nnAddr, Class<T> xface,

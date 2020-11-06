@@ -27,8 +27,8 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 
 import org.apache.commons.lang.mutable.MutableBoolean;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.StorageType;
@@ -72,7 +72,7 @@ import org.apache.htrace.core.Tracer;
  */
 @InterfaceAudience.Private
 public class BlockReaderFactory implements ShortCircuitReplicaCreator {
-  static final Log LOG = LogFactory.getLog(BlockReaderFactory.class);
+  static final Logger LOG = LoggerFactory.getLogger(BlockReaderFactory.class);
 
   public static class FailureInjector {
     public void injectRequestFileDescriptorsFailure() throws IOException {
@@ -512,14 +512,14 @@ public class BlockReaderFactory implements ShortCircuitReplicaCreator {
           if (LOG.isDebugEnabled()) {
             LOG.debug(this + ": closing stale domain peer " + peer, e);
           }
-          IOUtils.cleanup(LOG, peer);
+          IOUtils.cleanupWithLogger(LOG, peer);
         } else {
           // Handle an I/O error we got when using a newly created socket.
           // We temporarily disable the domain socket path for a few minutes in
           // this case, to prevent wasting more time on it.
           LOG.warn(this + ": I/O error requesting file descriptors.  " + 
               "Disabling domain socket " + peer.getDomainSocket(), e);
-          IOUtils.cleanup(LOG, peer);
+          IOUtils.cleanupWithLogger(LOG, peer);
           clientContext.getDomainSocketFactory()
               .disableDomainSocketPath(pathInfo.getPath());
           return null;
@@ -577,7 +577,7 @@ public class BlockReaderFactory implements ShortCircuitReplicaCreator {
         return null;
       } finally {
         if (replica == null) {
-          IOUtils.cleanup(DFSClient.LOG, fis[0], fis[1]);
+          IOUtils.cleanupWithLogger(DFSClient.LOG, fis[0], fis[1]);
         }
       }
     case ERROR_UNSUPPORTED:
@@ -645,7 +645,7 @@ public class BlockReaderFactory implements ShortCircuitReplicaCreator {
         blockReader = getRemoteBlockReader(peer);
         return blockReader;
       } catch (IOException ioe) {
-        IOUtils.cleanup(LOG, peer);
+        IOUtils.cleanupWithLogger(LOG, peer);
         if (isSecurityException(ioe)) {
           if (LOG.isTraceEnabled()) {
             LOG.trace(this + ": got security exception while constructing " +
@@ -672,7 +672,7 @@ public class BlockReaderFactory implements ShortCircuitReplicaCreator {
         }
       } finally {
         if (blockReader == null) {
-          IOUtils.cleanup(LOG, peer);
+          IOUtils.cleanupWithLogger(LOG, peer);
         }
       }
     }
@@ -729,7 +729,7 @@ public class BlockReaderFactory implements ShortCircuitReplicaCreator {
         }
       } finally {
         if (blockReader == null) {
-          IOUtils.cleanup(LOG, peer);
+          IOUtils.cleanupWithLogger(LOG, peer);
         }
       }
     }

@@ -35,8 +35,9 @@ import org.apache.hadoop.hdfs.client.HdfsAdmin;
 import org.apache.hadoop.hdfs.server.namenode.EncryptionZoneManager;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.apache.hadoop.test.GenericTestUtils;
+import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -73,7 +74,8 @@ public class TestReservedRawPaths {
         JavaKeyStoreProvider.SCHEME_NAME + "://file" + jksPath.toUri()
     );
     cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1).build();
-    Logger.getLogger(EncryptionZoneManager.class).setLevel(Level.TRACE);
+    GenericTestUtils.setLogLevel(LoggerFactory
+            .getLogger(EncryptionZoneManager.class), Level.TRACE);
     fs = cluster.getFileSystem();
     fsWrapper = new FileSystemTestWrapper(cluster.getFileSystem());
     fcWrapper = new FileContextTestWrapper(

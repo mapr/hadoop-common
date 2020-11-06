@@ -24,11 +24,11 @@ import static org.mockito.Mockito.verify;
 
 import java.util.List;
 
-import org.apache.commons.logging.impl.Log4JLogger;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.apache.hadoop.hdfs.protocol.proto.DataTransferProtos.Status;
-import org.apache.log4j.Level;
+import org.apache.hadoop.test.GenericTestUtils;
+import org.slf4j.event.Level;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -41,7 +41,7 @@ public class TestClientBlockVerification {
   static LocatedBlock testBlock = null;
 
   static {
-    ((Log4JLogger)RemoteBlockReader2.LOG).getLogger().setLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(RemoteBlockReader2.LOG, Level.TRACE);
   }
   @BeforeClass
   public static void setupCluster() throws Exception {

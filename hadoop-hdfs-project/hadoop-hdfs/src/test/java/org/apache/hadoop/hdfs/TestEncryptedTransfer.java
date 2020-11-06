@@ -46,8 +46,7 @@ import org.apache.hadoop.hdfs.server.common.HdfsServerConstants.StartupOption;
 import org.apache.hadoop.hdfs.server.datanode.DataNode;
 import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.test.GenericTestUtils.LogCapturer;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
+import org.slf4j.event.Level;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -57,8 +56,10 @@ import org.mockito.Mockito;
 @RunWith(Parameterized.class)
 public class TestEncryptedTransfer {
   {
-    LogManager.getLogger(SaslDataTransferServer.class).setLevel(Level.DEBUG);
-    LogManager.getLogger(DataTransferSaslUtil.class).setLevel(Level.DEBUG);
+    GenericTestUtils.setLogLevel(LoggerFactory.getLogger(SaslDataTransferServer.class),
+            Level.DEBUG);
+    GenericTestUtils.setLogLevel(LoggerFactory.getLogger(DataTransferSaslUtil.class),
+            Level.DEBUG);
   }
   
   @Parameters

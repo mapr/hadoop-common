@@ -20,8 +20,8 @@ package org.apache.hadoop.contrib.bkjournal;
 import java.io.IOException;
 import java.net.InetAddress;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.ZooKeeper;
@@ -46,7 +46,7 @@ import static com.google.common.base.Charsets.UTF_8;
  */
 
 class CurrentInprogress {
-  static final Log LOG = LogFactory.getLog(CurrentInprogress.class);
+  static final Logger LOG = LoggerFactory.getLogger(CurrentInprogress.class);
 
   private final ZooKeeper zkc;
   private final String currentInprogressNode;

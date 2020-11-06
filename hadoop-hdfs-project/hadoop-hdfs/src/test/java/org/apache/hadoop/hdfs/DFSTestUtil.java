@@ -18,7 +18,6 @@
 
 package org.apache.hadoop.hdfs;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -93,7 +92,7 @@ import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.Time;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.VersionInfo;
-import org.apache.log4j.Level;
+import org.slf4j.event.Level;
 import org.junit.Assume;
 import org.mockito.internal.util.reflection.Whitebox;
 

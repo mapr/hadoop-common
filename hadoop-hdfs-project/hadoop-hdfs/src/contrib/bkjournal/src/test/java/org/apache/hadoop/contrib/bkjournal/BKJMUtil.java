@@ -24,8 +24,8 @@ import java.net.URI;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.Watcher;
@@ -48,7 +48,7 @@ import java.io.File;
  * and bringing individual bookies up and down
  */
 class BKJMUtil {
-  protected static final Log LOG = LogFactory.getLog(BKJMUtil.class);
+  protected static final Logger LOG = LoggerFactory.getLogger(BKJMUtil.class);
 
   int nextPort = 6000; // next port for additionally created bookies
   private Thread bkthread = null;

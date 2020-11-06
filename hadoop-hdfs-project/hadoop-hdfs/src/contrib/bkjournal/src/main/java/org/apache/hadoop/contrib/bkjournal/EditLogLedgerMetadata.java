@@ -26,8 +26,8 @@ import org.apache.zookeeper.KeeperException;
 
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.hadoop.contrib.bkjournal.BKJournalProtos.EditLogLedgerProto;
 import com.google.protobuf.TextFormat;
@@ -38,7 +38,7 @@ import static com.google.common.base.Charsets.UTF_8;
  * with a single edit log segment, stored in a single ledger
  */
 public class EditLogLedgerMetadata {
-  static final Log LOG = LogFactory.getLog(EditLogLedgerMetadata.class);
+  static final Logger LOG = LoggerFactory.getLogger(EditLogLedgerMetadata.class);
 
   private String zkPath;
   private final int dataLayoutVersion;

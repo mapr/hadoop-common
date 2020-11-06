@@ -21,8 +21,8 @@ import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.nio.channels.AsynchronousCloseException;
 import java.util.HashMap;
+import org.slf4j.Logger;
 
-import org.apache.commons.logging.Log;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.net.Peer;
@@ -40,7 +40,7 @@ import com.google.common.annotations.VisibleForTesting;
  * Hadoop IPC mechanism.
  */
 class DataXceiverServer implements Runnable {
-  public static final Log LOG = DataNode.LOG;
+  public static final Logger LOG = DataNode.LOG;
   
   private final PeerServer peerServer;
   private final DataNode datanode;
@@ -262,7 +262,7 @@ class DataXceiverServer implements Runnable {
   synchronized void closeAllPeers() {
     LOG.info("Closing all peers.");
     for (Peer p : peers.keySet()) {
-      IOUtils.cleanup(LOG, p);
+      IOUtils.cleanupWithLogger(LOG, p);
     }
     peers.clear();
     peersXceiver.clear();

@@ -56,11 +56,11 @@ import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.ZooDefs.Ids;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TestBookKeeperJournalManager {
-  static final Log LOG = LogFactory.getLog(TestBookKeeperJournalManager.class);
+  static final Logger LOG = LoggerFactory.getLogger(TestBookKeeperJournalManager.class);
   
   private static final long DEFAULT_SEGMENT_SIZE = 1000;
 

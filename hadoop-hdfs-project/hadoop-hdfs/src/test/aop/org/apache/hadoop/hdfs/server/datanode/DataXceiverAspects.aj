@@ -17,15 +17,15 @@
  */
 package org.apache.hadoop.hdfs.server.datanode;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This aspect takes care about faults injected into datanode.DataXceiver 
  * class 
  */
 privileged public aspect DataXceiverAspects {
-  public static final Log LOG = LogFactory.getLog(DataXceiverAspects.class);
+  public static final Logger LOG = LoggerFactory.getLogger(DataXceiverAspects.class);
 
   pointcut runXceiverThread(DataXceiver xceiver) :
     execution (* run(..)) && target(xceiver);

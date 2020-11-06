@@ -47,7 +47,7 @@ import org.apache.hadoop.hdfs.protocol.LocatedBlocks;
 import org.apache.hadoop.hdfs.server.datanode.DataNode;
 import org.apache.hadoop.hdfs.server.datanode.DataNodeTestUtils;
 import org.apache.hadoop.hdfs.server.protocol.InterDatanodeProtocol;
-import org.apache.log4j.Level;
+import org.slf4j.event.Level;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -56,11 +56,10 @@ import org.junit.Test;
 /** This class implements some of tests posted in HADOOP-2658. */
 public class TestFileAppend3  {
   {
-    DFSTestUtil.setNameNodeLogLevel(Level.ALL);
-    GenericTestUtils.setLogLevel(DataNode.LOG, Level.ALL);
-    GenericTestUtils.setLogLevel(DFSClient.LOG, Level.ALL);
-    GenericTestUtils.setLogLevel(InterDatanodeProtocol.LOG, org.slf4j
-        .event.Level.TRACE);
+    DFSTestUtil.setNameNodeLogLevel(Level.TRACE);
+    GenericTestUtils.setLogLevel(DataNode.LOG, Level.TRACE);
+    GenericTestUtils.setLogLevel(DFSClient.LOG, Level.TRACE);
+    GenericTestUtils.setLogLevel(InterDatanodeProtocol.LOG, Level.TRACE);
   }
 
   static final long BLOCK_SIZE = 64 * 1024;

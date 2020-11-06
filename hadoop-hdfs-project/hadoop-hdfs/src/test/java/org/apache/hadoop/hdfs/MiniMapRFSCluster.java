@@ -29,8 +29,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -53,7 +53,7 @@ enum NodeState {
 }
 
 class MapRNode {
-  private static final Log LOG = LogFactory.getLog(MapRNode.class);
+  private static final Logger LOG = LoggerFactory.getLogger(MapRNode.class);
   public static final String ZOOKEEPER_HOME="/opt/mapr/zookeeper/zookeeper-3.4.11";
   public static final String ZOOKEEPER_DATA="/opt/mapr/zkdata";
 
@@ -359,7 +359,7 @@ class MapRNode {
 }
 
 class RunCommand {
-  private static final Log LOG = LogFactory.getLog(RunCommand.class);
+  private static final Logger LOG = LoggerFactory.getLogger(RunCommand.class);
 
   String[] command;
   String singleCommand;
@@ -406,7 +406,7 @@ class RunCommand {
         for (int i = 0; i < command.length; ++i) {
           cmdline.append(command[i] + " ");
         }
-        LOG.info(cmdline);
+        LOG.info("{}",cmdline);
         pr = rt.exec(command);
       } else {
         LOG.info("Command ran: " + singleCommand);
@@ -455,7 +455,7 @@ class RunCommand {
 }
 
 public class MiniMapRFSCluster extends MiniDFSCluster {
-  private static final Log LOG = LogFactory.getLog(MiniMapRFSCluster.class);
+  private static final Logger LOG = LoggerFactory.getLogger(MiniMapRFSCluster.class);
   public static final String MAPRFS_SCHEME = "maprfs:///";
 
   static String installDir="/opt/mapr";

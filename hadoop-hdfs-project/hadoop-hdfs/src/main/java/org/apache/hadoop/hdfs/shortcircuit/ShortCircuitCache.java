@@ -34,8 +34,8 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.lang.mutable.MutableBoolean;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
@@ -70,7 +70,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
  */
 @InterfaceAudience.Private
 public class ShortCircuitCache implements Closeable {
-  public static final Log LOG = LogFactory.getLog(ShortCircuitCache.class);
+  public static final Logger LOG = LoggerFactory.getLogger(ShortCircuitCache.class);
 
   /**
    * Expiry thread which makes sure that the file descriptors get closed
@@ -223,7 +223,7 @@ public class ShortCircuitCache implements Closeable {
         } else {
           shm.getEndpointShmManager().shutdown(shm);
         }
-        IOUtils.cleanup(LOG, sock, out);
+        IOUtils.cleanupWithLogger(LOG, sock, out);
       }
     }
   }
@@ -911,7 +911,7 @@ public class ShortCircuitCache implements Closeable {
       maxNonMmappedEvictableLifespanMs = 0;
       maxEvictableMmapedSize = 0;
       // Close and join cacheCleaner thread.
-      IOUtils.cleanup(LOG, cacheCleaner);
+      IOUtils.cleanupWithLogger(LOG, cacheCleaner);
       // Purge all replicas.
       while (true) {
         Entry<Long, ShortCircuitReplica> entry = evictable.firstEntry();
@@ -926,7 +926,7 @@ public class ShortCircuitCache implements Closeable {
     } finally {
       lock.unlock();
     }
-    IOUtils.cleanup(LOG, shmManager);
+    IOUtils.cleanupWithLogger(LOG, shmManager);
   }
 
   @VisibleForTesting // ONLY for testing

@@ -50,8 +50,8 @@ import org.apache.hadoop.util.ExitUtil.ExitException;
 
 import org.apache.bookkeeper.proto.BookieServer;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -62,7 +62,7 @@ import java.net.URISyntaxException;
  * works for HDFS Namenode HA
  */
 public class TestBookKeeperAsHASharedDir {
-  static final Log LOG = LogFactory.getLog(TestBookKeeperAsHASharedDir.class);
+  static final Logger LOG = LoggerFactory.getLogger(TestBookKeeperAsHASharedDir.class);
 
   private static BKJMUtil bkutil;
   static int numBookies = 3;

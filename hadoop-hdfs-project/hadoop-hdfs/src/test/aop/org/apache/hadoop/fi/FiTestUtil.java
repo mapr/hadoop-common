@@ -21,13 +21,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Test Utilities */
 public class FiTestUtil {
   /** Logging */
-  public static final Log LOG = LogFactory.getLog(FiTestUtil.class);
+  public static final Logger LOG = LoggerFactory.getLogger(FiTestUtil.class);
 
   /** Random source */
   public static final ThreadLocal<Random> RANDOM = new ThreadLocal<Random>() {

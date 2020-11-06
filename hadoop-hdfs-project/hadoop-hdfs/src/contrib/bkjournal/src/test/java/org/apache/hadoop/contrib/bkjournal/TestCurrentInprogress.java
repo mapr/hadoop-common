@@ -26,8 +26,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.bookkeeper.util.LocalBookKeeper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
@@ -44,7 +44,7 @@ import org.junit.Test;
  * Tests that read, update, clear api from CurrentInprogress
  */
 public class TestCurrentInprogress {
-  private static final Log LOG = LogFactory.getLog(TestCurrentInprogress.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TestCurrentInprogress.class);
   private static final String CURRENT_NODE_PATH = "/test";
   private static final String HOSTPORT = "127.0.0.1:2181";
   private static final int CONNECTION_TIMEOUT = 30000;

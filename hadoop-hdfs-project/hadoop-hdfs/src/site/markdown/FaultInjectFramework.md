@@ -98,8 +98,8 @@ Aspect Example
 ```java
 package org.apache.hadoop.hdfs.server.datanode;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fi.ProbabilityModel;
 import org.apache.hadoop.hdfs.server.datanode.DataNode;
 import org.apache.hadoop.util.DiskChecker.*;
@@ -113,7 +113,7 @@ import java.io.DataOutputStream;
  * class
  */
 public aspect BlockReceiverAspects {
-  public static final Log LOG = LogFactory.getLog(BlockReceiverAspects.class);
+  public static final Logger LOG = LoggerFactory.getLogger(BlockReceiverAspects.class);
 
   public static final String BLOCK_RECEIVER_FAULT="hdfs.datanode.BlockReceiver";
     pointcut callReceivePacket() : call (* OutputStream.write(..))

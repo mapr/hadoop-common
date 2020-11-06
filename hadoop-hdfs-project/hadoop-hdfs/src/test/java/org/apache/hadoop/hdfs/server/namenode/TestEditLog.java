@@ -81,7 +81,7 @@ import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.test.PathUtils;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.Time;
-import org.apache.log4j.Level;
+import org.slf4j.event.Level;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.xml.sax.ContentHandler;
@@ -96,7 +96,7 @@ import com.google.common.collect.Lists;
 public class TestEditLog {
 
   static {
-    GenericTestUtils.setLogLevel(FSEditLog.LOG, Level.ALL);
+    GenericTestUtils.setLogLevel(FSEditLog.LOG, Level.TRACE);
   }
 
   /**

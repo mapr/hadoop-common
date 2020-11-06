@@ -17,8 +17,8 @@
  */
 package org.apache.hadoop.hdfs;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fi.DataTransferTestUtil;
 import org.apache.hadoop.fi.PipelineTest;
 import org.apache.hadoop.fi.DataTransferTestUtil.DataTransferTest;
@@ -29,7 +29,7 @@ import org.junit.Assert;
 
 /** Aspects for DFSClient */
 privileged public aspect DFSClientAspects {
-  public static final Log LOG = LogFactory.getLog(DFSClientAspects.class);
+  public static final Logger LOG = LoggerFactory.getLogger(DFSClientAspects.class);
 
   pointcut callCreateBlockOutputStream(DataStreamer datastreamer):
     call(* createBlockOutputStream(..)) && target(datastreamer);

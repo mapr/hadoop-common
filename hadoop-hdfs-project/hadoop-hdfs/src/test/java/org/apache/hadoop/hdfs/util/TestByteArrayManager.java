@@ -31,9 +31,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.impl.Log4JLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.util.ByteArrayManager.Counter;
@@ -41,7 +40,8 @@ import org.apache.hadoop.hdfs.util.ByteArrayManager.CounterMap;
 import org.apache.hadoop.hdfs.util.ByteArrayManager.FixedLengthManager;
 import org.apache.hadoop.hdfs.util.ByteArrayManager.ManagerMap;
 import org.apache.hadoop.util.Time;
-import org.apache.log4j.Level;
+import org.apache.hadoop.test.GenericTestUtils;
+import org.slf4j.event.Level;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -50,11 +50,10 @@ import org.junit.Test;
  */
 public class TestByteArrayManager {
   static {
-    ((Log4JLogger)LogFactory.getLog(ByteArrayManager.class)
-        ).getLogger().setLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(ByteArrayManager.LOG, Level.TRACE);
   }
 
-  static final Log LOG = LogFactory.getLog(TestByteArrayManager.class);
+  static final Logger LOG = LoggerFactory.getLogger(TestByteArrayManager.class);
 
   private static final Comparator<Future<Integer>> CMP = new Comparator<Future<Integer>>() {
     @Override
@@ -559,8 +558,8 @@ public class TestByteArrayManager {
   }
   
   public static void main(String[] args) throws Exception {
-    ((Log4JLogger)LogFactory.getLog(ByteArrayManager.class)
-        ).getLogger().setLevel(Level.OFF);
+//    ((Log4JLogger)LogFactory.getLog(ByteArrayManager.class)
+//        ).getLogger().setLevel(Level.OFF);
 
     final int arrayLength = 64 * 1024; //64k
     final int nThreads = 512;

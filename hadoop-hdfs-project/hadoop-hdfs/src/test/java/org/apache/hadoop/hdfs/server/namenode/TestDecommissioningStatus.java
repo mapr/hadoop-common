@@ -55,8 +55,9 @@ import org.apache.hadoop.hdfs.server.blockmanagement.DecommissionManager;
 import org.apache.hadoop.hdfs.server.datanode.DataNode;
 import org.apache.hadoop.hdfs.server.datanode.DataNodeTestUtils;
 import org.apache.hadoop.hdfs.tools.DFSAdmin;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.apache.hadoop.test.GenericTestUtils;
+import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -110,7 +111,8 @@ public class TestDecommissioningStatus {
     fileSys = cluster.getFileSystem();
     cluster.getNamesystem().getBlockManager().getDatanodeManager()
         .setHeartbeatExpireInterval(3000);
-    Logger.getLogger(DecommissionManager.class).setLevel(Level.DEBUG);
+    GenericTestUtils.setLogLevel(LoggerFactory.getLogger(DecommissionManager.class),
+            Level.DEBUG);
   }
 
   @AfterClass
@@ -407,8 +409,8 @@ public class TestDecommissioningStatus {
    */
   @Test(timeout=120000)
   public void testDecommissionDeadDN() throws Exception {
-    Logger log = Logger.getLogger(DecommissionManager.class);
-    log.setLevel(Level.DEBUG);
+    GenericTestUtils.setLogLevel(LoggerFactory.getLogger(DecommissionManager.class),
+            Level.DEBUG);
     DatanodeID dnID = cluster.getDataNodes().get(0).getDatanodeId();
     String dnName = dnID.getXferAddr();
     DataNodeProperties stoppedDN = cluster.stopDataNode(0);

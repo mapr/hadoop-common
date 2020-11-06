@@ -71,7 +71,7 @@ import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.TokenIdentifier;
 import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.util.Time;
-import org.apache.log4j.Level;
+import org.slf4j.event.Level;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
@@ -90,11 +90,11 @@ public class TestBlockToken {
   private static final String ADDRESS = "0.0.0.0";
 
   static {
-    GenericTestUtils.setLogLevel(Client.LOG, Level.ALL);
-    GenericTestUtils.setLogLevel(Server.LOG, Level.ALL);
-    GenericTestUtils.setLogLevel(SaslRpcClient.LOG, Level.ALL);
-    GenericTestUtils.setLogLevel(SaslRpcServer.LOG, Level.ALL);
-    GenericTestUtils.setLogLevel(SaslInputStream.LOG, Level.ALL);
+    GenericTestUtils.setLogLevel(Client.LOG, Level.TRACE);
+    GenericTestUtils.setLogLevel(Server.LOG, Level.TRACE);
+    GenericTestUtils.setLogLevel(SaslRpcClient.LOG, Level.TRACE);
+    GenericTestUtils.setLogLevel(SaslRpcServer.LOG, Level.TRACE);
+    GenericTestUtils.setLogLevel(SaslInputStream.LOG, Level.TRACE);
   }
 
   /** Directory where we can count our open file descriptors under Linux */

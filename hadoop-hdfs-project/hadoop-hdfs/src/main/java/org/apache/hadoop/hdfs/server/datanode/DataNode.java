@@ -93,8 +93,8 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.ReconfigurableBase;
@@ -215,6 +215,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.protobuf.BlockingService;
 
+
 /**********************************************************
  * DataNode is a class (and program) that stores a set of
  * blocks for a DFS deployment.  A single deployment can
@@ -250,7 +251,7 @@ import com.google.protobuf.BlockingService;
 public class DataNode extends ReconfigurableBase
     implements InterDatanodeProtocol, ClientDatanodeProtocol,
         TraceAdminProtocol, DataNodeMXBean {
-  public static final Log LOG = LogFactory.getLog(DataNode.class);
+  public static final Logger LOG = LoggerFactory.getLogger(DataNode.class);
   
   static{
     HdfsConfiguration.init();
@@ -267,8 +268,8 @@ public class DataNode extends ReconfigurableBase
         ", blockid: %s" + // block id
         ", duration: %s";  // duration time
         
-  static final Log ClientTraceLog =
-    LogFactory.getLog(DataNode.class.getName() + ".clienttrace");
+  static final Logger ClientTraceLog =
+    LoggerFactory.getLogger(DataNode.class.getName() + ".clienttrace");
   
   private static final String USAGE =
       "Usage: java DataNode [-regular | -rollback]\n" +
@@ -2534,7 +2535,7 @@ public class DataNode extends ReconfigurableBase
         errorCode = 1;
       }
     } catch (Throwable e) {
-      LOG.fatal("Exception in secureMain", e);
+      LOG.error("Exception in secureMain", e);
       terminate(1, e);
     } finally {
       // We need to terminate the process here because either shutdown was called

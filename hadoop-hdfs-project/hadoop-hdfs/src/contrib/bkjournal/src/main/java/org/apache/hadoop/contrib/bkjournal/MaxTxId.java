@@ -19,8 +19,8 @@ package org.apache.hadoop.contrib.bkjournal;
 
 import java.io.IOException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.ZooKeeper;
@@ -36,7 +36,7 @@ import static com.google.common.base.Charsets.UTF_8;
  * the max seen txid in zookeeper
  */
 class MaxTxId {
-  static final Log LOG = LogFactory.getLog(MaxTxId.class);
+  static final Logger LOG = LoggerFactory.getLogger(MaxTxId.class);
   
   private final ZooKeeper zkc;
   private final String path;

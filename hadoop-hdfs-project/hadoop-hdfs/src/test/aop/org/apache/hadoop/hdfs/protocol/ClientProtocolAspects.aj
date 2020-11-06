@@ -17,14 +17,14 @@
  */
 package org.apache.hadoop.hdfs.protocol;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fi.DataTransferTestUtil;
 import org.apache.hadoop.fi.PipelineTest;
 
 /** Aspect for ClientProtocol */
 public aspect ClientProtocolAspects {
-  public static final Log LOG = LogFactory.getLog(ClientProtocolAspects.class);
+  public static final Logger LOG = LoggerFactory.getLogger(ClientProtocolAspects.class);
 
   pointcut addBlock():
     call(LocatedBlock ClientProtocol.addBlock(String, String,..));

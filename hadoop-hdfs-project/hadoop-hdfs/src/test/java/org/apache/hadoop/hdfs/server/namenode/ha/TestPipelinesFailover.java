@@ -54,7 +54,7 @@ import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.test.GenericTestUtils.DelayAnswer;
 import org.apache.hadoop.test.MultithreadedTestUtil.RepeatingTestThread;
 import org.apache.hadoop.test.MultithreadedTestUtil.TestContext;
-import org.apache.log4j.Level;
+import org.slf4j.event.Level;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -65,9 +65,9 @@ import com.google.common.base.Supplier;
  */
 public class TestPipelinesFailover {
   static {
-    GenericTestUtils.setLogLevel(LoggerFactory.getLogger(RetryInvocationHandler
-            .class), org.slf4j.event.Level.DEBUG);
-    DFSTestUtil.setNameNodeLogLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(LoggerFactory
+            .getLogger(RetryInvocationHandler.class), Level.DEBUG);
+    DFSTestUtil.setNameNodeLogLevel(Level.TRACE);
   }
   
   protected static final Logger LOG = LoggerFactory.getLogger(

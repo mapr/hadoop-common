@@ -47,7 +47,7 @@ import org.apache.hadoop.hdfs.server.namenode.FSDirectory;
 import org.apache.hadoop.hdfs.server.namenode.INodeFile;
 import org.apache.hadoop.hdfs.server.protocol.NamenodeProtocols;
 import org.apache.hadoop.test.GenericTestUtils;
-import org.apache.log4j.Level;
+import org.slf4j.event.Level;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -68,9 +68,9 @@ public class TestFileAppend4 {
   final boolean simulatedStorage = false;
 
   {
-    DFSTestUtil.setNameNodeLogLevel(Level.ALL);
-    GenericTestUtils.setLogLevel(DataNode.LOG, Level.ALL);
-    GenericTestUtils.setLogLevel(DFSClient.LOG, Level.ALL);
+    DFSTestUtil.setNameNodeLogLevel(Level.TRACE);
+    GenericTestUtils.setLogLevel(DataNode.LOG, Level.TRACE);
+    GenericTestUtils.setLogLevel(DFSClient.LOG, Level.TRACE);
   }
 
   @Before

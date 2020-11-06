@@ -28,8 +28,8 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.EnumSet;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.fs.CreateFlag;
 import org.apache.hadoop.fs.DirectoryListingStartAfterNotFoundException;
@@ -146,7 +146,7 @@ public class RpcProgramNfs3 extends RpcProgram implements Nfs3Interface {
   public static final FsPermission umask = new FsPermission(
       (short) DEFAULT_UMASK);
 
-  static final Log LOG = LogFactory.getLog(RpcProgramNfs3.class);
+  static final Logger LOG =LoggerFactory.getLogger(RpcProgramNfs3.class);
 
   private final NfsConfiguration config;
   private final WriteManager writeManager;

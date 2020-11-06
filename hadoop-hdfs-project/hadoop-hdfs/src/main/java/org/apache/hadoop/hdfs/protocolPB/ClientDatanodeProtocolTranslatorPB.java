@@ -28,8 +28,8 @@ import javax.net.SocketFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
@@ -87,8 +87,8 @@ import com.google.protobuf.ServiceException;
 public class ClientDatanodeProtocolTranslatorPB implements
     ProtocolMetaInterface, ClientDatanodeProtocol,
     ProtocolTranslator, Closeable {
-  public static final Log LOG = LogFactory
-      .getLog(ClientDatanodeProtocolTranslatorPB.class);
+  public static final Logger LOG = LoggerFactory
+          .getLogger(ClientDatanodeProtocolTranslatorPB.class);
   
   /** RpcController is not used and hence is set to null */
   private final static RpcController NULL_CONTROLLER = null;

@@ -29,8 +29,8 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
@@ -49,7 +49,7 @@ import com.google.common.annotations.VisibleForTesting;
 @InterfaceAudience.Private
 @InterfaceStability.Evolving
 public class BlockMetadataHeader {
-  private static final Log LOG = LogFactory.getLog(BlockMetadataHeader.class);
+  private static final Logger LOG = LoggerFactory.getLogger(BlockMetadataHeader.class);
 
   public static final short VERSION = 1;
   

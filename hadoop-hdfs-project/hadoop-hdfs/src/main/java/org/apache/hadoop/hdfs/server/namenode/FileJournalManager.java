@@ -26,8 +26,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileUtil;
@@ -59,7 +59,7 @@ import com.google.common.collect.Lists;
  */
 @InterfaceAudience.Private
 public class FileJournalManager implements JournalManager {
-  private static final Log LOG = LogFactory.getLog(FileJournalManager.class);
+  private static final Logger LOG = LoggerFactory.getLogger(FileJournalManager.class);
 
   private final Configuration conf;
   private final StorageDirectory sd;

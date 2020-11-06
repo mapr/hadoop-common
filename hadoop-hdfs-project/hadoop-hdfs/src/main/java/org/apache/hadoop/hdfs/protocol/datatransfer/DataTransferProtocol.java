@@ -19,8 +19,8 @@ package org.apache.hadoop.hdfs.protocol.datatransfer;
 
 import java.io.IOException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.fs.StorageType;
@@ -38,7 +38,7 @@ import org.apache.hadoop.util.DataChecksum;
 @InterfaceAudience.Private
 @InterfaceStability.Evolving
 public interface DataTransferProtocol {
-  public static final Log LOG = LogFactory.getLog(DataTransferProtocol.class);
+  public static final Logger LOG = LoggerFactory.getLogger(DataTransferProtocol.class);
   
   /** Version for data transfers between clients and datanodes
    * This should change when serialization of DatanodeInfo, not just

@@ -38,8 +38,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
@@ -73,7 +73,7 @@ import com.google.protobuf.CodedOutputStream;
  */
 @InterfaceAudience.Private
 public final class FSImageFormatProtobuf {
-  private static final Log LOG = LogFactory.getLog(FSImageFormatProtobuf.class);
+  private static final Logger LOG = LoggerFactory.getLogger(FSImageFormatProtobuf.class);
 
   public static final class LoaderContext {
     private String[] stringTable;

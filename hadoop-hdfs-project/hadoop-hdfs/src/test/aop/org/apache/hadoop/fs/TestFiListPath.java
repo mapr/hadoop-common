@@ -25,8 +25,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Iterator;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
@@ -45,7 +45,7 @@ import org.junit.Test;
  * This test uses AspectJ to simulate the scenario.
  */
 public class TestFiListPath {
-  private static final Log LOG = LogFactory.getLog(TestFiListPath.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TestFiListPath.class);
   private static final int LIST_LIMIT = 1;
   
   private static MiniDFSCluster cluster = null;

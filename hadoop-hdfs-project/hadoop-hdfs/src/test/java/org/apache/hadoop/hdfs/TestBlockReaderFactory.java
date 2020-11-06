@@ -38,8 +38,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -60,7 +60,7 @@ import org.junit.Test;
 import com.google.common.util.concurrent.Uninterruptibles;
 
 public class TestBlockReaderFactory {
-  static final Log LOG = LogFactory.getLog(TestBlockReaderFactory.class);
+  static final Logger LOG = LoggerFactory.getLogger(TestBlockReaderFactory.class);
 
   @Before
   public void init() {

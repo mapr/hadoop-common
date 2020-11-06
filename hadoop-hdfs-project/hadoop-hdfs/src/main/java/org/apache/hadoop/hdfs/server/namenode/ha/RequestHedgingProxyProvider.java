@@ -30,8 +30,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -48,8 +48,8 @@ import org.apache.hadoop.io.retry.MultiException;
 public class RequestHedgingProxyProvider<T> extends
         ConfiguredFailoverProxyProvider<T> {
 
-  private static final Log LOG =
-          LogFactory.getLog(RequestHedgingProxyProvider.class);
+  private static final Logger LOG =
+          LoggerFactory.getLogger(RequestHedgingProxyProvider.class);
 
   class RequestHedgingInvocationHandler implements InvocationHandler {
 

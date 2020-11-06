@@ -30,14 +30,14 @@ import org.apache.bookkeeper.client.LedgerHandle;
 import org.apache.bookkeeper.client.LedgerEntry;
 import org.apache.bookkeeper.client.BKException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Input stream which reads from a BookKeeper ledger.
  */
 class BookKeeperEditLogInputStream extends EditLogInputStream {
-  static final Log LOG = LogFactory.getLog(BookKeeperEditLogInputStream.class);
+  static final Logger LOG = LoggerFactory.getLogger(BookKeeperEditLogInputStream.class);
 
   private final long firstTxId;
   private final long lastTxId;

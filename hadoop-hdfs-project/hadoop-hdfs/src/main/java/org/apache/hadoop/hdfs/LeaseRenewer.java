@@ -27,8 +27,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.HadoopIllegalArgumentException;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -69,7 +69,7 @@ import com.google.common.annotations.VisibleForTesting;
  * </p>
  */
 class LeaseRenewer {
-  static final Log LOG = LogFactory.getLog(LeaseRenewer.class);
+  static final Logger LOG = LoggerFactory.getLogger(LeaseRenewer.class);
 
   static final long LEASE_RENEWER_GRACE_DEFAULT = 60*1000L;
   static final long LEASE_RENEWER_SLEEP_DEFAULT = 1000L;

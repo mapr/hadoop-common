@@ -39,7 +39,7 @@ import org.apache.hadoop.hdfs.tools.JMXGet;
 import org.apache.hadoop.net.unix.TemporarySocketDirectory;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.test.GenericTestUtils;
-import org.apache.log4j.Level;
+import org.slf4j.event.Level;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.rules.Timeout;
@@ -66,8 +66,8 @@ import static org.junit.Assert.fail;
 public abstract class LazyPersistTestCase {
 
   static {
-    DFSTestUtil.setNameNodeLogLevel(Level.ALL);
-    GenericTestUtils.setLogLevel(FsDatasetImpl.LOG, Level.ALL);
+    DFSTestUtil.setNameNodeLogLevel(Level.TRACE);
+    GenericTestUtils.setLogLevel(FsDatasetImpl.LOG, Level.TRACE);
   }
 
   protected static final int BLOCK_SIZE = 5 * 1024 * 1024;

@@ -26,8 +26,8 @@ import static org.junit.Assert.fail;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
@@ -41,7 +41,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class TestNetworkTopology {
-  private static final Log LOG = LogFactory.getLog(TestNetworkTopology.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TestNetworkTopology.class);
   private final static NetworkTopology cluster = new NetworkTopology();
   private DatanodeDescriptor dataNodes[];
   

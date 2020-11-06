@@ -69,8 +69,7 @@ import org.apache.hadoop.util.Time;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.hadoop.util.VersionInfo;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
+import org.slf4j.event.Level;
 
 /**
  * Main class for a series of name-node benchmarks.
@@ -150,10 +149,10 @@ public class NNThroughputBenchmark implements Tool {
     LOG.error("Log level = " + logLevel.toString());
     // change log level to NameNode logs
     DFSTestUtil.setNameNodeLogLevel(logLevel);
-    GenericTestUtils.setLogLevel(LogManager.getLogger(
-            NetworkTopology.class.getName()), logLevel);
-    GenericTestUtils.setLogLevel(LogManager.getLogger(
-            Groups.class.getName()), logLevel);
+    GenericTestUtils.setLogLevel(LoggerFactory
+            .getLogger(NetworkTopology.class.getName()), logLevel);
+    GenericTestUtils.setLogLevel(LoggerFactory
+            .getLogger(Groups.class.getName()), logLevel);
   }
 
   /**
@@ -346,7 +345,7 @@ public class NNThroughputBenchmark implements Tool {
       if(llIndex >= 0) {
         if(args.size() <= llIndex + 1)
           printUsage();
-        logLevel = Level.toLevel(args.get(llIndex+1), Level.ERROR);
+          logLevel = parseLogArg(args.get(llIndex+1), Level.ERROR);
         args.remove(llIndex+1);
         args.remove(llIndex);
       }
@@ -378,6 +377,13 @@ public class NNThroughputBenchmark implements Tool {
       LOG.info(" Ops per sec: " + getOpsPerSecond());
       LOG.info("Average Time: " + getAverageTime());
     }
+  }
+
+  private Level  parseLogArg(String arg, Level  defaultLevel) {
+    for (Level level: Level.values()) {
+      if (arg.equals(level.toString())) return level;
+    }
+    return defaultLevel;
   }
 
   /**

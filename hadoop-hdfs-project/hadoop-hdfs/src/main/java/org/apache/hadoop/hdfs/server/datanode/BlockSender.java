@@ -31,8 +31,7 @@ import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.Arrays;
-
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
 import org.apache.hadoop.fs.ChecksumException;
 import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
@@ -93,8 +92,8 @@ import com.google.common.base.Preconditions;
  *  no checksum error, it replies to DataNode with OP_STATUS_CHECKSUM_OK.
  */
 class BlockSender implements java.io.Closeable {
-  static final Log LOG = DataNode.LOG;
-  static final Log ClientTraceLog = DataNode.ClientTraceLog;
+  static final Logger LOG = DataNode.LOG;
+  static final Logger ClientTraceLog = DataNode.ClientTraceLog;
   private static final boolean is32Bit = 
       System.getProperty("sun.arch.data.model").equals("32");
   /**

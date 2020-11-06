@@ -22,8 +22,8 @@ import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.hdfs.ExtendedBlockId;
 import org.apache.hadoop.hdfs.shortcircuit.ShortCircuitShm;
@@ -36,7 +36,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class TestShortCircuitShm {
-  public static final Log LOG = LogFactory.getLog(TestShortCircuitShm.class);
+  public static final Logger LOG = LoggerFactory.getLogger(TestShortCircuitShm.class);
   
   private static final File TEST_BASE =
       new File(System.getProperty("test.build.data", "/tmp"));

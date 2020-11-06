@@ -25,8 +25,8 @@ import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.util.DirectBufferPool;
 import org.apache.hadoop.io.IOUtils;
@@ -48,7 +48,7 @@ public class PacketReceiver implements Closeable {
    */
   private static final int MAX_PACKET_SIZE = 16 * 1024 * 1024;
 
-  static final Log LOG = LogFactory.getLog(PacketReceiver.class);
+  static final Logger LOG = LoggerFactory.getLogger(PacketReceiver.class);
   
   private static final DirectBufferPool bufferPool = new DirectBufferPool();
   private final boolean useDirectBuffers;

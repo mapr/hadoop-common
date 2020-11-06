@@ -17,8 +17,8 @@
  */
 package org.apache.hadoop.hdfs.server.datanode;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fi.ProbabilityModel;
 import org.apache.hadoop.hdfs.server.datanode.FSDataset;
 import org.apache.hadoop.hdfs.server.datanode.FSDatasetInterface.BlockWriteStreams;
@@ -29,7 +29,7 @@ import org.apache.hadoop.util.DiskChecker.*;
  * This aspect takes care about faults injected into datanode.FSDatase class
  */
 public aspect FSDatasetAspects {
-  public static final Log LOG = LogFactory.getLog(BlockReceiverAspects.class);
+  public static final Logger LOG = LoggerFactory.getLogger(BlockReceiverAspects.class);
 
   pointcut execGetBlockFile() :
   // the following will inject faults inside of the method in question 		

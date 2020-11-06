@@ -21,8 +21,8 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.EnumSet;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
@@ -43,7 +43,7 @@ import org.apache.hadoop.util.StringUtils;
  */
 @InterfaceAudience.Private
 public class KeyManager implements Closeable, DataEncryptionKeyFactory {
-  private static final Log LOG = LogFactory.getLog(KeyManager.class);
+  private static final Logger LOG = LoggerFactory.getLogger(KeyManager.class);
 
   private final NamenodeProtocol namenode;
 

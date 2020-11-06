@@ -26,8 +26,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.ReadableByteChannel;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hdfs.net.Peer;
 import org.apache.hadoop.hdfs.protocol.DatanodeID;
 import org.apache.hadoop.net.unix.DomainSocket;
@@ -39,7 +39,7 @@ import org.mockito.stubbing.Answer;
 import com.google.common.collect.HashMultiset;
 
 public class TestPeerCache {
-  static final Log LOG = LogFactory.getLog(TestPeerCache.class);
+  static final Logger LOG = LoggerFactory.getLogger(TestPeerCache.class);
 
   private static class FakePeer implements Peer {
     private boolean closed = false;

@@ -35,7 +35,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.zip.Checksum;
 
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
 import org.apache.hadoop.fs.ChecksumException;
 import org.apache.hadoop.fs.FSOutputSummer;
 import org.apache.hadoop.fs.StorageType;
@@ -66,8 +66,8 @@ import com.google.common.annotations.VisibleForTesting;
  * streaming throttling is also supported.
  **/
 class BlockReceiver implements Closeable {
-  public static final Log LOG = DataNode.LOG;
-  static final Log ClientTraceLog = DataNode.ClientTraceLog;
+  public static final Logger LOG = DataNode.LOG;
+  static final Logger ClientTraceLog = DataNode.ClientTraceLog;
 
   @VisibleForTesting
   static long CACHE_DROP_LAG_BYTES = 8 * 1024 * 1024;
@@ -854,7 +854,7 @@ class BlockReceiver implements Closeable {
               // The worst case is not recovering this RBW replica. 
               // Client will fall back to regular pipeline recovery.
             } finally {
-              IOUtils.cleanup(LOG, out);
+              IOUtils.cleanupWithLogger(LOG, out);
             }
             try {              
               // Even if the connection is closed after the ack packet is

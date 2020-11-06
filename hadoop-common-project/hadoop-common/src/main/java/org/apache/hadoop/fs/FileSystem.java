@@ -47,8 +47,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
@@ -77,6 +75,8 @@ import org.apache.htrace.core.Tracer;
 import org.apache.htrace.core.TraceScope;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /****************************************************************
  * An abstract base class for a fairly generic filesystem.  It
@@ -104,7 +104,7 @@ public abstract class FileSystem extends Configured implements Closeable {
   public static final String DEFAULT_FS = 
                    CommonConfigurationKeys.FS_DEFAULT_NAME_DEFAULT;
 
-  public static final Log LOG = LogFactory.getLog(FileSystem.class);
+  public static final Logger LOG = LoggerFactory.getLogger(FileSystem.class);
 
   /**
    * Priority of the FileSystem shutdown hook.

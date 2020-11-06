@@ -30,8 +30,8 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.lang.mutable.MutableBoolean;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.hdfs.ExtendedBlockId;
 import org.apache.hadoop.hdfs.net.DomainPeer;
@@ -63,7 +63,7 @@ import com.google.common.base.Preconditions;
  */
 @InterfaceAudience.Private
 public class DfsClientShmManager implements Closeable {
-  private static final Log LOG = LogFactory.getLog(DfsClientShmManager.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DfsClientShmManager.class);
 
   /**
    * Manages short-circuit memory segments that pertain to a given DataNode.
@@ -192,7 +192,7 @@ public class DfsClientShmManager implements Closeable {
           }
           return shm;
         } finally {
-          IOUtils.cleanup(LOG,  fis[0]);
+          IOUtils.cleanupWithLogger(LOG,  fis[0]);
         }
       case ERROR_UNSUPPORTED:
         // The DataNode just does not support short-circuit shared memory
@@ -496,7 +496,7 @@ public class DfsClientShmManager implements Closeable {
     }
     // When closed, the domainSocketWatcher will issue callbacks that mark
     // all the outstanding DfsClientShm segments as stale.
-    IOUtils.cleanup(LOG, domainSocketWatcher);
+    IOUtils.cleanupWithLogger(LOG, domainSocketWatcher);
   }
 
 

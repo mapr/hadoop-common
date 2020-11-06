@@ -62,7 +62,7 @@ import org.apache.hadoop.hdfs.server.namenode.NameNode;
 import org.apache.hadoop.hdfs.server.namenode.NameNodeAdapter;
 import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.test.PathUtils;
-import org.apache.log4j.Level;
+import org.slf4j.event.Level;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -1017,8 +1017,8 @@ public class TestDecommission {
   @Test(timeout=120000)
   public void testBlocksPerInterval() throws Exception {
     Configuration newConf = new Configuration(conf);
-    org.apache.log4j.Logger.getLogger(DecommissionManager.class)
-        .setLevel(Level.TRACE);
+    GenericTestUtils.setLogLevel(LoggerFactory.
+            getLogger(DecommissionManager.class), Level.TRACE);
     // Turn the blocks per interval way down
     newConf.setInt(
         DFSConfigKeys.DFS_NAMENODE_DECOMMISSION_BLOCKS_PER_INTERVAL_KEY,
@@ -1050,8 +1050,8 @@ public class TestDecommission {
   @Test(timeout=120000)
   public void testNodesPerInterval() throws Exception {
     Configuration newConf = new Configuration(conf);
-    org.apache.log4j.Logger.getLogger(DecommissionManager.class)
-        .setLevel(Level.TRACE);
+    GenericTestUtils.setLogLevel(LoggerFactory.
+            getLogger(DecommissionManager.class), Level.TRACE);
     // Set the deprecated configuration key which limits the # of nodes per
     // interval
     newConf.setInt("dfs.namenode.decommission.nodes.per.interval", 1);
@@ -1096,8 +1096,8 @@ public class TestDecommission {
   @Test(timeout=120000)
   public void testPendingNodes() throws Exception {
     Configuration newConf = new Configuration(conf);
-    org.apache.log4j.Logger.getLogger(DecommissionManager.class)
-        .setLevel(Level.TRACE);
+    GenericTestUtils.setLogLevel(LoggerFactory.
+            getLogger(DecommissionManager.class), Level.TRACE);
     // Only allow one node to be decom'd at a time
     newConf.setInt(
         DFSConfigKeys.DFS_NAMENODE_DECOMMISSION_MAX_CONCURRENT_TRACKED_NODES,

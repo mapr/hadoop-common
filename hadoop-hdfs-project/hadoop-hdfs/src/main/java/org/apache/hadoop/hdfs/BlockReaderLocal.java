@@ -23,8 +23,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.EnumSet;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fs.ReadOption;
 import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.client.impl.DfsClientConf.ShortCircuitConf;
@@ -58,7 +58,7 @@ import com.google.common.base.Preconditions;
  * </ul>
  */
 class BlockReaderLocal implements BlockReader {
-  static final Log LOG = LogFactory.getLog(BlockReaderLocal.class);
+  static final Logger LOG = LoggerFactory.getLogger(BlockReaderLocal.class);
 
   private static final DirectBufferPool bufferPool = new DirectBufferPool();
 

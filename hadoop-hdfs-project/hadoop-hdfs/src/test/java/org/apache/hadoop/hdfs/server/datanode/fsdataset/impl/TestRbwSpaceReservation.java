@@ -20,9 +20,8 @@ package org.apache.hadoop.hdfs.server.datanode.fsdataset.impl;
 
 import com.google.common.base.Supplier;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.impl.Log4JLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import static org.apache.hadoop.hdfs.DFSConfigKeys.*;
 import static org.hamcrest.core.Is.is;
@@ -36,7 +35,7 @@ import org.apache.hadoop.hdfs.server.datanode.fsdataset.FsVolumeSpi;
 import org.apache.hadoop.ipc.RemoteException;
 import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.util.Daemon;
-import org.apache.log4j.Level;
+import org.slf4j.event.Level;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -53,7 +52,7 @@ import java.util.concurrent.TimeoutException;
  * replica being written (RBW).
  */
 public class TestRbwSpaceReservation {
-  static final Log LOG = LogFactory.getLog(TestRbwSpaceReservation.class);
+  static final Logger LOG = LoggerFactory.getLogger(TestRbwSpaceReservation.class);
 
   private static final int DU_REFRESH_INTERVAL_MSEC = 500;
   private static final int STORAGES_PER_DATANODE = 1;
@@ -80,8 +79,8 @@ public class TestRbwSpaceReservation {
   }
 
   static {
-    ((Log4JLogger) FsDatasetImpl.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger) DataNode.LOG).getLogger().setLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(FsDatasetImpl.LOG, Level.TRACE);
+    GenericTestUtils.setLogLevel(DataNode.LOG, Level.TRACE);
   }
 
   /**

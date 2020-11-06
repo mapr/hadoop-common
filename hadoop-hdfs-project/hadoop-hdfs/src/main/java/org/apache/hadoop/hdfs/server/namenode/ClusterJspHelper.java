@@ -34,8 +34,8 @@ import java.util.Set;
 
 import javax.management.MalformedObjectNameException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
@@ -56,7 +56,7 @@ import com.google.common.base.Charsets;
  */
 @InterfaceAudience.Private
 class ClusterJspHelper {
-  private static final Log LOG = LogFactory.getLog(ClusterJspHelper.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ClusterJspHelper.class);
   public static final String OVERALL_STATUS = "overall-status";
   public static final String DEAD = "Dead";
   private static final String JMX_QRY = 

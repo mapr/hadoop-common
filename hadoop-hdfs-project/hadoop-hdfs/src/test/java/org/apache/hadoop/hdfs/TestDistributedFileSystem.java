@@ -43,7 +43,6 @@ import java.util.List;
 import java.util.Random;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.logging.impl.Log4JLogger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.BlockStorageLocation;
@@ -73,7 +72,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.util.DataChecksum;
 import org.apache.hadoop.util.Time;
-import org.apache.log4j.Level;
+import org.slf4j.event.Level;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.InOrder;
@@ -88,7 +87,7 @@ public class TestDistributedFileSystem {
   private static final Random RAN = new Random();
 
   {
-    ((Log4JLogger)DFSClient.LOG).getLogger().setLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(DFSClient.LOG, Level.TRACE);
   }
 
   private boolean dualPortTesting = false;
@@ -543,7 +542,7 @@ public class TestDistributedFileSystem {
 
   @Test
   public void testFileChecksum() throws Exception {
-    ((Log4JLogger)HftpFileSystem.LOG).getLogger().setLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(HftpFileSystem.LOG, Level.TRACE);
 
     final long seed = RAN.nextLong();
     System.out.println("seed=" + seed);
@@ -750,9 +749,9 @@ public class TestDistributedFileSystem {
   @Test(timeout=60000)
   public void testGetFileBlockStorageLocationsBatching() throws Exception {
     final Configuration conf = getTestConfiguration();
-    ((Log4JLogger)ProtobufRpcEngine.LOG).getLogger().setLevel(Level.TRACE);
-    ((Log4JLogger)BlockStorageLocationUtil.LOG).getLogger().setLevel(Level.TRACE);
-    ((Log4JLogger)DFSClient.LOG).getLogger().setLevel(Level.TRACE);
+    GenericTestUtils.setLogLevel(ProtobufRpcEngine.LOG, Level.TRACE);
+    GenericTestUtils.setLogLevel(BlockStorageLocationUtil.LOG, Level.TRACE);
+    GenericTestUtils.setLogLevel(DFSClient.LOG, Level.TRACE);
 
     conf.setBoolean(DFSConfigKeys.DFS_HDFS_BLOCKS_METADATA_ENABLED,
         true);

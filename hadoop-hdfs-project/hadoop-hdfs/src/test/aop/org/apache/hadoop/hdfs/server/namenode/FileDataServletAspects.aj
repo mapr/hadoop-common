@@ -22,13 +22,13 @@ import java.io.IOException;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
 import org.apache.hadoop.hdfs.protocol.ClientProtocol;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.security.UserGroupInformation;
 
 public aspect FileDataServletAspects {
-  static final Log LOG = FileDataServlet.LOG;
+  static final Logger LOG = FileDataServlet.LOG;
 
   pointcut callCreateUrl() : call (URL FileDataServlet.createRedirectURL(
       String, String, HdfsFileStatus, UserGroupInformation, ClientProtocol,

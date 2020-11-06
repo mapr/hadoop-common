@@ -20,8 +20,8 @@ package org.apache.hadoop.hdfs;
 
 import java.io.IOException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fi.DataTransferTestUtil;
 import org.apache.hadoop.fi.PipelineTest;
 import org.apache.hadoop.fi.FiHFlushTestUtil.HFlushTest;
@@ -29,7 +29,7 @@ import org.apache.hadoop.hdfs.DFSOutputStream;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 
 public aspect HFlushAspects {
-  public static final Log LOG = LogFactory.getLog(HFlushAspects.class);
+  public static final Logger LOG = LoggerFactory.getLogger(HFlushAspects.class);
 
   pointcut hflushCall (DFSOutputStream outstream) :
     execution(void DFSOutputStream.hflush(..))

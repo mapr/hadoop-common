@@ -20,8 +20,8 @@ package org.apache.hadoop.hdfs.server.blockmanagement;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSUtil;
@@ -38,7 +38,7 @@ import org.apache.hadoop.util.Time;
  * by the heartbeat manager lock.
  */
 class HeartbeatManager implements DatanodeStatistics {
-  static final Log LOG = LogFactory.getLog(HeartbeatManager.class);
+  static final Logger LOG = LoggerFactory.getLogger(HeartbeatManager.class);
 
   /**
    * Stores a subset of the datanodeMap in DatanodeManager,

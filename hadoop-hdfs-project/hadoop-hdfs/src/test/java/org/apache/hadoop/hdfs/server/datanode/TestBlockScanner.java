@@ -51,7 +51,7 @@ import org.apache.hadoop.hdfs.server.datanode.fsdataset.impl.FsVolumeImpl;
 import org.apache.hadoop.hdfs.server.datanode.VolumeScanner.Statistics;
 import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.util.Time;
-import org.apache.log4j.Level;
+import org.slf4j.event.Level;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -65,9 +65,9 @@ public class TestBlockScanner {
   @Before
   public void before() {
     BlockScanner.Conf.allowUnitTestSettings = true;
-    GenericTestUtils.setLogLevel(BlockScanner.LOG, Level.ALL);
-    GenericTestUtils.setLogLevel(VolumeScanner.LOG, Level.ALL);
-    GenericTestUtils.setLogLevel(FsVolumeImpl.LOG, Level.ALL);
+    GenericTestUtils.setLogLevel(BlockScanner.LOG, Level.TRACE);
+    GenericTestUtils.setLogLevel(VolumeScanner.LOG, Level.TRACE);
+    GenericTestUtils.setLogLevel(FsVolumeImpl.LOG, Level.TRACE);
   }
 
   private static void disableBlockScanner(Configuration conf) {

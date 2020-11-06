@@ -17,8 +17,8 @@
  */
 package org.apache.hadoop.hdfs.client.impl;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.HadoopIllegalArgumentException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
@@ -453,7 +453,7 @@ public class DfsClientConf {
   }
 
   public static class ShortCircuitConf {
-    private static final Log LOG = LogFactory.getLog(ShortCircuitConf.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ShortCircuitConf.class);
 
     private final int socketCacheCapacity;
     private final long socketCacheExpiry;

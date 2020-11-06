@@ -44,7 +44,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.server.namenode.NameNode;
 import org.apache.hadoop.hdfs.server.namenode.TestFileTruncate;
 import org.apache.hadoop.test.GenericTestUtils;
-import org.apache.log4j.Level;
+import org.slf4j.event.Level;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -59,7 +59,7 @@ import com.google.common.base.Preconditions;
  */
 public class TestAppendSnapshotTruncate {
   static {
-    GenericTestUtils.setLogLevel(NameNode.stateChangeLog, Level.ALL);
+    GenericTestUtils.setLogLevel(NameNode.stateChangeLog, Level.TRACE);
   }
   private static final Logger LOG =
       LoggerFactory.getLogger(TestAppendSnapshotTruncate.class);

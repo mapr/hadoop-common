@@ -17,8 +17,6 @@
  */
 package org.apache.hadoop.hdfs.nfs.nfs3;
 
-import org.apache.commons.logging.LogFactory;
-
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
@@ -29,7 +27,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.base.Preconditions;
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSInputStream;
@@ -51,7 +50,7 @@ import com.google.common.cache.RemovalNotification;
  * A cache saves DFSClient objects for different users
  */
 class DFSClientCache {
-  private static final Log LOG = LogFactory.getLog(DFSClientCache.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DFSClientCache.class);
   /**
    * Cache that maps User id to the corresponding DFSClient.
    */

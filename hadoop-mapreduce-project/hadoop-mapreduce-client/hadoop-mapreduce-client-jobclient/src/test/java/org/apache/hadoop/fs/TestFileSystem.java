@@ -36,7 +36,7 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
@@ -59,7 +59,7 @@ import static org.junit.Assert.fail;
 
 
 public class TestFileSystem {
-  private static final Log LOG = FileSystem.LOG;
+  private static final Logger LOG = FileSystem.LOG;
 
   private static Configuration conf = new Configuration();
   private static int BUFFER_SIZE = conf.getInt("io.file.buffer.size", 4096);

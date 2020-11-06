@@ -30,8 +30,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ha.ServiceFailedException;
@@ -60,7 +60,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
  */
 @InterfaceAudience.Private
 public class StandbyCheckpointer {
-  private static final Log LOG = LogFactory.getLog(StandbyCheckpointer.class);
+  private static final Logger LOG = LoggerFactory.getLogger(StandbyCheckpointer.class);
   private static final long PREVENT_AFTER_CANCEL_MS = 2*60*1000L;
   private final CheckpointConf checkpointConf;
   private final Configuration conf;

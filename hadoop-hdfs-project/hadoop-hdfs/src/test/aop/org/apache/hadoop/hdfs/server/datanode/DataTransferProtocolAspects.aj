@@ -22,8 +22,8 @@ import java.io.DataInputStream;
 import java.io.InputStream;
 import java.io.IOException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fi.DataTransferTestUtil;
 import org.apache.hadoop.fi.DataTransferTestUtil.DataTransferTest;
 import org.apache.hadoop.hdfs.protocol.proto.DataTransferProtos.BlockOpResponseProto;
@@ -32,18 +32,8 @@ import org.apache.hadoop.hdfs.protocol.datatransfer.Receiver;
 
 /** Aspect for DataTransferProtocol */
 public aspect DataTransferProtocolAspects {
-  public static final Log LOG = LogFactory.getLog(
+  public static final Logger LOG = LoggerFactory.getLogger(
       DataTransferProtocolAspects.class);
-  /*
-  {
-    ((Log4JLogger)NameNode.stateChangeLog).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger)LeaseManager.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger)FSNamesystem.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger)DataNode.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger)DFSClient.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger)InterDatanodeProtocol.LOG).getLogger().setLevel(Level.ALL);
-  }
-  */
 
   pointcut receiverOp(DataXceiver dataxceiver):
     call(Op Receiver.readOp()) && target(dataxceiver);

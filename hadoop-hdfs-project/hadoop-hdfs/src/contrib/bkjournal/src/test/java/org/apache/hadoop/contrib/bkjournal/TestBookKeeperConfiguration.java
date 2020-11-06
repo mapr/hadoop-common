@@ -26,8 +26,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.Random;
 
 import org.apache.bookkeeper.util.LocalBookKeeper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.WatchedEvent;
@@ -46,8 +46,8 @@ import org.junit.Test;
 import org.apache.hadoop.hdfs.server.protocol.NamespaceInfo;
 
 public class TestBookKeeperConfiguration {
-  private static final Log LOG = LogFactory
-      .getLog(TestBookKeeperConfiguration.class);
+  private static final Logger LOG = LoggerFactory
+      .getLogger(TestBookKeeperConfiguration.class);
   private static final int ZK_SESSION_TIMEOUT = 5000;
   private static final String HOSTPORT = "127.0.0.1:2181";
   private static final int CONNECTION_TIMEOUT = 30000;

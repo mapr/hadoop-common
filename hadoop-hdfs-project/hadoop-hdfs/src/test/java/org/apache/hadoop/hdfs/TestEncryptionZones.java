@@ -83,8 +83,9 @@ import org.apache.hadoop.util.ToolRunner;
 import org.apache.hadoop.crypto.key.KeyProviderDelegationTokenExtension.DelegationTokenExtension;
 import org.apache.hadoop.crypto.key.KeyProviderCryptoExtension.CryptoExtension;
 import org.apache.hadoop.io.Text;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.apache.hadoop.test.GenericTestUtils;
+import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -145,7 +146,7 @@ public class TestEncryptionZones {
     conf.setInt(DFSConfigKeys.DFS_NAMENODE_LIST_ENCRYPTION_ZONES_NUM_RESPONSES,
         2);
     cluster = new MiniDFSCluster.Builder(conf).numDataNodes(1).build();
-    Logger.getLogger(EncryptionZoneManager.class).setLevel(Level.TRACE);
+    GenericTestUtils.setLogLevel(LoggerFactory.getLogger(EncryptionZoneManager.class), Level.TRACE);
     fs = cluster.getFileSystem();
     fsWrapper = new FileSystemTestWrapper(fs);
     fcWrapper = new FileContextTestWrapper(

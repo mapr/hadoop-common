@@ -24,9 +24,8 @@ import static org.mockito.Mockito.mock;
 import java.net.InetSocketAddress;
 import java.security.PrivilegedExceptionAction;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.impl.Log4JLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.protocol.ClientProtocol;
@@ -44,15 +43,16 @@ import org.apache.hadoop.security.SaslRpcServer;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.Token;
-import org.apache.log4j.Level;
+import org.apache.hadoop.test.GenericTestUtils;
+import org.slf4j.event.Level;
 import org.junit.Test;
 
 /** Unit tests for using Delegation Token over RPC. */
 public class TestClientProtocolWithDelegationToken {
   private static final String ADDRESS = "0.0.0.0";
 
-  public static final Log LOG = LogFactory
-      .getLog(TestClientProtocolWithDelegationToken.class);
+  public static final Logger LOG = LoggerFactory
+      .getLogger(TestClientProtocolWithDelegationToken.class);
 
   private static final Configuration conf;
   static {
@@ -62,11 +62,11 @@ public class TestClientProtocolWithDelegationToken {
   }
 
   static {
-    ((Log4JLogger) Client.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger) Server.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger) SaslRpcClient.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger) SaslRpcServer.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger) SaslInputStream.LOG).getLogger().setLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(Client.LOG, Level.TRACE);
+    GenericTestUtils.setLogLevel(Server.LOG, Level.TRACE);
+    GenericTestUtils.setLogLevel(SaslRpcClient.LOG, Level.TRACE);
+    GenericTestUtils.setLogLevel(SaslRpcServer.LOG, Level.TRACE);
+    GenericTestUtils.setLogLevel(SaslInputStream.LOG, Level.TRACE);
   }
 
   @Test

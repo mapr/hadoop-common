@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
@@ -46,7 +46,7 @@ import com.google.common.collect.Sets;
  */
 @InterfaceAudience.Private
 class BlockPoolManager {
-  private static final Log LOG = DataNode.LOG;
+  private static final Logger LOG = DataNode.LOG;
   
   private final Map<String, BPOfferService> bpByNameserviceId =
     Maps.newHashMap();

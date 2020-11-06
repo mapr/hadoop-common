@@ -642,7 +642,7 @@ class BlockPoolSlice {
 
       return validFileLength;
     } catch (IOException e) {
-      FsDatasetImpl.LOG.warn(e);
+      FsDatasetImpl.LOG.warn("{}",e);
       return 0;
     } finally {
       IOUtils.closeStream(checksumIn);

@@ -46,7 +46,7 @@ import java.nio.channels.ClosedChannelException;
 import java.security.MessageDigest;
 import java.util.Arrays;
 
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
 import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.ExtendedBlockId;
 import org.apache.hadoop.hdfs.net.Peer;
@@ -95,8 +95,8 @@ import org.apache.hadoop.util.Time;
  * Thread for processing incoming/outgoing data stream.
  */
 class DataXceiver extends Receiver implements Runnable {
-  public static final Log LOG = DataNode.LOG;
-  static final Log ClientTraceLog = DataNode.ClientTraceLog;
+  public static final Logger LOG = DataNode.LOG;
+  static final Logger ClientTraceLog = DataNode.ClientTraceLog;
   
   private Peer peer;
   private final String remoteAddress; // address of remote side
@@ -372,7 +372,7 @@ class DataXceiver extends Receiver implements Runnable {
             blk.getBlockId(), dnR.getDatanodeUuid(), success));
       }
       if (fis != null) {
-        IOUtils.cleanup(LOG, fis);
+        IOUtils.cleanupWithLogger(LOG, fis);
       }
     }
   }

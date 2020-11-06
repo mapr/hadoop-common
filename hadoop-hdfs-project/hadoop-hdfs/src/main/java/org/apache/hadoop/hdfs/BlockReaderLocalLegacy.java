@@ -29,8 +29,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.ReadOption;
 import org.apache.hadoop.fs.StorageType;
@@ -75,7 +75,7 @@ import org.apache.htrace.core.Tracer;
  * </ul>
  */
 class BlockReaderLocalLegacy implements BlockReader {
-  private static final Log LOG = LogFactory.getLog(BlockReaderLocalLegacy.class);
+  private static final Logger LOG = LoggerFactory.getLogger(BlockReaderLocalLegacy.class);
 
   //Stores the cache and proxy for a local datanode.
   private static class LocalDatanodeInfo {
@@ -687,7 +687,7 @@ class BlockReaderLocalLegacy implements BlockReader {
 
   @Override
   public synchronized void close() throws IOException {
-    IOUtils.cleanup(LOG, dataIn, checksumIn);
+    IOUtils.cleanupWithLogger(LOG, dataIn, checksumIn);
     if (slowReadBuff != null) {
       bufferPool.returnBuffer(slowReadBuff);
       slowReadBuff = null;
