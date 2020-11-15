@@ -24,8 +24,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.EnumSet;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fs.CreateFlag;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileContext;
@@ -36,7 +36,7 @@ import org.junit.Test;
 public class TestLogalyzer {
   private static String EL = System.getProperty("line.separator");
   private static String TAB = "\t";
-  private static final Log LOG = LogFactory.getLog(TestLogalyzer.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TestLogalyzer.class);
 
   private static File workSpace = new File("target",
       TestLogalyzer.class.getName() + "-workSpace");

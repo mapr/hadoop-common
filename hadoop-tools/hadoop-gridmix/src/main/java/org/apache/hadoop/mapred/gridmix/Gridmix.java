@@ -44,8 +44,8 @@ import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.hadoop.tools.rumen.JobStoryProducer;
 import org.apache.hadoop.tools.rumen.ZombieJobProducer;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Driver class for the Gridmix3 benchmark. Gridmix accepts a timestamped
@@ -57,7 +57,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class Gridmix extends Configured implements Tool {
 
-  public static final Log LOG = LogFactory.getLog(Gridmix.class);
+  public static final Logger LOG = LoggerFactory.getLogger(Gridmix.class);
 
   /**
    * Output (scratch) directory for submitted jobs. Relative paths are
@@ -565,7 +565,7 @@ public class Gridmix extends Configured implements Tool {
         summarizer.finalize(factory, traceIn, genbytes, userResolver, stats, 
                             conf);
       }
-      IOUtils.cleanup(LOG, trace);
+      IOUtils.cleanupWithLogger(LOG, trace);
     }
     return exitCode;
   }

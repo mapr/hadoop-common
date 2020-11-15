@@ -23,10 +23,12 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.tools.rumen.JobStory;
 import org.apache.hadoop.tools.rumen.JobStoryProducer;
 import org.apache.hadoop.util.ExitUtil;
-import org.apache.log4j.Level;
+import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -47,8 +49,8 @@ public class TestGridmixSubmission extends CommonJobTest {
 
 
   static {
-    ((Log4JLogger) LogFactory.getLog("org.apache.hadoop.mapred.gridmix"))
-            .getLogger().setLevel(Level.DEBUG);
+    GenericTestUtils.setLogLevel(LoggerFactory
+            .getLogger("org.apache.hadoop.mapred.gridmix"), Level.DEBUG);
   }
 
 

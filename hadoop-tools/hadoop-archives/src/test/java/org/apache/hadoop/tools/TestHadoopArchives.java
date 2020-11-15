@@ -41,10 +41,12 @@ import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.io.IOUtils;
+import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.util.JarFinder;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration;
-import org.apache.log4j.Level;
+import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 import org.junit.After;
 import org.junit.Assert;
 import static org.junit.Assert.*;
@@ -60,8 +62,8 @@ public class TestHadoopArchives {
       .getJar(HadoopArchives.class);
 
   {
-    ((Log4JLogger) LogFactory.getLog(org.apache.hadoop.security.Groups.class))
-        .getLogger().setLevel(Level.ERROR);
+    GenericTestUtils.setLogLevel(LoggerFactory.
+            getLogger(org.apache.hadoop.security.Groups.class), Level.ERROR);
 
   }
 

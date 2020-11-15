@@ -27,8 +27,8 @@ import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Random;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -45,7 +45,7 @@ import org.junit.Test;
  * or just a part of it.
  */
 public class TestReadAndSeekPageBlobAfterWrite {
-  private static final Log LOG = LogFactory.getLog(TestReadAndSeekPageBlobAfterWrite.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TestReadAndSeekPageBlobAfterWrite.class);
 
   private FileSystem fs;
   private AzureBlobStorageTestAccount testAccount;

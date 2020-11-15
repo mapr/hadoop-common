@@ -33,8 +33,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
@@ -81,8 +81,8 @@ class Jets3tFileSystemStore implements FileSystemStore {
   
   private int bufferSize;
   
-  private static final Log LOG = 
-    LogFactory.getLog(Jets3tFileSystemStore.class.getName());
+  private static final Logger LOG =
+    LoggerFactory.getLogger(Jets3tFileSystemStore.class.getName());
   
   @Override
   public void initialize(URI uri, Configuration conf) throws IOException {

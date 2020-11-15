@@ -45,8 +45,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -104,8 +104,8 @@ public class AzureNativeFileSystemStore implements NativeFileSystemStore {
   static final String DEFAULT_STORAGE_EMULATOR_ACCOUNT_NAME = "storageemulator";
   static final String STORAGE_EMULATOR_ACCOUNT_NAME_PROPERTY_NAME = "fs.azure.storage.emulator.account.name";
 
-  public static final Log LOG = LogFactory
-      .getLog(AzureNativeFileSystemStore.class);
+  public static final Logger LOG = LoggerFactory
+      .getLogger(AzureNativeFileSystemStore.class);
 
   private StorageInterface storageInteractionLayer;
   private CloudBlobDirectoryWrapper rootDirectory;

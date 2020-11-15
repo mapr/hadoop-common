@@ -18,8 +18,8 @@
 
 package org.apache.hadoop.fs.swift.http;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fs.swift.exceptions.SwiftConnectionClosedException;
 import org.apache.hadoop.fs.swift.util.SwiftUtils;
 import org.apache.http.HttpResponse;
@@ -44,8 +44,8 @@ import java.net.URI;
  */
 public class HttpInputStreamWithRelease extends InputStream {
 
-  private static final Log LOG =
-    LogFactory.getLog(HttpInputStreamWithRelease.class);
+  private static final Logger LOG =
+    LoggerFactory.getLogger(HttpInputStreamWithRelease.class);
   private final URI uri;
   private HttpRequestBase req;
   private HttpResponse resp;

@@ -38,15 +38,17 @@ import org.apache.hadoop.hdfs.server.datanode.DataNode;
 import org.apache.hadoop.hdfs.server.namenode.FSNamesystem;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.mapred.MiniMRClientClusterFactory;
+import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration;
-import org.apache.log4j.Level;
+import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 
 public class TestDistCh extends junit.framework.TestCase {
   {
-    ((Log4JLogger)LogFactory.getLog("org.apache.hadoop.hdfs.StateChange")
-        ).getLogger().setLevel(Level.ERROR);
-    ((Log4JLogger)DataNode.LOG).getLogger().setLevel(Level.ERROR);
-    ((Log4JLogger)LogFactory.getLog(FSNamesystem.class)).getLogger().setLevel(Level.ERROR);
+    GenericTestUtils.setLogLevel(LoggerFactory
+            .getLogger("org.apache.hadoop.hdfs.StateChange"), Level.ERROR);
+    GenericTestUtils.setLogLevel(DataNode.LOG, Level.ERROR);
+    GenericTestUtils.setLogLevel(LoggerFactory.getLogger(FSNamesystem.class), Level.ERROR);
   }
 
   static final Long RANDOM_NUMBER_GENERATOR_SEED = null;

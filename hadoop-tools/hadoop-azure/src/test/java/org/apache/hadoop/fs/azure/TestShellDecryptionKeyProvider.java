@@ -23,16 +23,16 @@ import static org.junit.Assert.assertEquals;
 import java.io.File;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.Shell;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class TestShellDecryptionKeyProvider {
-  public static final Log LOG = LogFactory
-      .getLog(TestShellDecryptionKeyProvider.class);
+  public static final Logger LOG = LoggerFactory
+      .getLogger(TestShellDecryptionKeyProvider.class);
   private static File TEST_ROOT_DIR = new File(System.getProperty(
       "test.build.data", "/tmp"), "TestShellDecryptionKeyProvider");
 

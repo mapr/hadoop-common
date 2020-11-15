@@ -26,8 +26,8 @@ import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configuration.DeprecationDelta;
@@ -108,7 +108,7 @@ public class Logalyzer {
   /** A WritableComparator optimized for UTF8 keys of the logs. */
   public static class LogComparator extends Text.Comparator implements Configurable {
     
-    private static Log LOG = LogFactory.getLog(Logalyzer.class);
+    private static Logger LOG = LoggerFactory.getLogger(Logalyzer.class);
     private JobConf conf = null;
     private String[] sortSpec = null;
     private String columnSeparator = null;
@@ -175,7 +175,7 @@ public class Logalyzer {
         }
         
       } catch (IOException ioe) {
-        LOG.fatal("Caught " + ioe);
+        LOG.error("Caught " + ioe);
         return 0;
       }
       
@@ -253,7 +253,7 @@ public class Logalyzer {
   
   public static void main(String[] args) {
     
-    Log LOG = LogFactory.getLog(Logalyzer.class);
+    Logger LOG = LoggerFactory.getLogger(Logalyzer.class);
     
     String version = "Logalyzer.0.0.1";
     String usage = "Usage: Logalyzer [-archive -logs <urlsFile>] " +

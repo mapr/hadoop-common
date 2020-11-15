@@ -86,7 +86,8 @@ import org.apache.hadoop.yarn.sls.conf.SLSConfiguration;
 import org.apache.hadoop.yarn.sls.web.SLSWebApp;
 import org.apache.hadoop.yarn.util.resource.ResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.Resources;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.CsvReporter;
@@ -153,7 +154,7 @@ public class ResourceSchedulerWrapper
   private Set<String> queueSet;
   private Set<String> trackedAppSet;
 
-  public final Logger LOG = Logger.getLogger(ResourceSchedulerWrapper.class);
+  public final Logger LOG = LoggerFactory.getLogger(ResourceSchedulerWrapper.class);
 
   public ResourceSchedulerWrapper() {
     super(ResourceSchedulerWrapper.class.getName());

@@ -20,8 +20,8 @@ package org.apache.hadoop.fs.azure.metrics;
 
 import java.net.HttpURLConnection;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 
 import com.microsoft.azure.storage.Constants.HeaderConstants;
@@ -38,7 +38,7 @@ import com.microsoft.azure.storage.StorageEvent;
 @InterfaceAudience.Private
 public final class ResponseReceivedMetricUpdater extends StorageEvent<ResponseReceivedEvent> {
 
-  public static final Log LOG = LogFactory.getLog(ResponseReceivedMetricUpdater.class);
+  public static final Logger LOG = LoggerFactory.getLogger(ResponseReceivedMetricUpdater.class);
 
   private final AzureFileSystemInstrumentation instrumentation;
   private final BandwidthGaugeUpdater blockUploadGaugeUpdater;

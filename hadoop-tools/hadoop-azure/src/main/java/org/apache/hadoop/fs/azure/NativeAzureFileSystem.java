@@ -45,8 +45,8 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
@@ -259,7 +259,7 @@ public class NativeAzureFileSystem extends FileSystem {
         throw new IOException("Unable to write RenamePending file for folder rename from "
             + srcKey + " to " + dstKey, e);
       } finally {
-        IOUtils.cleanup(LOG, output);
+        IOUtils.cleanupWithLogger(LOG, output);
       }
     }
 
@@ -602,7 +602,7 @@ public class NativeAzureFileSystem extends FileSystem {
     }
   }
 
-  public static final Log LOG = LogFactory.getLog(NativeAzureFileSystem.class);
+  public static final Logger LOG = LoggerFactory.getLogger(NativeAzureFileSystem.class);
 
   static final String AZURE_BLOCK_SIZE_PROPERTY_NAME = "fs.azure.block.size";
   /**
@@ -1277,7 +1277,7 @@ public class NativeAzureFileSystem extends FileSystem {
           lease.free();
         }
       } catch (Exception e) {
-        IOUtils.cleanup(LOG, out);
+        IOUtils.cleanupWithLogger(LOG, out);
         String msg = "Unable to free lease on " + parent.toUri();
         LOG.error(msg);
         throw new IOException(msg, e);

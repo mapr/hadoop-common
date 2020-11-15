@@ -21,8 +21,8 @@ package org.apache.hadoop.fs.azure.metrics;
 import java.util.ArrayList;
 import java.util.Date;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 
 /**
@@ -31,8 +31,8 @@ import org.apache.hadoop.classification.InterfaceAudience;
  */
 @InterfaceAudience.Private
 public final class BandwidthGaugeUpdater {
-  public static final Log LOG = LogFactory
-      .getLog(BandwidthGaugeUpdater.class);
+  public static final Logger LOG = LoggerFactory
+      .getLogger(BandwidthGaugeUpdater.class);
   
   public static final String THREAD_NAME = "AzureNativeFilesystemStore-UploadBandwidthUpdater";
   

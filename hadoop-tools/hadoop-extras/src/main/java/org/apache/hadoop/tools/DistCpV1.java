@@ -35,8 +35,8 @@ import java.util.Random;
 import java.util.Stack;
 import java.util.StringTokenizer;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -82,7 +82,7 @@ import org.apache.hadoop.util.StringUtils.TraditionalBinaryPrefix;
  * different file-systems.
  */
 public class DistCpV1 implements Tool {
-  public static final Log LOG = LogFactory.getLog(DistCpV1.class);
+  public static final Logger LOG = LoggerFactory.getLogger(DistCpV1.class);
 
   private static final String NAME = "distcp";
 

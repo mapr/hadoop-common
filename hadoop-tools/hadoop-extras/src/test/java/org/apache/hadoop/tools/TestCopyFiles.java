@@ -48,8 +48,10 @@ import org.apache.hadoop.hdfs.server.datanode.DataNode;
 import org.apache.hadoop.hdfs.server.namenode.FSNamesystem;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.log4j.Level;
+import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 
 
 /**
@@ -58,11 +60,11 @@ import org.apache.log4j.Level;
 
 public class TestCopyFiles extends TestCase {
   {
-    ((Log4JLogger)LogFactory.getLog("org.apache.hadoop.hdfs.StateChange")
-        ).getLogger().setLevel(Level.ERROR);
-    ((Log4JLogger)DataNode.LOG).getLogger().setLevel(Level.ERROR);
-    ((Log4JLogger)LogFactory.getLog(FSNamesystem.class)).getLogger().setLevel(Level.ERROR);
-    ((Log4JLogger)DistCpV1.LOG).getLogger().setLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(LoggerFactory
+            .getLogger("org.apache.hadoop.hdfs.StateChange"), Level.ERROR);
+    GenericTestUtils.setLogLevel(DataNode.LOG, Level.ERROR);
+    GenericTestUtils.setLogLevel(LoggerFactory.getLogger(FSNamesystem.class), Level.ERROR);
+    GenericTestUtils.setLogLevel(DistCpV1.LOG, Level.TRACE);
   }
   
   static final URI LOCAL_FS = URI.create("file:///");

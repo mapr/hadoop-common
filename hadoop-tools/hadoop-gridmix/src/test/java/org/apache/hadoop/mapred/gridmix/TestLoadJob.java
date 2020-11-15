@@ -17,10 +17,10 @@
  */
 package org.apache.hadoop.mapred.gridmix;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.impl.Log4JLogger;
-import org.apache.log4j.Level;
+import org.apache.hadoop.test.GenericTestUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -32,13 +32,13 @@ import java.io.IOException;
  */
 public class TestLoadJob extends CommonJobTest {
 
-  public static final Log LOG = LogFactory.getLog(Gridmix.class);
+  public static final Logger LOG = LoggerFactory.getLogger(Gridmix.class);
 
   static {
-    ((Log4JLogger) LogFactory.getLog("org.apache.hadoop.mapred.gridmix"))
-            .getLogger().setLevel(Level.DEBUG);
-    ((Log4JLogger) LogFactory.getLog(StressJobFactory.class)).getLogger()
-            .setLevel(Level.DEBUG);
+    GenericTestUtils.setLogLevel(LoggerFactory.
+            getLogger("org.apache.hadoop.mapred.gridmix"), Level.DEBUG);
+    GenericTestUtils.setLogLevel(LoggerFactory.
+            getLogger(StressJobFactory.class), Level.DEBUG);
   }
 
 

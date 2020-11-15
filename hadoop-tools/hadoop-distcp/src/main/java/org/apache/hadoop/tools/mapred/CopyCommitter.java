@@ -18,8 +18,8 @@
 
 package org.apache.hadoop.tools.mapred;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -54,7 +54,7 @@ import java.util.List;
  *  5. Cleanup of any partially copied files, from previous, failed attempts.
  */
 public class CopyCommitter extends FileOutputCommitter {
-  private static final Log LOG = LogFactory.getLog(CopyCommitter.class);
+  private static final Logger LOG = LoggerFactory.getLogger(CopyCommitter.class);
 
   private final TaskAttemptContext taskAttemptContext;
   private boolean syncFolder = false;

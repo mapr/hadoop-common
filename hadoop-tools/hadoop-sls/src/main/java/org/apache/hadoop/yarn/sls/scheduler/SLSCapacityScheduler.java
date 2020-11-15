@@ -79,7 +79,8 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fifo
         .FifoScheduler;
 import org.apache.hadoop.yarn.util.resource.Resources;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -154,7 +155,7 @@ public class SLSCapacityScheduler extends CapacityScheduler implements
   private Set<String> queueSet;
   private Set<String> trackedAppSet;
 
-  public final Logger LOG = Logger.getLogger(SLSCapacityScheduler.class);
+  public final Logger LOG = LoggerFactory.getLogger(SLSCapacityScheduler.class);
 
   public SLSCapacityScheduler() {
     samplerLock = new ReentrantLock();
