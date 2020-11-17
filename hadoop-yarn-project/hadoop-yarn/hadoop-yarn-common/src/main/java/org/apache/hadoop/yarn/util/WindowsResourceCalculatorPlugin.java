@@ -20,8 +20,8 @@ package org.apache.hadoop.yarn.util;
 
 import java.io.IOException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.util.Shell;
 import org.apache.hadoop.util.Shell.ShellCommandExecutor;
@@ -30,8 +30,8 @@ import org.apache.hadoop.util.StringUtils;
 @Private
 public class WindowsResourceCalculatorPlugin extends ResourceCalculatorPlugin {
   
-  static final Log LOG = LogFactory
-      .getLog(WindowsResourceCalculatorPlugin.class);
+  static final Logger LOG = LoggerFactory
+      .getLogger(WindowsResourceCalculatorPlugin.class);
   
   long vmemSize;
   long memSize;

@@ -17,8 +17,8 @@
  */
 package org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.security;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 
@@ -26,7 +26,7 @@ import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
  * Factory class to return an instance of @link{ExternalTokenLocalizer}.
  */
 public final class ExternalTokenLocalizerFactory {
-  private static final Log LOG = LogFactory.getLog(ExternalTokenLocalizerFactory.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ExternalTokenLocalizerFactory.class);
 
   private static ExternalTokenLocalizer extTokenLocalizer;
 

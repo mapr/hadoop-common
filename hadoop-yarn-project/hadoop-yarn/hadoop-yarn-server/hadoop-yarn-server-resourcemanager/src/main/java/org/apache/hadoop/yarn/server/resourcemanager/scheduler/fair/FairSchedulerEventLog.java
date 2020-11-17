@@ -21,8 +21,8 @@ package org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.conf.Configuration;
@@ -30,7 +30,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.log4j.DailyRollingFileAppender;
 import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 import org.apache.log4j.spi.LoggingEvent;
 
@@ -54,7 +53,7 @@ import org.apache.log4j.spi.LoggingEvent;
 @Private
 @Unstable
 class FairSchedulerEventLog {
-  private static final Log LOG = LogFactory.getLog(FairSchedulerEventLog.class.getName());
+  private static final Logger LOG = LoggerFactory.getLogger(FairSchedulerEventLog.class.getName());
 
   /** Set to true if logging is disabled due to an error. */
   private boolean logDisabled = true;
@@ -121,7 +120,7 @@ class FairSchedulerEventLog {
         buffer.append(param);
       }
       String message = buffer.toString();
-      Logger logger = Logger.getLogger(getClass());
+      org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(getClass());
       appender.append(new LoggingEvent("", logger, Level.INFO, message, null));
     } catch (Exception e) {
       LOG.error("Failed to append to fair scheduler event log", e);

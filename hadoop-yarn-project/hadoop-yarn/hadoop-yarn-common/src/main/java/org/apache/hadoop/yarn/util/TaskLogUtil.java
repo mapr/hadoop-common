@@ -19,8 +19,8 @@ package org.apache.hadoop.yarn.util;
 
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.yarn.conf.DefaultYarnConfiguration;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 
@@ -33,7 +33,7 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
  * to provide the DFS specific behavior.
  */
 public class TaskLogUtil {
-  private static final Log LOG = LogFactory.getLog(TaskLogUtil.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TaskLogUtil.class);
 
   private static final YarnConfiguration DEFAULT_CONF = DefaultYarnConfiguration.get();
   private static final boolean enableDfsLogging;

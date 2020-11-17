@@ -17,8 +17,8 @@
  */
 package org.apache.hadoop.yarn.conf;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 
 /**
@@ -32,7 +32,7 @@ public class RMAddressFinderLoader {
 
   private static RMAddressFinderLoader s_instance = new RMAddressFinderLoader();
 
-  private static Log LOG = LogFactory.getLog(RMAddressFinderLoader.class);
+  private static Logger LOG = LoggerFactory.getLogger(RMAddressFinderLoader.class);
     
   private CustomRMAddressFinder rmAddressFinder;
   private volatile boolean isLoaded;

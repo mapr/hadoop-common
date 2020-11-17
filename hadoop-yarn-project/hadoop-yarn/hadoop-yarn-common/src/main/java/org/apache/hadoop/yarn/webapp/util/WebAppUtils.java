@@ -26,8 +26,8 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Evolving;
 import org.apache.hadoop.conf.Configuration;
@@ -49,7 +49,7 @@ public class WebAppUtils {
   public static final String WEB_APP_KEY_PASSWORD_KEY =
       "ssl.server.keystore.keypassword";
   
-  private static final Log LOG = LogFactory.getLog(WebAppUtils.class);
+  private static final Logger LOG = LoggerFactory.getLogger(WebAppUtils.class);
   
   public static final String HTTPS_PREFIX = "https://";
   public static final String HTTP_PREFIX = "http://";

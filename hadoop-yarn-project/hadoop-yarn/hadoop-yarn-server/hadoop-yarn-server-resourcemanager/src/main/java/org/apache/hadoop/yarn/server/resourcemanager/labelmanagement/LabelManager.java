@@ -30,8 +30,8 @@ import java.util.TimerTask;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import net.java.dev.eval.Expression;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -58,7 +58,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
  */
 public class LabelManager {
 
-  private static final Log LOG = LogFactory.getLog(LabelManager.class);
+  private static final Logger LOG = LoggerFactory.getLogger(LabelManager.class);
   
   private long lastModified = 0;
   public static final String NODE_LABELS_FILE = 

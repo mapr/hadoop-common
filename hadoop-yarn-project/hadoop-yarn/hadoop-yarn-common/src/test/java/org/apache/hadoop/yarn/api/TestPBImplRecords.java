@@ -34,8 +34,8 @@ import java.util.Random;
 import java.util.Set;
 
 import org.apache.commons.lang.math.LongRange;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.security.proto.SecurityProtos.*;
 import org.apache.hadoop.yarn.api.protocolrecords.*;
 import org.apache.hadoop.yarn.api.protocolrecords.impl.pb.*;
@@ -57,7 +57,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 public class TestPBImplRecords {
-  static final Log LOG = LogFactory.getLog(TestPBImplRecords.class);
+  static final Logger LOG = LoggerFactory.getLogger(TestPBImplRecords.class);
 
   private static HashMap<Type, Object> typeValueCache = new HashMap<Type, Object>();
   private static Random rand = new Random();

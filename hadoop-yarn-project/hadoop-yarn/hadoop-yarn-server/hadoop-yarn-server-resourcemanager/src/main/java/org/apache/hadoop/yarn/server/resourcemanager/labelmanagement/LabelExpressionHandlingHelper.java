@@ -25,8 +25,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.yarn.api.records.NodeToLabelsList;
 import org.apache.hadoop.yarn.server.resourcemanager.labelmanagement.LabelManager.LabelApplicabilityStatus;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
@@ -41,7 +41,7 @@ import net.java.dev.eval.Expression;
  */
 public class LabelExpressionHandlingHelper {
 
-  private static final Log LOG = LogFactory.getLog(LabelExpressionHandlingHelper.class);
+  private static final Logger LOG = LoggerFactory.getLogger(LabelExpressionHandlingHelper.class);
 
   public LabelExpressionHandlingHelper() {
   }

@@ -7,8 +7,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -25,7 +25,7 @@ import org.apache.hadoop.yarn.util.YarnAppUtil;
  * for running the job.
  */
 public class MapRTicketUploader  {
-  private static final Log LOG = LogFactory.getLog(MapRTicketUploader.class);
+  private static final Logger LOG = LoggerFactory.getLogger(MapRTicketUploader.class);
 
   public void uploadToken(ApplicationId appId, Configuration conf) {
     // Upload only if security is enabled and the current user is not a proxy user

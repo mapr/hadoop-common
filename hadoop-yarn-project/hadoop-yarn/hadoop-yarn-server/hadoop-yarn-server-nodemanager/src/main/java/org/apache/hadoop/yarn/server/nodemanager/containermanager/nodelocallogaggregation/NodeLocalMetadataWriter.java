@@ -1,7 +1,7 @@
 package org.apache.hadoop.yarn.server.nodemanager.containermanager.nodelocallogaggregation;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -17,7 +17,8 @@ import java.io.IOException;
 import java.util.List;
 
 public class NodeLocalMetadataWriter {
-  private static final Log LOG = LogFactory.getLog(NodeLocalMetadataWriter.class);
+  private static final Logger LOG = LoggerFactory
+          .getLogger(NodeLocalMetadataWriter.class);
 
   private final String prefixPath;
   private final String logMetaDir;

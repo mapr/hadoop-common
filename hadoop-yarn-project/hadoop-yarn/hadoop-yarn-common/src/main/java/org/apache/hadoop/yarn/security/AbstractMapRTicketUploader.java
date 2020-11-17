@@ -4,8 +4,8 @@
 package org.apache.hadoop.yarn.security;
 
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 
@@ -15,7 +15,7 @@ import org.apache.hadoop.yarn.api.records.ApplicationId;
  */
 public abstract class AbstractMapRTicketUploader {
 
-  private static final Log LOG = LogFactory.getLog(AbstractMapRTicketUploader.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AbstractMapRTicketUploader.class);
 
   public abstract void uploadToken(ApplicationId appId, Configuration conf);
 

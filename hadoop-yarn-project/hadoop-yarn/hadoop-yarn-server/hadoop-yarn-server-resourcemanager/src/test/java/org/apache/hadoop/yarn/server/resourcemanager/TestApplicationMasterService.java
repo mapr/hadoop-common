@@ -25,8 +25,8 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.Capacity
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.FairScheduler;
 import org.apache.hadoop.yarn.util.resource.DiskBasedResourceCalculator;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.FinishApplicationMasterRequest;
 
@@ -55,7 +55,7 @@ import java.util.Map;
 import static java.lang.Thread.sleep;
 
 public class TestApplicationMasterService {
-  private static final Log LOG = LogFactory.getLog(TestFifoScheduler.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TestFifoScheduler.class);
 
   private final int GB = 1024;
   private static YarnConfiguration conf;

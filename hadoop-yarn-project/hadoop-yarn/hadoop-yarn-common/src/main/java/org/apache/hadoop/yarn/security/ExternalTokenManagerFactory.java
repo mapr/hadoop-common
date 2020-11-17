@@ -17,8 +17,8 @@
  */
 package org.apache.hadoop.yarn.security;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.yarn.conf.DefaultYarnConfiguration;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
@@ -27,7 +27,7 @@ import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
  * Factory class to return an instance of @link{ExternalTokenManager}.
  */
 public final class ExternalTokenManagerFactory {
-  private static final Log LOG = LogFactory.getLog(ExternalTokenManagerFactory.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ExternalTokenManagerFactory.class);
 
   private static ExternalTokenManager extTokenManager;
 

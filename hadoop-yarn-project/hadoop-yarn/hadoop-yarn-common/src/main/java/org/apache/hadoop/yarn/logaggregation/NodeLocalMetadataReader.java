@@ -1,7 +1,7 @@
 package org.apache.hadoop.yarn.logaggregation;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 public class NodeLocalMetadataReader {
-  private static final Log LOG = LogFactory.getLog(NodeLocalMetadataReader.class);
+  private static final Logger LOG = LoggerFactory.getLogger(NodeLocalMetadataReader.class);
 
   private final String prefixPath;
   private final String logMetaDir;
@@ -95,7 +95,7 @@ public class NodeLocalMetadataReader {
       try{
         fileStatusList.add(fs.getFileStatus(finalPath));
       } catch (IOException ex){
-        LOG.warn(ex);
+        LOG.warn(ex.toString());
       }
     }
     return fileStatusList;
@@ -115,7 +115,7 @@ public class NodeLocalMetadataReader {
       try{
         fileStatusList.add(fs.getFileStatus(finalPath));
       } catch (IOException ex){
-        LOG.warn(ex);
+        LOG.warn(ex.toString());
       }
     }
     return fileStatusList;

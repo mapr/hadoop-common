@@ -21,8 +21,8 @@ package org.apache.hadoop.yarn.util;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.conf.Configuration;
@@ -41,7 +41,7 @@ import com.google.common.annotations.VisibleForTesting;
 public class RackResolver {
   private static DNSToSwitchMapping dnsToSwitchMapping;
   private static boolean initCalled = false;
-  private static final Log LOG = LogFactory.getLog(RackResolver.class);
+  private static final Logger LOG = LoggerFactory.getLogger(RackResolver.class);
 
   public synchronized static void init(Configuration conf) {
     if (initCalled) {

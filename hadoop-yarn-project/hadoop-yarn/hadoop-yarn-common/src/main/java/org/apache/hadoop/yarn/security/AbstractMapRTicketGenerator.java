@@ -3,8 +3,8 @@
  */
 package org.apache.hadoop.yarn.security;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -23,7 +23,7 @@ import java.io.IOException;
  * tasks.
  */
 public abstract class AbstractMapRTicketGenerator {
-  private static final Log LOG = LogFactory.getLog(AbstractMapRTicketGenerator.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AbstractMapRTicketGenerator.class);
 
   public void generateToken(ApplicationSubmissionContext appCtx, String username,
       Configuration conf) {

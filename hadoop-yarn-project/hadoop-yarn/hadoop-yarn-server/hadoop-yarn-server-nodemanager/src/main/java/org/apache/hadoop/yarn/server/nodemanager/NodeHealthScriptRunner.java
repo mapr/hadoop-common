@@ -25,8 +25,8 @@ import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.service.AbstractService;
@@ -44,7 +44,7 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
  */
 public class NodeHealthScriptRunner extends AbstractService {
 
-  private static Log LOG = LogFactory.getLog(NodeHealthScriptRunner.class);
+  private static Logger LOG = LoggerFactory.getLogger(NodeHealthScriptRunner.class);
 
   /** Absolute path to the health script. */
   private String nodeHealthScript;

@@ -7,8 +7,8 @@ import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -29,7 +29,7 @@ import org.apache.hadoop.yarn.util.YarnAppUtil;
  * NodeManager process since some global state information is maintained here.
  */
 public class MapRTicketLocalizer implements ExternalTokenLocalizer {
-  private static final Log LOG = LogFactory.getLog(MapRTicketLocalizer.class);
+  private static final Logger LOG = LoggerFactory.getLogger(MapRTicketLocalizer.class);
 
   /**
    * Cache access key per application to synchronize localization by multiple

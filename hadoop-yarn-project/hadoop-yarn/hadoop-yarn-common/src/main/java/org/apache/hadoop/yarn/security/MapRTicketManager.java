@@ -3,8 +3,8 @@
  */
 package org.apache.hadoop.yarn.security;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ApplicationSubmissionContext;
@@ -16,7 +16,7 @@ import java.lang.reflect.InvocationTargetException;
  * Manages MapR ticket needed for running the application.
  */
 public class MapRTicketManager implements ExternalTokenManager {
-  private static final Log LOG = LogFactory.getLog(MapRTicketManager.class);
+  private static final Logger LOG = LoggerFactory.getLogger(MapRTicketManager.class);
 
   private MapRTicketUploader uploader;
   private AbstractMapRTicketGenerator generator;

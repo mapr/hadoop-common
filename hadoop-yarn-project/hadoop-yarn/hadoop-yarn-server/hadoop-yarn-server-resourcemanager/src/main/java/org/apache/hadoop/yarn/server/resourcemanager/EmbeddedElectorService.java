@@ -18,8 +18,8 @@
 package org.apache.hadoop.yarn.server.resourcemanager;
 
 import com.google.protobuf.InvalidProtocolBufferException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
@@ -44,8 +44,8 @@ import java.util.List;
 @InterfaceStability.Unstable
 public class EmbeddedElectorService extends AbstractService
     implements ActiveStandbyElector.ActiveStandbyElectorCallback {
-  private static final Log LOG =
-      LogFactory.getLog(EmbeddedElectorService.class.getName());
+  private static final Logger LOG =
+      LoggerFactory.getLogger(EmbeddedElectorService.class.getName());
   private static final HAServiceProtocol.StateChangeRequestInfo req =
       new HAServiceProtocol.StateChangeRequestInfo(
           HAServiceProtocol.RequestSource.REQUEST_BY_ZKFC);

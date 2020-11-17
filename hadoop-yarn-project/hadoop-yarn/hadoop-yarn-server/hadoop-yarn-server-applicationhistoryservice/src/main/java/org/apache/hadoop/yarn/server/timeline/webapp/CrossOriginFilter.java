@@ -35,14 +35,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 
 public class CrossOriginFilter implements Filter {
 
-  private static final Log LOG = LogFactory.getLog(CrossOriginFilter.class);
+  private static final Logger LOG = LoggerFactory.getLogger(CrossOriginFilter.class);
 
   // HTTP CORS Request Headers
   static final String ORIGIN = "Origin";

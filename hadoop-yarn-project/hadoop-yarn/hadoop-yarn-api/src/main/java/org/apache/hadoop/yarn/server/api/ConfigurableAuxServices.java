@@ -23,8 +23,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.service.Service;
@@ -33,6 +33,8 @@ import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 
 import com.google.common.base.Preconditions;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 /**
  * Manages a set of @link{ConfigurableAuxiliaryService} instances by starting
@@ -51,7 +53,8 @@ import com.google.common.base.Preconditions;
 public class ConfigurableAuxServices extends AbstractService
   implements ServiceStateChangeListener {
 
-  private static final Log LOG = LogFactory.getLog(ConfigurableAuxServices.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ConfigurableAuxServices.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
 
   private final Map<String, ConfigurableAuxiliaryService> serviceMap;
 
@@ -93,7 +96,7 @@ public class ConfigurableAuxServices extends AbstractService
         addService(sName, s);
         s.init(conf);
       } catch (RuntimeException e) {
-        LOG.fatal("Failed to initialize " + sName, e);
+        LOG.error(FATAL,"Failed to initialize " + sName, e);
         throw e;
       }
     }
@@ -127,7 +130,7 @@ public class ConfigurableAuxServices extends AbstractService
 
   @Override
   public void stateChanged(Service service) {
-    LOG.fatal("Service " + service.getName() + " changed state: " +
+    LOG.error(FATAL,"Service " + service.getName() + " changed state: " +
         service.getServiceState());
 
     stop();

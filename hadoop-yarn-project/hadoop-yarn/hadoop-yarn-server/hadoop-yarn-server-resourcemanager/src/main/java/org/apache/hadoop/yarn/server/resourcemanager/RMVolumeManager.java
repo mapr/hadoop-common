@@ -7,8 +7,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -25,7 +25,7 @@ import org.apache.hadoop.yarn.util.YarnAppUtil;
  * Manage resource manager volume and directory creation on MapRFS.
  */
 public class RMVolumeManager extends ConfigurableAuxiliaryService {
-  private static final Log LOG = LogFactory.getLog(RMVolumeManager.class);
+  private static final Logger LOG = LoggerFactory.getLogger(RMVolumeManager.class);
 
   private static final String RM_VOLUME_SCRIPT_PATH = "/server/createJTVolume.sh";
   private static final String RM_VOLUME_LOGFILE_PATH = "/logs/createRMVolume.log";

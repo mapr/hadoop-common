@@ -20,8 +20,8 @@ package org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.nodelabels.CommonNodeLabelsManager;
 import org.apache.hadoop.yarn.server.resourcemanager.nodelabels.RMNodeLabelsManager;
@@ -31,7 +31,7 @@ import org.apache.hadoop.yarn.util.resource.Resources;
 
 class CSQueueUtils {
   
-  private static final Log LOG = LogFactory.getLog(CSQueueUtils.class);
+  private static final Logger LOG = LoggerFactory.getLogger(CSQueueUtils.class);
 
   final static float EPSILON = 0.0001f;
   

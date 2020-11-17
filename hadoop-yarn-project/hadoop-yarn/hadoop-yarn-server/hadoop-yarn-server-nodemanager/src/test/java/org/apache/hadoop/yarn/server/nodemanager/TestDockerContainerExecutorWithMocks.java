@@ -18,8 +18,8 @@
 
 package org.apache.hadoop.yarn.server.nodemanager;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.FileContext;
@@ -58,8 +58,8 @@ import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
  */
 public class TestDockerContainerExecutorWithMocks {
 
-  private static final Log LOG = LogFactory
-      .getLog(TestDockerContainerExecutorWithMocks.class);
+  private static final Logger LOG = LoggerFactory
+      .getLogger(TestDockerContainerExecutorWithMocks.class);
   public static final String DOCKER_LAUNCH_COMMAND = "/bin/true";
   private DockerContainerExecutor dockerContainerExecutor = null;
   private LocalDirsHandlerService dirsHandler;

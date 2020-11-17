@@ -53,8 +53,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.http.JettyUtils;
@@ -154,8 +154,8 @@ import com.google.inject.Singleton;
 @Singleton
 @Path("/ws/v1/cluster")
 public class RMWebServices {
-  private static final Log LOG =
-      LogFactory.getLog(RMWebServices.class.getName());
+  private static final Logger LOG =
+      LoggerFactory.getLogger(RMWebServices.class.getName());
   private static final String EMPTY = "";
   private static final String ANY = "*";
   private final ResourceManager rm;

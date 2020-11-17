@@ -30,8 +30,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 
@@ -41,8 +41,8 @@ import org.apache.hadoop.classification.InterfaceStability;
 @InterfaceAudience.Private
 @InterfaceStability.Unstable
 public class LinuxResourceCalculatorPlugin extends ResourceCalculatorPlugin {
-  private static final Log LOG =
-      LogFactory.getLog(LinuxResourceCalculatorPlugin.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(LinuxResourceCalculatorPlugin.class);
 
   /**
    * proc's meminfo virtual file has keys-values in the format

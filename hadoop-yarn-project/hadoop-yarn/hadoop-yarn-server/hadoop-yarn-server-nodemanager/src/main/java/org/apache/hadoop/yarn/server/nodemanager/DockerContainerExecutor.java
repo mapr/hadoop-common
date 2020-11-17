@@ -25,8 +25,8 @@ import com.google.common.base.Strings;
 import java.io.FileNotFoundException;
 
 import org.apache.commons.lang.math.RandomUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.FileContext;
 import org.apache.hadoop.fs.Path;
@@ -74,8 +74,8 @@ import static org.apache.hadoop.fs.CreateFlag.OVERWRITE;
  */
 public class DockerContainerExecutor extends ContainerExecutor {
 
-  private static final Log LOG = LogFactory
-      .getLog(DockerContainerExecutor.class);
+  private static final Logger LOG = LoggerFactory
+      .getLogger(DockerContainerExecutor.class);
   public static final String DOCKER_CONTAINER_EXECUTOR_SCRIPT = "docker_container_executor";
   public static final String DOCKER_CONTAINER_EXECUTOR_SESSION_SCRIPT = "docker_container_executor_session";
 
@@ -473,7 +473,7 @@ public class DockerContainerExecutor extends ContainerExecutor {
         pout = new PrintStream(out, false, "UTF-8");
         writeLocalWrapperScript(launchDst, pidFile, pout);
       } finally {
-        IOUtils.cleanup(LOG, pout, out);
+        IOUtils.cleanupWithLogger(LOG, pout, out);
       }
     }
 
@@ -539,7 +539,7 @@ public class DockerContainerExecutor extends ContainerExecutor {
         pout.println(dockerCommand + " bash \"" +
           launchDst.toUri().getPath().toString() + "\"");
       } finally {
-        IOUtils.cleanup(LOG, pout, out);
+        IOUtils.cleanupWithLogger(LOG, pout, out);
       }
       lfs.setPermission(sessionScriptPath,
         ContainerExecutor.TASK_LAUNCH_SCRIPT_PERMISSION);

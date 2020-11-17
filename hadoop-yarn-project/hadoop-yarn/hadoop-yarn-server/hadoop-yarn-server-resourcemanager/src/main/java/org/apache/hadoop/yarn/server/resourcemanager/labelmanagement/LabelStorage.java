@@ -35,8 +35,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import net.java.dev.eval.Expression;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -57,7 +57,7 @@ import org.apache.hadoop.yarn.factory.providers.RecordFactoryProvider;
  */
 public final class  LabelStorage {
 
-  private static final Log LOG = LogFactory.getLog(LabelStorage.class);
+  private static final Logger LOG = LoggerFactory.getLogger(LabelStorage.class);
 
   public static final Pattern regex = Pattern.compile("[^\\s,\"']+|\"([^\"]*)\"|'([^']*)'");
   public static final Pattern alpha_num = Pattern.compile("^[^0-9][A-Za-z0-9-_ ]+$");
