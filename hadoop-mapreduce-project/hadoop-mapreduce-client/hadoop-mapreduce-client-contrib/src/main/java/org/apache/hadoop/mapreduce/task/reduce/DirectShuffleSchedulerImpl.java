@@ -31,8 +31,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.PathId;
@@ -47,10 +45,15 @@ import org.apache.hadoop.mapreduce.MRJobConfig;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.mapred.TaskID;
 import org.apache.hadoop.util.Progress;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 public class DirectShuffleSchedulerImpl<K,V> implements ShuffleScheduler<K, V> {
 
-  private static final Log LOG = LogFactory.getLog(DirectShuffleSchedulerImpl.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DirectShuffleSchedulerImpl.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
   
   private static final long INITIAL_PENALTY = 10000;
   private static final float PENALTY_GROWTH_RATE = 1.3f;
@@ -407,7 +410,7 @@ public class DirectShuffleSchedulerImpl<K,V> implements ShuffleScheduler<K, V> {
 	        failureCounts.size() == (totalMaps - doneMaps))
 	        && !reducerHealthy
 	        && (!reducerProgressedEnough || reducerStalled)) {
-	      LOG.fatal("Shuffle failed with too many fetch failures " +
+	      LOG.error(FATAL,"Shuffle failed with too many fetch failures " +
 	      "and insufficient progress!");
 	      String errorMsg = "Exceeded MAX_FAILED_UNIQUE_FETCHES; bailing-out.";
 	      reporter.reportException(new IOException(errorMsg));

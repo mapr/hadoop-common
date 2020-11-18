@@ -19,20 +19,13 @@
 package org.apache.hadoop.examples.blocklocality;
 
 import java.io.*;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Iterator;
-import java.net.InetAddress;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configured;
-import org.apache.hadoop.filecache.DistributedCache;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.*;
 import org.apache.hadoop.util.Tool;
@@ -45,7 +38,7 @@ import org.apache.hadoop.util.ToolRunner;
  * <b>bin/hadoop jar hadoop-*-examples.jar blocklocality in-dir out-dir</b>
  */
 public class BlockLocality extends Configured implements Tool {
-  private static final Log LOG = LogFactory.getLog(BlockLocality.class);
+  private static final Logger LOG = LoggerFactory.getLogger(BlockLocality.class);
 
   static class BlockLocalityMapper extends MapReduceBase
     implements Mapper<Text, Text, Text, IntWritable> {

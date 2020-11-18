@@ -25,8 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.Checksum;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.examples.terasort.TeraGen.Counters;
 import org.apache.hadoop.fs.Path;
@@ -68,7 +68,7 @@ import org.apache.hadoop.util.ToolRunner;
  */
 public class TeraGenWithCRC extends Configured implements Tool {
 	
-	static Log LOG = LogFactory.getLog(TeraGenWithCRC.class);
+	static Logger LOG = LoggerFactory.getLogger(TeraGenWithCRC.class);
 
   /**
    * An input format that assigns ranges of longs to each mapper.

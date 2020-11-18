@@ -21,8 +21,8 @@ package org.apache.hadoop.mapreduce.task.reduce;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.BoundedByteArrayOutputStream;
 import org.apache.hadoop.io.DataInputBuffer;
@@ -36,7 +36,7 @@ import org.apache.hadoop.mapreduce.TaskAttemptID;
 
 public class DirectInMemoryOutput<K,V> extends MapOutput<K, V> {
 
-  private static final Log LOG = LogFactory.getLog(DirectInMemoryOutput.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DirectInMemoryOutput.class);
   private Configuration conf;
   private final DirectShuffleMergeManagerImpl<K, V> merger;
   private final byte[] memory;
@@ -104,7 +104,7 @@ public class DirectInMemoryOutput<K,V> extends MapOutput<K, V> {
 
     // Close the streams
     if (shouldCloseInput) {
-      IOUtils.cleanup(LOG, input);
+      IOUtils.cleanupWithLogger(LOG, input);
     }
 
     // Re-throw

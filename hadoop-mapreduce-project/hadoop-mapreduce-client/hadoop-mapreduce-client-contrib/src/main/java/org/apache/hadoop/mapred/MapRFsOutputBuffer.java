@@ -38,8 +38,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
@@ -75,7 +75,7 @@ public class MapRFsOutputBuffer<K extends Object, V extends Object>
     implements MapOutputCollector<K, V>, IndexedSortable {
     //extends MapOutputBuffer<K,V> {
       
-  private static final Log LOG = LogFactory.getLog(MapRFsOutputBuffer.class);
+  private static final Logger LOG = LoggerFactory.getLogger(MapRFsOutputBuffer.class);
   
   private int partitions;
   private JobConf job;

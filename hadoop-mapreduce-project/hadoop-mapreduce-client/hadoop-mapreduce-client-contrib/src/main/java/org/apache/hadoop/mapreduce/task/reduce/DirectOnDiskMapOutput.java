@@ -22,8 +22,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
@@ -36,7 +36,7 @@ import com.google.common.annotations.VisibleForTesting;
 
 public class DirectOnDiskMapOutput<K,V> extends MapOutput<K, V> {
 
-  private static final Log LOG = LogFactory.getLog(DirectOnDiskMapOutput.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DirectOnDiskMapOutput.class);
   private final FileSystem fs;
   private final Path tmpOutputPath;
   private final Path outputPath;
@@ -122,9 +122,9 @@ public class DirectOnDiskMapOutput<K,V> extends MapOutput<K, V> {
     // Discard the map-output - caller will need to invoke "abort()" in case of IOException
     if (shouldCloseInput) {
       // Close the streams
-      IOUtils.cleanup(LOG, input, disk);
+      IOUtils.cleanupWithLogger(LOG, input, disk);
     } else {
-      IOUtils.cleanup(LOG, disk);
+      IOUtils.cleanupWithLogger(LOG, disk);
     }
     // Re-throw
     throw ioe;

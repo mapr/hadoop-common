@@ -36,8 +36,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FilterFileSystem;
@@ -69,8 +69,8 @@ import org.junit.Test;
 public class TestMRApps {
   private static File testWorkDir = null;
 
-  private static final Log LOG =
-      LogFactory.getLog(TestMRApps.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(TestMRApps.class);
 
   @BeforeClass
   public static void setupTestDirs() throws IOException {

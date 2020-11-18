@@ -25,8 +25,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.fs.ChecksumFileSystem;
@@ -66,7 +66,7 @@ import com.google.common.annotations.VisibleForTesting;
 @InterfaceStability.Unstable
 public class DirectShuffleMergeManagerImpl<K, V> implements MergeManager<K, V> {
   
-  private static final Log LOG = LogFactory.getLog(DirectShuffleMergeManagerImpl.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DirectShuffleMergeManagerImpl.class);
   
   /* Maximum percentage of the in-memory limit that a single shuffle can 
    * consume*/ 

@@ -22,8 +22,8 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.TreeSet;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
@@ -43,7 +43,7 @@ import org.apache.hadoop.util.ToolRunner;
 
 public class TeraValidateRecords extends Configured implements Tool {
 	
-	static Log LOG = LogFactory.getLog(TeraValidateRecords.class);
+	static Logger LOG = LoggerFactory.getLogger(TeraValidateRecords.class);
 	
 	static class TeraValidateMapper  
 			extends Mapper<Text,Text,IntWritable,LongWritable> {

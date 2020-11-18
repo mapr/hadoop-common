@@ -21,8 +21,8 @@ package org.apache.hadoop.mapreduce.task.reduce;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -47,7 +47,7 @@ import static org.apache.hadoop.mapred.TaskAttemptID.*;
 
 public class DirectShuffleFetcher<K, V> extends Thread {
 
-  private static final Log LOG = LogFactory.getLog(DirectShuffleFetcher.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DirectShuffleFetcher.class);
 
   private static enum ShuffleErrors{IO_ERROR, WRONG_LENGTH, BAD_ID, WRONG_MAP,
     CONNECTION, WRONG_REDUCE}
@@ -412,7 +412,7 @@ public class DirectShuffleFetcher<K, V> extends Thread {
     } */finally {
       // close input 
       if (input != null) {
-        IOUtils.cleanup(LOG, input);
+        IOUtils.cleanupWithLogger(LOG, input);
       }
     }
     return mapOutput;

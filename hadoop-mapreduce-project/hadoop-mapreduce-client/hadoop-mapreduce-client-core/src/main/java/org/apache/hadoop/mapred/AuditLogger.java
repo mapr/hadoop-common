@@ -19,8 +19,8 @@ package org.apache.hadoop.mapred;
 
 import java.net.InetAddress;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.ipc.Server;
 
 /** Manages MapReduce audit logs. Audit logs provides information about
@@ -29,7 +29,7 @@ import org.apache.hadoop.ipc.Server;
  * Audit log format is written as key=value pairs.
  */
 class AuditLogger {
-  private static final Log LOG = LogFactory.getLog(AuditLogger.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AuditLogger.class);
 
   static enum Keys {USER, OPERATION, TARGET, RESULT, IP, PERMISSIONS,
                     DESCRIPTION}

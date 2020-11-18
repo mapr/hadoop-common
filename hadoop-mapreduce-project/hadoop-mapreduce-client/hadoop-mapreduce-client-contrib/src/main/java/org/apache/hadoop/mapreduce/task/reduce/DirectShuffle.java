@@ -20,8 +20,8 @@ package org.apache.hadoop.mapreduce.task.reduce;
 
 import java.io.IOException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RawKeyValueIterator;
 import org.apache.hadoop.mapred.Reporter;
@@ -42,7 +42,7 @@ public class DirectShuffle<K,V> implements ShuffleConsumerPlugin<K, V>,
     private static final int MIN_EVENTS_TO_FETCH = 100;
     private static final int MAX_RPC_OUTSTANDING_EVENTS = 3000000;
     
-    private static final Log LOG = LogFactory.getLog(DirectShuffle.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DirectShuffle.class);
 
 	private org.apache.hadoop.mapred.ShuffleConsumerPlugin.Context<K, V> context;
 	private TaskAttemptID reduceId;

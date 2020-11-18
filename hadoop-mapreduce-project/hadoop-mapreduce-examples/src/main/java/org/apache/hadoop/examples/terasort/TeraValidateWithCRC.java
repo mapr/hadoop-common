@@ -20,8 +20,8 @@ package org.apache.hadoop.examples.terasort;
 
 import java.io.IOException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -50,7 +50,7 @@ import org.apache.hadoop.util.ToolRunner;
  */
 public class TeraValidateWithCRC extends Configured implements Tool {
   private static final Text error = new Text("error");
-  static Log LOG = LogFactory.getLog(TeraGenWithCRC.class);
+  static Logger LOG = LoggerFactory.getLogger(TeraGenWithCRC.class);
 
   static class ValidateMapper extends Mapper<Text,Text,Text,Text> {
     private Text lastKey;

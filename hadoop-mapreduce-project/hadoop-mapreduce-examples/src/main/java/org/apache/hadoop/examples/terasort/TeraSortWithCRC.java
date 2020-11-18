@@ -23,8 +23,8 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URI;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -48,7 +48,7 @@ import org.apache.hadoop.util.ToolRunner;
  * <b>bin/hadoop jar hadoop-*-examples.jar terasort in-dir out-dir</b>
  */
 public class TeraSortWithCRC extends Configured implements Tool {
-  private static final Log LOG = LogFactory.getLog(TeraSortWithCRC.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TeraSortWithCRC.class);
 
   /**
    * A partitioner that splits text keys into roughly equal partitions

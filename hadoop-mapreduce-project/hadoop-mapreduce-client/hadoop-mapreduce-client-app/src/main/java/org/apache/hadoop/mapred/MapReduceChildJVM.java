@@ -24,8 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.TaskLog.LogName;
 import org.apache.hadoop.mapreduce.MRJobConfig;
@@ -39,7 +39,7 @@ import org.apache.hadoop.yarn.util.TaskLogUtil;
 
 @SuppressWarnings("deprecation")
 public class MapReduceChildJVM {
-  private static final Log LOG = LogFactory.getLog(MapReduceChildJVM.class);
+  private static final Logger LOG = LoggerFactory.getLogger(MapReduceChildJVM.class);
 
   private static String getTaskLogFile(LogName filter) {
     return ApplicationConstants.LOG_DIR_EXPANSION_VAR + Path.SEPARATOR + 

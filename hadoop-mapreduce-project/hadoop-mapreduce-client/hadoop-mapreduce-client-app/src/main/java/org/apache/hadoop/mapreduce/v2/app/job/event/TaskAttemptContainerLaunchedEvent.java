@@ -25,14 +25,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.mapred.ShuffleHandler;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskAttemptId;
 
 public class TaskAttemptContainerLaunchedEvent extends TaskAttemptEvent {
   
-  static final Log LOG = LogFactory.getLog(TaskAttemptContainerLaunchedEvent.class);
+  static final Logger LOG = LoggerFactory.getLogger(TaskAttemptContainerLaunchedEvent.class);
   
   private int shufflePort;
   // Inefficient - does it for every container launch

@@ -19,8 +19,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -47,7 +47,7 @@ import org.apache.hadoop.yarn.server.nodemanager.NodeManager;
  * Auxiliary service to manage local volume that stores job related data.
  */
 public class LocalVolumeAuxService extends AuxiliaryService {
-  private static final Log LOG = LogFactory.getLog(LocalVolumeAuxService.class);
+  private static final Logger LOG = LoggerFactory.getLogger(LocalVolumeAuxService.class);
 
   private static final String SERVICE_NAME = DirectShuffleMetaData.DIRECT_SHUFFLE_SERVICE_ID;
 
