@@ -157,6 +157,13 @@ public class TestNodeManagerHardwareUtils {
     conf.setInt(YarnConfiguration.NM_VCORES, 10);
     ret = NodeManagerHardwareUtils.getVCores(plugin, conf);
     Assert.assertEquals(10, ret);
+
+    YarnConfiguration conf2 = new YarnConfiguration();
+    conf2.setBoolean(YarnConfiguration.NM_ENABLE_HARDWARE_CAPABILITY_DETECTION,
+        true);
+    conf.setInt(YarnConfiguration.NM_VCORES, 100);
+    ret = NodeManagerHardwareUtils.getVCores(plugin, conf2);
+    Assert.assertEquals(4, ret);
   }
 
   @Test

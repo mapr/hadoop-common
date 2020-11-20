@@ -187,8 +187,12 @@ public class NodeManagerHardwareUtils {
           YarnConfiguration.NM_ENABLE_HARDWARE_CAPABILITY_DETECTION,
           YarnConfiguration.DEFAULT_NM_ENABLE_HARDWARE_CAPABILITY_DETECTION);
 
+    if (plugin == null) {
+      plugin = ResourceCalculatorPlugin.getResourceCalculatorPlugin(null, conf);
+    }
+
     String message;
-    if (!hardwareDetectionEnabled || plugin == null) {
+    if (!hardwareDetectionEnabled) {
       cores =
           conf.getInt(YarnConfiguration.NM_VCORES,
             YarnConfiguration.DEFAULT_NM_VCORES);
@@ -196,27 +200,24 @@ public class NodeManagerHardwareUtils {
         cores = YarnConfiguration.DEFAULT_NM_VCORES;
       }
     } else {
-      cores = conf.getInt(YarnConfiguration.NM_VCORES, -1);
-      if (cores == -1) {
-        float physicalCores =
-            NodeManagerHardwareUtils.getContainersCPUs(plugin, conf);
-        float multiplier =
-            conf.getFloat(YarnConfiguration.NM_PCORES_VCORES_MULTIPLIER,
-                YarnConfiguration.DEFAULT_NM_PCORES_VCORES_MULTIPLIER);
-        if (multiplier > 0) {
-          float tmp = physicalCores * multiplier;
-          if (tmp > 0 && tmp < 1) {
-            // on a single core machine - tmp can be between 0 and 1
-            cores = 1;
-          } else {
-            cores = (int) tmp;
-          }
+      float physicalCores =
+          NodeManagerHardwareUtils.getContainersCPUs(plugin, conf);
+      float multiplier =
+          conf.getFloat(YarnConfiguration.NM_PCORES_VCORES_MULTIPLIER,
+              YarnConfiguration.DEFAULT_NM_PCORES_VCORES_MULTIPLIER);
+      if (multiplier > 0) {
+        float tmp = physicalCores * multiplier;
+        if (tmp > 0 && tmp < 1) {
+          // on a single core machine - tmp can be between 0 and 1
+          cores = 1;
         } else {
-          message = "Illegal value for "
-              + YarnConfiguration.NM_PCORES_VCORES_MULTIPLIER
-              + ". Value must be greater than 0.";
-          throw new IllegalArgumentException(message);
+          cores = (int) tmp;
         }
+      } else {
+        message = "Illegal value for "
+            + YarnConfiguration.NM_PCORES_VCORES_MULTIPLIER
+            + ". Value must be greater than 0.";
+        throw new IllegalArgumentException(message);
       }
     }
 
