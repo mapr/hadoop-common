@@ -154,10 +154,10 @@ class DataXceiverServer implements Runnable {
           LOG.warn(datanode.getDisplayName() + ":DataXceiverServer: ", ace);
         }
       } catch (IOException ie) {
-        IOUtils.cleanup(null, peer);
+        IOUtils.cleanupWithLogger(null, peer);
         LOG.warn(datanode.getDisplayName() + ":DataXceiverServer: ", ie);
       } catch (OutOfMemoryError ie) {
-        IOUtils.cleanup(null, peer);
+        IOUtils.cleanupWithLogger(null, peer);
         // DataNode can run out of memory if there is too many transfers.
         // Log the event, Sleep for 30 seconds, other transfers may complete by
         // then.
@@ -227,7 +227,7 @@ class DataXceiverServer implements Runnable {
   synchronized void closePeer(Peer peer) {
     peers.remove(peer);
     peersXceiver.remove(peer);
-    IOUtils.cleanup(null, peer);
+    IOUtils.cleanupWithLogger(null, peer);
   }
 
   // Sending OOB to all peers

@@ -125,7 +125,7 @@ public class FSXAttrBaseTest {
 
   @After
   public void destroyFileSystems() {
-    IOUtils.cleanup(null, fs);
+    IOUtils.cleanupWithLogger(null, fs);
     fs = null;
   }
   

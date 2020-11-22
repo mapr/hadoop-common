@@ -2073,7 +2073,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
 
       return PBHelper.convert(reply.getReadOpChecksumInfo().getChecksum().getType());
     } finally {
-      IOUtils.cleanup(null, pair.in, pair.out);
+      IOUtils.cleanupWithLogger(null, pair.in, pair.out);
     }
   }
 

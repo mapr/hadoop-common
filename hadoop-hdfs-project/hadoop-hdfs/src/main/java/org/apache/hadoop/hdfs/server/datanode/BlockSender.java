@@ -432,7 +432,7 @@ class BlockSender implements java.io.Closeable {
       blockInFd = null;
     }
     if (volumeRef != null) {
-      IOUtils.cleanup(null, volumeRef);
+      IOUtils.cleanupWithLogger(null, volumeRef);
       volumeRef = null;
     }
     // throw IOException if there is any

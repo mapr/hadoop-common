@@ -1272,7 +1272,7 @@ public class TestRetryCacheWithHA {
         } catch (Exception e) {
           LOG.info("Got Exception while calling " + op.name, e);
         } finally {
-          IOUtils.cleanup(null, op.client);
+          IOUtils.cleanupWithLogger(null, op.client);
         }
       }
     }.start();

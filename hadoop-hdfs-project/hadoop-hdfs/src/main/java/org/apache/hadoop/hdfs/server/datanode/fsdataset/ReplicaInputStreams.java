@@ -52,6 +52,6 @@ public class ReplicaInputStreams implements Closeable {
   public void close() {
     IOUtils.closeStream(dataIn);
     IOUtils.closeStream(checksumIn);
-    IOUtils.cleanup(null, volumeRef);
+    IOUtils.cleanupWithLogger(null, volumeRef);
   }
 }

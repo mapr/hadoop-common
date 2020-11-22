@@ -98,7 +98,7 @@ public class TestDynamicInputFormat {
                                     new Path(path))[0].getPath().toString());
     }
     finally {
-      IOUtils.cleanup(null, fileSystem, outputStream);
+      IOUtils.cleanupWithLogger(null, fileSystem, outputStream);
     }
   }
 

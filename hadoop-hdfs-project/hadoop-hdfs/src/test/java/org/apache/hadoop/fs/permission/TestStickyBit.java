@@ -90,7 +90,7 @@ public class TestStickyBit {
 
   @AfterClass
   public static void shutdown() throws Exception {
-    IOUtils.cleanup(null, hdfs, hdfsAsUser1, hdfsAsUser2);
+    IOUtils.cleanupWithLogger(null, hdfs, hdfsAsUser1, hdfsAsUser2);
     if (cluster != null) {
       cluster.shutdown();
     }
@@ -115,7 +115,7 @@ public class TestStickyBit {
       h.close();
       h = null;
     } finally {
-      IOUtils.cleanup(null, h);
+      IOUtils.cleanupWithLogger(null, h);
     }
   }
 
@@ -384,7 +384,7 @@ public class TestStickyBit {
       o.close();
       o = null;
     } finally {
-      IOUtils.cleanup(null, o);
+      IOUtils.cleanupWithLogger(null, o);
     }
   }
 

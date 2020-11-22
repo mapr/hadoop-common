@@ -756,11 +756,11 @@ class FsDatasetImpl implements FsDatasetSpi<FsVolumeImpl> {
         InputStream metaInStream = openAndSeek(info.getMetaFile(), metaOffset);
         return new ReplicaInputStreams(blockInStream, metaInStream, ref);
       } catch (IOException e) {
-        IOUtils.cleanup(null, blockInStream);
+        IOUtils.cleanupWithLogger(null, blockInStream);
         throw e;
       }
     } catch (IOException e) {
-      IOUtils.cleanup(null, ref);
+      IOUtils.cleanupWithLogger(null, ref);
       throw e;
     }
   }
@@ -775,7 +775,7 @@ class FsDatasetImpl implements FsDatasetSpi<FsVolumeImpl> {
       }
       return new FileInputStream(raf.getFD());
     } catch(IOException ioe) {
-      IOUtils.cleanup(null, raf);
+      IOUtils.cleanupWithLogger(null, raf);
       throw ioe;
     }
   }
@@ -1046,7 +1046,7 @@ class FsDatasetImpl implements FsDatasetSpi<FsVolumeImpl> {
       replica = append(b.getBlockPoolId(), (FinalizedReplica)replicaInfo, newGS,
           b.getNumBytes());
     } catch (IOException e) {
-      IOUtils.cleanup(null, ref);
+      IOUtils.cleanupWithLogger(null, ref);
       throw e;
     }
     return new ReplicaHandler(replica, ref);
@@ -1190,7 +1190,7 @@ class FsDatasetImpl implements FsDatasetSpi<FsVolumeImpl> {
         replica = (ReplicaBeingWritten) replicaInfo;
       }
     } catch (IOException e) {
-      IOUtils.cleanup(null, ref);
+      IOUtils.cleanupWithLogger(null, ref);
       throw e;
     }
     return new ReplicaHandler(replica, ref);
@@ -1278,7 +1278,7 @@ class FsDatasetImpl implements FsDatasetSpi<FsVolumeImpl> {
     try {
       f = v.createRbwFile(b.getBlockPoolId(), b.getLocalBlock());
     } catch (IOException e) {
-      IOUtils.cleanup(null, ref);
+      IOUtils.cleanupWithLogger(null, ref);
       throw e;
     }
 
@@ -1344,7 +1344,7 @@ class FsDatasetImpl implements FsDatasetSpi<FsVolumeImpl> {
       // bump the replica's generation stamp to newGS
       bumpReplicaGS(rbw, newGS);
     } catch (IOException e) {
-      IOUtils.cleanup(null, ref);
+      IOUtils.cleanupWithLogger(null, ref);
       throw e;
     }
     return new ReplicaHandler(rbw, ref);
@@ -1433,7 +1433,7 @@ class FsDatasetImpl implements FsDatasetSpi<FsVolumeImpl> {
           try {
             f = v.createTmpFile(b.getBlockPoolId(), b.getLocalBlock());
           } catch (IOException e) {
-            IOUtils.cleanup(null, ref);
+            IOUtils.cleanupWithLogger(null, ref);
             throw e;
           }
           ReplicaInPipeline newReplicaInfo =

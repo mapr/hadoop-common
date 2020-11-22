@@ -188,7 +188,7 @@ public class DebugAdmin extends Configured implements Tool {
             blockFile);
         return 0;
       } finally {
-        IOUtils.cleanup(null, metaStream, dataStream, checksumStream);
+        IOUtils.cleanupWithLogger(null, metaStream, dataStream, checksumStream);
       }
     }
   }

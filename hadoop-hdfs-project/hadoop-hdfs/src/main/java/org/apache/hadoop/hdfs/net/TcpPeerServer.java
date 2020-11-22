@@ -92,7 +92,7 @@ public class TcpPeerServer implements PeerServer {
       return peer;
     } finally {
       if (!success) {
-        IOUtils.cleanup(null, peer);
+        IOUtils.cleanupWithLogger(null, peer);
       }
     }
   }

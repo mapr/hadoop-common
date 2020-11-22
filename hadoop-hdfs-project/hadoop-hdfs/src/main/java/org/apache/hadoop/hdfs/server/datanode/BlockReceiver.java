@@ -338,7 +338,7 @@ class BlockReceiver implements Closeable {
       IOUtils.closeStream(out);
     }
     if (replicaHandler != null) {
-      IOUtils.cleanup(null, replicaHandler);
+      IOUtils.cleanupWithLogger(null, replicaHandler);
       replicaHandler = null;
     }
     if (measuredFlushTime) {

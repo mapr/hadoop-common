@@ -145,7 +145,7 @@ public class TestSecureNNWithQJM {
 
   @After
   public void shutdown() throws IOException {
-    IOUtils.cleanup(null, fs);
+    IOUtils.cleanupWithLogger(null, fs);
     if (cluster != null) {
       cluster.shutdown();
     }
@@ -193,7 +193,7 @@ public class TestSecureNNWithQJM {
    * @throws IOException if there is an I/O error
    */
   private void restartNameNode() throws IOException {
-    IOUtils.cleanup(null, fs);
+    IOUtils.cleanupWithLogger(null, fs);
     cluster.restartNameNode();
     fs = cluster.getFileSystem();
   }

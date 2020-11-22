@@ -224,7 +224,7 @@ public class TestDataTransferKeepalive {
         IOUtils.copyBytes(stm, new IOUtils.NullOutputStream(), 1024);
       }
     } finally {
-      IOUtils.cleanup(null, stms);
+      IOUtils.cleanupWithLogger(null, stms);
     }
     
     assertEquals(5, peerCache.size());

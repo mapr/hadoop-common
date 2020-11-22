@@ -29,9 +29,6 @@ import static org.mockito.Mockito.doReturn;
 import java.net.InetSocketAddress;
 import java.security.PrivilegedExceptionAction;
 
-import org.apache.commons.logging.*;
-import org.apache.commons.logging.impl.Log4JLogger;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.io.Text;
@@ -53,8 +50,11 @@ import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.User;
 
+import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.log4j.Level;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Unit tests for using Job Token over RPC. 
  * 
@@ -65,8 +65,8 @@ import org.junit.Test;
 public class TestUmbilicalProtocolWithJobToken {
   private static final String ADDRESS = "0.0.0.0";
 
-  public static final Log LOG = LogFactory
-      .getLog(TestUmbilicalProtocolWithJobToken.class);
+  public static final Logger LOG = LoggerFactory
+      .getLogger(TestUmbilicalProtocolWithJobToken.class);
 
   private static Configuration conf;
   static {
@@ -80,11 +80,11 @@ public class TestUmbilicalProtocolWithJobToken {
   }
 
   static {
-    ((Log4JLogger) Client.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger) Server.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger) SaslRpcClient.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger) SaslRpcServer.LOG).getLogger().setLevel(Level.ALL);
-    ((Log4JLogger) SaslInputStream.LOG).getLogger().setLevel(Level.ALL);
+    GenericTestUtils.setLogLevel(Client.LOG, Level.TRACE);
+    GenericTestUtils.setLogLevel(Server.LOG, Level.TRACE);
+    GenericTestUtils.setLogLevel(SaslRpcClient.LOG, Level.TRACE);
+    GenericTestUtils.setLogLevel(SaslRpcServer.LOG, Level.TRACE);
+    GenericTestUtils.setLogLevel(SaslInputStream.LOG, Level.TRACE);
   }
 
   @Test

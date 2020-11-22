@@ -496,7 +496,7 @@ public class TestFsck {
           }
         }
       } finally {
-        IOUtils.cleanup(null, in);
+        IOUtils.cleanupWithLogger(null, in);
       }
     }
   }

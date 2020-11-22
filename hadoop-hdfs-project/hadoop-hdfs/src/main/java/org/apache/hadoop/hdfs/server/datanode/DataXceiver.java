@@ -482,9 +482,9 @@ class DataXceiver extends Receiver implements Runnable {
         // If we failed to pass the shared memory segment to the client,
         // close the UNIX domain socket now.  This will trigger the 
         // DomainSocketWatcher callback, cleaning up the segment.
-        IOUtils.cleanup(null, sock);
+        IOUtils.cleanupWithLogger(null, sock);
       }
-      IOUtils.cleanup(null, shmInfo);
+      IOUtils.cleanupWithLogger(null, shmInfo);
     }
   }
 

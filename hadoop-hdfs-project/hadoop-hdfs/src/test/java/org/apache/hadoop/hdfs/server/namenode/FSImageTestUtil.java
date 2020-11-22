@@ -520,7 +520,7 @@ public abstract class FSImageTestUtil {
       props.store(out, null);
       
     } finally {
-      IOUtils.cleanup(null, fis, out);
+      IOUtils.cleanupWithLogger(null, fis, out);
     }    
   }
 

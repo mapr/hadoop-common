@@ -155,7 +155,7 @@ public class TestEditLogFileOutputStream {
       editLogStream.abort();
       editLogStream.abort();
     } finally {
-      IOUtils.cleanup(null, editLogStream);
+      IOUtils.cleanupWithLogger(null, editLogStream);
     }
   }
 }

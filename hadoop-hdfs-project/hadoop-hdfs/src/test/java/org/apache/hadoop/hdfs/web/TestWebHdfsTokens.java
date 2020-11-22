@@ -182,7 +182,7 @@ public class TestWebHdfsTokens {
           "webhdfs", cluster.getNameNode().getHttpAddress());
       validateLazyTokenFetch(clusterConf);
     } finally {
-      IOUtils.cleanup(null, fs);
+      IOUtils.cleanupWithLogger(null, fs);
       if (cluster != null) {
         cluster.shutdown();
       }
@@ -231,7 +231,7 @@ public class TestWebHdfsTokens {
         "swebhdfs", cluster.getNameNode().getHttpsAddress());
       validateLazyTokenFetch(clusterConf);
       } finally {
-        IOUtils.cleanup(null, fs);
+        IOUtils.cleanupWithLogger(null, fs);
         if (cluster != null) {
           cluster.shutdown();
         }

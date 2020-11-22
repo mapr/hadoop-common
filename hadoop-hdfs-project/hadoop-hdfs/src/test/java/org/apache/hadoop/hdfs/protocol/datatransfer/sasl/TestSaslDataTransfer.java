@@ -65,7 +65,7 @@ public class TestSaslDataTransfer extends SaslDataTransferTestCase {
 
   @After
   public void shutdown() {
-    IOUtils.cleanup(null, fs);
+    IOUtils.cleanupWithLogger(null, fs);
     if (cluster != null) {
       cluster.shutdown();
     }

@@ -208,8 +208,8 @@ public class TestOfflineImageViewer {
       out = new FileOutputStream(dest);
       in.getChannel().transferTo(0, MAX_BYTES, out.getChannel());
     } finally {
-      IOUtils.cleanup(null, in);
-      IOUtils.cleanup(null, out);
+      IOUtils.cleanupWithLogger(null, in);
+      IOUtils.cleanupWithLogger(null, out);
     }
   }
 

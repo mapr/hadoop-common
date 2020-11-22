@@ -1170,7 +1170,7 @@ public class TestBlockStoragePolicy {
       Assert.assertEquals(POLICY_SUITE.getPolicy(LAZY_PERSIST).toString(),
           policies[5].toString());
     } finally {
-      IOUtils.cleanup(null, fs);
+      IOUtils.cleanupWithLogger(null, fs);
       cluster.shutdown();
     }
   }

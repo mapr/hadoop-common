@@ -209,7 +209,7 @@ public class TestCopyMapper {
       System.out.println(fileStatus.getReplication());
     }
     finally {
-      IOUtils.cleanup(null, outputStream);
+      IOUtils.cleanupWithLogger(null, outputStream);
     }
   }
 

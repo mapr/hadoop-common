@@ -297,7 +297,7 @@ class FsDatasetAsyncDiskService {
             + block.getLocalBlock() + " file " + blockFile);
       }
       updateDeletedBlockId(block);
-      IOUtils.cleanup(null, volumeRef);
+      IOUtils.cleanupWithLogger(null, volumeRef);
     }
   }
   
