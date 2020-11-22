@@ -107,6 +107,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 /**
  * FSEditLog maintains a log of the namespace modifications.
@@ -117,6 +119,7 @@ import org.slf4j.LoggerFactory;
 public class FSEditLog implements LogsPurgeable {
 
   public static final Logger LOG = LoggerFactory.getLogger(FSEditLog.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
   /**
    * State machine for edit log.
    * 
@@ -624,7 +627,7 @@ public class FSEditLog implements LogsPurgeable {
                 "Could not sync enough journals to persistent storage " +
                 "due to " + e.getMessage() + ". " +
                 "Unsynced transactions: " + (txid - synctxid);
-            LOG.error(msg, new Exception());
+            LOG.error(FATAL,msg, new Exception());
             synchronized(journalSetLock) {
               IOUtils.cleanupWithLogger(LOG, journalSet);
             }
@@ -650,7 +653,7 @@ public class FSEditLog implements LogsPurgeable {
           final String msg =
               "Could not sync enough journals to persistent storage. "
               + "Unsynced transactions: " + (txid - synctxid);
-          LOG.error(msg, new Exception());
+          LOG.error(FATAL,msg, new Exception());
           synchronized(journalSetLock) {
             IOUtils.cleanupWithLogger(LOG, journalSet);
           }

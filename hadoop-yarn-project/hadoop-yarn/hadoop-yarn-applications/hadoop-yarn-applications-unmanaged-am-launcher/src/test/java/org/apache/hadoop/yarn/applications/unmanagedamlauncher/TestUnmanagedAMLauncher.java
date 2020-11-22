@@ -47,10 +47,13 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 public class TestUnmanagedAMLauncher {
   private static final Logger LOG = LoggerFactory
       .getLogger(TestUnmanagedAMLauncher.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
 
   protected static MiniYARNCluster yarnCluster = null;
   protected static Configuration conf = new YarnConfiguration();
@@ -127,7 +130,7 @@ public class TestUnmanagedAMLauncher {
     String classpath = getTestRuntimeClasspath();
     String javaHome = System.getenv("JAVA_HOME");
     if (javaHome == null) {
-      LOG.error("JAVA_HOME not defined. Test not running.");
+      LOG.error(FATAL,"JAVA_HOME not defined. Test not running.");
       return;
     }
     String[] args = {
@@ -169,7 +172,7 @@ public class TestUnmanagedAMLauncher {
     String classpath = getTestRuntimeClasspath();
     String javaHome = System.getenv("JAVA_HOME");
     if (javaHome == null) {
-      LOG.error("JAVA_HOME not defined. Test not running.");
+      LOG.error(FATAL,"JAVA_HOME not defined. Test not running.");
       return;
     }
     String[] args = {

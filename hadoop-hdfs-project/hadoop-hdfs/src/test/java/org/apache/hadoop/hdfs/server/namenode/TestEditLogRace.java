@@ -48,6 +48,8 @@ import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.util.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 import org.slf4j.event.Level;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
@@ -63,6 +65,7 @@ public class TestEditLogRace {
   }
 
   private static final Logger LOG = LoggerFactory.getLogger(TestEditLogRace.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
 
   private static final String NAME_DIR =
     MiniDFSCluster.getBaseDirectory() + "name1";
@@ -378,7 +381,7 @@ public class TestEditLogRace {
                 true);
             LOG.info("mkdirs complete");
           } catch (Throwable ioe) {
-            LOG.error("Got exception", ioe);
+            LOG.error(FATAL,"Got exception", ioe);
             deferredException.set(ioe);
             waitToEnterFlush.countDown();
           }
@@ -474,7 +477,7 @@ public class TestEditLogRace {
                 true);
             LOG.info("mkdirs complete");
           } catch (Throwable ioe) {
-            LOG.error("Got exception", ioe);
+            LOG.error(FATAL,"Got exception", ioe);
             deferredException.set(ioe);
             waitToEnterSync.countDown();
           }

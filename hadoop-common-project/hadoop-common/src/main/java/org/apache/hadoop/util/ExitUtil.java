@@ -21,6 +21,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 /**
  * Facilitates hooking process termination for tests and debugging.
@@ -29,6 +31,7 @@ import org.apache.hadoop.classification.InterfaceStability;
 @InterfaceStability.Unstable
 public final class ExitUtil {
   private static final Logger LOG = LoggerFactory.getLogger(ExitUtil.class.getName());
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
   private static volatile boolean systemExitDisabled = false;
   private static volatile boolean systemHaltDisabled = false;
   private static volatile ExitException firstExitException;
@@ -124,7 +127,7 @@ public final class ExitUtil {
     LOG.info("Exiting with status " + status);
     if (systemExitDisabled) {
       ExitException ee = new ExitException(status, msg);
-      LOG.error("Terminate called", ee);
+      LOG.error(FATAL,"Terminate called", ee);
       if (null == firstExitException) {
         firstExitException = ee;
       }
@@ -147,7 +150,7 @@ public final class ExitUtil {
     LOG.info("Halt with status " + status + " Message: " + msg);
     if (systemHaltDisabled) {
       HaltException ee = new HaltException(status, msg);
-      LOG.error("Halt called", ee);
+      LOG.error(FATAL,"Halt called", ee);
       if (null == firstHaltException) {
         firstHaltException = ee;
       }

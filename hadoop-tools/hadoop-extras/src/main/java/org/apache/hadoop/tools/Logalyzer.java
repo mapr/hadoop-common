@@ -49,6 +49,8 @@ import org.apache.hadoop.mapred.TextInputFormat;
 import org.apache.hadoop.mapred.TextOutputFormat;
 import org.apache.hadoop.mapred.lib.LongSumReducer;
 import org.apache.hadoop.mapreduce.lib.map.RegexMapper;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 /**
  * Logalyzer: A utility tool for archiving and analyzing hadoop logs.
@@ -109,6 +111,7 @@ public class Logalyzer {
   public static class LogComparator extends Text.Comparator implements Configurable {
     
     private static Logger LOG = LoggerFactory.getLogger(Logalyzer.class);
+    private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
     private JobConf conf = null;
     private String[] sortSpec = null;
     private String columnSeparator = null;
@@ -175,7 +178,7 @@ public class Logalyzer {
         }
         
       } catch (IOException ioe) {
-        LOG.error("Caught " + ioe);
+        LOG.error(FATAL,"Caught " + ioe);
         return 0;
       }
       

@@ -131,6 +131,8 @@ import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 /** An abstract IPC service.  IPC calls take a single {@link Writable} as a
  * parameter, and return a {@link Writable} as their value.  A service runs on
@@ -257,6 +259,7 @@ public abstract class Server {
   
 
   public static final Logger LOG = LoggerFactory.getLogger(Server.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
   public static final Logger AUDITLOG =
       LoggerFactory.getLogger("SecurityLogger."+Server.class.getName());
   private static final String AUTH_FAILED_FOR = "Auth failed for ";
@@ -683,7 +686,7 @@ public abstract class Server {
           } catch (IOException ex) {
             LOG.error("Error in Reader", ex);
           } catch (Throwable re) {
-            LOG.error("Bug in read selector!", re);
+            LOG.error(FATAL,"Bug in read selector!", re);
             ExitUtil.terminate(1, "Bug in read selector!");
           }
         }

@@ -144,6 +144,8 @@ import org.apache.log4j.LogManager;
 import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 /**
  * The Map-Reduce Application Master.
@@ -167,6 +169,7 @@ import org.slf4j.LoggerFactory;
 public class MRAppMaster extends CompositeService {
 
   private static final Logger LOG = LoggerFactory.getLogger(MRAppMaster.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
 
   /**
    * Priority of the MRAppMaster shutdown hook.
@@ -315,7 +318,7 @@ public class MRAppMaster extends CompositeService {
         errorHappenedShutDown = true;
         forcedState = JobStateInternal.ERROR;
         shutDownMessage = "Staging dir does not exist " + stagingDir;
-        LOG.error(shutDownMessage);
+        LOG.error(FATAL,shutDownMessage);
       } else if (commitStarted) {
         //A commit was started so this is the last time, we just need to know
         // what result we will use to notify, and how we will unregister
@@ -1484,7 +1487,7 @@ public class MRAppMaster extends CompositeService {
       conf.set(MRJobConfig.USER_NAME, jobUserName);
       initAndStartAppMaster(appMaster, conf, jobUserName);
     } catch (Throwable t) {
-      LOG.error("Error starting MRAppMaster", t);
+      LOG.error(FATAL,"Error starting MRAppMaster", t);
       ExitUtil.terminate(1, t);
     }
   }

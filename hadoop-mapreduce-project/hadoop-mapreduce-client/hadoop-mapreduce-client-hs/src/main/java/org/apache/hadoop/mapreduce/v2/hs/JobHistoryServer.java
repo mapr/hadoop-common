@@ -48,6 +48,8 @@ import org.apache.hadoop.yarn.server.api.ConfigurableAuxServices;
 import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 /******************************************************************
  * {@link JobHistoryServer} is responsible for servicing all job history
@@ -65,6 +67,7 @@ public class JobHistoryServer extends CompositeService {
 
   private static final Logger LOG =
       LoggerFactory.getLogger(JobHistoryServer.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
   protected HistoryContext historyContext;
   private HistoryClientService clientService;
   private JobHistory jobHistoryService;
@@ -233,7 +236,7 @@ public class JobHistoryServer extends CompositeService {
       jobHistoryServer.init(conf);
       jobHistoryServer.start();
     } catch (Throwable t) {
-      LOG.error("Error starting JobHistoryServer", t);
+      LOG.error(FATAL,"Error starting JobHistoryServer", t);
       ExitUtil.terminate(-1, "Error starting JobHistoryServer");
     }
     return jobHistoryServer;

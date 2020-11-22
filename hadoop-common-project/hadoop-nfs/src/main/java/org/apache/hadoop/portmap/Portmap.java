@@ -41,12 +41,15 @@ import org.jboss.netty.util.HashedWheelTimer;
 import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 /**
  * Portmap service for binding RPC protocols. See RFC 1833 for details.
  */
 final class Portmap {
   private static final Logger LOG = LoggerFactory.getLogger(Portmap.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
   private static final int DEFAULT_IDLE_TIME_MILLISECONDS = 5000;
 
   private ConnectionlessBootstrap udpServer;
@@ -65,7 +68,7 @@ final class Portmap {
       pm.start(DEFAULT_IDLE_TIME_MILLISECONDS,
           new InetSocketAddress(port), new InetSocketAddress(port));
     } catch (Throwable e) {
-      LOG.error("Failed to start the server. Cause:", e);
+      LOG.error(FATAL,"Failed to start the server. Cause:", e);
       pm.shutdown();
       System.exit(-1);
     }

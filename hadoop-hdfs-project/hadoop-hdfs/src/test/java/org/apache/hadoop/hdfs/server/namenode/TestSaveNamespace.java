@@ -58,6 +58,8 @@ import org.apache.hadoop.hdfs.util.MD5FileUtils;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.test.GenericTestUtils.DelayAnswer;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 import org.slf4j.event.Level;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -82,6 +84,7 @@ public class TestSaveNamespace {
   }
   
   private static final Logger LOG = LoggerFactory.getLogger(TestSaveNamespace.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
 
   private static class FaultySaveImage implements Answer<Void> {
     int count = 0;
@@ -301,7 +304,7 @@ public class TestSaveNamespace {
         try {
           fsn.close();
         } catch (Throwable t) {
-          LOG.error("Failed to shut down", t);
+          LOG.error(FATAL,"Failed to shut down", t);
         }
       }
     }

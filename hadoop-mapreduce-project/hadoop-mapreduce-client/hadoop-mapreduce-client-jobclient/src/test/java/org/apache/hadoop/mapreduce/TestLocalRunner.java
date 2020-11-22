@@ -33,6 +33,8 @@ import org.apache.hadoop.util.ReflectionUtils;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -56,6 +58,7 @@ public class TestLocalRunner {
 
   private static final Logger LOG =
       LoggerFactory.getLogger(TestLocalRunner.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
 
   private static int INPUT_SIZES[] =
     new int[] { 50000, 500, 500, 20,  5000, 500};
@@ -331,9 +334,9 @@ public class TestLocalRunner {
     try {
       job.waitForCompletion(true);
     } catch (InterruptedException ie) {
-      LOG.error("Interrupted while waiting for job completion", ie);
+      LOG.error(FATAL,"Interrupted while waiting for job completion", ie);
       for (int i = 0; i < 10; i++) {
-        LOG.error("Dumping stacks");
+        LOG.error(FATAL,"Dumping stacks");
         ReflectionUtils.logThreadInfo(LOG, "multimap threads", 0);
         Thread.sleep(1000);
       }

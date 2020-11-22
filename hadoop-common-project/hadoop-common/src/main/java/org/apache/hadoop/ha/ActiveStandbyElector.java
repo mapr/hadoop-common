@@ -47,6 +47,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 /**
  * 
@@ -143,6 +145,7 @@ public class ActiveStandbyElector implements StatCallback, StringCallback {
 
   public static final Logger LOG =
       LoggerFactory.getLogger(ActiveStandbyElector.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
 
   private static final int SLEEP_AFTER_FAILURE_TO_BECOME_ACTIVE = 1000;
 
@@ -640,7 +643,7 @@ public class ActiveStandbyElector implements StatCallback, StringCallback {
   }
 
   private void fatalError(String errorMessage) {
-    LOG.error(errorMessage);
+    LOG.error(FATAL,errorMessage);
     reset();
     appClient.notifyFatalError(errorMessage);
   }

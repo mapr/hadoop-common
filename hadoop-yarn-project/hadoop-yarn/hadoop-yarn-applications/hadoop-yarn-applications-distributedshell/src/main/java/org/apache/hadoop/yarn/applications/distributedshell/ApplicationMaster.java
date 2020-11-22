@@ -100,6 +100,8 @@ import org.apache.log4j.LogManager;
 import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 /**
  * An ApplicationMaster for executing shell commands on a set of launched
@@ -168,6 +170,7 @@ public class ApplicationMaster {
 
   private static final Logger LOG = LoggerFactory
       .getLogger(ApplicationMaster.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
 
   @VisibleForTesting
   @Private
@@ -293,7 +296,7 @@ public class ApplicationMaster {
       appMaster.run();
       result = appMaster.finish();
     } catch (Throwable t) {
-      LOG.error("Error running ApplicationMaster", t);
+      LOG.error(FATAL,"Error running ApplicationMaster", t);
       LogManager.shutdown();
       ExitUtil.terminate(1, t);
     }

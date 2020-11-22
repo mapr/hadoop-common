@@ -69,6 +69,8 @@ import org.apache.hadoop.util.Time;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.hadoop.util.VersionInfo;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 import org.slf4j.event.Level;
 
 /**
@@ -109,6 +111,7 @@ import org.slf4j.event.Level;
 public class NNThroughputBenchmark implements Tool {
   private static final Logger LOG =
       LoggerFactory.getLogger(NNThroughputBenchmark.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
   private static final int BLOCK_SIZE = 16;
   private static final String GENERAL_OPTIONS_USAGE = 
     "     [-keepResults] | [-logLevel L] | [-UGCacheRefreshCount G]";
@@ -146,7 +149,7 @@ public class NNThroughputBenchmark implements Tool {
   }
 
   static void setNameNodeLoggingLevel(Level logLevel) {
-    LOG.error("Log level = " + logLevel.toString());
+    LOG.error(FATAL,"Log level = " + logLevel.toString());
     // change log level to NameNode logs
     DFSTestUtil.setNameNodeLogLevel(logLevel);
     GenericTestUtils.setLogLevel(LoggerFactory

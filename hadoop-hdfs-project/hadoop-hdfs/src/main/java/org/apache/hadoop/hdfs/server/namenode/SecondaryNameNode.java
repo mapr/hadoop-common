@@ -80,6 +80,8 @@ import org.apache.hadoop.util.Time;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import org.apache.hadoop.util.VersionInfo;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 import javax.management.ObjectName;
 
@@ -105,6 +107,7 @@ public class SecondaryNameNode implements Runnable,
   }
   public static final Logger LOG =
       LoggerFactory.getLogger(SecondaryNameNode.class.getName());
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
 
   private final long starttime = Time.now();
   private volatile long lastCheckpointTime = 0;
@@ -401,12 +404,12 @@ public class SecondaryNameNode implements Runnable,
         // Prevent a huge number of edits from being created due to
         // unrecoverable conditions and endless retries.
         if (checkpointImage.getMergeErrorCount() > maxRetries) {
-          LOG.error("Merging failed " +
+          LOG.error(FATAL,"Merging failed " +
               checkpointImage.getMergeErrorCount() + " times.");
           terminate(1);
         }
       } catch (Throwable e) {
-        LOG.error("Throwable Exception in doCheckpoint", e);
+        LOG.error(FATAL,"Throwable Exception in doCheckpoint", e);
         e.printStackTrace();
         terminate(1, e);
       }
@@ -657,7 +660,7 @@ public class SecondaryNameNode implements Runnable,
   public static void main(String[] argv) throws Exception {
     CommandLineOpts opts = SecondaryNameNode.parseArgs(argv);
     if (opts == null) {
-      LOG.error("Failed to parse options");
+      LOG.error(FATAL,"Failed to parse options");
       terminate(1);
     } else if (opts.shouldPrintHelp()) {
       opts.usage();
@@ -670,7 +673,7 @@ public class SecondaryNameNode implements Runnable,
     try {
       secondary = new SecondaryNameNode(tconf, opts);
     } catch (IOException ioe) {
-      LOG.error("Failed to start secondary namenode", ioe);
+      LOG.error(FATAL,"Failed to start secondary namenode", ioe);
       terminate(1);
     }
 

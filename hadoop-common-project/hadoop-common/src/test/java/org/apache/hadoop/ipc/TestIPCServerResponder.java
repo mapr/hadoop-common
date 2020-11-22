@@ -43,6 +43,8 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 /**
  * This test provokes partial writes in the server, which is 
@@ -52,6 +54,7 @@ public class TestIPCServerResponder {
 
   public static final Logger LOG =
       LoggerFactory.getLogger(TestIPCServerResponder.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
 
   private static Configuration conf = new Configuration();
 
@@ -116,7 +119,7 @@ public class TestIPCServerResponder {
           client.call(param, address);
           Thread.sleep(RANDOM.nextInt(20));
         } catch (Exception e) {
-          LOG.error("Caught Exception", e);
+          LOG.error(FATAL,"Caught Exception", e);
           failed = true;
         }
       }

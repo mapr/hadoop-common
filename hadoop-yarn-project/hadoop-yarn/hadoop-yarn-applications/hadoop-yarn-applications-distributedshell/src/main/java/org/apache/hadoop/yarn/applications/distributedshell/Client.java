@@ -78,6 +78,8 @@ import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.apache.hadoop.yarn.util.timeline.TimelineUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 /**
  * Client for Distributed Shell application submission to YARN.
@@ -116,6 +118,7 @@ public class Client {
 
   private static final Logger LOG =
           LoggerFactory.getLogger(Client.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
   
   // Configuration
   private Configuration conf;
@@ -221,7 +224,7 @@ public class Client {
       }
       result = client.run();
     } catch (Throwable t) {
-      LOG.error("Error running Client", t);
+      LOG.error(FATAL,"Error running Client", t);
       System.exit(1);
     }
     if (result) {

@@ -53,6 +53,8 @@ import org.eclipse.jetty.util.ajax.JSON;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 /**
  * The JournalNode is a daemon which allows namenodes using
@@ -64,6 +66,7 @@ import com.google.common.collect.Maps;
 @InterfaceAudience.Private
 public class JournalNode implements Tool, Configurable, JournalNodeMXBean {
   public static final Logger LOG = LoggerFactory.getLogger(JournalNode.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
   private Configuration conf;
   private JournalNodeRpcServer rpcServer;
   private JournalNodeHttpServer httpServer;
@@ -297,7 +300,7 @@ public class JournalNode implements Tool, Configurable, JournalNodeMXBean {
   private class ErrorReporter implements StorageErrorReporter {
     @Override
     public void reportErrorOnFile(File f) {
-      LOG.error("Error reported on file " + f + "... exiting",
+      LOG.error(FATAL,"Error reported on file " + f + "... exiting",
           new Exception());
       stop(1);
     }

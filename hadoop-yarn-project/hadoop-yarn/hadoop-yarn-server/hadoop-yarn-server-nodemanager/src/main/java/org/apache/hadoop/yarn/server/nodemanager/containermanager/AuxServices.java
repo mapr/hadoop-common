@@ -45,6 +45,8 @@ import org.apache.hadoop.yarn.server.api.ContainerInitializationContext;
 import org.apache.hadoop.yarn.server.api.ContainerTerminationContext;
 
 import com.google.common.base.Preconditions;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 public class AuxServices extends AbstractService
     implements ServiceStateChangeListener, EventHandler<AuxServicesEvent> {
@@ -53,6 +55,7 @@ public class AuxServices extends AbstractService
 
   private static final Logger LOG =
        LoggerFactory.getLogger(AuxServices.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
 
   protected final Map<String,AuxiliaryService> serviceMap;
   protected final Map<String,ByteBuffer> serviceMetaData;
@@ -157,7 +160,7 @@ public class AuxServices extends AbstractService
         }
         s.init(conf);
       } catch (RuntimeException e) {
-        LOG.error("Failed to initialize " + sName, e);
+        LOG.error(FATAL,"Failed to initialize " + sName, e);
         throw e;
       }
     }
@@ -201,7 +204,7 @@ public class AuxServices extends AbstractService
 
   @Override
   public void stateChanged(Service service) {
-    LOG.error("Service " + service.getName() + " changed state: " +
+    LOG.error(FATAL,"Service " + service.getName() + " changed state: " +
         service.getServiceState());
     stop();
   }

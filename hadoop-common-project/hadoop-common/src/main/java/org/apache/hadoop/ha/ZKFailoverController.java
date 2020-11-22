@@ -56,11 +56,14 @@ import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 @InterfaceAudience.LimitedPrivate("HDFS")
 public abstract class ZKFailoverController {
 
   static final Logger LOG = LoggerFactory.getLogger(ZKFailoverController.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
   
   public static final String ZK_QUORUM_KEY = "ha.zookeeper.quorum";
   private static final String ZK_SESSION_TIMEOUT_KEY = "ha.zookeeper.session-timeout.ms";
@@ -158,7 +161,7 @@ public abstract class ZKFailoverController {
 
   public int run(final String[] args) throws Exception {
     if (!localTarget.isAutoFailoverEnabled()) {
-      LOG.error("Automatic failover is not enabled for " + localTarget + "." +
+      LOG.error(FATAL,"Automatic failover is not enabled for " + localTarget + "." +
           " Please ensure that automatic failover is enabled in the " +
           "configuration before running the ZK failover controller.");
       return ERR_CODE_AUTO_FAILOVER_NOT_ENABLED;
@@ -191,7 +194,7 @@ public abstract class ZKFailoverController {
     try {
       initZK();
     } catch (KeeperException ke) {
-      LOG.error("Unable to start failover controller. Unable to connect "
+      LOG.error(FATAL,"Unable to start failover controller. Unable to connect "
           + "to ZooKeeper quorum at " + zkQuorum + ". Please check the "
           + "configured value for " + ZK_QUORUM_KEY + " and ensure that "
           + "ZooKeeper is running.");
@@ -217,7 +220,7 @@ public abstract class ZKFailoverController {
     }
 
     if (!elector.parentZNodeExists()) {
-      LOG.error("Unable to start failover controller. "
+      LOG.error(FATAL,"Unable to start failover controller. "
           + "Parent znode does not exist.\n"
           + "Run with -formatZK flag to initialize ZooKeeper.");
       return ERR_CODE_NO_PARENT_ZNODE;
@@ -226,7 +229,7 @@ public abstract class ZKFailoverController {
     try {
       localTarget.checkFencingConfigured();
     } catch (BadFencingConfigurationException e) {
-      LOG.error("Fencing is not configured for " + localTarget + ".\n" +
+      LOG.error(FATAL,"Fencing is not configured for " + localTarget + ".\n" +
           "You must configure a fencing method before using automatic " +
           "failover.", e);
       return ERR_CODE_NO_FENCER;
@@ -372,7 +375,7 @@ public abstract class ZKFailoverController {
   }
   
   private synchronized void fatalError(String err) {
-    LOG.error("Fatal error occurred:" + err);
+    LOG.error(FATAL,"Fatal error occurred:" + err);
     fatalError = err;
     notifyAll();
   }
@@ -391,7 +394,7 @@ public abstract class ZKFailoverController {
 
     } catch (Throwable t) {
       String msg = "Couldn't make " + localTarget + " active";
-      LOG.error(msg, t);
+      LOG.error(FATAL,msg, t);
       
       recordActiveAttempt(new ActiveAttemptRecord(false, msg + "\n" +
           StringUtils.stringifyException(t)));

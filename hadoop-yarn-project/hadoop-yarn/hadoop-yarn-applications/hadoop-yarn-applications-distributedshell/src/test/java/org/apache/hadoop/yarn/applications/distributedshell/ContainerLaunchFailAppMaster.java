@@ -24,11 +24,14 @@ import java.util.Map;
 import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 public class ContainerLaunchFailAppMaster extends ApplicationMaster {
 
   private static final Logger LOG =
     LoggerFactory.getLogger(ContainerLaunchFailAppMaster.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
 
   public ContainerLaunchFailAppMaster() {
     super();
@@ -69,7 +72,7 @@ public class ContainerLaunchFailAppMaster extends ApplicationMaster {
       appMaster.run();
       result = appMaster.finish();
     } catch (Throwable t) {
-      LOG.error("Error running ApplicationMaster", t);
+      LOG.error(FATAL,"Error running ApplicationMaster", t);
       System.exit(1);
     }
     if (result) {

@@ -54,6 +54,8 @@ import org.apache.hadoop.util.StringInterner;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 /**
  * This class is responsible for talking to the task umblical.
@@ -71,6 +73,7 @@ public class TaskAttemptListenerImpl extends CompositeService
 
   private static final Logger LOG =
       LoggerFactory.getLogger(TaskAttemptListenerImpl.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
 
   private AppContext context;
   private Server server;
@@ -244,7 +247,7 @@ public class TaskAttemptListenerImpl extends CompositeService
   public void fatalError(TaskAttemptID taskAttemptID, String msg)
       throws IOException {
     // This happens only in Child and in the Task.
-    LOG.error("Task: " + taskAttemptID + " - exited : " + msg);
+    LOG.error(FATAL,"Task: " + taskAttemptID + " - exited : " + msg);
     reportDiagnosticInfo(taskAttemptID, "Error: " + msg);
 
     org.apache.hadoop.mapreduce.v2.api.records.TaskAttemptId attemptID =
@@ -257,7 +260,7 @@ public class TaskAttemptListenerImpl extends CompositeService
   public void fsError(TaskAttemptID taskAttemptID, String message)
       throws IOException {
     // This happens only in Child.
-    LOG.error("Task: " + taskAttemptID + " - failed due to FSError: "
+    LOG.error(FATAL,"Task: " + taskAttemptID + " - failed due to FSError: "
         + message);
     reportDiagnosticInfo(taskAttemptID, "FSError: " + message);
 

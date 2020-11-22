@@ -91,6 +91,8 @@ import org.apache.hadoop.security.alias.CredentialProviderFactory;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.StringInterner;
 import org.apache.hadoop.util.StringUtils;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 import org.w3c.dom.DOMException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -182,6 +184,8 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
 
   private static final Logger LOG_DEPRECATION = LoggerFactory.getLogger(
           "org.apache.hadoop.conf.Configuration.deprecation");
+
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
 
   private boolean quietmode = true;
 
@@ -2778,7 +2782,7 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
         toAddTo = new Properties();
       }
       if (!"configuration".equals(root.getTagName()))
-        LOG.error("bad conf file: top-level element not <configuration>");
+        LOG.error(FATAL,"bad conf file: top-level element not <configuration>");
       NodeList props = root.getChildNodes();
       DeprecationContext deprecations = deprecationContext.get();
       for (int i = 0; i < props.getLength(); i++) {
@@ -2849,16 +2853,16 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
       }
       return null;
     } catch (IOException e) {
-      LOG.error("error parsing conf " + name, e);
+      LOG.error(FATAL,"error parsing conf " + name, e);
       throw new RuntimeException(e);
     } catch (DOMException e) {
-      LOG.error("error parsing conf " + name, e);
+      LOG.error(FATAL,"error parsing conf " + name, e);
       throw new RuntimeException(e);
     } catch (SAXException e) {
-      LOG.error("error parsing conf " + name, e);
+      LOG.error(FATAL,"error parsing conf " + name, e);
       throw new RuntimeException(e);
     } catch (ParserConfigurationException e) {
-      LOG.error("error parsing conf " + name , e);
+      LOG.error(FATAL,"error parsing conf " + name , e);
       throw new RuntimeException(e);
     }
   }
@@ -2902,10 +2906,10 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
     writeXml(new OutputStreamWriter(out, "UTF-8"));
   }
 
-  /**
+  /** 
    * Write out the non-default properties in this configuration to the given
    * {@link Writer}.
-   *
+   * 
    * @param out the writer to write to.
    */
   public void writeXml(Writer out) throws IOException {
@@ -2971,7 +2975,7 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
           }
         }
       }
-
+      
       conf.appendChild(doc.createTextNode("\n"));
     }
     return doc;

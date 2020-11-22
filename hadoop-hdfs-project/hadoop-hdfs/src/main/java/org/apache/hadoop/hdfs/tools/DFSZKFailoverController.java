@@ -47,12 +47,15 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.StringUtils;
 
 import com.google.protobuf.InvalidProtocolBufferException;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 @InterfaceAudience.Private
 public class DFSZKFailoverController extends ZKFailoverController {
 
   private static final Logger LOG =
       LoggerFactory.getLogger(DFSZKFailoverController.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
   private final AccessControlList adminAcl;
   /* the same as superclass's localTarget, but with the more specfic NN type */
   private final NNHAServiceTarget localNNTarget;
@@ -180,7 +183,7 @@ public class DFSZKFailoverController extends ZKFailoverController {
     try {
       retCode = zkfc.run(parser.getRemainingArgs());
     } catch (Throwable t) {
-      LOG.error("Got a fatal error, exiting now", t);
+      LOG.error(FATAL,"Got a fatal error, exiting now", t);
     }
     System.exit(retCode);
   }

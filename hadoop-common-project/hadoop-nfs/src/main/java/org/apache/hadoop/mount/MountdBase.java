@@ -26,6 +26,8 @@ import org.apache.hadoop.portmap.PortmapMapping;
 import org.apache.hadoop.util.ShutdownHookManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 import static org.apache.hadoop.util.ExitUtil.terminate;
 
@@ -38,6 +40,7 @@ import static org.apache.hadoop.util.ExitUtil.terminate;
  */
 abstract public class MountdBase {
   public static final Logger LOG = LoggerFactory.getLogger(MountdBase.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
   private final RpcProgram rpcProgram;
   private int udpBoundPort; // Will set after server starts
   private int tcpBoundPort; // Will set after server starts
@@ -63,7 +66,7 @@ abstract public class MountdBase {
     try {
       udpServer.run();
     } catch (Throwable e) {
-      LOG.error("Failed to start the UDP server.", e);
+      LOG.error(FATAL,"Failed to start the UDP server.", e);
       if (udpServer.getBoundPort() > 0) {
         rpcProgram.unregister(PortmapMapping.TRANSPORT_UDP,
             udpServer.getBoundPort());
@@ -82,7 +85,7 @@ abstract public class MountdBase {
     try {
       tcpServer.run();
     } catch (Throwable e) {
-      LOG.error("Failed to start the TCP server.", e);
+      LOG.error(FATAL,"Failed to start the TCP server.", e);
       if (tcpServer.getBoundPort() > 0) {
         rpcProgram.unregister(PortmapMapping.TRANSPORT_TCP,
             tcpServer.getBoundPort());
@@ -103,7 +106,7 @@ abstract public class MountdBase {
         rpcProgram.register(PortmapMapping.TRANSPORT_UDP, udpBoundPort);
         rpcProgram.register(PortmapMapping.TRANSPORT_TCP, tcpBoundPort);
       } catch (Throwable e) {
-        LOG.error("Failed to register the MOUNT service.", e);
+        LOG.error(FATAL,"Failed to register the MOUNT service.", e);
         terminate(1, e);
       }
     }

@@ -214,6 +214,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.protobuf.BlockingService;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 
 /**********************************************************
@@ -252,6 +254,7 @@ public class DataNode extends ReconfigurableBase
     implements InterDatanodeProtocol, ClientDatanodeProtocol,
         TraceAdminProtocol, DataNodeMXBean {
   public static final Logger LOG = LoggerFactory.getLogger(DataNode.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
   
   static{
     HdfsConfiguration.init();
@@ -2535,7 +2538,7 @@ public class DataNode extends ReconfigurableBase
         errorCode = 1;
       }
     } catch (Throwable e) {
-      LOG.error("Exception in secureMain", e);
+      LOG.error(FATAL,"Exception in secureMain", e);
       terminate(1, e);
     } finally {
       // We need to terminate the process here because either shutdown was called

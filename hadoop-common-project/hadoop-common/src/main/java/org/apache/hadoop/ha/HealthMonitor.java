@@ -35,6 +35,8 @@ import org.apache.hadoop.util.Daemon;
 import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 /**
  * This class is a daemon which runs in a loop, periodically heartbeating
@@ -49,6 +51,7 @@ import org.slf4j.LoggerFactory;
 public class HealthMonitor {
   private static final Logger LOG = LoggerFactory.getLogger(
       HealthMonitor.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
 
   private Daemon daemon;
   private long connectRetryInterval;
@@ -283,7 +286,7 @@ public class HealthMonitor {
       setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
         @Override
         public void uncaughtException(Thread t, Throwable e) {
-          LOG.error("Health monitor failed", e);
+          LOG.error(FATAL,"Health monitor failed", e);
           enterState(HealthMonitor.State.HEALTH_MONITOR_FAILED);
         }
       });

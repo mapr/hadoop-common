@@ -43,6 +43,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 /**
  * A command-line tool for making calls in the HAServiceProtocol.
@@ -63,6 +65,7 @@ public abstract class HAAdmin extends Configured implements Tool {
    */
   private static final String FORCEMANUAL = "forcemanual";
   private static final Logger LOG = LoggerFactory.getLogger(HAAdmin.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
 
   private int rpcTimeoutForChecks = -1;
   
@@ -433,7 +436,7 @@ public abstract class HAAdmin extends Configured implements Tool {
     
     if (cmdLine.hasOption(FORCEMANUAL)) {
       if (!confirmForceManual()) {
-        LOG.error("Aborted");
+        LOG.error(FATAL,"Aborted");
         return -1;
       }
       // Instruct the NNs to honor this request even if they're

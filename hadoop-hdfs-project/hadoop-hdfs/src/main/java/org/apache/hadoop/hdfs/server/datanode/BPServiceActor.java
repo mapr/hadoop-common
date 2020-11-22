@@ -63,6 +63,8 @@ import org.apache.hadoop.util.VersionUtil;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 /**
  * A thread per active or standby namenode to perform:
@@ -77,6 +79,7 @@ import com.google.common.collect.Maps;
 class BPServiceActor implements Runnable {
   
   static final Logger LOG = DataNode.LOG;
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
   final InetSocketAddress nnAddr;
   HAServiceState state;
 
@@ -861,7 +864,7 @@ class BPServiceActor implements Runnable {
             sleepAndLogInterrupts(5000, "initializing");
           } else {
             runningState = RunningState.FAILED;
-            LOG.error("Initialization failed for " + this + ". Exiting. ", ioe);
+            LOG.error(FATAL,"Initialization failed for " + this + ". Exiting. ", ioe);
             return;
           }
         }

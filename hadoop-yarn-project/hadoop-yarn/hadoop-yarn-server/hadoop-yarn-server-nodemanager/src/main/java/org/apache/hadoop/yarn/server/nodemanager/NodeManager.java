@@ -67,6 +67,8 @@ import org.apache.hadoop.yarn.server.nodemanager.webapp.WebServer;
 import org.apache.hadoop.yarn.server.security.ApplicationACLsManager;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 public class NodeManager extends CompositeService 
     implements EventHandler<NodeManagerEvent> {
@@ -77,6 +79,7 @@ public class NodeManager extends CompositeService
   public static final int SHUTDOWN_HOOK_PRIORITY = 30;
 
   private static final Logger LOG = LoggerFactory.getLogger(NodeManager.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
   protected final NodeManagerMetrics metrics = NodeManagerMetrics.create();
   private ApplicationACLsManager aclsManager;
   private NodeHealthCheckerService nodeHealthChecker;
@@ -316,7 +319,7 @@ public class NodeManager extends CompositeService
           ((NodeStatusUpdaterImpl) nodeStatusUpdater)
             .rebootNodeStatusUpdaterAndRegisterWithRM();
         } catch (YarnRuntimeException e) {
-          LOG.error("Error while rebooting NodeStatusUpdater.", e);
+          LOG.error(FATAL,"Error while rebooting NodeStatusUpdater.", e);
           shutDown();
         }
       }
@@ -476,7 +479,7 @@ public class NodeManager extends CompositeService
       this.init(conf);
       this.start();
     } catch (Throwable t) {
-      LOG.error("Error starting NodeManager", t);
+      LOG.error(FATAL,"Error starting NodeManager", t);
       System.exit(-1);
     }
   }

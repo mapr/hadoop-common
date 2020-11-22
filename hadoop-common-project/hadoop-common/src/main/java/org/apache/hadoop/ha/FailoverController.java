@@ -31,6 +31,8 @@ import org.apache.hadoop.ipc.RPC;
 import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 /**
  * The FailOverController is responsible for electing an active service
@@ -44,6 +46,8 @@ public class FailoverController {
 
   private static final Logger LOG =
       LoggerFactory.getLogger(FailoverController.class);
+  private static final Marker FATAL =
+          MarkerFactory.getMarker("FATAL");
 
   private final int gracefulFenceTimeout;
   private final int rpcTimeoutToNewActive;
@@ -252,7 +256,7 @@ public class FailoverController {
         } catch (FailoverFailedException ffe) {
           msg += ". Failback to " + fromSvc +
             " failed (" + ffe.getMessage() + ")";
-          LOG.error(msg);
+          LOG.error(FATAL,msg);
         }
       }
       throw new FailoverFailedException(msg, cause);

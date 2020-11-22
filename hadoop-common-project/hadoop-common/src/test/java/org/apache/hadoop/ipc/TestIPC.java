@@ -81,11 +81,14 @@ import com.google.common.primitives.Bytes;
 import com.google.common.primitives.Ints;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 import org.slf4j.event.Level;
 
 /** Unit tests for IPC. */
 public class TestIPC {
   public static final Logger LOG = LoggerFactory.getLogger(TestIPC.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
   
   private static Configuration conf;
   final static private int PING_INTERVAL = 1000;
@@ -175,12 +178,12 @@ public class TestIPC {
           LongWritable value =
             (LongWritable)client.call(param, server, null, null, 0, conf);
           if (!param.equals(value)) {
-            LOG.error("Call failed!");
+            LOG.error(FATAL,"Call failed!");
             failed = true;
             break;
           }
         } catch (Exception e) {
-          LOG.error("Caught: " + StringUtils.stringifyException(e));
+          LOG.error(FATAL,"Caught: " + StringUtils.stringifyException(e));
           failed = true;
         }
       }

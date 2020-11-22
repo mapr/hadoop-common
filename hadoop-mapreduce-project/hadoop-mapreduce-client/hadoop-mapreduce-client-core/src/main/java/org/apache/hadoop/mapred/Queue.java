@@ -21,6 +21,8 @@ import org.apache.hadoop.mapreduce.QueueState;
 import org.apache.hadoop.security.authorize.AccessControlList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,6 +39,7 @@ import java.util.TreeSet;
 class Queue implements Comparable<Queue>{
 
   private static final Logger LOG = LoggerFactory.getLogger(Queue.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
 
   //Queue name
   private String name = null;
@@ -348,14 +351,14 @@ class Queue implements Comparable<Queue>{
       //check for the individual children and then see if all of them
       //are updated.
       if (newState.getChildren() == null) {
-        LOG.error("In the current state, queue " + getName() + " has "
+        LOG.error(FATAL,"In the current state, queue " + getName() + " has "
             + children.size() + " but the new state has none!");
         return false;
       }
       int childrenSize = children.size();
       int newChildrenSize = newState.getChildren().size();
       if (childrenSize != newChildrenSize) {
-        LOG.error("Number of children for queue " + newState.getName()
+        LOG.error(FATAL,"Number of children for queue " + newState.getName()
             + " in newState is " + newChildrenSize + " which is not equal to "
             + childrenSize + " in the current state.");
         return false;

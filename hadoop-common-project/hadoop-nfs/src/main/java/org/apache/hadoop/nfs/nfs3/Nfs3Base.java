@@ -24,6 +24,8 @@ import org.apache.hadoop.portmap.PortmapMapping;
 import org.apache.hadoop.util.ShutdownHookManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 import static org.apache.hadoop.util.ExitUtil.terminate;
 
@@ -33,6 +35,7 @@ import static org.apache.hadoop.util.ExitUtil.terminate;
  */
 public abstract class Nfs3Base {
   public static final Logger LOG = LoggerFactory.getLogger(Nfs3Base.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
   private final RpcProgram rpcProgram;
   private int nfsBoundPort; // Will set after server starts
 
@@ -54,7 +57,7 @@ public abstract class Nfs3Base {
       try {
         rpcProgram.register(PortmapMapping.TRANSPORT_TCP, nfsBoundPort);
       } catch (Throwable e) {
-        LOG.error("Failed to register the NFSv3 service.", e);
+        LOG.error(FATAL,"Failed to register the NFSv3 service.", e);
         terminate(1, e);
       }
     }
@@ -67,7 +70,7 @@ public abstract class Nfs3Base {
     try {
       tcpServer.run();
     } catch (Throwable e) {
-      LOG.error("Failed to start the TCP server.", e);
+      LOG.error(FATAL,"Failed to start the TCP server.", e);
       if (tcpServer.getBoundPort() > 0) {
         rpcProgram.unregister(PortmapMapping.TRANSPORT_TCP,
             tcpServer.getBoundPort());

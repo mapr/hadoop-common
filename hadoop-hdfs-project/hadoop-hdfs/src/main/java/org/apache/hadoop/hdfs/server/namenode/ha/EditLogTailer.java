@@ -49,6 +49,8 @@ import static org.apache.hadoop.util.ExitUtil.terminate;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 
 /**
@@ -60,6 +62,7 @@ import com.google.common.base.Preconditions;
 @InterfaceStability.Evolving
 public class EditLogTailer {
   public static final Logger LOG = LoggerFactory.getLogger(EditLogTailer.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
 
   private final EditLogTailerThread tailerThread;
   
@@ -338,7 +341,7 @@ public class EditLogTailer {
           // interrupter should have already set shouldRun to false
           continue;
         } catch (Throwable t) {
-          LOG.error("Unknown error encountered while tailing edits. " +
+          LOG.error(FATAL,"Unknown error encountered while tailing edits. " +
               "Shutting down standby NN.", t);
           terminate(1, t);
         }

@@ -120,6 +120,8 @@ import org.apache.hadoop.util.ToolRunner;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 /**
  * This class creates a single-process DFS cluster for junit testing.
@@ -133,6 +135,8 @@ public class MiniDFSCluster {
   private static final String NAMESERVICE_ID_PREFIX = "nameserviceId";
   private static final Logger LOG =
       LoggerFactory.getLogger(MiniDFSCluster.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
+
   /** System property to set the data dir: {@value} */
   public static final String PROP_TEST_BUILD_DATA = "test.build.data";
   /** Configuration option to set the data dir: {@value} */
@@ -1777,7 +1781,7 @@ public class MiniDFSCluster {
     LOG.info("Shutting down the Mini HDFS Cluster");
     if (checkExitOnShutdown)  {
       if (ExitUtil.terminateCalled()) {
-        LOG.error("Test resulted in an unexpected exit",
+        LOG.error(FATAL,"Test resulted in an unexpected exit",
             ExitUtil.getFirstExitException());
         ExitUtil.resetFirstExitException();
         throw new AssertionError("Test resulted in an unexpected exit");

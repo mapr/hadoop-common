@@ -47,6 +47,8 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 /**
  * Manages a collection of Journals. None of the methods are synchronized, it is
@@ -56,6 +58,7 @@ import com.google.common.collect.Sets;
 public class JournalSet implements JournalManager {
 
   static final Logger LOG = LoggerFactory.getLogger(FSEditLog.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
 
   // we want local logs to be ordered earlier in the collection, and true
   // is considered larger than false, so reverse the comparator
@@ -384,7 +387,7 @@ public class JournalSet implements JournalManager {
         if (jas.isRequired()) {
           final String msg = "Error: " + status + " failed for required journal ("
             + jas + ")";
-          LOG.error(msg, t);
+          LOG.error(FATAL,msg, t);
           // If we fail on *any* of the required journals, then we must not
           // continue on any of the other journals. Abort them to ensure that
           // retry behavior doesn't allow them to keep going in any way.

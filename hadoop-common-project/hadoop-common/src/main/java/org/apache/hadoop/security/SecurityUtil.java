@@ -45,6 +45,8 @@ import org.apache.hadoop.security.rpcauth.RpcAuthMethod;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.TokenInfo;
 import org.apache.hadoop.util.StringUtils;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 import org.xbill.DNS.Name;
 import org.xbill.DNS.ResolverConfig;
 import org.slf4j.Logger;
@@ -57,6 +59,7 @@ import com.google.common.net.InetAddresses;
 @InterfaceStability.Evolving
 public class SecurityUtil {
   public static final Logger LOG = LoggerFactory.getLogger(SecurityUtil.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
   public static final String HOSTNAME_PATTERN = "_HOST";
   public static final String FAILED_TO_GET_UGI_MSG_HEADER = 
       "Failed to obtain user group information:";
@@ -401,7 +404,7 @@ public class SecurityUtil {
       try { 
         ugi = UserGroupInformation.getLoginUser();
       } catch (IOException e) {
-        LOG.error("Exception while getting login user", e);
+        LOG.error(FATAL,"Exception while getting login user", e);
         e.printStackTrace();
         Runtime.getRuntime().exit(-1);
       }

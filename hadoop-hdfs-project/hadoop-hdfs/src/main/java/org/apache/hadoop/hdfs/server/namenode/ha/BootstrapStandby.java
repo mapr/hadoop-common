@@ -59,6 +59,8 @@ import org.apache.hadoop.util.ToolRunner;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 /**
  * Tool which allows the standby node's storage directories to be bootstrapped
@@ -69,6 +71,7 @@ import com.google.common.base.Preconditions;
 public class BootstrapStandby implements Tool, Configurable {
   private static final Logger LOG =
       LoggerFactory.getLogger(BootstrapStandby.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
   private String nsId;
   private String nnId;
   private String otherNNId;
@@ -149,7 +152,7 @@ public class BootstrapStandby implements Tool, Configurable {
     try {
       nsInfo = proxy.versionRequest();
     } catch (IOException ioe) {
-      LOG.error("Unable to fetch namespace information from active NN at " +
+      LOG.error(FATAL,"Unable to fetch namespace information from active NN at " +
           otherIpcAddr + ": " + ioe.getMessage());
       if (LOG.isDebugEnabled()) {
         LOG.debug("Full exception trace", ioe);
@@ -158,7 +161,7 @@ public class BootstrapStandby implements Tool, Configurable {
     }
 
     if (!checkLayoutVersion(nsInfo)) {
-      LOG.error("Layout version on remote node (" + nsInfo.getLayoutVersion()
+      LOG.error(FATAL,"Layout version on remote node (" + nsInfo.getLayoutVersion()
           + ") does not match " + "this node's layout version ("
           + HdfsConstants.NAMENODE_LAYOUT_VERSION + ")");
       return ERR_CODE_INVALID_VERSION;
@@ -253,9 +256,9 @@ public class BootstrapStandby implements Tool, Configurable {
           "or call saveNamespace on the active node.\n" +
           "Error: " + e.getLocalizedMessage();
       if (LOG.isDebugEnabled()) {
-        LOG.error(msg, e);
+        LOG.error(FATAL,msg, e);
       } else {
-        LOG.error(msg);
+        LOG.error(FATAL,msg);
       }
       return false;
     }

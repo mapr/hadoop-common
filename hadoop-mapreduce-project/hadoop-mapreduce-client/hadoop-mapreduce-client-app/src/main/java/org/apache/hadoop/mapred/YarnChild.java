@@ -58,6 +58,8 @@ import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 /**
  * The main() for MapReduce task processes.
@@ -65,6 +67,7 @@ import org.slf4j.LoggerFactory;
 class YarnChild {
 
   private static final Logger LOG = LoggerFactory.getLogger(YarnChild.class);
+  private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
 
   static volatile TaskAttemptID taskid = null;
 
@@ -162,7 +165,7 @@ class YarnChild {
         }
       });
     } catch (FSError e) {
-      LOG.error("FSError from child", e);
+      LOG.error(FATAL,"FSError from child", e);
       if (!ShutdownHookManager.get().isShutdownInProgress()) {
         umbilical.fsError(taskid, e.getMessage());
       }
@@ -196,7 +199,7 @@ class YarnChild {
         }
       }
     } catch (Throwable throwable) {
-      LOG.error("Error running child : "
+      LOG.error(FATAL,"Error running child : "
     	        + StringUtils.stringifyException(throwable));
       if (taskid != null) {
         if (!ShutdownHookManager.get().isShutdownInProgress()) {
