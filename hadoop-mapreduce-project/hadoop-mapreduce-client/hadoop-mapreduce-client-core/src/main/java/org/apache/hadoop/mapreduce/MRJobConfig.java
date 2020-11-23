@@ -485,6 +485,21 @@ public interface MRJobConfig {
   public static final long DEFAULT_MR_CLIENT_JOB_RETRY_INTERVAL =
       2000;
 
+  /**
+   * How many times retry to update job status
+   */
+  public static final String MR_JOB_STATUS_UPDATE_MAX_RETRIES =
+          MR_PREFIX + "job.update-status-max-retries";
+  public static final int DEFAULT_MR_JOB_STATUS_UPDATE_MAX_RETRIES = 0;
+
+  /**
+   * How long to wait between retries to update job status
+   */
+  public static final String MR_JOB_STATUS_UPDATE_RETRY_INTERVAL =
+          MR_PREFIX + "job.update-status-retry-interval";
+  public static final long DEFAULT_MR_JOB_STATUS_UPDATE_RETRY_INTERVAL =
+          2000;
+
   /** The staging directory for map reduce.*/
   public static final String MR_AM_STAGING_DIR = 
     MR_AM_PREFIX+"staging-dir";
