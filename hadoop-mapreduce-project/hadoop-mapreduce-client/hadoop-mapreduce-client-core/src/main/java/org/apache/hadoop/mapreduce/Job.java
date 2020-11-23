@@ -316,21 +316,36 @@ public class Job extends JobContextImpl implements JobContext {
    * @throws IOException
    */
   synchronized void updateStatus() throws IOException {
-    try {
-      this.status = ugi.doAs(new PrivilegedExceptionAction<JobStatus>() {
-        @Override
-        public JobStatus run() throws IOException, InterruptedException {
-          return cluster.getClient().getJobStatus(status.getJobID());
+
+    int maxUpdateAttempts = getConfiguration().getInt(MRJobConfig.MR_JOB_STATUS_UPDATE_MAX_RETRIES,
+            MRJobConfig.DEFAULT_MR_JOB_STATUS_UPDATE_MAX_RETRIES) + 1; // should be at least one update
+    long retryInterval = getConfiguration()
+            .getLong(MRJobConfig.MR_JOB_STATUS_UPDATE_RETRY_INTERVAL,
+                    MRJobConfig.DEFAULT_MR_JOB_STATUS_UPDATE_RETRY_INTERVAL);
+    int retryCounter = 0;
+    while (retryCounter < maxUpdateAttempts) {
+      try {
+        this.status = ugi.doAs(new PrivilegedExceptionAction<JobStatus>() {
+          @Override
+          public JobStatus run() throws IOException, InterruptedException {
+            return cluster.getClient().getJobStatus(status.getJobID());
+          }
+        });
+        if (this.status != null) {
+          this.statustime = System.currentTimeMillis();
+          break;
         }
-      });
-    }
-    catch (InterruptedException ie) {
-      throw new IOException(ie);
+        retryCounter++;
+        if(retryCounter < maxUpdateAttempts) {
+          Thread.sleep(retryInterval);
+        }
+      } catch (InterruptedException ie) {
+        throw new IOException(ie);
+      }
     }
     if (this.status == null) {
-      throw new IOException("Job status not available ");
+      throw new IOException("Job status not available, update attempts = " + maxUpdateAttempts);
     }
-    this.statustime = System.currentTimeMillis();
   }
   
   public JobStatus getStatus() throws IOException, InterruptedException {
