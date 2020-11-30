@@ -19,7 +19,6 @@ package org.apache.hadoop.fs.shell;
 
 import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.LinkedList;
@@ -92,7 +91,7 @@ class Display extends FsCommand {
     @Override
     protected void processPath(PathData item) throws IOException {
       if (item.stat.isDirectory() ||
-          (item.stat.isSymlink() && item.fs.getFileStatus(FileUtil.checkAndFixSymlinkPath(item)).isDirectory())) {
+          (item.stat.isSymlink() && item.fs.getFileStatus(FileUtil.fixSymlinkPath(item)).isDirectory())) {
         throw new PathIsDirectoryException(item.toString());
       }
       

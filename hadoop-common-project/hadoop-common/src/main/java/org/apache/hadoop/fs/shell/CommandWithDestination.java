@@ -262,7 +262,7 @@ abstract class CommandWithDestination extends FsCommand {
    */
   protected void processPath(PathData src, PathData dst) throws IOException {
     if (src.stat.isFile() ||
-        (src.stat.isSymlink() && !src.fs.getFileStatus(FileUtil.checkAndFixSymlinkPath(src)).isDirectory())) {
+        (src.stat.isSymlink() && !src.fs.getFileStatus(FileUtil.fixSymlinkPath(src)).isDirectory())) {
       copyFileToTarget(src, dst);
     } else if (src.stat.isDirectory() && !isRecursive()) {
       throw new PathIsDirectoryException(src.toString());
@@ -305,7 +305,7 @@ abstract class CommandWithDestination extends FsCommand {
     // on the first loop, the dst may be directory or a file, so only create
     // a child path if dst is a dir; after recursion, it's always a dir
     if(dst.exists && dst.stat.isSymlink()){
-      dst = new PathData(FileUtil.checkAndFixSymlinkPath(dst).toString(), dst.fs.getConf());
+      dst = new PathData(FileUtil.fixSymlinkPath(dst).toString(), dst.fs.getConf());
     }
     if ((getDepth() > 0) || (dst.exists && dst.stat.isDirectory())) {
       target = dst.getPathDataForChild(src);
@@ -325,7 +325,7 @@ abstract class CommandWithDestination extends FsCommand {
    */ 
   protected void copyFileToTarget(PathData src, PathData target)
       throws IOException {
-    Path srcPath = src.stat.isSymlink() ? FileUtil.checkAndFixSymlinkPath(src) : src.path;
+    Path srcPath = src.stat.isSymlink() ? FileUtil.fixSymlinkPath(src) : src.path;
     final boolean preserveRawXattrs =
         checkPathsForReservedRaw(srcPath, target.path);
     src.fs.setVerifyChecksum(verifyChecksum);

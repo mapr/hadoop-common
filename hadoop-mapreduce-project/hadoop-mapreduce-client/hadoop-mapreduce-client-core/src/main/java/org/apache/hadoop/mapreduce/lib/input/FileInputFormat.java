@@ -34,6 +34,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.RemoteIterator;
+import org.apache.hadoop.fs.shell.PathData;
 import org.apache.hadoop.mapred.LocatedFileStatusFetcher;
 import org.apache.hadoop.mapred.SplitLocationInfo;
 import org.apache.hadoop.mapreduce.InputFormat;
@@ -42,6 +43,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.security.TokenCache;
+import org.apache.hadoop.maprfs.AbstractMapRFileSystem;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.StopWatch;
 import org.apache.hadoop.util.StringUtils;
@@ -315,7 +317,10 @@ public abstract class FileInputFormat<K, V> extends InputFormat<K, V> {
     for (int i=0; i < dirs.length; ++i) {
       Path p = dirs[i];
       FileSystem fs = p.getFileSystem(job.getConfiguration());
-      FileStatus[] matches = fs.globStatus(FileUtil.checkPathForSymlink(p, fs.getConf()).path, inputFilter);
+      if (fs instanceof AbstractMapRFileSystem && fs.getFileStatus(p).isSymlink()) {
+        p = FileUtil.fixSymlinkPath(new PathData(p.toString(), fs.getConf()));
+      }
+      FileStatus[] matches = fs.globStatus(p, inputFilter);
       if (matches == null) {
         errors.add(new IOException("Input path does not exist: " + p));
       } else if (matches.length == 0) {
@@ -412,7 +417,9 @@ public abstract class FileInputFormat<K, V> extends InputFormat<K, V> {
     List<InputSplit> splits = new ArrayList<InputSplit>();
     List<FileStatus> files = listStatus(job);
     for (FileStatus file: files) {
-      file = FileUtil.checkPathForSymlink(file.getPath(), job.getConfiguration()).stat;
+      if (file.isSymlink()) {
+        file = new PathData(FileUtil.fixSymlinkFileStatus(file).toString(), job.getConfiguration()).stat;
+      }
       Path path = file.getPath();
       long length = file.getLen();
       if (length != 0) {

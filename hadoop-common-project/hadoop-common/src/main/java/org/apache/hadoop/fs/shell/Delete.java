@@ -101,7 +101,7 @@ class Delete {
       // if parent isSymlink, need to change it to real path
       PathData parent = new PathData(item.stat.getPath().getParent().toString(), item.fs.getConf());
       if(parent.stat.isSymlink()){
-        item = new PathData(new Path(FileUtil.checkAndFixSymlinkPath(parent), item.path.getName()).toString(), item.fs.getConf());
+        item = new PathData(new Path(FileUtil.fixSymlinkPath(parent), item.path.getName()).toString(), item.fs.getConf());
       }
       // TODO: if the user wants the trash to be used but there is any
       // problem (ie. creating the trash dir, moving the item to be deleted,

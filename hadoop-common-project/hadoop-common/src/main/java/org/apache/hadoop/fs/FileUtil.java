@@ -174,14 +174,19 @@ public class FileUtil {
     }
   }
 
-  public static Path checkAndFixSymlinkPath(PathData path) throws IOException {
+  public static Path fixSymlinkPath(PathData path) throws IOException {
     return path.stat.getSymlink().toString().startsWith("/") ? path.stat.getSymlink() :
         new Path(path.stat.getPath().getParent(), path.stat.getSymlink());
   }
 
+  public static Path fixSymlinkFileStatus(FileStatus stat) throws IOException {
+    return stat.getSymlink().toString().startsWith("/") ? stat.getSymlink() :
+        new Path(stat.getPath().getParent(), stat.getSymlink());
+  }
+
   public static PathData checkItemForSymlink(PathData item) throws IOException {
     return item.stat != null &&
-        item.stat.isSymlink() ? new PathData(FileUtil.checkAndFixSymlinkPath(item).toString(), item.fs.getConf()) : item;
+        item.stat.isSymlink() ? new PathData(FileUtil.fixSymlinkPath(item).toString(), item.fs.getConf()) : item;
   }
 
   public static PathData checkPathForSymlink(Path path, Configuration conf) throws IOException {

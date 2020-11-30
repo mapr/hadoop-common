@@ -40,7 +40,9 @@ import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.fs.RemoteIterator;
+import org.apache.hadoop.fs.shell.PathData;
 import org.apache.hadoop.mapreduce.security.TokenCache;
+import org.apache.hadoop.maprfs.AbstractMapRFileSystem;
 import org.apache.hadoop.net.NetworkTopology;
 import org.apache.hadoop.net.Node;
 import org.apache.hadoop.net.NodeBase;
@@ -257,7 +259,10 @@ public abstract class FileInputFormat<K, V> implements InputFormat<K, V> {
     List<IOException> errors = new ArrayList<IOException>();
     for (Path p: dirs) {
       FileSystem fs = p.getFileSystem(job);
-      FileStatus[] matches = fs.globStatus(FileUtil.checkPathForSymlink(p, fs.getConf()).path, inputFilter);
+      if (fs instanceof AbstractMapRFileSystem && fs.getFileStatus(p).isSymlink()) {
+        p = FileUtil.fixSymlinkPath(new PathData(p.toString(), fs.getConf()));
+      }
+      FileStatus[] matches = fs.globStatus(p, inputFilter);
       if (matches == null) {
         errors.add(new IOException("Input path does not exist: " + p));
       } else if (matches.length == 0) {
@@ -321,8 +326,10 @@ public abstract class FileInputFormat<K, V> implements InputFormat<K, V> {
     job.setLong(NUM_INPUT_FILES, files.length);
     long totalSize = 0;                           // compute total size
     for (FileStatus file: files) {                // check we have valid files
-      if (file.isDirectory() ||
-          FileUtil.checkPathForSymlink(file.getPath(), job).stat.isDirectory()) {
+      if (file.isSymlink()) {
+        file = new PathData(FileUtil.fixSymlinkFileStatus(file).toString(), job).stat;
+      }
+      if (file.isDirectory()) {
         throw new IOException("Not a file: "+ file.getPath());
       }
       totalSize += file.getLen();
@@ -336,7 +343,9 @@ public abstract class FileInputFormat<K, V> implements InputFormat<K, V> {
     ArrayList<FileSplit> splits = new ArrayList<FileSplit>(numSplits);
     NetworkTopology clusterMap = new NetworkTopology();
     for (FileStatus file: files) {
-      file = FileUtil.checkPathForSymlink(file.getPath(), job).stat;
+      if (file.isSymlink()) {
+        file = new PathData(FileUtil.fixSymlinkFileStatus(file).toString(), job).stat;
+      }
       Path path = file.getPath();
       long length = file.getLen();
       if (length != 0) {

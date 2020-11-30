@@ -344,7 +344,7 @@ abstract public class Command extends Configured {
    */
   protected boolean isPathRecursable(PathData item) throws IOException {
     return item.stat.isDirectory() ||
-        (item.stat.isSymlink() && item.fs.getFileStatus(FileUtil.checkAndFixSymlinkPath(item)).isDirectory());
+        (item.stat.isSymlink() && item.fs.getFileStatus(FileUtil.fixSymlinkPath(item)).isDirectory());
   }
 
   /**
@@ -378,7 +378,7 @@ abstract public class Command extends Configured {
     try {
       depth++;
       if(item.stat.isSymlink()){
-        item = new PathData(FileUtil.checkAndFixSymlinkPath(item).toString(), item.fs.getConf());
+        item = new PathData(FileUtil.fixSymlinkPath(item).toString(), item.fs.getConf());
       }
       processPaths(item, item.getDirectoryContents());
     } finally {

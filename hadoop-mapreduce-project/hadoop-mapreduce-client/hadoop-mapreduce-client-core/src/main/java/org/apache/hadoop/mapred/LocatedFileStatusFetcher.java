@@ -39,6 +39,7 @@ import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.fs.RemoteIterator;
+import org.apache.hadoop.fs.shell.PathData;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 
 import com.google.common.collect.Iterables;
@@ -48,6 +49,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.apache.hadoop.maprfs.AbstractMapRFileSystem;
 
 /**
  * Utility class to fetch block locations for specified Input paths using a
@@ -119,8 +121,12 @@ public class LocatedFileStatusFetcher {
     runningTasks.incrementAndGet();
     for (Path p : inputDirs) {
       runningTasks.incrementAndGet();
+      FileSystem fs = p.getFileSystem(conf);
+      if (fs instanceof AbstractMapRFileSystem && fs.getFileStatus(p).isSymlink()) {
+        p = FileUtil.fixSymlinkPath(new PathData(p.toString(), fs.getConf()));
+      }
       ListenableFuture<ProcessInitialInputPathCallable.Result> future = exec
-          .submit(new ProcessInitialInputPathCallable(FileUtil.checkPathForSymlink(p, conf).path, conf, inputFilter));
+          .submit(new ProcessInitialInputPathCallable(p, conf, inputFilter));
       Futures.addCallback(future, processInitialInputPathCallback,
           MoreExecutors.directExecutor());
     }

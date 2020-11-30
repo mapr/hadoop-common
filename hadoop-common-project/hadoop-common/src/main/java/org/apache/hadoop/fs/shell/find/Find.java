@@ -378,7 +378,7 @@ public class Find extends FsCommand {
     }
     if (item.stat.isSymlink()) {
       PathData linkedItem =
-          new PathData(item.fs.resolvePath(FileUtil.checkAndFixSymlinkPath(item)).toString(),
+          new PathData(item.fs.resolvePath(FileUtil.fixSymlinkPath(item)).toString(),
               getConf());
       if (linkedItem.stat.isDirectory()) {
         if (getOptions().isFollowLink()) {
