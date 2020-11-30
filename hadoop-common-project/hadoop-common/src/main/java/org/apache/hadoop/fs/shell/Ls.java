@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedList;
+
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.util.StringUtils;
 
 import org.apache.hadoop.classification.InterfaceAudience;
@@ -86,7 +88,7 @@ class Ls extends FsCommand {
   @Override
   protected void processPathArgument(PathData item) throws IOException {
     // implicitly recurse once for cmdline directories
-    if (dirRecurse && item.stat.isDirectory()) {
+    if (dirRecurse && (item.stat.isDirectory() || FileUtil.checkItemForSymlink(item).stat.isDirectory())) {
       recursePath(item);
     } else {
       super.processPathArgument(item);

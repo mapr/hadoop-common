@@ -214,7 +214,10 @@ abstract class CommandWithDestination extends FsCommand {
         throw new PathIsNotDirectoryException(dst.toString());
       }
     } else if (dst.exists) {
-      if (!dst.stat.isDirectory() && !overwrite) {
+      if (dst.stat.isSymlink()) {
+        if (!FileUtil.checkItemForSymlink(dst).stat.isDirectory() && !overwrite)
+          throw new PathExistsException(dst.toString());
+      } else if (!dst.stat.isDirectory() && !overwrite) {
         throw new PathExistsException(dst.toString());
       }
     } else if (!dst.parentExists()) {
@@ -301,6 +304,9 @@ abstract class CommandWithDestination extends FsCommand {
     PathData target;
     // on the first loop, the dst may be directory or a file, so only create
     // a child path if dst is a dir; after recursion, it's always a dir
+    if(dst.exists && dst.stat.isSymlink()){
+      dst = new PathData(FileUtil.checkAndFixSymlinkPath(dst).toString(), dst.fs.getConf());
+    }
     if ((getDepth() > 0) || (dst.exists && dst.stat.isDirectory())) {
       target = dst.getPathDataForChild(src);
     } else if (dst.representsDirectory()) { // see if path looks like a dir
