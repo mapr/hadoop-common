@@ -22,9 +22,7 @@ import static org.apache.hadoop.test.MetricsAsserts.assertGauge;
 import static org.apache.hadoop.test.MetricsAsserts.getMetrics;
 import static org.apache.hadoop.test.MockitoMaker.make;
 import static org.apache.hadoop.test.MockitoMaker.stub;
-import static org.jboss.netty.buffer.ChannelBuffers.wrappedBuffer;
-import static org.jboss.netty.handler.codec.http.HttpResponseStatus.OK;
-import static org.jboss.netty.handler.codec.http.HttpVersion.HTTP_1_1;
+import static io.netty.buffer.Unpooled.wrappedBuffer;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
@@ -42,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.CheckedOutputStream;
 import java.util.zip.Checksum;
 
@@ -54,7 +53,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.nativeio.NativeIO;
-import org.apache.hadoop.mapreduce.TypeConverter;
 import org.apache.hadoop.mapreduce.security.SecureShuffleUtils;
 import org.apache.hadoop.mapreduce.security.token.JobTokenIdentifier;
 import org.apache.hadoop.mapreduce.security.token.JobTokenSecretManager;
@@ -74,13 +72,12 @@ import org.apache.hadoop.yarn.server.api.ApplicationInitializationContext;
 import org.apache.hadoop.yarn.server.api.ApplicationTerminationContext;
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.ContainerLocalizer;
 import org.apache.hadoop.yarn.server.records.Version;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.handler.codec.http.DefaultHttpResponse;
-import org.jboss.netty.handler.codec.http.HttpRequest;
-import org.jboss.netty.handler.codec.http.HttpResponse;
-import org.jboss.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpResponse;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import org.junit.Assert;
 import org.junit.Test;
 import org.eclipse.jetty.http.HttpHeader;
@@ -130,6 +127,7 @@ public class TestShuffleHandler {
     sh.metrics.operationComplete(cf);
 
     checkShuffleMetrics(ms, 3*MiB, 1, 1, 0);
+    sh.close();
   }
 
   static void checkShuffleMetrics(MetricsSystem ms, long bytes, int failed,
@@ -149,7 +147,7 @@ public class TestShuffleHandler {
    */
   @Test (timeout = 10000)
   public void testClientClosesConnection() throws Exception {
-    final ArrayList<Throwable> failures = new ArrayList<Throwable>(1);
+    final AtomicBoolean failureEncountered = new AtomicBoolean(false);
     Configuration conf = new Configuration();
     conf.setInt(ShuffleHandler.SHUFFLE_PORT_CONFIG_KEY, 0);
     ShuffleHandler shuffleHandler = new ShuffleHandler() {
@@ -187,27 +185,25 @@ public class TestShuffleHandler {
                 new ShuffleHeader("attempt_12345_1_m_1_0", 5678, 5678, 1);
             DataOutputBuffer dob = new DataOutputBuffer();
             header.write(dob);
-            ch.write(wrappedBuffer(dob.getData(), 0, dob.getLength()));
+            ch.writeAndFlush(wrappedBuffer(dob.getData(), 0, dob.getLength()));
             dob = new DataOutputBuffer();
             for (int i = 0; i < 100000; ++i) {
               header.write(dob);
             }
-            return ch.write(wrappedBuffer(dob.getData(), 0, dob.getLength()));
+            return ch.writeAndFlush(wrappedBuffer(dob.getData(), 0, dob.getLength()));
           }
           @Override
           protected void sendError(ChannelHandlerContext ctx,
               HttpResponseStatus status) {
-            if (failures.size() == 0) {
-              failures.add(new Error());
-              ctx.getChannel().close();
+            if (failureEncountered.compareAndSet(false, true)) {
+              ctx.channel().close();
             }
           }
           @Override
           protected void sendError(ChannelHandlerContext ctx, String message,
               HttpResponseStatus status) {
-            if (failures.size() == 0) {
-              failures.add(new Error());
-              ctx.getChannel().close();
+            if (failureEncountered.compareAndSet(false, true)) {
+              ctx.channel().close();
             }
           }
         };
@@ -235,14 +231,14 @@ public class TestShuffleHandler {
     header.readFields(input);
     input.close();
 
-    shuffleHandler.stop();
+    shuffleHandler.close();
     Assert.assertTrue("sendError called when client closed connection",
-        failures.size() == 0);
+        !failureEncountered.get());
   }
 
   @Test(timeout = 10000)
   public void testKeepAlive() throws Exception {
-    final ArrayList<Throwable> failures = new ArrayList<Throwable>(1);
+    final AtomicBoolean failureEncountered = new AtomicBoolean(false);
     Configuration conf = new Configuration();
     conf.setInt(ShuffleHandler.SHUFFLE_PORT_CONFIG_KEY, 0);
     conf.setBoolean(ShuffleHandler.SHUFFLE_CONNECTION_KEEP_ALIVE_ENABLED, true);
@@ -293,7 +289,6 @@ public class TestShuffleHandler {
           protected ChannelFuture sendMapOutput(ChannelHandlerContext ctx,
               Channel ch, String user, String mapId, int reduce,
               MapOutputInfo info) throws IOException {
-            HttpResponse response = new DefaultHttpResponse(HTTP_1_1, OK);
 
             // send a shuffle header and a lot of data down the channel
             // to trigger a broken pipe
@@ -301,29 +296,27 @@ public class TestShuffleHandler {
                 new ShuffleHeader("attempt_12345_1_m_1_0", 5678, 5678, 1);
             DataOutputBuffer dob = new DataOutputBuffer();
             header.write(dob);
-            ch.write(wrappedBuffer(dob.getData(), 0, dob.getLength()));
+            ch.writeAndFlush(wrappedBuffer(dob.getData(), 0, dob.getLength()));
             dob = new DataOutputBuffer();
             for (int i = 0; i < 100000; ++i) {
               header.write(dob);
             }
-            return ch.write(wrappedBuffer(dob.getData(), 0, dob.getLength()));
+            return ch.writeAndFlush(wrappedBuffer(dob.getData(), 0, dob.getLength()));
           }
 
           @Override
           protected void sendError(ChannelHandlerContext ctx,
               HttpResponseStatus status) {
-            if (failures.size() == 0) {
-              failures.add(new Error());
-              ctx.getChannel().close();
+            if (failureEncountered.compareAndSet(false, true)) {
+              ctx.channel().close();
             }
           }
 
           @Override
           protected void sendError(ChannelHandlerContext ctx, String message,
               HttpResponseStatus status) {
-            if (failures.size() == 0) {
-              failures.add(new Error());
-              ctx.getChannel().close();
+            if (failureEncountered.compareAndSet(false, true)) {
+              ctx.channel().close();
             }
           }
         };
@@ -456,12 +449,12 @@ public class TestShuffleHandler {
                 new ShuffleHeader("dummy_header", 5678, 5678, 1);
             DataOutputBuffer dob = new DataOutputBuffer();
             header.write(dob);
-            ch.write(wrappedBuffer(dob.getData(), 0, dob.getLength()));
+            ch.writeAndFlush(wrappedBuffer(dob.getData(), 0, dob.getLength()));
             dob = new DataOutputBuffer();
             for (int i=0; i<100000; ++i) {
               header.write(dob);
             }
-            return ch.write(wrappedBuffer(dob.getData(), 0, dob.getLength()));
+            return ch.writeAndFlush(wrappedBuffer(dob.getData(), 0, dob.getLength()));
           }
         };
       }
@@ -489,13 +482,13 @@ public class TestShuffleHandler {
     // Try to open numerous connections
     for (int i = 0; i < connAttempts; i++) {
       conns[i].connect();
+      Thread.sleep(500);
     }
 
     //Ensure first connections are okay
     conns[0].getInputStream();
     int rc = conns[0].getResponseCode();
     Assert.assertEquals(HttpURLConnection.HTTP_OK, rc);
-    
     conns[1].getInputStream();
     rc = conns[1].getResponseCode();
     Assert.assertEquals(HttpURLConnection.HTTP_OK, rc);
@@ -511,7 +504,7 @@ public class TestShuffleHandler {
       Assert.fail("Expected a SocketException");
     }
     
-    shuffleHandler.stop(); 
+    shuffleHandler.close();
   }
 
   /**
@@ -601,7 +594,7 @@ public class TestShuffleHandler {
               + " did not match expected owner '" + user + "'";
       Assert.assertTrue((new String(byteArr)).contains(message));
     } finally {
-      shuffleHandler.stop();
+      shuffleHandler.close();
     }
   }
 
@@ -658,7 +651,6 @@ public class TestShuffleHandler {
   public void testRecovery() throws IOException {
     final String user = "someuser";
     final ApplicationId appId = ApplicationId.newInstance(12345, 1);
-    final JobID jobId = JobID.downgrade(TypeConverter.fromYarn(appId));
     final File tmpDir = new File(System.getProperty("test.build.data",
         System.getProperty("java.io.tmpdir")),
         TestShuffleHandler.class.getName());

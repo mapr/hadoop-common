@@ -32,7 +32,7 @@ import org.apache.hadoop.io.nativeio.NativeIO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.jboss.netty.channel.DefaultFileRegion;
+import io.netty.channel.DefaultFileRegion;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -76,8 +76,8 @@ public class FadvisedFileRegion extends DefaultFileRegion {
       throws IOException {
     if (manageOsCache && readaheadPool != null) {
       readaheadRequest = readaheadPool.readaheadStream(identifier, fd,
-          getPosition() + position, readaheadLength,
-          getPosition() + getCount(), readaheadRequest);
+          position() + position, readaheadLength,
+          position() + count(), readaheadRequest);
     }
     
     if(this.shuffleTransferToAllowed) {
@@ -141,24 +141,15 @@ public class FadvisedFileRegion extends DefaultFileRegion {
     return actualCount - trans;
   }
 
-  
-  @Override
-  public void releaseExternalResources() {
-    if (readaheadRequest != null) {
-      readaheadRequest.cancel();
-    }
-    super.releaseExternalResources();
-  }
-  
   /**
    * Call when the transfer completes successfully so we can advise the OS that
    * we don't need the region to be cached anymore.
    */
   public void transferSuccessful() {
-    if (manageOsCache && getCount() > 0) {
+    if (manageOsCache && count() > 0) {
       try {
         NativeIO.POSIX.getCacheManipulator().posixFadviseIfPossible(identifier,
-           fd, getPosition(), getCount(),
+           fd, position(), count(),
            NativeIO.POSIX.POSIX_FADV_DONTNEED);
       } catch (Throwable t) {
         LOG.warn("Failed to manage OS cache for " + identifier, t);
