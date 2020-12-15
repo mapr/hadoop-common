@@ -323,12 +323,13 @@ public class Job extends JobContextImpl implements JobContext {
             .getLong(MRJobConfig.MR_JOB_STATUS_UPDATE_RETRY_INTERVAL,
                     MRJobConfig.DEFAULT_MR_JOB_STATUS_UPDATE_RETRY_INTERVAL);
     int retryCounter = 0;
+    final JobID jobID = this.status.getJobID();
     while (retryCounter < maxUpdateAttempts) {
       try {
         this.status = ugi.doAs(new PrivilegedExceptionAction<JobStatus>() {
           @Override
           public JobStatus run() throws IOException, InterruptedException {
-            return cluster.getClient().getJobStatus(status.getJobID());
+            return cluster.getClient().getJobStatus(jobID);
           }
         });
         if (this.status != null) {
