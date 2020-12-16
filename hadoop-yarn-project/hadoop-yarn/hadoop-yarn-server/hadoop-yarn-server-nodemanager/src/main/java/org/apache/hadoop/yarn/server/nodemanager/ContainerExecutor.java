@@ -478,15 +478,20 @@ public abstract class ContainerExecutor implements Configurable {
     private final long delay;
     private final Signal signal;
     private final ContainerExecutor containerExecutor;
+    private final String[] childPids;
+    private final boolean killChildProcess;
 
     public DelayedProcessKiller(Container container, String user, String pid,
-        long delay, Signal signal, ContainerExecutor containerExecutor) {
+        long delay, Signal signal, ContainerExecutor containerExecutor,
+                                String[] childPids, boolean killChildProcess) {
       this.container = container;
       this.user = user;
       this.pid = pid;
       this.delay = delay;
       this.signal = signal;
       this.containerExecutor = containerExecutor;
+      this.childPids = childPids;
+      this.killChildProcess = killChildProcess;
       setName("Task killer for " + pid);
       setDaemon(false);
     }
@@ -502,6 +507,18 @@ public abstract class ContainerExecutor implements Configurable {
                     .setPid(pid)
                     .setSignal(signal)
                     .build());
+        }
+        if (childPids != null && killChildProcess) {
+          for (String pidd : childPids) {
+            if (shouldDoSignal(containerIdStr, pidd)) {
+              try {
+                Shell.execCommand("/bin/sh", "-c", "kill -9 " + pidd);
+                LOG.info("Run kill -9 for pid="+pidd);
+              } catch (IOException e) {
+                LOG.warn("Not able to execute command /bin/sh -c 'kill -9' " + pidd);
+              }
+            }
+          }
         }
       } catch (InterruptedException e) {
         return;

@@ -120,6 +120,7 @@ public class ContainerLaunch implements Callable<Integer> {
 
   private long sleepDelayBeforeSigKill = 250;
   private long maxKillWaitTime = 2000;
+  private boolean killChildProcess = false;
 
   protected Path pidFilePath = null;
 
@@ -159,6 +160,9 @@ public class ContainerLaunch implements Callable<Integer> {
     this.maxKillWaitTime =
         conf.getLong(YarnConfiguration.NM_PROCESS_KILL_WAIT_MS,
             YarnConfiguration.DEFAULT_NM_PROCESS_KILL_WAIT_MS);
+    this.killChildProcess =
+            conf.getBoolean(YarnConfiguration.NM_KILL_CONTAINER_CHILD_PROCESS,
+                    YarnConfiguration.DEFAULT_NM_KILL_CONTAINER_CHILD_PROCESS);
   }
 
   @VisibleForTesting
@@ -600,6 +604,8 @@ public class ContainerLaunch implements Callable<Integer> {
           ? Signal.TERM
           : Signal.KILL;
 
+        String[] childPids=getChildPids(processId);
+
         boolean result = exec.signalContainer(
             new ContainerSignalContext.Builder()
                 .setContainer(container)
@@ -615,7 +621,8 @@ public class ContainerLaunch implements Callable<Integer> {
 
         if (sleepDelayBeforeSigKill > 0) {
           new DelayedProcessKiller(container, user,
-              processId, sleepDelayBeforeSigKill, Signal.KILL, exec).start();
+              processId, sleepDelayBeforeSigKill, Signal.KILL, exec,
+                  childPids, killChildProcess).start();
         }
       }
     } catch (Exception e) {
@@ -632,6 +639,15 @@ public class ContainerLaunch implements Callable<Integer> {
         lfs.delete(pidFilePath, false);
         lfs.delete(pidFilePath.suffix(EXIT_CODE_FILE_SUFFIX), false);
       }
+    }
+  }
+
+  private String[] getChildPids(String processId) {
+    try {
+      String ret = Shell.execCommand("/bin/sh", "-c", "pgrep -P "+ processId);
+      return ret.split("\n");
+    } catch (IOException e) {
+      return null;
     }
   }
 
