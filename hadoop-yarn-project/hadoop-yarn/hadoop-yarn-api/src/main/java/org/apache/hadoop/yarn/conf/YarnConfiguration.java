@@ -1460,6 +1460,11 @@ public class YarnConfiguration extends Configuration {
   public static final long DEFAULT_NM_PROCESS_KILL_WAIT_MS =
       2000;
 
+  /** Use command 'Kill -9' for handing child process */
+  public static final String NM_KILL_CONTAINER_CHILD_PROCESS =
+          NM_PREFIX + "kill-container-child-process";
+  public static final boolean DEFAULT_NM_KILL_CONTAINER_CHILD_PROCESS = false;
+
   /** Timeout for container in localizing state before kill */
   public static final String TIMEOUT_LOCALIZING_CONTAINER =
       NM_PREFIX + "timeout-localizing-container";
