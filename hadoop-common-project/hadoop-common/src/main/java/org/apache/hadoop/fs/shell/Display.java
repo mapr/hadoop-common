@@ -279,12 +279,7 @@ class Display extends FsCommand {
       Schema schema = fileReader.getSchema();
       writer = new GenericDatumWriter<Object>(schema);
       output = new ByteArrayOutputStream();
-      JsonGenerator generator =
-        new JsonFactory().createJsonGenerator(output, JsonEncoding.UTF8);
-      MinimalPrettyPrinter prettyPrinter = new MinimalPrettyPrinter();
-      prettyPrinter.setRootValueSeparator(System.getProperty("line.separator"));
-      generator.setPrettyPrinter(prettyPrinter);
-      encoder = EncoderFactory.get().jsonEncoder(schema, generator);
+      encoder = EncoderFactory.get().jsonEncoder(schema, output);
     }
 
     /**
