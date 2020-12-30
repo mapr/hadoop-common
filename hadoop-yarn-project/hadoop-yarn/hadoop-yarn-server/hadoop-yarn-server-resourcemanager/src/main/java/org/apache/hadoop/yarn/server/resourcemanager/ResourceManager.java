@@ -714,7 +714,7 @@ public class ResourceManager extends CompositeService implements Recoverable {
       this.stopped = true;
       this.eventProcessor.interrupt();
       try {
-        this.eventProcessor.join();
+        this.eventProcessor.join(3000);
       } catch (InterruptedException e) {
         throw new YarnRuntimeException(e);
       }
