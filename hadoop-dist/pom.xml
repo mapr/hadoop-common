@@ -20,12 +20,12 @@
   <parent>
     <groupId>org.apache.hadoop</groupId>
     <artifactId>hadoop-project</artifactId>
-    <version>2.7.4.0-mapr-700</version>
+    <version>2.7.4.100-mapr-701</version>
     <relativePath>../hadoop-project</relativePath>
   </parent>
   <groupId>org.apache.hadoop</groupId>
   <artifactId>hadoop-dist</artifactId>
-  <version>2.7.4.0-mapr-700</version>
+  <version>2.7.4.100-mapr-701</version>
   <description>Apache Hadoop Distribution</description>
   <name>Apache Hadoop Distribution</name>
   <packaging>jar</packaging>
