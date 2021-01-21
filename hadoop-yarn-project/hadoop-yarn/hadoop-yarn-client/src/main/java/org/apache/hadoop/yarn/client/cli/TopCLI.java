@@ -443,6 +443,7 @@ public class TopCLI extends YarnCLI {
 
   public static void main(String[] args) throws Exception {
     TopCLI topImp = new TopCLI();
+    topImp.addShutdownHook();
     topImp.setSysOutPrintStream(System.out);
     topImp.setSysErrPrintStream(System.err);
     int res = ToolRunner.run(topImp, args);
@@ -490,7 +491,6 @@ public class TopCLI extends YarnCLI {
         rmStartTime = getRMStartTime();
       }
     }
-    clearScreen();
     return 0;
   }
 
@@ -1141,5 +1141,12 @@ public class TopCLI extends YarnCLI {
     p.waitFor();
     byte[] output = IOUtils.toByteArray(p.getInputStream());
     return new String(output, "ASCII");
+  }
+
+  private void addShutdownHook() {
+    //clear screen when the program exits
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      clearScreen();
+    }));
   }
 }
