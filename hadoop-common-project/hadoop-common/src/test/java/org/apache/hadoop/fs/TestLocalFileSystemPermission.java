@@ -42,7 +42,7 @@ import static org.junit.Assert.*;
 public class TestLocalFileSystemPermission {
 
   public static final Logger LOGGER =
-      LoggerFactory.getLogger(TestFcLocalFsPermission.class);
+      LoggerFactory.getLogger(TestLocalFileSystemPermission.class);
 
   static final String TEST_PATH_PREFIX = GenericTestUtils.getTempPath(
       TestLocalFileSystemPermission.class.getSimpleName());
