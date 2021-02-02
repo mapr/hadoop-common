@@ -22,6 +22,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -64,6 +65,7 @@ public class DeletionService extends AbstractService {
   private static final FileContext lfs = getLfs();
   private final NMStateStoreService stateStore;
   private AtomicInteger nextTaskId = new AtomicInteger(0);
+  private static int max_delete_retry = YarnConfiguration.DEFAULT_NM_MAX_RETRY_FILE_DELETE;
 
   static final FileContext getLfs() {
     try {
@@ -122,6 +124,8 @@ public class DeletionService extends AbstractService {
           conf.getInt(YarnConfiguration.NM_DELETE_THREAD_COUNT,
           YarnConfiguration.DEFAULT_NM_DELETE_THREAD_COUNT), tf);
       debugDelay = conf.getInt(YarnConfiguration.DEBUG_NM_DELETE_DELAY_SEC, 0);
+      max_delete_retry = conf.getInt(YarnConfiguration.NM_MAX_RETRY_FILE_DELETE,
+              YarnConfiguration.DEFAULT_NM_MAX_RETRY_FILE_DELETE);
     } else {
       sched = new HadoopScheduledThreadPoolExecutor(
           YarnConfiguration.DEFAULT_NM_DELETE_THREAD_COUNT, tf);
@@ -165,7 +169,7 @@ public class DeletionService extends AbstractService {
     private int taskId;
     private final String user;
     private final Path subDir;
-    private final List<Path> baseDirs;
+    private List<Path> baseDirs;
     private final AtomicInteger numberOfPendingPredecessorTasks;
     private final Set<FileDeletionTask> successorTaskSet;
     private final DeletionService delService;
@@ -264,17 +268,41 @@ public class DeletionService extends AbstractService {
       } else {
         try {
           LOG.debug("Deleting path: [" + subDir + "] as user: [" + user + "]");
-          if (baseDirs == null || baseDirs.size() == 0) {
-            delService.exec.deleteAsUser(new DeletionAsUserContext.Builder()
-                .setUser(user)
-                .setSubDir(subDir)
-                .build());
-          } else {
-            delService.exec.deleteAsUser(new DeletionAsUserContext.Builder()
-                .setUser(user)
-                .setSubDir(subDir)
-                .setBasedirs(baseDirs.toArray(new Path[0]))
-                .build());
+          int countRetry = 0;
+          boolean filesDeleted = false;
+          List<Path> baseDirsCopy = new ArrayList<>();
+          while ((countRetry < max_delete_retry) && (filesDeleted != true)) {
+            if (baseDirs == null || baseDirs.size() == 0) {
+              File dirFile = new File (subDir.toUri().getPath());
+              if (dirFile.exists()){
+                LOG.debug("Deleting path: [" + dirFile + "]");
+                deleteDir(subDir, null);
+              } else {
+                filesDeleted = true;
+              }
+              countRetry++;
+            } else {
+              if (countRetry == 0) {
+                baseDirsCopy.addAll(baseDirs);
+              }
+              for (Path path: baseDirs) {
+                Path delPath = subDir == null ? path : new Path(path, subDir);
+                File dirFile = new File (delPath.toUri().getPath());
+                if (dirFile.exists()){
+                  LOG.debug("Deleting path: [" + dirFile + "] as user: [" + user + "]");
+                  if (countRetry > 0){
+                    deleteDir(delPath, null);
+                  } else {
+                    deleteDir(subDir, baseDirs);
+                  }
+                } else {
+                  baseDirsCopy.remove(path);
+                }
+              }
+              if (baseDirsCopy.size() == 0) filesDeleted = true;
+              countRetry++;
+              baseDirs = new ArrayList<>(baseDirsCopy);
+            }
           }
         } catch (IOException e) {
           error = true;
@@ -288,6 +316,21 @@ public class DeletionService extends AbstractService {
         setSuccess(!error);
       }
       fileDeletionTaskFinished();
+    }
+
+    private void deleteDir(Path subDir, List<Path> baseDirs) throws IOException, InterruptedException {
+      if (baseDirs == null){
+        delService.exec.deleteAsUser(new DeletionAsUserContext.Builder()
+                .setUser(user)
+                .setSubDir(subDir)
+                .build());
+      } else {
+        delService.exec.deleteAsUser(new DeletionAsUserContext.Builder()
+                .setUser(user)
+                .setSubDir(subDir)
+                .setBasedirs(baseDirs.toArray(new Path[0]))
+                .build());
+      }
     }
 
     @Override

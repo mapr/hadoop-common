@@ -1342,6 +1342,10 @@ public class YarnConfiguration extends Configuration {
       NM_PREFIX + "windows-container.cpu-limit.enabled";
   public static final boolean DEFAULT_NM_WINDOWS_CONTAINER_CPU_LIMIT_ENABLED = false;
 
+  public static final String NM_MAX_RETRY_FILE_DELETE =
+          NM_PREFIX + "max-retry-file-delete";
+  public static final int DEFAULT_NM_MAX_RETRY_FILE_DELETE = 2;
+
   /** 
   /* The Windows group that the windows-secure-container-executor should run as.
   */
