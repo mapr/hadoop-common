@@ -319,9 +319,13 @@ public class MapTask extends Task {
     this.umbilical = umbilical;
 
     if (isMapTask()) {
-      FileSystem fileSystem = FileSystem.get(conf);
-
       Path outDir = FileOutputFormat.getOutputPath(conf);
+      FileSystem fileSystem;
+      if (outDir != null) {
+        fileSystem = FileSystem.get(outDir.toUri(), conf);
+      } else {
+        fileSystem = FileSystem.get(conf);
+      }
 
       if (fileSystem instanceof AbstractMapRFileSystem && outDir != null && fileSystem.exists(outDir)) {
         AbstractMapRFileSystem mapRFileSystem = (AbstractMapRFileSystem) fileSystem;
