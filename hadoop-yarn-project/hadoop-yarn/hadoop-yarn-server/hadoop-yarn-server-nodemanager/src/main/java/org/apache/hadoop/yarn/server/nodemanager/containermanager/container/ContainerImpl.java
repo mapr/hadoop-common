@@ -694,6 +694,7 @@ public class ContainerImpl implements Container {
     @Override
     public ContainerState transition(ContainerImpl container,
         ContainerEvent event) {
+      boolean skipUpload = false;
       ContainerResourceLocalizedEvent rsrcEvent = (ContainerResourceLocalizedEvent) event;
       LocalResourceRequest resourceRequest = rsrcEvent.getResource();
       Path location = rsrcEvent.getLocation();
@@ -706,10 +707,13 @@ public class ContainerImpl implements Container {
         return ContainerState.LOCALIZING;
       }
       container.localizedResources.put(location, syms);
-
+      if(resourceRequest == null){
+        LOG.warn("Resource is null for container " + container.containerId + ". Skipping upload to the shared cache");
+        skipUpload = true;
+      }
       // check to see if this resource should be uploaded to the shared cache
       // as well
-      if (shouldBeUploadedToSharedCache(container, resourceRequest)) {
+      if (shouldBeUploadedToSharedCache(container, resourceRequest) && !skipUpload) {
         container.resourcesToBeUploaded.put(resourceRequest, location);
       }
       if (!container.pendingResources.isEmpty()) {
