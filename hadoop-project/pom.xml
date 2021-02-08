@@ -81,7 +81,7 @@
     <netty3.version>3.10.6.Final</netty3.version>
     <netty4.version>4.1.54.Final</netty4.version>
 
-    <tomcat.version>9.0.39</tomcat.version>
+    <tomcat.version>9.0.43</tomcat.version>
 
     <!-- define the Java language version used by the compiler -->
     <javac.version>11</javac.version>
