@@ -20,12 +20,12 @@
   <parent>
     <groupId>org.apache.hadoop</groupId>
     <artifactId>hadoop-project</artifactId>
-    <version>2.7.4.100-mapr-701</version>
+    <version>2.7.4.101-mapr-701</version>
     <relativePath>../../hadoop-project</relativePath>
   </parent>
   <groupId>org.apache.hadoop</groupId>
   <artifactId>hadoop-auth-examples</artifactId>
-  <version>2.7.4.100-mapr-701</version>
+  <version>2.7.4.101-mapr-701</version>
   <packaging>war</packaging>
 
   <name>Apache Hadoop Auth Examples</name>
