@@ -43,7 +43,7 @@ public class LocatedFileStatus extends FileStatus {
         stat.getBlockSize(), stat.getModificationTime(),
         stat.getAccessTime(), stat.getPermission(), stat.getOwner(),
         stat.getGroup(), null, stat.getPath(), locations);
-    if (isSymlink()) {
+    if (stat.isSymlink()) {
       setSymlink(stat.getSymlink());
     }
   }
