@@ -52,6 +52,8 @@ public class AppInfo {
   protected long finishedTime;
   protected long elapsedTime;
   protected String applicationTags;
+  private long reservedCpuVcores;
+  private long reservedMemoryMB;
 
   public AppInfo() {
     // JAXB needs this
@@ -77,6 +79,14 @@ public class AppInfo {
     finishedTime = app.getFinishTime();
     elapsedTime = Times.elapsed(startedTime, finishedTime);
     finalAppStatus = app.getFinalApplicationStatus();
+    if (app.getApplicationResourceUsageReport() != null &&
+        app.getApplicationResourceUsageReport().getUsedResources() != null) {
+      reservedCpuVcores = app.getApplicationResourceUsageReport()
+              .getReservedResources().getVirtualCores();
+      reservedMemoryMB = app.getApplicationResourceUsageReport()
+              .getReservedResources().getMemory();
+
+    }
     progress = app.getProgress() * 100; // in percent
     if (app.getApplicationTags() != null && !app.getApplicationTags().isEmpty()) {
       this.applicationTags = CSV_JOINER.join(app.getApplicationTags());
@@ -117,6 +127,14 @@ public class AppInfo {
 
   public YarnApplicationState getAppState() {
     return appState;
+  }
+
+  public long getReservedCpuVcores() {
+    return reservedCpuVcores;
+  }
+
+  public long getReservedMemoryMB() {
+    return reservedMemoryMB;
   }
 
   public float getProgress() {

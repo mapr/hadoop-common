@@ -83,6 +83,8 @@ public class AppInfo {
   protected int allocatedMB;
   protected int allocatedVCores;
   protected double allocatedDisks;
+  protected long reservedMB;
+  protected long reservedVCores;
   protected int runningContainers;
   protected long memorySeconds;
   protected long vcoreSeconds;
@@ -155,14 +157,17 @@ public class AppInfo {
                 app.getUser());
             this.amHostHttpAddress = masterContainer.getNodeHttpAddress();
           }
-          
+
           ApplicationResourceUsageReport resourceReport = attempt
               .getApplicationResourceUsageReport();
           if (resourceReport != null) {
             Resource usedResources = resourceReport.getUsedResources();
+            Resource reservedResources = resourceReport.getReservedResources();
             allocatedMB = usedResources.getMemory();
             allocatedDisks = usedResources.getDisks();
             allocatedVCores = usedResources.getVirtualCores();
+            reservedMB = reservedResources.getMemory();
+            reservedVCores = reservedResources.getVirtualCores();
             runningContainers = resourceReport.getNumUsedContainers();
           }
           resourceRequests =
@@ -293,6 +298,14 @@ public class AppInfo {
 
   public double getAllocatedDisks() {
     return allocatedDisks;
+  }
+
+  public long getReservedMB() {
+    return this.reservedMB;
+  }
+
+  public long getReservedVCores() {
+    return this.reservedVCores;
   }
 
   public int getPreemptedMB() {
