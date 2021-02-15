@@ -531,6 +531,18 @@ public class FSLeafQueue extends FSQueue {
         new ResourceWeights(weight));
   }
 
+  @Override
+  public Resource getMaximumContainerAllocation() {
+    Resource maxContainerAllocation = scheduler.getAllocationConfiguration()
+            .getQueueMaxContainerAllocation(getName());
+    if (maxContainerAllocation.equals(Resources.unbounded())
+            && getParent() != null) {
+      return getParent().getMaximumContainerAllocation();
+    } else {
+      return maxContainerAllocation;
+    }
+  }
+
   /**
    * Helper method to check if the queue should preempt containers
    *

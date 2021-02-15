@@ -1075,6 +1075,26 @@ public class FairScheduler extends
   }
 
   @Override
+  public Resource getMaximumResourceCapability(String queueName) {
+    if(queueName == null || queueName.isEmpty()) {
+      return  getMaximumResourceCapability();
+    }
+    FSQueue queue = queueMgr.getQueue(queueName);
+    Resource schedulerLevelMaxResourceCapability =
+            getMaximumResourceCapability();
+    if (queue == null) {
+      return schedulerLevelMaxResourceCapability;
+    }
+    Resource queueMaxResourceCapability = queue.getMaximumContainerAllocation();
+    if (queueMaxResourceCapability.equals(Resources.unbounded())) {
+      return schedulerLevelMaxResourceCapability;
+    } else {
+      return Resources.componentwiseMin(schedulerLevelMaxResourceCapability,
+              queueMaxResourceCapability);
+    }
+  }
+
+  @Override
   public Allocation allocate(ApplicationAttemptId appAttemptId,
       List<ResourceRequest> ask, List<ContainerId> release,
       List<String> blacklistAdditions, List<String> blacklistRemovals) {
@@ -1089,7 +1109,7 @@ public class FairScheduler extends
 
     // Sanity check
     SchedulerUtils.normalizeRequests(ask, RESOURCE_CALCULATOR, clusterResource,
-            minimumAllocation, getMaximumResourceCapability(), incrAllocation);
+            minimumAllocation, getMaximumResourceCapability(application.getQueueName()), incrAllocation);
 
     // Release containers
     releaseContainers(release, application);

@@ -34,6 +34,7 @@ import org.apache.hadoop.yarn.api.records.ApplicationAccessType;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ApplicationSubmissionContext;
 import org.apache.hadoop.yarn.api.records.ResourceRequest;
+import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.event.EventHandler;
 import org.apache.hadoop.yarn.exceptions.InvalidResourceRequestException;
@@ -74,7 +75,7 @@ public class RMAppManager implements EventHandler<RMAppManagerEvent>,
   private int maxCompletedAppsInMemory;
   private int maxCompletedAppsInStateStore;
   protected int completedAppsInStateStore = 0;
-  private LinkedList<ApplicationId> completedApps = new LinkedList<ApplicationId>();
+  protected LinkedList<ApplicationId> completedApps = new LinkedList<ApplicationId>();
 
   private final RMContext rmContext;
   private final ApplicationMasterService masterService;
@@ -391,10 +392,12 @@ public class RMAppManager implements EventHandler<RMAppManagerEvent>,
             .getNodeLabelExpression());
       }
 
+      String queue = submissionContext.getQueue();
+      Resource maxAllocation = scheduler.getMaximumResourceCapability(queue);
       try {
         SchedulerUtils.normalizeAndValidateRequest(amReq,
-            scheduler.getMaximumResourceCapability(),
-            submissionContext.getQueue(), scheduler, isRecovery);
+                maxAllocation,
+                queue, scheduler, isRecovery);
       } catch (InvalidResourceRequestException e) {
         LOG.warn("RM app submission failed in validating AM resource request"
             + " for application " + submissionContext.getApplicationId(), e);
@@ -404,7 +407,7 @@ public class RMAppManager implements EventHandler<RMAppManagerEvent>,
       SchedulerUtils.normalizeRequest(amReq, scheduler.getResourceCalculator(),
           scheduler.getClusterResource(),
           scheduler.getMinimumResourceCapability(),
-          scheduler.getMaximumResourceCapability(),
+          maxAllocation,
           scheduler.getIncrementResourceCapability());
       return amReq;
     }

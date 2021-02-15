@@ -118,6 +118,8 @@ public abstract class FSQueue implements Queue, Schedulable {
     return scheduler.getAllocationConfiguration().getMaxResources(getName());
   }
 
+  public abstract Resource getMaximumContainerAllocation();
+
   @Override
   public long getStartTime() {
     return 0;

@@ -72,6 +72,8 @@ public class FairSchedulerPage extends RmView {
           __("Num Pending Applications:", qinfo.getNumPendingApplications()).
           __("Min Resources:", qinfo.getMinResources().toString()).
           __("Max Resources:", qinfo.getMaxResources().toString()).
+          __("Max Container Allocation:",
+              qinfo.getMaxContainerAllocation().toString()).
           __("Queue Label:", qinfo.getLabel()).
           __("Queue Label Policy:", qinfo.getLabelPolicy());
       int maxApps = qinfo.getMaxApplications();

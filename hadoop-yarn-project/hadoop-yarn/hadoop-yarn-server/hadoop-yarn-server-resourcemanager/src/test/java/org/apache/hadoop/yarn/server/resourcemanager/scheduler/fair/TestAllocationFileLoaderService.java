@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.yarn.api.records.QueueACL;
+import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.server.resourcemanager.reservation.ReservationSchedulerConfiguration;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.QueuePlacementRule.NestedUserQueue;
@@ -182,10 +183,12 @@ public class TestAllocationFileLoaderService {
     out.println("<fairSharePreemptionTimeout>120</fairSharePreemptionTimeout>");
     out.println("<minSharePreemptionTimeout>50</minSharePreemptionTimeout>");
     out.println("<fairSharePreemptionThreshold>0.6</fairSharePreemptionThreshold>");
+    out.println("<maxContainerAllocation>512mb,16vcores,2disks</maxContainerAllocation>");
     out.println("   <queue name=\"queueH\">");
     out.println("   <fairSharePreemptionTimeout>180</fairSharePreemptionTimeout>");
     out.println("   <minSharePreemptionTimeout>40</minSharePreemptionTimeout>");
     out.println("   <fairSharePreemptionThreshold>0.7</fairSharePreemptionThreshold>");
+    out.println("   <maxContainerAllocation>1024mb,8vcores,1disks</maxContainerAllocation>");
     out.println("   </queue>");
     out.println("</queue>");
     // Set default limit of apps per queue to 15
@@ -248,6 +251,26 @@ public class TestAllocationFileLoaderService {
     assertEquals(.5f, queueConf.getQueueMaxAMShare("root.queueC"), 0.01);
     assertEquals(.4f, queueConf.getQueueMaxAMShare("root.queueD"), 0.01);
     assertEquals(.5f, queueConf.getQueueMaxAMShare("root.queueE"), 0.01);
+
+    assertEquals(Resources.unbounded(),
+            queueConf.getQueueMaxContainerAllocation(
+                    "root." + YarnConfiguration.DEFAULT_QUEUE_NAME));
+    assertEquals(Resources.unbounded(),
+            queueConf.getQueueMaxContainerAllocation("root.queueA"));
+    assertEquals(Resources.unbounded(),
+            queueConf.getQueueMaxContainerAllocation("root.queueB"));
+    assertEquals(Resources.unbounded(),
+            queueConf.getQueueMaxContainerAllocation("root.queueC"));
+    assertEquals(Resources.unbounded(),
+            queueConf.getQueueMaxContainerAllocation("root.queueD"));
+    assertEquals(Resources.unbounded(),
+            queueConf.getQueueMaxContainerAllocation("root.queueE"));
+    assertEquals(Resources.unbounded(),
+            queueConf.getQueueMaxContainerAllocation("root.queueF"));
+    assertEquals(Resources.createResource(512, 16, 2),
+            queueConf.getQueueMaxContainerAllocation("root.queueG"));
+    assertEquals(Resources.createResource(1024, 8, 1),
+            queueConf.getQueueMaxContainerAllocation("root.queueG.queueH"));
 
     // Root should get * ACL
     assertEquals("*", queueConf.getQueueAcl("root",

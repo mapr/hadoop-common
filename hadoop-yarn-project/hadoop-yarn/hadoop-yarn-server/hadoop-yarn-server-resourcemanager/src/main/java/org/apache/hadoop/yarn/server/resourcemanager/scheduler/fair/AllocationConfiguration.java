@@ -87,7 +87,10 @@ public class AllocationConfiguration extends ReservationSchedulerConfiguration {
   private final String defaultQueueLabel;
   
   private final SchedulingPolicy defaultSchedulingPolicy;
-  
+
+  //Map for maximum container resource allocation per queues by queue name
+  private final Map<String, Resource> queueMaxContainerAllocationMap;
+
   // Policy for mapping apps to queues
   @VisibleForTesting
   QueuePlacementPolicy placementPolicy;
@@ -100,7 +103,7 @@ public class AllocationConfiguration extends ReservationSchedulerConfiguration {
   private ReservationQueueConfiguration globalReservationQueueConfig;
 
   public AllocationConfiguration(Map<String, Resource> minQueueResources,
-      Map<String, Resource> maxQueueResources,
+      Map<String, Resource> maxQueueResources, Map<String, Resource> queueMaxContainerAllocationMap,
       Map<String, Integer> queueMaxApps, Map<String, Integer> userMaxApps,
       Map<String, ResourceWeights> queueWeights,
       Map<String, Float> queueMaxAMShares, int userMaxAppsDefault,
@@ -120,6 +123,7 @@ public class AllocationConfiguration extends ReservationSchedulerConfiguration {
       String defaultLabel) {
     this.minQueueResources = minQueueResources;
     this.maxQueueResources = maxQueueResources;
+    this.queueMaxContainerAllocationMap = queueMaxContainerAllocationMap;
     this.queueMaxApps = queueMaxApps;
     this.userMaxApps = userMaxApps;
     this.queueMaxAMShares = queueMaxAMShares;
@@ -168,7 +172,7 @@ public class AllocationConfiguration extends ReservationSchedulerConfiguration {
     this.labels = new HashMap<String, String>();
     this.labelPolicies = new HashMap<String, Queue.QueueLabelPolicy>();
     this.defaultQueueLabel = null;
-
+    this.queueMaxContainerAllocationMap = new HashMap<String, Resource>();
   }
   
   /**
@@ -260,7 +264,13 @@ public class AllocationConfiguration extends ReservationSchedulerConfiguration {
     Resource maxQueueResource = maxQueueResources.get(queueName);
     return (maxQueueResource == null) ? Resources.unbounded() : maxQueueResource;
   }
-  
+
+  @VisibleForTesting
+  Resource getQueueMaxContainerAllocation(String queue) {
+    Resource resource = queueMaxContainerAllocationMap.get(queue);
+    return resource == null ? Resources.unbounded() : resource;
+  }
+
   public boolean hasAccess(String queueName, QueueACL acl,
       UserGroupInformation user) {
     int lastPeriodIndex = queueName.length();

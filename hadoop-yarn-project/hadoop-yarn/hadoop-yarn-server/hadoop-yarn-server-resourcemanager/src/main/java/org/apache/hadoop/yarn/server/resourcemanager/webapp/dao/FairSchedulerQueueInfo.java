@@ -61,6 +61,7 @@ public class FairSchedulerQueueInfo {
   private ResourceInfo steadyFairResources;
   private ResourceInfo fairResources;
   private ResourceInfo clusterResources;
+  private ResourceInfo maxContainerAllocation;
   
   private String queueName;
   private String schedulingPolicy;
@@ -95,6 +96,8 @@ public class FairSchedulerQueueInfo {
     maxResources = new ResourceInfo(queue.getMaxShare());
     maxResources = new ResourceInfo(
         Resources.componentwiseMin(queue.getMaxShare(), clusterQueueResource));
+    maxContainerAllocation =
+            new ResourceInfo(scheduler.getMaximumResourceCapability(queueName));
 
     fractionMemSteadyFairShare =
         (float)steadyFairResources.getMemory() / clusterResources.getMemory();
@@ -178,7 +181,11 @@ public class FairSchedulerQueueInfo {
   public ResourceInfo getMaxResources() {
     return maxResources;
   }
-  
+
+  public ResourceInfo getMaxContainerAllocation() {
+    return maxContainerAllocation;
+  }
+
   public int getMaxApplications() {
     return maxApps;
   }

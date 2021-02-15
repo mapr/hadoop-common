@@ -21,6 +21,9 @@ package org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.metrics2.impl.MetricsCollectorImpl;
+
+import static org.apache.hadoop.yarn.conf.YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS;
+import static org.apache.hadoop.yarn.conf.YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -394,6 +397,120 @@ public class TestFairScheduler extends FairSchedulerTestBase {
       assertEquals(3414, p.getSteadyFairShare().getMemory());
       assertEquals(3414, p.getMetrics().getSteadyFairShareMB());
     }
+  }
+
+  @Test
+  public void testQueueMaximumCapacityAllocations() throws IOException {
+    conf.set(FairSchedulerConfiguration.ALLOCATION_FILE, ALLOC_FILE);
+    int RM_SCHEDULER_MAXIMUM_ALLOCATION_MB_VALUE = 10240;
+
+    int tooHighQueueAllocation = RM_SCHEDULER_MAXIMUM_ALLOCATION_MB_VALUE + 1;
+
+    PrintWriter out = new PrintWriter(new FileWriter(ALLOC_FILE));
+    out.println("<?xml version=\"1.0\"?>");
+    out.println("<allocations>");
+    out.println("  <queue name=\"queueA\">");
+    out.println(
+            "   <maxContainerAllocation>512 mb 1 vcores 1 disks</maxContainerAllocation>");
+    out.println("  </queue>");
+    out.println("  <queue name=\"queueB\">");
+    out.println("  </queue>");
+    out.println("  <queue name=\"queueC\">");
+    out.println(
+            "   <maxContainerAllocation>2048 mb 3 vcores 2 disks</maxContainerAllocation>");
+    out.println("    <queue name=\"queueD\">");
+    out.println("    </queue>");
+    out.println("  </queue>");
+    out.println("  <queue name=\"queueE\">");
+    out.println("    <maxContainerAllocation>" + tooHighQueueAllocation
+            + " mb 1 vcores 1 disks</maxContainerAllocation>");
+    out.println("  </queue>");
+    out.println("</allocations>");
+    out.close();
+
+    scheduler.init(conf);
+
+    Assert.assertEquals(1, scheduler.getMaximumResourceCapability("root.queueA")
+            .getVirtualCores());
+    Assert.assertEquals(512,
+            scheduler.getMaximumResourceCapability("root.queueA").getMemory());
+    Assert.assertEquals(1.0,
+            scheduler.getMaximumResourceCapability("root.queueA").getDisks(), 0.01);
+
+    Assert.assertEquals(DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES,
+            scheduler.getMaximumResourceCapability("root.queueB")
+                    .getVirtualCores());
+    Assert.assertEquals(RM_SCHEDULER_MAXIMUM_ALLOCATION_MB_VALUE,
+            scheduler.getMaximumResourceCapability("root.queueB").getMemory());
+    Assert.assertEquals(DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS,
+            scheduler.getMaximumResourceCapability("root.queueB").getDisks(), 0.01);
+
+    Assert.assertEquals(3, scheduler.getMaximumResourceCapability("root.queueC")
+            .getVirtualCores());
+    Assert.assertEquals(2048,
+            scheduler.getMaximumResourceCapability("root.queueC").getMemory());
+    Assert.assertEquals(2.0,
+            scheduler.getMaximumResourceCapability("root.queueC").getDisks(), 0.01);
+
+    Assert.assertEquals(3, scheduler
+            .getMaximumResourceCapability("root.queueC.queueD").getVirtualCores());
+    Assert.assertEquals(2048, scheduler
+            .getMaximumResourceCapability("root.queueC.queueD").getMemory());
+    Assert.assertEquals(2.0,
+            scheduler.getMaximumResourceCapability("root.queueC.queueD").getDisks(), 0.01);
+
+    Assert.assertEquals(RM_SCHEDULER_MAXIMUM_ALLOCATION_MB_VALUE, scheduler
+            .getMaximumResourceCapability("root.queueE").getMemory());
+  }
+
+  @Test
+  public void testNormalizationUsingQueueMaximumAllocation()
+          throws IOException {
+    int RM_SCHEDULER_MAXIMUM_ALLOCATION_MB_VALUE = 10240;
+
+    int queueMaxAllocation = 4096;
+    conf.set(FairSchedulerConfiguration.ALLOCATION_FILE, ALLOC_FILE);
+
+    PrintWriter out = new PrintWriter(new FileWriter(ALLOC_FILE));
+    out.println("<?xml version=\"1.0\"?>");
+    out.println("<allocations>");
+    out.println(" <queue name=\"queueA\">");
+    out.println("  <maxContainerAllocation>" + queueMaxAllocation
+            + " mb 1 vcores 1 disks" + "</maxContainerAllocation>");
+    out.println(" </queue>");
+    out.println(" <queue name=\"queueB\">");
+    out.println(" </queue>");
+    out.println("</allocations>");
+    out.close();
+
+    scheduler.init(conf);
+    scheduler.start();
+    scheduler.reinitialize(conf, resourceManager.getRMContext());
+
+    allocateAppAttempt("root.queueA", 1, queueMaxAllocation + 1024);
+    allocateAppAttempt("root.queueB", 2,
+            RM_SCHEDULER_MAXIMUM_ALLOCATION_MB_VALUE + 1024);
+
+    scheduler.update();
+    FSQueue queueToCheckA = scheduler.getQueueManager().getQueue("root.queueA");
+    FSQueue queueToCheckB = scheduler.getQueueManager().getQueue("root.queueB");
+
+    assertEquals(queueMaxAllocation, queueToCheckA.getDemand().getMemory());
+    assertEquals(RM_SCHEDULER_MAXIMUM_ALLOCATION_MB_VALUE,
+            queueToCheckB.getDemand().getMemory());
+  }
+
+  private void allocateAppAttempt(String queueName, int id, int memorySize) {
+    ApplicationAttemptId id11 = createAppAttemptId(id, id);
+    createMockRMApp(id11);
+    scheduler.addApplication(id11.getApplicationId(), queueName, "user1",
+            false);
+    scheduler.addApplicationAttempt(id11, false, false);
+    List<ResourceRequest> ask1 = new ArrayList<ResourceRequest>();
+    ResourceRequest request1 =
+            createResourceRequest(memorySize, ResourceRequest.ANY, 1, 1, true);
+    ask1.add(request1);
+    scheduler.allocate(id11, ask1, new ArrayList<ContainerId>(), null,null);
   }
 
   @Test

@@ -81,7 +81,7 @@ import com.google.common.collect.Maps;
  *
  */
 
-public class TestAppManager{
+public class TestAppManager extends AppManagerTestBase {
   private Logger LOG =
           LoggerFactory.getLogger(TestAppManager.class);
   private static RMAppEventType appEventType = RMAppEventType.KILL;
@@ -156,43 +156,6 @@ public class TestAppManager{
       setAppEventType(event.getType());
       System.out.println("in handle routine " + getAppEventType().toString());
     }   
-  }
-
-
-  // Extend and make the functions we want to test public
-  public class TestRMAppManager extends RMAppManager {
-
-    public TestRMAppManager(RMContext context, Configuration conf) {
-      super(context, null, null, new ApplicationACLsManager(conf), conf);
-    }
-
-    public TestRMAppManager(RMContext context,
-        ClientToAMTokenSecretManagerInRM clientToAMSecretManager,
-        YarnScheduler scheduler, ApplicationMasterService masterService,
-        ApplicationACLsManager applicationACLsManager, Configuration conf) {
-      super(context, scheduler, masterService, applicationACLsManager, conf);
-    }
-
-    public void checkAppNumCompletedLimit() {
-      super.checkAppNumCompletedLimit();
-    }
-
-    public void finishApplication(ApplicationId appId) {
-      super.finishApplication(appId);
-    }
-
-    public int getCompletedAppsListSize() {
-      return super.getCompletedAppsListSize();
-    }
-    public int getCompletedAppsInStateStore() {
-      return this.completedAppsInStateStore;
-    }
-    public void submitApplication(
-        ApplicationSubmissionContext submissionContext, String user)
-            throws YarnException {
-      super.submitApplication(submissionContext, System.currentTimeMillis(),
-        user);
-    }
   }
 
   protected void addToCompletedApps(TestRMAppManager appMonitor, RMContext rmContext) {
@@ -607,6 +570,9 @@ public class TestAppManager{
     when(scheduler.getMaximumResourceCapability()).thenReturn(
         Resources.createResource(
             YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_MB));
+    when(scheduler.getMaximumResourceCapability(any(String.class))).thenReturn(
+            Resources.createResource(
+                    YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_MB));
 
     ResourceCalculator rs = mock(ResourceCalculator.class);
     when(scheduler.getResourceCalculator()).thenReturn(rs);

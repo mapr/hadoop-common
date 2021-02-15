@@ -413,6 +413,46 @@ public class TestCapacityScheduler {
     assertEquals(CapacitySchedulerConfiguration.MAXIMUM_CAPACITY_VALUE,conf.getNonLabeledQueueMaximumCapacity(A),delta);
   }
 
+  @Test
+  public void testQueueMaximumAllocations() {
+    CapacityScheduler scheduler = new CapacityScheduler();
+    scheduler.setConf(new YarnConfiguration());
+    scheduler.setRMContext(resourceManager.getRMContext());
+    CapacitySchedulerConfiguration conf = new CapacitySchedulerConfiguration();
+
+    setupQueueConfiguration(conf);
+    conf.set(CapacitySchedulerConfiguration.getQueuePrefix(A1)
+            + CapacitySchedulerConfiguration.MAXIMUM_ALLOCATION_MB, "1024");
+    conf.set(CapacitySchedulerConfiguration.getQueuePrefix(A1)
+            + CapacitySchedulerConfiguration.MAXIMUM_ALLOCATION_VCORES, "1");
+    conf.set(CapacitySchedulerConfiguration.getQueuePrefix(A1)
+            + CapacitySchedulerConfiguration.MAXIMUM_ALLOCATION_DISKS, "1");
+
+    scheduler.init(conf);
+    scheduler.start();
+
+    Resource maxAllocationForQueue =
+            scheduler.getMaximumResourceCapability("a1");
+    Resource maxAllocation1 = scheduler.getMaximumResourceCapability("");
+    Resource maxAllocation2 = scheduler.getMaximumResourceCapability(null);
+    Resource maxAllocation3 = scheduler.getMaximumResourceCapability();
+
+    Assert.assertEquals(maxAllocation1, maxAllocation2);
+    Assert.assertEquals(maxAllocation1, maxAllocation3);
+    Assert.assertEquals(
+            YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_MB,
+            maxAllocation1.getMemory());
+    Assert.assertEquals(
+            YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES,
+            maxAllocation1.getVirtualCores());
+    Assert.assertEquals(
+            YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_DISKS,
+            maxAllocation1.getDisks(), 0.01);
+
+    Assert.assertEquals(1024, maxAllocationForQueue.getMemory());
+    Assert.assertEquals(1, maxAllocationForQueue.getVirtualCores());
+    Assert.assertEquals(1.0, maxAllocationForQueue.getDisks(), 0.01);
+  }
 
   @Test
   public void testRefreshQueues() throws Exception {

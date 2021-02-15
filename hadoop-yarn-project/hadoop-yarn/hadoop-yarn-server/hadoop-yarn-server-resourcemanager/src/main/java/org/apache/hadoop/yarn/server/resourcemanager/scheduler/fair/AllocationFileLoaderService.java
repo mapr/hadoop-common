@@ -212,6 +212,7 @@ public class AllocationFileLoaderService extends AbstractService {
     // them in our fields if we have parsed the entire allocs file successfully.
     Map<String, Resource> minQueueResources = new HashMap<String, Resource>();
     Map<String, Resource> maxQueueResources = new HashMap<String, Resource>();
+    Map<String, Resource> maxContainerAllocations = new HashMap<String, Resource>();
     Map<String, Integer> queueMaxApps = new HashMap<String, Integer>();
     Map<String, Integer> userMaxApps = new HashMap<String, Integer>();
     Map<String, Float> queueMaxAMShares = new HashMap<String, Float>();
@@ -356,7 +357,7 @@ public class AllocationFileLoaderService extends AbstractService {
         }
         parent = null;
       }
-      loadQueue(parent, element, minQueueResources, maxQueueResources,
+      loadQueue(parent, element, minQueueResources, maxQueueResources, maxContainerAllocations,
           queueMaxApps, userMaxApps, queueMaxAMShares, queueWeights,
           queuePolicies, minSharePreemptionTimeouts, fairSharePreemptionTimeouts,
           fairSharePreemptionThresholds, queueAcls, configuredQueues,
@@ -403,7 +404,7 @@ public class AllocationFileLoaderService extends AbstractService {
     }
 
     AllocationConfiguration info = new AllocationConfiguration(minQueueResources,
-        maxQueueResources, queueMaxApps, userMaxApps, queueWeights,
+        maxQueueResources, maxContainerAllocations, queueMaxApps, userMaxApps, queueWeights,
         queueMaxAMShares, userMaxAppsDefault, queueMaxAppsDefault,
         queueMaxAMShareDefault, queuePolicies, defaultSchedPolicy,
         minSharePreemptionTimeouts, fairSharePreemptionTimeouts,
@@ -421,8 +422,8 @@ public class AllocationFileLoaderService extends AbstractService {
    * Loads a queue from a queue element in the configuration file
    */
   private void loadQueue(String parentName, Element element,
-      Map<String, Resource> minQueueResources,
-      Map<String, Resource> maxQueueResources, Map<String, Integer> queueMaxApps,
+      Map<String, Resource> minQueueResources, Map<String, Resource> maxQueueResources,
+      Map<String, Resource> maxContainerAllocations, Map<String, Integer> queueMaxApps,
       Map<String, Integer> userMaxApps, Map<String, Float> queueMaxAMShares,
       Map<String, ResourceWeights> queueWeights,
       Map<String, SchedulingPolicy> queuePolicies,
@@ -464,6 +465,10 @@ public class AllocationFileLoaderService extends AbstractService {
         String text = ((Text)field.getFirstChild()).getData().trim();
         Resource val = FairSchedulerConfiguration.parseResourceConfigValue(text);
         maxQueueResources.put(queueName, val);
+      } else if ("maxContainerAllocation".equals(field.getTagName())) {
+        String text = ((Text)field.getFirstChild()).getData().trim();
+        Resource val = FairSchedulerConfiguration.parseResourceConfigValue(text);
+        maxContainerAllocations.put(queueName, val);
       } else if ("maxRunningApps".equals(field.getTagName())) {
         String text = ((Text)field.getFirstChild()).getData().trim();
         int val = Integer.parseInt(text);
@@ -518,7 +523,7 @@ public class AllocationFileLoaderService extends AbstractService {
         }
       } else if ("queue".endsWith(field.getTagName()) ||
           "pool".equals(field.getTagName())) {
-        loadQueue(queueName, field, minQueueResources, maxQueueResources,
+        loadQueue(queueName, field, minQueueResources, maxQueueResources, maxContainerAllocations,
             queueMaxApps, userMaxApps, queueMaxAMShares, queueWeights,
             queuePolicies, minSharePreemptionTimeouts,
             fairSharePreemptionTimeouts, fairSharePreemptionThresholds,
