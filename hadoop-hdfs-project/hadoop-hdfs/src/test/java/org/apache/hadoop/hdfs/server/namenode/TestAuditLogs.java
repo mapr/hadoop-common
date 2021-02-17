@@ -46,6 +46,7 @@ import org.apache.hadoop.hdfs.web.WebHdfsTestUtil;
 import org.apache.hadoop.hdfs.web.WebHdfsFileSystem;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.test.PathUtils;
 import org.apache.log4j.Appender;
 import org.apache.log4j.AsyncAppender;
@@ -60,6 +61,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.slf4j.LoggerFactory;
 
 /**
  * A JUnit test that audit logs are generated
@@ -296,9 +298,8 @@ public class TestAuditLogs {
     if (file.exists()) {
       assertTrue(file.delete());
     }
-    Logger logger = ((Log4JLogger) FSNamesystem.auditLog).getLogger();
     // disable logging while the cluster startup preps files
-    logger.setLevel(Level.OFF);
+    disableAuditLog();
     PatternLayout layout = new PatternLayout("%m%n");
     RollingFileAppender appender = new RollingFileAppender(layout, auditLogFile);
     Logger logger = FSNamesystem.AUDIT_LOG;
@@ -376,4 +377,10 @@ public class TestAuditLogs {
         reader.close();
       }
   }
+
+  private void disableAuditLog() {
+    GenericTestUtils.disableLog(LoggerFactory.getLogger(
+        FSNamesystem.class.getName() + ".audit"));
+  }
+
 }

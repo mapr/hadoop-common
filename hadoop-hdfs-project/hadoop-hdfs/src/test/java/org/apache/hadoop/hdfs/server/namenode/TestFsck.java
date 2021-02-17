@@ -263,8 +263,8 @@ public class TestFsck {
   
   private void verifyAuditLogs() throws IOException {
     // Turn off the logs
-    Logger logger = ((Log4JLogger) FSNamesystem.auditLog).getLogger();
-    logger.setLevel(Level.OFF);
+    GenericTestUtils.disableLog(LoggerFactory.getLogger(
+        FSNamesystem.class.getName() + ".audit"));
 
     BufferedReader reader = null;
     try {
