@@ -536,7 +536,7 @@ public class ConfigUtil {
       new DeprecationDelta("mapred.multi.split.locations",
         MRJobConfig.MAPREDUCE_MULTI_SPLIT_LOCATIONS),
       new DeprecationDelta("mapred.multi.split.locations.enabled",
-        MRJobConfig.MAPREDUCE_MULTI_SPLIT_LOCATIONS),
+        MRJobConfig.MAPREDUCE_MULTI_SPLIT_LOCATIONS_ENABLED),
       new DeprecationDelta("mapred.input.dir.recursive",
         FileInputFormat.INPUT_DIR_RECURSIVE)
     });
