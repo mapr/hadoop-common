@@ -1088,8 +1088,54 @@ extern  "C" {
      * @param fname   Location of Ticket and Key file
      * @return        On success returns 0 or error
      */
-
+    LIBHDFS_EXTERNAL
     int hdfsSetTicketAndKeyFile(const char *fname);
+
+    struct hdfsFileAces {
+      char *readAce;
+      char *writeAce;
+      char *executeAce;
+      char *addChildAce;
+      char *deleteChildAce;
+      char *lookupAce;
+      char *readDirAce;
+    };
+
+    /**
+     * hdfsSetAces -- sets aces for a file/directory
+     * @param fs The configured filesystem handle. 
+     * @param path the path to the file/directory
+     * @param faces the expected aces for file/directory
+     * @param isSet if set existing aces will be replaced with input aces,
+     *              otherwise existing aces merged with input aces
+     * @param isRecursive if set aces will be set recursively
+     * @return On success returns 0 or error
+     */
+    LIBHDFS_EXTERNAL 
+    int hdfsSetAces(hdfsFS fs, const char *path, hdfsFileAces *faces,
+                    int isSet, int isRecursive);
+
+    /**
+     * hdfsGetAces - gets aces of a file/directory
+     * @param fs The configured filesystem handle.
+     * @param path the path to the file/directory
+     * @param aceBuf buffuer to hold ace entries
+     * @param bufLen length of the aceBuf
+     * @param faces available aces will be filled into this
+     * @return On success returns 0 or error
+     *         error(ERANGE): aceBuf is too less to hold ace entries 
+     */
+    LIBHDFS_EXTERNAL
+    int hdfsGetAces(hdfsFS fs, const char *path, void *aceBuf,
+                    int bufLen, hdfsFileAces *faces);
+
+    /** 
+     * hdfsDeleteAces - deletes aces of a file/directory
+     * @param fs The configured filesystem handle.
+     * @param path the path to the file/directory
+     */
+    LIBHDFS_EXTERNAL
+    int hdfsDeleteAces(hdfsFS fs, const char *path); 
 
 #ifdef __cplusplus
 }
