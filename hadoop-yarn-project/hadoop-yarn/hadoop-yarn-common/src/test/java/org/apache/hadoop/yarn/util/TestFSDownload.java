@@ -709,7 +709,7 @@ public class TestFSDownload {
   @Test(timeout=10000)
   public void testResourceTimestampChangeDuringDownload()
       throws IOException, InterruptedException {
-    conf = new Configuration();
+    Configuration conf = new Configuration();
     FileContext files = FileContext.getLocalFSFileContext(conf);
     final Path basedir = files.makeQualified(
         new Path("target", TestFSDownload.class.getSimpleName()));

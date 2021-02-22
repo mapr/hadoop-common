@@ -20,7 +20,11 @@ package org.apache.hadoop.yarn.api.records;
 
 import org.apache.hadoop.classification.InterfaceAudience.Public;
 import org.apache.hadoop.classification.InterfaceStability.Stable;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.yarn.util.Records;
+
+import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
  * <p><code>URL</code> represents a serializable {@link java.net.URL}.</p>
@@ -119,4 +123,12 @@ public abstract class URL {
   @Public
   @Stable
   public abstract void setFile(String file);
+
+  @Public
+  @Stable
+  public Path toPath() throws URISyntaxException {
+    return new Path(new URI(getScheme(), getUserInfo(),
+        getHost(), getPort(), getFile(), null, null));
+  }
+
 }
