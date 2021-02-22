@@ -194,7 +194,7 @@ Returns 0 on success and -1 on error.
 cp
 ----
 
-Usage: `hadoop fs -cp [-f] [-p | -p[topax]] URI [URI ...] <dest> `
+Usage: `hadoop fs -cp [-f] [-p | -p[etopax]] URI [URI ...] <dest> `
 
 Copy files from source to destination. This command allows multiple sources as well in which case the destination must be a directory.
 
@@ -203,7 +203,7 @@ Copy files from source to destination. This command allows multiple sources as w
 Options:
 
 * The -f option will overwrite the destination if it already exists.
-* The -p option will preserve file attributes [topx] (timestamps, ownership, permission, ACL, XAttr). If -p is specified with no *arg*, then preserves timestamps, ownership, permission. If -pa is specified, then preserves permission also because ACL is a super-set of permission. Determination of whether raw namespace extended attributes are preserved is independent of the -p flag.
+* The -p option will preserve file attributes [etopx] (ACE, timestamps, ownership, permission, ACL, XAttr). If -p is specified with no *arg*, then preserves ACE, timestamps, ownership, permission. If -pa is specified, then preserves permission also because ACL is a super-set of permission. Determination of whether raw namespace extended attributes are preserved is independent of the -p flag.
 
 Example:
 

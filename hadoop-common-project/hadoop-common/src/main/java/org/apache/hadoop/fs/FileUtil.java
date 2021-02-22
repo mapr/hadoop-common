@@ -405,7 +405,7 @@ public class FileUtil {
       }
     }
     if (srcFS instanceof AbstractMapRFileSystem &&
-            dstFS instanceof AbstractMapRFileSystem && dst != null) {
+            dstFS instanceof AbstractMapRFileSystem) {
       AbstractMapRFileSystem mapRFileSystem = (AbstractMapRFileSystem) srcFS;
       mapRFileSystem.copyAce(src, dst);
     }

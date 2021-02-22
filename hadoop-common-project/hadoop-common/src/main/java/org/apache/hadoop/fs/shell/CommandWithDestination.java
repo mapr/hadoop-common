@@ -460,7 +460,7 @@ abstract class CommandWithDestination extends FsCommand {
     }
     if (shouldPreserve(FileAttribute.EXP)) {
       if (src.fs instanceof AbstractMapRFileSystem &&
-              target.fs instanceof AbstractMapRFileSystem && target != null) {
+                   target.fs instanceof AbstractMapRFileSystem) {
         AbstractMapRFileSystem mapRFileSystem = (AbstractMapRFileSystem) src.fs;
         mapRFileSystem.copyAce(src.path, target.path);
       }
