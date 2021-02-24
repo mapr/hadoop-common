@@ -359,12 +359,15 @@ public class FSDownload implements Callable<Path> {
     }
 
     if (LOG.isDebugEnabled()) {
-      LOG.debug("Starting to download " + sCopy);
+      LOG.debug("Starting to download " + sCopy, resource.getType(), resource.getPattern());
     }
 
     createDir(destDirPath, cachePerms);
     final Path dst_work = new Path(destDirPath + "_tmp");
     createDir(dst_work, cachePerms);
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("Created " + destDirPath + " and " + dst_work + " with " + cachePerms.toString());
+    }
     Path dFinal = files.makeQualified(new Path(dst_work, sCopy.getName()));
     try {
       Path dTmp = null == userUgi ? files.makeQualified(copy(sCopy, dst_work))
@@ -374,7 +377,13 @@ public class FSDownload implements Callable<Path> {
             };
           });
       unpack(new File(dTmp.toUri()), new File(dFinal.toUri()));
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("Unpacked " + dTmp.toUri() + " to " + dFinal.toUri());
+      }
       changePermissions(dFinal.getFileSystem(conf), dFinal);
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("Permission changed for  " + dFinal);
+      }
       files.rename(dst_work, destDirPath, Rename.OVERWRITE);
 
       if (LOG.isDebugEnabled()) {
@@ -383,6 +392,7 @@ public class FSDownload implements Callable<Path> {
       }
     } catch (Exception e) {
       try {
+        LOG.debug("Exception during downloading. Removing " + destDirPath);
         files.delete(destDirPath, true);
       } catch (IOException ignore) {
       }

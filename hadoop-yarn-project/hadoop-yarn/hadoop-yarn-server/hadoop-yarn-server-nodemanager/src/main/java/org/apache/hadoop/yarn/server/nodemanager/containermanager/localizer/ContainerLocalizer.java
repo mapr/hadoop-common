@@ -296,13 +296,23 @@ public class ContainerLocalizer {
       try {
         LocalizerStatus status = createStatus();
         LocalizerHeartbeatResponse response = nodemanager.heartbeat(status);
+        if (LOG.isDebugEnabled()) {
+          LOG.debug("Localizer status: " + status.toString());
+          for (ResourceLocalizationSpec localResource : response.getResourceSpecs()) {
+            LOG.debug("Pending resource :" + localResource.getResource().getResource());
+          }
+          LOG.debug("NM action for localization: " + response.getLocalizerAction().toString());
+        }
         switch (response.getLocalizerAction()) {
         case LIVE:
           List<ResourceLocalizationSpec> newRsrcs = response.getResourceSpecs();
           for (ResourceLocalizationSpec newRsrc : newRsrcs) {
             if (!pendingResources.containsKey(newRsrc.getResource())) {
-              LOG.debug("Adding resource " + newRsrc.getDestinationDirectory().getFile() +
-                  " to pending with timestamp " + newRsrc.getResource().getTimestamp());
+              if (LOG.isDebugEnabled()) {
+                LOG.debug("Adding resource " + newRsrc.getResource().getResource() +
+                    " to pending with timestamp " + newRsrc.getResource().getTimestamp() +
+                    " and destination " + newRsrc.getDestinationDirectory());
+              }
               pendingResources.put(newRsrc.getResource(), cs.submit(download(
                 new Path(newRsrc.getDestinationDirectory().getFile()),
                 newRsrc.getResource(), ugi)));
@@ -311,6 +321,7 @@ public class ContainerLocalizer {
           break;
         case DIE:
           // killall running localizations
+          LOG.debug("Killing all localization threads");
           for (Future<Path> pending : pendingResources.values()) {
             pending.cancel(true);
           }
@@ -512,6 +523,7 @@ public class ContainerLocalizer {
   }
 
   private void destroyShellProcesses(Set<Shell> shells) {
+    LOG.debug("Destroying all shells");
     for (Shell shell : shells) {
       if(localizingThreads.contains(shell.getWaitingThread())) {
         shell.getProcess().destroy();
