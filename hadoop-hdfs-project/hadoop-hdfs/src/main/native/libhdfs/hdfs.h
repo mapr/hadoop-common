@@ -1091,7 +1091,7 @@ extern  "C" {
     LIBHDFS_EXTERNAL
     int hdfsSetTicketAndKeyFile(const char *fname);
 
-    struct hdfsFileAces {
+    typedef struct {
       char *readAce;
       char *writeAce;
       char *executeAce;
@@ -1099,7 +1099,7 @@ extern  "C" {
       char *deleteChildAce;
       char *lookupAce;
       char *readDirAce;
-    };
+    } hdfsFileAces;
 
     /**
      * hdfsSetAces -- sets aces for a file/directory
