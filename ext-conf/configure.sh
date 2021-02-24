@@ -207,6 +207,7 @@ function ConfigureYarnSiteXml() {
 }
 
 function ConfigureHS() {
+    HS_IP=$1
     # Default HS_IP to RM_IP if not defined and if it's the first time running this section
     # It will only set HS_IP to RM_IP IF __HS_IP__ is found in mapred-site.xml
     if [ -z "${HS_IP}" -a $(grep "__HS_IP__" "${HADOOP_HOME}/etc/hadoop/mapred-site.xml" | wc -l) -ne 0 ]; then
@@ -290,10 +291,6 @@ function ConfigureYarnServices() {
         maprHA=1
     fi
 
-    if [ ! -z "$2" ]; then
-        HS_IP="$2"
-    fi
-
     if [ $maprHA -eq 1 ]; then
         logInfo "No RM addresses were provided. Will configure MapR HA for Resource Manager.."
         ConfigureYarnSiteXml org.apache.hadoop.yarn.configuration.YarnSiteMapRHAXmlBuilder
@@ -348,8 +345,6 @@ function ConfigureYarnServices() {
     if [ $yarnSiteChange -eq 1 ] && ${MAPR_HOME}/initscripts/mapr-warden status >/dev/null 2>&1; then
         CreateRMRestartFile
     fi
-
-    ConfigureHS
 }
 
 function ConfigureTimeLineServer() {
@@ -920,10 +915,13 @@ if [ "$clientNode" != "1" ]; then
 fi
 
 if [ ! -z "$rm_ip" ]; then
-    ConfigureYarnServices "$rm_ip" "$hs_ip"
+    ConfigureYarnServices "$rm_ip"
 elif [ ! -f ${HADOOP_HOME}/etc/hadoop/yarn-site.xml ] || [ "$isOnlyRoles" != "1" ]; then
     # No -RM provided and no -R. Configure MapR-HA for RM.
-    ConfigureYarnServices "" "$hs_ip"
+    ConfigureYarnServices ""
+fi
+if [ ! -z "$hs_ip" ]; then
+    ConfigureHS "$hs_ip"
 fi
 if [ ! -z "$tl_ip" ]; then
     ConfigureTimeLineServer "$tl_ip"
