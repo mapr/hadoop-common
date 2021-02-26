@@ -277,7 +277,7 @@ public class SecureIOUtils {
         final String adminsGroupString = "Administrators";
         success = (owner.equals(adminsGroupString)
             && ugi.getGroups().contains(adminsGroupString) ||
-            checkIfUserYarnAdmin(expectedOwner, ugi.getGroupNames());
+            checkIfUserYarnAdmin(expectedOwner, ugi.getGroupNames()));
       } else if (expectedGroup != null &&
               !expectedGroup.equals(group)) {
         if (!checkIfUserYarnAdmin(expectedOwner, ugi.getGroupNames())) {
