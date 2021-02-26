@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.hadoop.hdfs.qjournal.client.QuorumCall;
+import org.apache.hadoop.util.FakeTimer;
 import org.junit.Test;
 
 import com.google.common.base.Joiner;
