@@ -49,4 +49,14 @@ public final class Time {
 
     return System.nanoTime() / NANOSECONDS_PER_MILLISECOND;
   }
+
+  /**
+   * Same as {@link #monotonicNow()} but returns its result in nanoseconds.
+   * Note that this is subject to the same resolution constraints as
+   * {@link System#nanoTime()}.
+   * @return a monotonic clock that counts in nanoseconds.
+   */
+  public static long monotonicNowNanos() {
+    return System.nanoTime();
+  }
 }

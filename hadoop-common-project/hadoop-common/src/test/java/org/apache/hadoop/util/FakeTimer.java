@@ -21,6 +21,8 @@ package org.apache.hadoop.util;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * FakeTimer can be used for test purposes to control the return values
  * from {{@link Timer}}.
@@ -29,10 +31,12 @@ import org.apache.hadoop.classification.InterfaceStability;
 @InterfaceStability.Unstable
 public class FakeTimer extends Timer {
   private long nowMillis;
+  private long nowNanos;
 
   /** Constructs a FakeTimer with a non-zero value */
   public FakeTimer() {
     nowMillis = 1000;  // Initialize with a non-trivial value.
+    nowNanos = TimeUnit.MILLISECONDS.toNanos(1000);
   }
 
   @Override
@@ -43,6 +47,11 @@ public class FakeTimer extends Timer {
   @Override
   public long monotonicNow() {
     return nowMillis;
+  }
+
+  @Override
+  public long monotonicNowNanos() {
+    return nowNanos;
   }
 
   /** Increases the time by milliseconds */

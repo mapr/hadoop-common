@@ -66,4 +66,35 @@ public class TestQuorumCall {
       // expected
     }
   }
+
+
+  @Test(timeout = 10000)
+  public void testQuorumSucceedsWithLongPause() throws Exception {
+    final Map<String, SettableFuture<String>> futures = ImmutableMap.of(
+        "f1", SettableFuture.<String>create());
+
+    FakeTimer timer = new FakeTimer() {
+      private int callCount = 0;
+
+      @Override
+      public long monotonicNowNanos() {
+        callCount++;
+        if (callCount == 1) {
+          long old = super.monotonicNowNanos();
+          advance(1000000);
+          return old;
+        } else if (callCount == 10) {
+          futures.get("f1").set("first future");
+          return super.monotonicNowNanos();
+        } else {
+          return super.monotonicNowNanos();
+        }
+      }
+    };
+
+    QuorumCall<String, String> q = QuorumCall.create(futures, timer);
+    assertEquals(0, q.countResponses());
+
+    q.waitFor(1, 0, 0, 3000, "test"); // wait for 1 response
+  }
 }
