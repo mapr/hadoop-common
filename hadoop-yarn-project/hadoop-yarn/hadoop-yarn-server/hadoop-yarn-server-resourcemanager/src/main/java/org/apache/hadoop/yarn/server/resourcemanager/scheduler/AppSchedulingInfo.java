@@ -318,14 +318,16 @@ public class AppSchedulingInfo {
       return false;
     }
     final Priority priority;
-    if ( priorities.contains(RMAppAttemptImpl.AM_CONTAINER_PRIORITY)) {
-      priority = RMAppAttemptImpl.AM_CONTAINER_PRIORITY;
-    } else {
-      if ( priorities.iterator().hasNext() ) {
-        priority = priorities.iterator().next();
+    synchronized (this) {
+      if (priorities.contains(RMAppAttemptImpl.AM_CONTAINER_PRIORITY)) {
+        priority = RMAppAttemptImpl.AM_CONTAINER_PRIORITY;
       } else {
-        LOG.trace("priorities is empty. Marking resource as not blacklisted");
-        return false;
+        if (priorities.iterator().hasNext()) {
+          priority = priorities.iterator().next();
+        } else {
+          LOG.trace("priorities is empty. Marking resource as not blacklisted");
+          return false;
+        }
       }
     }
     // Get ResourceRequest for AppMaster as it will determine whole App label
