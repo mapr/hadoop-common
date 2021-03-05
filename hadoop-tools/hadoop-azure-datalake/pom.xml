@@ -30,7 +30,7 @@
   </description>
   <packaging>jar</packaging>
   <properties>
-    <okHttpVersion>2.4.0</okHttpVersion>
+    <okHttpVersion>2.7.5</okHttpVersion>
     <minimalJsonVersion>0.9.1</minimalJsonVersion>
     <file.encoding>UTF-8</file.encoding>
     <downloadSources>true</downloadSources>
@@ -131,7 +131,7 @@
     <dependency>
       <groupId>com.squareup.okhttp</groupId>
       <artifactId>okhttp</artifactId>
-      <version>2.4.0</version>
+      <version>${okHttpVersion}</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -153,7 +153,7 @@
     <dependency>
       <groupId>com.squareup.okhttp</groupId>
       <artifactId>mockwebserver</artifactId>
-      <version>2.4.0</version>
+      <version>${okHttpVersion}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
