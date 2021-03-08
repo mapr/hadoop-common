@@ -60,6 +60,8 @@ function createSymlinks() {
   ln -sf ${COMMONS_CONFIG_ABSOLUTE} __PREFIX__/lib/${COMMONS_CONFIG_BASENAME}
 
   ls __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/hadoop-common-__VERSION_3DIGIT__*.jar | grep -v "tests" | xargs -I {} ln -sf {} __PREFIX__/lib/.
+  rm __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/slf4j-log4j12-* > /dev/null 2>&1
+  ln -sf __PREFIX__/lib/slf4j-log4j12-*  __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
 
 }
 
