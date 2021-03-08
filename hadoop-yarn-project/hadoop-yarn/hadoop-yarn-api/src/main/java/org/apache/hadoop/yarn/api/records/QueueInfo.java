@@ -54,7 +54,8 @@ public abstract class QueueInfo {
   
   @Private
   @Unstable
-  public static QueueInfo newInstance(String queueName, float capacity,
+  public static QueueInfo newInstance(String queueName,
+      String queuePath, float capacity,
       float maximumCapacity, float currentCapacity,
       List<QueueInfo> childQueues, List<ApplicationReport> applications,
       QueueState queueState, Set<String> accessibleNodeLabels,
@@ -62,6 +63,7 @@ public abstract class QueueInfo {
       boolean preemptionDisabled) {
     QueueInfo queueInfo = Records.newRecord(QueueInfo.class);
     queueInfo.setQueueName(queueName);
+    queueInfo.setQueuePath(queuePath);
     queueInfo.setCapacity(capacity);
     queueInfo.setMaximumCapacity(maximumCapacity);
     queueInfo.setCurrentCapacity(currentCapacity);
@@ -77,14 +79,15 @@ public abstract class QueueInfo {
 
   @Private
   @Unstable
-  public static QueueInfo newInstance(String queueName, float capacity,
+  public static QueueInfo newInstance(String queueName,
+      String queuePath, float capacity,
       float maximumCapacity, float currentCapacity,
       List<QueueInfo> childQueues, List<ApplicationReport> applications,
       QueueState queueState, Set<String> accessibleNodeLabels,
       String defaultNodeLabelExpression, QueueStatistics queueStatistics,
       boolean preemptionDisabled,
       Map<String, QueueConfigurations> queueConfigurations) {
-    QueueInfo queueInfo = QueueInfo.newInstance(queueName, capacity,
+    QueueInfo queueInfo = QueueInfo.newInstance(queueName, queuePath, capacity,
         maximumCapacity, currentCapacity,
         childQueues, applications,
         queueState, accessibleNodeLabels,
@@ -96,7 +99,8 @@ public abstract class QueueInfo {
 
   @Private
   @Unstable
-  public static QueueInfo newInstance(String queueName, float capacity,
+  public static QueueInfo newInstance(String queueName,
+      String queuePath, float capacity,
       float maximumCapacity, float currentCapacity,
       List<QueueInfo> childQueues, List<ApplicationReport> applications,
       QueueState queueState, Set<String> accessibleNodeLabels,
@@ -104,7 +108,7 @@ public abstract class QueueInfo {
       boolean preemptionDisabled,
       Map<String, QueueConfigurations> queueConfigurations,
       boolean intraQueuePreemptionDisabled) {
-    QueueInfo queueInfo = QueueInfo.newInstance(queueName, capacity,
+    QueueInfo queueInfo = QueueInfo.newInstance(queueName, queuePath, capacity,
         maximumCapacity, currentCapacity,
         childQueues, applications,
         queueState, accessibleNodeLabels,
@@ -125,6 +129,18 @@ public abstract class QueueInfo {
   @Private
   @Unstable
   public abstract void setQueueName(String queueName);
+
+  /**
+   * Get the <em>path</em> of the queue.
+   * @return <em>path</em> of the queue
+   */
+  @Public
+  @Stable
+  public abstract String getQueuePath();
+
+  @Private
+  @Unstable
+  public abstract void setQueuePath(String queuePath);
   
   /**
    * Get the <em>configured capacity</em> of the queue.
