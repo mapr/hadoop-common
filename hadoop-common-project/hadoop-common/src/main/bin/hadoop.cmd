@@ -168,7 +168,7 @@ if not "%HADOOP_CLASSPATH%" == "" (
   )
   @rem End: MapR specific section
   
-  set corecommands=fs version jar checknative distcp daemonlog archive classpath credential key
+  set corecommands=fs mfs conf version jar checknative distcp daemonlog archive classpath credential key
   for %%i in ( %corecommands% ) do (
     if %hadoop-command% == %%i set corecommand=true  
   )
