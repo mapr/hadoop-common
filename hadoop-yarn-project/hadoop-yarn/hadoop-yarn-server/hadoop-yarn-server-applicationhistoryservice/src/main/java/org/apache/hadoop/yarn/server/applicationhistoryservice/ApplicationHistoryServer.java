@@ -20,10 +20,12 @@ package org.apache.hadoop.yarn.server.applicationhistoryservice;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.util.ArrayList;
 
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.http.HttpServer2;
 import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 import org.apache.hadoop.metrics2.source.JvmMetrics;
 import org.apache.hadoop.security.AuthenticationFilterInitializer;
@@ -73,6 +75,7 @@ public class ApplicationHistoryServer extends CompositeService {
   private TimelineDelegationTokenSecretManagerService secretManagerService;
   private TimelineDataManager timelineDataManager;
   private WebApp webApp;
+  private HttpServer2 statusServer;
 
   public ApplicationHistoryServer() {
     super(ApplicationHistoryServer.class.getName());
@@ -109,12 +112,16 @@ public class ApplicationHistoryServer extends CompositeService {
     }
     super.serviceStart();
     startWebApp();
+    startStatusServer();
   }
 
   @Override
   protected void serviceStop() throws Exception {
     if (webApp != null) {
       webApp.stop();
+    }
+    if(statusServer != null) {
+      statusServer.stop();
     }
 
     DefaultMetricsSystem.shutdown();
@@ -278,6 +285,19 @@ public class ApplicationHistoryServer extends CompositeService {
       LOG.error(msg, e);
       throw new YarnRuntimeException(msg, e);
     }
+  }
+
+  private void startStatusServer() throws Exception {
+    Configuration conf = new Configuration();
+    String httpScheme = WebAppUtils.HTTP_PREFIX;
+    String bindAddress = conf.get(YarnConfiguration.TIMELINE_SERVICE_STATUS_ADDRESS, YarnConfiguration.DEFAULT_TIMELINE_SERVICE_STATUS_ADDRESS);
+    HttpServer2.Builder builder = new HttpServer2.Builder();
+    statusServer = builder.setName("applicationhistory-status")
+            .setConf(conf)
+            .addEndpoint(URI.create(httpScheme + bindAddress))
+            .build();
+    statusServer.addServlet("service_status", "/status", ApplicationHistoryStatusServlet.class);
+    statusServer.start();
   }
 
   private void doSecureLogin(Configuration conf) throws IOException {

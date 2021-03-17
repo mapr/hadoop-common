@@ -150,7 +150,13 @@ public class JHAdminConfig {
       + "http.policy";
   public static String DEFAULT_MR_HS_HTTP_POLICY =
           HttpConfig.Policy.HTTP_ONLY.name();
-  
+
+  /** History server status address.**/
+  public static final String MR_HISTORY_STATUS_ADDRESS = MR_HISTORY_PREFIX + "status.address";
+  public static final int DEFAULT_MR_HISTORY_STATUS_PORT = 29890;
+  public static final String DEFAULT_MR_HISTORY_STATUS_ADDRESS = "localhost:" +
+          DEFAULT_MR_HISTORY_STATUS_PORT;
+
   /**The address the history server webapp is on.*/
   public static final String MR_HISTORY_WEBAPP_ADDRESS =
     MR_HISTORY_PREFIX + "webapp.address";

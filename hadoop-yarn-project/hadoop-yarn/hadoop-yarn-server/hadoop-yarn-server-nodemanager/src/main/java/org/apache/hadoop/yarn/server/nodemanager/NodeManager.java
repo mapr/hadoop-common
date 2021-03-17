@@ -19,12 +19,16 @@
 package org.apache.hadoop.yarn.server.nodemanager;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.apache.hadoop.http.HttpServer2;
+import org.apache.hadoop.yarn.webapp.util.WebAppUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,7 +94,8 @@ public class NodeManager extends CompositeService
   private NodeStatusUpdater nodeStatusUpdater;
   private static CompositeServiceShutdownHook nodeManagerShutdownHook;
   private NMStateStoreService nmStore = null;
-  
+  private HttpServer2 statusServer;
+
   private AtomicBoolean isStopping = new AtomicBoolean(false);
   private boolean rmWorkPreservingRestartEnabled;
   private boolean shouldExitOnShutdownEvent = false;
@@ -138,6 +143,19 @@ public class NodeManager extends CompositeService
   protected void doSecureLogin() throws IOException {
     SecurityUtil.login(getConfig(), YarnConfiguration.NM_KEYTAB,
         YarnConfiguration.NM_PRINCIPAL);
+  }
+
+  private void startStatusServer() throws Exception {
+    Configuration conf = new Configuration();
+    String httpScheme = WebAppUtils.HTTP_PREFIX;
+    String bindAddress = conf.get(YarnConfiguration.NM_STATUS_ADDRESS, YarnConfiguration.DEFAULT_NM_STATUS_ADDRESS);
+    HttpServer2.Builder builder = new HttpServer2.Builder();
+    statusServer = builder.setName("nodemanager-status")
+            .setConf(conf)
+            .addEndpoint(URI.create(httpScheme + bindAddress))
+            .build();
+    statusServer.addServlet("service_status", "/status", NodeManagerStatusServlet.class);
+    statusServer.start();
   }
 
   private void initAndStartRecoveryStore(Configuration conf)
@@ -268,6 +286,7 @@ public class NodeManager extends CompositeService
       throw new YarnRuntimeException("Failed NodeManager login", e);
     }
     super.serviceStart();
+    startStatusServer();
   }
 
   @Override
@@ -278,6 +297,9 @@ public class NodeManager extends CompositeService
     super.serviceStop();
     stopRecoveryStore();
     DefaultMetricsSystem.shutdown();
+    if(statusServer != null) {
+      statusServer.stop();
+    }
   }
 
   public String getName() {

@@ -216,12 +216,16 @@
           <excludes>
             <exclude>src/main/resources/webapps/mapreduce/.keep</exclude>
             <exclude>src/main/resources/webapps/jobhistory/.keep</exclude>
+            <exclude>src/main/resources/webapps/jobhistory-status/.keep</exclude>
             <exclude>src/main/resources/webapps/yarn/.keep</exclude>
             <exclude>src/main/resources/webapps/applicationhistory/.keep</exclude>
+            <exclude>src/main/resources/webapps/applicationhistory-status/.keep</exclude>
             <exclude>src/main/resources/webapps/cluster/.keep</exclude>
             <exclude>src/main/resources/webapps/test/.keep</exclude>
             <exclude>src/main/resources/webapps/proxy/.keep</exclude>
             <exclude>src/main/resources/webapps/node/.keep</exclude>
+            <exclude>src/main/resources/webapps/nodemanager-status/.keep</exclude>
+            <exclude>src/main/resources/webapps/resourcemanager-status/.keep</exclude>
             <exclude>src/main/resources/webapps/static/dt-1.9.4/css/jui-dt.css</exclude>
             <exclude>src/main/resources/webapps/static/dt-1.9.4/css/demo_table.css</exclude>
             <exclude>src/main/resources/webapps/static/dt-1.9.4/images/Sorting icons.psd</exclude>

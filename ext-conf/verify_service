@@ -1,0 +1,251 @@
+#!/bin/bash
+
+MAPR_HOME=${MAPR_HOME:-/opt/mapr}
+ROLES_DIR="$MAPR_HOME/roles"
+HADOOP_HOME="${HADOOP_HOME:-__INSTALL__}"
+JHS_PID_FILE="$MAPR_HOME"/pid/mapred-mapr-historyserver.pid
+NM_PID_FILE="$MAPR_HOME"/pid/yarn-mapr-nodemanager.pid
+RM_PID_FILE="$MAPR_HOME"/pid/yarn-mapr-resourcemanager.pid
+TL_PID_FILE="$MAPR_HOME"/pid/yarn-mapr-timelineserver.pid
+JHS_STATUS_PORT=29890
+NM_STATUS_PORT=18044
+RM_STATUS_PORT=18090
+TL_STATUS_PORT=18190
+HOSTNAME="localhost"
+EXIT_SUCCESS=0
+EXIT_NOT_RUNNING=1
+EXIT_RUNNING_NOT_RESPONDING=2
+
+RESOURCEMANAGER="resourcemanager"
+NODEMANAGER="nodemanager"
+TIMELINESERVER="timelineserver"
+HISTORYSERVER="historyserver"
+
+RM_HA_ZERO="zero"
+RM_HA_AUTO="auto"
+RM_HA_DISABLED="noHA"
+
+timestamp() {
+  date +"[%Y-%m-%d %H:%M:%S]"
+}
+
+LOG_FILE="$HADOOP_HOME"/logs/verify_service.log
+
+logInfo() {
+  message="$1"
+  echo "$(timestamp) [INFO] $message" >>"$LOG_FILE"
+}
+
+logError() {
+  message="$1"
+  echo "$(timestamp) [ERROR] $message" >>"$LOG_FILE"
+}
+
+has_service() {
+  serviceName="$1"
+  if [ -f "$ROLES_DIR/$serviceName" ]; then
+    echo 0
+  else
+    echo 1
+  fi
+}
+
+is_running() {
+  SERVICE="$1"
+  PID_FILE="$2"
+
+  if [ -f "$PID_FILE" ]; then
+    if [ -s "$PID_FILE" ]; then
+      kill -0 $(cat "$PID_FILE") >/dev/null 2>&1
+      if [ $? -gt 0 ]; then
+        logError "PID file for service $SERVICE found but no matching process was found"
+        echo $EXIT_NOT_RUNNING
+      else
+        echo $EXIT_SUCCESS
+      fi
+    else
+      logError "PID file for service $SERVICE is empty"
+      echo $EXIT_NOT_RUNNING
+    fi
+  else
+    logError "PID file for service $SERVICE does not exist"
+    echo $EXIT_NOT_RUNNING
+  fi
+}
+
+is_responding() {
+  PORT="$1"
+  result=$(echo $(curl -s "http://$HOSTNAME:$PORT/status"))
+  if [ "x$result" != "x0" ]; then
+    echo $EXIT_RUNNING_NOT_RESPONDING
+  else
+    echo $EXIT_SUCCESS
+  fi
+}
+
+is_service_status_ok() {
+  SERVICE="$1"
+  PID_FILE="$2"
+  PORT="$3"
+  logInfo "Starting $SERVICE verification at $(timestamp)"
+  is_service_running=$(is_running $SERVICE $PID_FILE)
+  if [ $is_service_running -gt 0 ]; then
+    echo $EXIT_NOT_RUNNING
+  else
+    logInfo "Checking service $SERVICE is responding"
+    is_service_responding=$(is_responding $PORT)
+    if [ $is_service_responding -gt 0 ]; then
+      logError "$SERVICE service is not responding"
+      echo $EXIT_RUNNING_NOT_RESPONDING
+    else
+      logInfo "$SERVICE is responding"
+      echo $EXIT_SUCCESS
+    fi
+  fi
+}
+
+max_integer() {
+  max=0
+  for i in "$@"; do
+    if (($i > $max)); then max=$i; fi
+  done
+  echo $max
+}
+
+get_RM_HA_type() {
+  zero_config_enabled=$(hadoop conf | grep yarn.resourcemanager.ha.custom-ha-enabled | grep -o "value.*value" | cut -c 7- | rev | cut -c 8- | rev)
+  automatic_failover_enabled=$(hadoop conf | grep yarn.resourcemanager.ha.rm-ids | grep -o "value.*value" | cut -c 7- | rev | cut -c 8- | rev)
+  if [ "X$zero_config_enabled" = "Xtrue" ]; then
+    echo $RM_HA_ZERO
+  elif [ "X$automatic_failover_enabled" != "X" ]; then
+    echo $RM_HA_AUTO
+  else
+    logInfo "RM is configured without HA"
+    echo $RM_HA_DISABLED
+  fi
+}
+
+check_RM_HA_zero_status() {
+  RM_HA_STATUS=$EXIT_NOT_RUNNING
+
+  rm_node_list=($(maprcli node list -columns hostname,svc | grep resourcemanager | awk '{print $1}'))
+  for var in "${rm_node_list[@]}"; do
+    rm_node_status=$(maprcli service list -node $var -json | grep -A1 resourcemanager | grep -o "state.*," | cut -c 8- | rev | cut -c 2- | rev)
+    if [ "x$rm_node_status" = "x2" ]; then
+      RM_HA_STATUS=$EXIT_SUCCESS
+    fi
+  done
+  echo $RM_HA_STATUS
+}
+
+check_RM_HA_auto_status() {
+  RM_HA_STATUS=$EXIT_NOT_RUNNING
+
+  rm_id_list=$(hadoop conf | grep yarn.resourcemanager.ha.rm-ids | grep -o "value.*value" | cut -c 7- | rev | cut -c 8- | rev)
+  IFS=',' read -r -a rm_id_array <<<"$rm_id_list"
+  for rmID in "${rm_id_array[@]}"; do
+    rm_node_status=$(yarn rmadmin -getServiceState $rmID)
+    if [ "X$rm_node_status" = "Xactive" ]; then
+      RM_HA_STATUS=$EXIT_SUCCESS
+    fi
+  done
+  echo $RM_HA_STATUS
+}
+
+check_RM_HA_state() {
+  RM_HA_TYPE=$(get_RM_HA_type)
+  isSecure=$(head -1 ${MAPR_HOME}/conf/mapr-clusters.conf | grep -o 'secure=\w*' | cut -d= -f2)
+  if [ "$isSecure" = "true" ] && [ -f "${MAPR_HOME}/conf/mapruserticket" ]; then
+    export MAPR_TICKETFILE_LOCATION="${MAPR_HOME}/conf/mapruserticket"
+  fi
+  if [ "$RM_HA_TYPE" = "$RM_HA_ZERO" ]; then
+    echo $(check_RM_HA_zero_status)
+  elif [ "$RM_HA_TYPE" = "$RM_HA_AUTO" ]; then
+    echo $(check_RM_HA_auto_status)
+  else
+    echo $EXIT_NOT_RUNNING
+  fi
+}
+
+check_all_services() {
+  RM_STATUS=$EXIT_SUCCESS
+  NM_STATUS=$EXIT_SUCCESS
+  TL_STATUS=$EXIT_SUCCESS
+  JHS_STATUS=$EXIT_SUCCESS
+
+  IS_RM_INSTALLED=$(has_service $RESOURCEMANAGER)
+  IS_NM_INSTALLED=$(has_service $NODEMANAGER)
+  IS_TL_INSTALLED=$(has_service $TIMELINESERVER)
+  IS_JHS_INSTALLED=$(has_service $HISTORYSERVER)
+
+  if [ $IS_RM_INSTALLED -eq 0 ]; then
+    RM_HA_TYPE=$(get_RM_HA_type)
+    RM_STATUS=$(is_service_status_ok $RESOURCEMANAGER $RM_PID_FILE $RM_STATUS_PORT)
+    if [ $RM_STATUS -gt 0 ] && [ "$RM_HA_TYPE" = "$RM_HA_ZERO" ]; then
+      RM_HA_STATE=$(check_RM_HA_state)
+      RM_STATUS=$RM_HA_STATE
+    fi
+  fi
+  if [ $IS_NM_INSTALLED -eq 0 ]; then
+    NM_STATUS=$(is_service_status_ok $NODEMANAGER $NM_PID_FILE $NM_STATUS_PORT)
+  fi
+  if [ $IS_TL_INSTALLED -eq 0 ]; then
+    TL_STATUS=$(is_service_status_ok $TIMELINESERVER $TL_PID_FILE $TL_STATUS_PORT)
+  fi
+  if [ $IS_JHS_INSTALLED -eq 0 ]; then
+    JHS_STATUS=$(is_service_status_ok $HISTORYSERVER $JHS_PID_FILE $JHS_STATUS_PORT)
+  fi
+
+  if [ $RM_STATUS -eq $EXIT_SUCCESS ] && [ $NM_STATUS -eq $EXIT_SUCCESS ] && [ $TL_STATUS -eq $EXIT_SUCCESS ] && [ $JHS_STATUS -eq $EXIT_SUCCESS ]; then
+    echo "$EXIT_SUCCESS"
+  else
+    echo $(max_integer $RM_STATUS $NM_STATUS $TL_STATUS $JHS_STATUS)
+  fi
+}
+
+check_single_service() {
+  SERVICE="$1"
+  PID_FILE="$2"
+  PORT="$3"
+
+  has_service_installed=$(has_service $SERVICE)
+  if [ $has_service_installed -gt 0 ]; then
+    logError "$SERVICE is not installed"
+    echo $EXIT_NOT_RUNNING
+  else
+    SERVICE_STATUS=$(is_service_status_ok $SERVICE $PID_FILE $PORT)
+    if [ "$SERVICE" = "$RESOURCEMANAGER" ]; then
+      RM_HA_TYPE=$(get_RM_HA_type)
+      if [ $SERVICE_STATUS -gt 0 ] && [ "$RM_HA_TYPE" = "$RM_HA_ZERO" ]; then
+        RM_HA_STATE=$(check_RM_HA_state)
+        SERVICE_STATUS=$RM_HA_STATE
+      fi
+    fi
+    echo $SERVICE_STATUS
+  fi
+}
+
+main() {
+  case "$1" in
+  resourcemanager)
+    return $(check_single_service $RESOURCEMANAGER $RM_PID_FILE $RM_STATUS_PORT)
+    ;;
+  nodemanager)
+    return $(check_single_service $NODEMANAGER $NM_PID_FILE $NM_STATUS_PORT)
+    ;;
+  timelineserver)
+    return $(check_single_service $TIMELINESERVER $TL_PID_FILE $TL_STATUS_PORT)
+    ;;
+  historyserver)
+    return $(check_single_service $HISTORYSERVER $JHS_PID_FILE $JHS_STATUS_PORT)
+    ;;
+  RMHA)
+    return $(check_RM_HA_state)
+    ;;
+  *)
+    return $(check_all_services)
+    ;;
+  esac
+}
+
+main $1

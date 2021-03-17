@@ -19,6 +19,7 @@
 package org.apache.hadoop.yarn.server.resourcemanager;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.apache.hadoop.http.HttpServer2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
@@ -105,6 +106,7 @@ import org.slf4j.MarkerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.List;
@@ -159,6 +161,7 @@ public class ResourceManager extends CompositeService implements Recoverable {
   protected ApplicationACLsManager applicationACLsManager;
   protected QueueACLsManager queueACLsManager;
   private WebApp webApp;
+  private HttpServer2 statusServer;
   private AppReportFetcher fetcher = null;
   protected ResourceTrackerService resourceTracker;
 
@@ -1124,6 +1127,7 @@ public class ResourceManager extends CompositeService implements Recoverable {
       WebAppUtils.setRMWebAppPort(conf, port);
     }
     super.serviceStart();
+    startStatusServer();
   }
   
   protected void doSecureLogin() throws IOException {
@@ -1137,6 +1141,19 @@ public class ResourceManager extends CompositeService implements Recoverable {
     }
   }
 
+  private void startStatusServer() throws Exception {
+    Configuration conf = new Configuration();
+    String httpScheme = WebAppUtils.HTTP_PREFIX;
+    String bindAddress = conf.get(YarnConfiguration.RM_STATUS_ADDRESS, YarnConfiguration.DEFAULT_RM_STATUS_ADDRESS);
+    HttpServer2.Builder builder = new HttpServer2.Builder();
+    statusServer = builder.setName("resourcemanager-status")
+            .setConf(conf)
+            .addEndpoint(URI.create(httpScheme + bindAddress))
+            .build();
+    statusServer.addServlet("service_status", "/status", ResourceManagerStatusServlet.class);
+    statusServer.start();
+  }
+
   @Override
   protected void serviceStop() throws Exception {
     if (webApp != null) {
@@ -1147,6 +1164,9 @@ public class ResourceManager extends CompositeService implements Recoverable {
     }
     if (configurationProvider != null) {
       configurationProvider.close();
+    }
+    if(statusServer != null) {
+      statusServer.stop();
     }
     super.serviceStop();
     transitionToStandby(false);

@@ -239,6 +239,12 @@ public class YarnConfiguration extends Configuration {
   public static final String RM_SCHEDULER_MONITOR_POLICIES =
     RM_PREFIX + "scheduler.monitor.policies";
 
+  /** RM status address.**/
+  public static final String RM_STATUS_ADDRESS = RM_PREFIX + "status.address";
+  public static final int DEFAULT_RM_STATUS_PORT = 18090;
+  public static final String DEFAULT_RM_STATUS_ADDRESS = "localhost:" +
+          DEFAULT_RM_STATUS_PORT;
+
   /** The address of the RM web application.*/
   public static final String RM_WEBAPP_ADDRESS = RM_PREFIX + "webapp.address";
   public static final String RM_WEBAPP_IS_ALL_IFACES = RM_PREFIX + "webapp.all-ifaces";
@@ -1082,6 +1088,12 @@ public class YarnConfiguration extends Configuration {
   public static final String NM_NETWORK_RESOURCE_OUTBOUND_BANDWIDTH_YARN_MBIT =
       NM_NETWORK_RESOURCE_PREFIX + "outbound-bandwidth-yarn-mbit";
 
+  /** NM status address.**/
+  public static final String NM_STATUS_ADDRESS = NM_PREFIX + "status.address";
+  public static final int DEFAULT_NM_STATUS_PORT = 18044;
+  public static final String DEFAULT_NM_STATUS_ADDRESS = "localhost:" +
+          DEFAULT_NM_STATUS_PORT;
+
   /** NM Webapp address.**/
   public static final String NM_WEBAPP_ADDRESS = NM_PREFIX + "webapp.address";
   public static final int DEFAULT_NM_WEBAPP_PORT = 8042;
@@ -1692,7 +1704,12 @@ public class YarnConfiguration extends Configuration {
   public static final String TIMELINE_SERVICE_HANDLER_THREAD_COUNT =
       TIMELINE_SERVICE_PREFIX + "handler-thread-count";
   public static final int DEFAULT_TIMELINE_SERVICE_CLIENT_THREAD_COUNT = 10;
-  
+
+  /** Timeline service status address.**/
+  public static final String TIMELINE_SERVICE_STATUS_ADDRESS = TIMELINE_SERVICE_PREFIX + "status.address";
+  public static final int DEFAULT_TIMELINE_SERVICE_STATUS_PORT = 18190;
+  public static final String DEFAULT_TIMELINE_SERVICE_STATUS_ADDRESS = "localhost:" +
+          DEFAULT_TIMELINE_SERVICE_STATUS_PORT;
 
   /** The address of the timeline service web application.*/
   public static final String TIMELINE_SERVICE_WEBAPP_ADDRESS =

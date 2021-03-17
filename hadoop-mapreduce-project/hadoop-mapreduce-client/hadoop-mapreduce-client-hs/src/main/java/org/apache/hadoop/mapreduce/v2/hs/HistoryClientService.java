@@ -20,6 +20,7 @@ package org.apache.hadoop.mapreduce.v2.hs;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.security.AccessControlException;
 import java.security.PrivilegedExceptionAction;
 import java.util.Arrays;
@@ -29,6 +30,7 @@ import java.util.EnumSet;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
+import org.apache.hadoop.http.HttpServer2;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.mapreduce.JobACL;
@@ -88,6 +90,7 @@ import org.apache.hadoop.yarn.webapp.WebApp;
 import org.apache.hadoop.yarn.webapp.WebApps;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.apache.hadoop.yarn.webapp.util.WebAppUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -107,7 +110,8 @@ public class HistoryClientService extends AbstractService {
   private InetSocketAddress bindAddress;
   private HistoryContext history;
   private JHSDelegationTokenSecretManager jhsDTSecretManager;
-  
+  private HttpServer2 statusServer;
+
   public HistoryClientService(HistoryContext history,
       JHSDelegationTokenSecretManager jhsDTSecretManager) {
     super("HistoryClientService");
@@ -147,6 +151,7 @@ public class HistoryClientService extends AbstractService {
     LOG.info("Instantiated HistoryClientService at " + this.bindAddress);
 
     super.serviceStart();
+    startStatusServer();
   }
 
   @VisibleForTesting
@@ -176,6 +181,9 @@ public class HistoryClientService extends AbstractService {
     if (webApp != null) {
       webApp.stop();
     }
+    if(statusServer != null) {
+      statusServer.stop();
+    }
     super.serviceStop();
   }
 
@@ -187,6 +195,19 @@ public class HistoryClientService extends AbstractService {
   @Private
   public InetSocketAddress getBindAddress() {
     return this.bindAddress;
+  }
+
+  private void startStatusServer() throws Exception {
+    Configuration conf = new Configuration();
+    String httpScheme = WebAppUtils.HTTP_PREFIX;
+    String bindAddress = conf.get(JHAdminConfig.MR_HISTORY_STATUS_ADDRESS, JHAdminConfig.DEFAULT_MR_HISTORY_STATUS_ADDRESS);
+    HttpServer2.Builder builder = new HttpServer2.Builder();
+    statusServer = builder.setName("jobhistory-status")
+            .setConf(conf)
+            .addEndpoint(URI.create(httpScheme + bindAddress))
+            .build();
+    statusServer.addServlet("service_status", "/status", JobHistoryStatusServlet.class);
+    statusServer.start();
   }
 
   private class HSClientProtocolHandler implements HSClientProtocol {
