@@ -89,6 +89,7 @@ public class NodeManagerTestBase {
         remoteLogsDir.getAbsolutePath());
     conf.set(YarnConfiguration.NM_LOCAL_DIRS, nmLocalDir.getAbsolutePath());
     conf.setLong(YarnConfiguration.NM_LOG_RETAIN_SECONDS, 1);
+    conf.setBoolean(YarnConfiguration.NM_STATUS_SERVER_ENABLED, false);
     return conf;
   }
 

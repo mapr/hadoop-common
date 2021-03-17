@@ -41,6 +41,7 @@ import org.apache.hadoop.yarn.YarnUncaughtExceptionHandler;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
+import org.apache.hadoop.yarn.server.applicationhistoryservice.ApplicationHistoryStatusServlet;
 import org.apache.hadoop.yarn.server.timelineservice.reader.security.TimelineReaderAuthenticationFilterInitializer;
 import org.apache.hadoop.yarn.server.timelineservice.reader.security.TimelineReaderWhitelistAuthorizationFilterInitializer;
 import org.apache.hadoop.yarn.server.timelineservice.storage.TimelineReader;
@@ -67,6 +68,9 @@ public class TimelineReaderServer extends CompositeService {
   private HttpServer2 readerWebServer;
   private TimelineReaderManager timelineReaderManager;
   private String webAppURLWithoutScheme;
+
+  private HttpServer2 statusServer;
+
 
 
   public TimelineReaderServer() {
@@ -128,6 +132,7 @@ public class TimelineReaderServer extends CompositeService {
   protected void serviceStart() throws Exception {
     super.serviceStart();
     startTimelineReaderWebApp();
+    startStatusServer(new Configuration());
   }
 
   private void join() {
@@ -144,6 +149,9 @@ public class TimelineReaderServer extends CompositeService {
   protected void serviceStop() throws Exception {
     if (readerWebServer != null) {
       readerWebServer.stop();
+    }
+    if(statusServer != null) {
+      statusServer.stop();
     }
     super.serviceStop();
   }
@@ -219,6 +227,22 @@ public class TimelineReaderServer extends CompositeService {
       String msg = "TimelineReaderWebApp failed to start.";
       LOG.error(msg, e);
       throw new YarnRuntimeException(msg, e);
+    }
+  }
+
+  protected void startStatusServer(Configuration conf) throws Exception {
+    if (getConfig().getBoolean(
+            YarnConfiguration.TIMELINE_SERVICE_STATUS_SERVER_ENABLED,
+            YarnConfiguration.DEFAULT_TIMELINE_SERVICE_STATUS_SERVER_ENABLED)) {
+      String httpScheme = WebAppUtils.HTTP_PREFIX;
+      String bindAddress = conf.get(YarnConfiguration.TIMELINE_SERVICE_STATUS_SERVER_ADDRESS, YarnConfiguration.DEFAULT_TIMELINE_SERVICE_STATUS_SERVER_ADDRESS);
+      HttpServer2.Builder builder = new HttpServer2.Builder();
+      statusServer = builder.setName("applicationhistory-status")
+              .setConf(conf)
+              .addEndpoint(URI.create(httpScheme + bindAddress))
+              .build();
+      statusServer.addServlet("service_status", "/status", ApplicationHistoryStatusServlet.class);
+      statusServer.start();
     }
   }
 

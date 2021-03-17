@@ -24,6 +24,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.http.HttpServer2;
 import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 import org.apache.hadoop.metrics2.util.MBeans;
 import org.apache.hadoop.security.Credentials;
@@ -82,10 +83,12 @@ import org.apache.hadoop.yarn.server.scheduler.DistributedOpportunisticContainer
 import org.apache.hadoop.yarn.server.scheduler.OpportunisticContainerAllocator;
 import org.apache.hadoop.yarn.server.security.ApplicationACLsManager;
 import org.apache.hadoop.yarn.state.MultiStateTransitionListener;
+import org.apache.hadoop.yarn.webapp.util.WebAppUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -141,7 +144,8 @@ public class NodeManager extends CompositeService
   private NodeResourceMonitor nodeResourceMonitor;
   private static CompositeServiceShutdownHook nodeManagerShutdownHook;
   private NMStateStoreService nmStore = null;
-  
+  private HttpServer2 statusServer;
+
   private AtomicBoolean isStopping = new AtomicBoolean(false);
   private boolean rmWorkPreservingRestartEnabled;
   private boolean shouldExitOnShutdownEvent = false;
@@ -297,6 +301,22 @@ public class NodeManager extends CompositeService
   protected void doSecureLogin() throws IOException {
     SecurityUtil.login(getConfig(), YarnConfiguration.NM_KEYTAB,
         YarnConfiguration.NM_PRINCIPAL);
+  }
+
+  protected void startStatusServer(Configuration conf) throws Exception {
+    if (getConfig().getBoolean(
+                    YarnConfiguration.NM_STATUS_SERVER_ENABLED,
+                    YarnConfiguration.DEFAULT_NM_STATUS_SERVER_ENABLED)) {
+      String httpScheme = WebAppUtils.HTTP_PREFIX;
+      String bindAddress = conf.get(YarnConfiguration.NM_STATUS_SERVER_ADDRESS, YarnConfiguration.DEFAULT_NM_STATUS_SERVER_ADDRESS);
+      HttpServer2.Builder builder = new HttpServer2.Builder();
+      statusServer = builder.setName("nodemanager-status")
+              .setConf(conf)
+              .addEndpoint(URI.create(httpScheme + bindAddress))
+              .build();
+      statusServer.addServlet("service_status", "/status", NodeManagerStatusServlet.class);
+      statusServer.start();
+    }
   }
 
   private void initAndStartRecoveryStore(Configuration conf)
@@ -482,7 +502,7 @@ public class NodeManager extends CompositeService
       addService(nmCollectorService);
     }
 
-    // StatusUpdater should be added last so that it get started last 
+    // StatusUpdater should be added last so that it get started last
     // so that we make sure everything is up before registering with RM. 
     addService(nodeStatusUpdater);
     ((NMContext) context).setNodeStatusUpdater(nodeStatusUpdater);
@@ -500,6 +520,7 @@ public class NodeManager extends CompositeService
     context.getContainerExecutor().start();
     super.serviceInit(conf);
     // TODO add local dirs to del
+    startStatusServer(new Configuration());
   }
 
   @Override
@@ -524,6 +545,9 @@ public class NodeManager extends CompositeService
       // YARN-3641: NM's services stop get failed shouldn't block the
       // release of NMLevelDBStore.
       stopRecoveryStore();
+      if(statusServer != null) {
+        statusServer.stop();
+      }
     }
   }
 
@@ -999,7 +1023,7 @@ public class NodeManager extends CompositeService
   public boolean isSecurityEnabled() {
     return UserGroupInformation.isSecurityEnabled();
   }
-  
+
   // For testing
   NodeManager createNewNodeManager() {
     return new NodeManager();

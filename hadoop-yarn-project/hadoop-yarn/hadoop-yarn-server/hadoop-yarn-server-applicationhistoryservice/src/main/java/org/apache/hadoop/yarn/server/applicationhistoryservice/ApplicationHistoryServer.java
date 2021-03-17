@@ -20,6 +20,7 @@ package org.apache.hadoop.yarn.server.applicationhistoryservice;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -78,6 +79,7 @@ public class ApplicationHistoryServer extends CompositeService {
   private TimelineDataManager timelineDataManager;
   private WebApp webApp;
   private JvmPauseMonitor pauseMonitor;
+  private HttpServer2 statusServer;
 
   public ApplicationHistoryServer() {
     super(ApplicationHistoryServer.class.getName());
@@ -119,12 +121,16 @@ public class ApplicationHistoryServer extends CompositeService {
   protected void serviceStart() throws Exception {
     super.serviceStart();
     startWebApp();
+    startStatusServer(new Configuration());
   }
 
   @Override
   protected void serviceStop() throws Exception {
     if (webApp != null) {
       webApp.stop();
+    }
+    if(statusServer != null) {
+      statusServer.stop();
     }
     DefaultMetricsSystem.shutdown();
     super.serviceStop();
@@ -320,6 +326,22 @@ public class ApplicationHistoryServer extends CompositeService {
       String msg = "AHSWebApp failed to start.";
       LOG.error(msg, e);
       throw new YarnRuntimeException(msg, e);
+    }
+  }
+
+  protected void startStatusServer(Configuration conf) throws Exception {
+    if (getConfig().getBoolean(
+            YarnConfiguration.TIMELINE_SERVICE_STATUS_SERVER_ENABLED,
+            YarnConfiguration.DEFAULT_TIMELINE_SERVICE_STATUS_SERVER_ENABLED)) {
+      String httpScheme = WebAppUtils.HTTP_PREFIX;
+      String bindAddress = conf.get(YarnConfiguration.TIMELINE_SERVICE_STATUS_SERVER_ADDRESS, YarnConfiguration.DEFAULT_TIMELINE_SERVICE_STATUS_SERVER_ADDRESS);
+      HttpServer2.Builder builder = new HttpServer2.Builder();
+      statusServer = builder.setName("applicationhistory-status")
+              .setConf(conf)
+              .addEndpoint(URI.create(httpScheme + bindAddress))
+              .build();
+      statusServer.addServlet("service_status", "/status", ApplicationHistoryStatusServlet.class);
+      statusServer.start();
     }
   }
 
