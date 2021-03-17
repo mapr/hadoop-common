@@ -3,10 +3,10 @@
 MAPR_HOME=${MAPR_HOME:-/opt/mapr}
 ROLES_DIR="$MAPR_HOME/roles"
 HADOOP_HOME="${HADOOP_HOME:-__INSTALL__}"
-JHS_PID_FILE="$MAPR_HOME"/pid/mapred-mapr-historyserver.pid
-NM_PID_FILE="$MAPR_HOME"/pid/yarn-mapr-nodemanager.pid
-RM_PID_FILE="$MAPR_HOME"/pid/yarn-mapr-resourcemanager.pid
-TL_PID_FILE="$MAPR_HOME"/pid/yarn-mapr-timelineserver.pid
+JHS_PID_FILE="$MAPR_HOME"/pid/hadoop-mapr-historyserver.pid
+NM_PID_FILE="$MAPR_HOME"/pid/hadoop-mapr-nodemanager.pid
+RM_PID_FILE="$MAPR_HOME"/pid/hadoop-mapr-resourcemanager.pid
+TL_PID_FILE="$MAPR_HOME"/pid/hadoop-mapr-timelinereader.pid
 JHS_STATUS_PORT=29890
 NM_STATUS_PORT=18044
 RM_STATUS_PORT=18090

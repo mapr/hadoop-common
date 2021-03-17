@@ -345,14 +345,22 @@ public class YarnConfiguration extends Configuration {
   public static final String RM_SCHEDULER_MONITOR_POLICIES =
     RM_PREFIX + "scheduler.monitor.policies";
 
+  /** RM status address.**/
+  public static final String RM_STATUS_SERVER_ENABLED = RM_PREFIX + "status.server.enabled";
+  public static boolean DEFAULT_RM_STATUS_SERVER_ENABLED = true;
+  public static final String RM_STATUS_SERVER_ADDRESS = RM_PREFIX + "status.server.address";
+  public static final int DEFAULT_RM_STATUS_SERVER_PORT = 18090;
+  public static final String DEFAULT_RM_STATUS_SERVER_ADDRESS = "localhost:" +
+          DEFAULT_RM_STATUS_SERVER_PORT;
+
   /** The address of the RM web application.*/
-  public static final String RM_WEBAPP_ADDRESS = 
+  public static final String RM_WEBAPP_ADDRESS =
     RM_PREFIX + "webapp.address";
 
   public static final int DEFAULT_RM_WEBAPP_PORT = 8088;
   public static final String DEFAULT_RM_WEBAPP_ADDRESS = "0.0.0.0:" +
     DEFAULT_RM_WEBAPP_PORT;
-  
+
   /** The https address of the RM web application.*/
   public static final String RM_WEBAPP_HTTPS_ADDRESS =
       RM_PREFIX + "webapp.https.address";
@@ -535,7 +543,7 @@ public class YarnConfiguration extends Configuration {
    */
   public static final String GLOBAL_RM_AM_MAX_ATTEMPTS =
       RM_PREFIX + "am.global.max-attempts";
-  
+
   /** The keytab for the resource manager.*/
   public static final String RM_KEYTAB = 
     RM_PREFIX + "keytab";
@@ -591,7 +599,7 @@ public class YarnConfiguration extends Configuration {
       RM_PREFIX + "submission-preprocessor.file-refresh-interval-ms";
   public static final int
       DEFAULT_RM_SUBMISSION_PREPROCESSOR_REFRESH_INTERVAL_MS = 0;
-  
+
   /** Path to file with nodes to exclude.*/
   public static final String RM_NODES_EXCLUDE_FILE_PATH = 
     RM_PREFIX + "nodes.exclude-path";
@@ -689,7 +697,7 @@ public class YarnConfiguration extends Configuration {
 
   public static final int DEFAULT_RM_PLACEMENT_CONSTRAINTS_SCHEDULER_POOL_SIZE =
       1;
- 
+
   public static final String DEFAULT_RM_SCHEDULER = 
       "org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacityScheduler";
 
@@ -1303,7 +1311,7 @@ public class YarnConfiguration extends Configuration {
   public static final String NM_CONTAINER_STATE_TRANSITION_LISTENERS =
       NM_PREFIX + "container-state-transition-listener.classes";
 
-  /**  
+  /**
    * Adjustment to make to the container os scheduling priority.
    * The valid values for this could vary depending on the platform.
    * On Linux, higher values mean run the containers at a less 
@@ -1578,7 +1586,7 @@ public class YarnConfiguration extends Configuration {
       + "log-aggregation.debug.filesize";
   public static final long DEFAULT_LOG_AGGREGATION_DEBUG_FILESIZE
       = 100 * 1024 * 1024;
-  
+
   /**
    * How long to wait between aggregated log retention checks. If set to
    * a value {@literal <=} 0 then the value is computed as one-tenth of the
@@ -1996,6 +2004,14 @@ public class YarnConfiguration extends Configuration {
   public static final String DEFAULT_NM_NETWORK_RESOURCE_TAG_MAPPING_FILE_PATH =
       "";
 
+  /** NM status address.**/
+  public static final String NM_STATUS_SERVER_ENABLED = NM_PREFIX + "status.server.enabled";
+  public static boolean DEFAULT_NM_STATUS_SERVER_ENABLED = true;
+  public static final String NM_STATUS_SERVER_ADDRESS = NM_PREFIX + "status.server.address";
+  public static final int DEFAULT_NM_STATUS_SERVER_PORT = 18044;
+  public static final String DEFAULT_NM_STATUS_SERVER_ADDRESS = "localhost:" +
+          DEFAULT_NM_STATUS_SERVER_PORT;
+
   /** NM Webapp address.**/
   public static final String NM_WEBAPP_ADDRESS = NM_PREFIX + "webapp.address";
   public static final int DEFAULT_NM_WEBAPP_PORT = 8042;
@@ -2218,7 +2234,7 @@ public class YarnConfiguration extends Configuration {
   public static final long DEFAULT_NM_HEALTH_CHECK_TIMEOUT_MS =
       2 * DEFAULT_NM_HEALTH_CHECK_INTERVAL_MS;
 
-  /** Health check script time out period.*/  
+  /** Health check script time out period.*/
   public static final String NM_HEALTH_CHECK_SCRIPT_TIMEOUT_MS_TEMPLATE =
       NM_PREFIX + "health-checker.%s.timeout-ms";
   
@@ -2941,7 +2957,7 @@ public class YarnConfiguration extends Configuration {
   /** Binding address for the web proxy. */
   public static final String PROXY_BIND_HOST =
       PROXY_PREFIX + "bind-host";
-  
+
   /**
    * YARN Service Level Authorization
    */
@@ -3570,7 +3586,14 @@ public class YarnConfiguration extends Configuration {
   public static final String TIMELINE_SERVICE_HANDLER_THREAD_COUNT =
       TIMELINE_SERVICE_PREFIX + "handler-thread-count";
   public static final int DEFAULT_TIMELINE_SERVICE_CLIENT_THREAD_COUNT = 10;
-  
+
+  /** Timeline service status address.**/
+  public static final String TIMELINE_SERVICE_STATUS_SERVER_ENABLED = TIMELINE_SERVICE_PREFIX + "status.server.enabled";
+  public static boolean DEFAULT_TIMELINE_SERVICE_STATUS_SERVER_ENABLED = true;
+  public static final String TIMELINE_SERVICE_STATUS_SERVER_ADDRESS = TIMELINE_SERVICE_PREFIX + "status.server.address";
+  public static final int DEFAULT_TIMELINE_SERVICE_STATUS_SERVER_PORT = 18190;
+  public static final String DEFAULT_TIMELINE_SERVICE_STATUS_SERVER_ADDRESS = "localhost:" +
+          DEFAULT_TIMELINE_SERVICE_STATUS_SERVER_PORT;
 
   /** The address of the timeline service web application.*/
   public static final String TIMELINE_SERVICE_WEBAPP_ADDRESS =
@@ -4267,7 +4290,7 @@ public class YarnConfiguration extends Configuration {
       + "fs-store.impl.class";
   public static final String DEFAULT_FS_NODE_LABELS_STORE_IMPL_CLASS =
       "org.apache.hadoop.yarn.nodelabels.FileSystemNodeLabelsStore";
-  
+
   /** URI for NodeLabelManager */
   public static final String FS_NODE_LABELS_STORE_ROOT_DIR = NODE_LABELS_PREFIX
       + "fs-store.root-dir";
@@ -4327,7 +4350,7 @@ public class YarnConfiguration extends Configuration {
 
   public static final String NODELABEL_CONFIGURATION_TYPE =
       NODE_LABELS_PREFIX + "configuration-type";
-  
+
   public static final String CENTRALIZED_NODELABEL_CONFIGURATION_TYPE =
       "centralized";
 
@@ -4336,7 +4359,7 @@ public class YarnConfiguration extends Configuration {
 
   public static final String DISTRIBUTED_NODELABEL_CONFIGURATION_TYPE =
       "distributed";
-  
+
   public static final String DEFAULT_NODELABEL_CONFIGURATION_TYPE =
       CENTRALIZED_NODELABEL_CONFIGURATION_TYPE;
 

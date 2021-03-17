@@ -217,6 +217,7 @@ public class ResourceManager extends CompositeService
   private FederationStateStoreService federationStateStoreService;
   private ProxyCAManager proxyCAManager;
   private WebApp webApp;
+  private HttpServer2 statusServer;
   private AppReportFetcher fetcher = null;
   protected ResourceTrackerService resourceTracker;
   private JvmMetrics jvmMetrics;
@@ -588,7 +589,7 @@ public class ResourceManager extends CompositeService
     // Use the in memory Placement Constraint Manager.
     return new MemoryPlacementConstraintManager();
   }
-  
+
   protected DelegationTokenRenewer createDelegationTokenRenewer() {
     return new DelegationTokenRenewer();
   }
@@ -719,7 +720,7 @@ public class ResourceManager extends CompositeService
       AMLivelinessMonitor amFinishingMonitor = createAMLivelinessMonitor();
       addService(amFinishingMonitor);
       rmContext.setAMFinishingMonitor(amFinishingMonitor);
-      
+
       RMAppLifetimeMonitor rmAppLifetimeMonitor = createRMAppLifetimeMonitor();
       addService(rmAppLifetimeMonitor);
       rmContext.setRMAppLifetimeMonitor(rmAppLifetimeMonitor);
@@ -1512,6 +1513,8 @@ public class ResourceManager extends CompositeService
       WebAppUtils.setRMWebAppPort(conf, port);
     }
     super.serviceStart();
+    startStatusServer(new Configuration());
+
 
     // Non HA case, start after RM services are started.
     if (!this.rmContext.isHAEnabled()) {
@@ -1530,6 +1533,22 @@ public class ResourceManager extends CompositeService
     }
   }
 
+  protected void startStatusServer(Configuration conf) throws Exception {
+    if (getConfig().getBoolean(
+            YarnConfiguration.RM_STATUS_SERVER_ENABLED,
+            YarnConfiguration.DEFAULT_RM_STATUS_SERVER_ENABLED)) {
+      String httpScheme = WebAppUtils.HTTP_PREFIX;
+      String bindAddress = conf.get(YarnConfiguration.RM_STATUS_SERVER_ADDRESS, YarnConfiguration.DEFAULT_RM_STATUS_SERVER_ADDRESS);
+      HttpServer2.Builder builder = new HttpServer2.Builder();
+      statusServer = builder.setName("resourcemanager-status")
+              .setConf(conf)
+              .addEndpoint(URI.create(httpScheme + bindAddress))
+              .build();
+      statusServer.addServlet("service_status", "/status", ResourceManagerStatusServlet.class);
+      statusServer.start();
+    }
+  }
+
   @Override
   protected void serviceStop() throws Exception {
     if (webApp != null) {
@@ -1540,6 +1559,9 @@ public class ResourceManager extends CompositeService
     }
     if (configurationProvider != null) {
       configurationProvider.close();
+    }
+    if(statusServer != null) {
+      statusServer.stop();
     }
     super.serviceStop();
     if (zkManager != null) {

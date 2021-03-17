@@ -116,6 +116,7 @@ public class MockRM extends ResourceManager {
   private static final int TIMEOUT_MS_FOR_APP_REMOVED = 40 * SECOND;
   private static final int TIMEOUT_MS_FOR_CONTAINER_AND_NODE = 20 * SECOND;
   private static final int WAIT_MS_PER_LOOP = 10;
+  static final String ENABLE_STATUS_SERVER = "mockrm.status.server.enabled";
 
   private final boolean useNullRMNodeLabelsManager;
   private boolean disableDrainEventsImplicitly;
@@ -813,6 +814,15 @@ public class MockRM extends ResourceManager {
     }
 
     // Disable webapp
+  }
+
+  @Override
+  protected void startStatusServer(Configuration conf) throws Exception {
+    if (getConfig().getBoolean(ENABLE_STATUS_SERVER, false)) {
+      super.startStatusServer(conf);
+    }
+
+    // Disable status server
   }
 
   public static void finishAMAndVerifyAppState(RMApp rmApp, MockRM rm, MockNM nm,
