@@ -59,7 +59,7 @@ pipeline {
             // Autogenerate PROJECT variable
             PROJECT = REPOSITORY_NAME.replace("private","mapr").replace("-common",'')
             COMPONENT_VERSION = BRANCH_NAME.find("\\d+\\.[^\\-]{1,}")
-            MEP_VER = BRANCH_NAME.find("mep-(\\d+(\\.|\$)){2,3}")
+            MEP_VER = BRANCH_NAME.find("mep-\\d+.\\d+")
             PROJECT += "-"+COMPONENT_VERSION+"-"+MEP_VER
 
             println "Setuping variable for ${params.BUILD_TYPE} build..."
