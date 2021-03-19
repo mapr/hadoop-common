@@ -145,17 +145,20 @@ public class NodeManager extends CompositeService
         YarnConfiguration.NM_PRINCIPAL);
   }
 
-  private void startStatusServer() throws Exception {
-    Configuration conf = new Configuration();
-    String httpScheme = WebAppUtils.HTTP_PREFIX;
-    String bindAddress = conf.get(YarnConfiguration.NM_STATUS_ADDRESS, YarnConfiguration.DEFAULT_NM_STATUS_ADDRESS);
-    HttpServer2.Builder builder = new HttpServer2.Builder();
-    statusServer = builder.setName("nodemanager-status")
-            .setConf(conf)
-            .addEndpoint(URI.create(httpScheme + bindAddress))
-            .build();
-    statusServer.addServlet("service_status", "/status", NodeManagerStatusServlet.class);
-    statusServer.start();
+  protected void startStatusServer(Configuration conf) throws Exception {
+    if (getConfig().getBoolean(
+                    YarnConfiguration.NM_STATUS_SERVER_ENABLED,
+                    YarnConfiguration.DEFAULT_NM_STATUS_SERVER_ENABLED)) {
+      String httpScheme = WebAppUtils.HTTP_PREFIX;
+      String bindAddress = conf.get(YarnConfiguration.NM_STATUS_SERVER_ADDRESS, YarnConfiguration.DEFAULT_NM_STATUS_SERVER_ADDRESS);
+      HttpServer2.Builder builder = new HttpServer2.Builder();
+      statusServer = builder.setName("nodemanager-status")
+              .setConf(conf)
+              .addEndpoint(URI.create(httpScheme + bindAddress))
+              .build();
+      statusServer.addServlet("service_status", "/status", NodeManagerStatusServlet.class);
+      statusServer.start();
+    }
   }
 
   private void initAndStartRecoveryStore(Configuration conf)
@@ -286,7 +289,7 @@ public class NodeManager extends CompositeService
       throw new YarnRuntimeException("Failed NodeManager login", e);
     }
     super.serviceStart();
-    startStatusServer();
+    startStatusServer(new Configuration());
   }
 
   @Override

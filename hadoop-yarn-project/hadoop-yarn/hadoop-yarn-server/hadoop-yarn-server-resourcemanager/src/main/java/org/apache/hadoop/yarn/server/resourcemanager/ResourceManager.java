@@ -1127,7 +1127,7 @@ public class ResourceManager extends CompositeService implements Recoverable {
       WebAppUtils.setRMWebAppPort(conf, port);
     }
     super.serviceStart();
-    startStatusServer();
+    startStatusServer(new Configuration());
   }
   
   protected void doSecureLogin() throws IOException {
@@ -1141,17 +1141,20 @@ public class ResourceManager extends CompositeService implements Recoverable {
     }
   }
 
-  private void startStatusServer() throws Exception {
-    Configuration conf = new Configuration();
-    String httpScheme = WebAppUtils.HTTP_PREFIX;
-    String bindAddress = conf.get(YarnConfiguration.RM_STATUS_ADDRESS, YarnConfiguration.DEFAULT_RM_STATUS_ADDRESS);
-    HttpServer2.Builder builder = new HttpServer2.Builder();
-    statusServer = builder.setName("resourcemanager-status")
-            .setConf(conf)
-            .addEndpoint(URI.create(httpScheme + bindAddress))
-            .build();
-    statusServer.addServlet("service_status", "/status", ResourceManagerStatusServlet.class);
-    statusServer.start();
+  protected void startStatusServer(Configuration conf) throws Exception {
+    if (getConfig().getBoolean(
+            YarnConfiguration.RM_STATUS_SERVER_ENABLED,
+            YarnConfiguration.DEFAULT_RM_STATUS_SERVER_ENABLED)) {
+      String httpScheme = WebAppUtils.HTTP_PREFIX;
+      String bindAddress = conf.get(YarnConfiguration.RM_STATUS_SERVER_ADDRESS, YarnConfiguration.DEFAULT_RM_STATUS_SERVER_ADDRESS);
+      HttpServer2.Builder builder = new HttpServer2.Builder();
+      statusServer = builder.setName("resourcemanager-status")
+              .setConf(conf)
+              .addEndpoint(URI.create(httpScheme + bindAddress))
+              .build();
+      statusServer.addServlet("service_status", "/status", ResourceManagerStatusServlet.class);
+      statusServer.start();
+    }
   }
 
   @Override

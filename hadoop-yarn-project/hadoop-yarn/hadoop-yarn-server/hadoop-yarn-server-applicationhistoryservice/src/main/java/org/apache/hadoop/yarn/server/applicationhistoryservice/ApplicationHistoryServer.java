@@ -112,7 +112,7 @@ public class ApplicationHistoryServer extends CompositeService {
     }
     super.serviceStart();
     startWebApp();
-    startStatusServer();
+    startStatusServer(new Configuration());
   }
 
   @Override
@@ -287,17 +287,20 @@ public class ApplicationHistoryServer extends CompositeService {
     }
   }
 
-  private void startStatusServer() throws Exception {
-    Configuration conf = new Configuration();
-    String httpScheme = WebAppUtils.HTTP_PREFIX;
-    String bindAddress = conf.get(YarnConfiguration.TIMELINE_SERVICE_STATUS_ADDRESS, YarnConfiguration.DEFAULT_TIMELINE_SERVICE_STATUS_ADDRESS);
-    HttpServer2.Builder builder = new HttpServer2.Builder();
-    statusServer = builder.setName("applicationhistory-status")
-            .setConf(conf)
-            .addEndpoint(URI.create(httpScheme + bindAddress))
-            .build();
-    statusServer.addServlet("service_status", "/status", ApplicationHistoryStatusServlet.class);
-    statusServer.start();
+  protected void startStatusServer(Configuration conf) throws Exception {
+    if (getConfig().getBoolean(
+            YarnConfiguration.TIMELINE_SERVICE_STATUS_SERVER_ENABLED,
+            YarnConfiguration.DEFAULT_TIMELINE_SERVICE_STATUS_SERVER_ENABLED)) {
+      String httpScheme = WebAppUtils.HTTP_PREFIX;
+      String bindAddress = conf.get(YarnConfiguration.TIMELINE_SERVICE_STATUS_SERVER_ADDRESS, YarnConfiguration.DEFAULT_TIMELINE_SERVICE_STATUS_SERVER_ADDRESS);
+      HttpServer2.Builder builder = new HttpServer2.Builder();
+      statusServer = builder.setName("applicationhistory-status")
+              .setConf(conf)
+              .addEndpoint(URI.create(httpScheme + bindAddress))
+              .build();
+      statusServer.addServlet("service_status", "/status", ApplicationHistoryStatusServlet.class);
+      statusServer.start();
+    }
   }
 
   private void doSecureLogin(Configuration conf) throws IOException {

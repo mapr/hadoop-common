@@ -250,6 +250,7 @@ public class TestZKRMStateStore extends RMStateStoreTestBase {
     }
     conf.set(HAUtil.addSuffix(YarnConfiguration.RM_ADMIN_ADDRESS, rmId),
         "localhost:" + adminPort);
+    conf.setBoolean(YarnConfiguration.RM_STATUS_SERVER_ENABLED, false);
     return conf;
   }
 

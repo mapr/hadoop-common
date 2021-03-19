@@ -297,6 +297,7 @@ public class MiniYARNCluster extends CompositeService {
     if (HAUtil.isHAEnabled(newConf)) {
       newConf.set(YarnConfiguration.RM_HA_ID, rmIds[index]);
     }
+    conf.setBoolean(YarnConfiguration.RM_STATUS_SERVER_ENABLED, false);
     resourceManagers[index].init(newConf);
     resourceManagers[index].getRMContext().getDispatcher().register(
         RMAppAttemptEventType.class,
@@ -529,6 +530,7 @@ public class MiniYARNCluster extends CompositeService {
       WebAppUtils
           .setNMWebAppHostNameAndPort(config,
               MiniYARNCluster.getHostname(), 0);
+      config.setBoolean(YarnConfiguration.NM_STATUS_SERVER_ENABLED, false);
 
       // Disable resource checks by default
       if (!config.getBoolean(

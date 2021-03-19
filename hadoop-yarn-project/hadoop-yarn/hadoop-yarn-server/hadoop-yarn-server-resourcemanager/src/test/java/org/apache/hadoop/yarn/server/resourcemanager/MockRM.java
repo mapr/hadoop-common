@@ -95,6 +95,7 @@ import org.junit.Assert;
 public class MockRM extends ResourceManager {
 
   static final String ENABLE_WEBAPP = "mockrm.webapp.enabled";
+  static final String ENABLE_STATUS_SERVER = "mockrm.status.server.enabled";
 
   public MockRM() {
     this(new YarnConfiguration());
@@ -673,6 +674,15 @@ public class MockRM extends ResourceManager {
     }
 
     // Disable webapp
+  }
+
+  @Override
+  protected void startStatusServer(Configuration conf) throws Exception {
+    if (getConfig().getBoolean(ENABLE_STATUS_SERVER, false)) {
+      super.startStatusServer(conf);
+    }
+
+    // Disable status server
   }
 
   public static void finishAMAndVerifyAppState(RMApp rmApp, MockRM rm, MockNM nm,

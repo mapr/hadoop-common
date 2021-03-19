@@ -240,10 +240,12 @@ public class YarnConfiguration extends Configuration {
     RM_PREFIX + "scheduler.monitor.policies";
 
   /** RM status address.**/
-  public static final String RM_STATUS_ADDRESS = RM_PREFIX + "status.address";
-  public static final int DEFAULT_RM_STATUS_PORT = 18090;
-  public static final String DEFAULT_RM_STATUS_ADDRESS = "localhost:" +
-          DEFAULT_RM_STATUS_PORT;
+  public static final String RM_STATUS_SERVER_ENABLED = RM_PREFIX + "status.server.enabled";
+  public static boolean DEFAULT_RM_STATUS_SERVER_ENABLED = true;
+  public static final String RM_STATUS_SERVER_ADDRESS = RM_PREFIX + "status.server.address";
+  public static final int DEFAULT_RM_STATUS_SERVER_PORT = 18090;
+  public static final String DEFAULT_RM_STATUS_SERVER_ADDRESS = "localhost:" +
+          DEFAULT_RM_STATUS_SERVER_PORT;
 
   /** The address of the RM web application.*/
   public static final String RM_WEBAPP_ADDRESS = RM_PREFIX + "webapp.address";
@@ -1089,10 +1091,12 @@ public class YarnConfiguration extends Configuration {
       NM_NETWORK_RESOURCE_PREFIX + "outbound-bandwidth-yarn-mbit";
 
   /** NM status address.**/
-  public static final String NM_STATUS_ADDRESS = NM_PREFIX + "status.address";
-  public static final int DEFAULT_NM_STATUS_PORT = 18044;
-  public static final String DEFAULT_NM_STATUS_ADDRESS = "localhost:" +
-          DEFAULT_NM_STATUS_PORT;
+  public static final String NM_STATUS_SERVER_ENABLED = NM_PREFIX + "status.server.enabled";
+  public static boolean DEFAULT_NM_STATUS_SERVER_ENABLED = true;
+  public static final String NM_STATUS_SERVER_ADDRESS = NM_PREFIX + "status.server.address";
+  public static final int DEFAULT_NM_STATUS_SERVER_PORT = 18044;
+  public static final String DEFAULT_NM_STATUS_SERVER_ADDRESS = "localhost:" +
+          DEFAULT_NM_STATUS_SERVER_PORT;
 
   /** NM Webapp address.**/
   public static final String NM_WEBAPP_ADDRESS = NM_PREFIX + "webapp.address";
@@ -1706,10 +1710,12 @@ public class YarnConfiguration extends Configuration {
   public static final int DEFAULT_TIMELINE_SERVICE_CLIENT_THREAD_COUNT = 10;
 
   /** Timeline service status address.**/
-  public static final String TIMELINE_SERVICE_STATUS_ADDRESS = TIMELINE_SERVICE_PREFIX + "status.address";
-  public static final int DEFAULT_TIMELINE_SERVICE_STATUS_PORT = 18190;
-  public static final String DEFAULT_TIMELINE_SERVICE_STATUS_ADDRESS = "localhost:" +
-          DEFAULT_TIMELINE_SERVICE_STATUS_PORT;
+  public static final String TIMELINE_SERVICE_STATUS_SERVER_ENABLED = TIMELINE_SERVICE_PREFIX + "status.server.enabled";
+  public static boolean DEFAULT_TIMELINE_SERVICE_STATUS_SERVER_ENABLED = true;
+  public static final String TIMELINE_SERVICE_STATUS_SERVER_ADDRESS = TIMELINE_SERVICE_PREFIX + "status.server.address";
+  public static final int DEFAULT_TIMELINE_SERVICE_STATUS_SERVER_PORT = 18190;
+  public static final String DEFAULT_TIMELINE_SERVICE_STATUS_SERVER_ADDRESS = "localhost:" +
+          DEFAULT_TIMELINE_SERVICE_STATUS_SERVER_PORT;
 
   /** The address of the timeline service web application.*/
   public static final String TIMELINE_SERVICE_WEBAPP_ADDRESS =

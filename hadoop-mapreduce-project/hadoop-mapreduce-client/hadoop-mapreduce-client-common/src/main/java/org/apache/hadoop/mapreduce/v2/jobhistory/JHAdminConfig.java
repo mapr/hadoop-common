@@ -152,10 +152,12 @@ public class JHAdminConfig {
           HttpConfig.Policy.HTTP_ONLY.name();
 
   /** History server status address.**/
-  public static final String MR_HISTORY_STATUS_ADDRESS = MR_HISTORY_PREFIX + "status.address";
-  public static final int DEFAULT_MR_HISTORY_STATUS_PORT = 29890;
-  public static final String DEFAULT_MR_HISTORY_STATUS_ADDRESS = "localhost:" +
-          DEFAULT_MR_HISTORY_STATUS_PORT;
+  public static final String MR_HISTORY_STATUS_SERVER_ENABLED = MR_HISTORY_PREFIX + "status.server.enabled";
+  public static boolean DEFAULT_MR_HISTORY_STATUS_SERVER_ENABLED = true;
+  public static final String MR_HISTORY_STATUS_SERVER_ADDRESS = MR_HISTORY_PREFIX + "status.server.address";
+  public static final int DEFAULT_MR_HISTORY_STATUS_SERVER_PORT = 29890;
+  public static final String DEFAULT_MR_HISTORY_STATUS_SERVER_ADDRESS = "localhost:" +
+          DEFAULT_MR_HISTORY_STATUS_SERVER_PORT;
 
   /**The address the history server webapp is on.*/
   public static final String MR_HISTORY_WEBAPP_ADDRESS =

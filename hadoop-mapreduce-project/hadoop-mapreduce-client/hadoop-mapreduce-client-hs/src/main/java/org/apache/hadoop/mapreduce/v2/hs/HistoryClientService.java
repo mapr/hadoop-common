@@ -151,7 +151,7 @@ public class HistoryClientService extends AbstractService {
     LOG.info("Instantiated HistoryClientService at " + this.bindAddress);
 
     super.serviceStart();
-    startStatusServer();
+    startStatusServer(new Configuration());
   }
 
   @VisibleForTesting
@@ -197,17 +197,20 @@ public class HistoryClientService extends AbstractService {
     return this.bindAddress;
   }
 
-  private void startStatusServer() throws Exception {
-    Configuration conf = new Configuration();
-    String httpScheme = WebAppUtils.HTTP_PREFIX;
-    String bindAddress = conf.get(JHAdminConfig.MR_HISTORY_STATUS_ADDRESS, JHAdminConfig.DEFAULT_MR_HISTORY_STATUS_ADDRESS);
-    HttpServer2.Builder builder = new HttpServer2.Builder();
-    statusServer = builder.setName("jobhistory-status")
-            .setConf(conf)
-            .addEndpoint(URI.create(httpScheme + bindAddress))
-            .build();
-    statusServer.addServlet("service_status", "/status", JobHistoryStatusServlet.class);
-    statusServer.start();
+  protected void startStatusServer(Configuration conf) throws Exception {
+    if (getConfig().getBoolean(
+            JHAdminConfig.MR_HISTORY_STATUS_SERVER_ENABLED,
+            JHAdminConfig.DEFAULT_MR_HISTORY_STATUS_SERVER_ENABLED)) {
+      String httpScheme = WebAppUtils.HTTP_PREFIX;
+      String bindAddress = conf.get(JHAdminConfig.MR_HISTORY_STATUS_SERVER_ADDRESS, JHAdminConfig.DEFAULT_MR_HISTORY_STATUS_SERVER_ADDRESS);
+      HttpServer2.Builder builder = new HttpServer2.Builder();
+      statusServer = builder.setName("jobhistory-status")
+              .setConf(conf)
+              .addEndpoint(URI.create(httpScheme + bindAddress))
+              .build();
+      statusServer.addServlet("service_status", "/status", JobHistoryStatusServlet.class);
+      statusServer.start();
+    }
   }
 
   private class HSClientProtocolHandler implements HSClientProtocol {
