@@ -96,23 +96,14 @@ public class AggregatedLogDeletionService extends AbstractService {
             YarnConfiguration.DEFAULT_NM_REMOTE_APP_LOG_DIR));
       this.rmClient = rmClient;
 
-      // Use the glob setting to determine matching log directories
-      String logDirGlob = conf.get(YarnConfiguration.DFS_LOGGING_DIR_GLOB);
-      if (logDirGlob != null) {
-        try {
-        this.dfsLoggingDirs =  FileUtil.stat2Paths(
-            fs.globStatus(new Path(logDirGlob)));
-        } catch (IOException e) {
-          LOG.error("Unable to initialize DFS logging dirs using glob: "
-              + logDirGlob);
-        }
-      }
+      determineMatchingLogDirs(conf);
     }
     
     @Override
     public void run() {
       long cutoffMillis = System.currentTimeMillis() - retentionMillis;
       LOG.info("aggregated log deletion started.");
+      determineMatchingLogDirs(conf);
       try {
         for(FileStatus userDir : fs.listStatus(remoteRootLogDir)) {
           if(userDir.isDirectory()) {
@@ -141,7 +132,20 @@ public class AggregatedLogDeletionService extends AbstractService {
 
       LOG.info("aggregated log deletion finished.");
     }
-    
+
+    private void determineMatchingLogDirs(Configuration conf) {
+      String logDirGlob = conf.get(YarnConfiguration.DFS_LOGGING_DIR_GLOB);
+      if (logDirGlob != null) {
+        try {
+          this.dfsLoggingDirs =  FileUtil.stat2Paths(
+              fs.globStatus(new Path(logDirGlob)));
+        } catch (IOException e) {
+          LOG.error("Unable to initialize DFS logging dirs using glob: "
+              + logDirGlob);
+        }
+      }
+    }
+
     private static void deleteOldLogDirsFrom(Path dir, long cutoffMillis,
                                              FileSystem fs, ApplicationClientProtocol rmClient, Configuration conf, NodeLocalMetadataReader metadataReader, String appOwner) {
       try {
