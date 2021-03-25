@@ -53,7 +53,7 @@ pipeline {
 
             GIT_SHORT_COMMIT_SHA = sh (returnStdout: true, script: 'git rev-parse HEAD')[0..7]
             REPOSITORY_NAME = scm.getUserRemoteConfigs()[0]?.getUrl().replaceFirst(/^.*\/([^\/]+?).git$/, '$1')
-            GIT_REPO_URL = scm.getUserRemoteConfigs()[0]?.getUrl().replace(".git", '')
+            GIT_REPO_URL = scm.getUserRemoteConfigs()[0]?.getUrl().replace(".git", '').replace("https://", '')
             ARTIFACTORY_SERVER = Artifactory.server 'artifactory.devops.lab'
             ID = sh (returnStdout: true, script: "date +%Y%m%d%H%M").trim()
             // Autogenerate PROJECT variable
@@ -373,7 +373,7 @@ pipeline {
 
         slackMessage = "${REPOSITORY_NAME} :: ${JOB_BASE_NAME} #${BUILD_NUMBER} broken! (<${env.BUILD_URL}console|Log>)"
         if(GIT_REPO_URL!='' && GIT_SHORT_COMMIT_SHA!='') {
-          slackMessage += "\nLatest commit: <${GIT_REPO_URL}/commit/${GIT_SHORT_COMMIT_SHA}|GitHub>"
+          slackMessage += "\nLatest commit: <https://${GIT_REPO_URL}/commit/${GIT_SHORT_COMMIT_SHA}|GitHub>"
         }
         if(currentBuild.getPreviousBuild()!=null && currentBuild.getPreviousBuild().result!="FAILURE") {
           slackSend (channel: "#${SLACK_NOTIFICATION_CHANNEL}",
@@ -385,7 +385,7 @@ pipeline {
     fixed {
       script {
         slackSend (channel: "#${SLACK_NOTIFICATION_CHANNEL}",
-        message: "${REPOSITORY_NAME} :: ${JOB_BASE_NAME} back to normal. \nLatest commit: <${GIT_REPO_URL}/commit/${GIT_SHORT_COMMIT_SHA}|GitHub> \n <${env.BUILD_URL}|Build page>",
+        message: "${REPOSITORY_NAME} :: ${JOB_BASE_NAME} back to normal. \nLatest commit: <https://${GIT_REPO_URL}/commit/${GIT_SHORT_COMMIT_SHA}|GitHub> \n <${env.BUILD_URL}|Build page>",
         color: "good")
       }
     }
