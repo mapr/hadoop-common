@@ -192,7 +192,8 @@ function ConfigureYarnSiteXml() {
         logErr "Failed to find hadoop-yarn-common jar"
         exit 1
     fi
-    if [ -f ${FILE} ]; then
+    prevConf=`find ${MAPR_HOME}/hadoop -regextype posix-extended -regex '^.*yarn-site-([0-9]+)\-([0-9]+)\-([0-9]+)\.([0-9]+)\-([0-9]+).xml' | sort -rV | head -n1`
+    if [ -f ${FILE} ] && [[ -z $prevConf || $(diff -q $prevConf $FILE | wc -l) -ne 0 ]]; then
         logInfo "Backing up \"$HADOOP_HOME/etc/hadoop/yarn-site.xml\" to \"$HADOOP_HOME/etc/hadoop/yarn-site-${TIMESTAMP}.xml\""
         cp ${FILE} $HADOOP_HOME/etc/hadoop/${FILENAME}-${TIMESTAMP}.xml
     fi
@@ -215,19 +216,22 @@ function ConfigureHS() {
         HS_IP="0.0.0.0"
     fi
 
-    # Set history server IP in yarn-site.xml
+    # Set history server IP in mapred-site.xml
     if [ ! -z "$HS_IP" ]; then
         FILENAME="mapred-site"
         FILE="${HADOOP_HOME}/etc/hadoop/${FILENAME}.xml"
         TMPL="${FILE}.template"
+        prevConf=`find ${MAPR_HOME}/hadoop -regextype posix-extended -regex '^.*mapred-site-([0-9]+)\-([0-9]+)\-([0-9]+)\.([0-9]+)\-([0-9]+).xml' | sort -rV | head -n1`
         # Check if old file has HS set already. If it does, then back it up
-        if [ $(grep "__HS_IP__" $FILE | wc -l) -eq 0 ]; then
+        if [ $(grep "__HS_IP__" $FILE | wc -l) -eq 0 ] && [[ -z $prevConf || $(diff -q $prevConf ${HADOOP_HOME}/etc/hadoop/mapred-site.xml | wc -l) -ne 0 ]]; then
             TIMESTAMP=$(date +%F.%H-%M)
             logInfo "Backing up \"$HADOOP_HOME/etc/hadoop/mapred-site.xml\" to \"$HADOOP_HOME/etc/hadoop/mapred-site-${TIMESTAMP}.xml\""
             cp ${FILE} $HADOOP_HOME/etc/hadoop/${FILENAME}-${TIMESTAMP}.xml
         fi
-        # Replace HS_IP from template file and redirect output to new file
-        sed "s/__HS_IP__/${HS_IP}/g" "${TMPL}" >"${FILE}"
+        if [ $(grep "__HS_IP__" "${HADOOP_HOME}/etc/hadoop/mapred-site.xml" | wc -l) -ne 0 ]; then
+            # Replace HS_IP from template file and redirect output to new file
+            sed "s/__HS_IP__/${HS_IP}/g" "${TMPL}" >"${FILE}"
+        fi
     fi
 }
 
@@ -354,7 +358,8 @@ function ConfigureTimeLineServer() {
     local YSTIMESTAMP=$(date +%F.%H-%M)
     local yarnSiteChange=0
     isSecureEnable isSecure
-    if [ -f ${YarnSiteFile} ]; then
+    prevConf=`find ${MAPR_HOME}/hadoop -regextype posix-extended -regex '^.*yarn-site-([0-9]+)\-([0-9]+)\-([0-9]+)\.([0-9]+)\-([0-9]+).xml' | sort -rV | head -n1`
+    if [ -f ${YarnSiteFile} ] && [[ -z $prevConf || $(diff -q $prevConf $YarnSiteFile | wc -l) -ne 0 ]]; then
         logInfo "Backing up \"$HADOOP_HOME/etc/hadoop/yarn-site.xml\" to \"$HADOOP_HOME/etc/hadoop/yarn-site-${YSTIMESTAMP}.xml\""
         cp ${YarnSiteFile} $HADOOP_HOME/etc/hadoop/yarn-site-${YSTIMESTAMP}.xml
     fi
