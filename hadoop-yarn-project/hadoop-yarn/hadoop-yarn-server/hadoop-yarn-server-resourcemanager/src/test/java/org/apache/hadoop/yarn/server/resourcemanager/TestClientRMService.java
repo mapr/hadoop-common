@@ -945,6 +945,65 @@ public class TestClientRMService {
   }
 
   @Test
+  public void testAppSubmitInvalidLabel() throws IOException, NoSuchFieldException, IllegalAccessException {
+    String label = "label";
+    MockRM rm = new MockRM() {
+      protected ClientRMService createClientRMService() {
+        return new ClientRMService(this.rmContext, scheduler,
+            this.rmAppManager, this.applicationACLsManager,
+            this.queueACLsManager, this.getRMContext()
+            .getRMDelegationTokenSecretManager());
+      };
+    };
+    rm.start();
+    LabelManager labelManager = LabelManager.getInstance();
+    Field privateField = LabelManager.class.getDeclaredField("isServiceEnabled");
+    privateField.setAccessible(true);
+    privateField.setBoolean(labelManager, true);
+
+    // Create a client.
+    Configuration conf = new Configuration();
+    YarnRPC rpc = YarnRPC.create(conf);
+    InetSocketAddress rmAddress = rm.getClientRMService().getBindAddress();
+    LOG.info("Connecting to ResourceManager at " + rmAddress);
+    ApplicationClientProtocol client =
+        (ApplicationClientProtocol) rpc.getProxy(
+            ApplicationClientProtocol.class, rmAddress, conf);
+
+    String name = MockApps.newAppName();
+    String queue = MockApps.newQueue();
+    ApplicationId appId = getApplicationId(101);
+
+    Resource resource = Resources.createResource(
+        YarnConfiguration.DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_MB);
+
+    ApplicationSubmissionContext submissionContext =
+        recordFactory.newRecordInstance(ApplicationSubmissionContext.class);
+    submissionContext.setApplicationName(name);
+    submissionContext.setQueue(queue);
+    submissionContext.setApplicationId(appId);
+    submissionContext.setResource(resource);
+    submissionContext.setApplicationType(appType);
+
+    SubmitApplicationRequest submitRequest =
+        recordFactory.newRecordInstance(SubmitApplicationRequest.class);
+    submitRequest.setApplicationSubmissionContext(submissionContext);
+    submitRequest.getApplicationSubmissionContext().setApplicationType(
+        "matchType");
+    submitRequest.getApplicationSubmissionContext().setLabel(label);
+    try {
+      client.submitApplication(submitRequest);
+    } catch (YarnException e) {
+      assertTrue(e.getMessage().contains("Label \"" + label
+          + "\" was not attached to any of the nodes. Application rejected!"));
+      privateField.setBoolean(labelManager, false);
+      return;
+    }
+    privateField.setBoolean(labelManager, false);
+    Assert.fail();
+  }
+
+  @Test
   public void testGetApplications() throws Exception {
     /**
      * 1. Submit 3 applications alternately in two queues

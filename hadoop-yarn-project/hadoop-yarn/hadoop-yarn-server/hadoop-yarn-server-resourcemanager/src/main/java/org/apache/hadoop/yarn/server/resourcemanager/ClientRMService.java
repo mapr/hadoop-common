@@ -35,6 +35,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import net.java.dev.eval.Expression;
 import org.apache.commons.lang.math.LongRange;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -579,6 +580,26 @@ public class ClientRMService extends AbstractService implements
     if (rmContext.getRMApps().get(applicationId) != null) {
       LOG.info("This is an earlier submitted application: " + applicationId);
       return SubmitApplicationResponse.newInstance();
+    }
+
+    LabelManager labelManager = LabelManager.getInstance();
+    try {
+      if (labelManager.isServiceEnabled()) {
+        String label = submissionContext.getLabel();
+        Expression effectiveLabelExpr = labelManager.getEffectiveLabelExpr(label);
+        List<String> nodesForLabel = labelManager.getNodesForLabel(effectiveLabelExpr);
+        if (nodesForLabel.isEmpty()) {
+          throw new YarnException("Label \"" + label +
+              "\" was not attached to any of the nodes. Application rejected!");
+        }
+      }
+    } catch (YarnException | IOException e) {
+      LOG.info("Exception in submitting application with id " +
+          applicationId.getId(), e);
+      RMAuditLogger.logFailure(user, AuditConstants.SUBMIT_APP_REQUEST,
+          e.getMessage(), "ClientRMService",
+          "Exception in submitting application", applicationId);
+      throw new YarnException(e);
     }
 
     if (submissionContext.getQueue() == null) {
