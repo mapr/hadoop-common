@@ -231,6 +231,34 @@ function ConfigureHS() {
         if [ $(grep "__HS_IP__" "${HADOOP_HOME}/etc/hadoop/mapred-site.xml" | wc -l) -ne 0 ]; then
             # Replace HS_IP from template file and redirect output to new file
             sed "s/__HS_IP__/${HS_IP}/g" "${TMPL}" >"${FILE}"
+        else
+          key="<name>mapreduce.jobhistory.address<\/name>"
+          oldValue=$(grep -A1 mapreduce.jobhistory.address "${HADOOP_HOME}/etc/hadoop/mapred-site.xml" | grep -o value.*/value | cut -c 7- | rev | cut -c 8- | rev)
+          newValue=$(echo $oldValue | sed -E "s/(.*):(.*)/$HS_IP:\2/")
+
+          sed -i -e '/'"$key"'/{
+        N
+        s/\('"$key"' *\n* *<value>\)\(.*\)\(<\/value>\)/\1'"$newValue"'\3/
+      }' "${HADOOP_HOME}/etc/hadoop/mapred-site.xml"
+
+          key="<name>mapreduce.jobhistory.webapp.address<\/name>"
+          oldValue=$(grep -A1 mapreduce.jobhistory.webapp.address "${HADOOP_HOME}/etc/hadoop/mapred-site.xml" | grep -o value.*/value | cut -c 7- | rev | cut -c 8- | rev)
+          newValue=$(echo $oldValue | sed -E "s/(.*):(.*)/$HS_IP:\2/")
+
+          sed -i -e '/'"$key"'/{
+        N
+        s/\('"$key"' *\n* *<value>\)\(.*\)\(<\/value>\)/\1'"$newValue"'\3/
+      }' "${HADOOP_HOME}/etc/hadoop/mapred-site.xml"
+
+          key="<name>mapreduce.jobhistory.webapp.https.address<\/name>"
+          oldValue=$(grep -A1 mapreduce.jobhistory.webapp.https.address "${HADOOP_HOME}/etc/hadoop/mapred-site.xml" | grep -o value.*/value | cut -c 7- | rev | cut -c 8- | rev)
+          newValue=$(echo $oldValue | sed -E "s/(.*):(.*)/$HS_IP:\2/")
+
+          sed -i -e '/'"$key"'/{
+        N
+        s/\('"$key"' *\n* *<value>\)\(.*\)\(<\/value>\)/\1'"$newValue"'\3/
+      }' "${HADOOP_HOME}/etc/hadoop/mapred-site.xml"
+
         fi
     fi
 }
