@@ -10,11 +10,15 @@ function createSymlinks() {
   ln -sf __PREFIX__/lib/guava-* __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
   rm -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/slf4j-api*
   ln -sf __PREFIX__/lib/slf4j-api* __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  rm -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/mapr-hbase-*
   ln -sf __PREFIX__/lib/mapr-hbase-* __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  rm -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/mysql-connector-java-*.jar
   ln -sf __PREFIX__/lib/mysql-connector-java-*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
   rm -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/maprfs-*.jar
   ln -sf __PREFIX__/lib/maprfs-*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  rm -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/mapr-java-utils-*.jar
   ln -sf __PREFIX__/lib/mapr-java-utils-*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  rm -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/mapr-tools*.jar
   ln -sf __PREFIX__/lib/mapr-tools*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
   rm -f  __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/jackson-core-asl-1.*.jar
   rm -f  __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/jackson-jaxrs-1.*.jar
@@ -30,7 +34,9 @@ function createSymlinks() {
   ln -sf __PREFIX__/lib/jackson-jaxrs-1.*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
   ln -sf __PREFIX__/lib/jackson-mapper-asl-1.*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
   ln -sf __PREFIX__/lib/jackson-xc-1.*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  rm -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/json-*.jar
   ln -sf __PREFIX__/lib/json-*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  rm -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/central-logging-*.jar
   ln -sf __PREFIX__/lib/central-logging-*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
   rm -f  __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/zookeeper-3.*.jar
   ln -sf __PREFIX__/lib/zookeeper-3.*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
@@ -39,11 +45,17 @@ function createSymlinks() {
     ln -sf __PREFIX__/lib/libMapRClient.so __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/lib/native/
     ln -sf __PREFIX__/lib/libjpam.so __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/lib/native
   fi
+  rm -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/maprdb-*.jar
   ln -sf __PREFIX__/lib/maprdb-*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  rm -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/mapr-stream*.jar
   ln -sf __PREFIX__/lib/mapr-stream*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  rm -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/antlr4-runtime-*.jar
   ln -sf __PREFIX__/lib/antlr4-runtime-*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  rm -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/ojai-*.jar
   ln -sf __PREFIX__/lib/ojai-*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  rm -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/mapr-security-*.jar
   ln -sf __PREFIX__/lib/mapr-security-*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  rm -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/jmxagent*.jar
   ln -sf __PREFIX__/lib/jmxagent*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
 
   ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/audience-annotations-0.*.jar __PREFIX__/lib/
@@ -87,9 +99,6 @@ function copyMaprConfFiles() {
   fi
 }
 
-# check to see if we have old hadoop config
-if [ -f "__PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/etc/hadoop/.not_configured_yet" ]; then
-  createSymlinks
-  copyMaprConfFiles
-  rm -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/.not_configured_yet
-fi
+createSymlinks
+copyMaprConfFiles
+
