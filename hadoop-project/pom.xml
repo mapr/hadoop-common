@@ -32,7 +32,7 @@
   <properties>
     <failIfNoTests>false</failIfNoTests>
     <maven.test.redirectTestOutputToFile>true</maven.test.redirectTestOutputToFile>
-    <jetty.version>9.4.38.v20210224</jetty.version>
+    <jetty.version>9.4.39.v20210325</jetty.version>
     <test.exclude>_</test.exclude>
     <test.exclude.pattern>_</test.exclude.pattern>
 
