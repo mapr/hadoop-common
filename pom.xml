@@ -70,6 +70,13 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xs
         <enabled>false</enabled>
       </snapshots>
     </repository>
+    <repository>
+      <id>repository.atlassian.3rdparty</id>
+      <url>https://packages.atlassian.com/maven-3rdparty/</url>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
   </repositories>
 
   <licenses>

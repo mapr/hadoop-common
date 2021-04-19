@@ -62,7 +62,7 @@
     <jersey.version>1.19</jersey.version>
 
     <!-- jackson versions -->
-    <jackson.version>1.9.13</jackson.version>
+    <jackson.version>1.9.13-atlassian-5</jackson.version>
     <jackson2.version>2.11.1</jackson2.version>
 
     <!-- httpcomponents versions -->
