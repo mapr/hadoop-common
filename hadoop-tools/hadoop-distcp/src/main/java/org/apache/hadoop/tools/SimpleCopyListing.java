@@ -59,6 +59,7 @@ public class SimpleCopyListing extends CopyListing {
   private long totalBytesToCopy = 0;
   private int numListstatusThreads = 1;
   private final int maxRetries = 3;
+  private CopyFilter copyFilter;
 
   /**
    * Protected constructor, to initialize configuration.
@@ -72,6 +73,8 @@ public class SimpleCopyListing extends CopyListing {
     numListstatusThreads = getConf().getInt(
         DistCpConstants.CONF_LABEL_LISTSTATUS_THREADS,
         DistCpConstants.DEFAULT_LISTSTATUS_THREADS);
+    copyFilter = CopyFilter.getCopyFilter(getConf());
+    copyFilter.initialize();
   }
 
   @VisibleForTesting
@@ -221,7 +224,7 @@ public class SimpleCopyListing extends CopyListing {
                 fs.setPath(sourceStatus.getPath());
                 fs.setSymlink(sourceStatus.getSymlink());
               }
-              writeToFileListing(fileListWriter, fs, sourcePathRoot, options);
+              writeToFileListing(fileListWriter, fs, sourcePathRoot);
             }
 
               if (sourceStatus.isDirectory()) {
@@ -273,11 +276,10 @@ public class SimpleCopyListing extends CopyListing {
    * Provide an option to skip copy of a path, Allows for exclusion
    * of files such as {@link org.apache.hadoop.mapreduce.lib.output.FileOutputCommitter#SUCCEEDED_FILE_NAME}
    * @param path - Path being considered for copy while building the file listing
-   * @param options - Input options passed during DistCp invocation
    * @return - True if the path should be considered for copy, false otherwise
    */
-  protected boolean shouldCopy(Path path, DistCpOptions options) {
-    return true;
+  protected boolean shouldCopy(Path path) {
+    return copyFilter.shouldCopy(path);
   }
 
   /** {@inheritDoc} */
@@ -424,7 +426,7 @@ public class SimpleCopyListing extends CopyListing {
                 fs.setPath(child.getPath());
                 fs.setSymlink(child.getSymlink());
               }
-              writeToFileListing(fileListWriter, fs, sourcePathRoot, options);
+              writeToFileListing(fileListWriter, fs, sourcePathRoot);
             }
 
           }
@@ -462,27 +464,24 @@ public class SimpleCopyListing extends CopyListing {
         }
         return;
       }
-      writeToFileListing(fileListWriter, fs, sourcePathRoot, options);
+      writeToFileListing(fileListWriter, fs, sourcePathRoot);
     }
   }
 
   private void writeToFileListing(SequenceFile.Writer fileListWriter,
                                   CopyListingFileStatus fileStatus,
-                                  Path sourcePathRoot,
-                                  DistCpOptions options) throws IOException {
+                                  Path sourcePathRoot) throws IOException {
     if (LOG.isDebugEnabled()) {
       LOG.debug("REL PATH: " + DistCpUtils.getRelativePath(sourcePathRoot,
         fileStatus.getPath()) + ", FULL PATH: " + fileStatus.getPath());
     }
 
-    FileStatus status = fileStatus;
-
-    if (!shouldCopy(fileStatus.getPath(), options)) {
+    if (!shouldCopy(fileStatus.getPath())) {
       return;
     }
 
     fileListWriter.append(new Text(DistCpUtils.getRelativePath(sourcePathRoot,
-        fileStatus.getPath())), status);
+        fileStatus.getPath())), fileStatus);
     fileListWriter.sync();
 
     if (!fileStatus.isDirectory()) {

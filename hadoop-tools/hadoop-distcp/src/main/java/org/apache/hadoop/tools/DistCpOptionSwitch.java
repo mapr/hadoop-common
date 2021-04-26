@@ -202,7 +202,15 @@ public enum DistCpOptionSwitch {
    */
   MAX_FILE_SIZE(DistCpConstants.CONF_LABEL_MAX_FILE_SIZE,
       new Option("filesizemax", true, "Limit the file size to be < n bytes "
-        + "(default 8 exbibyte)"));
+        + "(default 8 exbibyte)")),
+
+  /**
+   * Path containing a list of strings, which when found in the path of
+   * a file to be copied excludes that file from the copy job.
+   */
+  FILTERS(DistCpConstants.CONF_LABEL_FILTERS_FILE,
+      new Option("filters", true, "The path to a file containing a list of"
+      + " strings for paths to be excluded from the copy."));
 
   public static final String PRESERVE_STATUS_DEFAULT = "-prbugpcte";
   private final String confLabel;

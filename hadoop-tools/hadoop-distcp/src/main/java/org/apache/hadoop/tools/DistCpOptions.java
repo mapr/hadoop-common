@@ -69,7 +69,12 @@ public class DistCpOptions {
 
   private Path targetPath;
 
-  // targetPathExist is a derived field, it's initialized in the 
+  /**
+   * The path to a file containing a list of paths to filter out of the copy.
+   */
+  private String filtersFile;
+
+  // targetPathExist is a derived field, it's initialized in the
   // beginning of distcp.
   private boolean targetPathExists = true;
 
@@ -80,7 +85,7 @@ public class DistCpOptions {
 
   private long minFileSize = DistCpConstants.DEFAULT_MIN_FILE_SIZE;
   private long maxFileSize = DistCpConstants.DEFAULT_MAX_FILE_SIZE;
-  
+
   public static enum FileAttribute{
     REPLICATION, BLOCKSIZE, USER, GROUP, PERMISSION, CHECKSUMTYPE, ACL, XATTR, TIMES, EXP;
 
@@ -150,6 +155,7 @@ public class DistCpOptions {
       this.minFileSize = that.minFileSize;
       this.maxFileSize = that.maxFileSize;
       this.blocksPerChunk = that.blocksPerChunk;
+      this.filtersFile = that.getFiltersFile();
     }
   }
 
@@ -588,6 +594,23 @@ public class DistCpOptions {
     return blocksPerChunk > 0;
   }
 
+  /**
+   * File path that contains the list of patterns
+   * for paths to be filtered from the file copy.
+   * @return - Filter  file path.
+   */
+  public final String getFiltersFile() {
+    return filtersFile;
+  }
+
+  /**
+   * Set filtersFile.
+   * @param filtersFilename The path to a list of patterns to exclude from copy.
+   */
+  public final void setFiltersFile(String filtersFilename) {
+    this.filtersFile = filtersFilename;
+  }
+
   public void validate(DistCpOptionSwitch option, boolean value) {
 
     boolean syncFolder = (option == DistCpOptionSwitch.SYNC_FOLDERS ?
@@ -668,6 +691,10 @@ public class DistCpOptions {
         String.valueOf(maxFileSize));
     DistCpOptionSwitch.addToConf(conf, DistCpOptionSwitch.BLOCKS_PER_CHUNK,
         String.valueOf(blocksPerChunk));
+    if (filtersFile != null) {
+      DistCpOptionSwitch.addToConf(conf, DistCpOptionSwitch.FILTERS,
+          filtersFile);
+    }
   }
 
   /**
@@ -691,6 +718,7 @@ public class DistCpOptions {
         ", targetPathExists=" + targetPathExists +
         ", preserveRawXattrs=" + preserveRawXattrs +
         ", blocksPerChunk=" + blocksPerChunk +
+        ", filtersFile='" + filtersFile + '\'' +
         '}';
   }
 
