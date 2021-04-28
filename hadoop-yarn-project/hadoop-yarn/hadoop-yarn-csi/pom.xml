@@ -39,7 +39,7 @@
         <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
-            <version>${protobuf.version}</version>
+            <version>${hadoop.protobuf.version}</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
@@ -54,6 +54,13 @@
             <groupId>io.grpc</groupId>
             <artifactId>grpc-protobuf</artifactId>
             <version>${grpc.version}</version>
+            <exclusions>
+                <!-- Exclude protobuf-java 2.5.0 -->
+                <exclusion>
+                    <groupId>com.google.protobuf</groupId>
+                    <artifactId>protobuf-java</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.grpc</groupId>
@@ -91,21 +98,49 @@
             <artifactId>hadoop-common</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
+            <exclusions>
+                <!-- Exclude protobuf-java 2.5.0 -->
+                <exclusion>
+                    <groupId>com.google.protobuf</groupId>
+                    <artifactId>protobuf-java</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
             <scope>provided</scope>
+            <exclusions>
+                <!-- Exclude protobuf-java 2.5.0 -->
+                <exclusion>
+                    <groupId>com.google.protobuf</groupId>
+                    <artifactId>protobuf-java</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-yarn-common</artifactId>
             <scope>provided</scope>
+            <exclusions>
+                <!-- Exclude protobuf-java 2.5.0 -->
+                <exclusion>
+                    <groupId>com.google.protobuf</groupId>
+                    <artifactId>protobuf-java</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-yarn-api</artifactId>
             <scope>provided</scope>
+            <exclusions>
+                <!-- Exclude protobuf-java 2.5.0 -->
+                <exclusion>
+                    <groupId>com.google.protobuf</groupId>
+                    <artifactId>protobuf-java</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>javax.annotation</groupId>
@@ -158,7 +193,7 @@
                 <artifactId>protobuf-maven-plugin</artifactId>
                 <version>${protobuf-maven-plugin.version}</version>
                 <configuration>
-                    <protocArtifact>com.google.protobuf:protoc:3.6.1:exe:${os.detected.classifier}</protocArtifact>
+                    <protocArtifact>com.google.protobuf:protoc:${hadoop.protobuf.version}:exe:${os.detected.classifier}</protocArtifact>
                     <pluginId>grpc-java</pluginId>
                     <pluginArtifact>io.grpc:protoc-gen-grpc-java:1.26.0:exe:${os.detected.classifier}</pluginArtifact>
                 </configuration>
