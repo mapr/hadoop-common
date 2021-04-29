@@ -38,6 +38,7 @@ public abstract class Nfs3Base {
   private static final Marker FATAL = MarkerFactory.getMarker("FATAL");
   private final RpcProgram rpcProgram;
   private int nfsBoundPort; // Will set after server starts
+  private SimpleTcpServer tcpServer = null;
 
   public RpcProgram getRpcProgram() {
     return rpcProgram;
@@ -64,7 +65,7 @@ public abstract class Nfs3Base {
   }
 
   private void startTCPServer() {
-    SimpleTcpServer tcpServer = new SimpleTcpServer(rpcProgram.getPort(),
+    tcpServer = new SimpleTcpServer(rpcProgram.getPort(),
         rpcProgram, 0);
     rpcProgram.startDaemons();
     try {
@@ -81,6 +82,17 @@ public abstract class Nfs3Base {
     nfsBoundPort = tcpServer.getBoundPort();
   }
 
+  public void stop() {
+    if (nfsBoundPort > 0) {
+      rpcProgram.unregister(PortmapMapping.TRANSPORT_TCP, nfsBoundPort);
+      nfsBoundPort = 0;
+    }
+    rpcProgram.stopDaemons();
+    if (tcpServer != null) {
+      tcpServer.shutdown();
+      tcpServer = null;
+    }
+  }
   /**
    * Priority of the nfsd shutdown hook.
    */

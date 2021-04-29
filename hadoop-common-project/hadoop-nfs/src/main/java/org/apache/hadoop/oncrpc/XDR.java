@@ -20,8 +20,8 @@ package org.apache.hadoop.oncrpc;
 import java.nio.ByteBuffer;
 
 import org.apache.commons.io.Charsets;
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -231,8 +231,13 @@ public final class XDR {
     return b;
   }
 
-  /** Write an XDR message to a TCP ChannelBuffer */
-  public static ChannelBuffer writeMessageTcp(XDR request, boolean last) {
+  /**
+   * Write an XDR message to a TCP ChannelBuffer.
+   * @param request XDR request
+   * @param last specifies last request or not
+   * @return TCP buffer
+   */
+  public static ByteBuf writeMessageTcp(XDR request, boolean last) {
     Preconditions.checkState(request.state == XDR.State.WRITING);
     ByteBuffer b = request.buf.duplicate();
     b.flip();
@@ -240,14 +245,18 @@ public final class XDR {
     ByteBuffer headerBuf = ByteBuffer.wrap(fragmentHeader);
 
     // TODO: Investigate whether making a copy of the buffer is necessary.
-    return ChannelBuffers.copiedBuffer(headerBuf, b);
+    return Unpooled.wrappedBuffer(headerBuf, b);
   }
 
-  /** Write an XDR message to a UDP ChannelBuffer */
-  public static ChannelBuffer writeMessageUdp(XDR response) {
+  /**
+   * Write an XDR message to a UDP ChannelBuffer.
+   * @param response XDR response
+   * @return UDP buffer
+   */
+  public static ByteBuf writeMessageUdp(XDR response) {
     Preconditions.checkState(response.state == XDR.State.READING);
     // TODO: Investigate whether making a copy of the buffer is necessary.
-    return ChannelBuffers.copiedBuffer(response.buf);
+    return Unpooled.copiedBuffer(response.buf);
   }
 
   public static int fragmentSize(byte[] mark) {
