@@ -248,4 +248,6 @@ main() {
   esac
 }
 
-main $1
+SERVICE_NAME=`echo "$(basename -- $0)" | awk -F- '{print $2}'`
+
+main $SERVICE_NAME
