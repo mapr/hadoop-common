@@ -100,7 +100,6 @@ pipeline {
                         rm -rf ${env.PROJECT}; git clone git@github.com:mapr/private-pkg.git ${env.PROJECT}; \
                         cd ${env.PROJECT}; \
                         git checkout MEP-7.0.0 ; \
-                        make ${env.PROJECT} TIMESTAMP=${ID} ${MAKEFILE_ARGS} ; \
                         make mapr-hadoop-util-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS} ; \
                         make mapr-hadoop-client-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS} ; \
                         make mapr-hadoop-core-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS} ; \
@@ -176,7 +175,6 @@ pipeline {
                         rm -rf ${env.PROJECT}; git clone git@github.com:mapr/private-pkg.git ${env.PROJECT}; \
                         cd ${env.PROJECT}; \
                         git checkout MEP-7.0.0 ; \
-                        make ${env.PROJECT} TIMESTAMP=${ID} ${MAKEFILE_ARGS} ; \
                         make mapr-hadoop-util-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS} ; \
                         make mapr-hadoop-client-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS} ; \
                         make mapr-hadoop-core-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS} ; \
