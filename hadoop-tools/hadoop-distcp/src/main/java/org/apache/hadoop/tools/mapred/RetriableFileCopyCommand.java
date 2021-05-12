@@ -37,6 +37,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.maprfs.AbstractMapRFileSystem;
 import org.apache.hadoop.tools.CopyListingFileStatus;
 import org.apache.hadoop.tools.DistCpConstants;
 import org.apache.hadoop.tools.DistCpOptions.FileAttribute;
@@ -181,11 +182,15 @@ public class RetriableFileCopyCommand extends RetriableCommand {
           EnumSet.of(CreateFlag.CREATE, CreateFlag.OVERWRITE),
           BUFFER_SIZE, repl, blockSize, context,
           getChecksumOpt(fileAttributes, sourceChecksum));
-      out.seek(sourceFileStatus.getChunkOffset());
+      if(targetFS instanceof AbstractMapRFileSystem){
+        out.seek(sourceFileStatus.getChunkOffset());
+      }
       outStream = new BufferedOutputStream(out);
     } else {
       FSDataOutputStream out = targetFS.append(targetPath, BUFFER_SIZE);
-      out.seek(sourceFileStatus.getChunkOffset());
+      if(targetFS instanceof AbstractMapRFileSystem){
+        out.seek(sourceFileStatus.getChunkOffset());
+      }
       outStream = new BufferedOutputStream(out);
     }
     return copyBytes(sourceFileStatus, sourceOffset, outStream, BUFFER_SIZE,

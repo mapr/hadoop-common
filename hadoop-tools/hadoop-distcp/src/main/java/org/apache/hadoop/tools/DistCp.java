@@ -34,6 +34,7 @@ import org.apache.hadoop.mapreduce.Cluster;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.JobSubmissionFiles;
+import org.apache.hadoop.maprfs.AbstractMapRFileSystem;
 import org.apache.hadoop.tools.DistCpOptions.FileAttribute;
 import org.apache.hadoop.tools.CopyListing.*;
 import org.apache.hadoop.tools.mapred.CopyMapper;
@@ -231,6 +232,9 @@ public class DistCp extends Configured implements Tool {
     }
     Path target = inputOptions.getTargetPath();
     FileSystem targetFS = target.getFileSystem(getConf());
+    if (!(targetFS instanceof AbstractMapRFileSystem)) {
+      throw new UnsupportedOperationException("Destination path should be MapRFS for supporting blocksperchunk property.");
+    }
 
     LOG.info("Enabling preserving blocksize since "
         + DistCpOptionSwitch.BLOCKS_PER_CHUNK.getSwitch() + " is passed.");

@@ -182,7 +182,7 @@ public enum DistCpOptionSwitch {
           + "0 and the files will be transmitted in their entirety without "
           + "splitting. This switch is only applicable when the source file "
           + "system implements getBlockLocations method and the target file "
-          + "system implements concat method")),
+          + "system is MapRFS")),
 
   /**
    * Specify bandwidth per map in MB
