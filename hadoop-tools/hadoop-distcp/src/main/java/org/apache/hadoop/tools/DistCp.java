@@ -37,6 +37,7 @@ import org.apache.hadoop.mapreduce.Cluster;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.JobSubmissionFiles;
+import org.apache.hadoop.maprfs.AbstractMapRFileSystem;
 import org.apache.hadoop.tools.CopyListing.*;
 import org.apache.hadoop.tools.mapred.CopyMapper;
 import org.apache.hadoop.tools.mapred.CopyOutputFormat;
@@ -265,7 +266,6 @@ public class DistCp extends Configured implements Tool {
     if (!context.splitLargeFile()) {
       return;
     }
-
     final Path target = context.getTargetPath();
     final FileSystem targetFS = target.getFileSystem(getConf());
     if (!(targetFS instanceof AbstractMapRFileSystem)) {

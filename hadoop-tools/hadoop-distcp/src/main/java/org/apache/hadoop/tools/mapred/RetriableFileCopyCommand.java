@@ -42,6 +42,7 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.maprfs.AbstractMapRFileSystem;
 import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.maprfs.AbstractMapRFileSystem;
 import org.apache.hadoop.tools.CopyListingFileStatus;
 import org.apache.hadoop.tools.DistCpConstants;
 import org.apache.hadoop.tools.DistCpOptionSwitch;
@@ -247,11 +248,15 @@ public class RetriableFileCopyCommand extends RetriableCommand {
         }
         out = builder.build();
       }
-        out.seek(source.getChunkOffset());
+      if(targetFS instanceof AbstractMapRFileSystem) {
+          out.seek(source.getChunkOffset());
+      }
         outStream = new BufferedOutputStream(out);
     } else {
       FSDataOutputStream out = targetFS.append(targetPath, copyBufferSize);
-      out.seek(source.getChunkOffset());
+      if(targetFS instanceof AbstractMapRFileSystem) {
+        out.seek(source.getChunkOffset());
+      }
       outStream = new BufferedOutputStream(out);
     }
     return copyBytes(source, sourceOffset, outStream, copyBufferSize,

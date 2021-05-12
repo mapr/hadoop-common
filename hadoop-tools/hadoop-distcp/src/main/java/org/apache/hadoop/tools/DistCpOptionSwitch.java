@@ -204,7 +204,7 @@ public enum DistCpOptionSwitch {
           + "0 and the files will be transmitted in their entirety without "
           + "splitting. This switch is only applicable when the source file "
           + "system implements getBlockLocations method and the target file "
-          + "system implements concat method")),
+          + "system is MapRFS")),
 
   KEEP_LINKS(DistCpConstants.CONF_LABEL_KEEP_LINKS,
       new Option("P", false, "Passing -P disables traverse by symbolic link, "
