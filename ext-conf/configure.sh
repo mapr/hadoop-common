@@ -442,23 +442,6 @@ TL_RESTART
     fi
 }
 
-function ConfigureHadoop2() {
-    if [ -f "$HADOOP_HOME/etc/hadoop/.not_configured_yet" ]; then
-        prevConf=`find ${MAPR_HOME}/hadoop -regextype posix-extended -regex '^.*hadoop-([0-9])\.([0-9])\.([0-9])\.([0-9]+)\.([0-9]+)' | sort -rV | head -n1`
-        if [ ! -z "$prevConf" ]; then
-            cp $prevConf/etc/hadoop/ssl-client.xml $HADOOP_SSL_CLIENT_FILE
-            cp $prevConf/etc/hadoop/ssl-server.xml $HADOOP_SSL_SERVER_FILE
-        fi
-    fi
-    sed -i -e 's|{MAPR_HOME}|'${MAPR_HOME}'|g' "$HADOOP_SSL_CLIENT_FILE"
-    sed -i -e 's|{MAPR_HOME}|'${MAPR_HOME}'|g' "$HADOOP_SSL_SERVER_FILE"
-    chmod 640 "$HADOOP_SSL_SERVER_FILE"
-
-    ln -sf "$HADOOP_SSL_CLIENT_FILE" "${MAPR_CONF_DIR}"/ssl-client.xml
-    ln -sf "$HADOOP_SSL_SERVER_FILE" "${MAPR_CONF_DIR}"/ssl-server.xml
-    chmod 640 "${MAPR_CONF_DIR}"/ssl-server.xml
-}
-
 function ConfigureYarnLinuxContainerExecutor() {
     # Only configure container executor for yarn
     # Set the MapR specific values in container-executor.cfg
@@ -504,8 +487,6 @@ function ConfigureHadoopMain() {
     fi
 
     ConfigureCommon
-
-    ConfigureHadoop2
 }
 
 function ConfigureHadoop() {
@@ -990,11 +971,6 @@ if hasRole "historyserver"; then
 fi
 if hasRole "timelineserver"; then
     installWardenConfFile timelineserver
-fi
-
-# remove state file
-if [ -f "$HADOOP_HOME/etc/hadoop/.not_configured_yet" ]; then
-    rm -f "$HADOOP_HOME/etc/hadoop/.not_configured_yet"
 fi
 
 true
