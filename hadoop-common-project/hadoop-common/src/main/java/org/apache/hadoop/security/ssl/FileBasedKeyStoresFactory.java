@@ -284,8 +284,8 @@ public class FileBasedKeyStoresFactory implements KeyStoresFactory {
       KeyStore keystore = KeyStore.getInstance(keystoreType);
       keystore.load(null, null);
       KeyManagerFactory keyMgrFactory = keystoreType.equalsIgnoreCase(BouncyCastleFipsKeyStoreProvider.KEYSTORE_TYPE) ?
-              KeyManagerFactory.getInstance(SSLFactory.SSLCERTIFICATE, Security.getProvider(BouncyCastleJsseProvider.PROVIDER_NAME)) :
-              KeyManagerFactory.getInstance(SSLFactory.SSLCERTIFICATE);
+              KeyManagerFactory.getInstance(SSLFactory.KEY_MANAGER_SSLCERTIFICATE, Security.getProvider(BouncyCastleJsseProvider.PROVIDER_NAME)) :
+              KeyManagerFactory.getInstance(SSLFactory.KEY_MANAGER_SSLCERTIFICATE);
 
       keyMgrFactory.init(keystore, null);
       keyManagers = keyMgrFactory.getKeyManagers();

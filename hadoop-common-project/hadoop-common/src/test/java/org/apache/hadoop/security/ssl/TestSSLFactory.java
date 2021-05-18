@@ -17,6 +17,8 @@
  */
 package org.apache.hadoop.security.ssl;
 
+import static java.security.Security.getProperty;
+import static java.security.Security.setProperty;
 import static org.apache.hadoop.security.ssl.KeyStoreTestUtil.TRUST_STORE_PASSWORD_DEFAULT;
 import static org.junit.Assert.assertTrue;
 
@@ -304,6 +306,20 @@ public class TestSSLFactory {
       sslFactory.init();
     } finally {
       sslFactory.destroy();
+    }
+  }
+
+  @Test
+  public void testDifferentAlgorithm() throws Exception {
+    Configuration conf = createConfiguration(false, true);
+    String currAlg = getProperty("ssl.KeyManagerFactory.algorithm");
+    setProperty("ssl.KeyManagerFactory.algorithm", "PKIX");
+    SSLFactory sslFactory = new SSLFactory(SSLFactory.Mode.CLIENT, conf);
+    try {
+      sslFactory.init();
+    } finally {
+      sslFactory.destroy();
+      setProperty("ssl.KeyManagerFactory.algorithm", currAlg);
     }
   }
 
