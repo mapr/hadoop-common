@@ -179,7 +179,7 @@ public class FileBasedKeyStoresFactory implements KeyStoresFactory {
       keystore.load(null, null);
     }
     KeyManagerFactory keyMgrFactory = KeyManagerFactory
-        .getInstance(SSLFactory.SSLCERTIFICATE);
+        .getInstance(SSLFactory.KEY_MANAGER_SSLCERTIFICATE);
       
     keyMgrFactory.init(keystore, (keystoreKeyPassword != null) ?
                                  keystoreKeyPassword.toCharArray() : null);
