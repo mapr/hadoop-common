@@ -419,6 +419,7 @@ function ConfigureTimeLineServer() {
         if (grep -Fq "<!--TIMELINE SECURITY SECTION-->" ${YarnSiteFile}); then
             yarnSiteChange=1
             sed -i -e '/<!--TIMELINE SECURITY SECTION-->/,/<!--TIMELINE SECURITY SECTION END-->/d' ${YarnSiteFile}
+            echo "</configuration>" >> ${YarnSiteFile}
         fi
     fi
 
