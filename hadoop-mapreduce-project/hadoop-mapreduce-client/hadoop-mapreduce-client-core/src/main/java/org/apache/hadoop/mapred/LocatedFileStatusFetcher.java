@@ -122,7 +122,7 @@ public class LocatedFileStatusFetcher {
     for (Path p : inputDirs) {
       runningTasks.incrementAndGet();
       FileSystem fs = p.getFileSystem(conf);
-      if (fs instanceof AbstractMapRFileSystem && fs.getFileStatus(p).isSymlink()) {
+      if (fs instanceof AbstractMapRFileSystem) {
         p = FileUtil.fixSymlinkPath(new PathData(p.toString(), fs.getConf()));
       }
       ListenableFuture<ProcessInitialInputPathCallable.Result> future = exec

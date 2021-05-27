@@ -259,8 +259,8 @@ public abstract class FileInputFormat<K, V> implements InputFormat<K, V> {
     List<IOException> errors = new ArrayList<IOException>();
     for (Path p: dirs) {
       FileSystem fs = p.getFileSystem(job);
-      if (fs instanceof AbstractMapRFileSystem && fs.getFileStatus(p).isSymlink()) {
-        p = FileUtil.fixSymlinkPath(new PathData(p.toString(), fs.getConf()));
+      if (fs instanceof AbstractMapRFileSystem) {
+        p = FileUtil.checkPathForSymlink(p, fs.getConf()).path;
       }
       FileStatus[] matches = fs.globStatus(p, inputFilter);
       if (matches == null) {

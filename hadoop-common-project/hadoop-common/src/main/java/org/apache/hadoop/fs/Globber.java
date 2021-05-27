@@ -26,6 +26,7 @@ import java.util.List;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 
+import org.apache.hadoop.maprfs.AbstractMapRFileSystem;
 import org.apache.htrace.core.TraceScope;
 import org.apache.htrace.core.Tracer;
 import org.slf4j.Logger;
@@ -232,6 +233,12 @@ class Globber {
           continue;
         }
         for (FileStatus candidate : candidates) {
+          if (fs instanceof AbstractMapRFileSystem) {
+            FileStatus candidateStatus = fs.getFileStatus(candidate.getPath());
+            if(candidateStatus.isSymlink()){
+              candidate = fs.getFileStatus(FileUtil.fixSymlinkFileStatus(candidateStatus));
+            }
+          }
           if (globFilter.hasPattern()) {
             FileStatus[] children = listStatus(candidate.getPath());
             if (children.length == 1) {
