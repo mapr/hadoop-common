@@ -358,7 +358,7 @@ public class Groups {
           backgroundRefreshException.incrementAndGet();
           backgroundRefreshRunning.decrementAndGet();
         }
-      });
+      }, MoreExecutors.directExecutor());
       return listenableFuture;
     }
 
