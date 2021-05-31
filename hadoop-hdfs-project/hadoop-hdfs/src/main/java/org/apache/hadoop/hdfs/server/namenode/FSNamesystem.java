@@ -1484,10 +1484,6 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
     this.fsLock.readLock().lock();
   }
   @Override
-  public void readLockInterruptibly() throws InterruptedException {
-    this.fsLock.readLockInterruptibly();
-  }
-  @Override
   public void readUnlock() {
     this.fsLock.readLock().unlock();
   }
@@ -6739,9 +6735,9 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
     assert !isInSafeMode() :
       "this should never be called while in safemode, since we stop " +
       "the DT manager before entering safemode!";
-    // edit log rolling is not thread-safe and must be protected by the
-    // fsn lock.  not updating namespace so read lock is sufficient.
-    assert hasReadLock();
+    // No need to hold FSN lock since we don't access any internal
+    // structures, and this is stopped before the FSN shuts itself
+    // down, etc.
     getEditLog().logUpdateMasterKey(key);
     getEditLog().logSync();
   }
@@ -6755,10 +6751,9 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
     assert !isInSafeMode() :
       "this should never be called while in safemode, since we stop " +
       "the DT manager before entering safemode!";
-    // edit log rolling is not thread-safe and must be protected by the
-    // fsn lock.  not updating namespace so read lock is sufficient.
-    assert hasReadLock();
-    // do not logSync so expiration edits are batched
+    // No need to hold FSN lock since we don't access any internal
+    // structures, and this is stopped before the FSN shuts itself
+    // down, etc.
     getEditLog().logCancelDelegationToken(id);
   }  
   

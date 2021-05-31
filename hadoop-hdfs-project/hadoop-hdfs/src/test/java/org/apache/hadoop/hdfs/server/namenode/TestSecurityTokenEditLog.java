@@ -24,7 +24,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Iterator;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -38,11 +37,7 @@ import org.apache.hadoop.hdfs.server.namenode.NNStorage.NameNodeDirType;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.Token;
-import org.junit.Assert;
 import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
-
 import static org.mockito.Mockito.*;
 
 /**
@@ -185,25 +180,8 @@ public class TestSecurityTokenEditLog {
     Text renewer = new Text(UserGroupInformation.getCurrentUser().getUserName());
     FSImage fsImage = mock(FSImage.class);
     FSEditLog log = mock(FSEditLog.class);
-    doReturn(log).when(fsImage).getEditLog();
-    // verify that the namesystem read lock is held while logging token
-    // expirations.  the namesystem is not updated, so write lock is not
-    // necessary, but the lock is required because edit log rolling is not
-    // thread-safe.
-    final AtomicReference<FSNamesystem> fsnRef = new AtomicReference<>();
-    doAnswer(
-      new Answer<Void>() {
-        @Override
-        public Void answer(InvocationOnMock invocation) throws Throwable {
-          // fsn claims read lock if either read or write locked.
-          Assert.assertTrue(fsnRef.get().hasReadLock());
-          Assert.assertFalse(fsnRef.get().hasWriteLock());
-          return null;
-        }
-      }
-    ).when(log).logCancelDelegationToken(any(DelegationTokenIdentifier.class));
+    doReturn(log).when(fsImage).getEditLog();   
     FSNamesystem fsn = new FSNamesystem(conf, fsImage);
-    fsnRef.set(fsn);
     
     DelegationTokenSecretManager dtsm = fsn.getDelegationTokenSecretManager();
     try {

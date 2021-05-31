@@ -11,11 +11,8 @@ Release 2.7.6 - UNRELEASED
     HDFS-11003. Expose XmitsInProgress through DataNodeMXBean.
     (Brahma Reddy Battula)
 
-    HDFS-11187. Optimize disk access for last partial chunk checksum of
-    Finalized replica. (Gabor Bota, Wei-Chiu Chuang via Xiao Chen)
-
-    HDFS-12884. BlockUnderConstructionFeature.truncateBlock should be of type
-    BlockInfo. (chencan via shv)
+    HADOOP-15212. Add independent secret manager method for logging expired
+    tokens. (Daryn Sharp via kihwal)
 
   OPTIMIZATIONS
 
@@ -38,15 +35,6 @@ Release 2.7.6 - UNRELEASED
     HDFS-10453. ReplicationMonitor thread could stuck for long time
     due to the race between replication and delete of same file in a
     large cluster. Contributed by He Xiaoqiao.
-
-    HDFS-13112. Token expiration edits may cause log corruption or deadlock.
-    (daryn via kihwal)
-
-    HDFS-4210. Throw helpful exception when DNS entry for JournalNode cannot be
-    resolved. (Charles Lamb and John Zhuge)
-
-    HDFS-13195. DataNode conf page cannot display the current value after
-    reconfig. (Mao Baolong via kihwal)
 
 Release 2.7.5 - 2017-12-14
 

@@ -21,10 +21,7 @@ package org.apache.hadoop.hdfs.util;
 public interface RwLock {
   /** Acquire read lock. */
   public void readLock();
-
-  /** Acquire read lock, unless interrupted while waiting  */
-  void readLockInterruptibly() throws InterruptedException;
-
+  
   /** Release read lock. */
   public void readUnlock();
 
