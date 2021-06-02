@@ -210,7 +210,7 @@ abstract class CommandWithDestination extends FsCommand {
       if (!dst.exists) {
         throw new PathNotFoundException(dst.toString());
       }
-      if (!dst.stat.isDirectory()) {
+      if (!FileUtil.checkItemForSymlink(dst).stat.isDirectory()) {
         throw new PathIsNotDirectoryException(dst.toString());
       }
     } else if (dst.exists) {
