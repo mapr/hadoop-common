@@ -233,9 +233,9 @@ class Globber {
           continue;
         }
         for (FileStatus candidate : candidates) {
-          if (fs instanceof AbstractMapRFileSystem) {
+          if (fs instanceof AbstractMapRFileSystem && fs.exists(candidate.getPath())) {
             FileStatus candidateStatus = fs.getFileStatus(candidate.getPath());
-            if(candidateStatus.isSymlink()){
+            if (candidateStatus.isSymlink()) {
               candidate = fs.getFileStatus(FileUtil.fixSymlinkFileStatus(candidateStatus));
             }
           }
