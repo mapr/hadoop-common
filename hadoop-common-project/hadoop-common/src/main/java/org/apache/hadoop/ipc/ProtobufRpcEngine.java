@@ -498,8 +498,11 @@ public class ProtobufRpcEngine implements RpcEngine {
     return CLIENTS.getClient(conf, SocketFactory.getDefault(),
         RpcResponseWrapper.class);
   }
-  
- 
+
+  @VisibleForTesting
+  public static void clearClientCache() {
+    CLIENTS.clearCache();
+  }
 
   @Override
   public RPC.Server getServer(Class<?> protocol, Object protocolImpl,
