@@ -109,8 +109,6 @@ if [ "$COMMAND" == "jar" ] && [ -f ${MAPR_HBASE_VERSION_FILE} ]; then
   fi
 fi
 
-BC_JAR=`cd ${BASEMAPR}; find ${MAPR_HOME}/lib -name "bc-fips*.jar" | head -1`
-BCTLS_JAR=`cd ${BASEMAPR}; find ${MAPR_HOME}/lib -name "bctls-fips*.jar" | head -1`
 if [ -d "$MAPR_HOME/lib" ]; then
   CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/kvstore*.jar
   CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/libprotodefs*.jar
@@ -118,12 +116,6 @@ if [ -d "$MAPR_HOME/lib" ]; then
   CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/maprutil*.jar
   CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/json-1.8.jar
   CLASSPATH=${CLASSPATH}:$MAPR_HOME/lib/flexjson-2.1.jar
-  if [ ! -z $BC_JAR ]; then
-    CLASSPATH=${CLASSPATH}:$BC_JAR
-  fi
-  if [ ! -z $BCTLS_JAR ]; then
-    CLASSPATH=${CLASSPATH}:$BCTLS_JAR
-  fi
 fi
 
 #MapR add standard library locations in java.library.path
