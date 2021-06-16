@@ -76,10 +76,10 @@ public abstract class QueueInfo {
       float maximumCapacity, float currentCapacity,
       List<QueueInfo> childQueues, List<ApplicationReport> applications,
       QueueState queueState, Set<String> accessibleNodeLabels,
-      String defaultNodeLabelExpression, String label, String labelPolicy) {
+      String defaultNodeLabelExpression, String label, String labelPolicy, QueueStatistics queueStatistics) {
 
     QueueInfo queueInfo = QueueInfo.newInstance(queueName, capacity, maximumCapacity, currentCapacity,
-        childQueues, applications, queueState, accessibleNodeLabels, defaultNodeLabelExpression);
+        childQueues, applications, queueState, accessibleNodeLabels, defaultNodeLabelExpression, queueStatistics);
     queueInfo.setQueueLabel(label);
     queueInfo.setQueueLabelPolicy(labelPolicy);
 

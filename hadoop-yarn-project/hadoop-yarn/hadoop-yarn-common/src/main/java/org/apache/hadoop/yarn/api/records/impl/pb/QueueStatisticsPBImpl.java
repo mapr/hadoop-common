@@ -254,4 +254,52 @@ public class QueueStatisticsPBImpl extends QueueStatistics {
     maybeInitBuilder();
     builder.setReservedVCores(reservedVCores);
   }
+
+  @Override
+  public double getAvailableDisks() {
+    QueueStatisticsProtoOrBuilder p = viaProto ? proto : builder;
+    return (p.hasAvailableDisks()) ? p.getAvailableDisks() : -1;
+  }
+
+  @Override
+  public void setAvailableDisks(double availableDisks) {
+    maybeInitBuilder();
+    builder.setAvailableDisks(availableDisks);
+  }
+
+  @Override
+  public double getAllocatedDisks() {
+    QueueStatisticsProtoOrBuilder p = viaProto ? proto : builder;
+    return (p.hasAllocatedDisks()) ? p.getAllocatedDisks() : -1;
+  }
+
+  @Override
+  public void setAllocatedDisks(double allocatedDisks) {
+    maybeInitBuilder();
+    builder.setAllocatedDisks(allocatedDisks);
+  }
+
+  @Override
+  public double getPendingDisks() {
+    QueueStatisticsProtoOrBuilder p = viaProto ? proto : builder;
+    return (p.hasPendingDisks()) ? p.getPendingDisks() : -1;
+  }
+
+  @Override
+  public void setPendingDisks(double pendingDisks) {
+    maybeInitBuilder();
+    builder.setPendingDisks(pendingDisks);
+  }
+
+  @Override
+  public double getReservedDisks() {
+    QueueStatisticsProtoOrBuilder p = viaProto ? proto : builder;
+    return (p.hasReservedDisks()) ? p.getReservedDisks() : -1;
+  }
+
+  @Override
+  public void setReservedDisks(double reservedDisks) {
+    maybeInitBuilder();
+    builder.setReservedDisks(reservedDisks);
+  }
 }

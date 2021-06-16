@@ -1268,7 +1268,7 @@ public class TestYarnCLI {
     String labelPolicy = "AND";
     QueueInfo queueInfo = QueueInfo.newInstance("queueA", 0.4f, 0.8f, 0.5f,
         null, null, QueueState.RUNNING, null, null,
-        label, labelPolicy);
+        label, labelPolicy, null);
     when(client.getQueueInfo(any(String.class))).thenReturn(queueInfo);
     int result = cli.run(new String[] { "-status", "queueA" });
     assertEquals(0, result);
@@ -1293,7 +1293,7 @@ public class TestYarnCLI {
     QueueCLI cli = createAndGetQueueCLI();
     QueueInfo queueInfo = QueueInfo.newInstance("queueA", 0.4f, 0.8f, 0.5f,
             null, null, QueueState.RUNNING, null, null,
-            null, null);
+            null, null, null);
     when(client.getQueueInfo(any(String.class))).thenReturn(queueInfo);
     int result = cli.run(new String[] { "-status", "queueA" });
     assertEquals(0, result);

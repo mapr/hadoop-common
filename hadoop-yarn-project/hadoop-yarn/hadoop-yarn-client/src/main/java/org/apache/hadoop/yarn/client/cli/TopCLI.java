@@ -84,7 +84,7 @@ public class TopCLI extends YarnCLI {
 
   enum Columns { // in the order in which they should be displayed
     APPID, USER, TYPE, QUEUE, PRIORITY, CONT, RCONT, VCORES, RVCORES, MEM,
-    RMEM, VCORESECS, MEMSECS, PROGRESS, TIME, NAME
+    RMEM, DISKS, RDISKS, VCORESECS, MEMSECS, PROGRESS, TIME, NAME
   }
 
   static class ColumnInformation {
@@ -115,6 +115,8 @@ public class TopCLI extends YarnCLI {
     final long reservedMemory;
     final int usedVirtualCores;
     final int reservedVirtualCores;
+    final double usedDisks;
+    final double reservedDisks;
     final int attempts;
     final float progress;
     final String state;
@@ -157,6 +159,10 @@ public class TopCLI extends YarnCLI {
           appReport.getApplicationResourceUsageReport().getUsedResources()
             .getMemory() / 1024;
       displayStringsMap.put(Columns.MEM, String.valueOf(usedMemory) + "G");
+      usedDisks =
+          appReport.getApplicationResourceUsageReport().getUsedResources()
+              .getDisks();
+      displayStringsMap.put(Columns.DISKS, String.valueOf(usedDisks));
       reservedVirtualCores =
           appReport.getApplicationResourceUsageReport().getReservedResources()
             .getVirtualCores();
@@ -166,6 +172,11 @@ public class TopCLI extends YarnCLI {
           appReport.getApplicationResourceUsageReport().getReservedResources()
             .getMemory() / 1024;
       displayStringsMap.put(Columns.RMEM, String.valueOf(reservedMemory) + "G");
+      reservedDisks =
+          appReport.getApplicationResourceUsageReport().getReservedResources()
+              .getDisks();
+      displayStringsMap.put(Columns.RDISKS,
+          String.valueOf(reservedDisks));
       attempts = appReport.getCurrentApplicationAttemptId().getAttemptId();
       nodes = 0;
       runningTime = Time.now() - appReport.getStartTime();
@@ -265,6 +276,22 @@ public class TopCLI extends YarnCLI {
           return a1.reservedVirtualCores - a2.reservedVirtualCores;
         }
       };
+  public static final Comparator<ApplicationInformation> UsedDisksComparator =
+      new Comparator<ApplicationInformation>() {
+        @Override
+        public int
+        compare(ApplicationInformation a1, ApplicationInformation a2) {
+          return Double.valueOf(a1.usedDisks).compareTo(a2.usedDisks);
+        }
+      };
+  public static final Comparator<ApplicationInformation> ReservedDisksComparator =
+      new Comparator<ApplicationInformation>() {
+        @Override
+        public int
+        compare(ApplicationInformation a1, ApplicationInformation a2) {
+          return Double.valueOf(a1.reservedDisks).compareTo(a2.reservedDisks);
+        }
+      };
   public static final Comparator<ApplicationInformation> VCoreSecondsComparator =
       new Comparator<ApplicationInformation>() {
         @Override
@@ -331,6 +358,10 @@ public class TopCLI extends YarnCLI {
     long allocatedVCores;
     long pendingVCores;
     long reservedVCores;
+    double availableDisks;
+    double allocatedDisks;
+    double pendingDisks;
+    double reservedDisks;
   }
 
   private class KeyboardMonitor extends Thread {
@@ -629,6 +660,10 @@ public class TopCLI extends YarnCLI {
       "%7s", true, "Allocated memory", "m"));
     columnInformationEnumMap.put(Columns.RMEM, new ColumnInformation("RMEM",
       "%7s", true, "Reserved memory", "w"));
+    columnInformationEnumMap.put(Columns.DISKS, new ColumnInformation("DISKS",
+        "%6s", true, "Allocated disks", "d"));
+    columnInformationEnumMap.put(Columns.RDISKS, new ColumnInformation("RDISKS",
+        "%6s", true, "Reserved disks", "l"));
     columnInformationEnumMap.put(Columns.VCORESECS, new ColumnInformation(
       "VCORESECS", "%10s", true, "Vcore seconds", "s"));
     columnInformationEnumMap.put(Columns.MEMSECS, new ColumnInformation(
@@ -712,6 +747,10 @@ public class TopCLI extends YarnCLI {
         queueMetrics.allocatedVCores += stats.getAllocatedVCores();
         queueMetrics.pendingVCores += stats.getPendingVCores();
         queueMetrics.reservedVCores += stats.getReservedVCores();
+        queueMetrics.availableDisks += stats.getAvailableDisks();
+        queueMetrics.allocatedDisks += stats.getAllocatedDisks();
+        queueMetrics.pendingDisks += stats.getPendingDisks();
+        queueMetrics.reservedDisks += stats.getReservedDisks();
       }
     }
     queueMetrics.availableMemoryGB = queueMetrics.availableMemoryGB / 1024;
@@ -781,18 +820,19 @@ public class TopCLI extends YarnCLI {
         queueMetrics.appsFailed), terminalWidth, true));
 
     ret.append(CLEAR_LINE);
-    ret.append(limitLineLength(String.format("Queue(s) Mem(GB): %d available,"
-        + " %d allocated, %d pending, %d reserved%n",
-      queueMetrics.availableMemoryGB, queueMetrics.allocatedMemoryGB,
-      queueMetrics.pendingMemoryGB, queueMetrics.reservedMemoryGB),
+    ret.append(limitLineLength(String.format("Queue(s) Mem(GB): %d allocated, %d pending, %d reserved%n",
+      queueMetrics.allocatedMemoryGB, queueMetrics.pendingMemoryGB, queueMetrics.reservedMemoryGB),
       terminalWidth, true));
 
     ret.append(CLEAR_LINE);
-    ret.append(limitLineLength(String.format("Queue(s) VCores: %d available,"
-        + " %d allocated, %d pending, %d reserved%n",
-      queueMetrics.availableVCores, queueMetrics.allocatedVCores,
-      queueMetrics.pendingVCores, queueMetrics.reservedVCores), terminalWidth,
+    ret.append(limitLineLength(String.format("Queue(s) VCores: %d allocated, %d pending, %d reserved%n",
+      queueMetrics.allocatedVCores, queueMetrics.pendingVCores, queueMetrics.reservedVCores), terminalWidth,
       true));
+
+    ret.append(CLEAR_LINE);
+    ret.append(limitLineLength(String.format("Queue(s) Disks: %,.2f allocated, %,.2f pending, %,.2f reserved%n",
+        queueMetrics.allocatedDisks, queueMetrics.pendingDisks, queueMetrics.reservedDisks), terminalWidth,
+        true));
     return ret.toString();
   }
 
@@ -982,6 +1022,12 @@ public class TopCLI extends YarnCLI {
       break;
     case "w":
       comparator = ReservedMemoryComparator;
+      break;
+    case "d":
+      comparator = UsedDisksComparator;
+      break;
+    case "l":
+      comparator = ReservedDisksComparator;
       break;
     case "s":
       comparator = VCoreSecondsComparator;

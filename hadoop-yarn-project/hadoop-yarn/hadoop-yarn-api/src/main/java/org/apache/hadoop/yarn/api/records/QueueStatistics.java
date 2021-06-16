@@ -32,7 +32,8 @@ public abstract class QueueStatistics {
       long pending, long completed, long killed, long failed, long activeUsers,
       long availableMemoryMB, long allocatedMemoryMB, long pendingMemoryMB,
       long reservedMemoryMB, long availableVCores, long allocatedVCores,
-      long pendingVCores, long reservedVCores) {
+      long pendingVCores, long reservedVCores, double availableDisks, double allocatedDisks,
+                                            double pendingDisks, double reservedDisks) {
     QueueStatistics statistics = Records.newRecord(QueueStatistics.class);
     statistics.setNumAppsSubmitted(submitted);
     statistics.setNumAppsRunning(running);
@@ -49,6 +50,10 @@ public abstract class QueueStatistics {
     statistics.setAllocatedVCores(allocatedVCores);
     statistics.setPendingVCores(pendingVCores);
     statistics.setReservedVCores(reservedVCores);
+    statistics.setAvailableDisks(availableDisks);
+    statistics.setAllocatedDisks(allocatedDisks);
+    statistics.setPendingDisks(pendingDisks);
+    statistics.setReservedDisks(reservedDisks);
     return statistics;
   }
 
@@ -276,4 +281,64 @@ public abstract class QueueStatistics {
    *          the reserved vcores
    */
   public abstract void setReservedVCores(long reservedVCores);
+
+  /**
+   * Get the available disks
+   *
+   * @return the available disks
+   */
+  public abstract double getAvailableDisks();
+
+  /**
+   * Set the available vcores
+   *
+   * @param availableDisks
+   *          the available disks
+   */
+  public abstract void setAvailableDisks(double availableDisks);
+
+  /**
+   * Get the allocated disks
+   *
+   * @return the allocated disks
+   */
+  public abstract double getAllocatedDisks();
+
+  /**
+   * Set the allocated disks
+   *
+   * @param allocatedDisks
+   *          the allocated disks
+   */
+  public abstract void setAllocatedDisks(double allocatedDisks);
+
+  /**
+   * Get the pending disks
+   *
+   * @return the pending disks
+   */
+  public abstract double getPendingDisks();
+
+  /**
+   * Set the pending disks
+   *
+   * @param pendingDisks
+   *          the pending disks
+   */
+  public abstract void setPendingDisks(double pendingDisks);
+
+  /**
+   * Get the reserved disks
+   *
+   * @return the reserved disks
+   */
+  public abstract double getReservedDisks();
+
+  /**
+   * Set the reserved disks
+   *
+   * @param reservedDisks
+   *          the reserved disks
+   */
+  public abstract void setReservedDisks(double reservedDisks);
 }

@@ -363,6 +363,10 @@ message QueueStatisticsProto {
   optional int64 allocatedVCores = 13;
   optional int64 pendingVCores = 14;
   optional int64 reservedVCores = 15;
+  optional double availableDisks = 16;
+  optional double allocatedDisks = 17;
+  optional double pendingDisks = 18;
+  optional double reservedDisks = 19;
 }
 
 message QueueInfoProto {
