@@ -185,6 +185,7 @@ static struct {
   const char *dir_to_be_deleted;
   int container_pid;
   int signal;
+  int container_option;
 } cmd_input;
 
 static int validate_run_as_user_commands(int argc, char **argv, int *operation);
@@ -347,7 +348,7 @@ static int validate_run_as_user_commands(int argc, char **argv, int *operation) 
     return 0;
 
   case SIGNAL_CONTAINER:
-    if (argc != 6) {
+    if (argc != 7) {
       fprintf(ERRORFILE, "Wrong number of arguments (%d vs 6) for " \
           "signal container\n", argc);
       fflush(ERRORFILE);
@@ -366,6 +367,13 @@ static int validate_run_as_user_commands(int argc, char **argv, int *operation) 
     cmd_input.signal = strtol(option, &end_ptr, 10);
     if (option == end_ptr || *end_ptr != '\0') {
       fprintf(ERRORFILE, "Illegal argument for signal %s\n", option);
+      fflush(ERRORFILE);
+      return INVALID_ARGUMENT_NUMBER;
+    }
+    option = argv[optind++];
+    cmd_input.container_option = strtol(option, &end_ptr, 10);
+    if (option == end_ptr || *end_ptr != '\0') {
+      fprintf(ERRORFILE, "Illegal argument for container option %s\n", option);
       fflush(ERRORFILE);
       return INVALID_ARGUMENT_NUMBER;
     }
@@ -476,7 +484,8 @@ int main(int argc, char **argv) {
 
     exit_code = signal_container_as_user(cmd_input.yarn_user_name,
                                   cmd_input.container_pid,
-                                  cmd_input.signal);
+                                  cmd_input.signal,
+                                  cmd_input.container_option);
     break;
   case RUN_AS_USER_DELETE:
     exit_code = set_user(cmd_input.run_as_user_name);

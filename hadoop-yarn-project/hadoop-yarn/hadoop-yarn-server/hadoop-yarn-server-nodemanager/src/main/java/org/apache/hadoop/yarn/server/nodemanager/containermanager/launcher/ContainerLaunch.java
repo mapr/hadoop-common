@@ -612,6 +612,7 @@ public class ContainerLaunch implements Callable<Integer> {
                 .setUser(user)
                 .setPid(processId)
                 .setSignal(signal)
+                .setContainerOption(ApplicationConstants.GROUP_CONTAINER_SIGNAL)
                 .build());
 
         LOG.debug("Sent signal " + signal + " to pid " + processId

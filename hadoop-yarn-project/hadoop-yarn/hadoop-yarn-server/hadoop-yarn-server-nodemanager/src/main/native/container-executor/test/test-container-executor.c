@@ -524,7 +524,7 @@ void test_signal_container_group() {
   // there's a race condition for child calling change_user and us
   // calling signal_container_as_user, hence sleeping
   sleep(3);
-  if (signal_container_as_user(yarn_username, child, SIGKILL) != 0) {
+  if (signal_container_as_user(yarn_username, child, SIGKILL, 0) != 0) {
     exit(1);
   }
   int status = 0;

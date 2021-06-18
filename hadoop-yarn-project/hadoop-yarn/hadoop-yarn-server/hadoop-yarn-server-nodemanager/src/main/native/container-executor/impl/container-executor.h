@@ -154,7 +154,10 @@ int launch_container_as_user(const char * user, const char *app_id,
  * @param sig the signal to send.
  * @return an errorcode enum value on error, or 0 on success.
  */
-int signal_container_as_user(const char *user, int pid, int sig);
+int signal_container_as_user(const char *user, int pid, int sig, int container_option);
+
+//Function to kill process or process group depends on container_option
+int kill_process(int pid, int sig, int container_option);
 
 // delete a directory (or file) recursively as the user. The directory
 // could optionally be relative to the baseDir set of directories (if the same

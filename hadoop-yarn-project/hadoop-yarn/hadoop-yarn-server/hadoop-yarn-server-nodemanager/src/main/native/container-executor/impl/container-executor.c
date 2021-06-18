@@ -1402,7 +1402,7 @@ int launch_container_as_user(const char *user, const char *app_id,
   return exit_code;
 }
 
-int signal_container_as_user(const char *user, int pid, int sig) {
+int signal_container_as_user(const char *user, int pid, int sig, int container_option) {
   if(pid <= 0) {
     return INVALID_CONTAINER_PID;
   }
@@ -1410,28 +1410,38 @@ int signal_container_as_user(const char *user, int pid, int sig) {
   if (change_user(user_detail->pw_uid, user_detail->pw_gid) != 0) {
     return SETUID_OPER_FAILED;
   }
+  int ret = 0;
+  if(container_option != 1){
+    ret = kill_process(-pid, sig, container_option);
+  } else {
+    ret = kill_process(pid, sig, container_option);
+  }
+  return ret;
+}
 
-  //Don't continue if the process-group is not alive anymore.
-  if (kill(-pid,0) < 0) {
+int kill_process(int pid, int sig, int container_option){
+
+  if (kill(pid,0) < 0) {
     fprintf(LOGFILE, "Error signalling not exist process group %d "
-            "with signal %d\n", pid, sig);
+            "with signal %d and option %d\n", pid, sig, container_option);
     return INVALID_CONTAINER_PID;
   }
 
-  if (kill(-pid, sig) < 0) {
+  if (kill(pid, sig) < 0) {
     if(errno != ESRCH) {
       fprintf(LOGFILE,
-              "Error signalling process group %d with signal %d - %s\n",
-              -pid, sig, strerror(errno));
+              "Error signalling process group %d with signal %d and option %d - %s\n",
+              pid, sig, container_option, strerror(errno));
       fflush(LOGFILE);
       return UNABLE_TO_SIGNAL_CONTAINER;
     } else {
       return INVALID_CONTAINER_PID;
     }
   }
-  fprintf(LOGFILE, "Killing process group %d with %d\n", pid, sig);
+  fprintf(LOGFILE, "Killing process %d with %d and option %d\n", pid, sig, container_option);
   return 0;
 }
+
 
 /**
  * Delete a final directory as the node manager user.

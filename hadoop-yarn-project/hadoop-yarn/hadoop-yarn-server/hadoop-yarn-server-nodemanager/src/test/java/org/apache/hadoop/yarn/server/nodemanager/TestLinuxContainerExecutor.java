@@ -27,6 +27,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import org.apache.hadoop.yarn.api.ApplicationConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -482,6 +484,7 @@ public class TestLinuxContainerExecutor {
         .setUser(appSubmitter)
         .setPid(pid)
         .setSignal(Signal.TERM)
+        .setContainerOption(ApplicationConstants.GROUP_CONTAINER_SIGNAL)
         .build());
     LOG.info("sleeping for 100ms to let the sleep be killed");
     Thread.sleep(100);

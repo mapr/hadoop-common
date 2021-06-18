@@ -99,6 +99,9 @@ public interface ApplicationConstants {
 
   public static final String SYSLOG = "syslog";
 
+  public static final String GROUP_CONTAINER_SIGNAL = "0";
+  public static final String SINGLE_CONTAINER_SIGNAL = "1";
+
   /**
    * The environment variable for MAX_APP_ATTEMPTS. Set in AppMaster environment
    * only

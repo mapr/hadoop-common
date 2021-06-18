@@ -26,6 +26,8 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
+
+import org.apache.hadoop.yarn.api.ApplicationConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -401,9 +403,10 @@ public class TestLinuxContainerExecutorWithMocks {
         .setUser(appSubmitter)
         .setPid("1000")
         .setSignal(signal)
+        .setContainerOption(ApplicationConstants.GROUP_CONTAINER_SIGNAL)
         .build());
     assertEquals(Arrays.asList(YarnConfiguration.DEFAULT_NM_NONSECURE_MODE_LOCAL_USER,
-        appSubmitter, cmd, "1000", sigVal),
+        appSubmitter, cmd, "1000", sigVal, "0"),
         readMockParams());
   }
   

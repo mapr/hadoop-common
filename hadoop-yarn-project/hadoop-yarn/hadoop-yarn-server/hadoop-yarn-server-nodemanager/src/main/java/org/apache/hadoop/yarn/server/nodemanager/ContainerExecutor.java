@@ -31,6 +31,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
+
+import org.apache.hadoop.yarn.api.ApplicationConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -506,17 +508,20 @@ public abstract class ContainerExecutor implements Configurable {
                     .setUser(user)
                     .setPid(pid)
                     .setSignal(signal)
+                    .setContainerOption(ApplicationConstants.GROUP_CONTAINER_SIGNAL)
                     .build());
         }
         if (childPids != null && killChildProcess) {
           for (String pidd : childPids) {
             if (shouldDoSignal(containerIdStr, pidd)) {
-              try {
-                Shell.execCommand("/bin/sh", "-c", "kill -9 " + pidd);
-                LOG.info("Run kill -9 for pid="+pidd);
-              } catch (IOException e) {
-                LOG.warn("Not able to execute command /bin/sh -c 'kill -9' " + pidd);
-              }
+              containerExecutor.signalContainer(new ContainerSignalContext.Builder()
+                  .setContainer(container)
+                  .setUser(user)
+                  .setPid(pidd)
+                  .setSignal(signal)
+                  .setContainerOption(ApplicationConstants.SINGLE_CONTAINER_SIGNAL)
+                  .build());
+              LOG.info("Sent signal kill -9 for pid = " + pidd);
             }
           }
         }

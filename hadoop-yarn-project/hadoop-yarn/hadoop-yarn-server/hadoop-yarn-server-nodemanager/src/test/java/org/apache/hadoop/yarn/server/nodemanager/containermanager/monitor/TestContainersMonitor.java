@@ -37,6 +37,7 @@ import java.util.regex.Pattern;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.UnsupportedFileSystemException;
+import org.apache.hadoop.yarn.api.ApplicationConstants;
 import org.apache.hadoop.yarn.api.protocolrecords.GetContainerStatusesRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.StartContainerRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.StartContainersRequest;
@@ -292,6 +293,7 @@ public class TestContainersMonitor extends BaseContainerManagerTest {
             .setUser(user)
             .setPid(pid)
             .setSignal(Signal.NULL)
+            .setContainerOption(ApplicationConstants.GROUP_CONTAINER_SIGNAL)
             .build()));
   }
 

@@ -74,4 +74,6 @@ public final class LinuxContainerRuntimeConstants {
       String.class, "pid");
   public static final Attribute<ContainerExecutor.Signal> SIGNAL = Attribute
       .attribute(ContainerExecutor.Signal.class, "signal");
+  public static final Attribute<String> CONTAINER_OPTION = Attribute
+      .attribute(String.class, "containerOption");
 }

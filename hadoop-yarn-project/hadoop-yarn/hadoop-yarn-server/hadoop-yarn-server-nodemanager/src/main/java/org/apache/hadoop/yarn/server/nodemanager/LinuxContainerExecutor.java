@@ -545,6 +545,7 @@ public class LinuxContainerExecutor extends ContainerExecutor {
     String user = ctx.getUser();
     String pid = ctx.getPid();
     Signal signal = ctx.getSignal();
+    String containerOption = ctx.getContainerOption();
 
     verifyUsernamePattern(user);
     String runAsUser = getRunAsUser(user);
@@ -555,6 +556,7 @@ public class LinuxContainerExecutor extends ContainerExecutor {
         .setExecutionAttribute(USER, user)
         .setExecutionAttribute(PID, pid)
         .setExecutionAttribute(SIGNAL, signal)
+        .setExecutionAttribute(CONTAINER_OPTION, containerOption)
         .build();
 
     try {
@@ -636,6 +638,7 @@ public class LinuxContainerExecutor extends ContainerExecutor {
         .setUser(user)
         .setPid(pid)
         .setSignal(Signal.NULL)
+        .setContainerOption(ApplicationConstants.GROUP_CONTAINER_SIGNAL)
         .build());
   }
 

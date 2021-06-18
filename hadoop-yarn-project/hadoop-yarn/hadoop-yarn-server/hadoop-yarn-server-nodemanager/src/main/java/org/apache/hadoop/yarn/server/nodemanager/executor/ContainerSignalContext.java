@@ -36,12 +36,14 @@ public final class ContainerSignalContext {
   private final String user;
   private final String pid;
   private final Signal signal;
+  private String containerOption;
 
   public static final class Builder {
     private Container container;
     private String user;
     private String pid;
     private Signal signal;
+    private String containerOption;
 
     public Builder() {
     }
@@ -66,6 +68,11 @@ public final class ContainerSignalContext {
       return this;
     }
 
+    public Builder setContainerOption(String containerOption) {
+      this.containerOption = containerOption;
+      return this;
+    }
+
     public ContainerSignalContext build() {
       return new ContainerSignalContext(this);
     }
@@ -76,6 +83,7 @@ public final class ContainerSignalContext {
     this.user = builder.user;
     this.pid = builder.pid;
     this.signal = builder.signal;
+    this.containerOption = builder.containerOption;
   }
 
   public Container getContainer() {
@@ -92,5 +100,9 @@ public final class ContainerSignalContext {
 
   public Signal getSignal() {
     return this.signal;
+  }
+
+  public String getContainerOption() {
+    return this.containerOption;
   }
 }

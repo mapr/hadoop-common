@@ -130,7 +130,8 @@ public class DefaultLinuxContainerRuntime implements LinuxContainerRuntime {
         Integer.toString(PrivilegedOperation.RunAsUserCommand
             .SIGNAL_CONTAINER.getValue()),
         ctx.getExecutionAttribute(PID),
-        Integer.toString(ctx.getExecutionAttribute(SIGNAL).getValue()));
+        Integer.toString(ctx.getExecutionAttribute(SIGNAL).getValue()),
+        ctx.getExecutionAttribute(CONTAINER_OPTION));
 
     //Some failures here are acceptable. Let the calling executor decide.
     signalOp.disableFailureLogging();
