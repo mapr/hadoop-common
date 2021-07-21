@@ -94,6 +94,13 @@ shift
 MAPR_HOME=${MAPR_HOME:=/opt/mapr}
 MAPR_HBASE_DIR=${MAPR_HOME}/hbase
 MAPR_HBASE_VERSION_FILE=${MAPR_HBASE_DIR}/hbaseversion
+TEST_FIPS=0
+
+# Used for determining if FIPS is enabled
+if [ -r ${MAPR_HOME}/server/scripts-common.sh ]; then
+  . ${MAPR_HOME}/server/scripts-common.sh
+  TEST_FIPS=1
+fi
 
 if [ "$COMMAND" == "jar" ] && [ -f ${MAPR_HBASE_VERSION_FILE} ]; then
   # add HBASE CLASSPATH to the CLASSPATH MapR Bug:5294
@@ -260,6 +267,17 @@ case $COMMAND in
     else
       # do not include mechanism, as it is defined outside
       HADOOP_OPTS="$HADOOP_OPTS ${MAPR_JAAS_CONFIG_OPTS} ${MAPR_ZOOKEEPER_OPTS} ${MAPR_SSL_OPTS}"
+    fi
+
+    if [ $TEST_FIPS -eq 1 ]; then
+      # Use alternate java.security file in FIPS mode
+      MAPR_ALTERNATE_JAVA_SECURITY=
+      isFipsMode=0
+      detectFipsMode client ssl.client.truststore.type
+      if [ $isFipsMode -eq 1 ]; then
+        MAPR_ALTERNATE_JAVA_SECURITY="-Djava.security.properties==${MAPR_HOME}/conf/java.security.fips"
+      fi
+      HADOOP_OPTS="${HADOOP_OPTS} ${MAPR_ALTERNATE_JAVA_SECURITY}"
     fi
 
     export CLASSPATH=$CLASSPATH
