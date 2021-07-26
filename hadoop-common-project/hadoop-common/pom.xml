@@ -574,6 +574,7 @@
         </executions>
         <configuration>
           <testOutputDirectory>${project.build.directory}/generated-test-sources/java</testOutputDirectory>
+          <fieldVisibility>public</fieldVisibility>
         </configuration>
       </plugin>
       <plugin>

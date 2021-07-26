@@ -127,6 +127,9 @@
       <plugin>
         <groupId>org.apache.avro</groupId>
         <artifactId>avro-maven-plugin</artifactId>
+        <configuration>
+          <fieldVisibility>public</fieldVisibility>
+        </configuration>
         <executions>
           <execution>
             <phase>generate-sources</phase>
