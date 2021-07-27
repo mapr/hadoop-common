@@ -101,6 +101,7 @@ public class ClientServiceDelegate {
   private String trackingUrl;
   private AtomicBoolean usingAMProxy = new AtomicBoolean(false);
   private int maxClientRetry;
+  private long clientRetryInterval;
   private boolean amAclDisabledStatusLogged = false;
 
   public ClientServiceDelegate(Configuration conf, ResourceMgrDelegate rm,
@@ -318,6 +319,9 @@ public class ClientServiceDelegate {
     maxClientRetry = this.conf.getInt(
         MRJobConfig.MR_CLIENT_MAX_RETRIES,
         MRJobConfig.DEFAULT_MR_CLIENT_MAX_RETRIES);
+    clientRetryInterval = this.conf.getLong(
+            MRJobConfig.MR_CLIENT_RETRY_INTERVAL,
+            MRJobConfig.DEFAULT_MR_CLIENT_RETRY_INTERVAL);
     IOException lastException = null;
     while (maxClientRetry > 0) {
       MRClientProtocol MRClientProxy = null;
@@ -344,7 +348,7 @@ public class ClientServiceDelegate {
         usingAMProxy.set(false);
         lastException = new IOException(e.getTargetException());
         try {
-          Thread.sleep(100);
+          Thread.sleep(clientRetryInterval);
         } catch (InterruptedException ie) {
           LOG.warn("ClientServiceDelegate invoke call interrupted", ie);
           throw new YarnRuntimeException(ie);
@@ -358,7 +362,7 @@ public class ClientServiceDelegate {
         maxClientRetry--;
         lastException = new IOException(e.getMessage());
         try {
-          Thread.sleep(100);
+          Thread.sleep(clientRetryInterval);
         } catch (InterruptedException ie) {
           LOG.warn("ClientServiceDelegate invoke call interrupted", ie);
           throw new YarnRuntimeException(ie);
