@@ -316,37 +316,26 @@ public class Job extends JobContextImpl implements JobContext {
    * @throws IOException
    */
   synchronized void updateStatus() throws IOException {
-
-    int maxUpdateAttempts = getConfiguration().getInt(MRJobConfig.MR_JOB_STATUS_UPDATE_MAX_RETRIES,
-            MRJobConfig.DEFAULT_MR_JOB_STATUS_UPDATE_MAX_RETRIES) + 1; // should be at least one update
-    long retryInterval = getConfiguration()
-            .getLong(MRJobConfig.MR_JOB_STATUS_UPDATE_RETRY_INTERVAL,
-                    MRJobConfig.DEFAULT_MR_JOB_STATUS_UPDATE_RETRY_INTERVAL);
-    int retryCounter = 0;
-    final JobID jobID = this.status.getJobID();
-    while (retryCounter < maxUpdateAttempts) {
-      try {
-        this.status = ugi.doAs(new PrivilegedExceptionAction<JobStatus>() {
-          @Override
-          public JobStatus run() throws IOException, InterruptedException {
-            return cluster.getClient().getJobStatus(jobID);
-          }
-        });
-        if (this.status != null) {
-          this.statustime = System.currentTimeMillis();
-          break;
+    new JobAction<Void>() {
+      @Override
+      public Void run() throws IOException {
+        try {
+          status = ugi.doAs(new PrivilegedExceptionAction<JobStatus>() {
+            @Override
+            public JobStatus run() throws IOException, InterruptedException {
+              return cluster.getClient().getJobStatus(status.getJobID());
+            }
+          });
+        } catch (InterruptedException ie) {
+          throw new IOException(ie);
         }
-        retryCounter++;
-        if(retryCounter < maxUpdateAttempts) {
-          Thread.sleep(retryInterval);
+        if (status == null) {
+          throw new IOException("Job status not available ");
         }
-      } catch (InterruptedException ie) {
-        throw new IOException(ie);
+        statustime = System.currentTimeMillis();
+        return null;
       }
-    }
-    if (this.status == null) {
-      throw new IOException("Job status not available, update attempts = " + maxUpdateAttempts);
-    }
+    }.runWithRetries();
   }
   
   public JobStatus getStatus() throws IOException, InterruptedException {
@@ -511,15 +500,24 @@ public class Job extends JobContextImpl implements JobContext {
       InterruptedException {
     int failCount = 1;
     TaskCompletionEvent lastEvent = null;
-    TaskCompletionEvent[] events = ugi.doAs(new 
-        PrivilegedExceptionAction<TaskCompletionEvent[]>() {
-          @Override
-          public TaskCompletionEvent[] run() throws IOException,
-          InterruptedException {
-            return cluster.getClient().getTaskCompletionEvents(
-                status.getJobID(), 0, 10);
-          }
-        });
+    TaskCompletionEvent[] events = new JobAction<TaskCompletionEvent[]>() {
+      @Override
+      public TaskCompletionEvent[] run() throws IOException {
+        try {
+          return ugi.doAs(new
+            PrivilegedExceptionAction<TaskCompletionEvent[]>() {
+              @Override
+              public TaskCompletionEvent[] run() throws IOException,
+                      InterruptedException {
+                return cluster.getClient().getTaskCompletionEvents(
+                        status.getJobID(), 0, 10);
+              }
+            });
+        } catch (InterruptedException e) {
+          throw new IOException(e);
+        }
+      }
+    }.runWithRetries();
     for (TaskCompletionEvent event : events) {
       if (event.getStatus().equals(TaskCompletionEvent.Status.FAILED)) {
         failCount++;
@@ -549,11 +547,20 @@ public class Job extends JobContextImpl implements JobContext {
       throws IOException, InterruptedException {
     ensureState(JobState.RUNNING);
     final TaskType tmpType = type;
-    return ugi.doAs(new PrivilegedExceptionAction<TaskReport[]>() {
-      public TaskReport[] run() throws IOException, InterruptedException {
-        return cluster.getClient().getTaskReports(getJobID(), tmpType);
+    return new JobAction<TaskReport[]>() {
+      @Override
+      public TaskReport[] run() throws IOException {
+        try {
+          return ugi.doAs(new PrivilegedExceptionAction<TaskReport[]>() {
+            public TaskReport[] run() throws IOException, InterruptedException {
+              return cluster.getClient().getTaskReports(getJobID(), tmpType);
+            }
+          });
+        } catch (InterruptedException e) {
+          throw new IOException(e);
+        }
       }
-    });
+    }.runWithRetries();
   }
 
   /**
@@ -641,12 +648,18 @@ public class Job extends JobContextImpl implements JobContext {
    */
   public void killJob() throws IOException {
     ensureState(JobState.RUNNING);
-    try {
-      cluster.getClient().killJob(getJobID());
-    }
-    catch (InterruptedException ie) {
-      throw new IOException(ie);
-    }
+    new JobAction<Void>() {
+      @Override
+      public Void run() throws IOException {
+        try {
+          cluster.getClient().killJob(getJobID());
+        } catch (InterruptedException ie) {
+          throw new IOException(ie);
+        }
+        return null;
+      }
+    }.runWithRetries();
+
   }
 
   /**
@@ -662,13 +675,23 @@ public class Job extends JobContextImpl implements JobContext {
     } else {
       ensureState(JobState.RUNNING);
       final JobPriority tmpPriority = priority;
-      ugi.doAs(new PrivilegedExceptionAction<Object>() {
+      new JobAction<Void>() {
         @Override
-        public Object run() throws IOException, InterruptedException {
-          cluster.getClient().setJobPriority(getJobID(), tmpPriority.toString());
-          return null;
+        public Void run() throws IOException {
+          try {
+            ugi.doAs(new PrivilegedExceptionAction<Object>() {
+              @Override
+              public Object run() throws IOException, InterruptedException {
+                cluster.getClient().setJobPriority(getJobID(), tmpPriority.toString());
+                return null;
+              }
+            });
+            return null;
+          } catch (InterruptedException e) {
+            throw new IOException(e);
+          }
         }
-      });
+      }.runWithRetries();
     }
   }
 
@@ -683,13 +706,22 @@ public class Job extends JobContextImpl implements JobContext {
   public TaskCompletionEvent[] getTaskCompletionEvents(final int startFrom,
       final int numEvents) throws IOException, InterruptedException {
     ensureState(JobState.RUNNING);
-    return ugi.doAs(new PrivilegedExceptionAction<TaskCompletionEvent[]>() {
+    return new JobAction<TaskCompletionEvent[]>() {
       @Override
-      public TaskCompletionEvent[] run() throws IOException, InterruptedException {
-        return cluster.getClient().getTaskCompletionEvents(getJobID(),
-            startFrom, numEvents); 
+      public TaskCompletionEvent[] run() throws IOException {
+        try {
+          return ugi.doAs(new PrivilegedExceptionAction<TaskCompletionEvent[]>() {
+            @Override
+            public TaskCompletionEvent[] run() throws IOException, InterruptedException {
+              return cluster.getClient().getTaskCompletionEvents(getJobID(),
+                      startFrom, numEvents);
+            }
+          });
+        } catch (InterruptedException e) {
+          throw new IOException(e);
+        }
       }
-    });
+    }.runWithRetries();
   }
 
   /**
@@ -726,16 +758,20 @@ public class Job extends JobContextImpl implements JobContext {
   public boolean killTask(final TaskAttemptID taskId,
                           final boolean shouldFail) throws IOException {
     ensureState(JobState.RUNNING);
-    try {
-      return ugi.doAs(new PrivilegedExceptionAction<Boolean>() {
-        public Boolean run() throws IOException, InterruptedException {
-          return cluster.getClient().killTask(taskId, shouldFail);
+    return new JobAction<Boolean>() {
+      @Override
+      public Boolean run() throws IOException {
+        try {
+          return ugi.doAs(new PrivilegedExceptionAction<Boolean>() {
+            public Boolean run() throws IOException, InterruptedException {
+              return cluster.getClient().killTask(taskId, shouldFail);
+            }
+          });
+        } catch (InterruptedException ie) {
+          throw new IOException(ie);
         }
-      });
-    }
-    catch (InterruptedException ie) {
-      throw new IOException(ie);
-    }
+      }
+    }.runWithRetries();
   }
 
   /**
@@ -770,17 +806,21 @@ public class Job extends JobContextImpl implements JobContext {
   public Counters getCounters() 
       throws IOException {
     ensureState(JobState.RUNNING);
-    try {
-      return ugi.doAs(new PrivilegedExceptionAction<Counters>() {
-        @Override
-        public Counters run() throws IOException, InterruptedException {
-          return cluster.getClient().getJobCounters(getJobID());
+    return new JobAction<Counters>() {
+      @Override
+      public Counters run() throws IOException {
+        try {
+          return ugi.doAs(new PrivilegedExceptionAction<Counters>() {
+            @Override
+            public Counters run() throws IOException, InterruptedException {
+              return cluster.getClient().getJobCounters(getJobID());
+            }
+          });
+        } catch (InterruptedException ie) {
+          throw new IOException(ie);
         }
-      });
-    }
-    catch (InterruptedException ie) {
-      throw new IOException(ie);
-    }
+      }
+    }.runWithRetries();
   }
 
   /**
@@ -792,12 +832,21 @@ public class Job extends JobContextImpl implements JobContext {
   public String[] getTaskDiagnostics(final TaskAttemptID taskid) 
       throws IOException, InterruptedException {
     ensureState(JobState.RUNNING);
-    return ugi.doAs(new PrivilegedExceptionAction<String[]>() {
+    return new JobAction<String[]>() {
       @Override
-      public String[] run() throws IOException, InterruptedException {
-        return cluster.getClient().getTaskDiagnostics(taskid);
+      public String[] run() throws IOException {
+        try {
+          return ugi.doAs(new PrivilegedExceptionAction<String[]>() {
+            @Override
+            public String[] run() throws IOException, InterruptedException {
+              return cluster.getClient().getTaskDiagnostics(taskid);
+            }
+          });
+        } catch (InterruptedException ie) {
+          throw new IOException(ie);
+        }
       }
-    });
+    }.runWithRetries();
   }
 
   /**
@@ -1515,4 +1564,33 @@ public class Job extends JobContextImpl implements JobContext {
     this.reservationId = reservationId;
   }
 
+  private abstract class JobAction<T> {
+    abstract T run() throws IOException;
+
+    T runWithRetries() throws IOException {
+      int maxNumRetries = getConfiguration().getInt(MRJobConfig.MR_JOB_ACTION_MAX_RETRIES,
+              MRJobConfig.DEFAULT_MR_JOB_ACTION_MAX_RETRIES);
+      long retryInterval = getConfiguration()
+              .getLong(MRJobConfig.MR_JOB_ACTION_RETRY_INTERVAL,
+                      MRJobConfig.DEFAULT_MR_JOB_ACTION_RETRY_INTERVAL);
+      int retry = 0;
+      while (true) {
+        try {
+          return run();
+        } catch (IOException e) {
+          LOG.info("Exception while executing a Job operation.", e);
+          if (++retry > maxNumRetries) {
+            LOG.info("Maxed out Job operation retries. Giving up!");
+            throw e;
+          }
+          LOG.info("Retrying Job operation. Retry no. " + retry);
+          try {
+            Thread.sleep(retryInterval);
+          } catch (InterruptedException ie) {
+            throw new IOException(ie);
+          }
+        }
+      }
+    }
+  }
 }

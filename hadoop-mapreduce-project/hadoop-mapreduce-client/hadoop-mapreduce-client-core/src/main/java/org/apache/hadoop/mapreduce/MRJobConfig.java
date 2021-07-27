@@ -469,6 +469,13 @@ public interface MRJobConfig {
   public static final String MR_CLIENT_MAX_RETRIES = 
     MR_PREFIX + "client.max-retries";
   public static final int DEFAULT_MR_CLIENT_MAX_RETRIES = 3;
+
+  /**
+   * Time between client retries to the RM/HS.
+   */
+  public static final String MR_CLIENT_RETRY_INTERVAL =
+          MR_PREFIX + "client.retry-interval";
+  public static final long DEFAULT_MR_CLIENT_RETRY_INTERVAL = 100;
   
   /**
    * How many times to retry jobclient calls (via getjob)
@@ -486,18 +493,18 @@ public interface MRJobConfig {
       2000;
 
   /**
-   * How many times retry to update job status
+   * How many times retry job action attempt
    */
-  public static final String MR_JOB_STATUS_UPDATE_MAX_RETRIES =
-          MR_PREFIX + "job.update-status-max-retries";
-  public static final int DEFAULT_MR_JOB_STATUS_UPDATE_MAX_RETRIES = 0;
+  public static final String MR_JOB_ACTION_MAX_RETRIES =
+          MR_PREFIX + "job.action-max-retries";
+  public static final int DEFAULT_MR_JOB_ACTION_MAX_RETRIES = 0;
 
   /**
-   * How long to wait between retries to update job status
+   * How long to wait between job action attempts
    */
-  public static final String MR_JOB_STATUS_UPDATE_RETRY_INTERVAL =
-          MR_PREFIX + "job.update-status-retry-interval";
-  public static final long DEFAULT_MR_JOB_STATUS_UPDATE_RETRY_INTERVAL =
+  public static final String MR_JOB_ACTION_RETRY_INTERVAL =
+          MR_PREFIX + "job.action-retry-interval";
+  public static final long DEFAULT_MR_JOB_ACTION_RETRY_INTERVAL =
           2000;
 
   /** The staging directory for map reduce.*/
