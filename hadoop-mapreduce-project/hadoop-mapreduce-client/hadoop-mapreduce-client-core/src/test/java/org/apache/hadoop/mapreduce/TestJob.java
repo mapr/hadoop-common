@@ -62,7 +62,7 @@ public class TestJob {
     ClientProtocol clientProtocol = mock(ClientProtocol.class);
     when(cluster.getClient()).thenReturn(clientProtocol);
     JobStatus status = new JobStatus(jobid, 0f, 0f, 0f, 0f,
-        State.RUNNING, JobPriority.DEFAULT, "root",
+        State.RUNNING, JobPriority.NORMAL, "root",
         "testUnexpectedJobStatus", "job file", "tracking URL");
     when(clientProtocol.getJobStatus(jobid)).thenReturn(status);
     Job job = Job.getInstance(cluster, status, new JobConf());
