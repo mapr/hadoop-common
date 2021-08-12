@@ -88,12 +88,8 @@ CYGWIN*) cygwin=true;;
 esac
 
 MAPR_HOME=${MAPR_HOME:=/opt/mapr}
-TEST_FIPS=0
-# Used for determining if FIPS is enabled
-if [ -r ${MAPR_HOME}/server/scripts-common.sh ]; then
-  . ${MAPR_HOME}/server/scripts-common.sh
-  TEST_FIPS=1
-fi
+env=${MAPR_HOME}/conf/env.sh
+[ -f $env ] && . $env
 
 HADOOP_LIBEXEC_DIR=${HADOOP_LIBEXEC_DIR:-$DEFAULT_LIBEXEC_DIR}
 . $HADOOP_LIBEXEC_DIR/yarn-config.sh
@@ -593,16 +589,7 @@ YARN_OPTS="$YARN_OPTS -Dhadoop.home.dir=$HADOOP_HOME"
 YARN_OPTS="$YARN_OPTS -Dhadoop.root.logger=${YARN_ROOT_LOGGER:-${HADOOP_LOGLEVEL},console}"
 YARN_OPTS="$YARN_OPTS -Dyarn.root.logger=${YARN_ROOT_LOGGER:-${HADOOP_LOGLEVEL},console}"
 
-if [ $TEST_FIPS -eq 1 ]; then
-  # Use alternate java.security file in FIPS mode
-  MAPR_ALTERNATE_JAVA_SECURITY=
-  isFipsMode=0
-  detectFipsMode client ssl.client.truststore.type
-  if [ $isFipsMode -eq 1 ]; then
-    MAPR_ALTERNATE_JAVA_SECURITY="-Djava.security.properties=${MAPR_HOME}/conf/java.security.fips"
-  fi
-  YARN_OPTS="$YARN_OPTS $MAPR_ALTERNATE_JAVA_SECURITY"
-fi
+YARN_OPTS="${YARN_OPTS} ${MAPR_COMMON_JAVA_OPTS}"
 
 if [ "x$JAVA_LIBRARY_PATH" != "x" ]; then
   if $cygwin; then
