@@ -87,6 +87,10 @@ case "$(uname)" in
 CYGWIN*) cygwin=true;;
 esac
 
+MAPR_HOME=${MAPR_HOME:=/opt/mapr}
+env=${MAPR_HOME}/conf/env.sh
+[ -f $env ] && . $env
+
 HADOOP_LIBEXEC_DIR=${HADOOP_LIBEXEC_DIR:-$DEFAULT_LIBEXEC_DIR}
 . $HADOOP_LIBEXEC_DIR/yarn-config.sh
 
@@ -584,6 +588,9 @@ export HADOOP_HOME
 YARN_OPTS="$YARN_OPTS -Dhadoop.home.dir=$HADOOP_HOME"
 YARN_OPTS="$YARN_OPTS -Dhadoop.root.logger=${YARN_ROOT_LOGGER:-${HADOOP_LOGLEVEL},console}"
 YARN_OPTS="$YARN_OPTS -Dyarn.root.logger=${YARN_ROOT_LOGGER:-${HADOOP_LOGLEVEL},console}"
+
+YARN_OPTS="${YARN_OPTS} ${MAPR_COMMON_JAVA_OPTS}"
+
 if [ "x$JAVA_LIBRARY_PATH" != "x" ]; then
   if $cygwin; then
     JAVA_LIBRARY_PATH=$(cygpath -w "$JAVA_LIBRARY_PATH" 2>/dev/null)

@@ -95,6 +95,10 @@ MAPR_HOME=${MAPR_HOME:=/opt/mapr}
 MAPR_HBASE_DIR=${MAPR_HOME}/hbase
 MAPR_HBASE_VERSION_FILE=${MAPR_HBASE_DIR}/hbaseversion
 
+# Used for determining if FIPS is enabled
+env=${MAPR_HOME}/conf/env.sh
+[ -f $env ] && . $env
+
 if [ "$COMMAND" == "jar" ] && [ -f ${MAPR_HBASE_VERSION_FILE} ]; then
   # add HBASE CLASSPATH to the CLASSPATH MapR Bug:5294
   jarfilename=$1 #the script does a shift after getting the command
@@ -261,6 +265,8 @@ case $COMMAND in
       # do not include mechanism, as it is defined outside
       HADOOP_OPTS="$HADOOP_OPTS ${MAPR_JAAS_CONFIG_OPTS} ${MAPR_ZOOKEEPER_OPTS} ${MAPR_SSL_OPTS}"
     fi
+
+    HADOOP_OPTS="${HADOOP_OPTS} ${MAPR_COMMON_JAVA_OPTS}"
 
     export CLASSPATH=$CLASSPATH
     exec "$JAVA" $JAVA_HEAP_MAX $HADOOP_OPTS $CLASS "$@"
