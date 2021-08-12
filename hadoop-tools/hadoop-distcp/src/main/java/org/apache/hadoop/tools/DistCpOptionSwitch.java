@@ -175,7 +175,7 @@ public enum DistCpOptionSwitch {
 
 
   BLOCKS_PER_CHUNK("",
-      new Option("blocksperchunk", true, "If set to a positive value, files"
+      new Option("blocksperchunk", true, "If set to a positive value, files "
           + "with more blocks than this value will be split into chunks of "
           + "<blocksperchunk> blocks to be transferred in parallel, and "
           + "reassembled on the destination. By default, <blocksperchunk> is "
@@ -183,6 +183,10 @@ public enum DistCpOptionSwitch {
           + "splitting. This switch is only applicable when the source file "
           + "system implements getBlockLocations method and the target file "
           + "system is MapRFS")),
+
+  KEEP_LINKS(DistCpConstants.CONF_LABEL_KEEP_LINKS,
+      new Option("P", false, "Passing -P disables traverse by symbolic link, "
+          + "symbolic link will be copied instead. This switch is only applicable when system is MapRFS")),
 
   /**
    * Specify bandwidth per map in MB
