@@ -97,6 +97,10 @@ public class OptionsParser {
       option.setAtomicCommit(true);
     }
 
+    if (command.hasOption(DistCpOptionSwitch.KEEP_LINKS.getSwitch())) {
+      option.setKeepLinks(true);
+    }
+
     if (command.hasOption(DistCpOptionSwitch.WORK_PATH.getSwitch()) &&
         option.shouldAtomicCommit()) {
       String workPath = getVal(command, DistCpOptionSwitch.WORK_PATH.getSwitch());

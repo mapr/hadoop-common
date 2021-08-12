@@ -43,6 +43,7 @@ public class DistCpOptions {
   private boolean skipCRC = false;
   private boolean blocking = true;
   private boolean useDiff = false;
+  private boolean keepLinks = false;
 
   public static final int maxNumListstatusThreads = 40;
   private int numListstatusThreads = 0;  // Indicates that flag is not set.
@@ -156,6 +157,7 @@ public class DistCpOptions {
       this.maxFileSize = that.maxFileSize;
       this.blocksPerChunk = that.blocksPerChunk;
       this.filtersFile = that.getFiltersFile();
+      this.keepLinks = that.keepLinks;
     }
   }
 
@@ -611,6 +613,14 @@ public class DistCpOptions {
     this.filtersFile = filtersFilename;
   }
 
+  public final void setKeepLinks(boolean keepLinks) {
+    this.keepLinks = keepLinks;
+  }
+
+  public final boolean shouldKeepLinks() {
+    return keepLinks;
+  }
+
   public void validate(DistCpOptionSwitch option, boolean value) {
 
     boolean syncFolder = (option == DistCpOptionSwitch.SYNC_FOLDERS ?
@@ -695,6 +705,8 @@ public class DistCpOptions {
       DistCpOptionSwitch.addToConf(conf, DistCpOptionSwitch.FILTERS,
           filtersFile);
     }
+    DistCpOptionSwitch.addToConf(conf, DistCpOptionSwitch.KEEP_LINKS,
+            String.valueOf(keepLinks));
   }
 
   /**
@@ -719,6 +731,7 @@ public class DistCpOptions {
         ", preserveRawXattrs=" + preserveRawXattrs +
         ", blocksPerChunk=" + blocksPerChunk +
         ", filtersFile='" + filtersFile + '\'' +
+        ", keepLinks='" + keepLinks + '\'' +
         '}';
   }
 

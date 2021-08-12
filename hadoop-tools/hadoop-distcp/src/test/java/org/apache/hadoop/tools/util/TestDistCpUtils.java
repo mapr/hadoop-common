@@ -20,10 +20,9 @@ package org.apache.hadoop.tools.util;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.EnumSet;
-import java.util.Random;
-import java.util.Stack;
+import java.util.*;
 
+import org.apache.hadoop.tools.FileListingEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -66,17 +65,31 @@ public class TestDistCpUtils {
   }
 
   @Test
-  public void testGetRelativePathRoot() {
+  public void testGetRelativePathRoot() throws IOException {
+    FileSystem fs = FileSystem.get(config);
     Path root = new Path("/");
     Path child = new Path("/a");
-    Assert.assertEquals(DistCpUtils.getRelativePath(root, child), "/a");
+    createFile(fs, child);
+    FileListingEntry rootListing = new FileListingEntry();
+    rootListing.setSourceRealPath(fs.getFileStatus(root));
+    FileListingEntry childListing = new FileListingEntry();
+    childListing.setSourceRealPath(fs.getFileStatus(root));
+    childListing.setParent(rootListing);
+    Assert.assertEquals(DistCpUtils.getRelativePath(childListing), "/a");
   }
 
   @Test
-  public void testGetRelativePath() {
-    Path root = new Path("/tmp/abc");
-    Path child = new Path("/tmp/abc/xyz/file");
-    Assert.assertEquals(DistCpUtils.getRelativePath(root, child), "/xyz/file");
+  public void testGetRelativePath() throws IOException {
+    FileSystem fs = FileSystem.get(config);
+    Path root = new Path("/tmp/abc123/xyz");
+    Path child = new Path("/tmp/abc123/xyz/file");
+    createFile(fs, child);
+    FileListingEntry rootListing = new FileListingEntry();
+    rootListing.setSourceRealPath(fs.getFileStatus(root));
+    FileListingEntry childListing = new FileListingEntry();
+    childListing.setSourceRealPath(fs.getFileStatus(root));
+    childListing.setParent(rootListing);
+    Assert.assertEquals(DistCpUtils.getRelativePath(childListing), "/file");
   }
 
   @Test
@@ -1083,8 +1096,10 @@ public class TestDistCpUtils {
          if (status.isDirectory()) {
            stack.push(status.getPath());
          }
+         FileListingEntry targetBaseListingEntry = DistCpUtils.pathToFileListingEntry(new Path(targetBase), fs);
+         FileListingEntry statusListingEntry = DistCpUtils.pathToFileListingEntry( status.getPath(), fs);
          Assert.assertTrue(fs.exists(new Path(sourceBase + "/" +
-             DistCpUtils.getRelativePath(new Path(targetBase), status.getPath()))));
+             DistCpUtils.getRelativePath(targetBaseListingEntry, statusListingEntry))));
        }
      }
      return true;
