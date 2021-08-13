@@ -24,11 +24,16 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Arrays;
+import java.util.ArrayList;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 
+import org.apache.hadoop.yarn.conf.YarnDefaultProperties;
+import org.apache.hadoop.util.RMVolumeShardingUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
@@ -95,6 +100,10 @@ public class FileSystemRMStateStore extends RMStateStore {
   @VisibleForTesting
   Path rmDTSecretManagerRoot;
   private Path rmAppRoot;
+  private int volumeCount;
+  private boolean useVolumeSharding;
+  private Map<Integer, Path> rmAppRootToVolumeMap;
+  private String rmDir;
   private Path dtSequenceNumberPath = null;
   private int fsNumRetries;
   private long fsRetryInterval;
@@ -110,6 +119,24 @@ public class FileSystemRMStateStore extends RMStateStore {
     rootDirPath = new Path(fsWorkingPath, ROOT_DIR_NAME);
     rmDTSecretManagerRoot = new Path(rootDirPath, RM_DT_SECRET_MANAGER_ROOT);
     rmAppRoot = new Path(rootDirPath, RM_APP_ROOT);
+    rmDir = conf.get(YarnDefaultProperties.RM_DIR, YarnDefaultProperties.DEFAULT_RM_DIR);
+    useVolumeSharding = conf.getBoolean(YarnDefaultProperties.RM_DIR_VOLUME_SHARDING_ENABLED, YarnDefaultProperties.DEFAULT_RM_DIR_VOLUME_SHARDING_ENABLED)
+            && fsWorkingPath.toUri().getRawPath().startsWith(new Path(rmDir).toUri().getRawPath())
+            && RMVolumeShardingUtil.isVolumeScriptNewVersion();
+
+    volumeCount = conf.getInt(YarnDefaultProperties.RM_DIR_VOLUME_COUNT, YarnDefaultProperties.DEFAULT_RM_DIR_VOLUME_COUNT);
+    rmAppRootToVolumeMap = new HashMap<Integer, Path>();
+    if(useVolumeSharding) {
+      for (int volumeName = 0; volumeName < volumeCount; volumeName++) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(rmDir)
+                .append(Path.SEPARATOR)
+                .append(volumeName)
+                .append(rmAppRoot.toString().substring(rmDir.length()));
+        rmAppRootToVolumeMap.put(volumeName, new Path(sb.toString()));
+      }
+      LOG.debug("Volume sharding is used for rmDir " + rmDir + " ; volumes count = " + volumeCount + " ; volumes: " + rmAppRootToVolumeMap);
+    }
     amrmTokenSecretManagerRoot =
         new Path(rootDirPath, AMRMTOKEN_SECRET_MANAGER_ROOT);
     fsNumRetries =
@@ -136,6 +163,11 @@ public class FileSystemRMStateStore extends RMStateStore {
     mkdirsWithRetries(rmDTSecretManagerRoot);
     mkdirsWithRetries(rmAppRoot);
     mkdirsWithRetries(amrmTokenSecretManagerRoot);
+    if(useVolumeSharding) {
+      for (Path rmAppRootWithVolume: rmAppRootToVolumeMap.values()) {
+        mkdirsWithRetries(rmAppRootWithVolume);
+      }
+    }
   }
 
   @Override
@@ -201,6 +233,8 @@ public class FileSystemRMStateStore extends RMStateStore {
     RMState rmState = new RMState();
     // recover DelegationTokenSecretManager
     loadRMDTSecretManagerState(rmState);
+    // always rebalance since we don't know if volumes were changed in scope of RMVolumeManager
+    RMVolumeShardingUtil.rebalanceVolumes(rmAppRoot.toString(), volumeCount, useVolumeSharding, rmDir, fs);
     // recover RM applications
     loadRMAppState(rmState);
     // recover AMRMTokenSecretManager
@@ -233,8 +267,15 @@ public class FileSystemRMStateStore extends RMStateStore {
     try {
       List<ApplicationAttemptStateData> attempts =
           new ArrayList<ApplicationAttemptStateData>();
-
-      for (FileStatus appDir : listStatusWithRetries(rmAppRoot)) {
+      List<FileStatus> appStateList = new ArrayList<>();
+      if(useVolumeSharding) {
+        for(Path rmAppRootWithVolume: rmAppRootToVolumeMap.values()) {
+          appStateList.addAll(Arrays.asList(listStatusWithRetries(rmAppRootWithVolume)));
+        }
+      } else {
+        appStateList.addAll(Arrays.asList(listStatusWithRetries(rmAppRoot)));
+      }
+      for (FileStatus appDir : appStateList) {
         checkAndResumeUpdateOperation(appDir.getPath());
         for (FileStatus childNodeStatus :
             listStatusWithRetries(appDir.getPath())) {
@@ -305,7 +346,9 @@ public class FileSystemRMStateStore extends RMStateStore {
         if (appState == null) {
           LOG.warn("Removing " + appId + " directory as info there is " +
                   "incomplete and can cause RM restart failure after failover.");
-          checkAndRemovePathWithRetries(getAppDir(rmAppRoot, appId));
+          int rmVolumeName = Math.abs(appId.toString().hashCode() % volumeCount);
+          Path appDirPath = useVolumeSharding ? getAppDir(rmAppRootToVolumeMap.get(rmVolumeName), appId) : getAppDir(rmAppRoot, appId);
+          checkAndRemovePathWithRetries(appDirPath);
           rmState.appState.remove(appId);
         } else {
           appState.attempts.put(attemptState.getAttemptId(), attemptState);
@@ -421,7 +464,8 @@ public class FileSystemRMStateStore extends RMStateStore {
   @Override
   public synchronized void storeApplicationStateInternal(ApplicationId appId,
       ApplicationStateData appStateDataPB) throws Exception {
-    Path appDirPath = getAppDir(rmAppRoot, appId);
+    int rmVolumeName = Math.abs(appId.toString().hashCode() % volumeCount);
+    Path appDirPath = useVolumeSharding ? getAppDir(rmAppRootToVolumeMap.get(rmVolumeName), appId) : getAppDir(rmAppRoot, appId);
     mkdirsWithRetries(appDirPath);
     Path nodeCreatePath = getNodePath(appDirPath, appId.toString());
 
@@ -440,7 +484,8 @@ public class FileSystemRMStateStore extends RMStateStore {
   @Override
   public synchronized void updateApplicationStateInternal(ApplicationId appId,
       ApplicationStateData appStateDataPB) throws Exception {
-    Path appDirPath = getAppDir(rmAppRoot, appId);
+    int rmVolumeName = Math.abs(appId.toString().hashCode() % volumeCount);
+    Path appDirPath = useVolumeSharding ? getAppDir(rmAppRootToVolumeMap.get(rmVolumeName), appId) : getAppDir(rmAppRoot, appId);
     Path nodeCreatePath = getNodePath(appDirPath, appId.toString());
 
     LOG.info("Updating info for app: " + appId + " at: " + nodeCreatePath);
@@ -460,8 +505,9 @@ public class FileSystemRMStateStore extends RMStateStore {
       ApplicationAttemptId appAttemptId,
       ApplicationAttemptStateData attemptStateDataPB)
       throws Exception {
-    Path appDirPath =
-        getAppDir(rmAppRoot, appAttemptId.getApplicationId());
+    ApplicationId appId = appAttemptId.getApplicationId();
+    int rmVolumeName = Math.abs(appId.toString().hashCode() % volumeCount);
+    Path appDirPath = useVolumeSharding ? getAppDir(rmAppRootToVolumeMap.get(rmVolumeName), appId) : getAppDir(rmAppRoot, appId);
     Path nodeCreatePath = getNodePath(appDirPath, appAttemptId.toString());
     LOG.info("Storing info for attempt: " + appAttemptId + " at: "
         + nodeCreatePath);
@@ -481,8 +527,10 @@ public class FileSystemRMStateStore extends RMStateStore {
       ApplicationAttemptId appAttemptId,
       ApplicationAttemptStateData attemptStateDataPB)
       throws Exception {
-    Path appDirPath =
-        getAppDir(rmAppRoot, appAttemptId.getApplicationId());
+    ApplicationId appId = appAttemptId.getApplicationId();
+    int rmVolumeName = Math.abs(appId.toString().hashCode() % volumeCount);
+    Path appDirPath = useVolumeSharding ? getAppDir(rmAppRootToVolumeMap.get(rmVolumeName), appId) : getAppDir(rmAppRoot, appId);
+
     Path nodeCreatePath = getNodePath(appDirPath, appAttemptId.toString());
     LOG.info("Updating info for attempt: " + appAttemptId + " at: "
         + nodeCreatePath);
@@ -501,8 +549,9 @@ public class FileSystemRMStateStore extends RMStateStore {
   public synchronized void removeApplicationAttemptInternal(
       ApplicationAttemptId appAttemptId)
       throws Exception {
-    Path appDirPath =
-        getAppDir(rmAppRoot, appAttemptId.getApplicationId());
+    ApplicationId appId = appAttemptId.getApplicationId();
+    int rmVolumeName = Math.abs(appId.toString().hashCode() % volumeCount);
+    Path appDirPath = useVolumeSharding ? getAppDir(rmAppRootToVolumeMap.get(rmVolumeName), appId) : getAppDir(rmAppRoot, appId);
     Path nodeRemovePath = getNodePath(appDirPath, appAttemptId.toString());
     LOG.info("Removing info for attempt: " + appAttemptId + " at: "
         + nodeRemovePath);
@@ -515,7 +564,8 @@ public class FileSystemRMStateStore extends RMStateStore {
       throws Exception {
     ApplicationId appId =
         appState.getApplicationSubmissionContext().getApplicationId();
-    Path nodeRemovePath = getAppDir(rmAppRoot, appId);
+    int rmVolumeName = Math.abs(appId.toString().hashCode() % volumeCount);
+    Path nodeRemovePath = useVolumeSharding ? getAppDir(rmAppRootToVolumeMap.get(rmVolumeName), appId) : getAppDir(rmAppRoot, appId);
     LOG.info("Removing info for app: " + appId + " at: " + nodeRemovePath);
     checkAndRemovePathWithRetries(nodeRemovePath);
   }

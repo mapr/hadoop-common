@@ -4,13 +4,26 @@
 package org.apache.hadoop.yarn.util;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.util.RMVolumeShardingUtil;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.conf.YarnDefaultProperties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class YarnAppUtil {
+
+  public static final Logger LOG =
+          LoggerFactory.getLogger(YarnAppUtil.class);
   /**
    * File permission to be used for any application specific directory.
    * It is rwx------. This ensures that only the app owner can access it.
@@ -50,20 +63,73 @@ public class YarnAppUtil {
    * Returns staging dir for the given app on resource manager.
    */
   public static Path getRMStagingDir(String appIdStr,
-      FileSystem fs, Configuration conf) {
-
-    Path dir = new Path(conf.get(YarnDefaultProperties.RM_STAGING_DIR));
-    return new Path(fs.makeQualified(dir).toString(), appIdStr);
+                                     FileSystem fs, Configuration conf) throws IOException {
+    String rmStagingDir = conf.get(YarnDefaultProperties.RM_STAGING_DIR, YarnDefaultProperties.DEFAULT_RM_STAGING_DIR);
+    return getRMDirWithVolume(appIdStr, fs, conf, rmStagingDir);
   }
 
   /**
    * Returns system dir for the given app on resource manager.
    */
   public static Path getRMSystemDir(String appIdStr,
-      FileSystem fs, Configuration conf) {
+                                    FileSystem fs, Configuration conf) throws IOException {
+    String rmSystemDir = conf.get(YarnDefaultProperties.RM_SYSTEM_DIR, YarnDefaultProperties.DEFAULT_RM_SYSTEM_DIR);
+    return getRMDirWithVolume(appIdStr, fs, conf, rmSystemDir);
+  }
 
-    Path dir = new Path(conf.get(YarnDefaultProperties.RM_SYSTEM_DIR));
-    return new Path(fs.makeQualified(dir).toString(), appIdStr);
+  public static Path getRMDirWithVolume(String appIdStr,
+                                        FileSystem fs, Configuration conf, String rmSubDir) throws IOException {
+    String rmDir = conf.get(YarnDefaultProperties.RM_DIR, YarnDefaultProperties.DEFAULT_RM_DIR);
+    Path rmDirPath = new Path(rmDir);
+    Path rmSubDirPath = new Path(rmSubDir);
+
+    String dirSuffix = rmSubDirPath.toString().substring(rmDirPath.toString().length());
+
+    boolean useVolumeSharding = conf.getBoolean(YarnDefaultProperties.RM_DIR_VOLUME_SHARDING_ENABLED, YarnDefaultProperties.DEFAULT_RM_DIR_VOLUME_SHARDING_ENABLED)
+            && RMVolumeShardingUtil.isVolumeScriptNewVersion()
+            && rmSubDirPath.toUri().getRawPath().startsWith(rmDirPath.toUri().getRawPath());
+    Path result;
+    if (useVolumeSharding) {
+      int volumeCount = conf.getInt(YarnDefaultProperties.RM_DIR_VOLUME_COUNT, YarnDefaultProperties.DEFAULT_RM_DIR_VOLUME_COUNT);
+      int rmVolumeName = Math.abs(appIdStr.hashCode() % volumeCount);
+      StringBuilder sb = new StringBuilder();
+      sb.append(rmDirPath.toUri())
+              .append(Path.SEPARATOR)
+              .append(rmVolumeName)
+              .append(dirSuffix);
+
+      Path dir = new Path(sb.toString());
+      result = new Path(fs.makeQualified(dir).toString() + Path.SEPARATOR + appIdStr);
+    } else {
+      Path dir = new Path(rmSubDir);
+      result = new Path(fs.makeQualified(dir).toString() + Path.SEPARATOR + appIdStr);
+    }
+    if (!fs.exists(result)) {
+      Path allRMDirsPath = inspectAllRMDirs(fs, rmDirPath, dirSuffix, appIdStr);
+      if(allRMDirsPath != null && fs.exists(allRMDirsPath)) {
+        result = allRMDirsPath;
+      }
+    }
+    return result;
+  }
+
+  private static Path inspectAllRMDirs(FileSystem fs, Path rmDirPath, String dirSuffix, String appIdStr) throws IOException {
+    List<FileStatus> rmVolumes = Arrays.asList(fs.listStatus(rmDirPath))
+            .stream()
+            .filter(volume -> volume.getPath().getName().matches("\\d+"))
+            .collect(Collectors.toList());
+    for (FileStatus volumeStatus : rmVolumes) {
+      Path appIdPathWithVolume = new Path(fs.makeQualified(volumeStatus.getPath()).toString() + dirSuffix + Path.SEPARATOR + appIdStr);
+      if (fs.exists(appIdPathWithVolume)) {
+        return appIdPathWithVolume;
+      }
+    }
+    Path appIdPath = new Path(fs.makeQualified(rmDirPath).toString() + dirSuffix + Path.SEPARATOR + appIdStr);
+    if (fs.exists(appIdPath)) {
+      return appIdPath;
+    }
+    LOG.warn("App dir " + dirSuffix + " is not found for app " + appIdStr);
+    return null;
   }
 
   /**
@@ -71,7 +137,7 @@ public class YarnAppUtil {
    * directory on resource manager.
    */
   public static Path getRMStagedMapRTicketPath(String appIdStr,
-      FileSystem fs, Configuration conf) {
+      FileSystem fs, Configuration conf) throws IOException {
 
     return getMapRTicketPath(getRMStagingDir(appIdStr, fs, conf));
   }
@@ -81,7 +147,7 @@ public class YarnAppUtil {
    * directory on resource manager.
    */
   public static Path getRMSystemMapRTicketPath(String appIdStr,
-      FileSystem fs, Configuration conf) {
+      FileSystem fs, Configuration conf) throws IOException {
 
     return getMapRTicketPath(getRMSystemDir(appIdStr, fs, conf));
   }
