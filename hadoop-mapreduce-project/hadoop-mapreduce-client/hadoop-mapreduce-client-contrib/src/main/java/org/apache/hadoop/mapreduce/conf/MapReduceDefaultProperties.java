@@ -28,6 +28,7 @@ import org.apache.hadoop.mapreduce.task.reduce.DirectShuffle;
 import org.apache.hadoop.http.HttpConfig;
 import org.apache.hadoop.mapreduce.v2.jobhistory.JHAdminConfig;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.util.RMVolumeShardingUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -42,7 +43,11 @@ public class MapReduceDefaultProperties extends Properties {
   static { // MapReduce framework related defaults
     props.put(MRConfig.FRAMEWORK_NAME, MRConfig.YARN_FRAMEWORK_NAME);
 
-    props.put(MRJobConfig.MR_AM_STAGING_DIR, "${yarn.resourcemanager.dir}/staging");
+    if(RMVolumeShardingUtil.isVolumeScriptNewVersion()) {
+      props.put(MRJobConfig.MR_AM_STAGING_DIR, "${yarn.timeline-service.generic-application-history.staging}");
+    } else {
+      props.put(MRJobConfig.MR_AM_STAGING_DIR, "${yarn.resourcemanager.dir}/staging");
+    }
 
   }
 
