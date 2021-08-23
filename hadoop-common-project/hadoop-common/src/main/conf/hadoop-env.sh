@@ -382,6 +382,8 @@ export HADOOP_OS_TYPE=${HADOOP_OS_TYPE:-$(uname -s)}
 #
 # export HDFS_BALANCER_OPTS=""
 
+export HADOOP_BC_LOGLEVEL="WARNING"
+
 ###
 # HDFS Mover specific parameters
 ###

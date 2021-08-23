@@ -25,6 +25,7 @@ import java.io.InterruptedIOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
 import java.nio.file.AccessDeniedException;
+import java.security.Security;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
@@ -50,6 +51,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
 import javax.annotation.Nullable;
 
 import software.amazon.awssdk.core.ResponseInputStream;
@@ -204,7 +206,9 @@ import org.apache.hadoop.io.retry.RetryPolicies;
 import org.apache.hadoop.fs.store.EtagChecksum;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.ProviderUtils;
+import org.apache.hadoop.security.alias.BouncyCastleFipsKeyStoreProvider;
 import org.apache.hadoop.security.token.Token;
+import org.apache.hadoop.security.ssl.SSLFactory;
 import org.apache.hadoop.util.BlockingThreadPoolExecutorService;
 import org.apache.hadoop.util.DurationInfo;
 import org.apache.hadoop.util.LambdaUtils;
@@ -271,6 +275,9 @@ import static org.apache.hadoop.util.Preconditions.checkArgument;
 import static org.apache.hadoop.util.RateLimitingFactory.unlimitedRate;
 import static org.apache.hadoop.util.functional.RemoteIterators.foreach;
 import static org.apache.hadoop.util.functional.RemoteIterators.typeCastingRemoteIterator;
+
+import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
+import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
 
 /**
  * The core S3A Filesystem implementation.
@@ -627,6 +634,18 @@ public class S3AFileSystem extends FileSystem implements StreamCapabilities,
       username = owner.getShortUserName();
       workingDir = new Path("/user", username)
           .makeQualified(this.uri, this.getWorkingDirectory());
+
+      Configuration sslConf = new Configuration();
+      sslConf.addResource(SSLFactory.SSL_CLIENT_CONF_DEFAULT);
+      if (sslConf.get(SSLFactory.SSL_CLIENT_KEYSTORE_TYPE, SSLFactory.SSL_CLIENT_KEYSTORE_TYPE_DEFAULT)
+              .equalsIgnoreCase(BouncyCastleFipsKeyStoreProvider.KEYSTORE_TYPE)) {
+        String logLevel = System.getProperty("hadoop.bc.logger");
+        if (logLevel == null || logLevel.isEmpty()) logLevel = "WARNING";
+        java.util.logging.Logger parent = java.util.logging.Logger.getLogger("org.bouncycastle.jsse.provider");
+        parent.setLevel(Level.parse(logLevel));
+        Security.addProvider(new BouncyCastleFipsProvider());
+        Security.addProvider(new BouncyCastleJsseProvider());
+      }
 
       maxKeys = intOption(conf, MAX_PAGING_KEYS, DEFAULT_MAX_PAGING_KEYS, 1);
       partSize = getMultipartSizeProperty(conf,

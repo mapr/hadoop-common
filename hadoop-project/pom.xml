@@ -65,6 +65,11 @@
     <!-- avro version -->
     <avro.version>1.9.2</avro.version>
 
+    <!-- bc version -->
+    <bcfips.version>1.0.2.3</bcfips.version>
+    <bctlsfips.version>1.0.12.2</bctlsfips.version>
+    <bcpkixfips.version>1.0.5</bcpkixfips.version>
+
     <!-- jersey version -->
     <jersey.version>1.19.4</jersey.version>
 
@@ -1458,6 +1463,14 @@
             <artifactId>kerby-config</artifactId>
           </exclusion>
           <exclusion>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bc-fips</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bctls-fips</artifactId>
+          </exclusion>
+          <exclusion>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
           </exclusion>
@@ -1755,6 +1768,21 @@
          </exclusion>
        </exclusions>
      </dependency>
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bc-fips</artifactId>
+        <version>${bcfips.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bctls-fips</artifactId>
+        <version>${bctlsfips.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcpkix-fips</artifactId>
+        <version>${bcpkixfips.version}</version>
+      </dependency>
      <dependency>
        <groupId>org.bouncycastle</groupId>
        <artifactId>bcprov-jdk18on</artifactId>

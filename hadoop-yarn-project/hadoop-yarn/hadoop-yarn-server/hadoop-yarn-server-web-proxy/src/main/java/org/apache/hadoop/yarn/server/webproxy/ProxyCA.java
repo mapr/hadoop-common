@@ -33,13 +33,12 @@ import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
-import org.bouncycastle.crypto.util.PrivateKeyFactory;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.DefaultDigestAlgorithmIdentifierFinder;
 import org.bouncycastle.operator.DefaultSignatureAlgorithmIdentifierFinder;
 import org.bouncycastle.operator.OperatorCreationException;
-import org.bouncycastle.operator.bc.BcRSAContentSignerBuilder;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,14 +95,13 @@ public class ProxyCA {
   private X509TrustManager defaultTrustManager;
   private X509KeyManager x509KeyManager;
   private HostnameVerifier hostnameVerifier;
-  private static final AlgorithmIdentifier SIG_ALG_ID =
-      new DefaultSignatureAlgorithmIdentifierFinder().find("SHA512WITHRSA");
+  private static String ALG_NAME = "SHA512WITHRSA";
 
   public ProxyCA() {
     srand = new SecureRandom();
 
     // This only has to be done once
-    Security.addProvider(new BouncyCastleProvider());
+    Security.addProvider(new BouncyCastleFipsProvider());
   }
 
   public void init() throws GeneralSecurityException, IOException {
@@ -155,12 +153,10 @@ public class ProxyCA {
         SubjectPublicKeyInfo.getInstance(publicKey.getEncoded());
     X509v3CertificateBuilder certBuilder = new X509v3CertificateBuilder(
         issuer, new BigInteger(64, srand), from, to, subject, subPubKeyInfo);
-    AlgorithmIdentifier digAlgId =
-        new DefaultDigestAlgorithmIdentifierFinder().find(SIG_ALG_ID);
     ContentSigner contentSigner;
     try {
-      contentSigner = new BcRSAContentSignerBuilder(SIG_ALG_ID, digAlgId)
-          .build(PrivateKeyFactory.createKey(privateKey.getEncoded()));
+      contentSigner = new JcaContentSignerBuilder(ALG_NAME)
+          .build(privateKey);
     } catch (OperatorCreationException oce) {
       throw new GeneralSecurityException(oce);
     }
@@ -178,7 +174,7 @@ public class ProxyCA {
           new JcaX509ExtensionUtils().createAuthorityKeyIdentifier(caCert));
     }
     X509CertificateHolder certHolder = certBuilder.build(contentSigner);
-    X509Certificate cert = new JcaX509CertificateConverter().setProvider("BC")
+    X509Certificate cert = new JcaX509CertificateConverter().setProvider("BCFIPS")
         .getCertificate(certHolder);
     LOG.info("Created Certificate for {}", subject);
     return cert;

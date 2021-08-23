@@ -25,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.hadoop.security.scram.ScramAuthMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod;
@@ -44,11 +45,14 @@ public class RpcAuthRegistry {
     public static final RpcAuthMethod FAKE_KERBEROS = FakeKerberosAuthMethod.INSTANCE;
     public static final RpcAuthMethod SIMPLE = SimpleAuthMethod.INSTANCE;
     public static final RpcAuthMethod DIGEST = DigestAuthMethod.INSTANCE;
+    public static final RpcAuthMethod SCRAM = ScramAuthMethod.INSTANCE;
+
 
     static {
         addRpcAuthMethod(SIMPLE);
         addRpcAuthMethod(KERBEROS);
         addRpcAuthMethod(DIGEST);
+        addRpcAuthMethod(SCRAM);
         addRpcAuthMethod(FAKE_KERBEROS);
     }
 

@@ -116,8 +116,10 @@ import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.apache.hadoop.security.authorize.PolicyProvider;
 import org.apache.hadoop.security.authorize.ProxyUsers;
 import org.apache.hadoop.security.authorize.ServiceAuthorizationManager;
+import org.apache.hadoop.security.rpcauth.DigestAuthMethod;
 import org.apache.hadoop.security.rpcauth.RpcAuthMethod;
 import org.apache.hadoop.security.rpcauth.RpcAuthRegistry;
+import org.apache.hadoop.security.rpcauth.TokenAuthMethod;
 import org.apache.hadoop.security.token.SecretManager;
 import org.apache.hadoop.security.token.SecretManager.InvalidToken;
 import org.apache.hadoop.security.token.TokenIdentifier;
@@ -2068,7 +2070,7 @@ public abstract class Server {
       this.channel = channel;
       this.lastContact = lastContact;
       this.data = null;
-      
+
       // the buffer is initialized to read the "hrpc" and after that to read
       // the length of the Rpc-packet (i.e 4 bytes)
       this.dataLengthBuffer = ByteBuffer.allocate(4);
@@ -2185,7 +2187,7 @@ public abstract class Server {
      * that are wrapped as a cause of parameter e are unwrapped so that they can
      * be sent as the true cause to the client side. In case of
      * {@link InvalidToken} we go one level deeper to get the true cause.
-     * 
+     *
      * @param e the exception that may have a cause we want to unwrap.
      * @return the true cause for some exceptions.
      */
@@ -2211,15 +2213,15 @@ public abstract class Server {
       }
       return e;
     }
-    
+
     /**
      * Process saslMessage and send saslResponse back
      * @param saslMessage received SASL message
      * @throws RpcServerException setup failed due to SASL negotiation
-     *         failure, premature or invalid connection context, or other state 
-     *         errors. This exception needs to be sent to the client. This 
-     *         exception will wrap {@link RetriableException}, 
-     *         {@link InvalidToken}, {@link StandbyException} or 
+     *         failure, premature or invalid connection context, or other state
+     *         errors. This exception needs to be sent to the client. This
+     *         exception will wrap {@link RetriableException},
+     *         {@link InvalidToken}, {@link StandbyException} or
      *         {@link SaslException}.
      * @throws IOException if sending reply fails
      * @throws InterruptedException
@@ -2298,15 +2300,15 @@ public abstract class Server {
         }
       }
     }
-    
+
     /**
      * Process a saslMessge.
      * @param saslMessage received SASL message
      * @return the sasl response to send back to client
-     * @throws SaslException if authentication or generating response fails, 
+     * @throws SaslException if authentication or generating response fails,
      *                       or SASL protocol mixup
      * @throws IOException if a SaslServer cannot be created
-     * @throws AccessControlException if the requested authentication type 
+     * @throws AccessControlException if the requested authentication type
      *         is not supported or trying to re-attempt negotiation.
      * @throws InterruptedException
      */
@@ -2354,7 +2356,7 @@ public abstract class Server {
             break;
           }
           // sasl server for tokens may already be instantiated
-          if (saslServer == null || !authMethod.equals(RpcAuthRegistry.DIGEST)) {
+          if (saslServer == null || !(authMethod.equals(RpcAuthRegistry.DIGEST) || authMethod.equals(RpcAuthRegistry.SCRAM))) {
             saslServer = createSaslServer(authMethod);
           }
           saslResponse = processSaslToken(saslMessage);
@@ -2445,17 +2447,17 @@ public abstract class Server {
     }
 
     /**
-     * This method reads in a non-blocking fashion from the channel: 
-     * this method is called repeatedly when data is present in the channel; 
+     * This method reads in a non-blocking fashion from the channel:
+     * this method is called repeatedly when data is present in the channel;
      * when it has enough data to process one rpc it processes that rpc.
-     * 
-     * On the first pass, it processes the connectionHeader, 
-     * connectionContext (an outOfBand RPC) and at most one RPC request that 
+     *
+     * On the first pass, it processes the connectionHeader,
+     * connectionContext (an outOfBand RPC) and at most one RPC request that
      * follows that. On future passes it will process at most one RPC request.
-     *  
-     * Quirky things: dataLengthBuffer (4 bytes) is used to read "hrpc" OR 
+     *
+     * Quirky things: dataLengthBuffer (4 bytes) is used to read "hrpc" OR
      * rpc request length.
-     *    
+     *
      * @return -1 in case of error, else num bytes read so far
      * @throws IOException - internal error that should not be returned to
      *         client, typically failure to respond to client
@@ -2580,10 +2582,10 @@ public abstract class Server {
     }
 
     /**
-     * Process the Sasl's Negotiate request, including the optimization of 
+     * Process the Sasl's Negotiate request, including the optimization of
      * accelerating token negotiation.
-     * @return the response to Negotiate request - the list of enabled 
-     *         authMethods and challenge if the TOKENS are supported. 
+     * @return the response to Negotiate request - the list of enabled
+     *         authMethods and challenge if the TOKENS are supported.
      * @throws SaslException - if attempt to generate challenge fails.
      * @throws IOException - if it fails to create the SASL server for Tokens
      */
@@ -2600,6 +2602,8 @@ public abstract class Server {
         negotiateBuilder.getAuthsBuilder(0)  // TOKEN is always first
             .setChallenge(ByteString.copyFrom(challenge));
         negotiateMessage = negotiateBuilder.build();
+      } else if(enabledAuthMethods.contains(RpcAuthRegistry.SCRAM)){
+        saslServer = createSaslServer(RpcAuthRegistry.SCRAM);
       }
       sentNegotiate = true;
       return negotiateMessage;
@@ -2684,7 +2688,7 @@ public abstract class Server {
         //this is not allowed if user authenticated with DIGEST.
         if ((protocolUser != null)
             && (!protocolUser.getUserName().equals(user.getUserName()))) {
-          if (authMethod.equals(RpcAuthRegistry.DIGEST)) {
+          if (authMethod.equals(RpcAuthRegistry.DIGEST) || authMethod.equals(RpcAuthRegistry.SCRAM)) {
             // Not allowed to doAs if token authentication is used
             throw new FatalRpcServerException(
                 RpcErrorCodeProto.FATAL_UNAUTHORIZED,
@@ -2753,16 +2757,16 @@ public abstract class Server {
     }
     
     /**
-     * Process one RPC Request from buffer read from socket stream 
+     * Process one RPC Request from buffer read from socket stream
      *  - decode rpc in a rpc-Call
      *  - handle out-of-band RPC requests such as the initial connectionContext
      *  - A successfully decoded RpcCall will be deposited in RPC-Q and
      *    its response will be sent later when the request is processed.
-     * 
+     *
      * Prior to this call the connectionHeader ("hrpc...") has been handled and
      * if SASL then SASL has been established and the buf we are passed
      * has been unwrapped from SASL.
-     * 
+     *
      * @param bb - contains the RPC request header and the rpc request
      * @throws IOException - internal error that should not be returned to
      *         client, typically failure to respond to client
@@ -2838,7 +2842,7 @@ public abstract class Server {
     }
 
     /**
-     * Process an RPC Request 
+     * Process an RPC Request
      *   - the connection headers and context must have been already read.
      *   - Based on the rpcKind, decode the rpcRequest.
      *   - A successfully decoded RpcCall will be deposited in RPC-Q and
@@ -2962,7 +2966,7 @@ public abstract class Server {
      * @param buffer - stream to request payload
      * @throws RpcServerException - setup failed due to SASL
      *         negotiation failure, premature or invalid connection context,
-     *         or other state errors. This exception needs to be sent to the 
+     *         or other state errors. This exception needs to be sent to the
      *         client.
      * @throws IOException - failed to send a response back to the client
      * @throws InterruptedException
@@ -3025,7 +3029,7 @@ public abstract class Server {
     }
     
     /**
-     * Decode the a protobuf from the given input stream 
+     * Decode the a protobuf from the given input stream
      * @return Message - decoded protobuf
      * @throws RpcServerException - deserialization failed
      */
@@ -3466,17 +3470,29 @@ public abstract class Server {
   private List<RpcAuthMethod> getAuthMethods(SecretManager<?> secretManager,
                                              Configuration conf) throws IOException {
     AuthenticationMethod confAuthenticationMethod =
-        SecurityUtil.getAuthenticationMethod(conf);        
+        SecurityUtil.getAuthenticationMethod(conf);
+    String tokenAuthMethod = conf.get(CommonConfigurationKeysPublic.HADOOP_SECURITY_TOKEN_MECHANISM,
+        RpcAuthRegistry.DIGEST.getMechanismName());
     List<RpcAuthMethod> authMethods = new ArrayList<RpcAuthMethod>();
     if (confAuthenticationMethod == AuthenticationMethod.TOKEN) {
       if (secretManager == null) {
         throw new IllegalArgumentException(AuthenticationMethod.TOKEN +
             " authentication requires a secret manager");
-      } 
+      }
+      if(tokenAuthMethod.equalsIgnoreCase(RpcAuthRegistry.SCRAM.getMechanismName())){
+        authMethods.add(RpcAuthRegistry.SCRAM);
+      }
+      else {
+        authMethods.add(RpcAuthRegistry.DIGEST);
+      }
     } else if (secretManager != null) {
       LOG.debug("{} authentication enabled for secret manager", AuthenticationMethod.TOKEN);
       // most preferred, go to the front of the line!
-      authMethods.add(RpcAuthRegistry.DIGEST);
+      if(tokenAuthMethod.equalsIgnoreCase(RpcAuthRegistry.SCRAM.getMechanismName()))
+        authMethods.add(RpcAuthRegistry.SCRAM);
+      else {
+        authMethods.add(RpcAuthRegistry.DIGEST);
+      }
     }
     authMethods.addAll(UserGroupInformation.getCurrentUser().getRpcAuthMethodList());
     
@@ -3490,7 +3506,7 @@ public abstract class Server {
 
   /**
    * Setup response for the IPC Call.
-   * 
+   *
    * @param call {@link Call} to which we are setting up the response
    * @param status of the IPC call
    * @param rv return value for the IPC Call, if the call was successful
@@ -3762,7 +3778,7 @@ public abstract class Server {
     }
     return allAddrs;
   }
-  
+
   /** 
    * Called for each call. 
    * @deprecated Use  {@link #call(RPC.RpcKind, String,
@@ -3973,7 +3989,7 @@ public abstract class Server {
         }
 
       } finally {
-        buf.limit(originalLimit);        
+        buf.limit(originalLimit);
       }
     }
 

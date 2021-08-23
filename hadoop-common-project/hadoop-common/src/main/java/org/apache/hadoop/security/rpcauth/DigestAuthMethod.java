@@ -51,47 +51,13 @@ import org.apache.hadoop.security.token.TokenIdentifier;
 // This is because UGI.AuthenticationMethod doesn't have DIGEST anymore and
 // hadoop is deprecating SaslRpcServer.AuthMethod which has DIGEST already
 // deprecated.
-public final class DigestAuthMethod extends RpcAuthMethod {
+public final class DigestAuthMethod extends TokenAuthMethod {
   private static final Logger LOG = LoggerFactory.getLogger(DigestAuthMethod.class);
 
-    static final RpcAuthMethod INSTANCE = new DigestAuthMethod();
-    private DigestAuthMethod() {
-        super((byte) 82, "token", "DIGEST-MD5", AuthenticationMethod.TOKEN);
-    }
-
-    @Override
-    public boolean isProxyAllowed() {
-        return false;
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public UserGroupInformation getAuthorizedUgi(String authorizedId,
-                                                 SecretManager secretManager) throws IOException {
-        TokenIdentifier tokenId = getIdentifier(authorizedId, secretManager);
-        UserGroupInformation ugi = tokenId.getUser();
-        if (ugi == null) {
-            throw new AccessControlException(
-                    "Can't retrieve username from tokenIdentifier.");
-        }
-        ugi.addTokenIdentifier(tokenId);
-        return ugi;
-    }
-
-    @Override
-    public boolean isSasl() {
-        return true;
-    }
-
-    @Override
-    public String getProtocol() throws IOException {
-        return SaslRpcServer.SASL_DEFAULT_REALM;
-    }
-
-    @Override
-    public String getServerId() throws IOException {
-        return "";
-    }
+  static final TokenAuthMethod INSTANCE = new DigestAuthMethod();
+  private DigestAuthMethod() {
+    super((byte) 82, "token", "DIGEST-MD5", AuthenticationMethod.TOKEN);
+  }
 
     @Override
     @SuppressWarnings("unchecked")
@@ -123,35 +89,9 @@ public final class DigestAuthMethod extends RpcAuthMethod {
                 new SaslDigestCallbackHandler(secretManager, connection));
     }
 
-    public static char[] encodePassword(byte[] password) {
-        return new String(Base64.encodeBase64(password)).toCharArray();
-    }
-
-    public static <T extends TokenIdentifier> T getIdentifier(String id,
-                                                              SecretManager<T> secretManager) throws InvalidToken {
-        byte[] tokenId = decodeIdentifier(id);
-        T tokenIdentifier = secretManager.createIdentifier();
-        try {
-            tokenIdentifier.readFields(new DataInputStream(new ByteArrayInputStream(
-                    tokenId)));
-        } catch (IOException e) {
-            throw (InvalidToken) new InvalidToken(
-                    "Can't de-serialize tokenIdentifier").initCause(e);
-        }
-        return tokenIdentifier;
-    }
-
-    public static String encodeIdentifier(byte[] identifier) {
-        return new String(Base64.encodeBase64(identifier));
-    }
-
-    public static byte[] decodeIdentifier(String identifier) {
-        return Base64.decodeBase64(identifier.getBytes());
-    }
-
-    private static class SaslClientCallbackHandler implements CallbackHandler {
-        private final String userName;
-        private final char[] userPassword;
+  private static class SaslClientCallbackHandler implements CallbackHandler {
+    private final String userName;
+    private final char[] userPassword;
 
         public SaslClientCallbackHandler(Token<? extends TokenIdentifier> token) {
             this.userName = encodeIdentifier(token.getIdentifier());

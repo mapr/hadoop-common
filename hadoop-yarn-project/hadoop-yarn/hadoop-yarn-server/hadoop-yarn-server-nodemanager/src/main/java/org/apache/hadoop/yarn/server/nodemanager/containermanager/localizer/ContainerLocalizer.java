@@ -404,7 +404,7 @@ public class ContainerLocalizer {
   }
 
   /**
-   * Returns the JVM options to to launch the resource localizer.
+   * Returns the JVM options to launch the resource localizer.
    * @param conf the configuration properties to launch the resource localizer.
    */
   public static List<String> getJavaOpts(Configuration conf) {

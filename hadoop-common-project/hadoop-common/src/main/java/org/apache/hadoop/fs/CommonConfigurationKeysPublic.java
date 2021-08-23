@@ -644,6 +644,8 @@ public class CommonConfigurationKeysPublic {
    * <a href="{@docRoot}/../hadoop-project-dist/hadoop-common/core-default.xml">
    * core-default.xml</a>
    */
+  public static final String  HADOOP_SECURITY_TOKEN_MECHANISM =
+          "hadoop.security.token.authentication.method";
   public static final String  HADOOP_SECURITY_AUTHENTICATION =
     "hadoop.security.authentication";
   /**

@@ -87,6 +87,8 @@ import org.apache.hadoop.metrics2.lib.MutableGaugeInt;
 import org.apache.hadoop.metrics2.lib.MutableGaugeLong;
 import org.apache.hadoop.metrics2.lib.MutableQuantiles;
 import org.apache.hadoop.metrics2.lib.MutableRate;
+import org.apache.hadoop.security.scram.ScramSaslClientProvider;
+import org.apache.hadoop.security.scram.ScramSaslServerProvider;
 import org.apache.hadoop.security.SaslRpcServer.AuthMethod;
 import org.apache.hadoop.security.login.HadoopLoginModule;
 import org.apache.hadoop.security.rpcauth.RpcAuthMethod;
@@ -235,11 +237,14 @@ public class UserGroupInformation {
   public static final String JAVA_SECURITY_AUTH_LOGIN_CONFIG = "java.security.auth.login.config";
   public static final String DEFAULT_JAVA_SECURITY_AUTH_LOGIN_CONFIG = System.getenv("JAVA_SECURITY_AUTH");
 
+  public static final String SCRAM_AUTH_MECHANISM = "SCRAM-SHA-256";
+  public static final String DIGEST_AUTH_MECHANISM = "DIGEST-MD5";
+
   public static boolean isInitialized() {
     return conf != null;
   }
 
-  /** 
+  /**
    * A method to initialize the fields that depend on a configuration.
    * Must be called before useKerberos or groups is used.
    */
@@ -331,7 +336,11 @@ public class UserGroupInformation {
 
     // by this time JAAS config file is fully loaded. Set UGI's authenticationMethod from JAAS config.
     setUGIAuthenticationMethodFromJAASConfiguration(jaasConfName);
-
+    String authTokenMethod = conf.get(CommonConfigurationKeysPublic.HADOOP_SECURITY_TOKEN_MECHANISM, DIGEST_AUTH_MECHANISM);
+    if (authTokenMethod.equalsIgnoreCase(SCRAM_AUTH_MECHANISM)) {
+      ScramSaslClientProvider.initialize();
+      ScramSaslServerProvider.initialize();
+    }
     if (overrideNameRules || !HadoopKerberosName.hasRulesBeenSet()) {
       try {
         HadoopKerberosName.setConfiguration(conf);
@@ -922,7 +931,7 @@ public class UserGroupInformation {
     // logged in ugi if it's different
     loginUserRef.set(ugi);
   }
-  
+
   private String getKeytab() {
     HadoopLoginContext login = getLogin();
     return (login != null)
@@ -948,7 +957,7 @@ public class UserGroupInformation {
     // have removed the keytab from priv creds.  instead, check login params.
     return hasKerberosCredentials() && isHadoopLogin() && getKeytab() != null;
   }
-  
+
   /**
    *  Is this user logged in from a ticket (but no keytab) managed by the UGI?
    * @return true if the credentials are from a ticket cache.

@@ -98,6 +98,10 @@ public class SSLFactory implements ConnectionConfigurator {
       "ssl.server.truststore.type";
   public static final String SSL_SERVER_TRUSTSTORE_TYPE_DEFAULT = "jks";
 
+  public static final String SSL_CLIENT_KEYSTORE_TYPE =
+          "ssl.client.keystore.type";
+  public static final String SSL_CLIENT_KEYSTORE_TYPE_DEFAULT = "jks";
+
   public static final String SSL_SERVER_EXCLUDE_CIPHER_LIST =
       "ssl.server.exclude.cipher.list";
 

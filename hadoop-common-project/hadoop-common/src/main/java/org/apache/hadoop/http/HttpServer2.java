@@ -31,6 +31,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.Security;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
@@ -73,6 +74,7 @@ import org.apache.hadoop.jmx.JMXJsonServlet;
 import org.apache.hadoop.log.LogLevel;
 import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 import org.apache.hadoop.metrics2.sink.PrometheusMetricsSink;
+import org.apache.hadoop.security.alias.BouncyCastleFipsKeyStoreProvider;
 import org.apache.hadoop.security.AuthenticationFilterInitializer;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -88,6 +90,9 @@ import org.apache.hadoop.util.Lists;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.Shell;
 import org.apache.hadoop.util.StringUtils;
+import org.apache.zookeeper.common.KeyStoreFileType;
+import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
+import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
 import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.server.ConnectionFactory;
 import org.eclipse.jetty.server.Connector;
@@ -597,6 +602,11 @@ public final class HttpServer2 implements FilterContainer {
 
       SslContextFactory.Server sslContextFactory =
           new SslContextFactory.Server();
+      if (keyStoreType.equalsIgnoreCase(BouncyCastleFipsKeyStoreProvider.KEYSTORE_TYPE)) {
+        Security.addProvider(new BouncyCastleFipsProvider());
+        Security.addProvider(new BouncyCastleJsseProvider());
+        sslContextFactory.setProvider(BouncyCastleJsseProvider.PROVIDER_NAME);
+      }
       sslContextFactory.setNeedClientAuth(needsClientAuth);
       if (keyPassword != null) {
         sslContextFactory.setKeyManagerPassword(keyPassword);

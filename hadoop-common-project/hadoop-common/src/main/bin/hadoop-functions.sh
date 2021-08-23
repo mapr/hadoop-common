@@ -1563,6 +1563,11 @@ function hadoop_finalize_hadoop_opts
   hadoop_add_param HADOOP_OPTS hadoop.policy.file "-Dhadoop.policy.file=${HADOOP_POLICYFILE}"
   hadoop_add_param HADOOP_OPTS hadoop.security.logger "-Dhadoop.security.logger=${HADOOP_SECURITY_LOGGER}"
 
+  # Used for determining if FIPS is enabled
+  env=${MAPR_HOME}/conf/env.sh
+  [ -f $env ] && . $env
+  HADOOP_OPTS="${HADOOP_OPTS} ${MAPR_COMMON_JAVA_OPTS}"
+
   echo "$HADOOP_OPTS" | grep "\-Dhadoop.login=" > /dev/null 2>&1
   if [ "$?" -ne 0 ]; then
     # not included - include

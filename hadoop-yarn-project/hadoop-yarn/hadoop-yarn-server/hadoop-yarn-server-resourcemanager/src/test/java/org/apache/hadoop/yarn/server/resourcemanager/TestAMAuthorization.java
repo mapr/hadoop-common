@@ -380,10 +380,10 @@ public class TestAMAuthorization {
         // server side will assume we are trying simple auth.
         String expectedMessage = "";
         if (UserGroupInformation.isSecurityEnabled()) {
-          expectedMessage = "Client cannot authenticate via:[TOKEN]";
+          expectedMessage = "Client cannot authenticate via:[TOKENDIGEST]";
         } else {
           expectedMessage =
-              "SIMPLE authentication is not enabled.  Available:[TOKEN]";
+              "SIMPLE authentication is not enabled.  Available:[TOKENDIGEST]";
         }
         Assert.assertTrue(e.getCause().getMessage().contains(expectedMessage)); 
       } else {
