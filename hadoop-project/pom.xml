@@ -58,6 +58,10 @@
     <!-- avro version -->
     <avro.version>1.10.1</avro.version>
 
+    <!-- bc version -->
+    <bcfips.version>1.0.2.1</bcfips.version>
+    <bctlsfips.version>1.0.11.4</bctlsfips.version>
+
     <!-- jersey version -->
     <jersey.version>1.19</jersey.version>
 
@@ -1063,6 +1067,16 @@
          </exclusion>
        </exclusions>
      </dependency>
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bc-fips</artifactId>
+        <version>${bcfips.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bctls-fips</artifactId>
+        <version>${bctlsfips.version}</version>
+      </dependency>
      <dependency>
        <groupId>org.bouncycastle</groupId>
        <artifactId>bcprov-jdk16</artifactId>

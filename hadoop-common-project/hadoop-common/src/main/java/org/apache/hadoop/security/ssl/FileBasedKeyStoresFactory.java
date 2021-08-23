@@ -22,6 +22,8 @@ import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.StringUtils;
+import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
+import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +35,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
+import java.security.Security;
 import java.text.MessageFormat;
 
 /**
@@ -74,6 +77,8 @@ public class FileBasedKeyStoresFactory implements KeyStoresFactory {
    * Default format of the keystore files.
    */
   public static final String DEFAULT_KEYSTORE_TYPE = "jks";
+
+  public static final String BCFKS_KEYSTORE_TYPE = "bcfks";
 
   /**
    * Reload interval in milliseconds.
@@ -134,7 +139,7 @@ public class FileBasedKeyStoresFactory implements KeyStoresFactory {
   public void init(SSLFactory.Mode mode)
     throws IOException, GeneralSecurityException {
 
-    boolean requireClientCert =
+      boolean requireClientCert =
       conf.getBoolean(SSLFactory.SSL_REQUIRE_CLIENT_CERT_KEY,
           SSLFactory.DEFAULT_SSL_REQUIRE_CLIENT_CERT);
 
@@ -178,8 +183,13 @@ public class FileBasedKeyStoresFactory implements KeyStoresFactory {
     } else {
       keystore.load(null, null);
     }
-    KeyManagerFactory keyMgrFactory = KeyManagerFactory
-        .getInstance(SSLFactory.KEY_MANAGER_SSLCERTIFICATE);
+    if (keystoreType.equalsIgnoreCase(BCFKS_KEYSTORE_TYPE)) {
+      Security.addProvider(new BouncyCastleFipsProvider());
+      Security.addProvider(new BouncyCastleJsseProvider());
+    }
+    KeyManagerFactory keyMgrFactory = keystoreType.equalsIgnoreCase(BCFKS_KEYSTORE_TYPE) ?
+        KeyManagerFactory.getInstance(SSLFactory.KEY_MANAGER_SSLCERTIFICATE, Security.getProvider(BouncyCastleJsseProvider.PROVIDER_NAME)) :
+        KeyManagerFactory.getInstance(SSLFactory.KEY_MANAGER_SSLCERTIFICATE);
       
     keyMgrFactory.init(keystore, (keystoreKeyPassword != null) ?
                                  keystoreKeyPassword.toCharArray() : null);
@@ -225,6 +235,8 @@ public class FileBasedKeyStoresFactory implements KeyStoresFactory {
   String getPassword(Configuration conf, String alias, String defaultPass) {
     String password = defaultPass;
     try {
+      //Add core-site.xml to configuration to get hadoop credential property
+      conf.addResource("core-site.xml");
       char[] passchars = conf.getPassword(alias);
       if (passchars != null) {
         password = new String(passchars);
