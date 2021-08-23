@@ -4226,6 +4226,11 @@ public class YarnConfiguration extends Configuration {
   public static final String YARN_NODEMANAGER_EXT_TOKEN_LOCALIZER = NM_PREFIX
           + "external.token.localizer";
 
+  public static final String BCFKS_LOG_LEVEL =
+      YARN_PREFIX + "bcfks.log.level";
+
+  public static final String DEFAULT_BCFKS_LOG_LEVEL = "WARNING";
+
   /**
    * Class to instantiate and use for managing external tokens.
    */

@@ -154,6 +154,17 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bc-fips</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bctls-fips</artifactId>
+      <scope>compile</scope>
+    </dependency>
+
+    <dependency>
       <groupId>commons-logging</groupId>
       <artifactId>commons-logging</artifactId>
       <scope>compile</scope>

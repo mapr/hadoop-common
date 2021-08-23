@@ -21,8 +21,7 @@ package org.apache.hadoop.mapreduce.conf;
 import org.apache.hadoop.mapreduce.MRConfig;
 import org.apache.hadoop.mapreduce.MRJobConfig;
 import org.apache.hadoop.http.HttpConfig;
-import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.apache.hadoop.util.MapRCommonSecurityUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -109,7 +108,7 @@ public class MapReduceDefaultProperties extends Properties {
   
   static { // Set mapreduce job history http policy
     String http_scheme = HttpConfig.Policy.HTTP_ONLY.name();
-    if(UserGroupInformation.isSecurityEnabled()==true) {
+    if(MapRCommonSecurityUtil.getInstance().isSecurityEnabled()==true) {
       http_scheme = HttpConfig.Policy.HTTPS_ONLY.name();
     }
     props.put("mapreduce.jobhistory.http.policy", http_scheme);
