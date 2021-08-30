@@ -3,26 +3,34 @@
  */
 package org.apache.hadoop.yarn.server.resourcemanager;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.util.Shell.ShellCommandExecutor;
+import org.apache.hadoop.yarn.conf.DefaultYarnConfiguration;
 import org.apache.hadoop.yarn.conf.YarnDefaultProperties;
+import org.apache.hadoop.yarn.server.api.ConfigurableAuxiliaryService;
+
+import org.apache.hadoop.util.BaseMapRUtil;
 import org.apache.hadoop.yarn.util.YarnAppUtil;
-import org.apache.hadoop.util.RMVolumeShardingUtil;
-import org.apache.hadoop.yarn.server.volume.VolumeManager;
 
 /**
  * Manage resource manager volume and directory creation on MapRFS.
  */
-public class RMVolumeManager extends VolumeManager {
+public class RMVolumeManager extends ConfigurableAuxiliaryService {
+  private static final Logger LOG = LoggerFactory.getLogger(RMVolumeManager.class);
 
-  private int volumeCount;
-  private boolean useVolumeSharding;
-  private String rmDir;
-  private String rmSystemDir;
-  private String rmStagingDir;
+  private static final String RM_VOLUME_SCRIPT_PATH = "/server/createJTVolume.sh";
+  private static final String RM_VOLUME_LOGFILE_PATH = "/logs/createRMVolume.log";
 
-  public RMVolumeManager() {
+  RMVolumeManager() {
     super(YarnDefaultProperties.RM_VOLUME_MANAGER_SERVICE);
   }
 
@@ -35,47 +43,93 @@ public class RMVolumeManager extends VolumeManager {
    */
   @Override
   public void serviceInit(Configuration conf) throws Exception {
-    super.serviceInit(conf);
-    LOG = LoggerFactory.getLogger(RMVolumeManager.class);
-    volumeMode = "yarn";
-    volumeLogfilePath = volumeLogfilePath + "/logs/createRMVolume.log";
-    rmDir = conf.get(YarnDefaultProperties.RM_DIR, YarnDefaultProperties.DEFAULT_RM_DIR);
-    mountPath = rmDir;
-    rmSystemDir = conf.get(YarnDefaultProperties.RM_SYSTEM_DIR, YarnDefaultProperties.DEFAULT_RM_SYSTEM_DIR);
-    rmStagingDir = conf.get(YarnDefaultProperties.RM_STAGING_DIR, YarnDefaultProperties.DEFAULT_RM_STAGING_DIR);
-    volumeCount = conf.getInt(YarnDefaultProperties.RM_DIR_VOLUME_COUNT, YarnDefaultProperties.DEFAULT_RM_DIR_VOLUME_COUNT);
-    useVolumeSharding = conf.getBoolean(YarnDefaultProperties.RM_DIR_VOLUME_SHARDING_ENABLED, YarnDefaultProperties.DEFAULT_RM_DIR_VOLUME_SHARDING_ENABLED)
-            && new Path(rmStagingDir).toUri().getRawPath().startsWith(new Path(rmDir).toUri().getRawPath())
-            && new Path(rmSystemDir).toUri().getRawPath().startsWith(new Path(rmDir).toUri().getRawPath())
-            && RMVolumeShardingUtil.isVolumeScriptNewVersion();
+    createVolume(conf);
 
-    createVolumes(conf);
+    FileSystem fs = FileSystem.get(conf);
+    createDir(fs, conf.get(YarnDefaultProperties.RM_SYSTEM_DIR),
+        YarnAppUtil.RM_SYSTEM_DIR_PERMISSION);
 
-    RMVolumeShardingUtil.rebalanceVolumes(rmSystemDir, volumeCount, useVolumeSharding, rmDir, fs);
-    RMVolumeShardingUtil.rebalanceVolumes(rmStagingDir, volumeCount, useVolumeSharding, rmDir, fs);
+    createDir(fs, conf.get(YarnDefaultProperties.RM_STAGING_DIR),
+        YarnAppUtil.RM_STAGING_DIR_PERMISSION);
   }
 
-  @Override
-  public void createVolumes(Configuration conf) throws Exception {
-    waitForYarnPathCreated(conf);
+  private void createVolume(Configuration conf) throws Exception {
+    String maprInstallDir = BaseMapRUtil.getPathToMaprHome();
 
-      // create separate volume for general RM dir
-    createVolume("");
-    createDir(conf.get(YarnDefaultProperties.RM_SYSTEM_DIR, YarnDefaultProperties.DEFAULT_RM_SYSTEM_DIR),
-            YarnAppUtil.RM_SYSTEM_DIR_PERMISSION);
+    String clusterPath = conf.get("cluster.name.prefix");
+    String mountPath = conf.get(YarnDefaultProperties.RM_DIR);
+    if ( clusterPath != null ) {
+      // script considers only one level of directory after volume mount point
+      // so it can substruct one level and get to the mount point
+      // we can not change script behavior as it is only used by JT
+      // that is why doing this "hack" 
+      mountPath = mountPath.substring(0, mountPath.length() - "/rm".length());
+    }
+    
+    String[] args = new String[5];
+    args[0] = maprInstallDir + RM_VOLUME_SCRIPT_PATH;
+    args[1] = BaseMapRUtil.getMapRHostName();
+    args[2] = mountPath;
+    args[3] = conf.get(YarnDefaultProperties.RM_DIR);
+    args[4] = "yarn";  // To distinguish RM from JT
 
-    createDir(conf.get(YarnDefaultProperties.RM_STAGING_DIR, YarnDefaultProperties.DEFAULT_RM_STAGING_DIR),
-            YarnAppUtil.RM_STAGING_DIR_PERMISSION);
+    // Set MAPR_MAPREDUCE_MODE to "yarn" since this is in ResourceManager and
+    // hadoop commands invoked should be with the hadoop2 script
+    Map<String, String> env = new HashMap<String, String>();
+    env.put("MAPR_MAPREDUCE_MODE", "yarn");
 
-    if(useVolumeSharding) {
-      for (int volumeNumber = 0; volumeNumber < volumeCount; volumeNumber++) {
-        createVolume(Integer.toString(volumeNumber));
-        createDir(rmSystemDir.replaceAll(rmDir, rmDir + Path.SEPARATOR + volumeNumber),
-                YarnAppUtil.RM_SYSTEM_DIR_PERMISSION);
+    ShellCommandExecutor shexec = new ShellCommandExecutor(args, null, env);
+    if (LOG.isInfoEnabled())
+      LOG.info("Checking for ResourceManager volume." +
+               " If volume not present command will create and mount it." +
+               " Command invoked is : " + shexec.toString());
 
-        createDir(rmStagingDir.replaceAll(rmDir, rmDir + Path.SEPARATOR + volumeNumber),
-                YarnAppUtil.RM_STAGING_DIR_PERMISSION);
+    // Since the same volume creation could happen simultaneously
+    // (RM and History server), it is possible to get an exception.
+    // Both the calls could end up trying to create the volume and so
+    // one of them will fail. When the failed caller tries again, it will
+    // see the volume to be already created and so would be a NOOP.
+    int numAttempts = 3;
+    for (int i = 0; i < numAttempts; i++) {
+      try {
+        shexec.execute();
+
+        // Success
+        break;
+      } catch (IOException ioe) {
+        // Propage the exception if this is the last attempt
+        if (i == numAttempts - 1) {
+          int exitCode = shexec.getExitCode();
+          if (exitCode != 0) {
+            LOG.error("Failed to create and mount ResourceManager volume at "
+                + args[2] + ". Please see logs at " + maprInstallDir
+                + RM_VOLUME_LOGFILE_PATH);
+
+            LOG.error("Command ran " + shexec.toString());
+            LOG.error("Command output " + shexec.getOutput());
+          }
+          throw ioe;
+        } else {
+          // Wait and retry
+          Thread.sleep(100);
+          if (LOG.isInfoEnabled()) {
+            LOG.info("Retrying check for ResourceManager volume ... ");
+          }
+        }
       }
     }
+    if (LOG.isInfoEnabled()) {
+      LOG.info("Sucessfully created ResourceManager volume and mounted at "
+               + args[2]);
+    }
+  }
+
+  private void createDir(FileSystem fs, String pathName,
+      FsPermission perm) throws IOException {
+
+    if (LOG.isInfoEnabled()) {
+      LOG.info("Creating RM dir: " + pathName + " with permission: " + perm);
+    }
+    FileSystem.mkdirs(fs, new Path(pathName), perm);
   }
 }

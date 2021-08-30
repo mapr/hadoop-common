@@ -27,18 +27,9 @@ public class YarnDefaultProperties extends Properties {
 
   public static final String CLUSTER_PREFIX = "cluster.name.prefix";
 
-  public static final String YARN_DIR = "yarn.dir";
-  public static final String DEFAULT_YARN_DIR = (System.getProperty(CLUSTER_PREFIX) != null) ?
-          "/var/mapr/cluster/yarn"+System.getProperty(CLUSTER_PREFIX) : "/var/mapr/cluster/yarn";
-
   public static final String RM_DIR = YarnConfiguration.RM_PREFIX + "dir";
-  public static final String DEFAULT_RM_DIR = DEFAULT_YARN_DIR + "/rm";
-
-  public static final String RM_DIR_VOLUME_SHARDING_ENABLED = YarnConfiguration.RM_PREFIX + "dir.volume-sharding.enabled";
-  public static final boolean DEFAULT_RM_DIR_VOLUME_SHARDING_ENABLED = false;
-
-  public static final String RM_DIR_VOLUME_COUNT = YarnConfiguration.RM_PREFIX + "dir.volume-count";
-  public static final int DEFAULT_RM_DIR_VOLUME_COUNT = 4;
+  public static final String DEFAULT_RM_DIR = (System.getProperty(CLUSTER_PREFIX) != null) ? 
+      "/var/mapr/cluster/yarn"+System.getProperty(CLUSTER_PREFIX)+"/rm"  : "/var/mapr/cluster/yarn/rm";
 
   public static final String RM_STAGING_DIR = YarnConfiguration.RM_PREFIX + "staging";
   public static final String DEFAULT_RM_STAGING_DIR = DEFAULT_RM_DIR + "/staging";
@@ -52,8 +43,6 @@ public class YarnDefaultProperties extends Properties {
    * Application history server volume manager service.
    */
   public static final String APP_HISTORY_VOLUME_MANAGER_SERVICE = "HSVolumeManager";
-  public static final String APP_HISTORY_STAGING_DIR = YarnConfiguration.APPLICATION_HISTORY_PREFIX + "staging";
-  public static final String DEFAULT_APP_HISTORY_STAGING_DIR = DEFAULT_YARN_DIR + "/hs";
 
   public static final String APACHE_SHUFFLE_SERVICE_ID = "mapreduce_shuffle";
   public static final String MAPR_SHUFFLE_SERVICE_ID = "mapr_direct_shuffle";
@@ -81,11 +70,8 @@ public class YarnDefaultProperties extends Properties {
       put(CLUSTER_PREFIX, System.getProperty(CLUSTER_PREFIX));
     }
     put(RM_DIR, DEFAULT_RM_DIR);
-    put(RM_DIR_VOLUME_COUNT, DEFAULT_RM_DIR_VOLUME_COUNT + "");
     put(RM_STAGING_DIR, DEFAULT_RM_STAGING_DIR);
     put(RM_SYSTEM_DIR, DEFAULT_RM_SYSTEM_DIR);
-    put(APP_HISTORY_STAGING_DIR, DEFAULT_APP_HISTORY_STAGING_DIR);
-    put(YARN_DIR, DEFAULT_YARN_DIR);
 
     if (isSecurityEnabled) {
       put(YarnConfiguration.YARN_HTTP_POLICY_KEY,      // yarn-default.xml
@@ -108,7 +94,7 @@ public class YarnDefaultProperties extends Properties {
         APP_HISTORY_VOLUME_MANAGER_SERVICE);
     // The same volume is used by both RM and history server. Hence the same class is used.
     put(String.format(YarnConfiguration.AUX_SERVICE_FMT, APP_HISTORY_VOLUME_MANAGER_SERVICE),
-        "org.apache.hadoop.yarn.server.applicationhistoryservice.HSVolumeManager");
+        "org.apache.hadoop.yarn.server.resourcemanager.RMVolumeManager");
 
     // Configuration for RM's RPC services
     put(YarnConfiguration.RM_ADDRESS,
