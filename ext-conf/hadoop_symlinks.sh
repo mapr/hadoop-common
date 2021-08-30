@@ -4,6 +4,9 @@ function createSymlinks() {
   ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/etc/hadoop/ssl-client.xml __PREFIX__/conf/ssl-client.xml
   ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/etc/hadoop/ssl-server.xml __PREFIX__/conf/ssl-server.xml
 
+  rm -f __PREFIX__/server/createRMVolume.sh
+  ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/bin/createRMVolume.sh __PREFIX__/server/
+
   rm -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/failureaccess-*
   ln -sf __PREFIX__/lib/failureaccess-* __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
   rm -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/guava-*

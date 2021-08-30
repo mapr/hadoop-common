@@ -20,11 +20,8 @@ public class RMVolumeShardingUtil {
           LoggerFactory.getLogger(RMVolumeShardingUtil.class);
 
   private static final String MAPR_INSTALL_DIR = BaseMapRUtil.getPathToMaprHome();
-  private static final String MAPR_RM_VOLUME_SCRIPT_PATH = "/server/createJTVolume.sh";
-  private static final String HADOOP_VOLUME_SCRIPT_PATH = "/bin/createRMVolume.sh";
+  private static final String MAPR_RM_VOLUME_SCRIPT_PATH = "/server/createRMVolume.sh";
   private static final String appIdStrPrefix = "application_";
-  private static final String HADOOP_HOME_PROPERTY = "hadoop.home.dir";
-  private static final String YARN_HOME_PROPERTY = "yarn.home.dir";
 
 
   public static void rebalanceVolumes(String rebalanceDir, int volumeCount, boolean useVolumeSharding, String rmDir, FileSystem fs) throws Exception {
@@ -113,45 +110,11 @@ public class RMVolumeShardingUtil {
     }
   }
 
-  public static boolean isVolumeScriptNewVersion() {
-    String hadoopHome = getPathToHadoopHome();
-    if(hadoopHome != null) {
-      File f = new File(hadoopHome + HADOOP_VOLUME_SCRIPT_PATH);
-      if(f.exists() && !f.isDirectory()) {
-        return true;
-      }
-      LOG.debug("Volume script " + hadoopHome + HADOOP_VOLUME_SCRIPT_PATH + " does not exist, using old version(without volume sharding)");
-      return false;
-    } else {
-      LOG.debug("Hadoop home is not set, using volume script old version(without volume sharding)");
-      return false;
-    }
-  }
-
-  public static String getPathToHadoopHome() {
-    String hadoopHome = System.getProperty(HADOOP_HOME_PROPERTY);
-    if (hadoopHome == null) {
-      hadoopHome = System.getProperty(YARN_HOME_PROPERTY);
-      if (hadoopHome == null) {
-        return null;
-      }
-    }
-    return hadoopHome;
-  }
-
   public static String getPathToVolumeCreateScript() {
-    if(isVolumeScriptNewVersion()) {
-      return getPathToHadoopHome() + HADOOP_VOLUME_SCRIPT_PATH;
-    } else {
-      return MAPR_INSTALL_DIR + MAPR_RM_VOLUME_SCRIPT_PATH;
-    }
+    return MAPR_INSTALL_DIR + MAPR_RM_VOLUME_SCRIPT_PATH;
   }
 
   public static String getPathToVolumeLog() {
-    if(isVolumeScriptNewVersion()) {
-      return getPathToHadoopHome();
-    } else {
-      return MAPR_INSTALL_DIR;
-    }
+    return MAPR_INSTALL_DIR;
   }
 }

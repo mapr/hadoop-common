@@ -46,8 +46,7 @@ public class RMVolumeManager extends VolumeManager {
     volumeCount = conf.getInt(YarnDefaultProperties.RM_DIR_VOLUME_COUNT, YarnDefaultProperties.DEFAULT_RM_DIR_VOLUME_COUNT);
     useVolumeSharding = conf.getBoolean(YarnDefaultProperties.RM_DIR_VOLUME_SHARDING_ENABLED, YarnDefaultProperties.DEFAULT_RM_DIR_VOLUME_SHARDING_ENABLED)
             && new Path(rmStagingDir).toUri().getRawPath().startsWith(new Path(rmDir).toUri().getRawPath())
-            && new Path(rmSystemDir).toUri().getRawPath().startsWith(new Path(rmDir).toUri().getRawPath())
-            && RMVolumeShardingUtil.isVolumeScriptNewVersion();
+            && new Path(rmSystemDir).toUri().getRawPath().startsWith(new Path(rmDir).toUri().getRawPath());
 
     createVolumes(conf);
 

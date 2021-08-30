@@ -8,7 +8,6 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.hadoop.util.RMVolumeShardingUtil;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.conf.YarnDefaultProperties;
 
@@ -86,7 +85,6 @@ public class YarnAppUtil {
     String dirSuffix = rmSubDirPath.toString().substring(rmDirPath.toString().length());
 
     boolean useVolumeSharding = conf.getBoolean(YarnDefaultProperties.RM_DIR_VOLUME_SHARDING_ENABLED, YarnDefaultProperties.DEFAULT_RM_DIR_VOLUME_SHARDING_ENABLED)
-            && RMVolumeShardingUtil.isVolumeScriptNewVersion()
             && rmSubDirPath.toUri().getRawPath().startsWith(rmDirPath.toUri().getRawPath());
     Path result;
     if (useVolumeSharding) {

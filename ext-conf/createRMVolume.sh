@@ -6,7 +6,6 @@
 # accepts hostname and mountpoint
 
 MAPR_HOME=${MAPR_HOME:-/opt/mapr}
-HADOOP_HOME="${HADOOP_HOME:-__INSTALL__}"
 
 function usage() {
   echo >&2 "usage: $0 <hostname> <vol mount point> <<full directory path for ${SHORT_NAME} dirs>"
@@ -76,7 +75,7 @@ fi
 
 clusterConf="${MAPR_HOME}/conf/mapr-clusters.conf"
 MAPRUSERTICKET="${MAPR_HOME}/conf/mapruserticket"
-logFile="${HADOOP_HOME}/logs/create${SHORT_NAME}Volume.log"
+logFile="${MAPR_HOME}/logs/create${SHORT_NAME}Volume.log"
 pidFile="${MAPR_HOME}/pid/create${SHORT_NAME}Volume.sh.pid"
 
 OLDMASK=`umask`

@@ -9,7 +9,6 @@ import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.conf.YarnDefaultProperties;
 import org.apache.hadoop.yarn.util.YarnAppUtil;
 import org.slf4j.LoggerFactory;
-import org.apache.hadoop.util.RMVolumeShardingUtil;
 import org.apache.hadoop.yarn.server.volume.VolumeManager;
 
 import java.util.Arrays;
@@ -34,24 +33,12 @@ public class HSVolumeManager extends VolumeManager {
     super.serviceInit(conf);
     LOG = LoggerFactory.getLogger(HSVolumeManager.class);
 
-    if(RMVolumeShardingUtil.isVolumeScriptNewVersion()) {
-      mountPath = conf.get(YarnDefaultProperties.APP_HISTORY_STAGING_DIR, YarnDefaultProperties.DEFAULT_APP_HISTORY_STAGING_DIR);
-      volumeMode = "hs";
-      volumeLogfilePath = volumeLogfilePath + "/logs/createJHSVolume.log";
-      createVolumes(conf);
-      fs.setPermission(new Path(mountPath), YarnAppUtil.RM_STAGING_DIR_PERMISSION);
-      this.moveHistoryDataToNewVolume(conf);
-    } else {
-      mountPath = conf.get(YarnDefaultProperties.RM_DIR, YarnDefaultProperties.DEFAULT_RM_DIR);
-      volumeMode = "yarn";
-      volumeLogfilePath = volumeLogfilePath + "/logs/createRMVolume.log";
-      createVolumes(conf);
-      createDir(conf.get(YarnDefaultProperties.RM_SYSTEM_DIR, YarnDefaultProperties.DEFAULT_RM_SYSTEM_DIR),
-              YarnAppUtil.RM_SYSTEM_DIR_PERMISSION);
-
-      createDir(conf.get(YarnDefaultProperties.RM_STAGING_DIR, YarnDefaultProperties.DEFAULT_RM_STAGING_DIR),
-              YarnAppUtil.RM_STAGING_DIR_PERMISSION);
-    }
+    mountPath = conf.get(YarnDefaultProperties.APP_HISTORY_STAGING_DIR, YarnDefaultProperties.DEFAULT_APP_HISTORY_STAGING_DIR);
+    volumeMode = "hs";
+    volumeLogfilePath = volumeLogfilePath + "/logs/createJHSVolume.log";
+    createVolumes(conf);
+    fs.setPermission(new Path(mountPath), YarnAppUtil.RM_STAGING_DIR_PERMISSION);
+    this.moveHistoryDataToNewVolume(conf);
   }
 
   @Override

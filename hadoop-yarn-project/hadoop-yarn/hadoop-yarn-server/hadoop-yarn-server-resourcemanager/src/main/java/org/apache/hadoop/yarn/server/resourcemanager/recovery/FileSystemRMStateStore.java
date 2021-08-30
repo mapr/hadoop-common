@@ -121,8 +121,7 @@ public class FileSystemRMStateStore extends RMStateStore {
     rmAppRoot = new Path(rootDirPath, RM_APP_ROOT);
     rmDir = conf.get(YarnDefaultProperties.RM_DIR, YarnDefaultProperties.DEFAULT_RM_DIR);
     useVolumeSharding = conf.getBoolean(YarnDefaultProperties.RM_DIR_VOLUME_SHARDING_ENABLED, YarnDefaultProperties.DEFAULT_RM_DIR_VOLUME_SHARDING_ENABLED)
-            && fsWorkingPath.toUri().getRawPath().startsWith(new Path(rmDir).toUri().getRawPath())
-            && RMVolumeShardingUtil.isVolumeScriptNewVersion();
+            && fsWorkingPath.toUri().getRawPath().startsWith(new Path(rmDir).toUri().getRawPath());
 
     volumeCount = conf.getInt(YarnDefaultProperties.RM_DIR_VOLUME_COUNT, YarnDefaultProperties.DEFAULT_RM_DIR_VOLUME_COUNT);
     rmAppRootToVolumeMap = new HashMap<Integer, Path>();
