@@ -214,7 +214,7 @@ public class TestLocalCacheCleanup {
   class StubbedLocalResourcesTrackerImpl extends LocalResourcesTrackerImpl {
     StubbedLocalResourcesTrackerImpl(String user,
         ConcurrentMap<LocalResourceRequest, LocalizedResource> rsrcs) {
-      super(user, null, null, rsrcs, false, new Configuration(), null, null);
+      super(user, null, null, rsrcs, false, new Configuration(), null);
     }
 
     @Override
