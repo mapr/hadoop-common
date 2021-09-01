@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.mutable.MutableObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
@@ -557,7 +558,7 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
    */
   private Resource assignContainer(
       FSSchedulerNode node, ResourceRequest request, NodeType type,
-      boolean reserved) {
+      boolean reserved, MutableObject createdContainer) {
 
     // How much does this request need?
     Resource capability = request.getCapability();
@@ -603,7 +604,7 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
         getQueue().addAMResourceUsage(container.getResource());
         setAmRunning(true);
       }
-
+      createdContainer.setValue(allocatedContainer);
       return container.getResource();
     }
 
@@ -677,10 +678,20 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
               scheduler.getRackLocalityThreshold());
         }
 
+        MutableObject allocatedContainer = new MutableObject();
+
         if (rackLocalRequest != null && rackLocalRequest.getNumContainers() != 0
             && localRequest != null && localRequest.getNumContainers() != 0) {
-          return assignContainer(node, localRequest,
-              NodeType.NODE_LOCAL, reserved);
+          Resource assigned = assignContainer(node, localRequest,
+                  NodeType.NODE_LOCAL, reserved, allocatedContainer);
+          if (Resources.greaterThan(RESOURCE_CALCULATOR, null,
+                  assigned, Resources.none())) {
+            if (allocatedContainer.getValue() != null) {
+              incNumAllocatedContainers(NodeType.NODE_LOCAL,
+                      NodeType.NODE_LOCAL);
+            }
+          }
+          return assigned;
         }
 
         if (rackLocalRequest != null && !rackLocalRequest.getRelaxLocality()) {
@@ -690,8 +701,16 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
         if (rackLocalRequest != null && rackLocalRequest.getNumContainers() != 0
             && (allowedLocality.equals(NodeType.RACK_LOCAL) ||
             allowedLocality.equals(NodeType.OFF_SWITCH))) {
-          return assignContainer(node, rackLocalRequest,
-              NodeType.RACK_LOCAL, reserved);
+          Resource assigned = assignContainer(node, rackLocalRequest,
+                  NodeType.RACK_LOCAL, reserved, allocatedContainer);
+          if (Resources.greaterThan(RESOURCE_CALCULATOR, null,
+                  assigned, Resources.none())) {
+            if (allocatedContainer.getValue() != null) {
+              incNumAllocatedContainers(NodeType.RACK_LOCAL,
+                      NodeType.RACK_LOCAL);
+            }
+          }
+          return assigned;
         }
 
         ResourceRequest offSwitchRequest =
@@ -704,8 +723,16 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
             offSwitchRequest.getNumContainers() != 0) {
           if (!hasNodeOrRackLocalRequests(priority) ||
               allowedLocality.equals(NodeType.OFF_SWITCH)) {
-            return assignContainer(
-                node, offSwitchRequest, NodeType.OFF_SWITCH, reserved);
+            Resource assigned = assignContainer(
+                    node, offSwitchRequest, NodeType.OFF_SWITCH, reserved, allocatedContainer);
+            if (Resources.greaterThan(RESOURCE_CALCULATOR, null,
+                    assigned, Resources.none())) {
+              if (allocatedContainer.getValue() != null) {
+                incNumAllocatedContainers(NodeType.OFF_SWITCH,
+                        NodeType.OFF_SWITCH);
+              }
+            }
+            return assigned;
           }
         }
       }
