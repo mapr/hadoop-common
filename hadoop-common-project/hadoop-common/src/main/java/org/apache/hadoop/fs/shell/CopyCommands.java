@@ -135,7 +135,7 @@ class CopyCommands {
 
   static class Cp extends CommandWithDestination {
     public static final String NAME = "cp";
-    public static final String USAGE = "[-f] [-p | -p[etopax]] [-P] <src> ... <dst>";
+    public static final String USAGE = "[-f] [-p | -p[etopax]] <src> ... <dst>";
     public static final String DESCRIPTION =
       "Copy files that match the file pattern <src> to a " +
       "destination.  When copying multiple files, the destination " +
@@ -144,8 +144,7 @@ class CopyCommands {
       "If -p is specified with no <arg>, then preserves " +
       "ACE, timestamps, ownership, permission. If -pa is specified, " +
       "then preserves permission also because ACL is a super-set of " +
-      "permission. Passing -P disables traverse by symbolic link, " +
-      "symbolic link will be copied instead. Passing -f overwrites the destination if it " +
+      "permission. Passing -f overwrites the destination if it " +
       "already exists. raw namespace extended attributes are preserved " +
       "if (1) they are supported (HDFS only) and, (2) all of the source and " +
       "target pathnames are in the /.reserved/raw hierarchy. raw namespace " +
@@ -155,10 +154,9 @@ class CopyCommands {
     @Override
     protected void processOptions(LinkedList<String> args) throws IOException {
       popPreserveOption(args);
-      CommandFormat cf = new CommandFormat(2, Integer.MAX_VALUE, "f", "P");
+      CommandFormat cf = new CommandFormat(2, Integer.MAX_VALUE, "f");
       cf.parse(args);
       setOverwrite(cf.getOpt("f"));
-      setKeepLinks(cf.getOpt("P"));
       // should have a -r option
       setRecursive(true);
       getRemoteDestination(args);

@@ -131,7 +131,7 @@ public class RetriableFileCopyCommand extends RetriableCommand {
             + offset);
       }
       //At this point, src&dest lengths are same. if length==0, we skip checksum
-      if ((bytesRead != 0) && (!skipCrc) && !source.isSymlink()) {
+      if ((bytesRead != 0) && (!skipCrc)) {
         if (!source.isSplit()) {
           compareCheckSums(sourceFS, source.getPath(), sourceChecksum,
               targetFS, targetPath);
@@ -170,13 +170,6 @@ public class RetriableFileCopyCommand extends RetriableCommand {
       CopyListingFileStatus sourceFileStatus, long sourceOffset, Mapper.Context context,
       EnumSet<FileAttribute> fileAttributes, final FileChecksum sourceChecksum)
       throws IOException {
-    if(sourceFileStatus.isSymlink()) {
-      if (targetFS instanceof AbstractMapRFileSystem) {
-        AbstractMapRFileSystem mapRFileSystem = (AbstractMapRFileSystem) targetFS;
-        mapRFileSystem.createSymlink(sourceFileStatus.getSymlink(), targetPath, false);
-        return sourceFileStatus.getLen();
-      }
-    }
     FsPermission permission = FsPermission.getFileDefault().applyUMask(
         FsPermission.getUMask(targetFS.getConf()));
     final OutputStream outStream;

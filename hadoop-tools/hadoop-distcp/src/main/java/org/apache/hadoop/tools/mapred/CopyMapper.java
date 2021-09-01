@@ -242,8 +242,9 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
         sourceFS = sourcePath.getFileSystem(conf);
         final boolean preserveXAttrs =
             fileAttributes.contains(FileAttribute.XATTR);
+        FileStatus tmpSourceStatus = DistCpUtils.getOriginalFileStatus(sourceFileStatus, conf);
         sourceCurrStatus = DistCpUtils.toCopyListingFileStatusHelper(sourceFS,
-            sourceFS.getFileStatus(sourcePath),
+            sourceFS.getFileStatus(tmpSourceStatus.getPath()),
             fileAttributes.contains(FileAttribute.ACL),
             preserveXAttrs, preserveRawXattrs,
             sourceFileStatus.getChunkOffset(),
