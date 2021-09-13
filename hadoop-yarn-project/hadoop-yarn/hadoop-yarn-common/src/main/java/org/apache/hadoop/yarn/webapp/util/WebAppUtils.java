@@ -477,10 +477,11 @@ public class WebAppUtils {
 
     Configuration sslConf = new Configuration(false);
 
-    sslConf.addResource(YarnConfiguration.YARN_SSL_SERVER_RESOURCE_DEFAULT);
     if (conf != null) {
       sslConf.addResource(conf);
     }
+    sslConf.addResource(YarnConfiguration.YARN_SSL_SERVER_RESOURCE_DEFAULT);
+
     boolean needsClientAuth = YarnConfiguration.YARN_SSL_CLIENT_HTTPS_NEED_AUTH_DEFAULT;
     return builder
         .needsClientAuth(needsClientAuth)
