@@ -35,6 +35,8 @@ import java.security.KeyStore;
 import java.text.MessageFormat;
 import java.util.Timer;
 
+import static org.apache.hadoop.security.alias.CredentialProviderFactory.CREDENTIAL_PROVIDER_PATH;
+
 /**
  * {@link KeyStoresFactory} implementation that reads the certificates from
  * keystore files.
@@ -302,6 +304,10 @@ public class FileBasedKeyStoresFactory implements KeyStoresFactory {
   String getPassword(Configuration conf, String alias, String defaultPass) {
     String password = defaultPass;
     try {
+      if(conf.get(CREDENTIAL_PROVIDER_PATH) == null){
+        //Add core-site.xml to configuration to get hadoop credential property
+        conf.addResource("core-site.xml");
+      }
       char[] passchars = conf.getPassword(alias);
       if (passchars != null) {
         password = new String(passchars);
