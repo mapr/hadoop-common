@@ -203,6 +203,7 @@ public class SimpleCopyListing extends CopyListing {
         FileListingEntry listingEntryRoot = getOriginalFileStatus(rootStatus, getConf(), keepLinks, loopLocator);
         FileStatus[] sourceFiles = sourceFS.listStatus(listingEntryRoot.getSourceRealPath().getPath());
         Path sourcePathRoot = computeSourceRootPath(listingEntryRoot.getSourceRealPath(), options);
+        String relativePathPrefix = listingEntryRoot.getSourceRealPath().getPath().equals(sourcePathRoot) ? "" : Path.SEPARATOR + listingEntryRoot.getSourceRealPath().getPath().getName();
         boolean explore = (sourceFiles != null && sourceFiles.length > 0);
         if (!explore || rootStatus.isDirectory()
                 || (rootStatus.isSymlink() && listingEntryRoot.getSourceRealPath().isDirectory())
@@ -211,7 +212,7 @@ public class SimpleCopyListing extends CopyListing {
                 preserveAcls, preserveXAttrs, preserveRawXAttrs,
                 options.getBlocksPerChunk());
           writeToFileListingRoot(fileListWriter, listingEntryRoot,
-              sourcePathRoot, options);
+              sourcePathRoot, options, relativePathPrefix);
         }
         if (explore && !(keepLinks && rootStatus.isSymlink())) {
           ArrayList<FileListingEntry> sourceDirs = new ArrayList<FileListingEntry>();
@@ -225,7 +226,7 @@ public class SimpleCopyListing extends CopyListing {
                     preserveXAttrs && listingEntry.getSourceRealPath().isDirectory(),
                     preserveRawXAttrs && listingEntry.getSourceRealPath().isDirectory(),
                     options.getBlocksPerChunk());
-            writeToFileListing(fileListWriter, listingEntry);
+            writeToFileListing(fileListWriter, listingEntry, relativePathPrefix + DistCpUtils.getRelativePath(listingEntry));
             if (listingEntry.getSourceRealPath().isDirectory()) {
               if (LOG.isDebugEnabled()) {
                 LOG.debug("Adding source dir for traverse: " + listingEntry.getSourceRealPath().getPath());
@@ -234,7 +235,7 @@ public class SimpleCopyListing extends CopyListing {
             }
           }
           traverseDirectory(fileListWriter, sourceFS, sourceDirs,
-                            sourcePathRoot, options);
+                  relativePathPrefix, options);
         }
       }
       fileListWriter.close();
@@ -394,7 +395,7 @@ public class SimpleCopyListing extends CopyListing {
   private void traverseDirectory(SequenceFile.Writer fileListWriter,
                                  FileSystem sourceFS,
                                  ArrayList<FileListingEntry> sourceDirs,
-                                 Path sourcePathRoot,
+                                 String relativePathPrefix,
                                  DistCpOptions options)
                                  throws IOException {
     final boolean preserveAcls = options.shouldPreserve(FileAttribute.ACL);
@@ -408,7 +409,7 @@ public class SimpleCopyListing extends CopyListing {
         new ProducerConsumer<FileListingEntry, List<FileListingEntry>>(numListstatusThreads);
     for (int i = 0; i < numListstatusThreads; i++) {
       workers.addWorker(
-          new FileStatusProcessor(sourcePathRoot.getFileSystem(getConf())));
+          new FileStatusProcessor(sourceFS));
     }
 
     for (FileListingEntry entry : sourceDirs) {
@@ -431,7 +432,7 @@ public class SimpleCopyListing extends CopyListing {
                 preserveXAttrs && child.getSourceRealPath().isDirectory(),
                 preserveRawXattrs && child.getSourceRealPath().isDirectory(),
                     options.getBlocksPerChunk());
-            writeToFileListing(fileListWriter, child);
+            writeToFileListing(fileListWriter, child, relativePathPrefix + DistCpUtils.getRelativePath(child));
           }
           if (retry < maxRetries) {
             if (child.getSourceRealPath().isDirectory()) {
@@ -455,7 +456,7 @@ public class SimpleCopyListing extends CopyListing {
 
   private void writeToFileListingRoot(SequenceFile.Writer fileListWriter,
                                       FileListingEntry listingEntry, Path sourcePathRoot,
-      DistCpOptions options) throws IOException {
+                                      DistCpOptions options, String relativePathPrefix) throws IOException {
     boolean syncOrOverwrite = options.shouldSyncFolder() ||
         options.shouldOverwrite();
     if (listingEntry.getSourceRealPath().getPath().equals(sourcePathRoot) &&
@@ -466,14 +467,14 @@ public class SimpleCopyListing extends CopyListing {
       }
       return;
     }
-    writeToFileListing(fileListWriter, listingEntry);
+    writeToFileListing(fileListWriter, listingEntry, relativePathPrefix);
   }
 
   private void writeToFileListing(SequenceFile.Writer fileListWriter,
-                                  FileListingEntry listingEntry) throws IOException {
+                                  FileListingEntry listingEntry, String relativePath) throws IOException {
     for(CopyListingFileStatus fileStatus: listingEntry.getCopyListingFileStatus()) {
       if (LOG.isDebugEnabled()) {
-        LOG.debug("RELATIVE TARGET PATH: " + DistCpUtils.getRelativePath(listingEntry)
+        LOG.debug("RELATIVE TARGET PATH: " + relativePath
                 + ", REAL FILE PATH: " + fileStatus.getPath());
       }
 
@@ -481,7 +482,7 @@ public class SimpleCopyListing extends CopyListing {
         return;
       }
 
-      fileListWriter.append(new Text(DistCpUtils.getRelativePath(listingEntry)), fileStatus);
+      fileListWriter.append(new Text(relativePath), fileStatus);
       fileListWriter.sync();
 
       if (!fileStatus.isDirectory()) {
