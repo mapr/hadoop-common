@@ -257,6 +257,13 @@ case $COMMAND in
       HADOOP_OPTS="$HADOOP_OPTS -Djava.security.krb5.realm= -Djava.security.krb5.kdc="
     fi
 
+    # If this node's system is FIPS-enabled --> use the mapr provided java.security for FIPS
+    get_fips_mode=$(sysctl crypto.fips_enabled 2> /dev/null)
+    fips_enabled='crypto.fips_enabled = 1'
+    if [ "$get_fips_mode" == "$fips_enabled" ]; then
+      HADOOP_OPTS="$HADOOP_OPTS -Djava.security.properties==/opt/mapr/conf/java.security.fips"
+    fi
+
     echo "$HADOOP_OPTS" | grep "\-Dhadoop.login=" > /dev/null 2>&1
     if [ "$?" -ne 0 ]; then
       # not included - include
