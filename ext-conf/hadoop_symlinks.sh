@@ -65,11 +65,20 @@ function createSymlinks() {
   ln -sf __PREFIX__/lib/bc-fips-*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
   ln -sf __PREFIX__/lib/bctls-fips-*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
 
+  rm -f __PREFIX__/lib/audience-annotations-0.*.jar
   ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/audience-annotations-0.*.jar __PREFIX__/lib/
+  rm -f __PREFIX__/lib/commons-cli-1.*.jar
   ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/commons-cli-1.*.jar __PREFIX__/lib/
+  rm -f __PREFIX__/lib/htrace-*.jar
   ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/htrace-*.jar  __PREFIX__/lib/
+  rm -f __PREFIX__/lib/hadoop-auth-*.jar
   ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/hadoop-auth-__VERSION_3DIGIT__*.jar __PREFIX__/lib/
+  rm -f __PREFIX__/lib/hadoop-yarn-api-*.jar
   ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/yarn/hadoop-yarn-api-__VERSION_3DIGIT__*.jar __PREFIX__/lib/
+  rm -f  __PREFIX__/lib/hadoop-yarn-client-*.jar
+  ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/yarn/hadoop-yarn-client-__VERSION_3DIGIT__*.jar __PREFIX__/lib/
+  rm -f  __PREFIX__/lib/hadoop-yarn-common-*.jar
+  ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/yarn/hadoop-yarn-common-__VERSION_3DIGIT__*.jar __PREFIX__/lib/
 
   ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/audience-annotations-0.*.jar __PREFIX__/lib/
   ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/activation-1.*.jar __PREFIX__/lib/
@@ -78,6 +87,7 @@ function createSymlinks() {
   COMMONS_CONFIG_BASENAME=$(basename ${COMMONS_CONFIG_ABSOLUTE})
   ln -sf ${COMMONS_CONFIG_ABSOLUTE} __PREFIX__/lib/${COMMONS_CONFIG_BASENAME}
 
+  rm -f __PREFIX__/lib/hadoop-common-*.jar
   ls __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/hadoop-common-__VERSION_3DIGIT__*.jar | grep -v "tests" | xargs -I {} ln -sf {} __PREFIX__/lib/.
   rm __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/slf4j-log4j12-* > /dev/null 2>&1
   ln -sf __PREFIX__/lib/slf4j-log4j12-*  __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/

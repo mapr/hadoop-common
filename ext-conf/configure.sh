@@ -187,7 +187,7 @@ function ConfigureYarnSiteXml() {
     local FILE="${HADOOP_HOME}/etc/hadoop/${FILENAME}.xml"
     local TEMP_FILE="${HADOOP_HOME}/etc/hadoop/${FILENAME}.xml.tmp"
     local TIMESTAMP="$(date +%F.%H-%M)"
-    phatJar="$(ls $INSTALL_DIR/lib/hadoop-yarn-common-*.jar | grep -v jni | grep -v diagnostic | grep -v core | grep -v test)"
+    phatJar="$(ls $INSTALL_DIR/lib/hadoop-yarn-common-*.jar | grep -v jni | grep -v diagnostic | grep -v core | grep -v test | sort -rV | head -n1)"
     if [ -z "$phatJar" ] || [ ! -f "$phatJar" ]; then
         logErr "Failed to find hadoop-yarn-common jar"
         exit 1
