@@ -417,6 +417,92 @@ public class FileUtil {
   
   }
 
+  /** Copy files between FileSystems with preserved permissions, ownership, links and ACEs. */
+  public static boolean copyAsMove(FileSystem srcFS, FileStatus srcStatus,
+                             FileSystem dstFS, Path dst,
+                             boolean deleteSource,
+                             boolean overwrite,
+                             Configuration conf) throws IOException {
+    Path src = srcStatus.getPath();
+    dst = checkDest(src.getName(), dstFS, dst, overwrite);
+
+    if (srcStatus.isSymlink()) {
+      if (srcFS instanceof AbstractMapRFileSystem && dstFS instanceof AbstractMapRFileSystem) {
+        AbstractMapRFileSystem mapRFileSystem = (AbstractMapRFileSystem) srcFS;
+        if (dstFS.exists(dst) && overwrite) {
+          dstFS.delete(dst, true);
+        }
+        mapRFileSystem.createSymlink(srcStatus.getSymlink(), dst, false);
+        copyOwner(srcStatus, dst, mapRFileSystem);
+        copyPermissions(srcStatus, dst, mapRFileSystem);
+        mapRFileSystem.copyAce(srcStatus.getPath(), dst);
+        if (deleteSource) {
+          return srcFS.delete(src, true);
+        } else {
+          return true;
+        }
+      } else {
+        srcStatus = srcFS.getFileStatus(srcStatus.getSymlink());
+      }
+    }
+
+    src = srcStatus.getPath();
+    if (srcStatus.isDirectory()) {
+      checkDependencies(srcFS, src, dstFS, dst);
+      if (!dstFS.mkdirs(dst)) {
+        return false;
+      }
+      FileStatus contents[] = srcFS.listStatus(src);
+      for (int i = 0; i < contents.length; i++) {
+        copyAsMove(srcFS, contents[i], dstFS,
+                new Path(dst, contents[i].getPath().getName()), deleteSource, overwrite, conf);
+      }
+    } else if (srcStatus.isTable()) {
+      throw new IOException("Cannot copy MDP Tables");
+    } else {
+      InputStream in=null;
+      OutputStream out = null;
+      try {
+        in = srcFS.open(src);
+        out = dstFS.create(dst, overwrite);
+        IOUtils.copyBytes(in, out, conf, true);
+      } catch (IOException e) {
+        IOUtils.closeStream(out);
+        IOUtils.closeStream(in);
+        throw e;
+      }
+    }
+    copyOwner(srcStatus, dst, dstFS);
+    copyPermissions(srcStatus, dst, dstFS);
+    if (srcFS instanceof AbstractMapRFileSystem &&
+            dstFS instanceof AbstractMapRFileSystem) {
+      AbstractMapRFileSystem mapRFileSystem = (AbstractMapRFileSystem) srcFS;
+      mapRFileSystem.copyAce(src, dst);
+    }
+    if (deleteSource) {
+      return srcFS.delete(src, true);
+    } else {
+      return true;
+    }
+  }
+
+  private static void copyOwner(FileStatus srcStatus, Path dst, FileSystem fs) throws IOException {
+    FileStatus dstFileStatus = fs.getFileStatus(dst);
+    String srcFileOwner = srcStatus.getOwner();
+    String srcFileGroup = srcStatus.getGroup();
+    if(!dstFileStatus.getOwner().equals(srcFileOwner) || !dstFileStatus.getGroup().equals(srcFileGroup)) {
+      fs.setOwner(dst, srcFileOwner, srcFileGroup);
+    }
+  }
+
+  private static void copyPermissions(FileStatus srcStatus, Path dst, FileSystem fs) throws IOException {
+    FileStatus dstFileStatus = fs.getFileStatus(dst);
+    FsPermission srcFilePermission = srcStatus.getPermission();
+    if(!dstFileStatus.getPermission().equals(srcFilePermission)) {
+      fs.setPermission(dst, srcFilePermission);
+    }
+  }
+
   /** Copy all files in a directory to one output file (merge). */
   public static boolean copyMerge(FileSystem srcFS, Path srcDir, 
                                   FileSystem dstFS, Path dstFile, 
