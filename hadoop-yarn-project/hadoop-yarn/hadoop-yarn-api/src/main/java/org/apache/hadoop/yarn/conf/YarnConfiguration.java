@@ -96,7 +96,7 @@ public class YarnConfiguration extends Configuration {
   /** Delay before deleting resource to ease debugging of NM issues */
   public static final String DEBUG_NM_DELETE_DELAY_SEC =
     YarnConfiguration.NM_PREFIX + "delete.debug-delay-sec";
-  
+
   ////////////////////////////////
   // IPC Configs
   ////////////////////////////////
@@ -286,7 +286,7 @@ public class YarnConfiguration extends Configuration {
   public static final String YARN_ACL_ENABLE = 
     YARN_PREFIX + "acl.enable";
   public static final boolean DEFAULT_YARN_ACL_ENABLE = false;
-  
+
   /** ACL of who can be admin of YARN cluster.*/
   public static final String YARN_ADMIN_ACL = 
     YARN_PREFIX + "admin.acl";
@@ -428,7 +428,7 @@ public class YarnConfiguration extends Configuration {
      RM_PREFIX + "delegation.token.max-lifetime";
   public static final long RM_DELEGATION_TOKEN_MAX_LIFETIME_DEFAULT =
     7*24*60*60*1000; // 7 days
-  
+
   public static final String RECOVERY_ENABLED = RM_PREFIX + "recovery.enabled";
   public static final boolean DEFAULT_RM_RECOVERY_ENABLED = false;
 
@@ -697,7 +697,7 @@ public class YarnConfiguration extends Configuration {
     NM_PREFIX + "bind-host";
 
   /** who will execute(launch) the containers.*/
-  public static final String NM_CONTAINER_EXECUTOR = 
+  public static final String NM_CONTAINER_EXECUTOR =
     NM_PREFIX + "container-executor.class";
 
   /**  
@@ -938,7 +938,7 @@ public class YarnConfiguration extends Configuration {
 
   public static final String YARN_LOG_SERVER_URL =
     YARN_PREFIX + "log.server.url";
-  
+
   public static final String YARN_TRACKING_URL_GENERATOR = 
       YARN_PREFIX + "tracking.url.generator";
 
@@ -964,7 +964,7 @@ public class YarnConfiguration extends Configuration {
   public static final String NM_VMEM_PMEM_RATIO =
     NM_PREFIX + "vmem-pmem-ratio";
   public static final float DEFAULT_NM_VMEM_PMEM_RATIO = 2.1f;
-  
+
   /** Number of Virtual CPU Cores which can be allocated for containers.*/
   public static final String NM_VCORES = NM_PREFIX + "resource.cpu-vcores";
   public static final int DEFAULT_NM_VCORES = 8;
@@ -1113,7 +1113,7 @@ public class YarnConfiguration extends Configuration {
   public static final int DEFAULT_NM_WEBAPP_HTTPS_PORT = 8044;
   public static final String DEFAULT_NM_WEBAPP_HTTPS_ADDRESS = "0.0.0.0:"
       + DEFAULT_NM_WEBAPP_HTTPS_PORT; 
-  
+
   /** How often to monitor containers.*/
   public final static String NM_CONTAINER_MON_INTERVAL_MS =
     NM_PREFIX + "container-monitor.interval-ms";
@@ -1368,7 +1368,7 @@ public class YarnConfiguration extends Configuration {
           NM_PREFIX + "max-retry-file-delete";
   public static final int DEFAULT_NM_MAX_RETRY_FILE_DELETE = 2;
 
-  /** 
+  /**
   /* The Windows group that the windows-secure-container-executor should run as.
   */
   public static final String NM_WINDOWS_SECURE_CONTAINER_GROUP =
@@ -2178,7 +2178,7 @@ public class YarnConfiguration extends Configuration {
    * Node-labels configurations
    */
   public static final String NODE_LABELS_PREFIX = YARN_PREFIX + "node-labels.";
-  
+
   /** URI for NodeLabelManager */
   public static final String FS_NODE_LABELS_STORE_ROOT_DIR = NODE_LABELS_PREFIX
       + "fs-store.root-dir";
@@ -2223,6 +2223,13 @@ public class YarnConfiguration extends Configuration {
   public static final String LIBJVM_SO_PATH = YARN_PREFIX + "libjvm.path";
 
   public static final String LIBJVM_SO_PATH_DEFAULT = System.getProperty("sun.boot.library.path") + "/server";
+
+  /*
+   * Support to view apps for given user in secure cluster.
+   */
+  public static final String DISPLAY_APPS_FOR_LOGGED_IN_USER =
+          RM_PREFIX + "display.per-user-apps";
+  public static final boolean DEFAULT_DISPLAY_APPS_FOR_LOGGED_IN_USER = false;
 
   public YarnConfiguration() {
     super();

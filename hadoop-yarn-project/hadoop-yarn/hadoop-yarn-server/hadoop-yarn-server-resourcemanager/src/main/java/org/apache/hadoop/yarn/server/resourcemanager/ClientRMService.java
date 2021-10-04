@@ -191,6 +191,8 @@ public class ClientRMService extends AbstractService implements
   private ReservationSystem reservationSystem;
   private ReservationInputValidator rValidator;
 
+  private boolean displayPerUserApps = false;
+
   // Label manager
   private LabelManager labelManager;
 
@@ -249,6 +251,10 @@ public class ClientRMService extends AbstractService implements
       }
       refreshServiceAcls(conf, RMPolicyProvider.getInstance());
     }
+
+    this.displayPerUserApps  = conf.getBoolean(
+        YarnConfiguration.DISPLAY_APPS_FOR_LOGGED_IN_USER,
+        YarnConfiguration.DEFAULT_DISPLAY_APPS_FOR_LOGGED_IN_USER);
 
     this.server.start();
     clientBindAddress = conf.updateConnectAddr(YarnConfiguration.RM_BIND_HOST,
@@ -852,6 +858,12 @@ public class ClientRMService extends AbstractService implements
         continue;
       }
 
+      // Given RM is configured to display apps per user, skip apps to which
+      // this caller doesn't have access to view.
+      if (displayPerUserApps && !allowAccess) {
+        continue;
+      }
+
       reports.add(application.createAndGetApplicationReport(
           callerUGI.getUserName(), allowAccess));
     }
@@ -1381,4 +1393,10 @@ public class ClientRMService extends AbstractService implements
     }
     return callerUGI.getShortUserName();
   }
+
+  @VisibleForTesting
+  public void setDisplayPerUserApps(boolean displayPerUserApps) {
+    this.displayPerUserApps = displayPerUserApps;
+  }
+
 }
