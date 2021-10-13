@@ -37,6 +37,7 @@ import org.apache.hadoop.classification.InterfaceAudience.Public;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.authorize.AccessControlList;
+import org.apache.hadoop.security.authorize.CaseInsensitiveAccessControlList;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.yarn.api.records.QueueACL;
 import org.apache.hadoop.yarn.api.records.Resource;
@@ -72,6 +73,8 @@ public class AllocationFileLoaderService extends AbstractService {
 
   public static final long THREAD_JOIN_TIMEOUT_MS = 1000;
 
+  private boolean aclCaseSensitivityDisabled = false;
+
   private final Clock clock;
 
   private long lastSuccessfulReload; // Last time we successfully reloaded queues
@@ -100,6 +103,8 @@ public class AllocationFileLoaderService extends AbstractService {
 
   @Override
   public void serviceInit(Configuration conf) throws Exception {
+    aclCaseSensitivityDisabled = conf.getBoolean(FairSchedulerConfiguration.ACL_CASE_SENSITIVITY_DISABLED,
+            FairSchedulerConfiguration.DEFAULT_ACL_CASE_SENSITIVITY_DISABLED);
     this.allocFile = getAllocationFile(conf);
     if (allocFile != null) {
       reloadThread = new Thread() {
@@ -502,10 +507,18 @@ public class AllocationFileLoaderService extends AbstractService {
         queuePolicies.put(queueName, policy);
       } else if ("aclSubmitApps".equals(field.getTagName())) {
         String text = ((Text)field.getFirstChild()).getData();
-        acls.put(QueueACL.SUBMIT_APPLICATIONS, new AccessControlList(text));
+        if(!aclCaseSensitivityDisabled) {
+          acls.put(QueueACL.SUBMIT_APPLICATIONS, new AccessControlList(text));
+        } else {
+          acls.put(QueueACL.SUBMIT_APPLICATIONS, new CaseInsensitiveAccessControlList(text));
+        }
       } else if ("aclAdministerApps".equals(field.getTagName())) {
         String text = ((Text)field.getFirstChild()).getData();
-        acls.put(QueueACL.ADMINISTER_QUEUE, new AccessControlList(text));
+        if(!aclCaseSensitivityDisabled) {
+          acls.put(QueueACL.ADMINISTER_QUEUE, new AccessControlList(text));
+        } else {
+          acls.put(QueueACL.ADMINISTER_QUEUE, new CaseInsensitiveAccessControlList(text));
+        }
       } else if ("reservation".equals(field.getTagName())) {
         isReservable = true;
         reservableQueues.add(queueName);

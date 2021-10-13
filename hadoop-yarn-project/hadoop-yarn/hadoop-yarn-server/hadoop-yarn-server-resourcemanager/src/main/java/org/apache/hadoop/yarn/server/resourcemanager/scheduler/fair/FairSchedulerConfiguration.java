@@ -74,6 +74,9 @@ public class FairSchedulerConfiguration extends Configuration {
   protected static final String  USER_AS_DEFAULT_QUEUE = CONF_PREFIX + "user-as-default-queue";
   protected static final boolean DEFAULT_USER_AS_DEFAULT_QUEUE = true;
 
+  protected static final String  ACL_CASE_SENSITIVITY_DISABLED = CONF_PREFIX + "acl-case-sensitivity-disabled";
+  protected static final boolean DEFAULT_ACL_CASE_SENSITIVITY_DISABLED = false;
+
   protected static final float  DEFAULT_LOCALITY_THRESHOLD = -1.0f;
 
   /** Cluster threshold for node locality. */

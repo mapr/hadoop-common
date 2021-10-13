@@ -57,11 +57,11 @@ public class AccessControlList implements Writable {
   private static final int INITIAL_CAPACITY = 256;
 
   // Set of users who are granted access.
-  private Collection<String> users;
+  protected Collection<String> users;
   // Set of groups which are granted access
-  private Collection<String> groups;
+  protected Collection<String> groups;
   // Whether all users are granted access.
-  private boolean allAllowed;
+  protected boolean allAllowed;
 
   private Groups groupsMapping = Groups.getUserToGroupsMappingService(new Configuration());
 
@@ -227,7 +227,8 @@ public class AccessControlList implements Writable {
    * @param ugi UserGroupInformation to check if contained in the ACL
    * @return true if ugi is member of the list
    */
-  public final boolean isUserInList(UserGroupInformation ugi) {
+  public boolean isUserInList(UserGroupInformation ugi) {
+
     if (allAllowed || users.contains(ugi.getShortUserName())) {
       return true;
     } else if (!groups.isEmpty()) {
