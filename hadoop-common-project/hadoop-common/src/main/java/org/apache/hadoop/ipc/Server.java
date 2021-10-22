@@ -109,8 +109,10 @@ import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.apache.hadoop.security.authorize.PolicyProvider;
 import org.apache.hadoop.security.authorize.ProxyUsers;
 import org.apache.hadoop.security.authorize.ServiceAuthorizationManager;
+import org.apache.hadoop.security.rpcauth.DigestAuthMethod;
 import org.apache.hadoop.security.rpcauth.RpcAuthMethod;
 import org.apache.hadoop.security.rpcauth.RpcAuthRegistry;
+import org.apache.hadoop.security.rpcauth.TokenAuthMethod;
 import org.apache.hadoop.security.token.SecretManager;
 import org.apache.hadoop.security.token.SecretManager.InvalidToken;
 import org.apache.hadoop.security.token.TokenIdentifier;
@@ -1416,7 +1418,7 @@ public abstract class Server {
             break;
           }
           // sasl server for tokens may already be instantiated
-          if (saslServer == null || !authMethod.equals(RpcAuthRegistry.DIGEST)) {
+          if (saslServer == null || !(authMethod.equals(RpcAuthRegistry.DIGEST) || authMethod.equals(RpcAuthRegistry.SCRAM))) {
             saslServer = createSaslServer(authMethod);
           }
           saslResponse = processSaslToken(saslMessage);
@@ -1632,6 +1634,8 @@ public abstract class Server {
         negotiateBuilder.getAuthsBuilder(0)  // TOKEN is always first
             .setChallenge(ByteString.copyFrom(challenge));
         negotiateMessage = negotiateBuilder.build();
+      } else if(enabledAuthMethods.contains(RpcAuthRegistry.SCRAM)){
+        saslServer = createSaslServer(RpcAuthRegistry.SCRAM);
       }
       sentNegotiate = true;
       return negotiateMessage;
@@ -1721,7 +1725,7 @@ public abstract class Server {
         //this is not allowed if user authenticated with DIGEST.
         if ((protocolUser != null)
             && (!protocolUser.getUserName().equals(user.getUserName()))) {
-          if (authMethod.equals(RpcAuthRegistry.DIGEST)) {
+          if (authMethod.equals(RpcAuthRegistry.DIGEST) || authMethod.equals(RpcAuthRegistry.SCRAM)) {
             // Not allowed to doAs if token authentication is used
             throw new WrappedRpcServerException(
                 RpcErrorCodeProto.FATAL_UNAUTHORIZED,
@@ -2309,19 +2313,30 @@ public abstract class Server {
   private List<RpcAuthMethod> getAuthMethods(SecretManager<?> secretManager,
                                              Configuration conf) throws IOException {
     AuthenticationMethod confAuthenticationMethod =
-        SecurityUtil.getAuthenticationMethod(conf);        
+        SecurityUtil.getAuthenticationMethod(conf);
+    String tokenAuthMethod = conf.get(CommonConfigurationKeysPublic.HADOOP_SECURITY_TOKEN_MECHANISM,
+        RpcAuthRegistry.DIGEST.getMechanismName());
     List<RpcAuthMethod> authMethods = new ArrayList<RpcAuthMethod>();
     if (confAuthenticationMethod == AuthenticationMethod.TOKEN) {
       if (secretManager == null) {
         throw new IllegalArgumentException(AuthenticationMethod.TOKEN +
             " authentication requires a secret manager");
-      } 
-      authMethods.add(RpcAuthRegistry.DIGEST);
+      }
+      if(tokenAuthMethod.equalsIgnoreCase(RpcAuthRegistry.SCRAM.getMechanismName())){
+        authMethods.add(RpcAuthRegistry.SCRAM);
+      }
+      else {
+        authMethods.add(RpcAuthRegistry.DIGEST);
+      }
     } else if (secretManager != null) {
       LOG.debug(AuthenticationMethod.TOKEN +
           " authentication enabled for secret manager");
       // most preferred, go to the front of the line!
-      authMethods.add(RpcAuthRegistry.DIGEST);
+      if(tokenAuthMethod.equalsIgnoreCase(RpcAuthRegistry.SCRAM.getMechanismName()))
+        authMethods.add(RpcAuthRegistry.SCRAM);
+      else {
+        authMethods.add(RpcAuthRegistry.DIGEST);
+      }
     }
     authMethods.addAll(UserGroupInformation.getCurrentUser().getRpcAuthMethodList());
     

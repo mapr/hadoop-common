@@ -29,13 +29,16 @@ public class MaprShellCommandExecutor {
    * @return json object which contains response data
    * @throws IOException
    */
-  public JsonArray execute(String[] command, Map<String, String> params) throws IOException {
+  public JsonArray execute(String[] command, Map<String, String> params, boolean skipMaprcli) throws IOException {
     if (executor == null) {
-      executor = new Shell.ShellCommandExecutor(createArgs(command, params));
+      executor = new Shell.ShellCommandExecutor(createArgs(command, params, skipMaprcli));
     }
-    LOG.info("Trying to execute maprcli command: " + executor.toString());
+    LOG.info("Trying to execute command: " + executor.toString());
     try {
       executor.execute();
+      if (skipMaprcli){
+        return null;
+      }
       String output = executor.getOutput();
       if (output == null || output.isEmpty()) {
         LOG.error("Output is empty");
@@ -64,7 +67,7 @@ public class MaprShellCommandExecutor {
    * @return full maprcli command
    */
   @VisibleForTesting
-  protected String[] createArgs(String[] command, Map<String, String> params) {
+  protected String[] createArgs(String[] command, Map<String, String> params, boolean skipMaprcli) {
     if (command == null) {
       throw new IllegalArgumentException("Empty command");
     }
@@ -73,11 +76,12 @@ public class MaprShellCommandExecutor {
     }
 
     // extra fields -> maprcli command and -json flag
-    int size = command.length + (params.size() * 2) + 2;
+    int size = command.length + (params.size() * 2);
+    if (!skipMaprcli) size += 2;
     String[] args = new String[size];
 
     int counter = 0;
-    args[counter++] = "maprcli";
+    if (!skipMaprcli) args[counter++] = "maprcli";
     for (String c : command) {
       args[counter++] = c;
     }
@@ -87,7 +91,7 @@ public class MaprShellCommandExecutor {
       args[counter++] = paramName;
       args[counter++] = e.getValue();
     }
-    args[counter] = "-json";
+    if (!skipMaprcli) args[counter] = "-json";
     return args;
   }
 

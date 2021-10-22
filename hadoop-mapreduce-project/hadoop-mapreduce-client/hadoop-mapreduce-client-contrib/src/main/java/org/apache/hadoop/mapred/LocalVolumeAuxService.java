@@ -19,9 +19,12 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.hadoop.security.rpcauth.RpcAuthRegistry;
+import org.apache.hadoop.yarn.util.ScramCredentialScriptUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -308,6 +311,10 @@ public class LocalVolumeAuxService extends AuxiliaryService {
 
     executeCommand(mapReduceVolumeArgs, env);
     executeCommand(stagingVolumeArgs, env);
+    if(conf.get(CommonConfigurationKeysPublic.HADOOP_SECURITY_TOKEN_MECHANISM, UserGroupInformation.DIGEST_AUTH_MECHANISM).
+        equalsIgnoreCase(UserGroupInformation.SCRAM_AUTH_MECHANISM)){
+      ScramCredentialScriptUtil.checkAndCopyScramCreds(conf, "nodeManager");
+    }
 
     try {
       initMapReduceDirs();

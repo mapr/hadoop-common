@@ -37,6 +37,7 @@ hadoopVersion="__VERSION_3DIGIT__"
 yarn_version="${hadoopVersion}"
 isOnlyRoles=0
 clientNode=0
+isFips="false"
 
 if [ -e "${MAPR_HOME}/server/common-ecosystem.sh" ]; then
     . "${MAPR_HOME}/server/common-ecosystem.sh"
@@ -80,6 +81,33 @@ function checkIncompatibleHadoopConfig() {
             exit 1
         fi
     fi
+}
+
+function isFipsConfigured() {
+    if [ ! -f $HADOOP_SSL_SERVER_FILE ]; then
+        echo "File $HADOOP_SSL_SERVER_FILE does not exist"
+        exit 1
+    fi
+    #
+    # Gets the key store type
+    #
+    keyStoreType=`awk '/ssl.server.keystore.type/{getline; print}' "$HADOOP_SSL_SERVER_FILE" |sed 's/\s*<value>\(.*\)<\/value>/\1/'`
+    if [ "$keyStoreType" != "bcfks" ]; then
+        isFips="false"
+        return
+    fi
+    #
+    # Gets the trust store type
+    #
+    trustStoreType=`awk '/ssl.server.truststore.type/{getline; print}' "$HADOOP_SSL_SERVER_FILE" |sed 's/\s*<value>\(.*\)<\/value>/\1/'`
+    if [ "$trustStoreType" != "bcfks" ]; then
+        isFips="false"
+        return
+    fi
+    #
+    # If we get here, then both key and trust stores are BCFKS stores
+    isFips="true"
+    return
 }
 
 function isSecureEnable() {
@@ -558,6 +586,7 @@ function ConfigureRunUserForHadoopInternal() {
     [ -d "${HADOOP_DIR}/logs" ] && chown $CURR_USER "${HADOOP_DIR}/logs" >>$logFile 2>&1
     [ -d "${HADOOP_DIR}/logs" ] && [ "$(ls -A ${HADOOP_DIR}/logs)" ] && chown $CURR_USER "${HADOOP_DIR}/logs/"* >>$logFile 2>&1
     [ -d "${HADOOP_DIR}/etc/hadoop" ] && find "${HADOOP_DIR}/etc/hadoop" -type f | grep -v container-executor.cfg | xargs chown $CURR_USER >>$logFile 2>&1
+    [ -d "${HADOOP_DIR}/etc/hadoop/scram" ] && chown -R $CURR_USER "${HADOOP_DIR}/etc/hadoop/scram" >>$logFile 2>&1
 }
 
 function ConfigureRunUserForHadoop() {
@@ -767,6 +796,31 @@ function checkTCFileForNodManager() {
     fi
 }
 
+function checkAndConfigureFIPSProperties() {
+  isFipsConfigured
+  if [ "$isFips" == "true" ];then
+      if [ -f ${HADOOP_HOME}/etc/hadoop/yarn-site.xml ];then
+          if ! grep -q "hadoop.security.token.authentication.method" "${HADOOP_HOME}/etc/hadoop/yarn-site.xml"; then
+              sed -i -e "s|</configuration>|  <property>\n   <name>hadoop.security.token.authentication.method</name>\n    <value>SCRAM-SHA-256</value>\n    <description>\n      SASL mechanism for token authentication.\n    </description>\n  </property>\n</configuration>|" "${HADOOP_HOME}/etc/hadoop/yarn-site.xml"
+          fi
+          if ! grep -q "yarn.app.mapreduce.am.command-opts" "${HADOOP_HOME}/etc/hadoop/yarn-site.xml"; then
+              sed -i -e "s|</configuration>|  <property>\n   <name>yarn.app.mapreduce.am.command-opts</name>\n    <value>-Xmx1024m --add-opens java.base/java.lang=ALL-UNNAMED -XX:+UseParallelGC -Djava.security.properties=/opt/mapr/conf/java.security.fips</value>\n  </property>\n</configuration>|" "${HADOOP_HOME}/etc/hadoop/yarn-site.xml"
+          fi
+          if ! grep -q "yarn.nodemanager.container-localizer.java.opts" "${HADOOP_HOME}/etc/hadoop/yarn-site.xml"; then
+              sed -i -e "s|</configuration>|  <property>\n   <name>yarn.nodemanager.container-localizer.java.opts</name>\n    <value>-Xmx256m -Djava.security.properties=/opt/mapr/conf/java.security.fips</value>\n  </property>\n</configuration>|" "${HADOOP_HOME}/etc/hadoop/yarn-site.xml"
+          fi
+      fi
+      if [ -f ${HADOOP_HOME}/etc/hadoop/mapred-site.xml ];then
+          if ! grep -q "mapreduce.map.java.opts" "${HADOOP_HOME}/etc/hadoop/mapred-site.xml"; then
+              sed -i -e "s|</configuration>|  <property>\n   <name>mapreduce.map.java.opts</name>\n    <value>-Xmx900m --add-opens java.base/java.lang=ALL-UNNAMED -XX:+UseParallelGC -Djava.security.properties=/opt/mapr/conf/java.security.fips</value>\n  </property>\n</configuration>|" "${HADOOP_HOME}/etc/hadoop/mapred-site.xml"
+          fi
+          if ! grep -q "mapreduce.reduce.java.opts" "${HADOOP_HOME}/etc/hadoop/mapred-site.xml"; then
+              sed -i -e "s|</configuration>|  <property>\n   <name>mapreduce.reduce.java.opts</name>\n    <value>-Xmx2560m --add-opens java.base/java.lang=ALL-UNNAMED -XX:+UseParallelGC -Djava.security.properties=/opt/mapr/conf/java.security.fips</value>\n  </property>\n</configuration>|" "${HADOOP_HOME}/etc/hadoop/mapred-site.xml"
+          fi
+      fi
+  fi
+}
+
 # typically called from master configure.sh with the following arguments
 #
 # configure.sh  ....
@@ -942,6 +996,8 @@ elif [ ! -f ${HADOOP_HOME}/etc/hadoop/yarn-site.xml ] || [ "$isOnlyRoles" != "1"
     # No -RM provided and no -R. Configure MapR-HA for RM.
     ConfigureYarnServices ""
 fi
+checkAndConfigureFIPSProperties
+
 if [ ! -z "$hs_ip" ]; then
     ConfigureHS "$hs_ip"
 fi

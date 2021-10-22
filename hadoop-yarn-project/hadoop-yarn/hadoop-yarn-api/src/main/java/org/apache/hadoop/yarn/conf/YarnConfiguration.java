@@ -2206,6 +2206,11 @@ public class YarnConfiguration extends Configuration {
 
   public static final int DEFAULT_APP_ATTEMPT_DIAGNOSTICS_LIMIT_KC = 64;
 
+  public static final String BCFKS_LOG_LEVEL =
+      YARN_PREFIX + "bcfks.log.level";
+
+  public static final String DEFAULT_BCFKS_LOG_LEVEL = "WARNING";
+
   /**
    * Class to instantiate and use for managing external tokens.
    */

@@ -27,7 +27,7 @@ public class TestMaprShellCommandExecutor {
   public void testCheckCommandCreation() {
     final String[] expected = new String[] {"maprcli", "node", "list", "-json"};
 
-    String[] args = executor.createArgs(new String[] {"node", "list"}, new HashMap<String, String>());
+    String[] args = executor.createArgs(new String[] {"node", "list"}, new HashMap<String, String>(), false);
 
     assertArrayEquals(expected, args);
   }
@@ -40,7 +40,7 @@ public class TestMaprShellCommandExecutor {
     Map<String, String> keyParamsWithoutMinus = new HashMap<>();
     keyParamsWithoutMinus.put("param1", "value1");
     keyParamsWithoutMinus.put("param2", "value2");
-    String[] args = executor.createArgs(commands, keyParamsWithoutMinus);
+    String[] args = executor.createArgs(commands, keyParamsWithoutMinus, false);
 
     assertEquals(expected.size(), args.length);
     assertTrue(expected.containsAll(Arrays.asList(args)));
@@ -48,7 +48,7 @@ public class TestMaprShellCommandExecutor {
     Map<String, String> keyParamsWithMinus = new HashMap<>();
     keyParamsWithMinus.put("-param1", "value1");
     keyParamsWithMinus.put("-param2", "value2");
-    args = executor.createArgs(commands, keyParamsWithMinus);
+    args = executor.createArgs(commands, keyParamsWithMinus, false);
 
     assertEquals(expected.size(), args.length);
     assertTrue(expected.containsAll(Arrays.asList(args)));
@@ -58,18 +58,18 @@ public class TestMaprShellCommandExecutor {
   public void testCheckEmptyParameterMap() {
     final String[] expected = new String[] {"maprcli", "node", "list", "-json"};
 
-    String[] args = executor.createArgs(new String[] {"node", "list"}, null);
+    String[] args = executor.createArgs(new String[] {"node", "list"}, null, false);
 
     assertArrayEquals(expected, args);
 
-    args = executor.createArgs(new String[] {"node", "list"}, new HashMap<String, String>());
+    args = executor.createArgs(new String[] {"node", "list"}, new HashMap<String, String>(), false);
 
     assertArrayEquals(expected, args);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testCheckEmptyCommand() {
-    executor.createArgs(null, null);
+    executor.createArgs(null, null, false);
   }
 
   @Test
@@ -79,7 +79,7 @@ public class TestMaprShellCommandExecutor {
     when(mock.getOutput()).thenReturn(getFileFromClassPath("command.json"));
     executor.setCommandExecutor(mock);
 
-    JsonArray responseArray = executor.execute(new String[] {"test"}, new HashMap<String, String>());
+    JsonArray responseArray = executor.execute(new String[] {"test"}, new HashMap<String, String>(), false);
 
     for (JsonElement e : responseArray) {
       JsonPrimitive hostname = e.getAsJsonObject().getAsJsonPrimitive("hostname");
@@ -94,7 +94,7 @@ public class TestMaprShellCommandExecutor {
     when(mock.getOutput()).thenReturn("{}");
     executor.setCommandExecutor(mock);
 
-    executor.execute(new String[] {"test"}, new HashMap<String, String>());
+    executor.execute(new String[] {"test"}, new HashMap<String, String>(), false);
   }
 
   @Test(expected = IOException.class)
@@ -104,7 +104,7 @@ public class TestMaprShellCommandExecutor {
     when(mock.getOutput()).thenReturn("");
     executor.setCommandExecutor(mock);
 
-    executor.execute(new String[] {"test"}, new HashMap<String, String>());
+    executor.execute(new String[] {"test"}, new HashMap<String, String>(), false);
   }
 
   private String getFileFromClassPath(String fileName) throws IOException {

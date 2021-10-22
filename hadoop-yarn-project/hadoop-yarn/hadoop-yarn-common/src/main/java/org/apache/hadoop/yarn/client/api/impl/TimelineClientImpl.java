@@ -30,6 +30,7 @@ import java.net.URLConnection;
 import java.security.GeneralSecurityException;
 import java.security.PrivilegedExceptionAction;
 import java.util.Arrays;
+import java.util.logging.Level;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -41,6 +42,9 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
+import org.apache.hadoop.security.alias.BouncyCastleFipsKeyStoreProvider;
+import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
+import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
@@ -95,6 +99,11 @@ public class TimelineClientImpl extends TimelineClient {
   private static Options opts;
   private static final String ENTITY_DATA_TYPE = "entity";
   private static final String DOMAIN_DATA_TYPE = "domain";
+  private static final String TRUSTSTORE_TYPE_JAVA_PROPERTY = "javax.net.ssl.trustStoreType";
+  private static final String TRUSTSTORE_PASS_JAVA_PROPERTY = "javax.net.ssl.trustStorePassword";
+  private static final String SSL_CLIENT_TRUSTSTORE_TYPE = "ssl.client.truststore.type";
+  private static final String SSL_CLIENT_TRUSTSTORE_PASSWORD = "ssl.client.truststore.password";
+  private static final String TRUSTNAME_SERVICE_JAVA_PROPERTY = "jdk.tls.trustNameService";
 
   static {
     opts = new Options();
@@ -259,6 +268,7 @@ public class TimelineClientImpl extends TimelineClient {
   }
 
   protected void serviceInit(Configuration conf) throws Exception {
+    initFIPSIfNeeded(conf);
     UserGroupInformation ugi = UserGroupInformation.getCurrentUser();
     UserGroupInformation realUgi = ugi.getRealUser();
     if (realUgi != null) {
@@ -303,6 +313,27 @@ public class TimelineClientImpl extends TimelineClient {
     }
     LOG.info("Timeline service address: " + resURI);
     super.serviceInit(conf);
+  }
+
+  public void initFIPSIfNeeded(Configuration conf) throws Exception{
+    Configuration sslConf = new Configuration();
+    sslConf.addResource("core-site.xml");
+    sslConf.addResource("ssl-client.xml");
+    String keystoreType = sslConf.get(SSL_CLIENT_TRUSTSTORE_TYPE);
+    if (keystoreType != null && keystoreType.equalsIgnoreCase(BouncyCastleFipsKeyStoreProvider.KEYSTORE_TYPE)) {
+      String log_level =  conf.get(YarnConfiguration.BCFKS_LOG_LEVEL, YarnConfiguration.DEFAULT_BCFKS_LOG_LEVEL);
+      java.util.logging.Logger parent = java.util.logging.Logger.getLogger("org.bouncycastle.jsse");
+      parent.setLevel(Level.parse(log_level));
+
+      java.security.Security.addProvider(new BouncyCastleFipsProvider());
+      java.security.Security.addProvider(new BouncyCastleJsseProvider());
+
+      String trustorePass = new String(sslConf.getPassword(SSL_CLIENT_TRUSTSTORE_PASSWORD));
+
+      System.setProperty(TRUSTSTORE_TYPE_JAVA_PROPERTY, BouncyCastleFipsKeyStoreProvider.KEYSTORE_TYPE);
+      System.setProperty(TRUSTSTORE_PASS_JAVA_PROPERTY, trustorePass);
+      System.setProperty(TRUSTNAME_SERVICE_JAVA_PROPERTY, "true");
+    }
   }
 
   public DelegationTokenAuthenticator getMaprDelegationTokenAuthenticator() {

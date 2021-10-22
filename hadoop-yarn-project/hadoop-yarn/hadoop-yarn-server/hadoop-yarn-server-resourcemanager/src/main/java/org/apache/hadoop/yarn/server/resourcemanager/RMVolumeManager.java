@@ -3,6 +3,10 @@
  */
 package org.apache.hadoop.yarn.server.resourcemanager;
 
+import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.rpcauth.RpcAuthRegistry;
+import org.apache.hadoop.yarn.util.ScramCredentialScriptUtil;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -57,7 +61,10 @@ public class RMVolumeManager extends VolumeManager {
   @Override
   public void createVolumes(Configuration conf) throws Exception {
     waitForYarnPathCreated(conf);
-
+    if(conf.get(CommonConfigurationKeysPublic.HADOOP_SECURITY_TOKEN_MECHANISM, UserGroupInformation.DIGEST_AUTH_MECHANISM).
+        equalsIgnoreCase(UserGroupInformation.SCRAM_AUTH_MECHANISM)){
+      ScramCredentialScriptUtil.checkAndCopyScramCreds(conf, "resourceManager");
+    }
       // create separate volume for general RM dir
     createVolume("");
     createDir(conf.get(YarnDefaultProperties.RM_SYSTEM_DIR, YarnDefaultProperties.DEFAULT_RM_SYSTEM_DIR),

@@ -21,8 +21,8 @@ import com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.security.alias.BouncyCastleFipsKeyStoreProvider;
 import org.apache.hadoop.util.StringUtils;
-import org.apache.zookeeper.common.KeyStoreFileType;
 import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
 import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
 import org.slf4j.Logger;
@@ -184,11 +184,11 @@ public class FileBasedKeyStoresFactory implements KeyStoresFactory {
     } else {
       keystore.load(null, null);
     }
-    if (keystoreType.equalsIgnoreCase(KeyStoreFileType.BCFKS.getPropertyValue())) {
+    if (keystoreType.equalsIgnoreCase(BouncyCastleFipsKeyStoreProvider.KEYSTORE_TYPE)) {
       Security.addProvider(new BouncyCastleFipsProvider());
       Security.addProvider(new BouncyCastleJsseProvider());
     }
-    KeyManagerFactory keyMgrFactory = keystoreType.equalsIgnoreCase(KeyStoreFileType.BCFKS.getPropertyValue()) ?
+    KeyManagerFactory keyMgrFactory = keystoreType.equalsIgnoreCase(BouncyCastleFipsKeyStoreProvider.KEYSTORE_TYPE) ?
         KeyManagerFactory.getInstance(SSLFactory.KEY_MANAGER_SSLCERTIFICATE, Security.getProvider(BouncyCastleJsseProvider.PROVIDER_NAME)) :
         KeyManagerFactory.getInstance(SSLFactory.KEY_MANAGER_SSLCERTIFICATE);
       

@@ -69,6 +69,8 @@ import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 import org.apache.hadoop.metrics2.lib.MetricsRegistry;
 import org.apache.hadoop.metrics2.lib.MutableQuantiles;
 import org.apache.hadoop.metrics2.lib.MutableRate;
+import org.apache.hadoop.security.scram.ScramSaslClientProvider;
+import org.apache.hadoop.security.scram.ScramSaslServerProvider;
 import org.apache.hadoop.security.SaslRpcServer.AuthMethod;
 import org.apache.hadoop.security.login.HadoopLoginModule;
 import org.apache.hadoop.security.rpcauth.RpcAuthMethod;
@@ -188,6 +190,9 @@ public class UserGroupInformation {
   public static final String JAVA_SECURITY_AUTH_LOGIN_CONFIG = "java.security.auth.login.config";
   public static final String DEFAULT_JAVA_SECURITY_AUTH_LOGIN_CONFIG = System.getenv("JAVA_SECURITY_AUTH");
 
+  public static final String SCRAM_AUTH_MECHANISM = "SCRAM-SHA-256";
+  public static final String DIGEST_AUTH_MECHANISM = "DIGEST-MD5";
+
   /** 
    * A method to initialize the fields that depend on a configuration.
    * Must be called before useKerberos or groups is used.
@@ -281,7 +286,11 @@ public class UserGroupInformation {
     }
     // by this time JAAS config file is fully loaded. Set UGI's authenticationMethod from JAAS config.
     setUGIAuthenticationMethodFromJAASConfiguration(jaasConfName);
-
+    String authTokenMethod = conf.get(CommonConfigurationKeysPublic.HADOOP_SECURITY_TOKEN_MECHANISM, DIGEST_AUTH_MECHANISM);
+    if (authTokenMethod.equalsIgnoreCase(SCRAM_AUTH_MECHANISM)) {
+      ScramSaslClientProvider.initialize();
+      ScramSaslServerProvider.initialize();
+    }
     if (overrideNameRules || !HadoopKerberosName.hasRulesBeenSet()) {
       try {
         HadoopKerberosName.setConfiguration(conf);
