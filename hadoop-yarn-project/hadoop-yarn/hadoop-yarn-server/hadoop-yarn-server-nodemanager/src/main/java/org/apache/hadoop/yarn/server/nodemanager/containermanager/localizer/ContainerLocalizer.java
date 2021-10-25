@@ -17,6 +17,8 @@
 */
 package org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer;
 
+import org.apache.hadoop.yarn.server.nodemanager.containermanager.launcher.ContainerLaunch;
+import org.apache.hadoop.yarn.util.TaskLogUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,6 +86,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import static org.apache.hadoop.util.Shell.getAllShells;
+import static org.apache.hadoop.yarn.conf.YarnConfiguration.YARN_APP_CONTAINER_LOG_DIR;
 
 public class ContainerLocalizer {
 
@@ -102,6 +105,8 @@ public class ContainerLocalizer {
       new FsPermission((short)0710);
   private static final FsPermission USERCACHE_FOLDER_PERMS =
       new FsPermission((short) 0755);
+
+  private static final String LOG_FILE_NAME = "container-localizer-syslog";
 
   private final String user;
   private final String appId;
@@ -203,7 +208,32 @@ public class ContainerLocalizer {
         closeFileSystems(ugi);
       }
     }
+    if (TaskLogUtil.isDfsLoggingEnabled()) {
+      moveLogFileToMaprFs();
+    }
   }
+
+  private void moveLogFileToMaprFs() throws IOException {
+
+    String relativeContainerLogDir = ContainerLaunch
+            .getRelativeContainerLogDir(appId, localizerId);
+
+    Path containerLogDir = TaskLogUtil.getDFSLoggingHandler()
+              .getLogDirForWrite(relativeContainerLogDir);
+
+    Path maprfsLogFile = new Path(containerLogDir,LOG_FILE_NAME);
+
+    Path localLogFile = new Path(
+            System.getProperty("yarn.app.container.log.dir"),
+            LOG_FILE_NAME);
+
+    FileSystem fs = FileSystem.get(conf);
+    fs.copyFromLocalFile(localLogFile, maprfsLogFile);
+
+    //delete local file
+    lfs.delete(localLogFile, false);
+  }
+
 
   ExecutorService createDownloadThreadPool() {
     return HadoopExecutors.newSingleThreadExecutor(new ThreadFactoryBuilder()
@@ -440,7 +470,7 @@ public class ContainerLocalizer {
         ApplicationConstants.LOG_DIR_EXPANSION_VAR);
     command.add("-D" + YarnConfiguration.YARN_APP_CONTAINER_LOG_SIZE + "=0");
     command.add("-Dhadoop.root.logger=" + logLevel + ",CLA");
-    command.add("-Dhadoop.root.logfile=container-localizer-syslog");
+    command.add("-Dhadoop.root.logfile="+LOG_FILE_NAME);
   }
 
   public static void main(String[] argv) throws Throwable {
