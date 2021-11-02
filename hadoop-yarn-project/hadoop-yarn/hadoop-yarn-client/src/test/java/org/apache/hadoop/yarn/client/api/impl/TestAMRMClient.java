@@ -40,6 +40,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.Credentials;
@@ -715,6 +716,17 @@ public class TestAMRMClient {
         Assert.assertNull(req.getNodeLabelExpression());
       }
     }
+    // set container with nodes and racks with labels
+    client.addContainerRequest(new ContainerRequest(
+        Resource.newInstance(1024, 1), new String[] { "rack1" },
+        new String[] { "node1", "node2" }, Priority.UNDEFINED, true, "y"));
+    for (ResourceRequest req : client.ask) {
+      if (ResourceRequest.ANY.equals(req.getResourceName())) {
+        Assert.assertEquals("y", req.getNodeLabelExpression());
+      } else {
+        Assert.assertNull(req.getNodeLabelExpression());
+      }
+    }
   }
   
   private void verifyAddRequestFailed(AMRMClient<ContainerRequest> client,
@@ -737,8 +749,8 @@ public class TestAMRMClient {
         new ContainerRequest(Resource.newInstance(1024, 1), null, null,
             Priority.UNDEFINED, true, "x && y"));
   }
-    
-  private void testAllocation(final AMRMClientImpl<ContainerRequest> amClient)  
+
+  private void testAllocation(final AMRMClientImpl<ContainerRequest> amClient)
       throws YarnException, IOException {
     // setup container request
     
