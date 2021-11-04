@@ -375,11 +375,20 @@ public abstract class Server {
   }
 
   /** Returns the remote side ip address when invoked inside an RPC 
-   *  Returns null incase of an error.
+   *  Returns null in case of an error.
    */
   public static InetAddress getRemoteIp() {
     Call call = CurCall.get();
-    return (call != null ) ? call.getHostInetAddress() : null;
+    return (call != null) ? call.getHostInetAddress() : null;
+  }
+
+  /**
+   * Returns the remote side port when invoked inside an RPC
+   * Returns 0 in case of an error.
+   */
+  public static int getRemotePort() {
+    Call call = CurCall.get();
+    return (call != null) ? call.getRemotePort() : 0;
   }
 
   /**
@@ -415,7 +424,7 @@ public abstract class Server {
     Call call = CurCall.get();
     return call != null ? call.clientId : RpcConstants.DUMMY_CLIENT_ID;
   }
-  
+
   /** Returns remote address as a string when invoked inside an RPC.
    *  Returns null in case of an error.
    */
@@ -461,7 +470,7 @@ public abstract class Server {
   private Class<? extends Writable> rpcRequestClass;   // class used for deserializing the rpc request
   final protected RpcMetrics rpcMetrics;
   final protected RpcDetailedMetrics rpcDetailedMetrics;
-  
+
   private Configuration conf;
   private String portRangeConfig = null;
   private SecretManager<TokenIdentifier> secretManager;
@@ -877,6 +886,9 @@ public abstract class Server {
     public InetAddress getHostInetAddress() {
       return null;
     }
+    public int getRemotePort() {
+      return 0;
+    }
     public String getHostAddress() {
       InetAddress addr = getHostInetAddress();
       return (addr != null) ? addr.getHostAddress() : null;
@@ -1032,6 +1044,11 @@ public abstract class Server {
     @Override
     public InetAddress getHostInetAddress() {
       return connection.getHostInetAddress();
+    }
+
+    @Override
+    public int getRemotePort() {
+      return connection.getRemotePort();
     }
 
     @Override
@@ -1913,6 +1930,10 @@ public abstract class Server {
 
     public int getIngressPort() {
       return ingressPort;
+    }
+
+    public int getRemotePort() {
+      return remotePort;
     }
 
     public InetAddress getHostInetAddress() {
