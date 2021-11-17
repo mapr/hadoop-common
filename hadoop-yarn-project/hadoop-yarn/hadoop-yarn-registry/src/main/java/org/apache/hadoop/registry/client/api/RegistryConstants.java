@@ -141,7 +141,7 @@ public interface RegistryConstants {
   /**
    * The default zookeeper quorum binding for the registry: {@value}
    */
-  String DEFAULT_REGISTRY_ZK_QUORUM = "localhost:2181";
+  String DEFAULT_REGISTRY_ZK_QUORUM = "localhost:5181";
 
   /**
    * Zookeeper session timeout in milliseconds: {@value}
