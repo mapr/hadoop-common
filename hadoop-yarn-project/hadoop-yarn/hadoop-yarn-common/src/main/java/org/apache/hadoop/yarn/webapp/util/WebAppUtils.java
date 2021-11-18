@@ -48,9 +48,9 @@ public class WebAppUtils {
       "ssl.server.keystore.password";
   public static final String WEB_APP_KEY_PASSWORD_KEY =
       "ssl.server.keystore.keypassword";
-  
+
   private static final Logger LOG = LoggerFactory.getLogger(WebAppUtils.class);
-  
+
   public static final String HTTPS_PREFIX = "https://";
   public static final String HTTP_PREFIX = "http://";
 
@@ -88,16 +88,16 @@ public class WebAppUtils {
   }
   
   public static String getRMWebAppURLWithoutScheme(Configuration conf) {
-    
+
     if ( conf.getBoolean(YarnConfiguration.RM_WEBAPP_IS_ALL_IFACES,
         YarnConfiguration.DEFAULT_RM_WEBAPP_IS_ALL_IFACES) ) {
       if (YarnConfiguration.useHttps(conf)) {
-        return YarnConfiguration.ALL_IFACE_LISTEN_ADDRESS + ":" + 
+        return YarnConfiguration.ALL_IFACE_LISTEN_ADDRESS + ":" +
             conf.getSocketAddr(YarnConfiguration.RM_WEBAPP_HTTPS_ADDRESS,
                 YarnConfiguration.DEFAULT_RM_WEBAPP_HTTPS_ADDRESS,
                 YarnConfiguration.DEFAULT_RM_WEBAPP_HTTPS_PORT).getPort();
       } else {
-        return YarnConfiguration.ALL_IFACE_LISTEN_ADDRESS + ":" + 
+        return YarnConfiguration.ALL_IFACE_LISTEN_ADDRESS + ":" +
             conf.getSocketAddr(YarnConfiguration.RM_WEBAPP_ADDRESS,
                 YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS,
                 YarnConfiguration.DEFAULT_RM_WEBAPP_PORT).getPort();
@@ -176,15 +176,15 @@ public class WebAppUtils {
   public static String getResolvedRMWebAppURLWithoutScheme(Configuration conf,
       Policy httpPolicy) {
     InetSocketAddress address = null;
-    
+
     if ( HAUtil.isCustomRMHAEnabled(conf)) {
       if (httpPolicy == Policy.HTTPS_ONLY) {
         address = NetUtils.createSocketAddr(HAUtil.getCurrentRMAddress(conf, YarnConfiguration.RM_WEBAPP_HTTPS_ADDRESS,
-          YarnConfiguration.DEFAULT_RM_WEBAPP_HTTPS_ADDRESS, 
+          YarnConfiguration.DEFAULT_RM_WEBAPP_HTTPS_ADDRESS,
           YarnConfiguration.DEFAULT_RM_WEBAPP_HTTPS_PORT));
       } else {
         address = NetUtils.createSocketAddr(HAUtil.getCurrentRMAddress(conf, YarnConfiguration.RM_WEBAPP_ADDRESS,
-            YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, YarnConfiguration.DEFAULT_RM_WEBAPP_PORT));       
+            YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, YarnConfiguration.DEFAULT_RM_WEBAPP_PORT));
       }
       return getResolvedAddress(address);
     }
@@ -205,26 +205,31 @@ public class WebAppUtils {
 
   public static String getResolvedRemoteRMWebAppURLWithoutScheme(Configuration conf,
       Policy httpPolicy) {
-    InetSocketAddress address = null;
     String rmId = null;
     if (HAUtil.isHAEnabled(conf)) {
       // If HA enabled, pick one of the RM-IDs and rely on redirect to go to
       // the Active RM
       rmId = (String) HAUtil.getRMHAIds(conf).toArray()[0];
     }
+    return getResolvedRemoteRMWebAppURLWithoutScheme(conf, httpPolicy, rmId);
+  }
+
+  public static String getResolvedRemoteRMWebAppURLWithoutScheme(
+      Configuration conf, Policy httpPolicy, String rmId) {
+    InetSocketAddress address = null;
 
     if ( HAUtil.isCustomRMHAEnabled(conf)) {
       if (httpPolicy == Policy.HTTPS_ONLY) {
         address = NetUtils.createSocketAddr(HAUtil.getCurrentRMAddress(conf, YarnConfiguration.RM_WEBAPP_HTTPS_ADDRESS,
-          YarnConfiguration.DEFAULT_RM_WEBAPP_HTTPS_ADDRESS, 
+          YarnConfiguration.DEFAULT_RM_WEBAPP_HTTPS_ADDRESS,
           YarnConfiguration.DEFAULT_RM_WEBAPP_HTTPS_PORT));
       } else {
         address = NetUtils.createSocketAddr(HAUtil.getCurrentRMAddress(conf, YarnConfiguration.RM_WEBAPP_ADDRESS,
-            YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, YarnConfiguration.DEFAULT_RM_WEBAPP_PORT));       
+            YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, YarnConfiguration.DEFAULT_RM_WEBAPP_PORT));
       }
       return getResolvedAddress(address);
     }
-    
+
     if (httpPolicy == Policy.HTTPS_ONLY) {
       address =
           conf.getSocketAddr(
@@ -302,12 +307,12 @@ public class WebAppUtils {
     if ( conf.getBoolean(YarnConfiguration.NM_WEBAPP_IS_ALL_IFACES,
         YarnConfiguration.DEFAULT_NM_WEBAPP_IS_ALL_IFACES) ) {
       if (YarnConfiguration.useHttps(conf)) {
-        return YarnConfiguration.ALL_IFACE_LISTEN_ADDRESS + ":" + 
+        return YarnConfiguration.ALL_IFACE_LISTEN_ADDRESS + ":" +
             conf.getSocketAddr(YarnConfiguration.NM_WEBAPP_HTTPS_ADDRESS,
                 YarnConfiguration.DEFAULT_NM_WEBAPP_HTTPS_ADDRESS,
                 YarnConfiguration.DEFAULT_NM_WEBAPP_HTTPS_PORT).getPort();
       } else {
-        return YarnConfiguration.ALL_IFACE_LISTEN_ADDRESS + ":" + 
+        return YarnConfiguration.ALL_IFACE_LISTEN_ADDRESS + ":" +
             conf.getSocketAddr(YarnConfiguration.NM_WEBAPP_ADDRESS,
                 YarnConfiguration.DEFAULT_NM_WEBAPP_ADDRESS,
                 YarnConfiguration.DEFAULT_NM_WEBAPP_PORT).getPort();
@@ -322,17 +327,17 @@ public class WebAppUtils {
       }
     }
   }
-  
+
   public static String getAHSWebAppURLWithoutScheme(Configuration conf) {
     if ( conf.getBoolean(YarnConfiguration.TIMELINE_SERVICE_IS_ALL_IFACES,
         YarnConfiguration.DEFAULT_TIMELINE_SERVICE_IS_ALL_IFACES) ) {
       if (YarnConfiguration.useHttps(conf)) {
-        return YarnConfiguration.ALL_IFACE_LISTEN_ADDRESS + ":" + 
+        return YarnConfiguration.ALL_IFACE_LISTEN_ADDRESS + ":" +
             conf.getSocketAddr(YarnConfiguration.TIMELINE_SERVICE_WEBAPP_HTTPS_ADDRESS,
                 YarnConfiguration.DEFAULT_TIMELINE_SERVICE_WEBAPP_HTTPS_ADDRESS,
                 YarnConfiguration.DEFAULT_TIMELINE_SERVICE_WEBAPP_HTTPS_PORT).getPort();
       } else {
-        return YarnConfiguration.ALL_IFACE_LISTEN_ADDRESS + ":" + 
+        return YarnConfiguration.ALL_IFACE_LISTEN_ADDRESS + ":" +
             conf.getSocketAddr(YarnConfiguration.TIMELINE_SERVICE_WEBAPP_ADDRESS,
                 YarnConfiguration.DEFAULT_TIMELINE_SERVICE_WEBAPP_ADDRESS,
                 YarnConfiguration.DEFAULT_TIMELINE_SERVICE_WEBAPP_PORT).getPort();
