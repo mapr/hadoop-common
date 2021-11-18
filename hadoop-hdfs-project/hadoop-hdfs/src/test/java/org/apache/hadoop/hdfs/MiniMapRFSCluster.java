@@ -45,7 +45,6 @@ import org.apache.hadoop.hdfs.server.namenode.FSNamesystem;
 import org.apache.hadoop.hdfs.server.namenode.NameNode;
 import org.apache.hadoop.hdfs.server.protocol.DatanodeStorage;
 import org.apache.hadoop.hdfs.server.protocol.NamenodeProtocols;
-import org.apache.hadoop.hdfs.web.HftpFileSystem;
 import org.apache.hadoop.security.authorize.ProxyUsers;
 
 enum NodeState {
@@ -1083,16 +1082,6 @@ public class MiniMapRFSCluster extends MiniDFSCluster {
 
     @Override
     public String getHttpUri(int nnIndex) {
-        throw new UnsupportedOperationException(UNSUPPORTED_MESSAGE);
-    }
-
-    @Override
-    public HftpFileSystem getHftpFileSystem(int nnIndex) throws IOException {
-        throw new UnsupportedOperationException(UNSUPPORTED_MESSAGE);
-    }
-
-    @Override
-    public HftpFileSystem getHftpFileSystemAs(String username, Configuration conf, int nnIndex, String... groups) throws IOException, InterruptedException {
         throw new UnsupportedOperationException(UNSUPPORTED_MESSAGE);
     }
 
