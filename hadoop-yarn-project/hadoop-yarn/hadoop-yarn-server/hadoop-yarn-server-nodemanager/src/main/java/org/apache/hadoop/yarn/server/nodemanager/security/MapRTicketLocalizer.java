@@ -98,9 +98,9 @@ public class MapRTicketLocalizer implements ExternalTokenLocalizer {
   }
 
   @Override
-  public Path getTokenPath(String appIdStr, Configuration conf) {
+  public Path getTokenPath(String appIdStr, Configuration conf) throws IOException {
     return UserGroupInformation.isSecurityEnabled()
-      ? YarnAppUtil.getNMPrivateTicketPath(appIdStr, conf)
+      ? YarnAppUtil.getNMPrivateTicketPathForRead(appIdStr, conf)
       : null;
   }
 
@@ -123,7 +123,7 @@ public class MapRTicketLocalizer implements ExternalTokenLocalizer {
     String appIdStr = containerId.getApplicationAttemptId()
       .getApplicationId().toString();
 
-    Path localTicketPath = YarnAppUtil.getNMPrivateTicketPath(appIdStr, conf);
+    Path localTicketPath = YarnAppUtil.getNMPrivateTicketPathForWrite(appIdStr, conf);
 
     // Get the ticket path on MapRFS
     FileSystem fs = FileSystem.get(conf);

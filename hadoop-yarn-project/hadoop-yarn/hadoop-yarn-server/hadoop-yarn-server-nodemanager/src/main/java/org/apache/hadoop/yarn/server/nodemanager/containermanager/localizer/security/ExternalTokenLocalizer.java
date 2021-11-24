@@ -22,6 +22,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ContainerId;
 
+import java.io.IOException;
+
 /**
  * Interface to plug in a token localizer that can localize any distribution
  * specific tokens from DFS on to some node local directory. These are tokens
@@ -51,7 +53,7 @@ public interface ExternalTokenLocalizer {
    * @param appIdStr application id
    * @param conf YarnConfiguration instance
    */
-  Path getTokenPath(String appIdStr, Configuration conf);
+  Path getTokenPath(String appIdStr, Configuration conf) throws IOException;
 
   /**
    * Returns the environment variable name that needs to be set to point to the

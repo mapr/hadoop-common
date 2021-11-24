@@ -6,6 +6,7 @@ package org.apache.hadoop.yarn.util;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.LocalDirAllocator;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
@@ -57,6 +58,9 @@ public class YarnAppUtil {
     FsPermission.createImmutable((short) 0777);
 
   private static final String MAPR_TICKET_FILE = "ticketfile";
+
+  private static final LocalDirAllocator dirAllocator =
+          new LocalDirAllocator(YarnConfiguration.NM_LOCAL_DIRS);
 
   /**
    * Returns staging dir for the given app on resource manager.
@@ -174,5 +178,23 @@ public class YarnAppUtil {
       Configuration conf) {
     return new Path(conf.get(YarnConfiguration.NM_LOCAL_DIRS),
         getNMPrivateRelativeTicketLocation(appIdStr));
+  }
+
+  /**
+   * Returns the absolute MapR ticket path on NodeManager private directory.
+   * See LocalDirAllocator#getLocalPathForWrite
+   */
+  public static Path getNMPrivateTicketPathForWrite(String appIdStr,
+                                            Configuration conf) throws IOException {
+    return dirAllocator.getLocalPathForWrite(getNMPrivateRelativeTicketLocation(appIdStr), conf);
+  }
+
+  /**
+   * Returns the absolute MapR ticket path on NodeManager private directory.
+   * See LocalDirAllocator#getLocalPathToRead
+   */
+  public static Path getNMPrivateTicketPathForRead(String appIdStr,
+                                                    Configuration conf) throws IOException {
+    return dirAllocator.getLocalPathToRead(getNMPrivateRelativeTicketLocation(appIdStr), conf);
   }
 }
