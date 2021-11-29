@@ -63,7 +63,7 @@ public class MapRTicketUploader  {
     }
 
     FileSystem fs = FileSystem.get(conf);
-    Path appStagingDir = YarnAppUtil.getRMStagingDir(appIdStr, fs, conf);
+    Path appStagingDir = YarnAppUtil.getRMStagingDirForWrite(appIdStr, fs, conf);
     Path outTicketFilePath = YarnAppUtil.getMapRTicketPath(appStagingDir);
 
     if (LOG.isDebugEnabled()) {

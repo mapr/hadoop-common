@@ -68,7 +68,18 @@ public class YarnAppUtil {
   public static Path getRMStagingDir(String appIdStr,
                                      FileSystem fs, Configuration conf) throws IOException {
     String rmStagingDir = conf.get(YarnDefaultProperties.RM_STAGING_DIR, YarnDefaultProperties.DEFAULT_RM_STAGING_DIR);
-    return getRMDirWithVolume(appIdStr, fs, conf, rmStagingDir);
+    return getRMDirWithVolume(appIdStr, fs, conf, rmStagingDir, true);
+  }
+
+  /**
+   * Returns staging dir for the given app on resource manager.
+   * It does not lookup through all staging directories on all volumes,
+   * because is used for "create" activity, not for "read" or "delete"
+   */
+  public static Path getRMStagingDirForWrite(String appIdStr,
+                                     FileSystem fs, Configuration conf) throws IOException {
+    String rmStagingDir = conf.get(YarnDefaultProperties.RM_STAGING_DIR, YarnDefaultProperties.DEFAULT_RM_STAGING_DIR);
+    return getRMDirWithVolume(appIdStr, fs, conf, rmStagingDir, false);
   }
 
   /**
@@ -77,11 +88,11 @@ public class YarnAppUtil {
   public static Path getRMSystemDir(String appIdStr,
                                     FileSystem fs, Configuration conf) throws IOException {
     String rmSystemDir = conf.get(YarnDefaultProperties.RM_SYSTEM_DIR, YarnDefaultProperties.DEFAULT_RM_SYSTEM_DIR);
-    return getRMDirWithVolume(appIdStr, fs, conf, rmSystemDir);
+    return getRMDirWithVolume(appIdStr, fs, conf, rmSystemDir, true);
   }
 
   public static Path getRMDirWithVolume(String appIdStr,
-                                        FileSystem fs, Configuration conf, String rmSubDir) throws IOException {
+                                        FileSystem fs, Configuration conf, String rmSubDir, boolean lookUpAllDirs) throws IOException {
     String rmDir = conf.get(YarnDefaultProperties.RM_DIR, YarnDefaultProperties.DEFAULT_RM_DIR);
     Path rmDirPath = new Path(rmDir);
     Path rmSubDirPath = new Path(rmSubDir);
@@ -106,7 +117,7 @@ public class YarnAppUtil {
       Path dir = new Path(rmSubDir);
       result = new Path(fs.makeQualified(dir).toString() + Path.SEPARATOR + appIdStr);
     }
-    if (!fs.exists(result)) {
+    if (!fs.exists(result) && lookUpAllDirs) {
       Path allRMDirsPath = inspectAllRMDirs(fs, rmDirPath, dirSuffix, appIdStr);
       if(allRMDirsPath != null && fs.exists(allRMDirsPath)) {
         result = allRMDirsPath;
