@@ -269,6 +269,7 @@ export HADOOP_HOME
 HADOOP_OPTS="$HADOOP_OPTS -Dhadoop.home.dir=$HADOOP_HOME"
 HADOOP_OPTS="$HADOOP_OPTS -Dhadoop.id.str=$HADOOP_IDENT_STRING"
 HADOOP_OPTS="$HADOOP_OPTS -Dhadoop.root.logger=${HADOOP_ROOT_LOGGER:-${HADOOP_LOGLEVEL},console}"
+HADOOP_OPTS="$HADOOP_OPTS -Dhadoop.bc.logger=${HADOOP_BC_LOGLEVEL}"
 if [ "x$JAVA_LIBRARY_PATH" != "x" ]; then
   if $cygwin; then
     JAVA_LIBRARY_PATH=$(cygpath -w "$JAVA_LIBRARY_PATH" 2>/dev/null)

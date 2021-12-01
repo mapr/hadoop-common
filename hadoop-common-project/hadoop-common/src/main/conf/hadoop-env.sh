@@ -84,6 +84,8 @@ export HADOOP_SECURE_DN_USER=${HADOOP_SECURE_DN_USER}
 # Where log files are stored in the secure data environment.
 export HADOOP_SECURE_DN_LOG_DIR=${HADOOP_LOG_DIR}/${HADOOP_HDFS_USER}
 
+export HADOOP_BC_LOGLEVEL="WARNING"
+
 ###
 # HDFS Mover specific parameters
 ###

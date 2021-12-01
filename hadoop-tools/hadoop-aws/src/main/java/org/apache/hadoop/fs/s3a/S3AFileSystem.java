@@ -23,6 +23,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.security.Security;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -31,6 +32,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
@@ -71,10 +73,14 @@ import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.ProviderUtils;
+import org.apache.hadoop.security.alias.BouncyCastleFipsKeyStoreProvider;
+import org.apache.hadoop.security.ssl.SSLFactory;
 import org.apache.hadoop.util.Progressable;
 
 import static org.apache.hadoop.fs.s3a.Constants.*;
 
+import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
+import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -180,6 +186,18 @@ public class S3AFileSystem extends FileSystem {
     String signerOverride = conf.getTrimmed(SIGNING_ALGORITHM, "");
     if(!signerOverride.isEmpty()) {
       awsConf.setSignerOverride(signerOverride);
+    }
+
+    Configuration sslConf = new Configuration();
+    sslConf.addResource(SSLFactory.SSL_CLIENT_CONF_DEFAULT);
+    if (sslConf.get(SSLFactory.SSL_CLIENT_KEYSTORE_TYPE, SSLFactory.SSL_CLIENT_KEYSTORE_TYPE_DEFAULT)
+        .equalsIgnoreCase(BouncyCastleFipsKeyStoreProvider.KEYSTORE_TYPE)) {
+      String logLevel = System.getProperty("hadoop.bc.logger");
+      if (logLevel == null || logLevel.isEmpty()) logLevel = "WARNING";
+      java.util.logging.Logger parent = java.util.logging.Logger.getLogger("org.bouncycastle.jsse.provider");
+      parent.setLevel(Level.parse(logLevel));
+      Security.addProvider(new BouncyCastleFipsProvider());
+      Security.addProvider(new BouncyCastleJsseProvider());
     }
 
     initProxySupport(conf, awsConf, secureConnections);
