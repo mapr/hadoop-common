@@ -84,6 +84,17 @@ public class YarnAppUtil {
 
   /**
    * Returns system dir for the given app on resource manager.
+   * It does not lookup through all system directories on all volumes,
+   * because is used for "create" activity, not for "read" or "delete"
+   */
+  public static Path getRMSystemDirForWrite(String appIdStr,
+                                             FileSystem fs, Configuration conf) throws IOException {
+    String rmSystemDir = conf.get(YarnDefaultProperties.RM_SYSTEM_DIR, YarnDefaultProperties.DEFAULT_RM_SYSTEM_DIR);
+    return getRMDirWithVolume(appIdStr, fs, conf, rmSystemDir, false);
+  }
+
+  /**
+   * Returns system dir for the given app on resource manager.
    */
   public static Path getRMSystemDir(String appIdStr,
                                     FileSystem fs, Configuration conf) throws IOException {
