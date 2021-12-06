@@ -57,7 +57,7 @@ public class LocalVolumeAuxService extends AuxiliaryService {
   private static final String MAPR_INSTALL_DIR = BaseMapRUtil.getPathToMaprHome();
   private static final String LOCALHOSTNAME = BaseMapRUtil.getMapRHostName();
 
-  private static final String LOCAL_VOLUME_CREATE_SCRIPT_PATH = "/server/createTTVolume.sh";
+  private static final String LOCAL_VOLUME_CREATE_SCRIPT_PATH = "/server/createLocalVolumes.sh";
   private static final String LOCAL_VOLUME_CREATE_SCRIPT_LOGFILE_PATH = "/logs/createNMVolume.log";
 
   // used by the script that creates the local volume
@@ -65,6 +65,9 @@ public class LocalVolumeAuxService extends AuxiliaryService {
 
   // used by the script to create staging volume
   private static final String STAGING_ARG = "staging";
+
+  // used by the script to create staging volume
+  private static final String SPARK_ARG = "spark";
 
   // The below config params should be used by consumers of the meta data as well.
   private static final String MAPR_LOCALOUTPUT_DIR_PARAM = "mapr.localoutput.dir";
@@ -311,6 +314,23 @@ public class LocalVolumeAuxService extends AuxiliaryService {
 
     executeCommand(mapReduceVolumeArgs, env);
     executeCommand(stagingVolumeArgs, env);
+
+    if (conf.getBoolean(YarnConfiguration.NM_CREATE_SPARK_VOLUME, YarnConfiguration.DEFAULT_NM_CREATE_SPARK_VOLUME)){
+      final String[] sparkVolumeArgs = new String[] {
+              MAPR_INSTALL_DIR + LOCAL_VOLUME_CREATE_SCRIPT_PATH,
+              // hostname
+              LOCALHOSTNAME,
+              // vol mount path
+              getSparkLocalVolumeMountPath(),
+              // full path
+              getSparkLocalVolumeMountPath() + "/nodeManager",
+              // spark volume
+              SPARK_ARG
+      };
+
+      executeCommand(sparkVolumeArgs, env);
+    }
+
     if(conf.get(CommonConfigurationKeysPublic.HADOOP_SECURITY_TOKEN_MECHANISM, UserGroupInformation.DIGEST_AUTH_MECHANISM).
         equalsIgnoreCase(UserGroupInformation.SCRAM_AUTH_MECHANISM)){
       ScramCredentialScriptUtil.checkAndCopyScramCreds(conf, "nodeManager");
@@ -624,6 +644,15 @@ public class LocalVolumeAuxService extends AuxiliaryService {
   @VisibleForTesting
   String getStagingLocalVolumeMountPath() {
     return this.conf.get("mapr.staging.localvolume.mount.path", "/var/mapr/local/" + LOCALHOSTNAME + "/nm-staging");
+  }
+
+  /**
+   * constructs the mapreduce volume mount path.
+   * for e.g. "/var/mapr/local/<hostname>/spark/"
+   */
+  @VisibleForTesting
+  String getSparkLocalVolumeMountPath() {
+    return this.conf.get("mapr.spark.localvolume.mount.path", "/var/mapr/local/" + LOCALHOSTNAME + "/spark");
   }
 
   private String getSpillDirName() {

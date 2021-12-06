@@ -6,6 +6,8 @@ function createSymlinks() {
 
   rm -f __PREFIX__/server/createRMVolume.sh
   ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/bin/createRMVolume.sh __PREFIX__/server/
+  rm -f __PREFIX__/server/createLocalVolumes.sh
+  ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/bin/createLocalVolumes.sh __PREFIX__/server/
 
   rm -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/failureaccess-*
   ln -sf __PREFIX__/lib/failureaccess-* __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/

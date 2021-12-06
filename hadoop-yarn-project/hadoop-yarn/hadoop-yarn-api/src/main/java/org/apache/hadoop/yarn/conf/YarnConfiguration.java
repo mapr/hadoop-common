@@ -803,6 +803,9 @@ public class YarnConfiguration extends Configuration {
       + "proxy-user-privileges.enabled";
   public static boolean DEFAULT_RM_PROXY_USER_PRIVILEGES_ENABLED = false;
 
+  public static String NM_CREATE_SPARK_VOLUME = NM_PREFIX + "create-spark-volume";
+  public static boolean DEFAULT_NM_CREATE_SPARK_VOLUME = false;
+
   public static final String DFS_LOGGING_PREFIX = YARN_PREFIX + "dfs-logging.";
 
   /**
