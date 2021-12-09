@@ -56,7 +56,7 @@ public final class DigestAuthMethod extends TokenAuthMethod {
 
   static final TokenAuthMethod INSTANCE = new DigestAuthMethod();
   private DigestAuthMethod() {
-    super((byte) 82, "tokenDigest", "DIGEST-MD5", AuthenticationMethod.TOKEN);
+    super((byte) 82, "token", "DIGEST-MD5", AuthenticationMethod.TOKEN);
   }
 
   @Override
