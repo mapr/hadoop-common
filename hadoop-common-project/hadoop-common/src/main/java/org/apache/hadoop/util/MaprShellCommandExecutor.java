@@ -30,9 +30,7 @@ public class MaprShellCommandExecutor {
    * @throws IOException
    */
   public JsonArray execute(String[] command, Map<String, String> params, boolean skipMaprcli) throws IOException {
-    if (executor == null) {
-      executor = new Shell.ShellCommandExecutor(createArgs(command, params, skipMaprcli));
-    }
+    executor = new Shell.ShellCommandExecutor(createArgs(command, params, skipMaprcli));
     LOG.info("Trying to execute command: " + executor.toString());
     try {
       executor.execute();

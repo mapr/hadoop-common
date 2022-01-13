@@ -3,9 +3,12 @@
  */
 package org.apache.hadoop.yarn.server.resourcemanager;
 
+import com.google.gson.JsonArray;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.rpcauth.RpcAuthRegistry;
+import org.apache.hadoop.util.MaprShellCommandExecutor;
 import org.apache.hadoop.yarn.util.ScramCredentialScriptUtil;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -14,6 +17,11 @@ import org.apache.hadoop.yarn.conf.YarnDefaultProperties;
 import org.apache.hadoop.yarn.util.YarnAppUtil;
 import org.apache.hadoop.util.RMVolumeShardingUtil;
 import org.apache.hadoop.yarn.server.volume.VolumeManager;
+
+import java.io.IOException;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Manage resource manager volume and directory creation on MapRFS.
@@ -52,8 +60,9 @@ public class RMVolumeManager extends VolumeManager {
             && new Path(rmStagingDir).toUri().getRawPath().startsWith(new Path(rmDir).toUri().getRawPath())
             && new Path(rmSystemDir).toUri().getRawPath().startsWith(new Path(rmDir).toUri().getRawPath());
 
+    verifyVolumeMountPoint();
     createVolumes(conf);
-
+    moveVolumeDataAfterUpgrade();
     RMVolumeShardingUtil.rebalanceVolumes(rmSystemDir, volumeCount, useVolumeSharding, rmDir, fs);
     RMVolumeShardingUtil.rebalanceVolumes(rmStagingDir, volumeCount, useVolumeSharding, rmDir, fs);
   }
@@ -81,6 +90,47 @@ public class RMVolumeManager extends VolumeManager {
 
         createDir(rmStagingDir.replaceAll(rmDir, rmDir + Path.SEPARATOR + volumeNumber),
                 YarnAppUtil.RM_STAGING_DIR_PERMISSION);
+      }
+    }
+  }
+
+  private void verifyVolumeMountPoint() throws IOException {
+    String rmVolumeName = "mapr.resourcemanager.volume";
+    MaprShellCommandExecutor executor = new MaprShellCommandExecutor();
+
+    String[] volumeListCommand = new String[] {"volume", "list"};
+    Map<String, String> volumeListParams = new HashMap<>();
+    volumeListParams.put("columns", "volumename,mountdir,mounted");
+    volumeListParams.put("filter", "[n=="+ rmVolumeName +"]");
+
+    JsonArray result = executor.execute(volumeListCommand, volumeListParams, false);
+    if(result != null && result.size() > 0) {
+      String volumeName = result.get(0).getAsJsonObject().get("volumename").getAsString();
+      String rmVolumePath = result.get(0).getAsJsonObject().get("mountdir").getAsString();
+      int mounted = result.get(0).getAsJsonObject().get("mounted").getAsInt();
+      if(!rmVolumePath.equals(mountPath) && volumeName.equals(rmVolumeName) && mounted == 1) {
+        LOG.info("Volume " + rmVolumeName + " is mounted at " + rmVolumePath + ". Mount path is configured as " + mountPath);
+        String[] volumeUnmountCommand = new String[] {"volume", "unmount"};
+        Map<String, String> volumeUnmountParams = new HashMap<>();
+        volumeUnmountParams.put("name", rmVolumeName);
+        executor.execute(volumeUnmountCommand, volumeUnmountParams, false);
+      }
+    }
+  }
+
+  private void moveVolumeDataAfterUpgrade() throws IOException {
+    Path oldRMDir = new Path(mountPath + "/rm");
+    if(fs.exists(oldRMDir)) {
+      FileStatus[] oldData = fs.listStatus(oldRMDir);
+      for(FileStatus srcDir: oldData) {
+        Path dstDir = new Path(mountPath, srcDir.getPath().getName());
+        fs.rename(srcDir.getPath(), dstDir);
+      }
+      oldData = fs.listStatus(oldRMDir);
+      if(oldData.length == 0) {
+        fs.delete(oldRMDir, true);
+      } else {
+        LOG.warn(oldRMDir + " directory not empty, deletion postponed");
       }
     }
   }

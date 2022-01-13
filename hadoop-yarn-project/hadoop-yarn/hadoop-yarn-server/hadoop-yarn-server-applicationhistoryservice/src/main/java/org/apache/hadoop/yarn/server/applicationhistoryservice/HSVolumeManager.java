@@ -1,21 +1,29 @@
 package org.apache.hadoop.yarn.server.applicationhistoryservice;
 
+import com.google.gson.JsonArray;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.util.MaprShellCommandExecutor;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.conf.YarnDefaultProperties;
 import org.apache.hadoop.yarn.util.YarnAppUtil;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.yarn.server.volume.VolumeManager;
 
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class HSVolumeManager extends VolumeManager {
+
+  private String rmDir;
 
   public HSVolumeManager() {
     super(YarnDefaultProperties.APP_HISTORY_VOLUME_MANAGER_SERVICE);
@@ -32,6 +40,7 @@ public class HSVolumeManager extends VolumeManager {
   public void serviceInit(Configuration conf) throws Exception {
     super.serviceInit(conf);
     LOG = LoggerFactory.getLogger(HSVolumeManager.class);
+    rmDir = conf.get(YarnDefaultProperties.RM_DIR, YarnDefaultProperties.DEFAULT_RM_DIR);
 
     mountPath = conf.get(YarnDefaultProperties.APP_HISTORY_STAGING_DIR, YarnDefaultProperties.DEFAULT_APP_HISTORY_STAGING_DIR);
     volumeMode = "hs";
@@ -55,9 +64,9 @@ public class HSVolumeManager extends VolumeManager {
       LOG.debug("History data is not moved, HS volume is already not empty: " + Arrays.stream(stats).map(FileStatus::getPath).collect(Collectors.toList()));
       return;
     }
-    String rmStagingDir = conf.get(YarnDefaultProperties.RM_STAGING_DIR, YarnDefaultProperties.DEFAULT_RM_STAGING_DIR);
-
-    List<FileStatus> historyData = Arrays.asList(fs.listStatus(new Path(rmStagingDir)))
+    Path rmStagingDir = new Path(conf.get(YarnDefaultProperties.RM_STAGING_DIR, YarnDefaultProperties.DEFAULT_RM_STAGING_DIR));
+    waitForRMVolume(rmStagingDir);
+    List<FileStatus> historyData = Arrays.asList(fs.listStatus(rmStagingDir))
             .stream()
             .filter(volume -> !volume.getPath().getName().matches(ApplicationId.appIdStrPrefix))
             .collect(Collectors.toList());
@@ -96,5 +105,57 @@ public class HSVolumeManager extends VolumeManager {
     if(!dstFileStatus.getOwner().equals(srcFileOwner) || !dstFileStatus.getGroup().equals(srcFileGroup)) {
       fs.setOwner(dst, srcFileOwner, srcFileGroup);
     }
+  }
+
+  private void waitForRMVolume(Path rmStagingDir) throws Exception {
+    int waitTimeTotal = 600;
+    int waitTime = 0;
+    while(!isRMVolumeMounted()) {
+      TimeUnit.SECONDS.sleep(10);
+      waitTime+=10;
+      if (waitTime > waitTimeTotal) {
+        throw new RuntimeException("First HSVolumeManager launch failed, mapr.resourcemanager.volume is not mounted or mount point is incorrect");
+      }
+    }
+    while(!fs.exists(rmStagingDir)) {
+      TimeUnit.SECONDS.sleep(10);
+      waitTime+=10;
+      if (waitTime > waitTimeTotal) {
+        throw new RuntimeException("First HSVolumeManager launch failed, staging directory " + rmStagingDir + " does not exist");
+      }
+    }
+    Path oldRMDir = new Path(rmDir + "/rm");
+    while(fs.exists(oldRMDir) && fs.listStatus(oldRMDir).length > 0) {
+      TimeUnit.SECONDS.sleep(10);
+      waitTime+=10;
+      if (waitTime > waitTimeTotal) {
+        throw new RuntimeException("First HSVolumeManager launch failed, data migration from old RM volume " + oldRMDir + " is not finished");
+      }
+    }
+  }
+
+  private boolean isRMVolumeMounted() {
+    String rmVolumeName = "mapr.resourcemanager.volume";
+    MaprShellCommandExecutor executor = new MaprShellCommandExecutor();
+
+    String[] volumeListCommand = new String[] {"volume", "list"};
+    Map<String, String> volumeListParams = new HashMap<>();
+    volumeListParams.put("columns", "volumename,mountdir,mounted");
+    volumeListParams.put("filter", "[n=="+ rmVolumeName +"]");
+    try {
+      JsonArray result = executor.execute(volumeListCommand, volumeListParams, false);
+      if(result != null && result.size() > 0) {
+        String volumeName = result.get(0).getAsJsonObject().get("volumename").getAsString();
+        int mounted = result.get(0).getAsJsonObject().get("mounted").getAsInt();
+        String rmVolumePath = result.get(0).getAsJsonObject().get("mountdir").getAsString();
+
+        if(volumeName.equals(rmVolumeName) && mounted == 1 && rmVolumePath.equals(rmDir)) {
+          return true;
+        }
+      }
+    } catch (IOException e) {
+      LOG.error("", e);
+    }
+    return false;
   }
 }
