@@ -89,15 +89,38 @@ This improves usability of YARN for manage the life cycle of applications.
 Incorporate Tencent Cloud COS File System Implementation
 -------------------------------------------------------
 
-Tencent cloud is top 2 cloud vendors in China market and the object store COS is widely used among China’s cloud users.
-This task implements a COSN filesytem to support Tencent cloud COS natively in Hadoop.
+HDFS Router-Based Federation
+---------------------
+HDFS Router-Based Federation adds a RPC routing layer that provides a federated
+view of multiple HDFS namespaces. This is similar to the existing
+[ViewFs](./hadoop-project-dist/hadoop-hdfs/ViewFs.html)) and
+[HDFS Federation](./hadoop-project-dist/hadoop-hdfs/Federation.html)
+functionality, except the mount table is managed on the server-side by the
+routing layer rather than on the client. This simplifies access to a federated
+cluster for existing HDFS clients.
 
-Scheduling of opportunistic containers
--------------------------------------
+See [HDFS-10467](https://issues.apache.org/jira/browse/HDFS-10467) and the
+HDFS Router-based Federation
+[documentation](./hadoop-project-dist/hadoop-hdfs-rbf/HDFSRouterFederation.html) for
+more details.
 
-scheduling of opportunistic container through the central RM (YARN-5220), through distributed scheduling (YARN-2877),
-as well as the scheduling of containers based on actual node utilization (YARN-1011) and the container
-promotion/demotion (YARN-5085).
+API-based configuration of Capacity Scheduler queue configuration
+----------------------
+
+The OrgQueue extension to the capacity scheduler provides a programmatic way to
+change configurations by providing a REST API that users can call to modify
+queue configurations. This enables automation of queue configuration management
+by administrators in the queue's `administer_queue` ACL.
+
+See [YARN-5734](https://issues.apache.org/jira/browse/YARN-5734) and the
+[Capacity Scheduler documentation](./hadoop-yarn/hadoop-yarn-site/CapacityScheduler.html) for more information.
+
+YARN Resource Types
+---------------
+
+The YARN resource model has been generalized to support user-defined countable resource types beyond CPU and memory. For instance, the cluster administrator could define resources like GPUs, software licenses, or locally-attached storage. YARN tasks can then be scheduled based on the availability of these resources.
+
+See [YARN-3926](https://issues.apache.org/jira/browse/YARN-3926) and the [YARN resource model documentation](./hadoop-yarn/hadoop-yarn-site/ResourceModel.html) for more information.
 
 Getting Started
 ===============

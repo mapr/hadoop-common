@@ -74,30 +74,8 @@ public class ITestS3AMiscOperationCost extends AbstractS3ACostTest {
   }
 
   public ITestS3AMiscOperationCost(final String name,
-      final boolean keepMarkers,
-      final boolean auditing) {
-    super(false, keepMarkers, false);
-    this.auditing = auditing;
-  }
-
-  @Override
-  public Configuration createConfiguration() {
-    final Configuration conf = super.createConfiguration();
-    removeBaseAndBucketOverrides(conf, AUDIT_ENABLED);
-    conf.setBoolean(AUDIT_ENABLED, auditing);
-    return conf;
-  }
-
-  /**
-   * Expected audit count when auditing is enabled; expect 0
-   * when disabled.
-   * @param expected expected value.
-   * @return the probe.
-   */
-  protected OperationCostValidator.ExpectedProbe withAuditCount(
-      final int expected) {
-    return probe(AUDIT_SPAN_CREATION,
-        auditing ? expected : 0);
+      final boolean keepMarkers) {
+    super(keepMarkers);
   }
 
   /**
@@ -136,11 +114,13 @@ public class ITestS3AMiscOperationCost extends AbstractS3ACostTest {
     Path childDir = new Path(baseDir, "subdir/child");
     touch(fs, childDir);
 
+    // look at path to see if it is a file
+    // it is not: so LIST
     final ContentSummary summary = verifyMetrics(
         () -> getContentSummary(baseDir),
         with(INVOCATION_GET_CONTENT_SUMMARY, 1),
-        withAuditCount(1),
-        whenRaw(FILE_STATUS_FILE_PROBE    // look at path to see if it is a file
+        with(AUDIT_SPAN_CREATION, 1),
+        always(FILE_STATUS_FILE_PROBE    // look at path to see if it is a file
             .plus(LIST_OPERATION)         // it is not: so LIST
             .plus(LIST_OPERATION)));       // and a LIST on the child dir
     Assertions.assertThat(summary.getDirectoryCount())
@@ -158,8 +138,8 @@ public class ITestS3AMiscOperationCost extends AbstractS3ACostTest {
     verifyMetricsIntercepting(FileNotFoundException.class,
         "", () -> getContentSummary(baseDir),
         with(INVOCATION_GET_CONTENT_SUMMARY, 1),
-        withAuditCount(1),
-        whenRaw(FILE_STATUS_FILE_PROBE
+        with(AUDIT_SPAN_CREATION, 1),
+        always(FILE_STATUS_FILE_PROBE
             .plus(FILE_STATUS_FILE_PROBE)
             .plus(LIST_OPERATION)
             .plus(LIST_OPERATION)));
