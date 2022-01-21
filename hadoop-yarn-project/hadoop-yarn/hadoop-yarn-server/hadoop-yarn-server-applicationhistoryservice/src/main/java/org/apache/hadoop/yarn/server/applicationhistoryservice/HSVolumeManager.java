@@ -94,19 +94,6 @@ public class HSVolumeManager extends VolumeManager {
     copyOwnerAndPermission(srcStatus, dst);
   }
 
-  private void copyOwnerAndPermission(FileStatus srcStatus, Path dst) throws Exception {
-    FileStatus dstFileStatus = fs.getFileStatus(dst);
-    FsPermission srcFilePermission = srcStatus.getPermission();
-    String srcFileOwner = srcStatus.getOwner();
-    String srcFileGroup = srcStatus.getGroup();
-    if(!dstFileStatus.getPermission().equals(srcFilePermission)) {
-      fs.setPermission(dst, srcFilePermission);
-    }
-    if(!dstFileStatus.getOwner().equals(srcFileOwner) || !dstFileStatus.getGroup().equals(srcFileGroup)) {
-      fs.setOwner(dst, srcFileOwner, srcFileGroup);
-    }
-  }
-
   private void waitForRMVolume(Path rmStagingDir) throws Exception {
     int waitTimeTotal = 600;
     int waitTime = 0;

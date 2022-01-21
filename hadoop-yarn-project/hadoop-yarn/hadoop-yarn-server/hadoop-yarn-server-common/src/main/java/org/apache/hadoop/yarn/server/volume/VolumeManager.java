@@ -1,6 +1,7 @@
 package org.apache.hadoop.yarn.server.volume;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -120,6 +121,7 @@ public abstract class VolumeManager extends ConfigurableAuxiliaryService {
     if(!fs.exists(yarnParentDir)) {
       throw new RuntimeException("Yarn parent directory is not found: " + yarnParentDir.toString());
     }
+    verifyYarnDirPermissions(yarnDir);
     fs.mkdirs(yarnDir);
   }
 
@@ -130,5 +132,33 @@ public abstract class VolumeManager extends ConfigurableAuxiliaryService {
       LOG.info("Creating dir: " + pathName + " with permission: " + perm);
     }
     FileSystem.mkdirs(fs, new Path(pathName), perm);
+  }
+
+  protected void verifyYarnDirPermissions(Path yarnDir) throws Exception {
+    Path clusterDirectory = yarnDir.getParent();
+    Path parentClusterDirectory = clusterDirectory.getParent();
+
+    if(fs.exists(parentClusterDirectory)) {
+      FileStatus parentClusterDirectoryFileStatus = fs.getFileStatus(parentClusterDirectory);
+      if(fs.exists(clusterDirectory)) {
+        copyOwnerAndPermission(parentClusterDirectoryFileStatus, clusterDirectory);
+      }
+      if(fs.exists(yarnDir)) {
+        copyOwnerAndPermission(parentClusterDirectoryFileStatus, yarnDir);
+      }
+    }
+  }
+
+  protected void copyOwnerAndPermission(FileStatus srcStatus, Path dst) throws Exception {
+    FileStatus dstFileStatus = fs.getFileStatus(dst);
+    FsPermission srcFilePermission = srcStatus.getPermission();
+    String srcFileOwner = srcStatus.getOwner();
+    String srcFileGroup = srcStatus.getGroup();
+    if(!dstFileStatus.getPermission().equals(srcFilePermission)) {
+      fs.setPermission(dst, srcFilePermission);
+    }
+    if(!dstFileStatus.getOwner().equals(srcFileOwner) || !dstFileStatus.getGroup().equals(srcFileGroup)) {
+      fs.setOwner(dst, srcFileOwner, srcFileGroup);
+    }
   }
 }
