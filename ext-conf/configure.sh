@@ -820,6 +820,18 @@ function checkAndConfigureFIPSProperties() {
               sed -i -e "s|</configuration>|  <property>\n   <name>mapreduce.reduce.java.opts</name>\n    <value>-Xmx2560m --add-opens java.base/java.lang=ALL-UNNAMED -XX:+UseParallelGC -Djava.security.properties=/opt/mapr/conf/java.security.fips</value>\n  </property>\n</configuration>|" "${HADOOP_HOME}/etc/hadoop/mapred-site.xml"
           fi
       fi
+      if [ -f ${HADOOP_HOME}/etc/hadoop/scram/scram-site.xml ];then
+          if [ "$isFips" != "true" ]; then
+              credType="jceks"
+          else
+              credType="bcfks"
+          fi
+          SCRAM_CREDS_FILE_WITH_STORE=local${credType}://file${HADOOP_HOME}/etc/hadoop/scram/scram.${credType}
+          if ! grep -q "hadoop.security.credential.provider.path" "${HADOOP_HOME}/etc/hadoop/scram/scram-site.xml"; then
+              sed -i -e "s|</configuration>|  <property>\n    <name>hadoop.security.credential.provider.path</name>\n    <value>${SCRAM_CREDS_FILE_WITH_STORE}</value>\n  </property>\n</configuration>|" ${HADOOP_HOME}/etc/hadoop/scram/scram-site.xml
+              chmod 644 ${HADOOP_HOME}/etc/hadoop/scram/*
+          fi
+      fi
   fi
 }
 
