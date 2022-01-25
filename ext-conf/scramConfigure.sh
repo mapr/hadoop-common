@@ -86,8 +86,9 @@ function ConfigureScram() {
           hadoop fs -copyToLocal -p $YARN_PATH/scram.${credType} $SCRAM_CREDS_FILE
         fi
     fi
-
-    sed -i -e "s|</configuration>|  <property>\n    <name>hadoop.security.credential.provider.path</name>\n    <value>${SCRAM_CREDS_FILE_WITH_STORE}</value>\n  </property>\n</configuration>|" $HADOOP_SCRAM_CONF
+    if ! grep -q "hadoop.security.credential.provider.path" "$HADOOP_SCRAM_CONF"; then
+        sed -i -e "s|</configuration>|  <property>\n    <name>hadoop.security.credential.provider.path</name>\n    <value>${SCRAM_CREDS_FILE_WITH_STORE}</value>\n  </property>\n</configuration>|" $HADOOP_SCRAM_CONF
+    fi
     chmod 644 $HADOOP_SCRAM_CONF_DIR/*
 }
 
@@ -117,7 +118,4 @@ done
 
 isFipsConfigured
 
-grep -q "hadoop.security.credential.provider.path" $HADOOP_SCRAM_CONF
-if [ $? -ne 0 ]; then
-    ConfigureScram
-fi
+ConfigureScram
