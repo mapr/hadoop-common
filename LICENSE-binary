@@ -213,7 +213,7 @@ com.aliyun:aliyun-java-sdk-core:4.5.10
 com.aliyun:aliyun-java-sdk-kms:2.11.0
 com.aliyun:aliyun-java-sdk-ram:3.1.0
 com.aliyun:aliyun-java-sdk-sts:3.0.0
-com.aliyun.oss:aliyun-sdk-oss:3.13.0
+com.aliyun.oss:aliyun-sdk-oss:3.13.2
 com.amazonaws:aws-java-sdk-bundle:1.12.425
 com.cedarsoftware:java-util:1.9.0
 com.cedarsoftware:json-io:2.5.1
@@ -513,8 +513,7 @@ org.hsqldb:hsqldb:2.7.1
 JDOM License
 ------------
 
-org.jdom:jdom:1.1
-org.jdom:jdom2:2.0.6.jar
+org.jdom:jdom2:2.0.6.1
 
 Boost Software License, Version 1.0
 -------------
