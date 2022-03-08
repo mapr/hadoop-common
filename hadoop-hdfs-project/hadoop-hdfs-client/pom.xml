@@ -43,6 +43,10 @@ https://maven.apache.org/xsd/maven-4.0.0.xsd">
           <groupId>ch.qos.reload4j</groupId>
           <artifactId>reload4j</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-ext</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
