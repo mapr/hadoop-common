@@ -1,0 +1,152 @@
+/**
+ * email: devops@mapr.com
+ * Uploader scripting for hadoop-common tarball and HDFS stuff
+ */
+
+apply plugin: "base"
+apply plugin: "maven-publish"
+
+group = "org.apache.hadoop"
+
+if (!hasProperty("hadoopVersion")) {
+    logger.error "need property hadoopVersion"
+    throw new GradleException("need property hadoopVersion - one example is '2.7.0-mapr-1506-SNAPSHOT'")
+}
+
+if (!hasProperty("platformString")) {
+    logger.error "need property platformString"
+    throw new GradleException("need property platformString - Examples are 'redhat', 'ubuntu', 'osx', 'windows', 'win32'")
+}
+
+String hdfsDir = null
+if (hasProperty("HDFS_DIR")) {
+    hdfsDir = HDFS_DIR
+} else {
+    hdfsDir = System.getenv("HDFS_DIR")
+}
+if ((hdfsDir == null) || (hdfsDir.length() <= 0)) {
+    String errorMsg = "The environment variable HDFS_DIR is missing."
+    logger.error errorMsg
+    throw new GradleException(errorMsg)
+}
+
+// Just in case ZIP might work better than TAR on Windows
+String archiveExtension
+if (!hasProperty("customExtension")) {
+    archiveExtension = "tar.gz"
+} else {
+    archiveExtension = customExtension
+}
+
+File artifactFile
+if (!hasProperty("distPath")) {
+    artifactFile = file("hadoop-dist/target/hadoop-${hadoopVersion}.${archiveExtension}")
+} else {
+    artifactFile = file(distPath)
+}
+
+boolean canUpload = true
+if (!hasProperty("mavenRepo")) {
+    logger.warn "property mavenRepo not detected - will not be able to upload"
+    canUpload = false
+}
+if (!hasProperty("mavenUser")) {
+    logger.warn "property mavenUser not detected - will not be able to upload"
+    canUpload = false
+}
+if (!hasProperty("mavenPass")) {
+    logger.warn "property mavenPass not detected - will not be able to upload"
+    canUpload = false
+}
+
+version = hadoopVersion
+String artifactIdString = "hadoop-dist-${platformString}"
+String hdfsArtifactId = "hadoop-hdfs-sources-${platformString}"
+
+logger.quiet "version: ${hadoopVersion}"
+logger.quiet "artifactId: ${artifactIdString}"
+
+task checkTarballFile() {
+    doFirst {
+        logger.quiet "Looking for file ${artifactFile}"
+        if (!artifactFile.exists()) {
+            String errorMsg = "The file ${artifactFile} was not found. So there is nothing to upload."
+            logger.error errorMsg
+            throw new GradleException(errorMsg)
+        }
+    }
+}
+
+task checkHdfsDir() {
+    doFirst {
+        logger.quiet "Looking for directory ${hdfsDir}"
+        File hdfsDirAsFile = file(hdfsDir)
+        if (!hdfsDirAsFile.exists()) {
+            String errorMsg = "The directory ${hdfsDir} was not found. So there is nothing to upload."
+            logger.error errorMsg
+            throw new GradleException(errorMsg)
+        }
+    }
+}
+
+// Turns out that a ZIP of the whole HDFS sources is about 350 MB.
+// So we have to be more targeted in what we copy.
+task copyHdfsSources(type: Copy) {
+    from "${hdfsDir}/src/main/native"
+    into "hadoop-hdfs/src/main/native"
+}
+
+task copyHdfsBinaries(type: Copy) {
+    from "${hdfsDir}/target/native"
+    into "hadoop-hdfs/target/native"
+}
+
+task deleteHdfsWorkspace(type: Delete) {
+    delete "hadoop-hdfs"
+}
+tasks.clean.dependsOn "deleteHdfsWorkspace"
+
+task zipHdfs(type: Zip) {
+    dependsOn "copyHdfsSources", "copyHdfsBinaries"
+    from "hadoop-hdfs"
+    baseName hdfsArtifactId
+}
+
+publishing {
+    publications {
+        hadoopCommonTar(MavenPublication) {
+            artifactId artifactIdString
+            artifact(artifactFile) {
+                extension archiveExtension
+            }
+        }
+        hdfsSources(MavenPublication) {
+            artifactId hdfsArtifactId
+            artifact(zipHdfs) {
+                extension "zip"
+            }
+        }
+    }
+    if (canUpload) {
+        repositories {
+            maven {
+                url mavenRepo
+                credentials {
+                    username mavenUser
+                    password mavenPass
+                }
+            }
+        }
+    }
+}
+
+model {
+    tasks {
+        generatePomFileForHadoopCommonTarPublication {
+            dependsOn "checkTarballFile"
+        }
+        generatePomFileForHdfsSourcesPublication {
+            dependsOn "checkHdfsDir"
+        }
+    }
+}
