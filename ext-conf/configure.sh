@@ -552,10 +552,10 @@ function ConfigureJMHadoopProperties() {
     grep "maprmapred.class" $file >/dev/null 2>&1
     if [ "$?" -ne 0 ]; then
         # insert record
-        echo "maprmapred.class=com.mapr.job.mngmnt.hadoop.metrics.MaprRPCContextFinal" >>$file
+        echo "maprmapred.class=com.mapr.org.apache.hadoop.metrics.spi.NullContext" >>$file
     else
         # update record
-        sed -i -e 's/^maprmapred.class=.*$/maprmapred.class=com.mapr.job.mngmnt.hadoop.metrics.MaprRPCContextFinal/g' $file
+        sed -i -e 's/^maprmapred.class=.*$/maprmapred.class=com.mapr.org.apache.hadoop.metrics.spi.NullContext/g' $file
     fi
 
     grep "maprmapred.period" $file >/dev/null 2>&1

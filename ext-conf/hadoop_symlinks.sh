@@ -89,6 +89,13 @@ function createSymlinks() {
   ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/audience-annotations-0.*.jar __PREFIX__/lib/
   ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/activation-1.*.jar __PREFIX__/lib/
 
+  rm -f __PREFIX__/lib/hadoop-shaded-guava-*.jar
+  ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/hadoop-shaded-guava-*.jar __PREFIX__/lib/
+  rm -f __PREFIX__/lib/woodstox-core-*.jar
+  ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/woodstox-core-*.jar __PREFIX__/lib/
+  rm -f __PREFIX__/lib/stax2-api-*.jar
+  ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/stax2-api-*.jar __PREFIX__/lib/
+
   COMMONS_CONFIG_ABSOLUTE=$(find __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib -name "commons-configuration*.jar" -print -quit)
   COMMONS_CONFIG_BASENAME=$(basename ${COMMONS_CONFIG_ABSOLUTE})
   ln -sf ${COMMONS_CONFIG_ABSOLUTE} __PREFIX__/lib/${COMMONS_CONFIG_BASENAME}

@@ -226,7 +226,7 @@ public class FileStatus implements Writable, Comparable<Object>,
    * instead.
    */
   @Deprecated
-  public final boolean isDir() {
+  public boolean isDir() {
     return isDirectory();
   }
 
