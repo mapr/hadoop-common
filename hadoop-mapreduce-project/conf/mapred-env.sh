@@ -24,6 +24,10 @@
 ## MAPRED_xyz > HADOOP_xyz > hard-coded defaults
 ##
 
+BASEMAPR=${MAPR_HOME:-/opt/mapr}
+env=${BASEMAPR}/conf/env.sh
+[ -f $env ] && . $env
+
 ###
 # Job History Server specific parameters
 ###
@@ -43,3 +47,10 @@
 # Specify the log4j settings for the JobHistoryServer
 # Java property: hadoop.root.logger
 #export HADOOP_JHS_LOGGER=INFO,RFA
+
+#MFS-6760: Fix warnings when using jdk 11
+HADOOP_OPTS="$HADOOP_OPTS $MAPR_COMMON_JAVA_OPTS"
+#MAPRHADOOP-107: Set ParallelGC by default on jdk11
+HADOOP_OPTS="$HADOOP_OPTS -XX:+UseParallelGC"
+#MAPRHADOOP-119: Skip "Logging initialized" messages
+HADOOP_OPTS="$HADOOP_OPTS -Dorg.eclipse.jetty.util.log.announce=false"

@@ -30,6 +30,11 @@
 ## {YARN_xyz|HDFS_xyz} > HADOOP_xyz > hard-coded defaults
 ##
 
+# source /opt/mapr/conf/env.sh to inherit MapR's env variables into 'bin/hadoop' script.
+BASEMAPR=${MAPR_HOME:-/opt/mapr}
+env=${BASEMAPR}/conf/env.sh
+[ -f $env ] && . $env
+
 # Many of the options here are built from the perspective that users
 # may want to provide OVERWRITING values on the command line.
 # For example:
@@ -432,3 +437,12 @@ export HADOOP_OS_TYPE=${HADOOP_OS_TYPE:-$(uname -s)}
 # By default, Hadoop uses jsvc which needs to know to launch a
 # server jvm.
 # export HADOOP_REGISTRYDNS_SECURE_EXTRA_OPTS="-jvm server"
+
+export MAPR_IMPERSONATION_ENABLED=1
+
+export HADOOP_BC_LOGLEVEL="WARNING"
+
+#MFS-6760: Fix warnings when using jdk 11
+HADOOP_OPTS="$HADOOP_OPTS $MAPR_COMMON_JAVA_OPTS"
+#MAPRHADOOP-119: Skip "Logging initialized" messages
+HADOOP_OPTS="$HADOOP_OPTS -Dorg.eclipse.jetty.util.log.announce=false"

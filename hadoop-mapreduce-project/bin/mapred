@@ -122,7 +122,15 @@ function mapredcmd_case
   esac
 }
 
+if [ -f "${HADOOP_CONF_DIR}/mapred-env.sh" ]; then
+  . "${HADOOP_CONF_DIR}/mapred-env.sh"
+fi
+
 bin=$(cd -P -- "$(dirname -- "${MYNAME}")" >/dev/null && pwd -P)
+
+MAPR_HOME=${MAPR_HOME:-"/opt/mapr"}
+HADOOP_VERSION=`cat ${MAPR_HOME}/hadoop/hadoopversion`
+HADOOP_HOME=${MAPR_HOME}/hadoop/hadoop-${HADOOP_VERSION}
 
 # let's locate libexec...
 if [[ -n "${HADOOP_HOME}" ]]; then

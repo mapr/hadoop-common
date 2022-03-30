@@ -338,6 +338,13 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
   private static final CopyOnWriteArrayList<String> defaultResources =
     new CopyOnWriteArrayList<String>();
 
+  /**
+   * List of extra default Resources as Properties. Resources are loaded in the order of the list
+   * entries
+   */
+  private static final CopyOnWriteArrayList<Properties> extraDefaultResources =
+          new CopyOnWriteArrayList<>();
+
   private static final Map<ClassLoader, Map<String, WeakReference<Class<?>>>>
     CACHE_CLASSES = new WeakHashMap<ClassLoader, Map<String, WeakReference<Class<?>>>>();
 
@@ -786,10 +793,6 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
   }
  
   static {
-    // Add default resources
-    addDefaultResource("core-default.xml");
-    addDefaultResource("core-site.xml");
-
     // print deprecation warning if hadoop-site.xml is found in classpath
     ClassLoader cL = Thread.currentThread().getContextClassLoader();
     if (cL == null) {
@@ -803,6 +806,10 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
           "respectively");
       addDefaultResource("hadoop-site.xml");
     }
+    // Add default resources
+    addDefaultResource("core-default.xml");
+    addDefaultResource(CoreDefaultProperties.getProperties());
+    addDefaultResource("core-site.xml");
   }
 
   private Properties properties;
@@ -899,6 +906,20 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
         if(conf.loadDefaults) {
           conf.reloadConfiguration();
         }
+      }
+    }
+  }
+
+  /**
+   * Add a default resource properties. Resources are loaded in the order of the resources
+   * added.
+   * @param properties with properties
+   */
+  public static synchronized void addDefaultResource(Properties properties) {
+    extraDefaultResources.add(properties);
+    for(Configuration conf : REGISTRY.keySet()) {
+      if(conf.loadDefaults) {
+        conf.reloadConfiguration();
       }
     }
   }
@@ -3088,6 +3109,10 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
       for (String resource : defaultResources) {
         loadResource(properties, new Resource(resource, false), quiet);
       }
+      for (Properties config : extraDefaultResources) {
+        // set quiet to true
+        loadResource(properties, new Resource(config, false), true);
+      }
     }
     
     for (int i = startIdx; i < resources.size(); i++) {
@@ -3904,6 +3929,7 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
     sb.append("Configuration: ");
     if(loadDefaults) {
       toString(defaultResources, sb);
+      toString(extraDefaultResources, sb);
       if(resources.size()>0) {
         sb.append(", ");
       }

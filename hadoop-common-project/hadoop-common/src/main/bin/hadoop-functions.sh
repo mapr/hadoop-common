@@ -870,25 +870,7 @@ function hadoop_basic_init
     export HADOOP_MAPRED_HOME="${HADOOP_HOME}"
   fi
 
-  if [[ ! -d "${HADOOP_COMMON_HOME}" ]]; then
-    hadoop_error "ERROR: Invalid HADOOP_COMMON_HOME"
-    exit 1
-  fi
-
-  if [[ ! -d "${HADOOP_HDFS_HOME}" ]]; then
-    hadoop_error "ERROR: Invalid HADOOP_HDFS_HOME"
-    exit 1
-  fi
-
-  if [[ ! -d "${HADOOP_YARN_HOME}" ]]; then
-    hadoop_error "ERROR: Invalid HADOOP_YARN_HOME"
-    exit 1
-  fi
-
-  if [[ ! -d "${HADOOP_MAPRED_HOME}" ]]; then
-    hadoop_error "ERROR: Invalid HADOOP_MAPRED_HOME"
-    exit 1
-  fi
+  export MAPR_HOME=${MAPR_HOME:-"/opt/mapr"}
 
   # if for some reason the shell doesn't have $USER defined
   # (e.g., ssh'd in to execute a command)
@@ -900,7 +882,7 @@ function hadoop_basic_init
   HADOOP_LOGLEVEL=${HADOOP_LOGLEVEL:-INFO}
   HADOOP_NICENESS=${HADOOP_NICENESS:-0}
   HADOOP_STOP_TIMEOUT=${HADOOP_STOP_TIMEOUT:-5}
-  HADOOP_PID_DIR=${HADOOP_PID_DIR:-/tmp}
+  HADOOP_PID_DIR=${HADOOP_PID_DIR:-/opt/mapr/pid}
   HADOOP_ROOT_LOGGER=${HADOOP_ROOT_LOGGER:-${HADOOP_LOGLEVEL},console}
   HADOOP_DAEMON_ROOT_LOGGER=${HADOOP_DAEMON_ROOT_LOGGER:-${HADOOP_LOGLEVEL},RFA}
   HADOOP_SECURITY_LOGGER=${HADOOP_SECURITY_LOGGER:-INFO,NullAppender}
@@ -1321,6 +1303,16 @@ function hadoop_add_common_to_classpath
 
   hadoop_add_classpath "${HADOOP_COMMON_HOME}/${HADOOP_COMMON_LIB_JARS_DIR}"'/*'
   hadoop_add_classpath "${HADOOP_COMMON_HOME}/${HADOOP_COMMON_DIR}"'/*'
+
+  #Add MapR specific jar to classpath
+  if [ -d "$MAPR_HOME/lib" ]; then
+    hadoop_add_classpath "$MAPR_HOME/lib/kvstore*.jar"
+    hadoop_add_classpath "$MAPR_HOME/lib/json-1.8.jar"
+    hadoop_add_classpath "$MAPR_HOME/lib/libprotodefs*.jar"
+    hadoop_add_classpath "$MAPR_HOME/lib/baseutils*.jar"
+    hadoop_add_classpath "$MAPR_HOME/lib/maprutil*.jar"
+    hadoop_add_classpath "$MAPR_HOME/lib/flexjson-2.1.jar"
+  fi
 }
 
 ## @description  Run libexec/tools/module.sh to add to the classpath
