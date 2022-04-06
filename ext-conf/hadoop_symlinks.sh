@@ -63,14 +63,6 @@ function createSymlinks() {
   rm -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/jmxagent*.jar
   ln -sf __PREFIX__/lib/jmxagent*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
 
-  BC_FIPS=$(find __PREFIX__/lib -name "bc-fips*.jar" -print -quit)
-  if [ -f "${BC_FIPS}" ]; then
-    rm -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/bc-fips-*.jar
-    rm -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/bctls-fips-*.jar
-    ln -sf __PREFIX__/lib/bc-fips-*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
-    ln -sf __PREFIX__/lib/bctls-fips-*.jar __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
-  fi
-
   rm -f __PREFIX__/lib/audience-annotations-0.*.jar
   ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/audience-annotations-0.*.jar __PREFIX__/lib/
   rm -f __PREFIX__/lib/commons-cli-1.*.jar

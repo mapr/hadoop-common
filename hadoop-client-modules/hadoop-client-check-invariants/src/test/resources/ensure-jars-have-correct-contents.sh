@@ -46,6 +46,9 @@ allowed_expr+="|^webapps/"
 #   * Hadoop's default configuration files, which have the form
 #     "_module_-default.xml"
 allowed_expr+="|^[^-]*-default.xml$"
+#yarn-site configuration templates
+allowed_expr+="|^yarn-site-.*.xml$"
+allowed_expr+="|^yarn-.*.template$"
 #   * Hadoop's versioning properties files, which have the form
 #     "_module_-version-info.properties"
 allowed_expr+="|^[^-]*-version-info.properties$"
