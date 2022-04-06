@@ -2211,6 +2211,8 @@ function hadoop_daemon_handler
         # stale pid file, so just remove it and continue on
         rm -f "${daemon_pidfile}" >/dev/null 2>&1
       fi
+      #CORE-443: Changed UMask for CentOS 8
+      umask 022
       ##COMPAT  - differenticate between --daemon start and nothing
       # "nothing" shouldn't detach
       if [[ "$daemonmode" = "default" ]]; then
