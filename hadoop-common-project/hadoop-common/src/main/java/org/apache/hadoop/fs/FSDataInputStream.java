@@ -55,6 +55,17 @@ public class FSDataInputStream extends DataInputStream
     extendedReadBuffers
       = new IdentityHashStore<>(0);
 
+  /**
+   * Type of file advise to be passed on to the underlying file system. This
+   * information can be used to make optimizations such as reclaiming buffers
+   * for files that are no longer needed by the application, etc.
+   */
+  public static enum FadviseType {
+    FILE_DONTNEED,
+    FILE_RANDOM,
+    FILE_SEQUENTIAL;
+  }
+
   public FSDataInputStream(InputStream in) {
     super(in);
     if( !(in instanceof Seekable) || !(in instanceof PositionedReadable) ) {
@@ -305,5 +316,59 @@ public class FSDataInputStream extends DataInputStream
   public void readVectored(List<? extends FileRange> ranges,
                            IntFunction<ByteBuffer> allocate) throws IOException {
     ((PositionedReadable) in).readVectored(ranges, allocate);
+  }
+
+
+  /**
+   * Specifies the kind of advise to provide for this stream and the file
+   * offsets to which they apply.
+   *
+   * The default implementation does nothing. Sub classes can override this
+   * behavior.
+   *
+   * @param type advise type
+   * @param offset starting file offset
+   * @param count number of bytes starting from the offset
+   */
+  public void adviseFile(FadviseType type, long offset, long count)
+          throws IOException {
+  }
+
+  /**
+   * Returns the file length.
+   *
+   * @return file length
+   */
+  public long getFileLength() throws IOException {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Returns the file id as string.
+   *
+   * @return file id as string
+   */
+  public String getFidStr() {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Returns the server IPs in which the file is stored. Each IP is stored in a
+   * long. For e.g., the first 4 bytes can be used to store the IP in
+   * hexadecimal format and the last 4 bytes to store the port number.
+   *
+   * @return array of server IPs in which the file is stored
+   */
+  public long[] getFidServers() {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Returns the file chunk size.
+   *
+   * @return file chunk size
+   */
+  public long getChunkSize() {
+    throw new UnsupportedOperationException();
   }
 }

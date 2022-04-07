@@ -699,6 +699,7 @@ public abstract class TaskImpl implements Task, EventHandler<TaskEvent> {
       tce.setMapOutputServerAddress(StringInterner.weakIntern(scheme
          + attempt.getNodeHttpAddress().split(":")[0] + ":"
          + attempt.getShufflePort()));
+      tce.setServicesMetaData(((TaskAttemptImpl) attempt).getServicesMetaData());
       tce.setStatus(status);
       tce.setAttemptId(attempt.getID());
       int runTime = 0;

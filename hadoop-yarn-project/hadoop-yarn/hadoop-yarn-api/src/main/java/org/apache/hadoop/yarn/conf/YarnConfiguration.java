@@ -63,6 +63,10 @@ public class YarnConfiguration extends Configuration {
   private static final String YARN_DEFAULT_CONFIGURATION_FILE =
       "yarn-default.xml";
 
+  public static final String YARN_DEFAULT_CONFIGURATION_CLASS =
+          "org.apache.hadoop.yarn.conf.YarnDefaultProperties";
+
+
   @Private
   public static final String CORE_SITE_CONFIGURATION_FILE = "core-site.xml";
 
@@ -1531,6 +1535,12 @@ public class YarnConfiguration extends Configuration {
       RM_PREFIX + "max-log-aggregation-diagnostics-in-memory";
   public static final int DEFAULT_RM_MAX_LOG_AGGREGATION_DIAGNOSTICS_IN_MEMORY =
       10;
+
+  /**
+   * Property for automatically creating Spark volume at FS
+   * */
+  public static String NM_CREATE_SPARK_VOLUME = NM_PREFIX + "create-spark-volume";
+  public static boolean DEFAULT_NM_CREATE_SPARK_VOLUME = false;
 
   /** Whether to enable log aggregation */
   public static final String LOG_AGGREGATION_ENABLED = YARN_PREFIX

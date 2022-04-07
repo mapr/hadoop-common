@@ -202,6 +202,8 @@ abstract public class Task implements Writable, Configurable {
   protected GcTimeUpdater gcUpdater;
   final AtomicBoolean mustPreempt = new AtomicBoolean(false);
   private boolean uberized = false;
+  private boolean reportOutputSize = true;
+
 
   ////////////////////////////////////////////
   // Constructors
@@ -1336,13 +1338,23 @@ abstract public class Task implements Writable, Configurable {
       }
     }
   }
-  
+
+  public boolean getReportOutputSize() {
+    return this.reportOutputSize;
+  }
+
+  public void setReportOutputSize(boolean reportOutputSize) {
+    this.reportOutputSize = reportOutputSize;
+  }
+
+
   /**
    * Sends last status update before sending umbilical.done(); 
    */
   private void sendLastUpdate(TaskUmbilicalProtocol umbilical) 
   throws IOException {
-    taskStatus.setOutputSize(calculateOutputSize());
+    if (reportOutputSize)
+      taskStatus.setOutputSize(calculateOutputSize());
     // send a final status report
     taskStatus.statusUpdate(taskProgress.get(),
                             taskProgress.toString(), 
@@ -1522,6 +1534,9 @@ abstract public class Task implements Writable, Configurable {
     this.mapOutputFile = ReflectionUtils.newInstance(
         conf.getClass(MRConfig.TASK_LOCAL_OUTPUT_CLASS,
           MROutputFiles.class, MapOutputFile.class), conf);
+    if (LOG.isInfoEnabled())
+      LOG.info("mapOutputFile class: " + mapOutputFile.getClass().getName());
+
     this.lDirAlloc = new LocalDirAllocator(MRConfig.LOCAL_DIR);
     // add the static resolutions (this is required for the junit to
     // work on testcases that simulate multiple nodes on a single physical

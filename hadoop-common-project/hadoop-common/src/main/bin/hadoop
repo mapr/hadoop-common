@@ -193,6 +193,15 @@ function hadoopcmd_case
       HADOOP_SECURE_CLASSNAME='org.apache.hadoop.registry.server.dns.PrivilegedRegistryDNSStarter'
       HADOOP_CLASSNAME='org.apache.hadoop.registry.server.dns.RegistryDNSServer'
     ;;
+    mfs)
+      HADOOP_CLASSNAME=com.mapr.fs.clicommands.MapRCliCommands
+    ;;
+    conf)
+      HADOOP_CLASSNAME=org.apache.hadoop.mapreduce.util.ConfigUtil
+    ;;
+    conf-details)
+      HADOOP_CLASSNAME=org.apache.hadoop.conf.HadoopConfigClassifier
+    ;;
     version)
       HADOOP_CLASSNAME=org.apache.hadoop.util.VersionInfo
     ;;

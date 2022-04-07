@@ -24,9 +24,11 @@ import org.apache.hadoop.conf.Configuration.DeprecationDelta;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.MRConfig;
 import org.apache.hadoop.mapreduce.MRJobConfig;
+import org.apache.hadoop.mapreduce.conf.MapReduceDefaultProperties;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.server.jobtracker.JTConfig;
 import org.apache.hadoop.mapreduce.server.tasktracker.TTConfig;
+import org.apache.hadoop.yarn.conf.YarnDefaultProperties;
 
 /**
  * Place holder for deprecated keys in the framework 
@@ -41,8 +43,10 @@ public class ConfigUtil {
   public static void loadResources() {
     addDeprecatedKeys();
     Configuration.addDefaultResource("mapred-default.xml");
+    Configuration.addDefaultResource(MapReduceDefaultProperties.getProperties());
     Configuration.addDefaultResource("mapred-site.xml");
     Configuration.addDefaultResource("yarn-default.xml");
+    Configuration.addDefaultResource(YarnDefaultProperties.getProperties());
     Configuration.addDefaultResource("yarn-site.xml");
   }
   
@@ -435,7 +439,20 @@ public class ConfigUtil {
 
   public static void main(String[] args) {
     loadResources();
-    Configuration.dumpDeprecatedKeys();
+    if (args.length > 0) {
+      if (args[0].contains("help"))  {
+        System.out.println("Args: [-deprecated] [-help]");
+      } else if (args[0].contains("deprecated")) {
+        Configuration.dumpDeprecatedKeys();
+      }
+    } else {
+      try {
+        Configuration.main(args);
+        System.out.println();
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
   }
 }
 

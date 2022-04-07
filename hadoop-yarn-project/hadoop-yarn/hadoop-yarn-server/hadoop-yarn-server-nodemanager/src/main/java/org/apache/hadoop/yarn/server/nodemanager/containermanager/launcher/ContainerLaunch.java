@@ -1663,7 +1663,7 @@ public class ContainerLaunch implements Callable<Integer> {
 
     // put AuxiliaryService data to environment
     for (Map.Entry<String, ByteBuffer> meta : containerManager
-        .getAuxServiceMetaData().entrySet()) {
+        .getAuxServiceMetaData(container.getContainerId()).entrySet()) {
       AuxiliaryServiceHelper.setServiceDataIntoEnv(
           meta.getKey(), meta.getValue(), environment);
       nmVars.add(AuxiliaryServiceHelper.getPrefixServiceName(meta.getKey()));

@@ -327,5 +327,6 @@
     <module>hadoop-mapreduce-client-hs-plugins</module>
     <module>hadoop-mapreduce-client-nativetask</module>
     <module>hadoop-mapreduce-client-uploader</module>
+    <module>hadoop-mapreduce-client-contrib</module>
   </modules>
 </project>

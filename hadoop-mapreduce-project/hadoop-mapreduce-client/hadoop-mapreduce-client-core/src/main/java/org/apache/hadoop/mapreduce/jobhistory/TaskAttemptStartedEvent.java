@@ -18,6 +18,9 @@
 
 package org.apache.hadoop.mapreduce.jobhistory;
 
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.avro.util.Utf8;
@@ -56,6 +59,13 @@ public class TaskAttemptStartedEvent implements HistoryEvent {
       TaskType taskType, long startTime, String trackerName,
       int httpPort, int shufflePort, ContainerId containerId,
       String locality, String avataar) {
+    this(attemptId, taskType, startTime, trackerName, httpPort, shufflePort, containerId, locality, avataar, null);
+  }
+
+  public TaskAttemptStartedEvent( TaskAttemptID attemptId,
+                                  TaskType taskType, long startTime, String trackerName,
+                                  int httpPort, int shufflePort, ContainerId containerId,
+                                  String locality, String avataar, Map<String, ByteBuffer> servicesMetaData) {
     datum.setAttemptId(new Utf8(attemptId.toString()));
     datum.setTaskid(new Utf8(attemptId.getTaskID().toString()));
     datum.setStartTime(startTime);
@@ -69,6 +79,13 @@ public class TaskAttemptStartedEvent implements HistoryEvent {
     }
     if (avataar != null) {
       datum.setAvataar(new Utf8(avataar));
+    }
+    if (servicesMetaData != null) {
+      Map<CharSequence, ByteBuffer> metaData = new HashMap<>();
+      for (String serviceName : servicesMetaData.keySet()) {
+        metaData.put(new Utf8(serviceName), servicesMetaData.get(serviceName));
+      }
+      datum.setServicesMetaData(metaData);
     }
   }
 
@@ -132,6 +149,18 @@ public class TaskAttemptStartedEvent implements HistoryEvent {
   public String getAvataar() {
     if (datum.getAvataar() != null) {
       return datum.getAvataar().toString();
+    }
+    return null;
+  }
+
+  public Map<String, ByteBuffer> getServicesMetaData() {
+    Map<CharSequence, ByteBuffer> servicesMetaData = datum.getServicesMetaData();
+    if (servicesMetaData != null) {
+      Map<String, ByteBuffer> metaData = new HashMap<>();
+      for (CharSequence service : servicesMetaData.keySet()) {
+        metaData.put(service.toString(), servicesMetaData.get(service));
+      }
+      return metaData;
     }
     return null;
   }

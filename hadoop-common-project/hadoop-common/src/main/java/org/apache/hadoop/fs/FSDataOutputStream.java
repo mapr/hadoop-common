@@ -185,4 +185,9 @@ public class FSDataOutputStream extends DataOutputStream
           FSExceptionMessages.ABORTABLE_UNSUPPORTED);
     }
   }
+
+  public long[] getFidServers() throws IOException {
+    throw new UnsupportedOperationException();
+  }
+
 }

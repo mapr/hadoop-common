@@ -91,14 +91,14 @@ public class MapTask extends Task {
       new FsPermission((short)0640);
 
   private TaskSplitIndex splitMetaInfo = new TaskSplitIndex();
-  private final static int APPROX_HEADER_LENGTH = 150;
+  public final static int APPROX_HEADER_LENGTH = 150;
 
   private static final Logger LOG =
       LoggerFactory.getLogger(MapTask.class.getName());
 
   private Progress mapPhase;
   private Progress sortPhase;
-  
+
   {   // set phase for this task
     setPhase(TaskStatus.Phase.MAP); 
     getProgress().setStatus("map");
@@ -130,7 +130,11 @@ public class MapTask extends Task {
   public void write(DataOutput out) throws IOException {
     super.write(out);
     if (isMapOrReduce()) {
-      splitMetaInfo.write(out);
+      if (splitMetaInfo != null) {
+        splitMetaInfo.write(out);
+      } else {
+        new TaskSplitIndex().write(out);
+      }
       splitMetaInfo = null;
     }
   }
@@ -493,11 +497,14 @@ public class MapTask extends Task {
       FileSplit fileSplit = (FileSplit) inputSplit;
       job.set(JobContext.MAP_INPUT_FILE, fileSplit.getPath().toString());
       job.setLong(JobContext.MAP_INPUT_START, fileSplit.getStart());
-      job.setLong(JobContext.MAP_INPUT_PATH, fileSplit.getLength());
-    }
-    LOG.info("Processing split: " + inputSplit);
-  }
 
+      if (LOG.isInfoEnabled())
+        LOG.info("Processing Split: File = " + fileSplit.getPath().toString() +
+                ", Start Offset = " + fileSplit.getStart() +
+                ", Length = " + fileSplit.getLength());
+    }
+  }
+  
   static class NewTrackingRecordReader<K,V> 
     extends org.apache.hadoop.mapreduce.RecordReader<K,V> {
     private final org.apache.hadoop.mapreduce.RecordReader<K,V> real;
@@ -2062,7 +2069,7 @@ public class MapTask extends Task {
    * to hold the current record.
    */
   @SuppressWarnings("serial")
-  private static class MapBufferTooSmallException extends IOException {
+  public static class MapBufferTooSmallException extends IOException {
     public MapBufferTooSmallException(String s) {
       super(s);
     }

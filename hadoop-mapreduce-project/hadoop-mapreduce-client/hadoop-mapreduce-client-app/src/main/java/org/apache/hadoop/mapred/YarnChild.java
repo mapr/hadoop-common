@@ -325,8 +325,8 @@ class YarnChild {
 
     // set tcp nodelay
     job.setBoolean("ipc.client.tcpnodelay", true);
-    job.setClass(MRConfig.TASK_LOCAL_OUTPUT_CLASS,
-        YarnOutputFiles.class, MapOutputFile.class);
+    Class<? extends MapOutputFile> outputFileClass = job.getClass(MRConfig.TASK_LOCAL_OUTPUT_CLASS, YarnOutputFiles.class, MapOutputFile.class);
+    job.setClass(MRConfig.TASK_LOCAL_OUTPUT_CLASS, outputFileClass, MapOutputFile.class);
     // set the jobToken and shuffle secrets into task
     task.setJobTokenSecret(
         JobTokenSecretManager.createSecretKey(jt.getPassword()));

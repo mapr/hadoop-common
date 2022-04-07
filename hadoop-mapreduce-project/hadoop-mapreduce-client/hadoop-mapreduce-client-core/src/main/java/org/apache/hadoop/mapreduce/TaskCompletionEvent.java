@@ -21,6 +21,10 @@ package org.apache.hadoop.mapreduce;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
@@ -77,6 +81,9 @@ public class TaskCompletionEvent implements Writable{
   private int idWithinJob;
   public static final TaskCompletionEvent[] EMPTY_ARRAY = 
     new TaskCompletionEvent[0];
+
+  private Map<String, ByteBuffer> serviceMetaData = new HashMap<String, ByteBuffer>();
+
   /**
    * Default constructor for Writable.
    *
@@ -108,6 +115,23 @@ public class TaskCompletionEvent implements Writable{
     this.status =status; 
     this.taskTrackerHttp = taskTrackerHttp;
   }
+
+  public TaskCompletionEvent(int eventId,
+                             TaskAttemptID taskId,
+                             int idWithinJob,
+                             boolean isMap,
+                             Status status,
+                             String taskTrackerHttp,
+                             Map<String, ByteBuffer> servicesMetaData) {
+    this.taskId = taskId;
+    this.idWithinJob = idWithinJob;
+    this.isMap = isMap;
+    this.eventId = eventId;
+    this.status =status;
+    this.taskTrackerHttp = taskTrackerHttp;
+    this.serviceMetaData = servicesMetaData;
+  }
+
   /**
    * Returns event Id. 
    * @return event id
@@ -144,6 +168,10 @@ public class TaskCompletionEvent implements Writable{
    */
   public int getTaskRunTime() {
     return taskRunTime;
+  }
+
+  public Map<String, ByteBuffer> getServiceMetaData() {
+    return serviceMetaData;
   }
 
   /**
@@ -185,7 +213,11 @@ public class TaskCompletionEvent implements Writable{
   protected void setTaskTrackerHttp(String taskTrackerHttp) {
     this.taskTrackerHttp = taskTrackerHttp;
   }
-    
+
+  public void setServiceMetaData(Map<String, ByteBuffer> serviceMetaData) {
+    this.serviceMetaData = serviceMetaData;
+  }
+
   @Override
   public String toString(){
     StringBuffer buf = new StringBuffer(); 
@@ -236,6 +268,19 @@ public class TaskCompletionEvent implements Writable{
     WritableUtils.writeString(out, taskTrackerHttp);
     WritableUtils.writeVInt(out, taskRunTime);
     WritableUtils.writeVInt(out, eventId);
+    WritableUtils.writeVInt(out, serviceMetaData.size());
+    for ( Map.Entry<String, ByteBuffer> entry: serviceMetaData.entrySet()) {
+      WritableUtils.writeString(out, entry.getKey());
+      ByteBuffer value = entry.getValue();
+      // get clone of the value
+      ByteBuffer dup = value.duplicate();
+      ((Buffer)dup).rewind();
+      int count = dup.remaining();
+      final byte[] copy = new byte[count];
+      dup.get(copy);
+      WritableUtils.writeVInt(out,count);
+      out.write(copy, 0, count);
+    }
   }
   
   public void readFields(DataInput in) throws IOException {
@@ -246,5 +291,14 @@ public class TaskCompletionEvent implements Writable{
     taskTrackerHttp = WritableUtils.readString(in);
     taskRunTime = WritableUtils.readVInt(in);
     eventId = WritableUtils.readVInt(in);
+    int mapSize = WritableUtils.readVInt(in);
+    for ( int i = 0; i < mapSize; i++ ) {
+      String sName = WritableUtils.readString(in);
+      int count = WritableUtils.readVInt(in);
+      byte [] array = new byte[count];
+      in.readFully(array);
+      ByteBuffer bb = ByteBuffer.wrap(array);
+      serviceMetaData.put(sName, bb);
+    }
   }
 }

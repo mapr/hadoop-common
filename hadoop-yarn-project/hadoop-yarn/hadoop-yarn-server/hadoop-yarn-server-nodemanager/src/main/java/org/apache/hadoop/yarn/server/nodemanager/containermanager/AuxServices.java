@@ -190,6 +190,20 @@ public class AuxServices extends AbstractService
     return metaClone;
   }
 
+  public Map<String, ByteBuffer> getMetaData(ContainerInitializationContext ctx) {
+    Map<String, ByteBuffer> metaClone = new HashMap<>(
+            serviceMap.size());
+    synchronized (serviceMap) {
+      for (Entry<String, AuxiliaryService> entry : serviceMap.entrySet()) {
+        ByteBuffer data = entry.getValue().getMetaData(ctx);
+        if ( data != null ) {
+          metaClone.put(entry.getKey(), data);
+        }
+      }
+    }
+    return metaClone;
+  }
+
   /**
    * Creates an auxiliary service from a specification using the Configuration
    * classloader.

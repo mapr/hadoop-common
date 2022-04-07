@@ -18,16 +18,21 @@
 
 package org.apache.hadoop.mapreduce.v2.api.records;
 
+import java.nio.ByteBuffer;
+import java.util.Map;
+
 public interface TaskAttemptCompletionEvent {
   public abstract TaskAttemptId getAttemptId();
   public abstract TaskAttemptCompletionEventStatus getStatus();
   public abstract String getMapOutputServerAddress();
   public abstract int getAttemptRunTime();
   public abstract int getEventId();
-  
+  public abstract Map<String, ByteBuffer> getServicesMetaData();
+
   public abstract void setAttemptId(TaskAttemptId taskAttemptId);
   public abstract void setStatus(TaskAttemptCompletionEventStatus status);
   public abstract void setMapOutputServerAddress(String address);
   public abstract void setAttemptRunTime(int runTime);
   public abstract void setEventId(int eventId);
+  public abstract void setServicesMetaData(Map<String, ByteBuffer> meta);
 }
