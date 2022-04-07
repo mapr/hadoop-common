@@ -94,6 +94,17 @@ public abstract class AuxiliaryService extends AbstractService {
   public abstract ByteBuffer getMetaData();
 
   /**
+   * Return Metadata based on the context provided
+   * if not overwrite is provided returns service MetaData
+   * @param initContainerContext
+   * @return metadata
+   */
+  public ByteBuffer getMetaData(ContainerInitializationContext
+                                        initContainerContext) {
+    return getMetaData();
+  }
+
+  /**
    * A new container is started on this NodeManager. This is a signal to
    * this {@link AuxiliaryService} about the container initialization.
    * This method is called when the NodeManager receives the container launch

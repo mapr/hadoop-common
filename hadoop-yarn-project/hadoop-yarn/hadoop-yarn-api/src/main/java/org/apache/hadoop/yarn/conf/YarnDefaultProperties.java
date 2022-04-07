@@ -6,6 +6,8 @@ package org.apache.hadoop.yarn.conf;
 import static org.apache.hadoop.yarn.conf.YarnConfiguration.NM_AUX_SERVICES;
 import static org.apache.hadoop.yarn.conf.YarnConfiguration.NM_CONTAINER_EXECUTOR;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import org.apache.hadoop.fs.Path;
@@ -69,25 +71,27 @@ public class YarnDefaultProperties extends Properties {
         isSecurityEnabled = MapRCommonSecurityUtil.getInstance().isSecurityEnabled();
     }
 
+    private static final Map<String, String> props =
+            new HashMap<String, String>();
 
-    public YarnDefaultProperties() {
+    static {
         // Dummy values needed to handle delegation token code path in TokenCache
-        put(YarnConfiguration.RM_PRINCIPAL, "mapr");
+        props.put(YarnConfiguration.RM_PRINCIPAL, "mapr");
 
-        put(MAPR_TICKET_EXPIRY, DEFAULT_MAPR_TICKET_EXPIRY);
+        props.put(MAPR_TICKET_EXPIRY, DEFAULT_MAPR_TICKET_EXPIRY);
 
         if ( System.getProperty(CLUSTER_PREFIX) != null ) {
-            put(CLUSTER_PREFIX, System.getProperty(CLUSTER_PREFIX));
+            props.put(CLUSTER_PREFIX, System.getProperty(CLUSTER_PREFIX));
         }
-        put(RM_DIR, DEFAULT_RM_DIR);
-        put(RM_DIR_VOLUME_COUNT, DEFAULT_RM_DIR_VOLUME_COUNT + "");
-        put(RM_STAGING_DIR, DEFAULT_RM_STAGING_DIR);
-        put(RM_SYSTEM_DIR, DEFAULT_RM_SYSTEM_DIR);
-        put(APP_HISTORY_STAGING_DIR, DEFAULT_APP_HISTORY_STAGING_DIR);
-        put(YARN_DIR, DEFAULT_YARN_DIR);
+        props.put(RM_DIR, DEFAULT_RM_DIR);
+        props.put(RM_DIR_VOLUME_COUNT, DEFAULT_RM_DIR_VOLUME_COUNT + "");
+        props.put(RM_STAGING_DIR, DEFAULT_RM_STAGING_DIR);
+        props.put(RM_SYSTEM_DIR, DEFAULT_RM_SYSTEM_DIR);
+        props.put(APP_HISTORY_STAGING_DIR, DEFAULT_APP_HISTORY_STAGING_DIR);
+        props.put(YARN_DIR, DEFAULT_YARN_DIR);
 
         if (isSecurityEnabled) {
-            put(YarnConfiguration.YARN_HTTP_POLICY_KEY,      // yarn-default.xml
+            props.put(YarnConfiguration.YARN_HTTP_POLICY_KEY,      // yarn-default.xml
                     HttpConfig.Policy.HTTPS_ONLY.name());
         }
 
@@ -111,40 +115,40 @@ public class YarnDefaultProperties extends Properties {
 //                "org.apache.hadoop.yarn.server.applicationhistoryservice.HSVolumeManager");
 
         // Configuration for RM's RPC services
-        put(YarnConfiguration.RM_ADDRESS,
+        props.put(YarnConfiguration.RM_ADDRESS,
                 "${" + YarnConfiguration.RM_HOSTNAME + "}:" + YarnConfiguration.DEFAULT_RM_PORT);
-        put(YarnConfiguration.RM_SCHEDULER_ADDRESS,
+        props.put(YarnConfiguration.RM_SCHEDULER_ADDRESS,
                 "${" + YarnConfiguration.RM_HOSTNAME + "}:" + YarnConfiguration.DEFAULT_RM_SCHEDULER_PORT);
-        put(YarnConfiguration.RM_RESOURCE_TRACKER_ADDRESS,
+        props.put(YarnConfiguration.RM_RESOURCE_TRACKER_ADDRESS,
                 "${" + YarnConfiguration.RM_HOSTNAME + "}:" + YarnConfiguration.DEFAULT_RM_RESOURCE_TRACKER_PORT);
 
         // Resource Management Configs.
         // The "$" variables will be set into the configuration set by Warden via environment.
-        put(YarnConfiguration.NM_PMEM_MB, "${nodemanager.resource.memory-mb}");
-        put(YarnConfiguration.NM_VCORES, "${nodemanager.resource.cpu-vcores}");
+        props.put(YarnConfiguration.NM_PMEM_MB, "${nodemanager.resource.memory-mb}");
+        props.put(YarnConfiguration.NM_VCORES, "${nodemanager.resource.cpu-vcores}");
         // TODO Disk resource
 //        put(YarnConfiguration.NM_DISKS, "${nodemanager.resource.io-spindles}");
 
         // Shuffle Aux Services Configuration
-        put(NM_AUX_SERVICES, APACHE_SHUFFLE_SERVICE_ID + "," + MAPR_SHUFFLE_SERVICE_ID);
-        put(NM_AUX_SERVICES + "." + APACHE_SHUFFLE_SERVICE_ID + ".class", "org.apache.hadoop.mapred.ShuffleHandler");
-        put(NM_AUX_SERVICES + "." + MAPR_SHUFFLE_SERVICE_ID + ".class", "org.apache.hadoop.mapred.LocalVolumeAuxService");
+        props.put(NM_AUX_SERVICES, APACHE_SHUFFLE_SERVICE_ID + "," + MAPR_SHUFFLE_SERVICE_ID);
+        props.put(NM_AUX_SERVICES + "." + APACHE_SHUFFLE_SERVICE_ID + ".class", "org.apache.hadoop.mapred.ShuffleHandler");
+        props.put(NM_AUX_SERVICES + "." + MAPR_SHUFFLE_SERVICE_ID + ".class", "org.apache.hadoop.mapred.LocalVolumeAuxService");
 
         // container executor configuration
-        put(NM_CONTAINER_EXECUTOR, "org.apache.hadoop.yarn.server.nodemanager.LinuxContainerExecutor");
+        props.put(NM_CONTAINER_EXECUTOR, "org.apache.hadoop.yarn.server.nodemanager.LinuxContainerExecutor");
 
         // RM HA configs
-        put(YarnConfiguration.RM_STORE, "org.apache.hadoop.yarn.server.resourcemanager.recovery.FileSystemRMStateStore");
+        props.put(YarnConfiguration.RM_STORE, "org.apache.hadoop.yarn.server.resourcemanager.recovery.FileSystemRMStateStore");
         // state store dir will be created under this dir
-        put(YarnConfiguration.FS_RM_STATE_STORE_URI, DEFAULT_RM_SYSTEM_DIR);
+        props.put(YarnConfiguration.FS_RM_STATE_STORE_URI, DEFAULT_RM_SYSTEM_DIR);
 
         // TODO RM HA configs
 //        put(YarnConfiguration.CUSTOM_RM_HA_RMFINDER, "org.apache.hadoop.yarn.client.MapRZKBasedRMAddressFinder");
 
         // Scheduler configs
-        put(YarnConfiguration.RM_SCHEDULER, FAIR_SCHEDULER_CLASS);
+        props.put(YarnConfiguration.RM_SCHEDULER, FAIR_SCHEDULER_CLASS);
 
-        put(YarnConfiguration.LOG_AGGREGATION_ENABLED, "false");
+        props.put(YarnConfiguration.LOG_AGGREGATION_ENABLED, "false");
 
         /* TODO DFS Logging */
 //        put(YarnConfiguration.ENABLE_DFS_LOGGING, "false");
@@ -157,6 +161,17 @@ public class YarnDefaultProperties extends Properties {
 //                        + "*/logs/yarn/userlogs");
 
         // Default retention to 30 days
-        put(YarnConfiguration.LOG_AGGREGATION_RETAIN_SECONDS, 30 * 24 * 3600 + "");
+        props.put(YarnConfiguration.LOG_AGGREGATION_RETAIN_SECONDS, 30 * 24 * 3600 + "");
     }
+
+    public static Properties getProperties() {
+        Properties properties = new Properties();
+        properties.putAll(props);
+        return properties;
+    }
+
+    public YarnDefaultProperties() {
+        this.putAll(props);
+    }
+
 }

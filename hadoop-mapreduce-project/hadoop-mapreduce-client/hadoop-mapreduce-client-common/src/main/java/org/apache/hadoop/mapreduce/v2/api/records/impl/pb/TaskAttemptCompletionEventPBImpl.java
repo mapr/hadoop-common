@@ -18,10 +18,16 @@
 
 package org.apache.hadoop.mapreduce.v2.api.records.impl.pb;
 
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.hadoop.mapreduce.v2.api.records.TaskAttemptCompletionEvent;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskAttemptCompletionEventStatus;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskAttemptId;
+import org.apache.hadoop.mapreduce.v2.proto.MRProtos.ServiceMetaDataProto;
 import org.apache.hadoop.mapreduce.v2.proto.MRProtos.TaskAttemptCompletionEventProto;
 import org.apache.hadoop.mapreduce.v2.proto.MRProtos.TaskAttemptCompletionEventProtoOrBuilder;
 import org.apache.hadoop.mapreduce.v2.proto.MRProtos.TaskAttemptCompletionEventStatusProto;
@@ -29,8 +35,8 @@ import org.apache.hadoop.mapreduce.v2.proto.MRProtos.TaskAttemptIdProto;
 import org.apache.hadoop.mapreduce.v2.util.MRProtoUtils;
 import org.apache.hadoop.yarn.api.records.impl.pb.ProtoBase;
 
+import com.google.protobuf.ByteString;
 
-    
 public class TaskAttemptCompletionEventPBImpl extends ProtoBase<TaskAttemptCompletionEventProto> implements TaskAttemptCompletionEvent {
   TaskAttemptCompletionEventProto proto = TaskAttemptCompletionEventProto.getDefaultInstance();
   TaskAttemptCompletionEventProto.Builder builder = null;
@@ -172,6 +178,54 @@ public class TaskAttemptCompletionEventPBImpl extends ProtoBase<TaskAttemptCompl
     return MRProtoUtils.convertFromProtoFormat(e);
   }
 
+  /*
+   * ByteBuffer
+   */
+  public static ByteBuffer convertGeneralFromProtoFormat(ByteString byteString) {
+    int capacity = ((Buffer)byteString.asReadOnlyByteBuffer()).rewind().remaining();
+    byte[] b = new byte[capacity];
+    byteString.asReadOnlyByteBuffer().get(b, 0, capacity);
+    return ByteBuffer.wrap(b);
+  }
+
+  public static ByteString convertGeneralToProtoFormat(ByteBuffer byteBuffer) {
+    int oldPos = ((Buffer)byteBuffer).position();
+    ((Buffer)byteBuffer).rewind();
+    ByteString bs = ByteString.copyFrom(byteBuffer);
+    ((Buffer)byteBuffer).position(oldPos);
+    return bs;
+  }
+
+
+  @Override
+  public Map<String, ByteBuffer> getServicesMetaData() {
+    TaskAttemptCompletionEventProtoOrBuilder p = viaProto ? proto : builder;
+
+    List<ServiceMetaDataProto> servicesList = p.getServiceMetaDataList();
+    Map<String, ByteBuffer> result = new HashMap<String, ByteBuffer>(servicesList.size());
+    for ( ServiceMetaDataProto proto : servicesList) {
+      String name = proto.getServiceName();
+      ByteBuffer data = convertGeneralFromProtoFormat(proto.getServiceData());
+      result.put(name, data);
+    }
+    return result;
+  }
+
+  @Override
+  public void setServicesMetaData(Map<String, ByteBuffer> meta) {
+    maybeInitBuilder();
+    if ( meta == null || meta.isEmpty() ) {
+      builder.clearServiceMetaData();
+    }
+    if ( meta != null && !meta.isEmpty() ) {
+      for ( Map.Entry<String, ByteBuffer> entry: meta.entrySet()) {
+        ServiceMetaDataProto.Builder serviceBuilder = ServiceMetaDataProto.newBuilder();
+        serviceBuilder.setServiceName(entry.getKey()).
+                setServiceData(convertGeneralToProtoFormat(entry.getValue())).build();
+        builder.addServiceMetaData(serviceBuilder);
+      }
+    }
+  }
 
 
 }  

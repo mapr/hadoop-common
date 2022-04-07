@@ -22,6 +22,7 @@ import java.io.PrintStream;
 import java.net.InetSocketAddress;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapreduce.conf.MapReduceDefaultProperties;
 import org.apache.hadoop.tools.GetGroupsBase;
 import org.apache.hadoop.util.ToolRunner;
 
@@ -33,6 +34,7 @@ public class GetGroups extends GetGroupsBase {
 
   static {
     Configuration.addDefaultResource("mapred-default.xml");
+    Configuration.addDefaultResource(MapReduceDefaultProperties.getProperties());
     Configuration.addDefaultResource("mapred-site.xml");
   }
   

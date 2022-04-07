@@ -723,13 +723,14 @@ public class Merger {
                                 ChecksumFileSystem.getApproxChkSumLength(
                                 s.getLength());
           }
-          Path tmpFilename = 
-            new Path(tmpDir, "intermediate").suffix("." + passNo);
-
-          Path outputFile =  lDirAlloc.getLocalPathForWrite(
-                                              tmpFilename.toString(),
-                                              approxOutputSize, conf);
-
+          Path tmpFilename =
+                  new Path(tmpDir, "intermediate").suffix("." + passNo);
+          Path outputFile = tmpFilename;
+          if (conf.getBoolean("mapred.local.mapoutput", true)) {
+            outputFile = lDirAlloc.getLocalPathForWrite(
+                    tmpFilename.toString(),
+                    approxOutputSize, conf);
+          }
           FSDataOutputStream out = fs.create(outputFile);
           out = IntermediateEncryptedStream.wrapIfNecessary(conf, out,
               outputFile);

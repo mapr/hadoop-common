@@ -26,17 +26,17 @@ import java.util.List;
 
 public interface PathId {
 
-    public String getFid();
+  public String getFid();
 
-    public long[] getIPs();
+  public long[] getIPs();
+  
+  public void setFid(String fid);
+ 
+  public void setIps(long[] ips);
+ 
+  public void setIps(List<Long> ips);
 
-    public void setFid(String fid);
+  public void writeFields(DataOutput out) throws IOException;
 
-    public void setIps(long[] ips);
-
-    public void setIps(List<Long> ips);
-
-    public void writeFields(DataOutput out) throws IOException;
-
-    public void readFields(DataInput in) throws IOException;
+  public void readFields(DataInput in) throws IOException;
 }

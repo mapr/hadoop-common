@@ -24,6 +24,7 @@ import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.yarn.api.protocolrecords.GetLocalizationStatusesRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetLocalizationStatusesResponse;
 import org.apache.hadoop.yarn.api.records.LocalizationStatus;
+import org.apache.hadoop.yarn.server.api.ContainerInitializationContext;
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.container.UpdateContainerTokenEvent;
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.loghandler.event.LogHandlerTokenUpdatedEvent;
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.scheduler.ContainerSchedulerEvent;
@@ -945,6 +946,7 @@ public class ContainerManagerImpl extends CompositeService implements
     // container is being started, in particular when the container has not yet
     // been added to the containers map in NMContext.
     synchronized (this.context) {
+      ContainerId anyContainerid = null;
       for (StartContainerRequest request : requests
           .getStartContainerRequests()) {
         ContainerId containerId = null;
@@ -959,7 +961,7 @@ public class ContainerManagerImpl extends CompositeService implements
           verifyAndGetContainerTokenIdentifier(request.getContainerToken(),
               containerTokenIdentifier);
           containerId = containerTokenIdentifier.getContainerID();
-
+          anyContainerid = containerId;
           // Initialize the AMRMProxy service instance only if the container is of
           // type AM and if the AMRMProxy service is enabled
           if (amrmProxyEnabled && containerTokenIdentifier.getContainerType()
@@ -982,7 +984,7 @@ public class ContainerManagerImpl extends CompositeService implements
         }
       }
       return StartContainersResponse
-          .newInstance(getAuxServiceMetaData(), succeededContainers,
+          .newInstance(getAuxServiceMetaData(anyContainerid), succeededContainers,
               failedContainers);
     }
   }
@@ -1784,6 +1786,11 @@ public class ContainerManagerImpl extends CompositeService implements
   @Private
   public AMRMProxyService getAMRMProxyService() {
     return this.amrmProxyService;
+  }
+
+  public Map<String, ByteBuffer> getAuxServiceMetaData(ContainerId cId) {
+    return this.auxiliaryServices.getMetaData(
+            new ContainerInitializationContext(null, cId, null));
   }
 
   @Private

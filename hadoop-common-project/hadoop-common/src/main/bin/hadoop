@@ -196,6 +196,15 @@ function hadoopcmd_case
     trace)
       HADOOP_CLASSNAME=org.apache.hadoop.tracing.TraceAdmin
     ;;
+    mfs)
+      HADOOP_CLASSNAME=com.mapr.fs.clicommands.MapRCliCommands
+    ;;
+    conf)
+      HADOOP_CLASSNAME=org.apache.hadoop.mapreduce.util.ConfigUtil
+    ;;
+    conf-details)
+      HADOOP_CLASSNAME=org.apache.hadoop.conf.HadoopConfigClassifier
+    ;;
     version)
       HADOOP_CLASSNAME=org.apache.hadoop.util.VersionInfo
     ;;

@@ -19,6 +19,7 @@
 package org.apache.hadoop.mapreduce.jobhistory;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -340,7 +341,8 @@ public class JobHistoryParser implements HistoryEventHandler {
     attemptInfo.taskType = event.getTaskType();
     attemptInfo.shufflePort = event.getShufflePort();
     attemptInfo.containerId = event.getContainerId();
-    
+    attemptInfo.servicesMetaData = event.getServicesMetaData();
+
     taskInfo.attemptsMap.put(attemptId, attemptInfo);
   }
 
@@ -669,6 +671,7 @@ public class JobHistoryParser implements HistoryEventHandler {
     int port;
     String rackname;
     ContainerId containerId;
+    Map<String, ByteBuffer> servicesMetaData;
 
     /** Create a Task Attempt Info which will store attempt level information
      * on a history parse.
@@ -680,6 +683,7 @@ public class JobHistoryParser implements HistoryEventHandler {
       port = -1;
       httpPort = -1;
       shufflePort = -1;
+      servicesMetaData = new HashMap<>();
     }
     /**
      * Print all the information about this attempt.
@@ -737,6 +741,8 @@ public class JobHistoryParser implements HistoryEventHandler {
     public int getShufflePort() { return shufflePort; }
     /** @return the ContainerId for the tracker */
     public ContainerId getContainerId() { return containerId; }
+    /** @return the Services Metadata for the tracker */
+    public Map<String, ByteBuffer> getServicesMetaData() { return servicesMetaData; }
   }
 
   /**

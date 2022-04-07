@@ -87,8 +87,6 @@
     <!-- com.google.re2j version -->
     <re2j.version>1.1</re2j.version>
 
-    <!--Protobuf version for backward compatibility-->
-    <protobuf.version>2.5.0</protobuf.version>
     <!-- ProtocolBuffer version, actually used in Hadoop -->
     <hadoop.protobuf.version>3.7.1</hadoop.protobuf.version>
     <protoc.path>${env.HADOOP_PROTOC_PATH}</protoc.path>
@@ -1252,7 +1250,7 @@
       <dependency>
         <groupId>com.google.protobuf</groupId>
         <artifactId>protobuf-java</artifactId>
-        <version>${protobuf.version}</version>
+        <version>${hadoop.protobuf.version}</version>
       </dependency>
       <dependency>
         <groupId>commons-daemon</groupId>

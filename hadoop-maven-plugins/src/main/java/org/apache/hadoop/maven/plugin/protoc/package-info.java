@@ -35,7 +35,7 @@
  *            &lt;goal&gt;protoc&lt;/goal&gt;
  *          &lt;/goals&gt;
  *          &lt;configuration&gt;
- *            &lt;protocVersion&gt;${protobuf.version}&lt;/protocVersion&gt;
+ *            &lt;protocVersion&gt;${hadoop.protobuf.version}&lt;/protocVersion&gt;
  *            &lt;protocCommand&gt;${protoc.path}&lt;/protocCommand&gt;
  *            &lt;imports&gt;
  *              &lt;param&gt;${basedir}/src/main/proto&lt;/param&gt;
@@ -73,7 +73,7 @@
  *            &lt;goal&gt;test-protoc&lt;/goal&gt;
  *          &lt;/goals&gt;
  *          &lt;configuration&gt;
- *            &lt;protocVersion&gt;${protobuf.version}&lt;/protocVersion&gt;
+ *            &lt;protocVersion&gt;${hadoop.protobuf.version}&lt;/protocVersion&gt;
  *            &lt;protocCommand&gt;${protoc.path}&lt;/protocCommand&gt;
  *            &lt;imports&gt;
  *              &lt;param&gt;${basedir}/src/test/proto&lt;/param&gt;

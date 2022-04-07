@@ -63,6 +63,7 @@ import org.apache.hadoop.mapreduce.server.jobtracker.JTConfig;
 import org.apache.hadoop.mapreduce.split.JobSplit.TaskSplitMetaInfo;
 import org.apache.hadoop.mapreduce.split.SplitMetaInfoReader;
 import org.apache.hadoop.mapreduce.task.TaskAttemptContextImpl;
+import org.apache.hadoop.mapreduce.task.reduce.Shuffle;
 import org.apache.hadoop.mapreduce.v2.LogParams;
 import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -170,6 +171,8 @@ public class LocalJobRunner implements ClientProtocol {
       // this will trigger localFile to be re-written again.
       localDistributedCacheManager = new LocalDistributedCacheManager();
       localDistributedCacheManager.setup(conf, jobid);
+      // Reset parameters to default apache shuffle instead of Mapr direct shuffle
+      resetShuffleParams(conf);
       
       // Write out configuration file.  Instead of copying it from
       // systemJobFile, we re-write it, since setup(), above, may have
@@ -216,6 +219,14 @@ public class LocalJobRunner implements ClientProtocol {
       }
 
       this.start();
+    }
+
+    private void resetShuffleParams(JobConf conf) {
+      conf.setClass(MRConfig.TASK_LOCAL_OUTPUT_CLASS, MROutputFiles.class, MapOutputFile.class);
+      conf.setClass(MRJobConfig.MAP_OUTPUT_COLLECTOR_CLASS_ATTR, MapTask.MapOutputBuffer.class, MapOutputCollector.class);
+      conf.setClass(MRConfig.SHUFFLE_CONSUMER_PLUGIN, Shuffle.class, ShuffleConsumerPlugin.class);
+      conf.setClass("mapred.ifile.output.stream.class", IFileOutputStream.class, IFileOutputStream.class);
+      conf.setClass("mapred.ifile.output.input.class", IFileInputStream.class, IFileInputStream.class);
     }
 
     protected abstract class RunnableWithThrowable implements Runnable {
