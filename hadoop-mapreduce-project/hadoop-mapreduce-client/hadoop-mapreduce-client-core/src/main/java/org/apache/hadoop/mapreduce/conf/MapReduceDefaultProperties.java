@@ -22,6 +22,7 @@ import org.apache.hadoop.mapreduce.MRConfig;
 import org.apache.hadoop.mapreduce.MRJobConfig;
 import org.apache.hadoop.http.HttpConfig;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -87,6 +88,7 @@ public class MapReduceDefaultProperties extends Properties {
   static { // Map side performance tuning defaults
     props.put(MRJobConfig.MAP_MEMORY_MB, "1024");
     props.put(MRJobConfig.MAP_CPU_VCORES, "1");
+    props.put(MRJobConfig.MAP_RESOURCE_TYPE_PREFIX + "disks", "500");
     props.put(MRJobConfig.MAP_JAVA_OPTS, "-Xmx900m --add-opens java.base/java.lang=ALL-UNNAMED");
     props.put(MRJobConfig.IO_SORT_MB, getIoSortMb());
     props.put(MRJobConfig.IO_SORT_FACTOR, "256");
@@ -99,6 +101,7 @@ public class MapReduceDefaultProperties extends Properties {
   static { // Reduce side performance tuning defaults
     props.put(MRJobConfig.REDUCE_MEMORY_MB, "3072");
     props.put(MRJobConfig.REDUCE_CPU_VCORES, "1");
+    props.put(MRJobConfig.REDUCE_RESOURCE_TYPE_PREFIX + "disks", "1000");
     props.put(MRJobConfig.REDUCE_JAVA_OPTS, "-Xmx2560m --add-opens java.base/java.lang=ALL-UNNAMED");
     props.put(MRJobConfig.COMPLETED_MAPS_FOR_REDUCE_SLOWSTART, "1.00");
     props.put(MRJobConfig.SHUFFLE_PARALLEL_COPIES, "12");

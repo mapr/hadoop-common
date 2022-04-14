@@ -129,8 +129,15 @@ public class YarnDefaultProperties extends Properties {
         // The "$" variables will be set into the configuration set by Warden via environment.
         props.put(YarnConfiguration.NM_PMEM_MB, "${nodemanager.resource.memory-mb}");
         props.put(YarnConfiguration.NM_VCORES, "${nodemanager.resource.cpu-vcores}");
-        // TODO Disk resource
-//        put(YarnConfiguration.NM_DISKS, "${nodemanager.resource.io-spindles}");
+        //Added disk as resource
+        //Convert disk value to long from double. Disk has value as milli resource type
+        long disk = 2;
+        if (System.getProperty("nodemanager.resource.io-spindles") != null) {
+            disk = (long) (Double.parseDouble(System.getProperty("nodemanager.resource.io-spindles")) * 1000);
+        }
+        props.put(YarnConfiguration.RESOURCE_TYPES, "disks");
+        props.put(YarnConfiguration.NM_RESOURCES_PREFIX + "disks", Long.toString(disk));
+
 
         // Shuffle Aux Services Configuration
         props.put(NM_AUX_SERVICES, APACHE_SHUFFLE_SERVICE_ID + "," + MAPR_SHUFFLE_SERVICE_ID);
