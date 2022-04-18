@@ -753,7 +753,9 @@ function installWardenConfFile() {
             rc=$?
             rm -f "${tmpWardenFile}"
         fi
-        ConfigureWardenRMHA "${INST_WARDEN_FILE}" "$maprHA"
+        if [ "$isOnlyRoles" != "1" ]; then
+          ConfigureWardenRMHA "${INST_WARDEN_FILE}" "$maprHA"
+        fi
     else
         if ! [ -d "${MAPR_CONF_CONFD_DIR}" ]; then
             mkdir -p "${MAPR_CONF_CONFD_DIR}" >/dev/null 2>&1
@@ -762,7 +764,9 @@ function installWardenConfFile() {
         if [ -n "$newestPrevVersionFile" ] && [ -f "$newestPrevVersionFile" ]; then
             curr_runstate=$(get_warden_value "$newestPrevVersionFile" "$WARDEN_RUNSTATE_KEY")
             cp "$PKG_WARDEN_FILE" "${tmpWardenFile}"
-            ConfigureWardenRMHA "${tmpWardenFile}" "$maprHA"
+            if [ "$isOnlyRoles" != "1" ]; then
+              ConfigureWardenRMHA "${tmpWardenFile}" "$maprHA"
+            fi
             if [ -n "$curr_runstate" ]; then
                 echo "service.runstate=$curr_runstate" >>"${tmpWardenFile}"
             fi
