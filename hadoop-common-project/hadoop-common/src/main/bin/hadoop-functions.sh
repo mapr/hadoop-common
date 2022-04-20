@@ -870,7 +870,10 @@ function hadoop_basic_init
     export HADOOP_MAPRED_HOME="${HADOOP_HOME}"
   fi
 
-  export MAPR_HOME=${MAPR_HOME:-"/opt/mapr"}
+  # define MAPR_HOME
+  if [[ -d "/opt/mapr" ]]; then
+    export MAPR_HOME="/opt/mapr"
+  fi
 
   # if for some reason the shell doesn't have $USER defined
   # (e.g., ssh'd in to execute a command)
@@ -1559,6 +1562,15 @@ function hadoop_finalize_hadoop_opts
   hadoop_add_param HADOOP_OPTS hadoop.root.logger "-Dhadoop.root.logger=${HADOOP_ROOT_LOGGER}"
   hadoop_add_param HADOOP_OPTS hadoop.policy.file "-Dhadoop.policy.file=${HADOOP_POLICYFILE}"
   hadoop_add_param HADOOP_OPTS hadoop.security.logger "-Dhadoop.security.logger=${HADOOP_SECURITY_LOGGER}"
+
+  echo "$HADOOP_OPTS" | grep "\-Dhadoop.login=" > /dev/null 2>&1
+  if [ "$?" -ne 0 ]; then
+    # not included - include
+    HADOOP_OPTS="$HADOOP_OPTS ${MAPR_AUTH_CLIENT_OPTS}"
+  else
+    # do not include mechanism, as it is defined outside
+    HADOOP_OPTS="$HADOOP_OPTS ${MAPR_JAAS_CONFIG_OPTS} ${MAPR_ZOOKEEPER_OPTS} ${MAPR_SSL_OPTS}"
+  fi
 }
 
 ## @description  Finish Java classpath prior to execution

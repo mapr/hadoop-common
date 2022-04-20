@@ -33,7 +33,7 @@ import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.ipc.Server;
-import org.apache.hadoop.security.SaslRpcServer;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.PolicyProvider;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.service.AbstractService;
@@ -189,7 +189,7 @@ public class ApplicationMasterService extends AbstractService implements
     serverConf = new Configuration(conf);
     serverConf.set(
         CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION,
-        SaslRpcServer.AuthMethod.TOKEN.toString());
+            UserGroupInformation.AuthenticationMethod.TOKEN.toString());
     this.server = getServer(rpc, serverConf, masterServiceAddress,
         this.rmContext.getAMRMTokenSecretManager());
     // TODO more exceptions could be added later.

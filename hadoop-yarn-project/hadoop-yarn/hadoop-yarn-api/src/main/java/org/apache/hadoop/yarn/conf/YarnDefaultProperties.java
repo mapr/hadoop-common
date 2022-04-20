@@ -99,12 +99,11 @@ public class YarnDefaultProperties extends Properties {
                     HttpConfig.Policy.HTTPS_ONLY.name());
         }
 
-        // TODO security
-//        put(YarnConfiguration.YARN_NODEMANAGER_EXT_TOKEN_LOCALIZER,
-//                "org.apache.hadoop.yarn.server.nodemanager.security.MapRTicketLocalizer");
-//
-//        put(YarnConfiguration.YARN_EXT_TOKEN_MANAGER,
-//                "org.apache.hadoop.yarn.security.MapRTicketManager");
+        props.put(YarnConfiguration.YARN_NODEMANAGER_EXT_TOKEN_LOCALIZER,
+                "org.apache.hadoop.yarn.server.nodemanager.security.MapRTicketLocalizer");
+
+        props.put(YarnConfiguration.YARN_EXT_TOKEN_MANAGER,
+                "org.apache.hadoop.yarn.security.MapRTicketManager");
 
         // RM auxiliary service
         props.put(YarnConfiguration.RM_AUX_SERVICES, RM_VOLUME_MANAGER_SERVICE);

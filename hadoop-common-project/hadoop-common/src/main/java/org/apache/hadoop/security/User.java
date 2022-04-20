@@ -32,7 +32,7 @@ import org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod;
  */
 @InterfaceAudience.LimitedPrivate({"HDFS", "MapReduce"})
 @InterfaceStability.Evolving
-class User implements Principal {
+public class User implements Principal {
   private final String fullName;
   private final String shortName;
   private volatile AuthenticationMethod authMethod = null;

@@ -17,6 +17,7 @@
  */
 package org.apache.hadoop.security.token.delegation.web;
 
+import org.apache.hadoop.security.authentication.server.AbstractMaprAuthenticationHandler;
 import org.apache.hadoop.thirdparty.com.google.common.annotations.VisibleForTesting;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -30,6 +31,7 @@ import org.apache.hadoop.security.authentication.server.AuthenticationHandler;
 import org.apache.hadoop.security.authentication.server.AuthenticationToken;
 import org.apache.hadoop.security.authentication.server.KerberosAuthenticationHandler;
 import org.apache.hadoop.security.authentication.server.MultiSchemeAuthenticationHandler;
+import org.apache.hadoop.security.authentication.server.MultiMechsAuthenticationHandler;
 import org.apache.hadoop.security.authentication.server.PseudoAuthenticationHandler;
 import org.apache.hadoop.security.authentication.util.ZKSignerSecretProvider;
 import org.apache.hadoop.security.authorize.AuthorizationException;
@@ -139,6 +141,9 @@ public class DelegationTokenAuthenticationFilter
     } else if (authType.equals(KerberosAuthenticationHandler.TYPE)) {
       props.setProperty(AUTH_TYPE,
           KerberosDelegationTokenAuthenticationHandler.class.getName());
+    } else if (authType.equals(AbstractMaprAuthenticationHandler.TYPE)) {
+      props.setProperty(AUTH_TYPE,
+              MaprDelegationTokenAuthenticationHandler.class.getName());
     } else if (authType.equals(MultiSchemeAuthenticationHandler.TYPE)) {
       props.setProperty(AUTH_TYPE,
           MultiSchemeDelegationTokenAuthenticationHandler.class.getName());
@@ -194,6 +199,11 @@ public class DelegationTokenAuthenticationFilter
     }
     if (handler instanceof KerberosAuthenticationHandler ||
         handler instanceof KerberosDelegationTokenAuthenticationHandler) {
+      setHandlerAuthMethod(SaslRpcServer.AuthMethod.KERBEROS);
+    }
+
+    if (handler instanceof MultiMechsAuthenticationHandler ||
+        handler.getClass().isAssignableFrom(MaprDelegationTokenAuthenticationHandler.class)) {
       setHandlerAuthMethod(SaslRpcServer.AuthMethod.KERBEROS);
     }
 

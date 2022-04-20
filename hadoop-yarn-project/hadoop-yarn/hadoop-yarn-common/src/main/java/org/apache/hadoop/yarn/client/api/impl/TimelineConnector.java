@@ -35,6 +35,7 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 
+import org.apache.hadoop.security.token.delegation.web.MaprDelegationTokenAuthenticator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
@@ -114,7 +115,7 @@ public class TimelineConnector extends AbstractService {
     }
 
     if (UserGroupInformation.isSecurityEnabled()) {
-      authenticator = new KerberosDelegationTokenAuthenticator();
+      authenticator = getMaprDelegationTokenAuthenticator();
     } else {
       authenticator = new PseudoDelegationTokenAuthenticator();
     }
@@ -131,6 +132,22 @@ public class TimelineConnector extends AbstractService {
           new TimelineJerseyRetryFilter(connectionRetry);
       client.addFilter(retryFilter);
     }
+  }
+
+  public DelegationTokenAuthenticator getMaprDelegationTokenAuthenticator() {
+    DelegationTokenAuthenticator maprAuthenticator = null;
+    try {
+      maprAuthenticator = new MaprDelegationTokenAuthenticator();
+    } catch (InstantiationException e) {
+      LOG.error("Unable to instantiate class " + maprAuthenticator.getClass().getName(), e);
+    } catch (IllegalAccessException e) {
+      LOG.error("Unable to init class " + maprAuthenticator.getClass().getName(), e);
+    } finally {
+      if (maprAuthenticator == null) {
+        return new KerberosDelegationTokenAuthenticator();
+      }
+    }
+    return maprAuthenticator;
   }
 
   private static final ConnectionConfigurator DEFAULT_TIMEOUT_CONN_CONFIGURATOR

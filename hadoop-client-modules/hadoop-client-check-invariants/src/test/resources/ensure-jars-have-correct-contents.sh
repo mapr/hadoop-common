@@ -46,6 +46,7 @@ allowed_expr+="|^webapps/"
 #   * Hadoop's default configuration files, which have the form
 #     "_module_-default.xml"
 allowed_expr+="|^[^-]*-default.xml$"
+allowed_expr+="|^mapr.login.conf$"
 #yarn-site configuration templates
 allowed_expr+="|^yarn-site-.*.xml$"
 allowed_expr+="|^yarn-.*.template$"

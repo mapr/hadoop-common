@@ -48,6 +48,8 @@ env=${BASEMAPR}/conf/env.sh
 # Java property: hadoop.root.logger
 #export HADOOP_JHS_LOGGER=INFO,RFA
 
+export HADOOP_JOB_HISTORYSERVER_OPTS="${HADOOP_JOB_HISTORYSERVER_OPTS} ${MAPR_LOGIN_OPTS}"
+
 #MFS-6760: Fix warnings when using jdk 11
 HADOOP_OPTS="$HADOOP_OPTS $MAPR_COMMON_JAVA_OPTS"
 #MAPRHADOOP-107: Set ParallelGC by default on jdk11

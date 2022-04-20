@@ -62,6 +62,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -109,10 +110,13 @@ import org.apache.hadoop.security.SaslRpcServer.AuthMethod;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod;
+import org.apache.hadoop.security.authentication.util.KerberosUtil;
 import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.apache.hadoop.security.authorize.PolicyProvider;
 import org.apache.hadoop.security.authorize.ProxyUsers;
 import org.apache.hadoop.security.authorize.ServiceAuthorizationManager;
+import org.apache.hadoop.security.rpcauth.RpcAuthMethod;
+import org.apache.hadoop.security.rpcauth.RpcAuthRegistry;
 import org.apache.hadoop.security.token.SecretManager;
 import org.apache.hadoop.security.token.SecretManager.InvalidToken;
 import org.apache.hadoop.security.token.TokenIdentifier;
@@ -143,7 +147,7 @@ import org.slf4j.LoggerFactory;
 @InterfaceStability.Evolving
 public abstract class Server {
   private final boolean authorize;
-  private List<AuthMethod> enabledAuthMethods;
+  private List<RpcAuthMethod> enabledAuthMethods;
   private RpcSaslProto negotiateResponse;
   private ExceptionsHandler exceptionsHandler = new ExceptionsHandler();
   private Tracer tracer;
@@ -1835,7 +1839,7 @@ public abstract class Server {
     String protocolName;
     SaslServer saslServer;
     private String establishedQOP;
-    private AuthMethod authMethod;
+    private RpcAuthMethod authMethod;
     private AuthProtocol authProtocol;
     private boolean saslContextEstablished;
     private ByteBuffer connectionHeaderBuf = null;
@@ -1947,23 +1951,6 @@ public abstract class Server {
     private void incRpcCount() {
       rpcCount.incrementAndGet();
     }
-    
-    private UserGroupInformation getAuthorizedUgi(String authorizedId)
-        throws InvalidToken, AccessControlException {
-      if (authMethod == AuthMethod.TOKEN) {
-        TokenIdentifier tokenId = SaslRpcServer.getIdentifier(authorizedId,
-            secretManager);
-        UserGroupInformation ugi = tokenId.getUser();
-        if (ugi == null) {
-          throw new AccessControlException(
-              "Can't retrieve username from tokenIdentifier.");
-        }
-        ugi.addTokenIdentifier(tokenId);
-        return ugi;
-      } else {
-        return UserGroupInformation.createRemoteUser(authorizedId, authMethod);
-      }
-    }
 
     private void saslReadAndProcess(RpcWritable.Buffer buffer) throws
         RpcServerException, IOException, InterruptedException {
@@ -2041,6 +2028,7 @@ public abstract class Server {
         try {
           saslResponse = processSaslMessage(saslMessage);
         } catch (IOException e) {
+          KerberosUtil.checkJCEKeyStrength();
           rpcMetrics.incrAuthenticationFailures();
           if (LOG.isDebugEnabled()) {
             LOG.debug(StringUtils.stringifyException(e));
@@ -2058,7 +2046,7 @@ public abstract class Server {
             LOG.debug("SASL server context established. Negotiated QoP is "
                 + saslServer.getNegotiatedProperty(Sasl.QOP));
           }
-          user = getAuthorizedUgi(saslServer.getAuthorizationID());
+          user = authMethod.getAuthorizedUgi(saslServer.getAuthorizationID(), secretManager);
           if (LOG.isDebugEnabled()) {
             LOG.debug("SASL server successfully authenticated client: " + user);
           }
@@ -2135,16 +2123,16 @@ public abstract class Server {
             saslResponse = buildSaslNegotiateResponse();
             break;
           }
-          authMethod = AuthMethod.valueOf(clientSaslAuth.getMethod());
+          authMethod = RpcAuthRegistry.getAuthMethod(clientSaslAuth.getMethod());
           // abort SASL for SIMPLE auth, server has already ensured that
           // SIMPLE is a legit option above.  we will send no response
-          if (authMethod == AuthMethod.SIMPLE) {
+          if (authMethod.equals(RpcAuthRegistry.SIMPLE)) {
             switchToSimple();
             saslResponse = null;
             break;
           }
           // sasl server for tokens may already be instantiated
-          if (saslServer == null || authMethod != AuthMethod.TOKEN) {
+          if (saslServer == null || !authMethod.equals(RpcAuthRegistry.DIGEST)) {
             saslServer = createSaslServer(authMethod);
           }
           saslResponse = processSaslToken(saslMessage);
@@ -2350,7 +2338,7 @@ public abstract class Server {
         doSaslReply(ioe);
         throw ioe;        
       }
-      boolean isSimpleEnabled = enabledAuthMethods.contains(AuthMethod.SIMPLE);
+      boolean isSimpleEnabled = enabledAuthMethods.contains(RpcAuthRegistry.SIMPLE);
       switch (authProtocol) {
         case NONE: {
           // don't reply if client is simple and server is insecure
@@ -2361,6 +2349,7 @@ public abstract class Server {
             doSaslReply(ioe);
             throw ioe;
           }
+          this.authMethod = RpcAuthRegistry.SIMPLE;
           break;
         }
         default: {
@@ -2383,8 +2372,8 @@ public abstract class Server {
       RpcSaslProto negotiateMessage = negotiateResponse;
       // accelerate token negotiation by sending initial challenge
       // in the negotiation response
-      if (enabledAuthMethods.contains(AuthMethod.TOKEN)) {
-        saslServer = createSaslServer(AuthMethod.TOKEN);
+      if (enabledAuthMethods.contains(RpcAuthRegistry.DIGEST)) {
+        saslServer = createSaslServer(RpcAuthRegistry.DIGEST);
         byte[] challenge = saslServer.evaluateResponse(new byte[0]);
         RpcSaslProto.Builder negotiateBuilder =
             RpcSaslProto.newBuilder(negotiateResponse);
@@ -2395,12 +2384,11 @@ public abstract class Server {
       sentNegotiate = true;
       return negotiateMessage;
     }
-    
-    private SaslServer createSaslServer(AuthMethod authMethod)
-        throws IOException, InterruptedException {
-      final Map<String,?> saslProps =
-                  saslPropsResolver.getServerProperties(addr, ingressPort);
-      return new SaslRpcServer(authMethod).create(this, saslProps, secretManager);
+
+    private SaslServer createSaslServer(RpcAuthMethod authMethod)
+            throws IOException, InterruptedException {
+      return new SaslRpcServer(authMethod).create(this, new TreeMap<String, Object>(
+              saslPropsResolver.getServerProperties(addr)), secretManager);
     }
     
     /**
@@ -2470,13 +2458,13 @@ public abstract class Server {
         user = protocolUser;
       } else {
         // user is authenticated
-        user.setAuthenticationMethod(authMethod);
+        user.setAuthenticationMethod(authMethod.getAuthenticationMethod());
         //Now we check if this is a proxy user case. If the protocol user is
         //different from the 'user', it is a proxy user scenario. However, 
         //this is not allowed if user authenticated with DIGEST.
         if ((protocolUser != null)
             && (!protocolUser.getUserName().equals(user.getUserName()))) {
-          if (authMethod == AuthMethod.TOKEN) {
+          if (authMethod.equals(RpcAuthRegistry.DIGEST)) {
             // Not allowed to doAs if token authentication is used
             throw new FatalRpcServerException(
                 RpcErrorCodeProto.FATAL_UNAUTHORIZED,
@@ -2804,7 +2792,7 @@ public abstract class Server {
         // authorize real user. doAs is allowed only for simple or kerberos
         // authentication
         if (user != null && user.getRealUser() != null
-            && (authMethod != AuthMethod.TOKEN)) {
+                && authMethod.isProxyAllowed()) {
           ProxyUsers.authorize(user, this.getHostAddress());
         }
         authorize(user, protocolName, getHostInetAddress());
@@ -3173,15 +3161,15 @@ public abstract class Server {
     auxiliaryListenerMap.put(newListener.getAddress().getPort(), newListener);
   }
 
-  private RpcSaslProto buildNegotiateResponse(List<AuthMethod> authMethods)
+  private RpcSaslProto buildNegotiateResponse(List<RpcAuthMethod> authMethods)
       throws IOException {
     RpcSaslProto.Builder negotiateBuilder = RpcSaslProto.newBuilder();
-    if (authMethods.contains(AuthMethod.SIMPLE) && authMethods.size() == 1) {
+    if (authMethods.contains(RpcAuthRegistry.SIMPLE) && authMethods.size() == 1) {
       // SIMPLE-only servers return success in response to negotiate
       negotiateBuilder.setState(SaslState.SUCCESS);
     } else {
       negotiateBuilder.setState(SaslState.NEGOTIATE);
-      for (AuthMethod authMethod : authMethods) {
+      for (RpcAuthMethod authMethod : authMethods) {
         SaslRpcServer saslRpcServer = new SaslRpcServer(authMethod);      
         SaslAuth.Builder builder = negotiateBuilder.addAuthsBuilder()
             .setMethod(authMethod.toString())
@@ -3200,11 +3188,11 @@ public abstract class Server {
   // get the security type from the conf. implicitly include token support
   // if a secret manager is provided, or fail if token is the conf value but
   // there is no secret manager
-  private List<AuthMethod> getAuthMethods(SecretManager<?> secretManager,
-                                             Configuration conf) {
+  private List<RpcAuthMethod> getAuthMethods(SecretManager<?> secretManager,
+                                             Configuration conf) throws IOException {
     AuthenticationMethod confAuthenticationMethod =
         SecurityUtil.getAuthenticationMethod(conf);        
-    List<AuthMethod> authMethods = new ArrayList<AuthMethod>();
+    List<RpcAuthMethod> authMethods = new ArrayList<RpcAuthMethod>();
     if (confAuthenticationMethod == AuthenticationMethod.TOKEN) {
       if (secretManager == null) {
         throw new IllegalArgumentException(AuthenticationMethod.TOKEN +
@@ -3214,9 +3202,9 @@ public abstract class Server {
       LOG.debug(AuthenticationMethod.TOKEN +
           " authentication enabled for secret manager");
       // most preferred, go to the front of the line!
-      authMethods.add(AuthenticationMethod.TOKEN.getAuthMethod());
+      authMethods.add(RpcAuthRegistry.DIGEST);
     }
-    authMethods.add(confAuthenticationMethod.getAuthMethod());        
+    authMethods.addAll(UserGroupInformation.getCurrentUser().getRpcAuthMethodList());
     
     LOG.debug("Server accepts auth methods:" + authMethods);
     return authMethods;

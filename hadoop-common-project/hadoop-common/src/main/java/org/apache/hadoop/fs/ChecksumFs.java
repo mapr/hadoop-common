@@ -244,7 +244,7 @@ public abstract class ChecksumFs extends FilterFs {
     }
     
     /* Return the file length */
-    private long getFileLength() throws IOException, UnresolvedLinkException {
+    public long getFileLength() throws IOException, UnresolvedLinkException {
       if (fileLen==-1L) {
         fileLen = fs.getFileStatus(file).getLen();
       }

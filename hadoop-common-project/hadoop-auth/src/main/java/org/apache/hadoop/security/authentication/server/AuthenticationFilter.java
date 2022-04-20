@@ -35,6 +35,8 @@ import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.security.Principal;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -143,6 +145,10 @@ public class AuthenticationFilter implements Filter {
   private String cookiePath;
   private boolean isCookiePersistent;
   private boolean destroySecretProvider;
+  /**
+   * Configuration prefix value for properties.
+   */
+  protected String configPrefix;
 
   /**
    * <p>Initializes the authentication filter and signer secret provider.</p>
@@ -155,7 +161,7 @@ public class AuthenticationFilter implements Filter {
    */
   @Override
   public void init(FilterConfig filterConfig) throws ServletException {
-    String configPrefix = filterConfig.getInitParameter(CONFIG_PREFIX);
+    configPrefix = filterConfig.getInitParameter(CONFIG_PREFIX);
     configPrefix = (configPrefix != null) ? configPrefix + "." : "";
     config = getConfiguration(configPrefix, filterConfig);
     String authHandlerName = config.getProperty(AUTH_TYPE, null);
@@ -179,8 +185,18 @@ public class AuthenticationFilter implements Filter {
 
     initializeAuthHandler(authHandlerClassName, filterConfig);
 
-    cookieDomain = config.getProperty(COOKIE_DOMAIN, null);
-    cookiePath = config.getProperty(COOKIE_PATH, null);
+    String domainName = null;
+    try {
+      InetAddress localHost = InetAddress.getLocalHost();
+      String fqdn = localHost.getCanonicalHostName();
+      if (fqdn != null && !fqdn.isEmpty() && fqdn.contains(".")) {
+        domainName = fqdn.substring(fqdn.indexOf("."));
+      }
+    } catch (UnknownHostException e) {
+    }
+
+    cookieDomain = config.getProperty(COOKIE_DOMAIN, domainName);
+    cookiePath = config.getProperty(COOKIE_PATH, "/");
     isCookiePersistent = Boolean.parseBoolean(
             config.getProperty(COOKIE_PERSISTENT, "false"));
 
