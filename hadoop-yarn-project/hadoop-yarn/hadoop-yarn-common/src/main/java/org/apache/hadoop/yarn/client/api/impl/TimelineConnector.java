@@ -35,8 +35,6 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 
-import org.apache.hadoop.security.authentication.server.KerberosAuthenticationHandler;
-import org.apache.hadoop.security.authentication.server.PseudoAuthenticationHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
@@ -49,6 +47,7 @@ import org.apache.hadoop.security.token.delegation.web.DelegationTokenAuthentica
 import org.apache.hadoop.security.token.delegation.web.DelegationTokenAuthenticatedURL.Token;
 import org.apache.hadoop.security.token.delegation.web.DelegationTokenAuthenticator;
 import org.apache.hadoop.security.token.delegation.web.KerberosDelegationTokenAuthenticator;
+import org.apache.hadoop.security.token.delegation.web.MaprDelegationTokenAuthenticator;
 import org.apache.hadoop.security.token.delegation.web.PseudoDelegationTokenAuthenticator;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
@@ -115,13 +114,9 @@ public class TimelineConnector extends AbstractService {
     } else {
       connConfigurator = defaultTimeoutConnConfigurator;
     }
-    String defaultAuth = UserGroupInformation.isSecurityEnabled() ?
-            KerberosAuthenticationHandler.TYPE :
-            PseudoAuthenticationHandler.TYPE;
-    String authType = conf.get(YarnConfiguration.TIMELINE_HTTP_AUTH_TYPE,
-            defaultAuth);
-    if (authType.equals(KerberosAuthenticationHandler.TYPE)) {
-      authenticator = new KerberosDelegationTokenAuthenticator();
+
+    if (UserGroupInformation.isSecurityEnabled()) {
+      authenticator = getMaprDelegationTokenAuthenticator();
     } else {
       authenticator = new PseudoDelegationTokenAuthenticator();
     }
@@ -144,6 +139,22 @@ public class TimelineConnector extends AbstractService {
     setTimeouts(conn, socketTimeOut);
     return conn;
   };
+
+  public DelegationTokenAuthenticator getMaprDelegationTokenAuthenticator() {
+    DelegationTokenAuthenticator maprAuthenticator = null;
+    try {
+      maprAuthenticator = new MaprDelegationTokenAuthenticator();
+    } catch (InstantiationException e) {
+      LOG.error("Unable to instantiate class " + maprAuthenticator.getClass().getName(), e);
+    } catch (IllegalAccessException e) {
+      LOG.error("Unable to init class " + maprAuthenticator.getClass().getName(), e);
+    } finally {
+      if (maprAuthenticator == null) {
+        return new KerberosDelegationTokenAuthenticator();
+      }
+    }
+    return maprAuthenticator;
+  }
 
   private ConnectionConfigurator getConnConfigurator(SSLFactory sslFactoryObj) {
     try {

@@ -47,9 +47,11 @@ import org.apache.hadoop.net.ConnectTimeoutException;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.KerberosInfo;
 import org.apache.hadoop.security.SaslRpcClient;
-import org.apache.hadoop.security.SaslRpcServer.AuthMethod;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.authentication.util.KerberosUtil;
+import org.apache.hadoop.security.rpcauth.RpcAuthMethod;
+import org.apache.hadoop.security.rpcauth.RpcAuthRegistry;
 import org.apache.hadoop.util.ProtoUtil;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.Time;
@@ -60,6 +62,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.SocketFactory;
+import javax.security.auth.login.LoginException;
 import javax.security.sasl.Sasl;
 import javax.security.sasl.SaslException;
 import java.io.*;
@@ -363,8 +366,8 @@ public class Client implements AutoCloseable {
    * socket: responses may be delivered out of order. */
   private class Connection extends Thread {
     private InetSocketAddress server;             // server ip:port
-    private final ConnectionId remoteId;          // connection id
-    private AuthMethod authMethod; // authentication method
+    private final ConnectionId remoteId;                // connection id
+    private RpcAuthMethod authMethod; // authentication method
     private AuthProtocol authProtocol;
     private int serviceClass;
     private SaslRpcClient saslRpcClient;
@@ -454,7 +457,8 @@ public class Client implements AutoCloseable {
       boolean trySasl = UserGroupInformation.isSecurityEnabled() ||
                         (ticket != null && !ticket.getTokens().isEmpty());
       this.authProtocol = trySasl ? AuthProtocol.SASL : AuthProtocol.NONE;
-      
+      this.authMethod = RpcAuthRegistry.SIMPLE; // start with SIMPLE even if security is enabled.
+
       this.setName("IPC Client (" + socketFactory.hashCode() +") connection to " +
           server.toString() +
           " from " + ((ticket==null)?"an unknown user":ticket.getUserName()));
@@ -557,7 +561,7 @@ public class Client implements AutoCloseable {
       UserGroupInformation loginUser = UserGroupInformation.getLoginUser();
       UserGroupInformation currentUser = UserGroupInformation.getCurrentUser();
       UserGroupInformation realUser = currentUser.getRealUser();
-      if (authMethod == AuthMethod.KERBEROS && loginUser != null &&
+      if (authMethod.shouldReLogin() && loginUser != null &&
       // Make sure user logged in using Kerberos either keytab or TGT
           loginUser.hasKerberosCredentials() &&
           // relogin only in case it is the login user (e.g. JT)
@@ -568,7 +572,7 @@ public class Client implements AutoCloseable {
       return false;
     }
 
-    private synchronized AuthMethod setupSaslConnection(IpcStreams streams)
+    private synchronized RpcAuthMethod setupSaslConnection(IpcStreams streams)
         throws IOException {
       // Do not use Client.conf here! We must use ConnectionId.conf, since the
       // Client object is cached and shared between all RPC clients, even those
@@ -708,7 +712,7 @@ public class Client implements AutoCloseable {
         InterruptedException {
       ugi.doAs(new PrivilegedExceptionAction<Object>() {
         @Override
-        public Object run() throws IOException, InterruptedException {
+        public Object run() throws IOException, InterruptedException, LoginException {
           final short MAX_BACKOFF = 5000;
           closeConnection();
           disposeSasl();
@@ -716,11 +720,7 @@ public class Client implements AutoCloseable {
             if (currRetries < maxRetries) {
               LOG.debug("Exception encountered while connecting to the server {}", remoteId, ex);
               // try re-login
-              if (UserGroupInformation.isLoginKeytabBased()) {
-                UserGroupInformation.getLoginUser().reloginFromKeytab();
-              } else if (UserGroupInformation.isLoginTicketBased()) {
-                UserGroupInformation.getLoginUser().reloginFromTicketCache();
-              }
+              authMethod.reLogin();
               // have granularity of milliseconds
               //we are sleeping with the Connection lock held but since this
               //connection instance is being used for connecting to the server
@@ -792,9 +792,9 @@ public class Client implements AutoCloseable {
           if (authProtocol == AuthProtocol.SASL) {
             try {
               authMethod = ticket
-                  .doAs(new PrivilegedExceptionAction<AuthMethod>() {
+                  .doAs(new PrivilegedExceptionAction<RpcAuthMethod>() {
                     @Override
-                    public AuthMethod run()
+                    public RpcAuthMethod run()
                         throws IOException, InterruptedException {
                       return setupSaslConnection(ipcStreams);
                     }
@@ -804,6 +804,7 @@ public class Client implements AutoCloseable {
                 // whatever happened -it can't be handled, so rethrow
                 throw ex;
               }
+              KerberosUtil.checkJCEKeyStrength();
               // otherwise, assume a connection problem
               authMethod = saslRpcClient.getAuthMethod();
               if (rand == null) {
@@ -813,7 +814,7 @@ public class Client implements AutoCloseable {
                   rand, ticket);
               continue;
             }
-            if (authMethod != AuthMethod.SIMPLE) {
+            if (!authMethod.equals(RpcAuthRegistry.SIMPLE)) {
               // Sasl connect is successful. Let's set up Sasl i/o streams.
               ipcStreams.setSaslClient(saslRpcClient);
               // for testing
@@ -872,7 +873,7 @@ public class Client implements AutoCloseable {
           return;
         }
       }
-      if (authMethod != AuthMethod.SIMPLE) {
+      if (!authMethod.equals(RpcAuthRegistry.SIMPLE)) {
         if (fallbackToSimpleAuth != null) {
           LOG.trace("Disabling fallbackToSimpleAuth, target does not use SIMPLE authentication.");
           fallbackToSimpleAuth.set(false);
@@ -1005,7 +1006,7 @@ public class Client implements AutoCloseable {
      * Out is not synchronized because only the first thread does this.
      */
     private void writeConnectionContext(ConnectionId remoteId,
-                                        AuthMethod authMethod)
+                                        RpcAuthMethod authMethod)
                                             throws IOException {
       // Write out the ConnectionHeader
       IpcConnectionContextProto message = ProtoUtil.makeIpcConnectionContext(
@@ -1779,7 +1780,7 @@ public class Client implements AutoCloseable {
     RetryPolicy getRetryPolicy() {
       return connectionRetryPolicy;
     }
-    
+
     @VisibleForTesting
     String getSaslQop() {
       return saslQop;

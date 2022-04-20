@@ -22,6 +22,7 @@ import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.HADOOP_KERBEROS
 import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.HADOOP_KERBEROS_MIN_SECONDS_BEFORE_RELOGIN_DEFAULT;
 import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.HADOOP_KERBEROS_KEYTAB_LOGIN_AUTORENEWAL_ENABLED;
 import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.HADOOP_KERBEROS_KEYTAB_LOGIN_AUTORENEWAL_ENABLED_DEFAULT;
+import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION;
 import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.HADOOP_TOKEN_FILES;
 import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.HADOOP_TOKENS;
 import static org.apache.hadoop.security.UGIExceptionMessages.*;
@@ -33,6 +34,7 @@ import org.apache.hadoop.classification.VisibleForTesting;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.UndeclaredThrowableException;
+import java.net.URL;
 import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.security.Principal;
@@ -47,6 +49,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -73,6 +76,7 @@ import org.apache.hadoop.io.retry.RetryPolicies;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.retry.RetryPolicy;
 import org.apache.hadoop.metrics2.annotation.Metric;
@@ -84,6 +88,9 @@ import org.apache.hadoop.metrics2.lib.MutableGaugeLong;
 import org.apache.hadoop.metrics2.lib.MutableQuantiles;
 import org.apache.hadoop.metrics2.lib.MutableRate;
 import org.apache.hadoop.security.SaslRpcServer.AuthMethod;
+import org.apache.hadoop.security.login.HadoopLoginModule;
+import org.apache.hadoop.security.rpcauth.RpcAuthMethod;
+import org.apache.hadoop.security.rpcauth.RpcAuthRegistry;
 import org.apache.hadoop.security.authentication.util.KerberosUtil;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.TokenIdentifier;
@@ -125,7 +132,26 @@ public class UserGroupInformation {
     shouldRenewImmediatelyForTests = immediate;
   }
 
-  /** 
+  // Begin MapR section
+  private static final String HADOOP_SECURITY_SPOOF_USER = "hadoop.spoof.user";
+  private static final String HADOOP_SECURITY_SPOOFED_USER = "hadoop.spoofed.user.username";
+  private static boolean spoofUser = false;
+  private static String spoofedUser;
+
+  private static void checkSpoofing(Configuration conf) {
+    // spoof users by default on Windows
+    spoofUser = conf.getBoolean(HADOOP_SECURITY_SPOOF_USER,
+            windows ? true : false);
+
+    if (!spoofUser) {
+      return;
+    }
+
+    spoofedUser = conf.get(HADOOP_SECURITY_SPOOFED_USER, "root");
+  }
+  // End MapR section
+
+  /**
    * UgiMetrics maintains UGI activity statistics
    * and publishes them through the metrics interfaces.
    */
@@ -165,93 +191,6 @@ public class UserGroupInformation {
       return renewalFailures;
     }
   }
-  
-  /**
-   * A login module that looks at the Kerberos, Unix, or Windows principal and
-   * adds the corresponding UserName.
-   */
-  @InterfaceAudience.Private
-  public static class HadoopLoginModule implements LoginModule {
-    private Subject subject;
-
-    @Override
-    public boolean abort() throws LoginException {
-      return true;
-    }
-
-    private <T extends Principal> T getCanonicalUser(Class<T> cls) {
-      for(T user: subject.getPrincipals(cls)) {
-        return user;
-      }
-      return null;
-    }
-
-    @Override
-    public boolean commit() throws LoginException {
-      LOG.debug("hadoop login commit");
-      // if we already have a user, we are done.
-      if (!subject.getPrincipals(User.class).isEmpty()) {
-        LOG.debug("Using existing subject: {}", subject.getPrincipals());
-        return true;
-      }
-      Principal user = getCanonicalUser(KerberosPrincipal.class);
-      if (user != null) {
-        LOG.debug("Using kerberos user: {}", user);
-      }
-      //If we don't have a kerberos user and security is disabled, check
-      //if user is specified in the environment or properties
-      if (!isSecurityEnabled() && (user == null)) {
-        String envUser = System.getenv(HADOOP_USER_NAME);
-        if (envUser == null) {
-          envUser = System.getProperty(HADOOP_USER_NAME);
-        }
-        user = envUser == null ? null : new User(envUser);
-      }
-      // use the OS user
-      if (user == null) {
-        user = getCanonicalUser(OS_PRINCIPAL_CLASS);
-        LOG.debug("Using local user: {}", user);
-      }
-      // if we found the user, add our principal
-      if (user != null) {
-        LOG.debug("Using user: \"{}\" with name: {}", user, user.getName());
-
-        User userEntry = null;
-        try {
-          // LoginContext will be attached later unless it's an external
-          // subject.
-          AuthenticationMethod authMethod = (user instanceof KerberosPrincipal)
-            ? AuthenticationMethod.KERBEROS : AuthenticationMethod.SIMPLE;
-          userEntry = new User(user.getName(), authMethod, null);
-        } catch (Exception e) {
-          throw (LoginException)(new LoginException(e.toString()).initCause(e));
-        }
-        LOG.debug("User entry: \"{}\"", userEntry);
-
-        subject.getPrincipals().add(userEntry);
-        return true;
-      }
-      throw new LoginException("Failed to find user in name " + subject);
-    }
-
-    @Override
-    public void initialize(Subject subject, CallbackHandler callbackHandler,
-                           Map<String, ?> sharedState, Map<String, ?> options) {
-      this.subject = subject;
-    }
-
-    @Override
-    public boolean login() throws LoginException {
-      LOG.debug("Hadoop login");
-      return true;
-    }
-
-    @Override
-    public boolean logout() throws LoginException {
-      LOG.debug("Hadoop logout");
-      return true;
-    }
-  }
 
   /**
    * Reattach the class's metrics to a new metric system.
@@ -277,13 +216,25 @@ public class UserGroupInformation {
 
   private static Configuration conf;
 
-  
+  /** JAAS configuration name to be used for user login */
+  private static String userJAASConfName;
+
+  /** JAAS configuration name to be used for service login */
+  private static String serviceJAASConfName;
+
   /**Environment variable pointing to the token cache file*/
   public static final String HADOOP_TOKEN_FILE_LOCATION = 
       "HADOOP_TOKEN_FILE_LOCATION";
   /** Environment variable pointing to the base64 tokens. */
   public static final String HADOOP_TOKEN = "HADOOP_TOKEN";
-  
+
+  private static Class<? extends Principal> customAuthPrincipalClass;
+
+  private static Class<? extends RpcAuthMethod> customRpcAuthMethodClass;
+
+  public static final String JAVA_SECURITY_AUTH_LOGIN_CONFIG = "java.security.auth.login.config";
+  public static final String DEFAULT_JAVA_SECURITY_AUTH_LOGIN_CONFIG = System.getenv("JAVA_SECURITY_AUTH");
+
   public static boolean isInitialized() {
     return conf != null;
   }
@@ -308,7 +259,79 @@ public class UserGroupInformation {
    */
   private static synchronized void initialize(Configuration conf,
                                               boolean overrideNameRules) {
-    authenticationMethod = SecurityUtil.getAuthenticationMethod(conf);
+    AuthenticationMethod authenticationMethodFromConf = getAuthenticationMethodFromConfiguration(conf);
+    if (LOG.isDebugEnabled())
+      LOG.debug("HADOOP_SECURITY_AUTHENTICATION is set to: " + authenticationMethodFromConf);
+    // spoofing is only allowed when insecure
+    if (authenticationMethodFromConf == null || authenticationMethodFromConf.equals(AuthenticationMethod.SIMPLE)) {
+      checkSpoofing(conf);
+    } else {
+      // Initialize custom auth method.
+      // TODO This code really belongs to RpcAuthRegistry.
+      customAuthPrincipalClass = SecurityUtil.getCustomAuthPrincipal(conf);
+      customRpcAuthMethodClass = SecurityUtil.getCustomRpcAuthMethod(conf);
+    }
+    String jaasConfName = null;
+    if (authenticationMethodFromConf == AuthenticationMethod.SIMPLE) {
+      jaasConfName = "simple";
+    } else {
+      LOG.debug("Security is enabled.");
+      // ignore what is passed in and instead honor extra configuration
+      // or JVM setting if neither set, use default.
+      jaasConfName = System.getProperty("hadoop.login");
+      if (jaasConfName == null) {
+        jaasConfName = conf.get("hadoop.login", "default");
+      }
+    }
+
+    userJAASConfName = jaasConfName.startsWith("hadoop_")
+            ? jaasConfName : "hadoop_" + jaasConfName;
+    serviceJAASConfName = userJAASConfName.endsWith("_keytab")
+            ? userJAASConfName : userJAASConfName + "_keytab";
+
+    if (LOG.isDebugEnabled())
+      LOG.debug("Login configuration entry is " + userJAASConfName);
+
+    String loginConfPath = System.getProperty(JAVA_SECURITY_AUTH_LOGIN_CONFIG);
+
+    if (loginConfPath == null) {
+      loginConfPath = conf.get(JAVA_SECURITY_AUTH_LOGIN_CONFIG, DEFAULT_JAVA_SECURITY_AUTH_LOGIN_CONFIG);
+      if (loginConfPath != null ) {
+        System.setProperty(JAVA_SECURITY_AUTH_LOGIN_CONFIG, loginConfPath);
+        loginConfPath = System.getProperty(JAVA_SECURITY_AUTH_LOGIN_CONFIG);
+        LOG.info("Java System property 'java.security.auth.login.config' not"
+                + " set, unilaterally setting to " + loginConfPath);
+      }
+    }
+    // still can be null
+    if ( loginConfPath == null || !(new File(loginConfPath)).canRead() ) {
+      if ( LOG.isDebugEnabled()) {
+        LOG.debug(loginConfPath + " either null or can not be read. Trying to load "
+                + "'java.security.auth.login.config' from jar");
+      }
+      String javaSecurityJarPath =
+              conf.get(CommonConfigurationKeysPublic.HADOOP_SECURITY_JAVA_SECURITY_JAR_PATH);
+      URL javaSecurityURL = null;
+      if ( javaSecurityJarPath != null ) {
+        javaSecurityURL = UserGroupInformation.class.getResource(javaSecurityJarPath);
+        if ( javaSecurityURL != null ) {
+          loginConfPath = javaSecurityURL.toExternalForm();
+          System.setProperty(JAVA_SECURITY_AUTH_LOGIN_CONFIG, loginConfPath);
+          if ( LOG.isDebugEnabled()) {
+            LOG.debug("Loading 'java.security.auth.login.config' from: " + loginConfPath);
+          }
+        }
+      }
+      if (javaSecurityJarPath == null || javaSecurityURL == null ) {
+        LOG.warn("'java.security.auth.login.config' is not"
+                + " configured either in Hadoop configuration or"
+                + " via Java property or not loaded from jar, may cause login failure");
+      }
+    }
+
+    // by this time JAAS config file is fully loaded. Set UGI's authenticationMethod from JAAS config.
+    setUGIAuthenticationMethodFromJAASConfiguration(jaasConfName);
+
     if (overrideNameRules || !HadoopKerberosName.hasRulesBeenSet()) {
       try {
         HadoopKerberosName.setConfiguration(conf);
@@ -351,6 +374,46 @@ public class UserGroupInformation {
         metrics.getGroupsQuantiles = getGroupsQuantiles;
       }
     }
+  }
+
+  private static AuthenticationMethod getAuthenticationMethodFromConfiguration(Configuration conf) {
+    String value = conf.get(HADOOP_SECURITY_AUTHENTICATION, "simple");
+    try {
+      return Enum.valueOf(AuthenticationMethod.class, value.toUpperCase(Locale.ENGLISH));
+    } catch (IllegalArgumentException iae) {
+      throw new IllegalArgumentException("Invalid attribute value for " +
+              HADOOP_SECURITY_AUTHENTICATION + " of " + value);
+    }
+  }
+
+  /**
+   * The only supported options in JAAS config file (currently) are SIMPLE, KERBEROS and CUSTOM.
+   *
+   * DIGEST/TOKEN is internal to hadoop. PROXY is used during impersonation. These two options
+   * are therefore not never returned via this method.
+   */
+  private static void setUGIAuthenticationMethodFromJAASConfiguration(String jaasConfName) {
+    if (jaasConfName.contains("simple")) {
+      UserGroupInformation.authenticationMethod = AuthenticationMethod.SIMPLE;
+    } else if (jaasConfName.contains("kerberos")) {
+      UserGroupInformation.authenticationMethod = AuthenticationMethod.KERBEROS;
+    } else { // if it's not SIMPLE and not KERBEROS, treat it as CUSTOM
+      UserGroupInformation.authenticationMethod = AuthenticationMethod.CUSTOM;
+    }
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("authenticationMethod from JAAS configuration:" + UserGroupInformation.authenticationMethod);
+    }
+  }
+
+  /**
+   * Returns authenticationMethod obtained by inspecting JAAS configuration.
+   * @return
+   */
+  public static AuthenticationMethod getUGIAuthenticationMethod() {
+    if (UserGroupInformation.authenticationMethod == null) {
+      ensureInitialized();
+    }
+    return UserGroupInformation.authenticationMethod;
   }
 
   /**
@@ -420,47 +483,10 @@ public class UserGroupInformation {
   private final Subject subject;
   // All non-static fields must be read-only caches that come from the subject.
   private final User user;
+  private List<RpcAuthMethod> rpcAuthMethodList;
 
-  private static String OS_LOGIN_MODULE_NAME;
-  private static Class<? extends Principal> OS_PRINCIPAL_CLASS;
-  
   private static final boolean windows =
       System.getProperty("os.name").startsWith("Windows");
-
-  /* Return the OS login module class name */
-  /* For IBM JDK, use the common OS login module class name for all platforms */
-  private static String getOSLoginModuleName() {
-    if (IBM_JAVA) {
-      return "com.ibm.security.auth.module.JAASLoginModule";
-    } else {
-      return windows ? "com.sun.security.auth.module.NTLoginModule"
-        : "com.sun.security.auth.module.UnixLoginModule";
-    }
-  }
-
-  /* Return the OS principal class */
-  /* For IBM JDK, use the common OS principal class for all platforms */
-  @SuppressWarnings("unchecked")
-  private static Class<? extends Principal> getOsPrincipalClass() {
-    ClassLoader cl = ClassLoader.getSystemClassLoader();
-    try {
-      String principalClass = null;
-      if (IBM_JAVA) {
-        principalClass = "com.ibm.security.auth.UsernamePrincipal";
-      } else {
-        principalClass = windows ? "com.sun.security.auth.NTUserPrincipal"
-            : "com.sun.security.auth.UnixPrincipal";
-      }
-      return (Class<? extends Principal>) cl.loadClass(principalClass);
-    } catch (ClassNotFoundException e) {
-      LOG.error("Unable to find JAAS classes:" + e.getMessage());
-    }
-    return null;
-  }
-  static {
-    OS_LOGIN_MODULE_NAME = getOSLoginModuleName();
-    OS_PRINCIPAL_CLASS = getOsPrincipalClass();
-  }
 
   private static class RealUser implements Principal {
     private final UserGroupInformation realUser;
@@ -502,7 +528,7 @@ public class UserGroupInformation {
 
   private static HadoopLoginContext
   newLoginContext(String appName, Subject subject,
-                  HadoopConfiguration loginConf)
+                  Map<String,?> overrideOptions)
       throws LoginException {
     // Temporarily switch the thread's ContextClassLoader to match this
     // class's classloader, so that we can properly load HadoopLoginModule
@@ -511,10 +537,27 @@ public class UserGroupInformation {
     ClassLoader oldCCL = t.getContextClassLoader();
     t.setContextClassLoader(HadoopLoginModule.class.getClassLoader());
     try {
-      return new HadoopLoginContext(appName, subject, loginConf);
+      if (overrideOptions != null) {
+        DynamicLoginConfiguration cfg =
+                new DynamicLoginConfiguration(getJAASConf(), overrideOptions);
+        return new HadoopLoginContext(appName, subject, cfg);
+      }
+      return new HadoopLoginContext(appName, subject);
     } finally {
       t.setContextClassLoader(oldCCL);
     }
+  }
+
+  private static LoginContext newLoginContextWithKeyTab(String appName,
+                                                        Subject subject, String keytab, String principal) throws LoginException {
+    Map<String,String> overrideOptions = new HashMap<String, String>();
+    overrideOptions.put("keyTab", keytab);
+    overrideOptions.put("principal", principal);
+    return newLoginContext(appName, subject, overrideOptions);
+  }
+
+  private static javax.security.auth.login.Configuration getJAASConf() {
+    return javax.security.auth.login.Configuration.getConfiguration();
   }
 
   // return the LoginContext only if it's managed by the ugi.  externally
@@ -549,6 +592,34 @@ public class UserGroupInformation {
     user.setLastLogin(loginTime);
   }
 
+  private void configureRpcAuthMethods(String confName) {
+    ArrayList<RpcAuthMethod> authMethodList = new ArrayList<RpcAuthMethod>();
+    if (isSecurityEnabled() && confName != null) {
+      Set<RpcAuthMethod> authMethods = new LinkedHashSet<RpcAuthMethod>();
+      AppConfigurationEntry[] appInfo =
+              getJAASConf().getAppConfigurationEntry(confName);
+      for (int i = 0; appInfo != null && i < appInfo.length; i++) {
+        String module = appInfo[i].getLoginModuleName();
+        RpcAuthMethod rpcAuthMethod = RpcAuthRegistry.getAuthMethodForLoginModule(module);
+        if (rpcAuthMethod != null) {
+          authMethods.add(rpcAuthMethod);
+        }
+      }
+
+      if (isSecurityEnabled()
+              && !"hadoop_simple".equals(confName)
+              && authMethods.size() == 0) {
+        LOG.warn("Security is enabled but no suitable RPC authentication "
+                + "method is found in the provided JAAS configuration: " + confName);
+      }
+      authMethodList.addAll(authMethods);
+    } else {
+      authMethodList.add(RpcAuthRegistry.SIMPLE);
+    }
+
+    this.rpcAuthMethodList = Collections.unmodifiableList(authMethodList);
+  }
+
   /**
    * Create a UserGroupInformation for the given subject.
    * This does not change the subject or acquire new credentials.
@@ -557,6 +628,10 @@ public class UserGroupInformation {
    * @param subject the user's subject
    */
   UserGroupInformation(Subject subject) {
+    this(subject, userJAASConfName);
+  }
+
+  UserGroupInformation(Subject subject, String loginConfName) {
     this.subject = subject;
     // do not access ANY private credentials since they are mutable
     // during a relogin.  no principal locking necessary since
@@ -564,6 +639,22 @@ public class UserGroupInformation {
     this.user = subject.getPrincipals(User.class).iterator().next();
     if (user == null || user.getName() == null) {
       throw new IllegalStateException("Subject does not contain a valid User");
+    }
+    configureRpcAuthMethods(loginConfName);
+
+    /* Since multiple methods are allowed at once, this isn't a great setting.
+     * We just prefer the dominant method. This concept really should be removed.
+     * Better to have the login modules set the methods of authentication based
+     * upon some common mapping or even callers just look directly at the subject
+     * to determine what is in it.
+     */
+    if (!subject.getPrincipals(KerberosPrincipal.class).isEmpty()) {
+      this.user.setAuthenticationMethod(AuthenticationMethod.KERBEROS);
+      LOG.debug("found Kerberos Principal in subject, marking as such");
+    } else if (customAuthPrincipalClass != null && !subject.getPrincipals(customAuthPrincipalClass).isEmpty()) {
+      this.user.setAuthenticationMethod(AuthenticationMethod.CUSTOM);
+      LOG.debug("found custom auth principal " + customAuthPrincipalClass.getName() + "  in subject. " +
+              "marking authentication method as " + AuthenticationMethod.CUSTOM);
     }
   }
 
@@ -573,6 +664,10 @@ public class UserGroupInformation {
    */
   public boolean hasKerberosCredentials() {
     return user.getAuthenticationMethod() == AuthenticationMethod.KERBEROS;
+  }
+
+  public List<RpcAuthMethod> getRpcAuthMethodList() {
+    return rpcAuthMethodList;
   }
 
   /**
@@ -602,7 +697,7 @@ public class UserGroupInformation {
    *
    * @return                   The most appropriate UserGroupInformation
    * @throws IOException raised on errors performing I/O.
-   */ 
+   */
   public static UserGroupInformation getBestUGI(
       String ticketCachePath, String user) throws IOException {
     if (ticketCachePath != null) {
@@ -802,6 +897,23 @@ public class UserGroupInformation {
     return loginUser;
   }
 
+  private static void setUserAuthenticationMethod(UserGroupInformation realUser) {
+    if (realUser.user.getAuthenticationMethod() == null) { // if the user's auth method is not set from subject
+      switch (authenticationMethod) {                      // set it from configured authenticationMethod
+        case TOKEN:
+        case CERTIFICATE:
+        case KERBEROS_SSL:
+        case PROXY:
+          throw new UnsupportedOperationException(
+                  authenticationMethod + " login authentication is not supported");
+        default:
+          LOG.debug("Found no authentication principals in subject. Simple?");
+          realUser.user.setAuthenticationMethod(authenticationMethod);
+      }
+
+    }
+  }
+
   @InterfaceAudience.Private
   @InterfaceStability.Unstable
   @VisibleForTesting
@@ -814,8 +926,8 @@ public class UserGroupInformation {
   private String getKeytab() {
     HadoopLoginContext login = getLogin();
     return (login != null)
-      ? login.getConfiguration().getParameters().get(LoginParam.KEYTAB)
-      : null;
+          ? (String) login.getConfiguration().getOverrideOptions().get(LoginParam.KEYTAB)
+          : null;
   }
 
   /**
@@ -972,7 +1084,7 @@ public class UserGroupInformation {
      * The concrete implementations of this class should provide specific
      * logic required to perform renewal as part of this method.
      */
-    protected abstract void relogin() throws IOException;
+    protected abstract void relogin() throws IOException, LoginException;
 
     @Override
     public void run() {
@@ -1048,6 +1160,8 @@ public class UserGroupInformation {
                 getUserName());
             return;
           }
+        } catch (LoginException e) {
+          e.printStackTrace();
         }
       } while (runRenewalLoop);
     }
@@ -1071,7 +1185,7 @@ public class UserGroupInformation {
     }
 
     @Override
-    public void relogin() throws IOException {
+    public void relogin() throws IOException, LoginException {
       String output = Shell.execCommand(kinitCmd, "-R");
       LOG.debug("Renewed ticket. kinit output: {}", output);
       reloginFromTicketCache();
@@ -1301,7 +1415,7 @@ public class UserGroupInformation {
    */
   @InterfaceAudience.Public
   @InterfaceStability.Evolving
-  public void forceReloginFromTicketCache() throws IOException {
+  public void forceReloginFromTicketCache() throws IOException, LoginException {
     reloginFromTicketCache(true);
   }
 
@@ -1315,16 +1429,17 @@ public class UserGroupInformation {
    */
   @InterfaceAudience.Public
   @InterfaceStability.Evolving
-  public void reloginFromTicketCache() throws IOException {
+  public void reloginFromTicketCache() throws IOException, LoginException {
     reloginFromTicketCache(false);
   }
 
   private void reloginFromTicketCache(boolean ignoreLastLoginTime)
-      throws IOException {
+      throws IOException, LoginException {
     if (!shouldRelogin() || !isFromTicket()) {
       return;
     }
-    HadoopLoginContext login = getLogin();
+    HadoopLoginContext login = newLoginContext(userJAASConfName, getSubject(), null);
+    LOG.info("Initiating re-login for " + getUserName());
     if (login == null) {
       throw new KerberosAuthException(MUST_FIRST_LOGIN);
     }
@@ -1362,7 +1477,7 @@ public class UserGroupInformation {
       //login and also update the subject field of this instance to 
       //have the new credentials (pass it to the LoginContext constructor)
       login = newLoginContext(
-        login.getAppName(), login.getSubject(), login.getConfiguration());
+              login.getAppName(), login.getSubject(), login.getConfiguration().getOverrideOptions());
       LOG.debug("Initiating re-login for {}", getUserName());
       login.login();
       // this should be unnecessary.  originally added due to improper locking
@@ -1469,48 +1584,25 @@ public class UserGroupInformation {
   public enum AuthenticationMethod {
     // currently we support only one auth per method, but eventually a 
     // subtype is needed to differentiate, ex. if digest is token or ldap
-    SIMPLE(AuthMethod.SIMPLE,
-        HadoopConfiguration.SIMPLE_CONFIG_NAME),
-    KERBEROS(AuthMethod.KERBEROS,
-        HadoopConfiguration.KERBEROS_CONFIG_NAME),
-    TOKEN(AuthMethod.TOKEN),
-    CERTIFICATE(null),
-    KERBEROS_SSL(null),
-    PROXY(null);
-    
-    private final AuthMethod authMethod;
-    private final String loginAppName;
-    
-    private AuthenticationMethod(AuthMethod authMethod) {
-      this(authMethod, null);
+    SIMPLE(false),
+    KERBEROS(true),
+    TOKEN(false),
+    CERTIFICATE(true),
+    KERBEROS_SSL(true),
+    PROXY(false),
+    CUSTOM(true);
+
+    private final boolean allowsDelegation;
+
+    private AuthenticationMethod(boolean allowsDelegation) {
+      this.allowsDelegation = allowsDelegation;
     }
-    private AuthenticationMethod(AuthMethod authMethod, String loginAppName) {
-      this.authMethod = authMethod;
-      this.loginAppName = loginAppName;
+
+    public boolean allowsDelegation() {
+      return allowsDelegation;
     }
-    
-    public AuthMethod getAuthMethod() {
-      return authMethod;
-    }
-    
-    String getLoginAppName() {
-      if (loginAppName == null) {
-        throw new UnsupportedOperationException(
-            this + " login authentication is not supported");
-      }
-      return loginAppName;
-    }
-    
-    public static AuthenticationMethod valueOf(AuthMethod authMethod) {
-      for (AuthenticationMethod value : values()) {
-        if (value.getAuthMethod() == authMethod) {
-          return value;
-        }
-      }
-      throw new IllegalArgumentException(
-          "no authentication method for " + authMethod);
-    }
-  };
+
+  }
 
   /**
    * Create a proxy user using username of the effective user and the ugi of the
@@ -1649,6 +1741,9 @@ public class UserGroupInformation {
    * @return the user's name up to the first '/' or '@'.
    */
   public String getShortUserName() {
+    if (windows && spoofUser) {
+      return spoofedUser;
+    }
     return user.getShortName();
   }
 
@@ -1667,6 +1762,9 @@ public class UserGroupInformation {
   @InterfaceAudience.Public
   @InterfaceStability.Evolving
   public String getUserName() {
+    if (windows && spoofUser) {
+      return spoofedUser;
+    }
     return user.getName();
   }
 
@@ -1842,7 +1940,22 @@ public class UserGroupInformation {
    * @param authMethod authMethod.
    */
   public void setAuthenticationMethod(AuthMethod authMethod) {
-    user.setAuthenticationMethod(AuthenticationMethod.valueOf(authMethod));
+    switch (authMethod) {
+      case SIMPLE:
+        user.setAuthenticationMethod(AuthenticationMethod.SIMPLE);
+        break;
+      case KERBEROS: {
+        user.setAuthenticationMethod(AuthenticationMethod.KERBEROS);
+        break;
+      }
+      case DIGEST:
+      case TOKEN: {
+        user.setAuthenticationMethod(AuthenticationMethod.TOKEN);
+        break;
+      }
+      default:
+        user.setAuthenticationMethod(null);
+    }
   }
 
   /**
@@ -1910,7 +2023,7 @@ public class UserGroupInformation {
    * Get the underlying subject from this ugi.
    * @return the subject that represents this user.
    */
-  protected Subject getSubject() {
+  public Subject getSubject() {
     return subject;
   }
 
@@ -2046,12 +2159,19 @@ public class UserGroupInformation {
     if (subject == null && params == null) {
       params = LoginParams.getDefaults();
     }
-    HadoopConfiguration loginConf = new HadoopConfiguration(params);
     try {
-      HadoopLoginContext login = newLoginContext(
-        authenticationMethod.getLoginAppName(), subject, loginConf);
+      HadoopLoginContext login;
+      if (params == null) {
+        login = newLoginContext(
+                userJAASConfName, subject, null);
+      } else {
+        login = newLoginContext(
+                userJAASConfName, subject, params.getParams());
+      }
       login.login();
-      UserGroupInformation ugi = new UserGroupInformation(login.getSubject());
+      UserGroupInformation ugi = new UserGroupInformation(login.getSubject(), userJAASConfName);
+      setUserAuthenticationMethod(ugi);
+      ugi = new UserGroupInformation(login.getSubject(), userJAASConfName);
       // attach login context for relogin unless this was a pre-existing
       // subject.
       if (subject == null) {
@@ -2101,20 +2221,29 @@ public class UserGroupInformation {
       params.put(LoginParam.CCACHE, System.getenv("KRB5CCNAME"));
       return params;
     }
+
+    EnumMap getParams(){
+      return this;
+    }
   }
 
   // wrapper to allow access to fields necessary to recreate the same login
   // context for relogin.  explicitly private to prevent external tampering.
   private static class HadoopLoginContext extends LoginContext {
     private final String appName;
-    private final HadoopConfiguration conf;
+    DynamicLoginConfiguration conf;
     private AtomicBoolean isLoggedIn = new AtomicBoolean();
 
     HadoopLoginContext(String appName, Subject subject,
-                       HadoopConfiguration conf) throws LoginException {
+                       DynamicLoginConfiguration conf) throws LoginException {
       super(appName, subject, null, conf);
       this.appName = appName;
       this.conf = conf;
+    }
+
+    HadoopLoginContext(String appName, Subject subject) throws LoginException {
+      super(appName, subject);
+      this.appName = appName;
     }
 
     /** Get the login status. */
@@ -2126,7 +2255,7 @@ public class UserGroupInformation {
       return appName;
     }
 
-    HadoopConfiguration getConfiguration() {
+    DynamicLoginConfiguration getConfiguration() {
       return conf;
     }
 
@@ -2161,133 +2290,6 @@ public class UserGroupInformation {
           super.logout();
         }
       }
-    }
-  }
-
-  /**
-   * A JAAS configuration that defines the login modules that we want
-   * to use for login.
-   */
-  @InterfaceAudience.Private
-  @InterfaceStability.Unstable
-  private static class HadoopConfiguration
-  extends javax.security.auth.login.Configuration {
-    static final String KRB5_LOGIN_MODULE =
-        KerberosUtil.getKrb5LoginModuleName();
-    static final String SIMPLE_CONFIG_NAME = "hadoop-simple";
-    static final String KERBEROS_CONFIG_NAME = "hadoop-kerberos";
-
-    private static final Map<String, String> BASIC_JAAS_OPTIONS =
-        new HashMap<String,String>();
-    static {
-      if ("true".equalsIgnoreCase(System.getenv("HADOOP_JAAS_DEBUG"))) {
-        BASIC_JAAS_OPTIONS.put("debug", "true");
-      }
-    }
-
-    static final AppConfigurationEntry OS_SPECIFIC_LOGIN =
-        new AppConfigurationEntry(
-            OS_LOGIN_MODULE_NAME,
-            LoginModuleControlFlag.REQUIRED,
-            BASIC_JAAS_OPTIONS);
-
-    static final AppConfigurationEntry HADOOP_LOGIN =
-        new AppConfigurationEntry(
-            HadoopLoginModule.class.getName(),
-            LoginModuleControlFlag.REQUIRED,
-            BASIC_JAAS_OPTIONS);
-
-    private final LoginParams params;
-
-    HadoopConfiguration(LoginParams params) {
-      this.params = params;
-    }
-
-    @Override
-    public LoginParams getParameters() {
-      return params;
-    }
-
-    @Override
-    public AppConfigurationEntry[] getAppConfigurationEntry(String appName) {
-      ArrayList<AppConfigurationEntry> entries = new ArrayList<>();
-      // login of external subject passes no params.  technically only
-      // existing credentials should be used but other components expect
-      // the login to succeed with local user fallback if no principal.
-      if (params == null || appName.equals(SIMPLE_CONFIG_NAME)) {
-        entries.add(OS_SPECIFIC_LOGIN);
-      } else if (appName.equals(KERBEROS_CONFIG_NAME)) {
-        // existing semantics are the initial default login allows local user
-        // fallback. this is not allowed when a principal explicitly
-        // specified or during a relogin.
-        if (!params.containsKey(LoginParam.PRINCIPAL)) {
-          entries.add(OS_SPECIFIC_LOGIN);
-        }
-        entries.add(getKerberosEntry());
-      }
-      entries.add(HADOOP_LOGIN);
-      return entries.toArray(new AppConfigurationEntry[0]);
-    }
-
-    private AppConfigurationEntry getKerberosEntry() {
-      final Map<String,String> options = new HashMap<>(BASIC_JAAS_OPTIONS);
-      LoginModuleControlFlag controlFlag = LoginModuleControlFlag.OPTIONAL;
-      // kerberos login is mandatory if principal is specified.  principal
-      // will not be set for initial default login, but will always be set
-      // for relogins.
-      final String principal = params.get(LoginParam.PRINCIPAL);
-      if (principal != null) {
-        options.put("principal", principal);
-        controlFlag = LoginModuleControlFlag.REQUIRED;
-      }
-
-      // use keytab if given else fallback to ticket cache.
-      if (IBM_JAVA) {
-        if (params.containsKey(LoginParam.KEYTAB)) {
-          final String keytab = params.get(LoginParam.KEYTAB);
-          if (keytab != null) {
-            options.put("useKeytab", prependFileAuthority(keytab));
-          } else {
-            options.put("useDefaultKeytab", "true");
-          }
-          options.put("credsType", "both");
-        } else {
-          String ticketCache = params.get(LoginParam.CCACHE);
-          if (ticketCache != null) {
-            options.put("useCcache", prependFileAuthority(ticketCache));
-          } else {
-            options.put("useDefaultCcache", "true");
-          }
-          options.put("renewTGT", "true");
-        }
-      } else {
-        if (params.containsKey(LoginParam.KEYTAB)) {
-          options.put("useKeyTab", "true");
-          final String keytab = params.get(LoginParam.KEYTAB);
-          if (keytab != null) {
-            options.put("keyTab", keytab);
-          }
-          options.put("storeKey", "true");
-        } else {
-          options.put("useTicketCache", "true");
-          String ticketCache = params.get(LoginParam.CCACHE);
-          if (ticketCache != null) {
-            options.put("ticketCache", ticketCache);
-          }
-          options.put("renewTGT", "true");
-        }
-        options.put("doNotPrompt", "true");
-      }
-      options.put("refreshKrb5Config", "true");
-
-      return new AppConfigurationEntry(
-          KRB5_LOGIN_MODULE, controlFlag, options);
-    }
-
-    private static String prependFileAuthority(String keytabPath) {
-      return keytabPath.startsWith("file://")
-          ? keytabPath
-          : "file://" + keytabPath;
     }
   }
 

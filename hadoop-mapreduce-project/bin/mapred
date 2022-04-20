@@ -73,6 +73,7 @@ function mapredcmd_case
     ;;
     historyserver)
       HADOOP_SUBCMD_SUPPORTDAEMONIZATION="true"
+      hadoop_add_classpath ${MAPR_HOME}/lib/JPam-1.1.jar
       HADOOP_CLASSNAME=org.apache.hadoop.mapreduce.v2.hs.JobHistoryServer
       if [[ -n "${HADOOP_JOB_HISTORYSERVER_HEAPSIZE}" ]]; then
         HADOOP_HEAPSIZE_MAX="${HADOOP_JOB_HISTORYSERVER_HEAPSIZE}"

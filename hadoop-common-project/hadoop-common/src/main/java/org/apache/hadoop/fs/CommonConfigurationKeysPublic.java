@@ -674,6 +674,9 @@ public class CommonConfigurationKeysPublic {
    */
   public static final String  HADOOP_SECURITY_AUTH_TO_LOCAL =
     "hadoop.security.auth_to_local";
+  /** See <a href="{@docRoot}/../core-default.html">core-default.xml</a> */
+  public static final String HADOOP_SECURITY_JAVA_SECURITY_JAR_PATH =
+      "hadoop.security.java.security.login.config.jar.path";
   /**
    * @see
    * <a href="{@docRoot}/../hadoop-project-dist/hadoop-common/core-default.xml">
@@ -706,6 +709,8 @@ public class CommonConfigurationKeysPublic {
       "hadoop.tokens";
   public static final String HADOOP_HTTP_AUTHENTICATION_TYPE =
     "hadoop.http.authentication.type";
+
+  public static final String HADOOP_WEBAPPS_CUSTOM_HEADERS_PATH = "hadoop.webapps.custom.headers.path";
 
   /**
    * @see
@@ -947,6 +952,13 @@ public class CommonConfigurationKeysPublic {
   public static final boolean HADOOP_SHELL_MISSING_DEFAULT_FS_WARNING_DEFAULT =
       false;
 
+
+  /**
+   * Authenticator class to use for LogLevel command.
+   * @see org.apache.hadoop.log.LogLevel
+   */
+  public static final String LOG_LEVEL_AUTHENTICATOR_CLASS =
+          "hadoop.log.level.authenticator.class";
   /**
    * @see
    * <a href="{@docRoot}/../hadoop-project-dist/hadoop-common/core-default.xml">

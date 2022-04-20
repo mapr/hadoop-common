@@ -25,10 +25,6 @@
 ## YARN_xyz > HADOOP_xyz > hard-coded defaults
 ##
 
-BASEMAPR=${MAPR_HOME:-/opt/mapr}
-env=${BASEMAPR}/conf/env.sh
-[ -f $env ] && . $env
-
 ###
 # Resource Manager specific parameters
 ###
@@ -201,9 +197,18 @@ env=${BASEMAPR}/conf/env.sh
 # export YARN_SERVICE_EXAMPLES_DIR = $HADOOP_YARN_HOME/share/hadoop/yarn/yarn-service-examples
 # export YARN_CONTAINER_RUNTIME_DOCKER_RUN_OVERRIDE_DISABLE=true
 
+BASEMAPR=${MAPR_HOME:-/opt/mapr}
+env=${BASEMAPR}/conf/env.sh
+[ -f $env ] && . $env
+
 #MFS-6760: Fix warnings when using jdk 11
 YARN_OPTS="$YARN_OPTS $MAPR_COMMON_JAVA_OPTS"
 #MAPRHADOOP-107: Set ParallelGC by default on jdk11
 YARN_OPTS="$YARN_OPTS -XX:+UseParallelGC"
 #MAPRHADOOP-119: Skip "Logging initialized" messages
 YARN_OPTS="$YARN_OPTS -Dorg.eclipse.jetty.util.log.announce=false"
+
+export YARN_RESOURCEMANAGER_OPTS="${YARN_RESOURCEMANAGER_OPTS} ${MAPR_LOGIN_OPTS}"
+export YARN_NODEMANAGER_OPTS="${YARN_NODEMANAGER_OPTS} ${MAPR_LOGIN_OPTS}"
+export YARN_HISTORYSERVER_OPTS="${YARN_HISTORYSERVER_OPTS} ${MAPR_LOGIN_OPTS}"
+export YARN_TIMELINESERVER_OPTS="${YARN_TIMELINESERVER_OPTS} ${MAPR_LOGIN_OPTS}"

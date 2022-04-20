@@ -363,29 +363,35 @@ public class WebHdfsFileSystem extends FileSystem
   // the first getAuthParams() for a non-token op will either get the
   // internal token from the ugi or lazy fetch one
   protected synchronized Token<?> getDelegationToken() throws IOException {
-    if (delegationToken == null) {
-      Token<?> token = tokenSelector.selectToken(
-          new Text(getCanonicalServiceName()), ugi.getTokens());
-      // ugi tokens are usually indicative of a task which can't
-      // refetch tokens.  Don't attempt to fetch tokens from the
-      // namenode in this situation.
-      if (token != null) {
-        LOG.debug("Using UGI token: {}", token);
-        canRefreshDelegationToken = false;
-      } else {
-        if (canRefreshDelegationToken) {
-          token = getDelegationToken(null);
-          if (token != null) {
-            LOG.debug("Fetched new token: {}", token);
-          } else { // security is disabled
-            canRefreshDelegationToken = false;
-            isInsecureCluster = true;
-          }
+    try {
+        if (delegationToken == null) {
+            Token<?> token = tokenSelector.selectToken(
+                    new Text(getCanonicalServiceName()), ugi.getTokens());
+            // ugi tokens are usually indicative of a task which can't
+            // refetch tokens.  Don't attempt to fetch tokens from the
+            // namenode in this situation.
+            if (token != null) {
+                LOG.debug("Using UGI token: {}", token);
+                canRefreshDelegationToken = false;
+            } else {
+                if (canRefreshDelegationToken) {
+                    token = getDelegationToken(null);
+                    if (token != null) {
+                        LOG.debug("Fetched new token: {}", token);
+                    } else { // security is disabled
+                        canRefreshDelegationToken = false;
+                        isInsecureCluster = true;
+                    }
+                }
+            }
+            setDelegationToken(token);
         }
-      }
-      setDelegationToken(token);
+        return delegationToken;
+    } catch (IOException e) {
+      LOG.warn(e.getMessage());
+      LOG.debug(e.getMessage(), e);
     }
-    return delegationToken;
+    return null;
   }
 
   @VisibleForTesting
@@ -1811,24 +1817,31 @@ public class WebHdfsFileSystem extends FileSystem
   @Override
   public Token<DelegationTokenIdentifier> getDelegationToken(
       final String renewer) throws IOException {
-    final HttpOpParam.Op op = GetOpParam.Op.GETDELEGATIONTOKEN;
-    Token<DelegationTokenIdentifier> token =
-        new FsPathResponseRunner<Token<DelegationTokenIdentifier>>(
-            op, null, new RenewerParam(renewer)) {
-          @Override
-          Token<DelegationTokenIdentifier> decodeResponse(Map<?,?> json)
-              throws IOException {
-            return JsonUtilClient.toDelegationToken(json);
-          }
-        }.run();
-    if (token != null) {
-      token.setService(tokenServiceName);
-    } else {
-      if (disallowFallbackToInsecureCluster) {
-        throw new AccessControlException(CANT_FALLBACK_TO_INSECURE_MSG);
+    try {
+      final HttpOpParam.Op op = GetOpParam.Op.GETDELEGATIONTOKEN;
+      Token<DelegationTokenIdentifier> token =
+              new FsPathResponseRunner<Token<DelegationTokenIdentifier>>(
+                      op, null, new RenewerParam(renewer)) {
+                @Override
+                Token<DelegationTokenIdentifier> decodeResponse(Map<?, ?> json)
+                        throws IOException {
+                  return JsonUtilClient.toDelegationToken(json);
+                }
+              }.run();
+      if (token != null) {
+        token.setService(tokenServiceName);
+        return token;
+      } else {
+        if (disallowFallbackToInsecureCluster) {
+          throw new AccessControlException(CANT_FALLBACK_TO_INSECURE_MSG);
+        }
       }
+      return token;
+    } catch (Exception e) {
+      LOG.warn(e.getMessage());
+      LOG.debug(e.getMessage(), e);
     }
-    return token;
+    return null;
   }
 
   @Override

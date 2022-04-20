@@ -286,32 +286,31 @@ public class CoreDefaultProperties extends Properties
                 HADOOP_RPC_SOCKET_FACTORY_CLASS_DEFAULT);
     }
 
-    // TODO security
-//    static {
-//        if ( isSecurityEnabled ) {
-//            // set the value for hadoop.security.authentication
-//            props.put(CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION, // core-default.xml
-//                    UserGroupInformation.AuthenticationMethod.CUSTOM.name());
-//            props.put(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY, // core-default.xml
-//                    "org.apache.hadoop.security.rpcauth.MaprAuthMethod");
-//            props.put(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY, // core-default.xml
-//                    "com.mapr.security.MapRPrincipal");
-//
-//            props.put("hadoop.http.authentication.type",
-//                    "org.apache.hadoop.security.authentication.server.MultiMechsAuthenticationHandler");
-//            // set hadoop.ssl.enabled to be true
+    static {
+        if ( isSecurityEnabled ) {
+            // set the value for hadoop.security.authentication
+            props.put(CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION, // core-default.xml
+                    UserGroupInformation.AuthenticationMethod.CUSTOM.name());
+            props.put(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY, // core-default.xml
+                    "org.apache.hadoop.security.rpcauth.MaprAuthMethod");
+            props.put(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY, // core-default.xml
+                    "com.mapr.security.MapRPrincipal");
+
+            props.put("hadoop.http.authentication.type",
+                    "org.apache.hadoop.security.authentication.server.MultiMechsAuthenticationHandler");
+            // set hadoop.ssl.enabled to be true
 //            props.put(CommonConfigurationKeysPublic.HADOOP_SSL_ENABLED_KEY, "true"); // this is a deprecated property in core-default.xml. It is used to enable the SslSocketConnector in HttpServer used by jobtracker, tasktracker etc.
-//
-//            props.put(CommonConfigurationKeysPublic.LOG_LEVEL_AUTHENTICATOR_CLASS,
-//                    "com.mapr.security.maprauth.MaprAuthenticator");
-//
-//            props.put(CommonConfigurationKeysPublic.HADOOP_WEBAPPS_CUSTOM_HEADERS_PATH,
-//                    "etc/hadoop/jetty-headers.xml");
-//        } else {
-//            props.put(CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION, // core-default.xml
-//                    UserGroupInformation.AuthenticationMethod.SIMPLE.name());
-//        }
-//    }
+
+            props.put(CommonConfigurationKeysPublic.LOG_LEVEL_AUTHENTICATOR_CLASS,
+                    "com.mapr.security.maprauth.MaprAuthenticator");
+
+            props.put(CommonConfigurationKeysPublic.HADOOP_WEBAPPS_CUSTOM_HEADERS_PATH,
+                    "etc/hadoop/jetty-headers.xml");
+        } else {
+            props.put(CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION, // core-default.xml
+                    UserGroupInformation.AuthenticationMethod.SIMPLE.name());
+        }
+    }
 
     static {
         props.put("hadoop.http.authentication.signature.secret", // core-default.xml

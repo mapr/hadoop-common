@@ -25,6 +25,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
+import java.security.Principal;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
@@ -49,6 +50,7 @@ import org.apache.hadoop.net.DomainNameResolver;
 import org.apache.hadoop.net.DomainNameResolverFactory;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod;
+import org.apache.hadoop.security.rpcauth.RpcAuthMethod;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.TokenInfo;
 import org.apache.hadoop.util.StopWatch;
@@ -314,17 +316,10 @@ public final class SecurityUtil {
     
     if(! UserGroupInformation.isSecurityEnabled()) 
       return;
-    
-    String keytabFilename = conf.get(keytabFileKey);
-    if (keytabFilename == null || keytabFilename.length() == 0) {
-      throw new IOException(
-          "Running in secure mode, but config doesn't have a keytab for key: " + keytabFileKey);
-    }
 
-    String principalConfig = conf.get(userNameKey, System
-        .getProperty("user.name"));
-    String principalName = SecurityUtil.getServerPrincipal(principalConfig,
-        hostname);
+      String keytabFilename = conf.get(keytabFileKey);
+      String principalName = SecurityUtil.getServerPrincipal(
+              conf.get(userNameKey, System.getProperty("user.name")), hostname);
     UserGroupInformation.loginUserFromKeytab(principalName, keytabFilename);
   }
 
@@ -728,14 +723,7 @@ public final class SecurityUtil {
   }
 
   public static AuthenticationMethod getAuthenticationMethod(Configuration conf) {
-    String value = conf.get(HADOOP_SECURITY_AUTHENTICATION, "simple");
-    try {
-      return Enum.valueOf(AuthenticationMethod.class,
-          StringUtils.toUpperCase(value));
-    } catch (IllegalArgumentException iae) {
-      throw new IllegalArgumentException("Invalid attribute value for " +
-          HADOOP_SECURITY_AUTHENTICATION + " of " + value);
-    }
+    return UserGroupInformation.getUGIAuthenticationMethod();
   }
 
   public static void setAuthenticationMethod(
@@ -888,4 +876,34 @@ public final class SecurityUtil {
       return truststorePassword;
     }
   }
+
+    public static Class<? extends Principal> getCustomAuthPrincipal(Configuration conf) {
+        String principalClassName = conf.get(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY);
+        try {
+            Class<?> principalClass = conf.getClassByName(principalClassName);
+            return principalClass.asSubclass(Principal.class);
+        } catch (ClassNotFoundException cnfe) {
+            LOG.error("The value '" + principalClassName + "' provided for "
+                    + CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY + " is not a valid class name.", cnfe);
+        } catch (ClassCastException cce) {
+            LOG.error("The value provided for " + CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY
+                    + " does not extend " + Principal.class.getName(), cce);
+        }
+        return null;
+    }
+
+    public static Class<? extends RpcAuthMethod> getCustomRpcAuthMethod(Configuration conf) {
+        String rpcAuthMethodClassName = conf.get(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY);
+        try {
+            Class<?> rpcAuthMethodClass = conf.getClassByName(rpcAuthMethodClassName);
+            return rpcAuthMethodClass.asSubclass(RpcAuthMethod.class);
+        } catch (ClassNotFoundException cnfe) {
+            LOG.error("The value '" + rpcAuthMethodClassName + "' provided for "
+                    + CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY + " is not a valid class name.", cnfe);
+        } catch (ClassCastException cce) {
+            LOG.error("The value provided for " + CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY
+                    + " does not extend " + Principal.class.getName(), cce);
+        }
+        return null;
+    }
 }

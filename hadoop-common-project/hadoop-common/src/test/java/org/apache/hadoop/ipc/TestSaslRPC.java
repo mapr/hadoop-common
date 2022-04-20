@@ -78,9 +78,9 @@ import java.util.regex.Pattern;
 
 import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.HADOOP_RPC_PROTECTION;
 import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION;
-import static org.apache.hadoop.security.SaslRpcServer.AuthMethod.KERBEROS;
-import static org.apache.hadoop.security.SaslRpcServer.AuthMethod.SIMPLE;
-import static org.apache.hadoop.security.SaslRpcServer.AuthMethod.TOKEN;
+import static org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod.KERBEROS;
+import static org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod.SIMPLE;
+import static org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod.TOKEN;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -540,12 +540,12 @@ public class TestSaslRPC extends TestRpcBase {
   private static Pattern KrbFailed =
       Pattern.compile(".*Failed on local exception:.* " +
                       "Failed to specify server's Kerberos principal name.*");
-  private static Pattern Denied(AuthMethod method) {
+  private static Pattern Denied(AuthenticationMethod method) {
     return Pattern.compile("^" + RemoteException.class.getName() +
         "\\(" + AccessControlException.class.getName() + "\\): "
         + method + " authentication is not enabled.*");
   }
-  private static Pattern No(AuthMethod ... method) {
+  private static Pattern No(AuthenticationMethod ... method) {
     String methods = StringUtils.join(method, ",\\s*");
     return Pattern.compile(".*Failed on local exception:.* " +
         "Client cannot authenticate via:\\[" + methods + "\\].*");
@@ -861,8 +861,8 @@ public class TestSaslRPC extends TestRpcBase {
   // test helpers
 
   private String getAuthMethod(
-      final AuthMethod clientAuth,
-      final AuthMethod serverAuth) throws Exception {
+      final AuthenticationMethod clientAuth,
+      final AuthenticationMethod serverAuth) throws Exception {
     try {
       return internalGetAuthMethod(clientAuth, serverAuth, UseToken.NONE);
     } catch (Exception e) {
@@ -872,8 +872,8 @@ public class TestSaslRPC extends TestRpcBase {
   }
 
   private String getAuthMethod(
-      final AuthMethod clientAuth,
-      final AuthMethod serverAuth,
+      final AuthenticationMethod clientAuth,
+      final AuthenticationMethod serverAuth,
       final UseToken tokenType) throws Exception {
     try {
       return internalGetAuthMethod(clientAuth, serverAuth, tokenType);
@@ -884,8 +884,8 @@ public class TestSaslRPC extends TestRpcBase {
   }
 
   private String internalGetAuthMethod(
-      final AuthMethod clientAuth,
-      final AuthMethod serverAuth,
+      final AuthenticationMethod clientAuth,
+      final AuthenticationMethod serverAuth,
       final UseToken tokenType) throws Exception {
 
     final TestTokenSecretManager sm = new TestTokenSecretManager();
@@ -909,7 +909,7 @@ public class TestSaslRPC extends TestRpcBase {
     }
   }
 
-  private Configuration createConfForAuth(AuthMethod clientAuth) {
+  private Configuration createConfForAuth(AuthenticationMethod clientAuth) {
     final Configuration clientConf = new Configuration(conf);
     clientConf.set(HADOOP_SECURITY_AUTHENTICATION, clientAuth.toString());
     clientConf.setBoolean(
@@ -919,7 +919,7 @@ public class TestSaslRPC extends TestRpcBase {
   }
 
   private SecretManager<?> createServerSecretManager(
-      AuthMethod serverAuth, TestTokenSecretManager sm) {
+      AuthenticationMethod serverAuth, TestTokenSecretManager sm) {
     boolean useSecretManager = (serverAuth != SIMPLE);
     if (enableSecretManager != null) {
       useSecretManager &= enableSecretManager;
@@ -942,7 +942,7 @@ public class TestSaslRPC extends TestRpcBase {
     return server;
   }
 
-  private UserGroupInformation setupServerUgi(AuthMethod serverAuth,
+  private UserGroupInformation setupServerUgi(AuthenticationMethod serverAuth,
       Configuration serverConf) {
     UserGroupInformation.setConfiguration(serverConf);
 
@@ -953,7 +953,7 @@ public class TestSaslRPC extends TestRpcBase {
     return serverUgi;
   }
 
-  private UserGroupInformation setupClientUgi(AuthMethod clientAuth,
+  private UserGroupInformation setupClientUgi(AuthenticationMethod clientAuth,
       Configuration clientConf) {
     UserGroupInformation.setConfiguration(clientConf);
 
@@ -1007,7 +1007,7 @@ public class TestSaslRPC extends TestRpcBase {
           AuthMethod authMethod =
               convert(proxy.getAuthMethod(null, newEmptyRequest()));
           // verify sasl completed with correct QOP
-          assertEquals((authMethod != SIMPLE) ? expectedQop.saslQop : null,
+          assertEquals((authMethod.equals(AuthenticationMethod.SIMPLE)) ? expectedQop.saslQop : null,
               RPC.getConnectionIdForProxy(proxy).getSaslQop());
           return authMethod != null ? authMethod.toString() : null;
         } catch (ServiceException se) {
@@ -1027,7 +1027,7 @@ public class TestSaslRPC extends TestRpcBase {
     });
   }
 
-  private static void assertAuthEquals(AuthMethod expect,
+  private static void assertAuthEquals(AuthenticationMethod expect,
       String actual) {
     assertEquals(expect.toString(), actual);
   }

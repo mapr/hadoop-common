@@ -18,6 +18,7 @@
 package org.apache.hadoop.http;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InterruptedIOException;
@@ -197,6 +198,7 @@ public final class HttpServer2 implements FilterContainer {
   static final String STATE_DESCRIPTION_ALIVE = " - alive";
   static final String STATE_DESCRIPTION_NOT_LIVE = " - not live";
   private final SignerSecretProvider secretProvider;
+  private static final Properties headers = new Properties();
   private final Optional<java.util.Timer> configurationChangeMonitor;
   private XFrameOption xFrameOption;
   private boolean xFrameOptionIsEnabled;
@@ -496,17 +498,23 @@ public final class HttpServer2 implements FilterContainer {
 
       HttpServer2 server = new HttpServer2(this);
 
-      if (this.securityEnabled &&
-          authFilterConfigurationPrefixes.stream().noneMatch(
-              prefix -> this.conf.get(prefix + "type")
-                  .equals(PseudoAuthenticationHandler.TYPE))
-      ) {
-        server.initSpnego(
-            conf,
-            hostName,
-            getFilterProperties(conf, authFilterConfigurationPrefixes),
-            usernameConfKey,
-            keytabConfKey);
+// TODO check condition equals(PseudoAuthenticationHandler.TYPE)
+//        if (this.securityEnabled &&
+//          authFilterConfigurationPrefixes.stream().noneMatch(
+//              prefix -> this.conf.get(prefix + "type")
+//                  .equals(PseudoAuthenticationHandler.TYPE))
+//      ) {
+//        server.initSpnego(
+//            conf,
+//            hostName,
+//            getFilterProperties(conf, authFilterConfigurationPrefixes),
+//            usernameConfKey,
+//            keytabConfKey);
+//      }
+
+      if (this.securityEnabled) {
+        FilterInitializer initializer = new HadoopCoreAuthenticationFilterInitializer();
+        initializer.initFilter(server, conf);
       }
 
       for (URI ep : endpoints) {
@@ -790,6 +798,7 @@ public final class HttpServer2 implements FilterContainer {
     }
 
     addDefaultServlets(conf);
+    readHeaders(conf);
     addPrometheusServlet(conf);
     addAsyncProfilerServlet(contexts, conf);
   }
@@ -812,6 +821,17 @@ public final class HttpServer2 implements FilterContainer {
       addServlet("prof", "/prof", ProfilerDisabledServlet.class);
       LOG.info("ASYNC_PROFILER_HOME environment variable and async.profiler.home system property "
           + "not specified. Disabling /prof endpoint.");
+    }
+  }
+
+  private void readHeaders(Configuration conf) throws IOException {
+    String fileName = conf.get(CommonConfigurationKeysPublic.HADOOP_WEBAPPS_CUSTOM_HEADERS_PATH);
+    if (fileName != null && !fileName.isEmpty()) {
+      File headersConf = new File(fileName);
+      if (headersConf.exists()) {
+        headers.loadFromXML(new FileInputStream(headersConf));
+        LOG.info("Loaded headers from file: " + headersConf.getAbsolutePath());
+      }
     }
   }
 
@@ -1875,6 +1895,9 @@ public final class HttpServer2 implements FilterContainer {
       HttpServletRequestWrapper quoted =
         new RequestQuoter((HttpServletRequest) request);
       HttpServletResponse httpResponse = (HttpServletResponse) response;
+      for (String headerName : headers.stringPropertyNames()) {
+        httpResponse.addHeader(headerName, headers.getProperty(headerName));
+      }
 
       String mime = inferMimeType(request);
       if (mime == null) {

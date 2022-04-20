@@ -41,7 +41,6 @@ import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.Credentials;
-import org.apache.hadoop.security.SaslRpcServer;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.PolicyProvider;
 import org.apache.hadoop.security.token.SecretManager.InvalidToken;
@@ -682,7 +681,7 @@ public class ContainerManagerImpl extends CompositeService implements
     // always enforce it to be token-based.
     serverConf.set(
       CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION,
-      SaslRpcServer.AuthMethod.TOKEN.toString());
+      UserGroupInformation.AuthenticationMethod.TOKEN.toString());
     
     YarnRPC rpc = YarnRPC.create(conf);
 

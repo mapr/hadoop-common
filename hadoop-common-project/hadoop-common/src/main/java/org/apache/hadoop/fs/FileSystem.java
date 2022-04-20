@@ -77,6 +77,7 @@ import org.apache.hadoop.util.ClassUtil;
 import org.apache.hadoop.util.DataChecksum;
 import org.apache.hadoop.util.DurationInfo;
 import org.apache.hadoop.util.LambdaUtils;
+import org.apache.hadoop.util.MapRCommonSecurityUtil;
 import org.apache.hadoop.util.Progressable;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.ShutdownHookManager;
@@ -3873,6 +3874,7 @@ public abstract class FileSystem extends Configured
       final String authority;
       final UserGroupInformation ugi;
       final long unique;   // an artificial way to make a key unique
+      final String clusterName;
 
       Key(URI uri, Configuration conf) throws IOException {
         this(uri, conf, 0);
@@ -3886,11 +3888,23 @@ public abstract class FileSystem extends Configured
         this.unique = unique;
 
         this.ugi = UserGroupInformation.getCurrentUser();
+
+        this.clusterName = parseClusterName(uri);
+      }
+
+      private String parseClusterName(URI uri) {
+        Set<String> clustersNameList = MapRCommonSecurityUtil.getInstance().getClustersNamesList();
+        for (String clusterName : clustersNameList) {
+          if (uri.getPath().contains(clusterName)) {
+            return StringUtils.toLowerCase(clusterName);
+          }
+        }
+        return "";
       }
 
       @Override
       public int hashCode() {
-        return (scheme + authority).hashCode() + ugi.hashCode() + (int)unique;
+        return (scheme + authority).hashCode() + ugi.hashCode() + (int)unique + clusterName.hashCode();
       }
 
       static boolean isEqual(Object a, Object b) {
@@ -3907,7 +3921,8 @@ public abstract class FileSystem extends Configured
           return isEqual(this.scheme, that.scheme)
                  && isEqual(this.authority, that.authority)
                  && isEqual(this.ugi, that.ugi)
-                 && (this.unique == that.unique);
+                 && (this.unique == that.unique)
+                 && isEqual(this.clusterName, that.clusterName);
         }
         return false;
       }

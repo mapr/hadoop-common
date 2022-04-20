@@ -393,7 +393,7 @@ public class DelegationTokenAuthenticatedURL extends AuthenticatedURL {
     Preconditions.checkNotNull(token, "token");
     try {
       token.delegationToken =
-          ((KerberosDelegationTokenAuthenticator) getAuthenticator()).
+          ((DelegationTokenAuthenticator) getAuthenticator()).
               getDelegationToken(url, token, renewer, doAsUser);
       return token.delegationToken;
     } catch (IOException ex) {
@@ -437,7 +437,7 @@ public class DelegationTokenAuthenticatedURL extends AuthenticatedURL {
     Preconditions.checkNotNull(token.delegationToken,
         "No delegation token available");
     try {
-      return ((KerberosDelegationTokenAuthenticator) getAuthenticator()).
+      return ((DelegationTokenAuthenticator) getAuthenticator()).
           renewDelegationToken(url, token, token.delegationToken, doAsUser);
     } catch (IOException ex) {
       token.delegationToken = null;
@@ -476,7 +476,7 @@ public class DelegationTokenAuthenticatedURL extends AuthenticatedURL {
     Preconditions.checkNotNull(token.delegationToken,
         "No delegation token available");
     try {
-      ((KerberosDelegationTokenAuthenticator) getAuthenticator()).
+      ((DelegationTokenAuthenticator) getAuthenticator()).
           cancelDelegationToken(url, token, token.delegationToken, doAsUser);
     } finally {
       token.delegationToken = null;

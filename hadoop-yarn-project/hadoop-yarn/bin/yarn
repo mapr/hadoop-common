@@ -123,6 +123,7 @@ ${HADOOP_COMMON_HOME}/${HADOOP_COMMON_LIB_JARS_DIR}"
       echo "DEPRECATED: Use of this command to start the timeline server is deprecated." 1>&2
       echo "Instead use the timelineserver command for it." 1>&2
       echo "Starting the History Server anyway..." 1>&2
+      hadoop_add_classpath "$MAPR_HOME/lib/JPam-1.1.jar"
       HADOOP_CLASSNAME='org.apache.hadoop.yarn.server.applicationhistoryservice.ApplicationHistoryServer'
     ;;
     logs)
@@ -135,6 +136,7 @@ ${HADOOP_COMMON_HOME}/${HADOOP_COMMON_LIB_JARS_DIR}"
       HADOOP_SUBCMD_SUPPORTDAEMONIZATION="true"
       hadoop_add_classpath "$HADOOP_YARN_HOME/$YARN_DIR/timelineservice/*"
       hadoop_add_classpath "$HADOOP_YARN_HOME/$YARN_DIR/timelineservice/lib/*" before
+      hadoop_add_classpath "$MAPR_HOME/lib/JPam-1.1.jar"
       HADOOP_CLASSNAME='org.apache.hadoop.yarn.server.nodemanager.NodeManager'
       # Backwards compatibility
       if [[ -n "${YARN_NODEMANAGER_HEAPSIZE}" ]]; then
@@ -162,6 +164,7 @@ ${HADOOP_COMMON_HOME}/${HADOOP_COMMON_LIB_JARS_DIR}"
       HADOOP_SUBCMD_SUPPORTDAEMONIZATION="true"
       hadoop_add_classpath "$HADOOP_YARN_HOME/$YARN_DIR/timelineservice/*"
       hadoop_add_classpath "$HADOOP_YARN_HOME/$YARN_DIR/timelineservice/lib/*" before
+      hadoop_add_classpath "$MAPR_HOME/lib/JPam-1.1.jar"
       HADOOP_CLASSNAME='org.apache.hadoop.yarn.server.resourcemanager.ResourceManager'
       # Backwards compatibility
       if [[ -n "${YARN_RESOURCEMANAGER_HEAPSIZE}" ]]; then
@@ -207,6 +210,7 @@ ${HADOOP_COMMON_HOME}/${HADOOP_COMMON_LIB_JARS_DIR}"
       HADOOP_SUBCMD_SUPPORTDAEMONIZATION="true"
       hadoop_add_classpath "$HADOOP_YARN_HOME/$YARN_DIR/timelineservice/*"
       hadoop_add_classpath "$HADOOP_YARN_HOME/$YARN_DIR/timelineservice/lib/*" before
+      hadoop_add_classpath "$MAPR_HOME/lib/JPam-1.1.jar"
       HADOOP_CLASSNAME='org.apache.hadoop.yarn.server.timelineservice.reader.TimelineReaderServer'
     ;;
 	nodeattributes)
@@ -216,6 +220,7 @@ ${HADOOP_COMMON_HOME}/${HADOOP_COMMON_LIB_JARS_DIR}"
     timelineserver)
       HADOOP_SUBCMD_SUPPORTDAEMONIZATION="true"
       HADOOP_CLASSNAME='org.apache.hadoop.yarn.server.applicationhistoryservice.ApplicationHistoryServer'
+      hadoop_add_classpath "$MAPR_HOME/lib/JPam-1.1.jar"
       # Backwards compatibility
       if [[ -n "${YARN_TIMELINESERVER_HEAPSIZE}" ]]; then
         HADOOP_HEAPSIZE_MAX="${YARN_TIMELINESERVER_HEAPSIZE}"

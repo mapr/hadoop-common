@@ -502,6 +502,11 @@ public class TestRpcBase {
     }
 
     @Override
+    public TestProtos.AuthMethodResponseProto getAuthMethod(com.google.protobuf.RpcController controller, TestProtos.EmptyRequestProto request) throws com.google.protobuf.ServiceException {
+      return null;
+    }
+/*
+    @Override
     public TestProtos.AuthMethodResponseProto getAuthMethod(
         RpcController controller, TestProtos.EmptyRequestProto request)
         throws ServiceException {
@@ -518,7 +523,7 @@ public class TestRpcBase {
           .setMechanismName(authMethod.getMechanismName())
           .build();
     }
-
+*/
     @Override
     public TestProtos.UserResponseProto getAuthUser(
         RpcController controller, TestProtos.EmptyRequestProto request)

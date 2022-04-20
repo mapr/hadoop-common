@@ -550,6 +550,7 @@
         <configuration>
           <systemPropertyVariables>
             <runningWithNative>${runningWithNative}</runningWithNative>
+            <java.security.auth.login.config>target/test-classes/test.login.conf</java.security.auth.login.config>
           </systemPropertyVariables>
           <properties>
             <property>
@@ -1043,6 +1044,7 @@
                 <test.build.data>${test.build.data}/${surefire.forkNumber}</test.build.data>
                 <test.build.dir>${test.build.dir}/${surefire.forkNumber}</test.build.dir>
                 <hadoop.tmp.dir>${hadoop.tmp.dir}/${surefire.forkNumber}</hadoop.tmp.dir>
+                <java.security.auth.login.config>target/test-classes/test.login.conf</java.security.auth.login.config>
 
                 <!-- Due to a Maven quirk, setting this to just -->
                 <!-- surefire.forkNumber won't do the parameter substitution. -->

@@ -27,6 +27,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.charset.IllegalCharsetNameException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -40,19 +41,23 @@ import org.apache.kerby.kerberos.kerb.keytab.Keytab;
 import org.apache.kerby.kerberos.kerb.type.base.PrincipalName;
 import org.ietf.jgss.GSSException;
 import org.ietf.jgss.Oid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.security.auth.Subject;
 import javax.security.auth.kerberos.KerberosPrincipal;
 import javax.security.auth.kerberos.KerberosTicket;
 import javax.security.auth.kerberos.KeyTab;
+import javax.crypto.Cipher;
 
 public class KerberosUtil {
+  private static Logger LOG = LoggerFactory.getLogger(KerberosUtil.class);
 
   /* Return the Kerberos login module name */
   public static String getKrb5LoginModuleName() {
     return (IBM_JAVA)
       ? "com.ibm.security.auth.module.Krb5LoginModule"
-      : "com.sun.security.auth.module.Krb5LoginModule";
+            :  "org.apache.hadoop.security.login.KerberosBugWorkAroundLoginModule";
   }
 
   public static final Oid GSS_SPNEGO_MECH_OID =
@@ -462,6 +467,21 @@ public class KerberosUtil {
     @Override
     public String toString() {
       return "[tag=0x"+Integer.toHexString(tag)+" bb="+bb+"]";
+    }
+  }
+
+  /**
+   * Validate if JCE Unlimited Strength Jurisdiction Policy Files are installed,
+   * logs a warning otherwise.
+   */
+  public static void checkJCEKeyStrength() {
+    try {
+      if (Cipher.getMaxAllowedKeyLength("AES") != Integer.MAX_VALUE) {
+        LOG.warn("JCE Unlimited Strength Jurisdiction Policy Files are not "
+                + "installed. This could cause authentication failures.");
+      }
+    } catch (NoSuchAlgorithmException e) {
+      LOG.warn(e.getMessage());
     }
   }
 }

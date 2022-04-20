@@ -461,7 +461,7 @@ public class LinuxContainerExecutor extends ContainerExecutor {
           getPrivilegedOperationExecutor();
 
       privilegedOperationExecutor.executePrivilegedOperation(prefixCommands,
-          initializeContainerOp, null, null, false, true);
+          initializeContainerOp, null, null, false, false);
 
     } catch (PrivilegedOperationException e) {
       int exitCode = e.getExitCode();
