@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 
+import org.apache.hadoop.net.NetUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
@@ -156,6 +157,12 @@ public class ClientRMProxy<T> extends RMProxy<T>  {
             .toString());
       }
       return new Text(Joiner.on(',').join(services));
+    } else if (HAUtil.isCustomRMHAEnabled(conf)) {
+      String currentRMAddress = HAUtil.getCurrentRMAddress(conf, address,
+              defaultAddr, defaultPort);
+      if ( currentRMAddress != null ) {
+        return SecurityUtil.buildTokenService(NetUtils.createSocketAddr(currentRMAddress));
+      }
     }
 
     // Non-HA case - no need to set RM_ID

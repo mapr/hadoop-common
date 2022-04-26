@@ -98,8 +98,10 @@ public class RMProxy<T> {
     YarnConfiguration conf = (configuration instanceof YarnConfiguration)
         ? (YarnConfiguration) configuration
         : new YarnConfiguration(configuration);
-    RetryPolicy retryPolicy = createRetryPolicy(conf,
-        (HAUtil.isHAEnabled(conf) || HAUtil.isFederationFailoverEnabled(conf)));
+    boolean isHAEnabled = HAUtil.isHAEnabled(conf)
+            || HAUtil.isFederationFailoverEnabled(conf)
+            || HAUtil.isCustomRMHAEnabled(conf);
+    RetryPolicy retryPolicy = createRetryPolicy(conf, isHAEnabled);
     return newProxyInstance(conf, protocol, instance, retryPolicy);
   }
 
@@ -117,8 +119,11 @@ public class RMProxy<T> {
     YarnConfiguration conf = (configuration instanceof YarnConfiguration)
         ? (YarnConfiguration) configuration
         : new YarnConfiguration(configuration);
+    boolean isHAEnabled = HAUtil.isHAEnabled(conf)
+            || HAUtil.isFederationFailoverEnabled(conf)
+            || HAUtil.isCustomRMHAEnabled(conf);
     RetryPolicy retryPolicy = createRetryPolicy(conf, retryTime, retryInterval,
-        HAUtil.isHAEnabled(conf));
+        isHAEnabled);
     return newProxyInstance(conf, protocol, instance, retryPolicy);
   }
 
@@ -126,7 +131,7 @@ public class RMProxy<T> {
       final Class<T> protocol, RMProxy<T> instance, RetryPolicy retryPolicy)
           throws IOException{
     RMFailoverProxyProvider<T> provider;
-    if (HAUtil.isHAEnabled(conf) || HAUtil.isFederationEnabled(conf)) {
+    if (HAUtil.isHAEnabled(conf) || HAUtil.isFederationEnabled(conf) || HAUtil.isCustomRMHAEnabled(conf)) {
       provider = instance.createRMFailoverProxyProvider(conf, protocol);
     } else {
       provider = instance.createNonHaRMFailoverProxyProvider(conf, protocol);

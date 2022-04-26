@@ -17,6 +17,7 @@
  */
 package org.apache.hadoop.yarn.client.util;
 
+import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.thirdparty.com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -93,6 +94,13 @@ public abstract class YarnClientUtils {
       throws IOException {
     if (rmPrincipal == null) {
       throw new IllegalArgumentException("RM principal string is null");
+    }
+    if ( HAUtil.isCustomRMHAEnabled(conf)) {
+      String hostname = NetUtils.createSocketAddr(HAUtil.getCurrentRMAddress(conf,
+              YarnConfiguration.RM_ADDRESS,
+              YarnConfiguration.DEFAULT_RM_ADDRESS,
+              YarnConfiguration.DEFAULT_RM_PORT)).getHostName();
+      return SecurityUtil.getServerPrincipal(rmPrincipal, hostname);
     }
 
     if (HAUtil.isHAEnabled(conf)) {
