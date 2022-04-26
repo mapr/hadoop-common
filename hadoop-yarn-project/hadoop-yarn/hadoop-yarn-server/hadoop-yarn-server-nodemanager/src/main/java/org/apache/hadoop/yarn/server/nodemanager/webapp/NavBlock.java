@@ -51,7 +51,7 @@ public class NavBlock extends HtmlBlock implements YarnWebParams {
     }
 	
     String RMWebAppURL =
-        WebAppUtils.getResolvedRMWebAppURLWithScheme(this.conf);
+        WebAppUtils.getResolvedRemoteRMWebAppURLWithScheme(this.conf);
 	  Hamlet.DIV<Hamlet> ul = html
       .div("#nav")
       .h3().__("ResourceManager").__()

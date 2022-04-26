@@ -177,8 +177,11 @@ public class RMProxy<T> {
     YarnConfiguration conf = (configuration instanceof YarnConfiguration)
         ? (YarnConfiguration) configuration
         : new YarnConfiguration(configuration);
+    boolean isHAEnabled = HAUtil.isHAEnabled(conf)
+            || HAUtil.isFederationFailoverEnabled(conf)
+            || HAUtil.isCustomRMHAEnabled(conf);
     RetryPolicy retryPolicy = createRetryPolicy(conf, retryTime, retryInterval,
-        HAUtil.isHAEnabled(conf));
+        isHAEnabled);
     return newProxyInstance(conf, protocol, instance, retryPolicy);
   }
 
@@ -382,7 +385,7 @@ public class RMProxy<T> {
   }
 
   private static boolean isFailoverEnabled(YarnConfiguration conf) {
-    if (HAUtil.isHAEnabled(conf)) {
+    if (HAUtil.isHAEnabled(conf) || HAUtil.isCustomRMHAEnabled(conf)) {
       // Considering Resource Manager HA is enabled.
       return true;
     }

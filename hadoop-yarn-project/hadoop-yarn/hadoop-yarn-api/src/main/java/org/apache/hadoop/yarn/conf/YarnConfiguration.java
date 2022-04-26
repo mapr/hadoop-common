@@ -63,10 +63,6 @@ public class YarnConfiguration extends Configuration {
   private static final String YARN_DEFAULT_CONFIGURATION_FILE =
       "yarn-default.xml";
 
-  public static final String YARN_DEFAULT_CONFIGURATION_CLASS =
-          "org.apache.hadoop.yarn.conf.YarnDefaultProperties";
-
-
   @Private
   public static final String CORE_SITE_CONFIGURATION_FILE = "core-site.xml";
 
@@ -101,7 +97,7 @@ public class YarnConfiguration extends Configuration {
 
   static {
     addDeprecatedKeys();
-    Configuration.addDefaultResource(YARN_DEFAULT_CONFIGURATION_CLASS);
+    Configuration.addDefaultResource(YarnDefaultProperties.getProperties());
     Configuration.addDefaultResource(YARN_DEFAULT_CONFIGURATION_FILE);
     Configuration.addDefaultResource(YARN_SITE_CONFIGURATION_FILE);
     Configuration.addDefaultResource(RESOURCE_TYPES_CONFIGURATION_FILE);
@@ -915,6 +911,12 @@ public class YarnConfiguration extends Configuration {
   public static final String RM_HA_PREFIX = RM_PREFIX + "ha.";
   public static final String RM_HA_ENABLED = RM_HA_PREFIX + "enabled";
   public static final boolean DEFAULT_RM_HA_ENABLED = false;
+
+  /** Custom HA scheme(s) config */
+  public static final String CUSTOM_RM_HA_ENABLED= RM_HA_PREFIX + "custom-ha-enabled";
+
+  public static final String CUSTOM_RM_HA_RMFINDER= RM_HA_PREFIX + "custom-ha-rmaddressfinder";
+  public static final boolean DEFAULT_CUSTOM_RM_HA_ENABLED = false;
 
   public static final String RM_HA_IDS = RM_HA_PREFIX + "rm-ids";
   public static final String RM_HA_ID = RM_HA_PREFIX + "id";

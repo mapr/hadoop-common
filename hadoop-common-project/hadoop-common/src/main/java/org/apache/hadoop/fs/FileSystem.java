@@ -23,6 +23,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.lang.ref.ReferenceQueue;
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.PrivilegedExceptionAction;
@@ -5049,6 +5050,46 @@ public abstract class FileSystem extends Configured
     throw new UnsupportedOperationException("See concrete FS for implementation");
   }
   public void setOwnerFid(String fid, String user, String group) throws IOException {
+    throw new UnsupportedOperationException("See concrete FS for implementation");
+  }
+
+  /**
+   * MapR addition:
+   * Opens an FSDataInputStream at the indicated fid.
+   * @param fid the fid to open
+   * @param ips the list of ip/ports which this fid belongs to
+   * @param chunkSize the chunkSize of the file corresponding to the fid
+   * @param fileSize the size of the file corresponding to the fid
+   */
+  public FSDataInputStream openFid(String fid, long[] ips,
+                                   long chunkSize, long fileSize) throws IOException {
+    throw new UnsupportedOperationException("See concrete FS for implementation");
+  }
+
+  /**
+   * MapR addition:
+   * Opens an FSDataInputStream at the indicated fid.
+   * @param pfid the parent-fid of the file to open
+   * @param file the file to be opened
+   */
+  public FSDataInputStream openFid(String pfid, String file, long [] ips)
+          throws IOException {
+    throw new UnsupportedOperationException("See concrete FS for implementation");
+  }
+
+  /**
+   * MapR - get Zookeeper connect string for the default cluster.
+   */
+  public String getZkConnectString() throws IOException {
+    throw new UnsupportedOperationException("See concrete FS for implementation");
+  }
+
+  /**
+   * MapR - get jobTracker addresses given by cluster name
+   *        in mapred.job.tracker
+   */
+  public InetSocketAddress[] getJobTrackerAddrs(Configuration conf)
+          throws IOException {
     throw new UnsupportedOperationException("See concrete FS for implementation");
   }
 }

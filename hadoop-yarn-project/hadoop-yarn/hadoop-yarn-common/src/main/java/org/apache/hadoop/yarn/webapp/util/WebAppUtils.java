@@ -105,16 +105,22 @@ public class WebAppUtils {
    */
   public static <T, R> R execOnActiveRM(Configuration conf,
       ThrowingBiFunction<String, T, R> func, T arg) throws Exception {
-    int haIndex = 0;
-    if (HAUtil.isHAEnabled(conf)) {
-      String activeRMId = RMHAUtils.findActiveRMHAId(conf);
-      if (activeRMId != null) {
-        haIndex = new ArrayList<>(HAUtil.getRMHAIds(conf)).indexOf(activeRMId);
-      } else {
-        throw new ConnectException("No Active RM available");
+    String rm1Address;
+
+    if ( HAUtil.isCustomRMHAEnabled(conf)) {
+      rm1Address = getResolvedRemoteRMWebAppURLWithScheme(conf);
+    } else {
+      int haIndex = 0;
+      if (HAUtil.isHAEnabled(conf)) {
+        String activeRMId = RMHAUtils.findActiveRMHAId(conf);
+        if (activeRMId != null) {
+          haIndex = new ArrayList<>(HAUtil.getRMHAIds(conf)).indexOf(activeRMId);
+        } else {
+          throw new ConnectException("No Active RM available");
+        }
       }
+      rm1Address = getRMWebAppURLWithScheme(conf, haIndex);
     }
-    String rm1Address = getRMWebAppURLWithScheme(conf, haIndex);
     return func.apply(rm1Address, arg);
   }
 
@@ -256,6 +262,19 @@ public class WebAppUtils {
   public static String getResolvedRMWebAppURLWithoutScheme(Configuration conf,
       Policy httpPolicy) {
     InetSocketAddress address = null;
+
+    if ( HAUtil.isCustomRMHAEnabled(conf)) {
+      if (httpPolicy == Policy.HTTPS_ONLY) {
+        address = NetUtils.createSocketAddr(HAUtil.getCurrentRMAddress(conf, YarnConfiguration.RM_WEBAPP_HTTPS_ADDRESS,
+                YarnConfiguration.DEFAULT_RM_WEBAPP_HTTPS_ADDRESS,
+                YarnConfiguration.DEFAULT_RM_WEBAPP_HTTPS_PORT));
+      } else {
+        address = NetUtils.createSocketAddr(HAUtil.getCurrentRMAddress(conf, YarnConfiguration.RM_WEBAPP_ADDRESS,
+                YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, YarnConfiguration.DEFAULT_RM_WEBAPP_PORT));
+      }
+      return getResolvedAddress(address);
+    }
+
     if (httpPolicy == Policy.HTTPS_ONLY) {
       address =
           conf.getSocketAddr(YarnConfiguration.RM_WEBAPP_HTTPS_ADDRESS,
@@ -284,6 +303,18 @@ public class WebAppUtils {
   public static String getResolvedRemoteRMWebAppURLWithoutScheme(
       Configuration conf, Policy httpPolicy, String rmId) {
     InetSocketAddress address = null;
+
+    if ( HAUtil.isCustomRMHAEnabled(conf)) {
+      if (httpPolicy == Policy.HTTPS_ONLY) {
+        address = NetUtils.createSocketAddr(HAUtil.getCurrentRMAddress(conf, YarnConfiguration.RM_WEBAPP_HTTPS_ADDRESS,
+                YarnConfiguration.DEFAULT_RM_WEBAPP_HTTPS_ADDRESS,
+                YarnConfiguration.DEFAULT_RM_WEBAPP_HTTPS_PORT));
+      } else {
+        address = NetUtils.createSocketAddr(HAUtil.getCurrentRMAddress(conf, YarnConfiguration.RM_WEBAPP_ADDRESS,
+                YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, YarnConfiguration.DEFAULT_RM_WEBAPP_PORT));
+      }
+      return getResolvedAddress(address);
+    }
 
     if (httpPolicy == Policy.HTTPS_ONLY) {
       address = conf.getSocketAddr(

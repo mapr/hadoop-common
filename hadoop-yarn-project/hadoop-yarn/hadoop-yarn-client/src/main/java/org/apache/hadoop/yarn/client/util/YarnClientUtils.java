@@ -28,6 +28,7 @@ import org.apache.hadoop.thirdparty.com.google.common.collect.ImmutableSet;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
@@ -93,6 +94,13 @@ public abstract class YarnClientUtils {
       throws IOException {
     if (rmPrincipal == null) {
       throw new IllegalArgumentException("RM principal string is null");
+    }
+    if ( HAUtil.isCustomRMHAEnabled(conf)) {
+      String hostname = NetUtils.createSocketAddr(HAUtil.getCurrentRMAddress(conf,
+              YarnConfiguration.RM_ADDRESS,
+              YarnConfiguration.DEFAULT_RM_ADDRESS,
+              YarnConfiguration.DEFAULT_RM_PORT)).getHostName();
+      return SecurityUtil.getServerPrincipal(rmPrincipal, hostname);
     }
 
     if (HAUtil.isHAEnabled(conf)) {

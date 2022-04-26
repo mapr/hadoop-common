@@ -22,8 +22,12 @@ import org.apache.hadoop.classification.VisibleForTesting;
 import org.apache.hadoop.classification.InterfaceAudience.Public;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.Time;
+import org.apache.hadoop.yarn.api.ApplicationConstants;
+import org.apache.hadoop.yarn.conf.HAUtil;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.server.webproxy.ProxyUtils;
 import org.apache.hadoop.yarn.server.webproxy.WebAppProxyServlet;
+import org.apache.hadoop.yarn.webapp.util.WebAppUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,8 +46,11 @@ import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -64,7 +71,7 @@ public class AmIpFilter implements Filter {
   //update the proxy IP list about every 5 min
   private static long updateInterval = TimeUnit.MINUTES.toMillis(5);
 
-  private String[] proxyHosts;
+  private List<String> proxyHosts = new ArrayList<>();
   private Set<String> proxyAddresses = null;
   private long lastUpdate;
   @VisibleForTesting
@@ -76,12 +83,13 @@ public class AmIpFilter implements Filter {
     // Maintain for backwards compatibility
     if (conf.getInitParameter(PROXY_HOST) != null
         && conf.getInitParameter(PROXY_URI_BASE) != null) {
-      proxyHosts = new String[]{conf.getInitParameter(PROXY_HOST)};
+      proxyHosts = new ArrayList<>(1);
+      proxyHosts.add(conf.getInitParameter(PROXY_HOST));
       proxyUriBases = new HashMap<>(1);
       proxyUriBases.put("dummy", conf.getInitParameter(PROXY_URI_BASE));
     } else {
-      proxyHosts = conf.getInitParameter(PROXY_HOSTS)
-          .split(PROXY_HOSTS_DELIMITER);
+      proxyHosts = new ArrayList<>(Arrays.asList(conf.getInitParameter(PROXY_HOSTS)
+          .split(PROXY_HOSTS_DELIMITER)));
 
       String[] proxyUriBasesArr = conf.getInitParameter(PROXY_URI_BASES)
           .split(PROXY_URI_BASES_DELIMITER);
@@ -190,7 +198,38 @@ public class AmIpFilter implements Filter {
   @VisibleForTesting
   public String findRedirectUrl() throws ServletException {
     String addr = null;
-    if (proxyUriBases.size() == 1) {
+    YarnConfiguration conf = new YarnConfiguration();
+
+    if (HAUtil.isCustomRMHAEnabled(conf)) {
+      // http(s)://host:port
+      String currentRMAddress = WebAppUtils.getResolvedRMWebAppURLWithScheme(conf);
+      String applicationWebProxy = System.getenv(ApplicationConstants.APPLICATION_WEB_PROXY_BASE_ENV);
+      if(applicationWebProxy == null || applicationWebProxy.isEmpty()){
+        for (Map.Entry<String,String> entry: proxyUriBases.entrySet()) {
+          String address = entry.getValue();
+          if(address.contains("/proxy/application")){
+            applicationWebProxy = address.substring(address.indexOf("/proxy/application"),address.length());
+            break;
+          }
+        }
+        if(applicationWebProxy == null){
+          applicationWebProxy = "";
+        }
+      }
+      addr = currentRMAddress.concat(applicationWebProxy);
+      if (!isValidUrl(currentRMAddress)) {
+        throw new ServletException(
+                "Could not determine the proxy server for redirection. " +
+                        "Check your network configuration");
+      }
+      try {
+        URL url = new URL(currentRMAddress);
+        proxyUriBases.put(url.getHost() + ":" + url.getPort(), addr);
+        proxyHosts.add(url.getHost());
+      } catch (MalformedURLException e) {
+        LOG.warn("{} does not appear to be a valid URL", currentRMAddress, e);
+      }
+    } else if (proxyUriBases.size() == 1) {
       // external proxy or not RM HA
       addr = proxyUriBases.values().iterator().next();
     } else if (rmUrls != null) {

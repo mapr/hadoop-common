@@ -151,8 +151,7 @@ public class YarnDefaultProperties extends Properties {
         // state store dir will be created under this dir
         props.put(YarnConfiguration.FS_RM_STATE_STORE_URI, DEFAULT_RM_SYSTEM_DIR);
 
-        // TODO RM HA configs
-//        put(YarnConfiguration.CUSTOM_RM_HA_RMFINDER, "org.apache.hadoop.yarn.client.MapRZKBasedRMAddressFinder");
+        props.put(YarnConfiguration.CUSTOM_RM_HA_RMFINDER, "org.apache.hadoop.yarn.client.MapRZKBasedRMAddressFinder");
 
         // Scheduler configs
         props.put(YarnConfiguration.RM_SCHEDULER, FAIR_SCHEDULER_CLASS);
