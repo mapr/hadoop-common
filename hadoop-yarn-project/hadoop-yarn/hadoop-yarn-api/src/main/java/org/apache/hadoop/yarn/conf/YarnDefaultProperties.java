@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.http.HttpConfig;
 import org.apache.hadoop.util.MapRCommonSecurityUtil;
@@ -62,6 +63,7 @@ public class YarnDefaultProperties extends Properties {
 
     public static final String APACHE_SHUFFLE_SERVICE_ID = "mapreduce_shuffle";
     public static final String MAPR_SHUFFLE_SERVICE_ID = "mapr_direct_shuffle";
+    private static final String TIMELINE_AUX_SERVICE_ID = "timeline_collector";
 
     public static final String FAIR_SCHEDULER_CLASS =
             "org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.FairScheduler";
@@ -137,9 +139,17 @@ public class YarnDefaultProperties extends Properties {
         props.put(YarnConfiguration.RESOURCE_TYPES, "disks");
         props.put(YarnConfiguration.NM_RESOURCES_PREFIX + "disks", Long.toString(disk));
 
-
         // Shuffle Aux Services Configuration
-        props.put(NM_AUX_SERVICES, APACHE_SHUFFLE_SERVICE_ID + "," + MAPR_SHUFFLE_SERVICE_ID);
+        Configuration conf = new Configuration();
+        conf.addResource("yarn-site.xml");
+
+        final String atsVersion = conf.get("yarn.timeline-service.version");
+        if (atsVersion != null && !atsVersion.startsWith("1.")) {
+            props.put(NM_AUX_SERVICES, APACHE_SHUFFLE_SERVICE_ID + "," + MAPR_SHUFFLE_SERVICE_ID + "," + TIMELINE_AUX_SERVICE_ID);
+        } else {
+            props.put(NM_AUX_SERVICES, APACHE_SHUFFLE_SERVICE_ID + "," + MAPR_SHUFFLE_SERVICE_ID);
+        }
+
         props.put(NM_AUX_SERVICES + "." + APACHE_SHUFFLE_SERVICE_ID + ".class", "org.apache.hadoop.mapred.ShuffleHandler");
         props.put(NM_AUX_SERVICES + "." + MAPR_SHUFFLE_SERVICE_ID + ".class", "org.apache.hadoop.mapred.LocalVolumeAuxService");
 
