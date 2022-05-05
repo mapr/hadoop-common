@@ -243,7 +243,7 @@ public enum DistCpOptionSwitch {
               + "the listing to save the memory utilisation at the client"));
 
 
-  public static final String PRESERVE_STATUS_DEFAULT = "-prbugpct";
+  public static final String PRESERVE_STATUS_DEFAULT = "-prbugpcte";
   private final String confLabel;
   private final Option option;
 

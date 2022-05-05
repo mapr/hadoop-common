@@ -18,6 +18,7 @@
 
 package org.apache.hadoop.tools.util;
 
+import org.apache.hadoop.maprfs.AbstractMapRFileSystem;
 import org.apache.hadoop.thirdparty.com.google.common.collect.Maps;
 
 import org.slf4j.Logger;
@@ -226,6 +227,10 @@ public class DistCpUtils {
     } else if (attributes.contains(FileAttribute.PERMISSION) &&
       !srcFileStatus.getPermission().equals(targetFileStatus.getPermission())) {
       targetFS.setPermission(path, srcFileStatus.getPermission());
+    }
+
+    if(attributes.contains(FileAttribute.EXP) && targetFS instanceof AbstractMapRFileSystem){
+      ((AbstractMapRFileSystem) targetFS).copyAce(srcFileStatus.getPath(), path);
     }
 
     final boolean preserveXAttrs = attributes.contains(FileAttribute.XATTR);
