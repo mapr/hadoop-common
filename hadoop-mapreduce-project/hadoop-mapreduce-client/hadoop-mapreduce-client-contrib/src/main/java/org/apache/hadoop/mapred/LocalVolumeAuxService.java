@@ -256,13 +256,10 @@ public class LocalVolumeAuxService extends AuxiliaryService {
 
   /**
    * Actions called during the INITED to STARTED transition.
-   * <p/>
    * This method will only ever be called once during the lifecycle of
    * a specific service instance.
-   * <p/>
    * Implementations do not need to be synchronized as the logic
    * in {@link #start()} prevents re-entrancy.
-   * <p>
    * Initializes local volume and starts off a periodic volume health check
    * task with an initial delay equal to the volumeCheckInterval as we don't
    * want the check to happen immediately.

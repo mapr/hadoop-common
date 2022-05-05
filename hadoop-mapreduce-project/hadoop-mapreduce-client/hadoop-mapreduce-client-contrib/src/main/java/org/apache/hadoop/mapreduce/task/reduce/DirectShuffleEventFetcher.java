@@ -107,7 +107,7 @@ public class DirectShuffleEventFetcher<K,V> extends Thread {
   }
   
   /** 
-   * Queries the {@link TaskTracker} for a set of map-completion events 
+   * Queries the TaskTracker for a set of map-completion events
    * from a given event ID.
    * @throws IOException
    */  

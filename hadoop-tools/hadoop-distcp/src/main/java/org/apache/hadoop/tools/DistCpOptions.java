@@ -179,7 +179,8 @@ public final class DistCpOptions {
     ACL,            // A
     XATTR,          // X
     TIMES,          // T
-    ERASURECODINGPOLICY; // E
+    ERASURECODINGPOLICY, // E
+    HEXP;            // H
 
     public static FileAttribute getAttribute(char symbol) {
       for (FileAttribute attribute : values()) {

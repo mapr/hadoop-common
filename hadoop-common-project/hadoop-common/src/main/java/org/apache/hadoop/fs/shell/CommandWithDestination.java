@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 
+import org.apache.hadoop.maprfs.AbstractMapRFileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -127,13 +128,14 @@ abstract class CommandWithDestination extends FsCommand {
       preserve(FileAttribute.TIMESTAMPS);
       preserve(FileAttribute.OWNERSHIP);
       preserve(FileAttribute.PERMISSION);
+      preserve(FileAttribute.EXP);
     } else {
       preserveStatus.clear();
     }
   }
   
   protected enum FileAttribute {
-    TIMESTAMPS, OWNERSHIP, PERMISSION, ACL, XATTR;
+    TIMESTAMPS, OWNERSHIP, PERMISSION, ACL, XATTR, EXP;
 
     public static FileAttribute getAttribute(char symbol) {
       for (FileAttribute attribute : values()) {
@@ -485,6 +487,13 @@ abstract class CommandWithDestination extends FsCommand {
             target.fs.setXAttr(target.path, entry.getKey(), entry.getValue());
           }
         }
+      }
+    }
+    if (shouldPreserve(FileAttribute.EXP)) {
+      if (src.fs instanceof AbstractMapRFileSystem &&
+              target.fs instanceof AbstractMapRFileSystem && target != null) {
+        AbstractMapRFileSystem mapRFileSystem = (AbstractMapRFileSystem) src.fs;
+        mapRFileSystem.copyAce(src.path, target.path);
       }
     }
   }

@@ -251,7 +251,7 @@ public enum DistCpOptionSwitch {
       "Update root directory attributes "
           + "(eg permissions, ownership ...)"));
 
-  public static final String PRESERVE_STATUS_DEFAULT = "-prbugpct";
+  public static final String PRESERVE_STATUS_DEFAULT = "-prbugpcteh";
   private final String confLabel;
   private final Option option;
 
