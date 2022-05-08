@@ -26,6 +26,7 @@ import com.sun.jersey.spi.container.servlet.ServletContainer;
 
 import org.apache.hadoop.yarn.logaggregation.LogAggregationUtils;
 import org.apache.hadoop.yarn.metrics.GenericEventTypeMetrics;
+import org.apache.hadoop.yarn.webapp.WebAppException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -1421,7 +1422,12 @@ public class ResourceManager extends CompositeService
         IsResourceManagerActiveServlet.PATH_SPEC,
         IsResourceManagerActiveServlet.class);
 
-    webApp = builder.start(new RMWebApp(this), uiWebAppContext);
+    try {
+      webApp = builder.start(new RMWebApp(this), uiWebAppContext);
+    } catch (WebAppException e) {
+      webApp = e.getWebApp();
+      throw e;
+    }
   }
 
   private String getWebAppsPath(String appName) {
