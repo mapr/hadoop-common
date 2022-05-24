@@ -26,6 +26,8 @@ import static org.apache.hadoop.yarn.server.nodemanager.containermanager.linux.r
 import static org.apache.hadoop.yarn.server.nodemanager.containermanager.linux.runtime.LinuxContainerRuntimeConstants.CONTAINER_LOG_DIRS;
 import static org.apache.hadoop.yarn.server.nodemanager.containermanager.linux.runtime.LinuxContainerRuntimeConstants.CONTAINER_RUN_CMDS;
 import static org.apache.hadoop.yarn.server.nodemanager.containermanager.linux.runtime.LinuxContainerRuntimeConstants.CONTAINER_WORK_DIR;
+import static org.apache.hadoop.yarn.server.nodemanager.containermanager.linux.runtime.LinuxContainerRuntimeConstants.EXT_TOKENS_ENV_VAR;
+import static org.apache.hadoop.yarn.server.nodemanager.containermanager.linux.runtime.LinuxContainerRuntimeConstants.EXT_TOKENS_PATH;
 import static org.apache.hadoop.yarn.server.nodemanager.containermanager.linux.runtime.LinuxContainerRuntimeConstants.FILECACHE_DIRS;
 import static org.apache.hadoop.yarn.server.nodemanager.containermanager.linux.runtime.LinuxContainerRuntimeConstants.LOCALIZED_RESOURCES;
 import static org.apache.hadoop.yarn.server.nodemanager.containermanager.linux.runtime.LinuxContainerRuntimeConstants.LOCAL_DIRS;
@@ -398,6 +400,8 @@ public class LinuxContainerExecutor extends ContainerExecutor {
       throws IOException, InterruptedException {
     Path nmPrivateContainerTokensPath = ctx.getNmPrivateContainerTokens();
     InetSocketAddress nmAddr = ctx.getNmAddr();
+    Path nmPrivateExtTokensPath = ctx.getExtTokenPath();
+    String extTokensEnvVar = ctx.getExtTokenEnvVar();
     String user = ctx.getUser();
     String appId = ctx.getAppId();
     String locId = ctx.getLocId();
@@ -421,6 +425,10 @@ public class LinuxContainerExecutor extends ContainerExecutor {
         appId,
         locId,
         nmPrivateContainerTokensPath.toUri().getPath().toString(),
+        (nmPrivateExtTokensPath == null)
+                ? ""
+                : nmPrivateExtTokensPath.toUri().getPath().toString(),
+        (extTokensEnvVar == null) ? "" : extTokensEnvVar,
         StringUtils.join(PrivilegedOperation.LINUX_FILE_PATH_SEPARATOR,
             localDirs),
         StringUtils.join(PrivilegedOperation.LINUX_FILE_PATH_SEPARATOR,
@@ -685,6 +693,8 @@ public class LinuxContainerExecutor extends ContainerExecutor {
     addNumaArgsToCommand(prefixCommands, numaArgs);
 
     Container container = ctx.getContainer();
+    Path nmPrivateExtTokensPath = ctx.getExtTokenPath();
+    String extTokensEnvVar = ctx.getExtTokenEnvVar();
 
     ContainerRuntimeContext.Builder builder = new ContainerRuntimeContext
             .Builder(container);
@@ -705,6 +715,8 @@ public class LinuxContainerExecutor extends ContainerExecutor {
         ctx.getNmPrivateContainerScriptPath())
       .setExecutionAttribute(NM_PRIVATE_TOKENS_PATH,
         ctx.getNmPrivateTokensPath())
+      .setExecutionAttribute(EXT_TOKENS_PATH, nmPrivateExtTokensPath)
+      .setExecutionAttribute(EXT_TOKENS_ENV_VAR, extTokensEnvVar)
       .setExecutionAttribute(NM_PRIVATE_KEYSTORE_PATH,
         ctx.getNmPrivateKeystorePath())
       .setExecutionAttribute(NM_PRIVATE_TRUSTSTORE_PATH,

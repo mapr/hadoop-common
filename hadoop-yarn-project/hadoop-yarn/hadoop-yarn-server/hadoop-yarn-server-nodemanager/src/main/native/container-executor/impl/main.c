@@ -255,6 +255,8 @@ static struct {
   const char *keystore_file;
   const char *truststore_file;
   const char *cred_file;
+  const char *ext_cred_file;
+  const char *ext_cred_env_var;
   const char *script_file;
   const char *current_dir;
   const char *pid_file;
@@ -497,8 +499,8 @@ static int validate_run_as_user_commands(int argc, char **argv, int *operation) 
   char * resources_value = NULL;
   switch (command) {
   case INITIALIZE_CONTAINER:
-    if (argc < 10) {
-      fprintf(ERRORFILE, "Too few arguments (%d vs 10) for initialize container\n",
+    if (argc < 12) {
+      fprintf(ERRORFILE, "Too few arguments (%d vs 12) for initialize container\n",
        argc);
       return INVALID_ARGUMENT_NUMBER;
     }
@@ -509,6 +511,8 @@ static int validate_run_as_user_commands(int argc, char **argv, int *operation) 
       return INVALID_CONTAINER_ID;
     }
     cmd_input.cred_file = argv[optind++];
+    cmd_input.ext_cred_file = argv[optind++];
+    cmd_input.ext_cred_env_var = argv[optind++];
     cmd_input.local_dirs = argv[optind++];// good local dirs as a comma separated list
     cmd_input.log_dirs = argv[optind++];// good log dirs as a comma separated list
 
@@ -517,8 +521,8 @@ static int validate_run_as_user_commands(int argc, char **argv, int *operation) 
  case LAUNCH_DOCKER_CONTAINER:
    if(is_docker_support_enabled()) {
       //kill me now.
-      if (!(argc >= 14 && argc <= 17)) {
-        fprintf(ERRORFILE, "Wrong number of arguments (%d vs 14 - 17) for"
+      if (!(argc >= 16 && argc <= 19)) {
+        fprintf(ERRORFILE, "Wrong number of arguments (%d vs 16 - 19) for"
           " launch docker container\n", argc);
         return INVALID_ARGUMENT_NUMBER;
       }
@@ -528,6 +532,8 @@ static int validate_run_as_user_commands(int argc, char **argv, int *operation) 
       cmd_input.current_dir = argv[optind++];
       cmd_input.script_file = argv[optind++];
       cmd_input.cred_file = argv[optind++];
+      cmd_input.ext_cred_file = argv[optind++];
+      cmd_input.ext_cred_env_var = argv[optind++];
       if (strcmp("--https", argv[optind++]) == 0) {
         cmd_input.https = 1;
         cmd_input.keystore_file = argv[optind++];
@@ -542,7 +548,7 @@ static int validate_run_as_user_commands(int argc, char **argv, int *operation) 
       cmd_input.log_dirs = argv[optind++];
       cmd_input.command_file = argv[optind++];
       //network isolation through tc
-      if ((argc == 15 && !cmd_input.https) || (argc == 17 && cmd_input.https)) {
+      if ((argc == 17 && !cmd_input.https) || (argc == 19 && cmd_input.https)) {
         if(is_tc_support_enabled()) {
           cmd_input.traffic_control_command_file = argv[optind++];
         } else {
@@ -560,8 +566,8 @@ static int validate_run_as_user_commands(int argc, char **argv, int *operation) 
 
   case LAUNCH_CONTAINER:
     //kill me now.
-    if (!(argc >= 14 && argc <= 17)) {
-      fprintf(ERRORFILE, "Wrong number of arguments (%d vs 14 - 17)"
+    if (!(argc >= 16 && argc <= 19)) {
+      fprintf(ERRORFILE, "Wrong number of arguments (%d vs 16 - 19)"
         " for launch container\n", argc);
       return INVALID_ARGUMENT_NUMBER;
     }
@@ -571,6 +577,8 @@ static int validate_run_as_user_commands(int argc, char **argv, int *operation) 
     cmd_input.current_dir = argv[optind++];
     cmd_input.script_file = argv[optind++];
     cmd_input.cred_file = argv[optind++];
+    cmd_input.ext_cred_file = argv[optind++];
+    cmd_input.ext_cred_env_var = argv[optind++];
     if (strcmp("--https", argv[optind++]) == 0) {
       cmd_input.https = 1;
       cmd_input.keystore_file = argv[optind++];
@@ -595,7 +603,7 @@ static int validate_run_as_user_commands(int argc, char **argv, int *operation) 
     }
 
     //network isolation through tc
-    if ((argc == 15 && !cmd_input.https) || (argc == 17 && cmd_input.https)) {
+    if ((argc == 17 && !cmd_input.https) || (argc == 19 && cmd_input.https)) {
       if(is_tc_support_enabled()) {
         cmd_input.traffic_control_command_file = argv[optind++];
       } else {
@@ -711,6 +719,8 @@ int main(int argc, char **argv) {
                             cmd_input.app_id,
                             cmd_input.container_id,
                             cmd_input.cred_file,
+                            cmd_input.ext_cred_file,
+                            cmd_input.ext_cred_env_var,
                             split(cmd_input.local_dirs),
                             split(cmd_input.log_dirs),
                             argv + optind);
@@ -736,6 +746,8 @@ int main(int argc, char **argv) {
                       cmd_input.current_dir,
                       cmd_input.script_file,
                       cmd_input.cred_file,
+                      cmd_input.ext_cred_file,
+                      cmd_input.ext_cred_env_var,
                       cmd_input.https,
                       cmd_input.keystore_file,
                       cmd_input.truststore_file,
@@ -765,6 +777,8 @@ int main(int argc, char **argv) {
                     cmd_input.current_dir,
                     cmd_input.script_file,
                     cmd_input.cred_file,
+                    cmd_input.ext_cred_file,
+                    cmd_input.ext_cred_env_var,
                     cmd_input.https,
                     cmd_input.keystore_file,
                     cmd_input.truststore_file,

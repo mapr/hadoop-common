@@ -4,7 +4,7 @@
 
 package org.apache.hadoop.mapred;
 
-import com.google.common.annotations.VisibleForTesting;
+import org.apache.hadoop.classification.VisibleForTesting;
 
 import java.nio.ByteBuffer;
 import java.io.IOException;

@@ -110,12 +110,15 @@ void free_executor_configurations();
 // initialize the application directory
 int initialize_app(const char *user, const char *app_id,
                    const char *container_id,
-                   const char *credentials, char* const* local_dirs,
+                   const char *credentials,
+                   const char *ext_cred_file, const char *ext_cred_env_var,
+                   char* const* local_dirs,
                    char* const* log_dirs, char* const* args);
 
 int launch_docker_container_as_user(const char * user, const char *app_id,
                               const char *container_id, const char *work_dir,
                               const char *script_name, const char *cred_file,
+                              const char *ext_cred_file, const char *ext_cred_env_var,
                               const int https,
                               const char *keystore_file, const char *truststore_file,
                               const char *pid_file, char* const* local_dirs,
@@ -136,6 +139,8 @@ int launch_docker_container_as_user(const char * user, const char *app_id,
  * @param script_name the name of the script to be run to launch the container.
  * @param cred_file the credentials file that needs to be copied to the
  * working directory.
+ * @param ext_cred_file the external credentials file that needs to be copied
+ * to the working directory.
  * @param https 1 if a keystore and truststore will be provided, 0 if not
  * @param keystore_file the keystore file that needs to be copied to the
  * working directory.
@@ -151,6 +156,7 @@ int launch_docker_container_as_user(const char * user, const char *app_id,
 int launch_container_as_user(const char * user, const char *app_id,
                      const char *container_id, const char *work_dir,
                      const char *script_name, const char *cred_file,
+                     const char *ext_cred_file, const char *ext_cred_env_var,
                      const int https,
                      const char *keystore_file, const char *truststore_file,
                      const char *pid_file, char* const* local_dirs,
@@ -282,6 +288,13 @@ int is_tc_support_enabled();
 
 /** Check if cgroup mount support is enabled in configuration. */
 int is_mount_cgroups_support_enabled();
+
+/**
+ * Copies external credential file to working directory, similar to how
+ * the container tokens are managed.
+ */
+int setup_external_token(int ext_cred_fd, const char *ext_cred_file,
+    const char *dest_dir, const char *ext_cred_env_var);
 
 /**
  * Run a batch of tc commands that modify interface configuration

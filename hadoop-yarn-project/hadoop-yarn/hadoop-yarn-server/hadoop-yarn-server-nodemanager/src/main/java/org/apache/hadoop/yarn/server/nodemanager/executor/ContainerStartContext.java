@@ -40,6 +40,8 @@ public final class ContainerStartContext {
   private final Map<Path, List<String>> localizedResources;
   private final Path nmPrivateContainerScriptPath;
   private final Path nmPrivateTokensPath;
+  private final Path extTokenPath;
+  private final String extTokenEnvVar;
   private final Path nmPrivateKeystorePath;
   private final Path nmPrivateTruststorePath;
   private final String user;
@@ -60,6 +62,8 @@ public final class ContainerStartContext {
     private Map<Path, List<String>> localizedResources;
     private Path nmPrivateContainerScriptPath;
     private Path nmPrivateTokensPath;
+    private Path extTokenPath;
+    private String extTokenEnvVar;
     private Path nmPrivateKeystorePath;
     private Path nmPrivateTruststorePath;
     private String user;
@@ -97,6 +101,16 @@ public final class ContainerStartContext {
 
     public Builder setNmPrivateTokensPath(Path nmPrivateTokensPath) {
       this.nmPrivateTokensPath = nmPrivateTokensPath;
+      return this;
+    }
+
+    public Builder setExtTokenPath(Path extTokenPath) {
+      this.extTokenPath = extTokenPath;
+      return this;
+    }
+
+    public Builder setExtTokenEnvVar(String extTokenEnvVar) {
+      this.extTokenEnvVar = extTokenEnvVar;
       return this;
     }
 
@@ -182,6 +196,8 @@ public final class ContainerStartContext {
     this.localizedResources = builder.localizedResources;
     this.nmPrivateContainerScriptPath = builder.nmPrivateContainerScriptPath;
     this.nmPrivateTokensPath = builder.nmPrivateTokensPath;
+    this.extTokenPath = builder.extTokenPath;
+    this.extTokenEnvVar = builder.extTokenEnvVar;
     this.nmPrivateKeystorePath = builder.nmPrivateKeystorePath;
     this.nmPrivateTruststorePath = builder.nmPrivateTruststorePath;
     this.user = builder.user;
@@ -217,6 +233,10 @@ public final class ContainerStartContext {
   public Path getNmPrivateTokensPath() {
     return this.nmPrivateTokensPath;
   }
+
+  public Path getExtTokenPath() { return  this.extTokenPath; }
+
+  public String getExtTokenEnvVar() { return  this.extTokenEnvVar; }
 
   public Path getNmPrivateKeystorePath() {
     return this.nmPrivateKeystorePath;

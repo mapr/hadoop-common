@@ -101,6 +101,7 @@ public class YarnConfiguration extends Configuration {
 
   static {
     addDeprecatedKeys();
+    Configuration.addDefaultResource(YARN_DEFAULT_CONFIGURATION_CLASS);
     Configuration.addDefaultResource(YARN_DEFAULT_CONFIGURATION_FILE);
     Configuration.addDefaultResource(YARN_SITE_CONFIGURATION_FILE);
     Configuration.addDefaultResource(RESOURCE_TYPES_CONFIGURATION_FILE);
@@ -2780,6 +2781,11 @@ public class YarnConfiguration extends Configuration {
 
   public static final String DEFAULT_RM_APPLICATION_HTTPS_POLICY = "NONE";
 
+  public static final String RM_AUX_SERVICES =
+          RM_PREFIX + "aux-services";
+
+  public static final String AUX_SERVICE_FMT =
+          RM_PREFIX + "aux-services.%s.class";
 
   // If the proxy connection time enabled.
   public static final String RM_PROXY_TIMEOUT_ENABLED =
@@ -3590,6 +3596,12 @@ public class YarnConfiguration extends Configuration {
   @Private
   public static final String APPLICATION_HISTORY_PREFIX =
       TIMELINE_SERVICE_PREFIX + "generic-application-history.";
+
+  /**
+   * Auxiliary services to start as part of Application history server.
+   */
+  public static final String APPLICATION_HISTORY_AUX_SERVICES =
+          APPLICATION_HISTORY_PREFIX + "aux-services";
 
   /**
    *  The setting that controls whether application history service is
@@ -4826,7 +4838,19 @@ public class YarnConfiguration extends Configuration {
   public static final String NODE_LABELS_ENABLED = NODE_LABELS_PREFIX
       + "enabled";
   public static final boolean DEFAULT_NODE_LABELS_ENABLED = false;
-  
+
+  /**
+   * Class to instantiate and use for external token localization.
+   */
+  public static final String YARN_NODEMANAGER_EXT_TOKEN_LOCALIZER = NM_PREFIX
+          + "external.token.localizer";
+
+  /**
+   * Class to instantiate and use for managing external tokens.
+   */
+  public static final String YARN_EXT_TOKEN_MANAGER = YARN_PREFIX
+          + "external.token.manager";
+
   public static final String NODELABEL_CONFIGURATION_TYPE =
       NODE_LABELS_PREFIX + "configuration-type";
   

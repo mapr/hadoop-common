@@ -32,7 +32,7 @@ import org.apache.hadoop.mapred.MapOutputFile;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 
-import com.google.common.annotations.VisibleForTesting;
+import org.apache.hadoop.classification.VisibleForTesting;
 
 public class DirectOnDiskMapOutput<K,V> extends MapOutput<K, V> {
 

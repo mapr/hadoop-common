@@ -35,6 +35,8 @@ import java.net.InetSocketAddress;
 @InterfaceStability.Unstable
 public final class LocalizerStartContext {
   private final Path nmPrivateContainerTokens;
+  private final Path extTokenPath;
+  private final String extTokenEnvVar;
   private final InetSocketAddress nmAddr;
   private final String user;
   private final String appId;
@@ -44,6 +46,8 @@ public final class LocalizerStartContext {
   public static final class Builder {
     private Path nmPrivateContainerTokens;
     private InetSocketAddress nmAddr;
+    private Path extTokenPath;
+    private String extTokenEnvVar;
     private String user;
     private String appId;
     private String locId;
@@ -54,6 +58,16 @@ public final class LocalizerStartContext {
 
     public Builder setNmPrivateContainerTokens(Path nmPrivateContainerTokens) {
       this.nmPrivateContainerTokens = nmPrivateContainerTokens;
+      return this;
+    }
+
+    public Builder setExtTokenPath(Path extTokenPath) {
+      this.extTokenPath = extTokenPath;
+      return this;
+    }
+
+    public Builder setExtTokenEnvVar(String extTokenEnvVar) {
+      this.extTokenEnvVar = extTokenEnvVar;
       return this;
     }
 
@@ -89,6 +103,8 @@ public final class LocalizerStartContext {
 
   private LocalizerStartContext(Builder builder) {
     this.nmPrivateContainerTokens = builder.nmPrivateContainerTokens;
+    this.extTokenPath = builder.extTokenPath;
+    this.extTokenEnvVar = builder.extTokenEnvVar;
     this.nmAddr = builder.nmAddr;
     this.user = builder.user;
     this.appId = builder.appId;
@@ -99,6 +115,10 @@ public final class LocalizerStartContext {
   public Path getNmPrivateContainerTokens() {
     return this.nmPrivateContainerTokens;
   }
+
+  public Path getExtTokenPath() { return  this.extTokenPath; }
+
+  public String getExtTokenEnvVar() { return  this.extTokenEnvVar; }
 
   public InetSocketAddress getNmAddr() {
     return this.nmAddr;

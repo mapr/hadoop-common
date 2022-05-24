@@ -89,6 +89,8 @@ import org.apache.hadoop.yarn.server.nodemanager.containermanager.container.Cont
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.container.ContainerState;
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.ContainerLocalizer;
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.ResourceLocalizationService;
+import org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.security.ExternalTokenLocalizer;
+import org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.security.ExternalTokenLocalizerFactory;
 import org.apache.hadoop.yarn.server.nodemanager.executor.ContainerPrepareContext;
 import org.apache.hadoop.yarn.server.nodemanager.executor.ContainerReapContext;
 import org.apache.hadoop.yarn.server.nodemanager.executor.ContainerSignalContext;
@@ -385,6 +387,22 @@ public class ContainerLaunch implements Callable<Integer> {
       }
       // /////////// End of writing out container-tokens
 
+      // Invoke any registered external token localizer. External tokens are
+      // localized as part of resource localization. But some tasks may not
+      // need resource localization and so we need to localize the token here.
+      ExternalTokenLocalizer extTokenLocalizer = ExternalTokenLocalizerFactory.get();
+      if (extTokenLocalizer != null) {
+        extTokenLocalizer.run(containerID, user, conf);
+      }
+
+      Path extTokenPath = null;
+      String extTokenEnvVar = null;
+
+      if (extTokenLocalizer != null) {
+        extTokenPath = extTokenLocalizer.getTokenPath(appIdStr, conf);
+        extTokenEnvVar = extTokenLocalizer.getTokenEnvVar();
+      }
+
       ret = launchContainer(new ContainerStartContext.Builder()
           .setContainer(container)
           .setLocalizedResources(localResources)
@@ -392,6 +410,8 @@ public class ContainerLaunch implements Callable<Integer> {
           .setNmPrivateTokensPath(nmPrivateTokensPath)
           .setNmPrivateKeystorePath(nmPrivateKeystorePath)
           .setNmPrivateTruststorePath(nmPrivateTruststorePath)
+          .setExtTokenPath(extTokenPath)
+          .setExtTokenEnvVar(extTokenEnvVar)
           .setUser(user)
           .setAppId(appIdStr)
           .setContainerWorkDir(containerWorkDir)

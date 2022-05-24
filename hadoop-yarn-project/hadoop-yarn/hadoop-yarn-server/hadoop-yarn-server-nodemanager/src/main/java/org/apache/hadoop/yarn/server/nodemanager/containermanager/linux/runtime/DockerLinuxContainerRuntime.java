@@ -1169,7 +1169,13 @@ public class DockerLinuxContainerRuntime extends OCIContainerRuntime {
         containerIdStr,
         containerWorkDir.toString(),
         nmPrivateContainerScriptPath.toUri().getPath(),
-        ctx.getExecutionAttribute(NM_PRIVATE_TOKENS_PATH).toUri().getPath());
+        ctx.getExecutionAttribute(NM_PRIVATE_TOKENS_PATH).toUri().getPath(),
+        (ctx.getExecutionAttribute(EXT_TOKENS_PATH) == null)
+                ? ""
+                : ctx.getExecutionAttribute(EXT_TOKENS_PATH).toUri().getPath().toString(),
+        (ctx.getExecutionAttribute(EXT_TOKENS_ENV_VAR) == null)
+                ? ""
+                : ctx.getExecutionAttribute(EXT_TOKENS_ENV_VAR));
     Path keystorePath = ctx.getExecutionAttribute(NM_PRIVATE_KEYSTORE_PATH);
     Path truststorePath = ctx.getExecutionAttribute(NM_PRIVATE_TRUSTSTORE_PATH);
     if (keystorePath != null && truststorePath != null) {

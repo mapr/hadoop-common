@@ -1166,12 +1166,14 @@ int check_pidfile_as_nm(const char* pidfile) {
 
 /**
  * Copy a file from a fd to a given filename.
- * The new file must not exist and it is created with permissions perm.
+ * If truncate is not set, then the new file must not exist and it is created
+ * with permissions perm. If truncate is set, then existing file will be
+ * truncated.
  * The input stream is closed.
  * Return 0 if everything is ok.
  */
-static int copy_file(int input, const char* in_filename,
-		     const char* out_filename, mode_t perm) {
+static int copy_file_with_truncate(int input, const char* in_filename,
+		     const char* out_filename, mode_t perm, int truncate) {
   const int buffer_size = 128*1024;
   char* buffer = malloc(buffer_size);
   if (buffer == NULL) {
@@ -1179,8 +1181,12 @@ static int copy_file(int input, const char* in_filename,
       in_filename, out_filename);
     return -1;
   }
-
-  int out_fd = open(out_filename, O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW, perm);
+  int out_fd = -1;
+  if (truncate) {
+    out_fd = open(out_filename, O_WRONLY|O_CREAT|O_TRUNC|O_NOFOLLOW, perm);
+  } else {
+    out_fd = open(out_filename, O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW, perm);
+  }
   if (out_fd == -1) {
     fprintf(LOGFILE, "Can't open %s for output - %s\n", out_filename,
             strerror(errno));
@@ -1219,6 +1225,18 @@ static int copy_file(int input, const char* in_filename,
   }
   close(input);
   return 0;
+}
+
+/**
+ * Copy a file from a fd to a given filename.
+ * The new file must not exist and it is created with permissions perm.
+ * The input stream is closed.
+ * Return 0 if everything is ok.
+ */
+static int copy_file(int input, const char* in_filename,
+		     const char* out_filename, mode_t perm) {
+
+  return copy_file_with_truncate(input, in_filename, out_filename, perm, 0);
 }
 
 /**
@@ -1405,6 +1423,7 @@ static char *create_app_dirs(const char *user,
 int initialize_app(const char *user, const char *app_id,
                    const char *container_id,
                    const char* nmPrivate_credentials_file,
+                   const char *ext_cred_file, const char *ext_cred_env_var,
                    char* const* local_dirs, char* const* log_roots,
                    char* const* args) {
   if (app_id == NULL || user == NULL || user_detail == NULL || user_detail->pw_name == NULL) {
@@ -1437,6 +1456,23 @@ int initialize_app(const char *user, const char *app_id,
     return -1;
   }
 
+  // Check if external credential file is set. If not, no need of external
+  // token setup.
+  int setup_ext_token = 1;
+  if ((ext_cred_file == NULL) || strcmp(ext_cred_file, "") == 0) {
+    setup_ext_token = 0;
+  }
+
+  int ext_cred_fd = -1;
+  if (setup_ext_token) {
+    // open external credential
+    ext_cred_fd = open_file_as_nm(ext_cred_file);
+    if (ext_cred_fd == -1) {
+      fprintf(LOGFILE, "failed to open external credential file %s \n", ext_cred_file);
+      return -1;
+    }
+  }
+
   // give up root privs
   if (change_user(user_detail->pw_uid, user_detail->pw_gid) != 0) {
     return -1;
@@ -1446,6 +1482,15 @@ int initialize_app(const char *user, const char *app_id,
   char *primary_app_dir = create_app_dirs(user, app_id, local_dirs);
   if (primary_app_dir == NULL) {
     return -1;
+  }
+
+  if (setup_ext_token) {
+    int retCode = setup_external_token(ext_cred_fd, ext_cred_file,
+        primary_app_dir, ext_cred_env_var);
+    if (retCode != 0) {
+      fprintf(LOGFILE, "failed to set up external token during init app\n");
+      return -1;
+    }
   }
 
   char *nmPrivate_credentials_file_copy = strdup(nmPrivate_credentials_file);
@@ -2058,6 +2103,7 @@ cleanup:
 int launch_docker_container_as_user(const char * user, const char *app_id,
                               const char *container_id, const char *work_dir,
                               const char *script_name, const char *cred_file,
+                              const char *ext_cred_file, const char *ext_cred_env_var,
                               const int https,
                               const char *keystore_file, const char *truststore_file,
                               const char *pid_file, char* const* local_dirs,
@@ -2100,6 +2146,23 @@ int launch_docker_container_as_user(const char * user, const char *app_id,
   if (exit_code != 0) {
     fprintf(ERRORFILE, "Could not create local files and directories %d %d\n", container_file_source, cred_file_source);
     goto cleanup;
+  }
+
+  // Check if external credential file is set. If not, no need of external
+  // token setup.
+  int setup_ext_token = 1;
+  if ((ext_cred_file == NULL) || strcmp(ext_cred_file, "") == 0) {
+    setup_ext_token = 0;
+  }
+
+  int ext_cred_fd = -1;
+  if (setup_ext_token) {
+    // open external credential
+    ext_cred_fd = open_file_as_nm(ext_cred_file);
+    if (ext_cred_fd == -1) {
+      fprintf(LOGFILE, "failed to open external credential file %s \n", ext_cred_file);
+      goto cleanup;
+    }
   }
 
   exit_code = create_user_filecache_dirs(user, local_dirs);
@@ -2260,6 +2323,15 @@ int launch_docker_container_as_user(const char * user, const char *app_id,
       goto cleanup;
     }
 
+  if (setup_ext_token) {
+    int retCode = setup_external_token(ext_cred_fd, ext_cred_file, work_dir,
+        ext_cred_env_var);
+    if (retCode != 0) {
+      fprintf(LOGFILE, "failed to set up external token during container launch\n");
+      goto cleanup;
+    }
+  }
+
     fprintf(LOGFILE, "Waiting for docker container to finish.\n");
 
     // wait for pid to finish
@@ -2341,6 +2413,7 @@ cleanup:
 int launch_container_as_user(const char *user, const char *app_id,
                    const char *container_id, const char *work_dir,
                    const char *script_name, const char *cred_file,
+                   const char *ext_cred_file, const char *ext_cred_env_var,
                    const int https,
                    const char *keystore_file, const char *truststore_file,
                    const char* pid_file, char* const* local_dirs,
@@ -2372,6 +2445,23 @@ int launch_container_as_user(const char *user, const char *app_id,
   if (exit_code != 0) {
     fprintf(ERRORFILE, "Could not create local files and directories\n");
     goto cleanup;
+  }
+
+  // Check if external credential file is set. If not, no need of external
+  // token setup.
+  int setup_ext_token = 1;
+  if ((ext_cred_file == NULL) || strcmp(ext_cred_file, "") == 0) {
+    setup_ext_token = 0;
+  }
+
+  int ext_cred_fd = -1;
+  if (setup_ext_token) {
+    // open external credential
+    ext_cred_fd = open_file_as_nm(ext_cred_file);
+    if (ext_cred_fd == -1) {
+      fprintf(LOGFILE, "failed to open external credential file %s \n", ext_cred_file);
+      goto cleanup;
+    }
   }
 
   pid_t child_pid = fork();
@@ -2418,6 +2508,15 @@ int launch_container_as_user(const char *user, const char *app_id,
   if (exit_code != 0) {
     fprintf(ERRORFILE, "Could not create local files and directories\n");
     _exit(exit_code);
+  }
+
+  if (setup_ext_token) {
+    int retCode = setup_external_token(ext_cred_fd, ext_cred_file, work_dir,
+        ext_cred_env_var);
+    if (retCode != 0) {
+      fprintf(LOGFILE, "failed to set up external token during container launch\n");
+      goto cleanup;
+    }
   }
 
   fprintf(LOGFILE, "Launching container...\n");
@@ -3004,6 +3103,45 @@ cleanup:
 
   return result;
 #endif
+}
+
+int setup_external_token(int ext_cred_fd, const char *ext_cred_file,
+    const char *dest_dir, const char *ext_cred_env_var) {
+  int exit_code = -1;
+
+  char *ext_cred_file_copy = strdup(ext_cred_file);
+  // TODO: FIXME. The user's copy of creds should go to a path selected by
+  // localDirAllocator
+  char *ext_cred_file_dest = concatenate("%s/%s", "ext container credentials", 2,
+      dest_dir, basename(ext_cred_file_copy));
+
+  if (NULL == ext_cred_file_dest) {
+    exit_code = OUT_OF_MEMORY;
+    fprintf(LOGFILE, "failed to create destination external credential file\n");
+    goto cleanup;
+  }
+
+  // 600
+  // Truncate credential file is it exists. This can happen during RM HA.
+  if (copy_file_with_truncate(ext_cred_fd, ext_cred_file, ext_cred_file_dest,
+        S_IRUSR | S_IWUSR, 1) != 0) {
+    fprintf(LOGFILE, "failed to copy external credential file to destination\n");
+    goto cleanup;
+  }
+
+  int retCode = setenv(ext_cred_env_var, ext_cred_file_dest, 1);
+  if (retCode != 0) {
+    fprintf(LOGFILE, "failed to set %s env var to %s with error: %s\n",
+      ext_cred_env_var, ext_cred_file_dest, strerror(errno));
+    goto cleanup;
+  }
+
+  exit_code = 0;
+
+ cleanup:
+  free(ext_cred_file_dest);
+	free(ext_cred_file_copy);
+  return exit_code;
 }
 
 static int run_traffic_control(const char *opts[], char *command_file) {

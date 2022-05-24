@@ -63,6 +63,10 @@ public final class LinuxContainerRuntimeConstants {
       .attribute(Path.class, "nm_private_keystore_path");
   public static final Attribute<Path> NM_PRIVATE_TRUSTSTORE_PATH = Attribute
       .attribute(Path.class, "nm_private_truststore_path");
+  public static final Attribute<Path> EXT_TOKENS_PATH = Attribute
+          .attribute(Path.class, "ext_tokens_path");
+  public static final Attribute<String> EXT_TOKENS_ENV_VAR = Attribute.attribute(
+          String.class, "ext_tokens_env_var");
   public static final Attribute<Path> PID_FILE_PATH = Attribute.attribute(
       Path.class, "pid_file_path");
   public static final Attribute<List> LOCAL_DIRS = Attribute.attribute(

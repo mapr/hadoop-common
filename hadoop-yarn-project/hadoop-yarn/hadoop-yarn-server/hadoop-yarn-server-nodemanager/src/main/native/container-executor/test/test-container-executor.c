@@ -904,7 +904,7 @@ void test_init_app() {
   } else if (child == 0) {
     char *final_pgm[] = {"touch", "my-touch-file", 0};
     exit(initialize_app(yarn_username, "app_4", "container_1",
-                       TEST_ROOT "/creds.txt",
+                       TEST_ROOT "/creds.txt", NULL, NULL,
                        local_dirs, log_dirs, final_pgm));
   }
   int status = 0;
@@ -1012,7 +1012,7 @@ void test_launch_container(const char* app, int https) {
     exit(1);
   } else if (child == 0) {
     exit(launch_container_as_user(yarn_username, app, "container_1",
-                        container_dir, script_name, TEST_ROOT "/creds.txt",
+                        container_dir, script_name, TEST_ROOT "/creds.txt", NULL, NULL,
                         https, keystore_file, truststore_file,
                         pid_file, local_dirs, log_dirs,
                         "cgroups", cgroups_pids));

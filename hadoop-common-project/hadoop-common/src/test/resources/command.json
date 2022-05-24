@@ -1,0 +1,19 @@
+{
+  "somedata":"value",
+  "data":[
+    {
+      "ip":[
+        "0.0.0.1"
+      ],
+      "hostname":"node1",
+      "racktopo":"/rack1"
+    },
+    {
+      "ip":[
+        "0.0.0.2"
+      ],
+      "hostname":"node2",
+      "racktopo":"/rack2"
+    }
+  ]
+}

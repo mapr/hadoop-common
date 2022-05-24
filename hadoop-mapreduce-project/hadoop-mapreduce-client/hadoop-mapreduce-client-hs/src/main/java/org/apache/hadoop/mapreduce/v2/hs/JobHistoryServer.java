@@ -43,6 +43,7 @@ import org.apache.hadoop.yarn.YarnUncaughtExceptionHandler;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 import org.apache.hadoop.yarn.logaggregation.AggregatedLogDeletionService;
+import org.apache.hadoop.yarn.server.api.ConfigurableAuxServices;
 
 import org.apache.hadoop.classification.VisibleForTesting;
 import org.slf4j.Logger;
@@ -70,6 +71,7 @@ public class JobHistoryServer extends CompositeService {
   private AggregatedLogDeletionService aggLogDelService;
   private HSAdminServer hsAdminServer;
   private HistoryServerStateStoreService stateStore;
+  private ConfigurableAuxServices auxiliaryServices;
   private JvmPauseMonitor pauseMonitor;
 
   // utility class to start and stop secret manager as part of service
@@ -126,6 +128,12 @@ public class JobHistoryServer extends CompositeService {
     } catch(IOException ie) {
       throw new YarnRuntimeException("History Server Failed to login", ie);
     }
+    // Setup configurable services
+    auxiliaryServices = new ConfigurableAuxServices("AppHistoryAuxServices",
+            YarnConfiguration.APPLICATION_HISTORY_AUX_SERVICES);
+
+    // Add this service first
+    addService(auxiliaryServices);
     jobHistoryService = new JobHistory();
     stateStore = createStateStore(conf);
     this.jhsDTSecretManager = createJHSSecretManager(conf, stateStore);

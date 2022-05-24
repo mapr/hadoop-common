@@ -3,7 +3,7 @@
  */
 package org.apache.hadoop.yarn.configuration;
 
-import com.google.common.base.Joiner;
+import org.apache.hadoop.thirdparty.com.google.common.base.Joiner;
 
 import java.io.*;
 import java.net.InetAddress;
@@ -55,7 +55,7 @@ public class YarnHASiteXmlBuilder {
    * read and anything before and including {@link #CONFIG_DEMARCATION} is replaced with
    * the new contents returned by {@link #buildYarnSiteXmlFromTemplate()}.
    *
-   * @return
+   * @return String with yarn-site content
    * @throws IOException
    */
   public String build() throws IOException{
@@ -74,7 +74,7 @@ public class YarnHASiteXmlBuilder {
    * On RM nodes, the yarn.resourcemanager.ha.id is set to rm{1,2,3,..}.
    * On non-RM nodes, yarn.resourcemanager.ha.id is set to rm1.
    *
-   * @return
+   * @return String with yarn-site content
    * @throws IOException
    */
   private String buildYarnSiteXmlFromTemplate() throws IOException {
@@ -135,7 +135,7 @@ public class YarnHASiteXmlBuilder {
   /**
    * Looks up the current host's ip/hostname in the {@link #rmIps} list.
    *
-   * @return
+   * @return String with RM IP
    */
   private String getThisRmIp() {
     String thisRmIp = null;

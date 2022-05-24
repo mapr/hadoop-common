@@ -24,7 +24,7 @@ public class YarnSiteAclXmlBuilder {
    * read and {@link #CONFIG_DEMARCATION} is replaced with
    * the new contents returned by {@link #buildYarnSiteXmlFromTemplate()}.
    *
-   * @return
+   * @return yarn-site content
    * @throws IOException
    */
   public String build() throws IOException {
@@ -41,7 +41,7 @@ public class YarnSiteAclXmlBuilder {
   /**
    * Builds the yarn-site.xml from {@link #YARN_SITE_TEMPLATE_FILE}.
    *
-   * @return
+   * @return yarn-site content
    * @throws IOException
    */
   private String buildYarnSiteXmlFromTemplate() throws IOException {

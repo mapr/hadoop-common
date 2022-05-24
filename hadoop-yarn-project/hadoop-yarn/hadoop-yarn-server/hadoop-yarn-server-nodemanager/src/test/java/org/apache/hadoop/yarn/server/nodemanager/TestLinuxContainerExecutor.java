@@ -349,6 +349,8 @@ public class TestLinuxContainerExecutor {
         .setContainer(container)
         .setNmPrivateContainerScriptPath(scriptPath)
         .setNmPrivateTokensPath(tokensPath)
+        .setExtTokenPath(null)
+        .setExtTokenEnvVar(null)
         .setUser(appSubmitter)
         .setAppId(appId)
         .setContainerWorkDir(workDir)
@@ -389,6 +391,8 @@ public class TestLinuxContainerExecutor {
 
     exec.startLocalizer(new LocalizerStartContext.Builder()
         .setNmPrivateContainerTokens(nmPrivateContainerTokensPath)
+        .setExtTokenPath(null)
+        .setExtTokenEnvVar(null)
         .setNmAddr(nmAddr)
         .setUser(appSubmitter)
         .setAppId(appId)
@@ -405,6 +409,8 @@ public class TestLinuxContainerExecutor {
     files.create(nmPrivateContainerTokensPath2, EnumSet.of(CREATE, OVERWRITE));
     exec.startLocalizer(new LocalizerStartContext.Builder()
             .setNmPrivateContainerTokens(nmPrivateContainerTokensPath2)
+            .setExtTokenPath(null)
+            .setExtTokenEnvVar(null)
             .setNmAddr(nmAddr)
             .setUser(appSubmitter)
             .setAppId(appId)
