@@ -68,6 +68,7 @@ import org.apache.hadoop.yarn.event.EventHandler;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 import org.apache.hadoop.yarn.nodelabels.NodeAttributesManager;
+import org.apache.hadoop.yarn.server.api.ConfigurableAuxServices;
 import org.apache.hadoop.yarn.server.resourcemanager.ahs.RMApplicationHistoryWriter;
 import org.apache.hadoop.yarn.server.resourcemanager.amlauncher.AMLauncherEventType;
 import org.apache.hadoop.yarn.server.resourcemanager.amlauncher.ApplicationMasterLauncher;
@@ -234,6 +235,8 @@ public class ResourceManager extends CompositeService
 
   private UserGroupInformation rmLoginUGI;
 
+  private ConfigurableAuxServices auxiliaryServices;
+
   public ResourceManager() {
     super("ResourceManager");
   }
@@ -295,6 +298,13 @@ public class ResourceManager extends CompositeService
     } catch(IOException ie) {
       throw new YarnRuntimeException("Failed to login", ie);
     }
+
+    // Setup configurable services
+    auxiliaryServices = new ConfigurableAuxServices("RMAuxServices",
+            YarnConfiguration.RM_AUX_SERVICES);
+
+    // Add this service first
+    addService(auxiliaryServices);
 
     this.configurationProvider =
         ConfigurationProviderFactory.getConfigurationProvider(conf);

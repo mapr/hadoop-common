@@ -38,6 +38,9 @@ public class YarnDefaultProperties extends Properties {
     public static final String RM_DIR_VOLUME_SHARDING_ENABLED = YarnConfiguration.RM_PREFIX + "dir.volume-sharding.enabled";
     public static final boolean DEFAULT_RM_DIR_VOLUME_SHARDING_ENABLED = false;
 
+    public static final String RM_DIR_VOLUME_NEW_PATH_SUPPORT_ENABLED = YarnConfiguration.RM_PREFIX + "dir.new-volume-path-support.enabled";
+    public static final boolean DEFAULT_RM_DIR_VOLUME_NEW_PATH_SUPPORT_ENABLED = false;
+
     public static final String RM_DIR_VOLUME_COUNT = YarnConfiguration.RM_PREFIX + "dir.volume-count";
     public static final int DEFAULT_RM_DIR_VOLUME_COUNT = 4;
 
@@ -54,7 +57,8 @@ public class YarnDefaultProperties extends Properties {
      */
     public static final String APP_HISTORY_VOLUME_MANAGER_SERVICE = "HSVolumeManager";
     public static final String APP_HISTORY_STAGING_DIR = YarnConfiguration.APPLICATION_HISTORY_PREFIX + "staging";
-    public static final String DEFAULT_APP_HISTORY_STAGING_DIR = DEFAULT_YARN_DIR + "/hs";
+    public static final String DEFAULT_APP_HISTORY_STAGING_DIR = (System.getProperty(CLUSTER_PREFIX) != null) ?
+            "/var/mapr/cluster/hs"+System.getProperty(CLUSTER_PREFIX) : "/var/mapr/cluster/hs";
 
     public static final String APACHE_SHUFFLE_SERVICE_ID = "mapreduce_shuffle";
     public static final String MAPR_SHUFFLE_SERVICE_ID = "mapr_direct_shuffle";
@@ -102,17 +106,16 @@ public class YarnDefaultProperties extends Properties {
 //        put(YarnConfiguration.YARN_EXT_TOKEN_MANAGER,
 //                "org.apache.hadoop.yarn.security.MapRTicketManager");
 
-        // TODO RM/HS volumes
-//        // RM auxiliary service
-//        put(YarnConfiguration.RM_AUX_SERVICES, RM_VOLUME_MANAGER_SERVICE);
-//        put(String.format(YarnConfiguration.AUX_SERVICE_FMT, RM_VOLUME_MANAGER_SERVICE),
-//                "org.apache.hadoop.yarn.server.resourcemanager.RMVolumeManager");
-//
-//        // Application history auxiliary service
-//        put(YarnConfiguration.APPLICATION_HISTORY_AUX_SERVICES,
-//                APP_HISTORY_VOLUME_MANAGER_SERVICE);
-//        put(String.format(YarnConfiguration.AUX_SERVICE_FMT, APP_HISTORY_VOLUME_MANAGER_SERVICE),
-//                "org.apache.hadoop.yarn.server.applicationhistoryservice.HSVolumeManager");
+        // RM auxiliary service
+        props.put(YarnConfiguration.RM_AUX_SERVICES, RM_VOLUME_MANAGER_SERVICE);
+        props.put(String.format(YarnConfiguration.AUX_SERVICE_FMT, RM_VOLUME_MANAGER_SERVICE),
+                "org.apache.hadoop.yarn.server.resourcemanager.RMVolumeManager");
+
+        // Application history auxiliary service
+        props.put(YarnConfiguration.APPLICATION_HISTORY_AUX_SERVICES,
+                APP_HISTORY_VOLUME_MANAGER_SERVICE);
+        props.put(String.format(YarnConfiguration.AUX_SERVICE_FMT, APP_HISTORY_VOLUME_MANAGER_SERVICE),
+                "org.apache.hadoop.yarn.server.resourcemanager.RMVolumeManager");
 
         // Configuration for RM's RPC services
         props.put(YarnConfiguration.RM_ADDRESS,

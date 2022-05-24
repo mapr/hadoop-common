@@ -103,6 +103,8 @@ import static org.apache.hadoop.yarn.server.nodemanager.containermanager.linux.r
 import static org.apache.hadoop.yarn.server.nodemanager.containermanager.linux.runtime.LinuxContainerRuntimeConstants.CONTAINER_ID_STR;
 import static org.apache.hadoop.yarn.server.nodemanager.containermanager.linux.runtime.LinuxContainerRuntimeConstants.CONTAINER_LOG_DIRS;
 import static org.apache.hadoop.yarn.server.nodemanager.containermanager.linux.runtime.LinuxContainerRuntimeConstants.CONTAINER_WORK_DIR;
+import static org.apache.hadoop.yarn.server.nodemanager.containermanager.linux.runtime.LinuxContainerRuntimeConstants.EXT_TOKENS_ENV_VAR;
+import static org.apache.hadoop.yarn.server.nodemanager.containermanager.linux.runtime.LinuxContainerRuntimeConstants.EXT_TOKENS_PATH;
 import static org.apache.hadoop.yarn.server.nodemanager.containermanager.linux.runtime.LinuxContainerRuntimeConstants.FILECACHE_DIRS;
 import static org.apache.hadoop.yarn.server.nodemanager.containermanager.linux.runtime.LinuxContainerRuntimeConstants.LOCALIZED_RESOURCES;
 import static org.apache.hadoop.yarn.server.nodemanager.containermanager.linux.runtime.LinuxContainerRuntimeConstants.LOCAL_DIRS;
@@ -155,6 +157,8 @@ public class TestDockerContainerRuntime {
   private String appId;
   private String containerIdStr = containerId;
   private Path containerWorkDir;
+  private Path extTokensPath;
+  private String extTokensEnvVar;
   private Path nmPrivateContainerScriptPath;
   private Path nmPrivateTokensPath;
   private Path nmPrivateKeystorePath;
@@ -309,6 +313,8 @@ public class TestDockerContainerRuntime {
         .setExecutionAttribute(NM_PRIVATE_CONTAINER_SCRIPT_PATH,
             nmPrivateContainerScriptPath)
         .setExecutionAttribute(NM_PRIVATE_TOKENS_PATH, nmPrivateTokensPath)
+        .setExecutionAttribute(EXT_TOKENS_PATH, extTokensPath)
+        .setExecutionAttribute(EXT_TOKENS_ENV_VAR, extTokensEnvVar)
         .setExecutionAttribute(NM_PRIVATE_KEYSTORE_PATH, nmPrivateKeystorePath)
         .setExecutionAttribute(NM_PRIVATE_TRUSTSTORE_PATH,
             nmPrivateTruststorePath)
@@ -456,7 +462,7 @@ public class TestDockerContainerRuntime {
 
     //This invocation of container-executor should use 15 or 13 arguments in a
     // specific order
-    int expected = (https) ? 15 : 13;
+    int expected = (https) ? 17 : 15;
     int counter = 1;
     Assert.assertEquals(expected, args.size());
     Assert.assertEquals(user, args.get(counter++));
@@ -469,6 +475,8 @@ public class TestDockerContainerRuntime {
         args.get(counter++));
     Assert.assertEquals(nmPrivateTokensPath.toUri().getPath(),
         args.get(counter++));
+    Assert.assertEquals(extTokensPath.toUri().getPath(), args.get(counter++));
+    Assert.assertEquals(extTokensEnvVar, args.get(counter++));
     if (https) {
       Assert.assertEquals("--https", args.get(counter++));
       Assert.assertEquals(nmPrivateKeystorePath.toUri().toString(),
@@ -495,7 +503,7 @@ public class TestDockerContainerRuntime {
     runtime.launchContainer(builder.build());
     List<String> dockerCommands = readDockerCommands();
 
-    int expected = 13;
+    int expected = 15;
     int counter = 0;
     Assert.assertEquals(expected, dockerCommands.size());
     Assert.assertEquals("[docker-command-execution]",
@@ -541,7 +549,7 @@ public class TestDockerContainerRuntime {
 
     List<String> dockerCommands = readDockerCommands();
 
-    int expected = 13;
+    int expected = 15;
     int counter = 0;
     Assert.assertEquals(expected, dockerCommands.size());
     Assert.assertEquals("[docker-command-execution]",
@@ -587,7 +595,7 @@ public class TestDockerContainerRuntime {
     Assert.assertEquals(false,
         conf.getBoolean(YarnConfiguration.NM_DOCKER_IMAGE_UPDATE, false));
 
-    int expected = 13;
+    int expected = 15;
     int counter = 0;
     Assert.assertEquals(expected, dockerCommands.size());
     Assert.assertEquals("[docker-command-execution]",
@@ -656,7 +664,7 @@ public class TestDockerContainerRuntime {
     // launch docker container
     List<String> dockerCommands = readDockerCommands(2);
 
-    int expected = 13;
+    int expected = 15;
     int counter = 0;
     Assert.assertEquals(expected, dockerCommands.size());
     Assert.assertEquals("[docker-command-execution]",
@@ -700,7 +708,7 @@ public class TestDockerContainerRuntime {
     runtime.launchContainer(builder.build());
     List<String> dockerCommands = readDockerCommands();
 
-    Assert.assertEquals(13, dockerCommands.size());
+    Assert.assertEquals(15, dockerCommands.size());
     int counter = 0;
     Assert.assertEquals("[docker-command-execution]",
         dockerCommands.get(counter++));
@@ -810,7 +818,7 @@ public class TestDockerContainerRuntime {
     List<String> dockerCommands = readDockerCommands();
 
     //This is the expected docker invocation for this case
-    int expected = 14;
+    int expected = 16;
     int counter = 0;
     Assert.assertEquals(expected, dockerCommands.size());
     Assert.assertEquals("[docker-command-execution]",
@@ -865,7 +873,7 @@ public class TestDockerContainerRuntime {
     List<String> dockerCommands = readDockerCommands();
 
     //This is the expected docker invocation for this case
-    int expected = 14;
+    int expected = 16;
     int counter = 0;
     Assert.assertEquals(expected, dockerCommands.size());
     Assert.assertEquals("[docker-command-execution]",
@@ -929,7 +937,7 @@ public class TestDockerContainerRuntime {
 
     //This is the expected docker invocation for this case. customNetwork1
     // ("sdn1") is the expected network to be used in this case
-    int expected = 14;
+    int expected = 16;
     int counter = 0;
     Assert.assertEquals(expected, dockerCommands.size());
     Assert.assertEquals("[docker-command-execution]",
@@ -1033,7 +1041,7 @@ public class TestDockerContainerRuntime {
     runtime.launchContainer(builder.build());
     List<String> dockerCommands = readDockerCommands();
 
-    int expected = 13;
+    int expected = 15;
     Assert.assertEquals(expected, dockerCommands.size());
 
     String command = dockerCommands.get(0);
@@ -1077,7 +1085,7 @@ public class TestDockerContainerRuntime {
     runtime.launchContainer(builder.build());
     List<String> dockerCommands = readDockerCommands();
 
-    int expected = 14;
+    int expected = 16;
     int counter = 0;
     Assert.assertEquals(expected, dockerCommands.size());
     Assert.assertEquals("[docker-command-execution]",
@@ -1122,7 +1130,7 @@ public class TestDockerContainerRuntime {
     runtime.launchContainer(builder.build());
     List<String> dockerCommands = readDockerCommands();
 
-    int expected = 13;
+    int expected = 15;
     Assert.assertEquals(expected, dockerCommands.size());
 
     String command = dockerCommands.get(0);
@@ -1222,7 +1230,7 @@ public class TestDockerContainerRuntime {
     runtime.launchContainer(builder.build());
     List<String> dockerCommands = readDockerCommands();
 
-    int expected = 13;
+    int expected = 15;
     int counter = 0;
     Assert.assertEquals(expected, dockerCommands.size());
     Assert.assertEquals("[docker-command-execution]",
@@ -1333,7 +1341,7 @@ public class TestDockerContainerRuntime {
     runtime.launchContainer(builder.build());
     List<String> dockerCommands = readDockerCommands();
 
-    int expected = 13;
+    int expected = 15;
     int counter = 0;
     Assert.assertEquals(expected, dockerCommands.size());
     Assert.assertEquals("[docker-command-execution]",
@@ -1382,7 +1390,7 @@ public class TestDockerContainerRuntime {
     runtime.launchContainer(builder.build());
     List<String> dockerCommands = readDockerCommands();
 
-    int expected = 13;
+    int expected = 15;
     int counter = 0;
     Assert.assertEquals(expected, dockerCommands.size());
     Assert.assertEquals("[docker-command-execution]",
@@ -1432,7 +1440,7 @@ public class TestDockerContainerRuntime {
     runtime.launchContainer(builder.build());
     List<String> dockerCommands = readDockerCommands();
 
-    int expected = 13;
+    int expected = 15;
     int counter = 0;
     Assert.assertEquals(expected, dockerCommands.size());
     Assert.assertEquals("[docker-command-execution]",
@@ -1667,7 +1675,7 @@ public class TestDockerContainerRuntime {
     runtime.launchContainer(builder.build());
     List<String> dockerCommands = readDockerCommands();
 
-    int expected = 13;
+    int expected = 15;
     int counter = 0;
     Assert.assertEquals(expected, dockerCommands.size());
     Assert.assertEquals("[docker-command-execution]",
@@ -1729,7 +1737,7 @@ public class TestDockerContainerRuntime {
     runtime.launchContainer(builder.build());
     List<String> dockerCommands = readDockerCommands();
 
-    int expected = 13;
+    int expected = 15;
     int counter = 0;
     Assert.assertEquals(expected, dockerCommands.size());
     Assert.assertEquals("[docker-command-execution]",
@@ -2305,7 +2313,7 @@ public class TestDockerContainerRuntime {
 
     List<String> dockerCommands = readDockerCommands(3);
 
-    int expected = 14;
+    int expected = 16;
     int counter = 0;
     Assert.assertEquals(expected, dockerCommands.size());
     Assert.assertEquals("[docker-command-execution]",
@@ -2422,7 +2430,7 @@ public class TestDockerContainerRuntime {
 
     List<String> args = op.getArguments();
 
-    int expectedArgs = (https) ? 15 : 13;
+    int expectedArgs = (https) ? 17 : 15;
     int argsCounter = 0;
     Assert.assertEquals(expectedArgs, args.size());
     Assert.assertEquals(runAsUser, args.get(argsCounter++));
@@ -2453,7 +2461,7 @@ public class TestDockerContainerRuntime {
     List<String> dockerCommands = Files
         .readAllLines(Paths.get(dockerCommandFile), Charset.forName("UTF-8"));
 
-    int expected = 14;
+    int expected = 16;
     int counter = 0;
     Assert.assertEquals(expected, dockerCommands.size());
     Assert.assertEquals("[docker-command-execution]",
@@ -2559,7 +2567,7 @@ public class TestDockerContainerRuntime {
     List<String> dockerCommands = readDockerCommands();
 
     //This is the expected docker invocation for this case
-    Assert.assertEquals(14, dockerCommands.size());
+    Assert.assertEquals(16, dockerCommands.size());
     Assert.assertEquals("  runtime=runc", dockerCommands.get(11));
   }
 

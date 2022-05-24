@@ -130,6 +130,8 @@ import org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.even
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.event.ResourceRecoveredEvent;
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.event.ResourceReleaseEvent;
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.event.ResourceRequestEvent;
+import org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.security.ExternalTokenLocalizer;
+import org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.security.ExternalTokenLocalizerFactory;
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.security.LocalizerTokenIdentifier;
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer.security.LocalizerTokenSecretManager;
 import org.apache.hadoop.yarn.server.nodemanager.executor.LocalizerStartContext;
@@ -666,7 +668,10 @@ public class ResourceLocalizationService extends CompositeService
 
     // TODO: decrement reference counts of all resources associated with this
     // app
-
+    ExternalTokenLocalizer extTokenLocalizer = ExternalTokenLocalizerFactory.get();
+    if (extTokenLocalizer != null) {
+      extTokenLocalizer.cleanup(appId);
+    }
     dispatcher.getEventHandler().handle(new ApplicationEvent(
           application.getAppId(),
           ApplicationEventType.APPLICATION_RESOURCES_CLEANEDUP));
@@ -1260,14 +1265,34 @@ public class ResourceLocalizationService extends CompositeService
         // 0) init queue, etc.
         // 1) write credentials to private dir
         writeCredentials(nmPrivateCTokensPath);
+        // Invoke any registered external token localizer. This should be done
+        // before starting the localization since these tokens may be needed for
+        // localization itself to run.
+        ExternalTokenLocalizer extTokenLocalizer = ExternalTokenLocalizerFactory.get();
+        if (extTokenLocalizer != null) {
+          extTokenLocalizer.run(context.getContainerId(), context.getUser(),
+                  getConfig());
+        }
         // 2) exec initApplication and wait
         if (dirsHandler.areDisksHealthy()) {
+
+          String appIdStr = context.getContainerId().getApplicationAttemptId().getApplicationId().toString();
+
+          Path extTokenPath = null;
+          String extTokenEnvVar = null;
+
+          if (extTokenLocalizer != null) {
+            extTokenPath = extTokenLocalizer.getTokenPath(appIdStr, getConfig());
+            extTokenEnvVar = extTokenLocalizer.getTokenEnvVar();
+          }
+
           exec.startLocalizer(new LocalizerStartContext.Builder()
               .setNmPrivateContainerTokens(nmPrivateCTokensPath)
+              .setExtTokenPath(extTokenPath)
+              .setExtTokenEnvVar(extTokenEnvVar)
               .setNmAddr(localizationServerAddress)
               .setUser(context.getUser())
-              .setAppId(context.getContainerId()
-                  .getApplicationAttemptId().getApplicationId().toString())
+              .setAppId(appIdStr)
               .setLocId(localizerId)
               .setDirsHandler(dirsHandler)
               .build());
@@ -1309,6 +1334,9 @@ public class ResourceLocalizationService extends CompositeService
         FileDeletionTask deletionTask = new FileDeletionTask(delService, null,
             nmPrivateCTokensPath, null);
         delService.delete(deletionTask);
+        // Note: Do no delete external token path as it is needed
+        // for launching the task by ContainerLaunch. It will get
+        // cleaned up automatically when the application finishes.
       }
     }
 

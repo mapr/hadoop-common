@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.hadoop.yarn.security.ExternalTokenManager;
+import org.apache.hadoop.yarn.security.ExternalTokenManagerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
@@ -89,6 +91,8 @@ public class AMLauncher implements Runnable {
 
   @SuppressWarnings("rawtypes")
   private final EventHandler handler;
+
+  private ExternalTokenManager extTokenMgr = ExternalTokenManagerFactory.get();
 
   public AMLauncher(RMContext rmContext, RMAppAttempt application,
       AMLauncherEventType eventType, Configuration conf) {
@@ -202,6 +206,15 @@ public class AMLauncher implements Runnable {
     }
     // Finalize the container
     setupTokens(container, containerID);
+
+    // Setup any external tokens
+    if (extTokenMgr != null) {
+      String username = rmContext.getRMApps()
+              .get(containerID.getApplicationAttemptId().getApplicationId())
+              .getUser();
+      extTokenMgr.generateToken(applicationMasterContext, username, conf);
+    }
+
     // set the flow context optionally for timeline service v.2
     setFlowContext(container);
 
