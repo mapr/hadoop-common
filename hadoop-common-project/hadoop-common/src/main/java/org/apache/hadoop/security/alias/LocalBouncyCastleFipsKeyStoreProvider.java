@@ -20,9 +20,11 @@ package org.apache.hadoop.security.alias;
 
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
+import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
 
 import java.io.IOException;
 import java.net.URI;
+import java.security.Security;
 
 /**
  * CredentialProvider based on bouncy castle FIPS KeyStore file format.
@@ -67,6 +69,7 @@ public final class LocalBouncyCastleFipsKeyStoreProvider extends
     public CredentialProvider createProvider(URI providerName,
         Configuration conf) throws IOException {
       if (SCHEME_NAME.equals(providerName.getScheme())) {
+        Security.addProvider(new BouncyCastleFipsProvider());
         return new LocalBouncyCastleFipsKeyStoreProvider(providerName, conf);
       }
       return null;
