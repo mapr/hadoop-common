@@ -122,7 +122,11 @@ public class SaslRpcServer {
     return DigestAuthMethod.encodePassword(password);
   }
 
-  /** Splitting fully qualified Kerberos name into parts */
+  /**
+   * Splitting fully qualified Kerberos name into parts.
+   * @param fullName fullName.
+   * @return splitKerberosName.
+   */
   public static String[] splitKerberosName(String fullName) {
     return KerberosAuthMethod.splitKerberosName(fullName);
   }
@@ -155,17 +159,30 @@ public class SaslRpcServer {
       return i < 0 || i >= values().length ? null : values()[i];
     }
 
-    /** Return the SASL mechanism name */
+    /**
+     * Return the SASL mechanism name.
+     * @return mechanismName.
+     */
     public String getMechanismName() {
       return mechanismName;
     }
 
-    /** Read from in */
+    /**
+     * Read from in.
+     *
+     * @param in DataInput.
+     * @throws IOException raised on errors performing I/O.
+     * @return AuthMethod.
+     */
     public static AuthMethod read(DataInput in) throws IOException {
       return valueOf(in.readByte());
     }
 
-    /** Write to out */
+    /**
+     * Write to out.
+     * @param out DataOutput.
+     * @throws IOException raised on errors performing I/O.
+     */
     public void write(DataOutput out) throws IOException {
       out.write(code);
     }

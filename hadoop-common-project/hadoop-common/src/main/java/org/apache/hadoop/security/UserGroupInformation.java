@@ -681,6 +681,7 @@ public class UserGroupInformation {
    * @param user               The user name, or NULL if none is specified.
    *
    * @return                   The most appropriate UserGroupInformation
+   * @throws IOException raised on errors performing I/O.
    */ 
   public static UserGroupInformation getBestUGI(
       String ticketCachePath, String user) throws IOException {
@@ -701,6 +702,7 @@ public class UserGroupInformation {
    * @param ticketCache     the path to the ticket cache file
    *
    * @throws IOException        if the kerberos login fails
+   * @return UserGroupInformation.
    */
   @InterfaceAudience.Public
   @InterfaceStability.Evolving
@@ -722,8 +724,9 @@ public class UserGroupInformation {
    *                            The creator of subject is responsible for
    *                            renewing credentials.
    *
-   * @throws IOException
+   * @throws IOException raised on errors performing I/O.
    * @throws KerberosAuthException if the kerberos login fails
+   * @return UserGroupInformation.
    */
   public static UserGroupInformation getUGIFromSubject(Subject subject)
       throws IOException {
@@ -778,7 +781,7 @@ public class UserGroupInformation {
    * remove the login method that is followed by a space from the username
    * e.g. "jack (auth:SIMPLE)" {@literal ->} "jack"
    *
-   * @param userName
+   * @param userName input userName.
    * @return userName without login method
    */
   public static String trimLoginMethod(String userName) {
@@ -1217,7 +1220,7 @@ public class UserGroupInformation {
    * file and logs them in. They become the currently logged-in user.
    * @param user the principal name to load from the keytab
    * @param path the path to the keytab file
-   * @throws IOException
+   * @throws IOException raised on errors performing I/O.
    * @throws KerberosAuthException if it's a kerberos login exception.
    */
   @InterfaceAudience.Public
@@ -1248,7 +1251,7 @@ public class UserGroupInformation {
    * This method assumes that the user logged in by calling
    * {@link #loginUserFromKeytab(String, String)}.
    *
-   * @throws IOException
+   * @throws IOException raised on errors performing I/O.
    * @throws KerberosAuthException if a failure occurred in logout,
    * or if the user did not log in by invoking loginUserFromKeyTab() before.
    */
@@ -1288,7 +1291,7 @@ public class UserGroupInformation {
   /**
    * Re-login a user from keytab if TGT is expired or is close to expiry.
    * 
-   * @throws IOException
+   * @throws IOException raised on errors performing I/O.
    * @throws KerberosAuthException if it's a kerberos login exception.
    */
   public void checkTGTAndReloginFromKeytab() throws IOException {
@@ -1336,7 +1339,7 @@ public class UserGroupInformation {
    * happened already.
    * The Subject field of this UserGroupInformation object is updated to have
    * the new credentials.
-   * @throws IOException
+   * @throws IOException raised on errors performing I/O.
    * @throws KerberosAuthException on a failure
    */
   @InterfaceAudience.Public
@@ -1353,7 +1356,7 @@ public class UserGroupInformation {
    * Subject field of this UserGroupInformation object is updated to have the
    * new credentials.
    *
-   * @throws IOException
+   * @throws IOException raised on errors performing I/O.
    * @throws KerberosAuthException on a failure
    */
   @InterfaceAudience.Public
@@ -1390,7 +1393,7 @@ public class UserGroupInformation {
    * method assumes that login had happened already.
    * The Subject field of this UserGroupInformation object is updated to have
    * the new credentials.
-   * @throws IOException
+   * @throws IOException raised on errors performing I/O.
    * @throws KerberosAuthException on a failure
    */
   @InterfaceAudience.Public
@@ -1459,6 +1462,7 @@ public class UserGroupInformation {
    * @param user the principal name to load from the keytab
    * @param path the path to the keytab file
    * @throws IOException if the keytab file can't be read
+   * @return UserGroupInformation.
    */
   public
   static UserGroupInformation loginUserFromKeytabAndReturnUGI(String user,
@@ -1485,8 +1489,9 @@ public class UserGroupInformation {
   }
   
   /**
-   * Did the login happen via keytab
+   * Did the login happen via keytab.
    * @return true or false
+   * @throws IOException raised on errors performing I/O.
    */
   @InterfaceAudience.Public
   @InterfaceStability.Evolving
@@ -1495,8 +1500,9 @@ public class UserGroupInformation {
   }
 
   /**
-   * Did the login happen via ticket cache
+   * Did the login happen via ticket cache.
    * @return true or false
+   * @throws IOException raised on errors performing I/O.
    */
   public static boolean isLoginTicketBased()  throws IOException {
     return getLoginUser().isFromTicket();
@@ -1517,7 +1523,9 @@ public class UserGroupInformation {
   /**
    * Create a user from a login name. It is intended to be used for remote
    * users in RPC, since it won't have any credentials.
+   *
    * @param user the full user principal name, must not be empty or null
+   * @param authMethod input authMethod.
    * @return the UserGroupInformation for the remote user.
    */
   @InterfaceAudience.Public
@@ -1564,8 +1572,9 @@ public class UserGroupInformation {
   /**
    * Create a proxy user using username of the effective user and the ugi of the
    * real user.
-   * @param user
-   * @param realUser
+   *
+   * @param user input user.
+   * @param realUser input realUser.
    * @return proxyUser ugi
    */
   @InterfaceAudience.Public
@@ -1859,9 +1868,9 @@ public class UserGroupInformation {
   }
 
   /**
-   * Sets the authentication method in the subject
+   * Sets the authentication method in the subject.
    * 
-   * @param authMethod
+   * @param authMethod input authMethod.
    */
   public synchronized 
   void setAuthenticationMethod(AuthenticationMethod authMethod) {
@@ -1869,9 +1878,9 @@ public class UserGroupInformation {
   }
 
   /**
-   * Sets the authentication method in the subject
+   * Sets the authentication method in the subject.
    * 
-   * @param authMethod
+   * @param authMethod input authMethod.
    */
   public void setAuthenticationMethod(AuthMethod authMethod) {
     switch (authMethod) {
@@ -1919,7 +1928,7 @@ public class UserGroupInformation {
    * Returns the authentication method of a ugi. If the authentication method is
    * PROXY, returns the authentication method of the real user.
    * 
-   * @param ugi
+   * @param ugi input ugi.
    * @return AuthenticationMethod
    */
   public static AuthenticationMethod getRealAuthenticationMethod(
@@ -2020,8 +2029,11 @@ public class UserGroupInformation {
 
   /**
    * Log current UGI and token information into specified log.
-   * @param ugi - UGI
-   * @throws IOException
+   *
+   * @param log input log.
+   * @param caption input caption.
+   * @param ugi - UGI.
+   * @throws IOException raised on errors performing I/O.
    */
   @InterfaceAudience.LimitedPrivate({"HDFS", "KMS"})
   @InterfaceStability.Unstable
@@ -2037,8 +2049,10 @@ public class UserGroupInformation {
 
   /**
    * Log all (current, real, login) UGI and token info into specified log.
+   *
+   * @param log input log.
    * @param ugi - UGI
-   * @throws IOException
+   * @throws IOException raised on errors performing I/O.
    */
   @InterfaceAudience.LimitedPrivate({"HDFS", "KMS"})
   @InterfaceStability.Unstable
@@ -2056,7 +2070,7 @@ public class UserGroupInformation {
   /**
    * Log all (current, real, login) UGI and token info into UGI debug log.
    * @param ugi - UGI
-   * @throws IOException
+   * @throws IOException raised on errors performing I/O.
    */
   public static void logAllUserInfo(UserGroupInformation ugi) throws
       IOException {
@@ -2226,7 +2240,7 @@ public class UserGroupInformation {
    * A test method to print out the current user's UGI.
    * @param args if there are two arguments, read the user from the keytab
    * and print it out.
-   * @throws Exception
+   * @throws Exception if any error occurs.
    */
   public static void main(String [] args) throws Exception {
   System.out.println("Getting UGI for current user");

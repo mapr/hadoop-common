@@ -56,7 +56,11 @@ public class FsPermission implements Writable, Serializable,
   /** Maximum acceptable length of a permission string to parse */
   public static final int MAX_PERMISSION_LENGTH = 10;
 
-  /** Create an immutable {@link FsPermission} object. */
+  /**
+   * Create an immutable {@link FsPermission} object.
+   * @param permission permission.
+   * @return FsPermission.
+   */
   public static FsPermission createImmutable(short permission) {
     return new ImmutableFsPermission(permission);
   }
@@ -87,7 +91,7 @@ public class FsPermission implements Writable, Serializable,
 
   /**
    * Construct by the given mode.
-   * @param mode
+   * @param mode mode.
    * @see #toShort()
    */
   public FsPermission(short mode) { fromShort(mode); }
@@ -147,13 +151,19 @@ public class FsPermission implements Writable, Serializable,
     this(new RawParser(mode).getPermission());
   }
 
-  /** Return user {@link FsAction}. */
+  /**
+   * @return Return user {@link FsAction}.
+   */
   public FsAction getUserAction() {return useraction;}
 
-  /** Return group {@link FsAction}. */
+  /**
+   * @return Return group {@link FsAction}.
+   */
   public FsAction getGroupAction() {return groupaction;}
 
-  /** Return other {@link FsAction}. */
+  /**
+   * @return Return other {@link FsAction}.
+   */
   public FsAction getOtherAction() {return otheraction;}
 
   private void set(FsAction u, FsAction g, FsAction o, boolean sb) {
@@ -195,6 +205,7 @@ public class FsPermission implements Writable, Serializable,
 
   /**
    * Get masked permission if exists.
+   * @return masked.
    */
   public FsPermission getMasked() {
     return null;
@@ -202,6 +213,7 @@ public class FsPermission implements Writable, Serializable,
 
   /**
    * Get unmasked permission if exists.
+   * @return unmasked.
    */
   public FsPermission getUnmasked() {
     return null;
@@ -209,6 +221,10 @@ public class FsPermission implements Writable, Serializable,
 
   /**
    * Create and initialize a {@link FsPermission} from {@link DataInput}.
+   *
+   * @param in data input.
+   * @throws IOException raised on errors performing I/O.
+   * @return FsPermission.
    */
   public static FsPermission read(DataInput in) throws IOException {
     FsPermission p = new FsPermission();
@@ -239,6 +255,7 @@ public class FsPermission implements Writable, Serializable,
 
   /**
    * Encode the object to a short.
+   * @return object to a short.
    */
   public short toShort() {
     int s =  (stickyOrdinal() << 9)       |
@@ -354,6 +371,9 @@ public class FsPermission implements Writable, Serializable,
    * '-' sets bits in the mask.
    * 
    * Octal umask, the specified bits are set in the file mode creation mask.
+   *
+   * @param conf configuration.
+   * @return FsPermission UMask.
    */
   public static FsPermission getUMask(Configuration conf) {
     int umask = DEFAULT_UMASK;
@@ -399,7 +419,11 @@ public class FsPermission implements Writable, Serializable,
   }
 
   /**
-   * Returns true if the file is encrypted or directory is in an encryption zone
+   * Returns true if the file is encrypted or directory is in an encryption zone.
+   *
+   * @return if the file is encrypted or directory
+   * is in an encryption zone true, not false.
+   *
    * @deprecated Get encryption bit from the
    * {@link org.apache.hadoop.fs.FileStatus} object.
    */
@@ -410,6 +434,9 @@ public class FsPermission implements Writable, Serializable,
 
   /**
    * Returns true if the file or directory is erasure coded.
+   *
+   * @return if the file or directory is
+   * erasure coded true, not false.
    * @deprecated Get ec bit from the {@link org.apache.hadoop.fs.FileStatus}
    * object.
    */
@@ -418,7 +445,11 @@ public class FsPermission implements Writable, Serializable,
     return false;
   }
 
-  /** Set the user file creation mask (umask) */
+  /**
+   * Set the user file creation mask (umask)
+   * @param conf configuration.
+   * @param umask umask.
+   */
   public static void setUMask(Configuration conf, FsPermission umask) {
     conf.set(UMASK_LABEL, String.format("%1$03o", umask.toShort()));
   }
@@ -432,6 +463,8 @@ public class FsPermission implements Writable, Serializable,
    * {@link FsPermission#getDirDefault()} for directory, and use
    * {@link FsPermission#getFileDefault()} for file.
    * This method is kept for compatibility.
+   *
+   * @return Default FsPermission.
    */
   public static FsPermission getDefault() {
     return new FsPermission((short)00777);
@@ -439,6 +472,8 @@ public class FsPermission implements Writable, Serializable,
 
   /**
    * Get the default permission for directory.
+   *
+   * @return DirDefault FsPermission.
    */
   public static FsPermission getDirDefault() {
     return new FsPermission((short)00777);
@@ -446,6 +481,8 @@ public class FsPermission implements Writable, Serializable,
 
   /**
    * Get the default permission for file.
+   *
+   * @return FileDefault FsPermission.
    */
   public static FsPermission getFileDefault() {
     return new FsPermission((short)00666);
@@ -453,6 +490,8 @@ public class FsPermission implements Writable, Serializable,
 
   /**
    * Get the default permission for cache pools.
+   *
+   * @return CachePoolDefault FsPermission.
    */
   public static FsPermission getCachePoolDefault() {
     return new FsPermission((short)00755);
@@ -461,6 +500,7 @@ public class FsPermission implements Writable, Serializable,
   /**
    * Create a FsPermission from a Unix symbolic permission string
    * @param unixSymbolicPermission e.g. "-rw-rw-rw-"
+   * @return FsPermission.
    */
   public static FsPermission valueOf(String unixSymbolicPermission) {
     if (unixSymbolicPermission == null) {

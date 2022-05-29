@@ -117,7 +117,9 @@ public final class SecurityUtil {
   }
 
   /**
-   * For use only by tests and initialization
+   * For use only by tests and initialization.
+   *
+   * @param flag flag.
    */
   @InterfaceAudience.Private
   @VisibleForTesting
@@ -483,6 +485,10 @@ public final class SecurityUtil {
    * Perform the given action as the daemon's login user. If the login
    * user cannot be determined, this will log a FATAL error and exit
    * the whole JVM.
+   *
+   * @param action action.
+   * @param <T> generic type T.
+   * @return generic type T.
    */
   public static <T> T doAsLoginUserOrFatal(PrivilegedAction<T> action) { 
     if (UserGroupInformation.isSecurityEnabled()) {
@@ -505,6 +511,7 @@ public final class SecurityUtil {
    * InterruptedException is thrown, it is converted to an IOException.
    *
    * @param action the action to perform
+   * @param <T> Generics Type T.
    * @return the result of the action
    * @throws IOException in the event of error
    */
@@ -518,6 +525,7 @@ public final class SecurityUtil {
    * InterruptedException is thrown, it is converted to an IOException.
    *
    * @param action the action to perform
+   * @param <T> generic type T.
    * @return the result of the action
    * @throws IOException in the event of error
    */
@@ -737,9 +745,13 @@ public final class SecurityUtil {
 
   /**
    * Utility method to fetch ZK auth info from the configuration.
+   *
+   * @param conf configuration.
+   * @param configKey config key.
    * @throws java.io.IOException if the Zookeeper ACLs configuration file
    * cannot be read
    * @throws ZKUtil.BadAuthFormatException if the auth format is invalid
+   * @return ZKAuthInfo List.
    */
   public static List<ZKUtil.ZKAuthInfo> getZKAuthInfos(Configuration conf,
       String configKey) throws IOException {
