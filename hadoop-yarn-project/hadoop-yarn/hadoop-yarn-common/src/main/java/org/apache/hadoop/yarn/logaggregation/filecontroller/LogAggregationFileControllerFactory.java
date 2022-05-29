@@ -18,6 +18,7 @@
 
 package org.apache.hadoop.yarn.logaggregation.filecontroller;
 
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.thirdparty.com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.thirdparty.com.google.common.base.Preconditions;
 import java.io.IOException;
@@ -29,6 +30,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.yarn.logaggregation.filecontroller.nodelocal.LogAggregationNodeLocalTFileController;
+import org.apache.hadoop.yarn.logaggregation.filecontroller.nodelocal.NodeLocalMetadataReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
@@ -137,6 +140,11 @@ public class LogAggregationFileControllerFactory {
       s.initialize(conf, fileController);
       controllers.add(s);
     }
+    if(YarnConfiguration.isNodeLocalAggregationEnabled(conf) && controllers.stream().noneMatch(c -> c.getFileControllerName().equals("nodeLocal"))) {
+      LogAggregationFileController localNodeLogController = ReflectionUtils.newInstance(LogAggregationNodeLocalTFileController.class, conf);
+      localNodeLogController.initialize(conf, "nodeLocal");
+      controllers.add(localNodeLogController);
+    }
   }
 
   /**
@@ -144,6 +152,13 @@ public class LogAggregationFileControllerFactory {
    * @return the LogAggregationFileController instance
    */
   public LogAggregationFileController getFileControllerForWrite() {
+    if(YarnConfiguration.isNodeLocalAggregationEnabled(conf)) {
+      for (LogAggregationFileController fileController : controllers) {
+        if (fileController instanceof LogAggregationNodeLocalTFileController) {
+          return fileController;
+        }
+      }
+    }
     return controllers.getFirst();
   }
 
@@ -158,6 +173,18 @@ public class LogAggregationFileControllerFactory {
   public LogAggregationFileController getFileControllerForRead(
       ApplicationId appId, String appOwner) throws IOException {
     StringBuilder diagnosticsMsg = new StringBuilder();
+
+    if(YarnConfiguration.isNodeLocalAggregationEnabled(conf)) {
+      try {
+        for (LogAggregationFileController fileController : controllers) {
+          if (fileController instanceof LogAggregationNodeLocalTFileController) {
+            return fileController;
+          }
+        }
+      } catch (Exception ex) {
+        diagnosticsMsg.append(ex.getMessage() + "\n");
+      }
+    }
 
     if (LogAggregationUtils.isOlderPathEnabled(conf)) {
       for (LogAggregationFileController fileController : controllers) {

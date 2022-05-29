@@ -112,8 +112,8 @@ public class NMWebAppFilter extends GuiceContainer{
 
         Configuration nmConf = nmContext.getLocalDirsHandler().getConfig();
         if ((app == null || fetchAggregatedLog)
-            && nmConf.getBoolean(YarnConfiguration.LOG_AGGREGATION_ENABLED,
-              YarnConfiguration.DEFAULT_LOG_AGGREGATION_ENABLED)) {
+            && (nmConf.getBoolean(YarnConfiguration.LOG_AGGREGATION_ENABLED,
+              YarnConfiguration.DEFAULT_LOG_AGGREGATION_ENABLED) || YarnConfiguration.isNodeLocalAggregationEnabled(nmConf))) {
           String logServerUrl =
               nmConf.get(YarnConfiguration.YARN_LOG_SERVER_URL);
           if (logServerUrl != null && !logServerUrl.isEmpty()) {

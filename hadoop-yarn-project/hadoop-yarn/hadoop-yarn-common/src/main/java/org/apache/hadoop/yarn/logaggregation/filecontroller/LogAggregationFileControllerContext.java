@@ -17,13 +17,17 @@
 */
 package org.apache.hadoop.yarn.logaggregation.filecontroller;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.records.ApplicationAccessType;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
+import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.api.records.NodeId;
 
 /**
@@ -43,6 +47,7 @@ public class LogAggregationFileControllerContext {
   private final Map<ApplicationAccessType, String> appAcls;
   private int logAggregationTimes = 0;
   private int cleanOldLogsTimes = 0;
+  private List<ContainerId> uploadedContainersList;
 
   private boolean uploadedLogsInThisCycle;
   private long logUploadedTimeStamp;
@@ -126,5 +131,13 @@ public class LogAggregationFileControllerContext {
 
   public Map<ApplicationAccessType, String> getAppAcls() {
     return appAcls;
+  }
+
+  public List<ContainerId> getUploadedContainersList() {
+    return uploadedContainersList;
+  }
+
+  public void setUploadedContainersList(List<ContainerId> uploadedContainersList) {
+    this.uploadedContainersList = uploadedContainersList;
   }
 }

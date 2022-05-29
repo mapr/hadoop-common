@@ -256,7 +256,7 @@ public abstract class LogAggregationFileController {
    * {@link YarnConfiguration#NM_REMOTE_APP_LOG_DIR_SUFFIX} appended by the
    * FileController's name, if the former is not set.
    */
-  private void extractRemoteRootLogDirSuffix() {
+  protected void extractRemoteRootLogDirSuffix() {
     String suffix = String.format(
         YarnConfiguration.LOG_AGGREGATION_REMOTE_APP_LOG_DIR_SUFFIX_FMT,
         fileControllerName);
@@ -276,7 +276,7 @@ public abstract class LogAggregationFileController {
    * from the configuration or {@link YarnConfiguration#NM_REMOTE_APP_LOG_DIR},
    * if the former is not set.
    */
-  private void extractRemoteRootLogDir() {
+  protected void extractRemoteRootLogDir() {
     String remoteDirStr = String.format(
         YarnConfiguration.LOG_AGGREGATION_REMOTE_APP_LOG_DIR_FMT,
         fileControllerName);
@@ -335,7 +335,7 @@ public abstract class LogAggregationFileController {
         try {
           remoteFS.setPermission(qualified, new FsPermission(TLDIR_PERMISSIONS));
         } catch ( UnsupportedOperationException use) {
-          LOG.info("Unable to set permissions for configured filesystem since"
+          LOG.info("Unable to set permissions for configured filesystem {} since"
               + " it does not support this", remoteFS.getScheme());
           fsSupportsChmod = false;
         }
@@ -382,7 +382,7 @@ public abstract class LogAggregationFileController {
         remoteFS.createNewFile(permissionCheckFile);
         remoteFS.setPermission(permissionCheckFile, new FsPermission(TLDIR_PERMISSIONS));
       } catch (UnsupportedOperationException use) {
-        LOG.info("Unable to set permissions for configured filesystem since"
+        LOG.info("Unable to set permissions for configured filesystem {} since"
             + " it does not support this", remoteFS.getScheme());
         fsSupportsChmod = false;
       } catch (IOException e) {
@@ -611,5 +611,9 @@ public abstract class LogAggregationFileController {
       return containerId.getApplicationAttemptId().equals(appAttemptId);
     }
     return false;
+  }
+
+  public String getFileControllerName() {
+    return fileControllerName;
   }
 }
