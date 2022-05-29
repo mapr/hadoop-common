@@ -598,7 +598,7 @@ public class ContainerManagerImpl extends CompositeService implements
   protected LogHandler createLogHandler(Configuration conf, Context context,
       DeletionService deletionService) {
     if (conf.getBoolean(YarnConfiguration.LOG_AGGREGATION_ENABLED,
-        YarnConfiguration.DEFAULT_LOG_AGGREGATION_ENABLED)) {
+        YarnConfiguration.DEFAULT_LOG_AGGREGATION_ENABLED) || YarnConfiguration.isNodeLocalAggregationEnabled(conf)) {
       return new LogAggregationService(this.dispatcher, context,
           deletionService, dirsHandler);
     } else {

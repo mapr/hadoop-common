@@ -65,7 +65,7 @@ public class NMLogAggregationStatusTracker extends CompositeService {
     this.nmContext = context;
     Configuration conf = context.getConf();
     if (!conf.getBoolean(YarnConfiguration.LOG_AGGREGATION_ENABLED,
-        YarnConfiguration.DEFAULT_LOG_AGGREGATION_ENABLED)) {
+        YarnConfiguration.DEFAULT_LOG_AGGREGATION_ENABLED) && !YarnConfiguration.isNodeLocalAggregationEnabled(conf)) {
       disabled = true;
     }
     this.recoveryStatuses = new ConcurrentHashMap<>();

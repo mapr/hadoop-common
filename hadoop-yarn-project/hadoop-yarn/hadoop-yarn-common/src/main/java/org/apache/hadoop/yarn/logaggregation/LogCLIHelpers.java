@@ -25,6 +25,7 @@ import java.nio.file.AccessDeniedException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
@@ -41,6 +42,7 @@ import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.logaggregation.filecontroller.LogAggregationFileController;
 import org.apache.hadoop.yarn.logaggregation.filecontroller.LogAggregationFileControllerFactory;
+import org.apache.hadoop.yarn.logaggregation.filecontroller.nodelocal.LogAggregationNodeLocalTFileController;
 import org.apache.hadoop.classification.VisibleForTesting;
 
 public class LogCLIHelpers implements Configurable {
@@ -244,10 +246,15 @@ public class LogCLIHelpers implements Configurable {
       foundAnyLogs = fc.readAggregatedLogs(options, null);
     }
     if (!foundAnyLogs) {
-      emptyLogDir(LogAggregationUtils.getRemoteAppLogDir(
+      if(YarnConfiguration.isNodeLocalAggregationEnabled(conf)) {
+        emptyLogDir(((LogAggregationNodeLocalTFileController)fc).getNodeLocalMetadataReader()
+          .getPathForApp(options.getAppId().toString(), options.getAppOwner()).toString());
+      } else {
+        emptyLogDir(LogAggregationUtils.getRemoteAppLogDir(
           conf, options.getAppId(), options.getAppOwner(),
           fc.getRemoteRootLogDir(), fc.getRemoteRootLogDirSuffix())
           .toString());
+      }
       return -1;
     }
     return 0;
@@ -311,27 +318,39 @@ public class LogCLIHelpers implements Configurable {
       err.println(ex.getMessage());
       return;
     }
-    RemoteIterator<FileStatus> nodeFiles = null;
-    try {
-      nodeFiles = LogAggregationUtils.getRemoteNodeFileDir(conf, appId,
-          appOwner, fileFormat.getRemoteRootLogDir(),
-          fileFormat.getRemoteRootLogDirSuffix());
-    } catch (FileNotFoundException fnf) {
-      logDirNotExist(fileFormat.getRemoteAppLogDir(appId,
-          appOwner).toString());
-    } catch (AccessControlException | AccessDeniedException ace) {
-      logDirNoAccessPermission(fileFormat.getRemoteAppLogDir(appId,
-          appOwner).toString(), appOwner, ace.getMessage());
-    }
-    if (nodeFiles == null) {
-      return;
-    }
     boolean foundNode = false;
     StringBuilder sb = new StringBuilder();
-    while (nodeFiles.hasNext()) {
-      FileStatus thisNodeFile = nodeFiles.next();
-      sb.append(thisNodeFile.getPath().getName() + "\n");
-      foundNode = true;
+    if(YarnConfiguration.isNodeLocalAggregationEnabled(conf)) {
+      Map<String, List<String>> nodeToContainersMap = ((LogAggregationNodeLocalTFileController)fileFormat).getNodeLocalMetadataReader()
+        .getLogMetadataForApplication(appId.toString(), appOwner);
+      if(!nodeToContainersMap.isEmpty()) {
+        Set<String> nodes = nodeToContainersMap.keySet();
+        for (String node : nodes) {
+          sb.append(node + "\n");
+          foundNode = true;
+        }
+      }
+    } else {
+      RemoteIterator<FileStatus> nodeFiles = null;
+      try {
+        nodeFiles = LogAggregationUtils.getRemoteNodeFileDir(conf, appId,
+          appOwner, fileFormat.getRemoteRootLogDir(),
+          fileFormat.getRemoteRootLogDirSuffix());
+      } catch (FileNotFoundException fnf) {
+        logDirNotExist(fileFormat.getRemoteAppLogDir(appId,
+          appOwner).toString());
+      } catch (AccessControlException | AccessDeniedException ace) {
+        logDirNoAccessPermission(fileFormat.getRemoteAppLogDir(appId,
+          appOwner).toString(), appOwner, ace.getMessage());
+      }
+      if (nodeFiles == null) {
+        return;
+      }
+      while (nodeFiles.hasNext()) {
+        FileStatus thisNodeFile = nodeFiles.next();
+        sb.append(thisNodeFile.getPath().getName() + "\n");
+        foundNode = true;
+      }
     }
     if (!foundNode) {
       err.println("No nodes found that aggregated logs for "

@@ -161,7 +161,7 @@ public class HsTaskPage extends HsView {
          String logsUrl = url("logs", nodeIdString, containerIdString, taid,
              app.getJob().getUserName());
          if (!conf.getBoolean(YarnConfiguration.LOG_AGGREGATION_ENABLED,
-             YarnConfiguration.DEFAULT_LOG_AGGREGATION_ENABLED)) {
+             YarnConfiguration.DEFAULT_LOG_AGGREGATION_ENABLED) && !YarnConfiguration.isNodeLocalAggregationEnabled(conf)) {
            logsUrl =
                url(MRWebAppUtil.getYARNWebappScheme(), nodeHttpAddr, "node",
                    "containerlogs", containerIdString,

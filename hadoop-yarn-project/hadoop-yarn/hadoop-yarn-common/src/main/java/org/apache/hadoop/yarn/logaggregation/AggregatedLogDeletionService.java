@@ -26,6 +26,7 @@ import java.util.TimerTask;
 
 import org.apache.hadoop.yarn.logaggregation.filecontroller.LogAggregationFileControllerFactory;
 import org.apache.hadoop.yarn.logaggregation.filecontroller.LogAggregationFileController;
+import org.apache.hadoop.yarn.logaggregation.filecontroller.nodelocal.NodeLocalMetadataReader;
 import org.apache.hadoop.yarn.util.Apps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,14 +68,25 @@ public class AggregatedLogDeletionService extends AbstractService {
     private String suffix = null;
     private Path remoteRootLogDir = null;
     private ApplicationClientProtocol rmClient = null;
-    
+    private static boolean isLocalNodeLogAggregation = false;
+    private static NodeLocalMetadataReader nodeLocalMetadataReader;
+
     public LogDeletionTask(Configuration conf, long retentionSecs,
                            ApplicationClientProtocol rmClient,
                            LogAggregationFileController fileController) {
       this.conf = conf;
       this.retentionMillis = retentionSecs * 1000;
-      this.suffix = LogAggregationUtils.getBucketSuffix();
-      this.remoteRootLogDir = fileController.getRemoteRootLogDir();
+      if(YarnConfiguration.isNodeLocalAggregationEnabled(conf)) {
+        this.suffix = conf.get(YarnConfiguration.NODE_LOCAL_AGGREGATION_METADATA_DIR_NAME,
+                YarnConfiguration.DEFAULT_NODE_LOCAL_AGGREGATION_METADATA_DIR_NAME);
+        this.remoteRootLogDir = new Path(conf.get(YarnConfiguration.NM_REMOTE_APP_LOG_DIR,
+                YarnConfiguration.DEFAULT_NM_REMOTE_APP_LOG_DIR));
+        isLocalNodeLogAggregation = true;
+        nodeLocalMetadataReader = new NodeLocalMetadataReader(conf);
+      } else {
+        this.suffix = LogAggregationUtils.getBucketSuffix();
+        this.remoteRootLogDir = fileController.getRemoteRootLogDir();
+      }
       this.rmClient = rmClient;
     }
     
@@ -86,14 +98,24 @@ public class AggregatedLogDeletionService extends AbstractService {
         FileSystem fs = remoteRootLogDir.getFileSystem(conf);
         for(FileStatus userDir : fs.listStatus(remoteRootLogDir)) {
           if(userDir.isDirectory()) {
+            String appOwner = userDir.getPath().getName();
             for (FileStatus suffixDir : fs.listStatus(userDir.getPath())) {
               Path suffixDirPath = suffixDir.getPath();
-              if (suffixDir.isDirectory() && suffixDirPath.getName().
+              if(isLocalNodeLogAggregation) {
+                if (suffixDir.isDirectory() && suffixDirPath.getName().
+                  equals(suffix)) {
+                  for (FileStatus appDir : fs.listStatus(suffixDirPath)) {
+                    deleteAppDirLogs(cutoffMillis, fs, rmClient, appDir, appOwner);
+                  }
+                }
+              } else {
+                if (suffixDir.isDirectory() && suffixDirPath.getName().
                   startsWith(suffix)) {
-                for (FileStatus bucketDir : fs.listStatus(suffixDirPath)) {
-                  if (bucketDir.isDirectory()) {
-                    deleteOldLogDirsFrom(bucketDir.getPath(), cutoffMillis,
+                  for (FileStatus bucketDir : fs.listStatus(suffixDirPath)) {
+                    if (bucketDir.isDirectory()) {
+                      deleteOldLogDirsFrom(bucketDir.getPath(), cutoffMillis,
                         fs, rmClient);
+                    }
                   }
                 }
               }
@@ -117,13 +139,13 @@ public class AggregatedLogDeletionService extends AbstractService {
         return;
       }
       for (FileStatus appDir : appDirs) {
-        deleteAppDirLogs(cutoffMillis, fs, rmClient, appDir);
+        deleteAppDirLogs(cutoffMillis, fs, rmClient, appDir, "");
       }
     }
 
     private static void deleteAppDirLogs(long cutoffMillis, FileSystem fs,
                                          ApplicationClientProtocol rmClient,
-                                         FileStatus appDir) {
+                                         FileStatus appDir, String appOwner) {
       try {
         if (appDir.isDirectory() &&
             appDir.getModificationTime() < cutoffMillis) {
@@ -153,6 +175,13 @@ public class AggregatedLogDeletionService extends AbstractService {
             // Application is no longer running
             try {
               LOG.info("Deleting aggregated logs in " + appDir.getPath());
+              if (isLocalNodeLogAggregation) {
+                List<FileStatus> nodeLocalVolumeLogFiles = nodeLocalMetadataReader.getAppLogsDirsFileStatusListForApp(appId, appOwner);
+                for (FileStatus toDelete : nodeLocalVolumeLogFiles) {
+                  LOG.debug("Deleting logs file from: " + toDelete.getPath());
+                  fs.delete(toDelete.getPath(), true);
+                }
+              }
               fs.delete(appDir.getPath(), true);
             } catch (IOException e) {
               logException("Could not delete " + appDir.getPath(), e);
@@ -258,7 +287,7 @@ public class AggregatedLogDeletionService extends AbstractService {
   private void scheduleLogDeletionTasks() throws IOException {
     Configuration conf = getConfig();
     if (!conf.getBoolean(YarnConfiguration.LOG_AGGREGATION_ENABLED,
-        YarnConfiguration.DEFAULT_LOG_AGGREGATION_ENABLED)) {
+        YarnConfiguration.DEFAULT_LOG_AGGREGATION_ENABLED) && !YarnConfiguration.isNodeLocalAggregationEnabled(conf)) {
       // Log aggregation is not enabled so don't bother
       return;
     }

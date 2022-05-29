@@ -86,7 +86,7 @@ public class AggregatedLogsBlock extends HtmlBlock {
 
     String nmApplicationLogUrl = getApplicationLogURL(applicationId);
     if (!conf.getBoolean(YarnConfiguration.LOG_AGGREGATION_ENABLED,
-        YarnConfiguration.DEFAULT_LOG_AGGREGATION_ENABLED)) {
+        YarnConfiguration.DEFAULT_LOG_AGGREGATION_ENABLED) && !YarnConfiguration.isNodeLocalAggregationEnabled(conf)) {
       html.h1()
           .__("Aggregation is not enabled. Try the nodemanager at " + nodeId)
           .__();

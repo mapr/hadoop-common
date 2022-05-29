@@ -341,7 +341,7 @@ public abstract class LogAggregationFileController {
    * {@link YarnConfiguration#NM_REMOTE_APP_LOG_DIR_SUFFIX} appended by the
    * FileController's name, if the former is not set.
    */
-  private void extractRemoteRootLogDirSuffix() {
+  protected void extractRemoteRootLogDirSuffix() {
     String suffix = String.format(
         YarnConfiguration.LOG_AGGREGATION_REMOTE_APP_LOG_DIR_SUFFIX_FMT,
         fileControllerName);
@@ -361,7 +361,7 @@ public abstract class LogAggregationFileController {
    * from the configuration or {@link YarnConfiguration#NM_REMOTE_APP_LOG_DIR},
    * if the former is not set.
    */
-  private void extractRemoteRootLogDir() {
+  protected void extractRemoteRootLogDir() {
     String remoteDirStr = String.format(
         YarnConfiguration.LOG_AGGREGATION_REMOTE_APP_LOG_DIR_FMT,
         fileControllerName);

@@ -42,6 +42,7 @@ public class LogAggregationUtils {
 
   public static final String TMP_FILE_SUFFIX = ".tmp";
   private static final String BUCKET_SUFFIX = "bucket-";
+  public static final String LOG_PATH_FOR_LOCAL_VOLUME = "/mapred/nodeManager/logs/";
 
   /**
    * Constructs the full filename for an application's log file per node.

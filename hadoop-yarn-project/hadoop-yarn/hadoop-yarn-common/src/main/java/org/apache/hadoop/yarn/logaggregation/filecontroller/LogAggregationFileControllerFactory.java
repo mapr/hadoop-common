@@ -34,11 +34,14 @@ import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.logaggregation.LogAggregationUtils;
+import org.apache.hadoop.yarn.logaggregation.filecontroller.nodelocal.LogAggregationNodeLocalTFileController;
+import org.apache.hadoop.yarn.logaggregation.filecontroller.nodelocal.NodeLocalMetadataReader;
 
 /**
  * Use {@code LogAggregationFileControllerFactory} to get the correct
@@ -118,6 +121,11 @@ public class LogAggregationFileControllerFactory {
     } else {
       controllerChecker.put(dirSuffix, fileController);
     }
+    if(YarnConfiguration.isNodeLocalAggregationEnabled(conf) && controllers.stream().noneMatch(c -> c.getFileControllerName().equals("nodeLocal"))) {
+      LogAggregationFileController localNodeLogController = ReflectionUtils.newInstance(LogAggregationNodeLocalTFileController.class, conf);
+      localNodeLogController.initialize(conf, "nodeLocal");
+      controllers.add(localNodeLogController);
+    }
   }
 
   /**
@@ -125,6 +133,13 @@ public class LogAggregationFileControllerFactory {
    * @return the LogAggregationFileController instance
    */
   public LogAggregationFileController getFileControllerForWrite() {
+    if(YarnConfiguration.isNodeLocalAggregationEnabled(conf)) {
+      for (LogAggregationFileController fileController : controllers) {
+        if (fileController instanceof LogAggregationNodeLocalTFileController) {
+          return fileController;
+        }
+      }
+    }
     return controllers.getFirst();
   }
 
@@ -139,6 +154,18 @@ public class LogAggregationFileControllerFactory {
   public LogAggregationFileController getFileControllerForRead(
       ApplicationId appId, String appOwner) throws IOException {
     StringBuilder diagnosticsMsg = new StringBuilder();
+
+    if(YarnConfiguration.isNodeLocalAggregationEnabled(conf)) {
+      try {
+        for (LogAggregationFileController fileController : controllers) {
+          if (fileController instanceof LogAggregationNodeLocalTFileController) {
+            return fileController;
+          }
+        }
+      } catch (Exception ex) {
+        diagnosticsMsg.append(ex.getMessage() + "\n");
+      }
+    }
 
     if (LogAggregationUtils.isOlderPathEnabled(conf)) {
       for (LogAggregationFileController fileController : controllers) {

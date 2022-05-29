@@ -1560,7 +1560,45 @@ public class YarnConfiguration extends Configuration {
   public static final String LOG_AGGREGATION_REMOTE_APP_LOG_DIR_SUFFIX_FMT
       = YARN_PREFIX + "log-aggregation.%s.remote-app-log-dir-suffix";
 
-  /** 
+  public static final String NODE_LOCAL_LOG_AGGREGATION = YARN_PREFIX
+    + "node-local-log-aggregation.";
+
+  /** Whether to enable node-local log aggregation */
+  public static final String NODE_LOCAL_LOG_AGGREGATION_ENABLED =
+    NODE_LOCAL_LOG_AGGREGATION + "enable";
+  public static final boolean DEFAULT_NODE_LOCAL_LOG_AGGREGATION_ENABLED = false;
+
+  public static final String NODE_LOCAL_LOG_AGGREGATION_REMOTE_APP_LOG_DIR_FMT
+    = YARN_PREFIX + "log-aggregation.nodeLocal.remote-app-log-dir";
+
+  public static final String DEFAULT_NODE_LOCAL_LOG_AGGREGATION_REMOTE_APP_LOG_DIR_FMT
+    = "/var/mapr/local/%s/mapred/nodeManager/logs/";
+
+  public static final String NODE_LOCAL_LOG_AGGREGATION_NODE_ID =
+    NODE_LOCAL_LOG_AGGREGATION + "node-id";
+
+  /** With enabled node-local aggregation indicates to try read logs from default
+   * log-aggregation directory if no data found using node-local aggregation
+   */
+  public static final String TRY_READ_LOGS_FROM_LOG_AGGREGATION_DIR =
+    NODE_LOCAL_LOG_AGGREGATION + "try-read-logs-from-log-aggregation-dir";
+  public static final boolean DEFAULT_TRY_READ_LOGS_FROM_LOG_AGGREGATION_DIR = true;
+
+  /**
+   * The remote log metadata dir will be created at
+   * NM_REMOTE_APP_LOG_DIR/${user}/NODE_LOCAL_AGGREGATION_METADATA_DIR_NAME/${appId}
+   */
+  public static final String NODE_LOCAL_AGGREGATION_METADATA_DIR_NAME =
+    NODE_LOCAL_LOG_AGGREGATION + "metadata-path";
+
+  public static final String DEFAULT_NODE_LOCAL_AGGREGATION_METADATA_DIR_NAME = "logsMeta";
+
+  public static final String NODE_LOCAL_AGGREGATION_METADATA_FILENAME =
+    NODE_LOCAL_LOG_AGGREGATION + "metadata-filename";
+
+  public static final String DEFAULT_NODE_LOCAL_AGGREGATION_METADATA_FILENAME =
+    "containers.seq";
+  /**
    * How long to wait before deleting aggregated logs, -1 disables.
    * Be careful set this too small and you will spam the name node.
    */
@@ -5516,6 +5554,11 @@ public class YarnConfiguration extends Configuration {
     int multiplier = conf.getInt(SCHEDULER_SKIP_NODE_MULTIPLIER,
         DEFAULT_SCHEDULER_SKIP_NODE_MULTIPLIER);
     return multiplier * heartbeatIntvl;
+  }
+
+  public static boolean isNodeLocalAggregationEnabled(Configuration conf) {
+    return conf.getBoolean(YarnConfiguration.NODE_LOCAL_LOG_AGGREGATION_ENABLED,
+      YarnConfiguration.DEFAULT_NODE_LOCAL_LOG_AGGREGATION_ENABLED);
   }
 
   /* For debugging. mp configurations to system output as XML format. */

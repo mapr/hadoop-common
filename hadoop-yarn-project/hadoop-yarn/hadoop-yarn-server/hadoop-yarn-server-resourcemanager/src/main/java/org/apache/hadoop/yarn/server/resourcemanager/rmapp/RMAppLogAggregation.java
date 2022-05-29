@@ -80,7 +80,7 @@ public class RMAppLogAggregation {
 
   private boolean getEnabledFlagFromConf(Configuration conf) {
     return conf.getBoolean(YarnConfiguration.LOG_AGGREGATION_ENABLED,
-        YarnConfiguration.DEFAULT_LOG_AGGREGATION_ENABLED);
+        YarnConfiguration.DEFAULT_LOG_AGGREGATION_ENABLED) || YarnConfiguration.isNodeLocalAggregationEnabled(conf);
   }
 
   private int getMaxLogAggregationDiagnostics(Configuration conf) {

@@ -374,6 +374,7 @@ public class AppLogAggregatorImpl implements AppLogAggregator {
         }
       }
 
+      logControllerContext.setUploadedContainersList(new ArrayList<>(pendingContainerInThisCycle));
       logControllerContext.setUploadedLogsInThisCycle(uploadedLogsInThisCycle);
       logControllerContext.setLogUploadTimeStamp(System.currentTimeMillis());
       logControllerContext.increLogAggregationTimes();

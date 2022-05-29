@@ -252,7 +252,7 @@ public class NodeStatusUpdaterImpl extends AbstractService implements
 
     this.logAggregationEnabled =
         conf.getBoolean(YarnConfiguration.LOG_AGGREGATION_ENABLED,
-          YarnConfiguration.DEFAULT_LOG_AGGREGATION_ENABLED);
+          YarnConfiguration.DEFAULT_LOG_AGGREGATION_ENABLED) || YarnConfiguration.isNodeLocalAggregationEnabled(conf);
     this.timelineServiceV2Enabled = YarnConfiguration.
         timelineServiceV2Enabled(conf);
 
@@ -350,8 +350,8 @@ public class NodeStatusUpdaterImpl extends AbstractService implements
 
   @Private
   protected boolean isTokenKeepAliveEnabled(Configuration conf) {
-    return conf.getBoolean(YarnConfiguration.LOG_AGGREGATION_ENABLED,
-        YarnConfiguration.DEFAULT_LOG_AGGREGATION_ENABLED)
+    return (conf.getBoolean(YarnConfiguration.LOG_AGGREGATION_ENABLED,
+        YarnConfiguration.DEFAULT_LOG_AGGREGATION_ENABLED) || YarnConfiguration.isNodeLocalAggregationEnabled(conf))
         && UserGroupInformation.isSecurityEnabled();
   }
 

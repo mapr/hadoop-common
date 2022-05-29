@@ -66,6 +66,8 @@ import org.apache.hadoop.yarn.server.nodemanager.containermanager.loghandler.eve
 import org.apache.hadoop.classification.VisibleForTesting;
 import org.apache.hadoop.thirdparty.com.google.common.util.concurrent.ThreadFactoryBuilder;
 
+import static org.apache.hadoop.yarn.conf.YarnConfiguration.NODE_LOCAL_LOG_AGGREGATION_NODE_ID;
+
 public class LogAggregationService extends AbstractService implements
     LogHandler {
 
@@ -168,6 +170,9 @@ public class LogAggregationService extends AbstractService implements
     // NodeId is only available during start, the following cannot be moved
     // anywhere else.
     this.nodeId = this.context.getNodeId();
+    if (YarnConfiguration.isNodeLocalAggregationEnabled(getConfig())) {
+      getConfig().set(NODE_LOCAL_LOG_AGGREGATION_NODE_ID, nodeId.getHost());
+    }
     super.serviceStart();
   }
   

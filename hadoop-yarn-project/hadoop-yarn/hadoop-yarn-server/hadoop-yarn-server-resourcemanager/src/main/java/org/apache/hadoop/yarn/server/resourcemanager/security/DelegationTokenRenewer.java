@@ -147,7 +147,7 @@ public class DelegationTokenRenewer extends AbstractService {
           YarnConfiguration.DEFAULT_RM_PROXY_USER_PRIVILEGES_ENABLED);
     this.tokenKeepAliveEnabled =
         conf.getBoolean(YarnConfiguration.LOG_AGGREGATION_ENABLED,
-            YarnConfiguration.DEFAULT_LOG_AGGREGATION_ENABLED);
+            YarnConfiguration.DEFAULT_LOG_AGGREGATION_ENABLED) || YarnConfiguration.isNodeLocalAggregationEnabled(conf);
     this.tokenRemovalDelayMs =
         conf.getInt(YarnConfiguration.RM_NM_EXPIRY_INTERVAL_MS,
             YarnConfiguration.DEFAULT_RM_NM_EXPIRY_INTERVAL_MS);
