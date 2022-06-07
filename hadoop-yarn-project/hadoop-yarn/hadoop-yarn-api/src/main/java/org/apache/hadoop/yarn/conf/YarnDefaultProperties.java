@@ -132,7 +132,7 @@ public class YarnDefaultProperties extends Properties {
         props.put(YarnConfiguration.NM_VCORES, "${nodemanager.resource.cpu-vcores}");
         //Added disk as resource
         //Convert disk value to long from double. Disk has value as milli resource type
-        long disk = 2;
+        long disk = 2000;
         if (System.getProperty("nodemanager.resource.io-spindles") != null) {
             disk = (long) (Double.parseDouble(System.getProperty("nodemanager.resource.io-spindles")) * 1000);
         }
