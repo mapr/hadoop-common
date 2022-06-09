@@ -47,6 +47,7 @@ public class ResourceInformation implements Comparable<ResourceInformation> {
   // Known resource types
   public static final String MEMORY_URI = "memory-mb";
   public static final String VCORES_URI = "vcores";
+  public static final String DISKS_URI = "disks";
   public static final String GPU_URI = "yarn.io/gpu";
   public static final String FPGA_URI = "yarn.io/fpga";
 
