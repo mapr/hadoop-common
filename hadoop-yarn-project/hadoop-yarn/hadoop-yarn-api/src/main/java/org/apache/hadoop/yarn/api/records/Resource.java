@@ -389,6 +389,27 @@ public abstract class Resource implements Comparable<Resource> {
     }
   }
 
+  /**
+   * Get <em>number of disks</em> of the resource.
+   * @return <em>number of disks</em> of the resource
+   */
+  @Public
+  @Stable
+  public double getDisks(){
+    return getResourceInformation(ResourceInformation.DISKS_URI).getValue();
+  }
+
+  /**
+   * Set <em>number of disks</em> of the resource.
+   * Multiples to 1000 because disks handle as milli value
+   * @param memory <em>number of disks</em> of the resource
+   */
+  @Public
+  @Stable
+  public void setDisks(double disks){
+    setResourceValue(ResourceInformation.DISKS_URI, (long) disks * 1000);
+  }
+
   protected void throwExceptionWhenArrayOutOfBound(int index) {
     String exceptionMsg = String.format(
         "Trying to access ResourceInformation for given index=%d. "
