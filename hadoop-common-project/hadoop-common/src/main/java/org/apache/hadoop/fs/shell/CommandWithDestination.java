@@ -23,12 +23,15 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import org.apache.hadoop.maprfs.AbstractMapRFileSystem;
 import org.slf4j.Logger;
@@ -79,6 +82,10 @@ abstract class CommandWithDestination extends FsCommand {
   private boolean lazyPersist = false;
   private boolean direct = false;
 
+  private boolean keepLinks = false;
+  public static Map<String, Set<String>> loopLocator = new HashMap<>();
+
+
   /**
    * The name of the raw xattr namespace. It would be nice to use
    * XAttr.RAW.name() but we can't reference the hadoop-hdfs project.
@@ -114,6 +121,10 @@ abstract class CommandWithDestination extends FsCommand {
 
   protected void setDirectWrite(boolean flag) {
     direct = flag;
+  }
+
+  protected void setKeepLinks(boolean flag) {
+    keepLinks = flag;
   }
 
   /**
@@ -293,15 +304,57 @@ abstract class CommandWithDestination extends FsCommand {
    */
   protected void processPath(PathData src, PathData dst) throws IOException {
     if (src.stat.isFile() ||
-        (src.stat.isSymlink() && !src.fs.getFileStatus(FileUtil.fixSymlinkPath(src)).isDirectory())) {
+            (src.stat.isSymlink() && !keepLinks &&
+                    !src.fs.getFileStatus(FileUtil.fixSymlinkPath(src)).isDirectory())) {
       copyFileToTarget(src, dst);
+    } else if (src.stat.isSymlink() && keepLinks) {
+      if (src.fs instanceof AbstractMapRFileSystem && dst.fs instanceof AbstractMapRFileSystem) {
+        AbstractMapRFileSystem mapRFileSystem = (AbstractMapRFileSystem) src.fs;
+        mapRFileSystem.createSymlink(src.stat.getSymlink(), dst.path, false);
+      }
     } else if (src.stat.isDirectory() && !isRecursive()) {
       throw new PathIsDirectoryException(src.toString());
     }
   }
 
+  private boolean isLoop(PathData src) throws IOException {
+    String symlinkDestination = FileUtil.fixSymlinkPath(src).toUri().getRawPath();
+    String symlinkPath = src.path.toUri().getRawPath();
+    Set<String> realPathVisitCounter = loopLocator.get(symlinkDestination);
+    return (realPathVisitCounter != null && realPathVisitCounter.contains(symlinkPath));
+  }
+
+  private boolean isParentLoop(PathData src) throws IOException {
+    Path symlinkDestinationPath = FileUtil.fixSymlinkPath(src);
+    Path symlinkLocationPath = src.stat.getPath().getParent();
+    String symlinkDestination = src.fs.makeQualified(symlinkDestinationPath).toUri().getRawPath();
+    String symlinkLocation = src.fs.makeQualified(symlinkLocationPath).toUri().getRawPath();
+    return symlinkLocation.startsWith(symlinkDestination);
+  }
+
+  private void fixLoop(PathData src) throws IOException {
+    PathData target = getTargetPath(src);
+    if (src.fs instanceof AbstractMapRFileSystem && target.fs instanceof AbstractMapRFileSystem) {
+      AbstractMapRFileSystem mapRFileSystem = (AbstractMapRFileSystem) src.fs;
+      displayWarning("Symlink " + src.stat.getPath() + " leads to copy loop, copied as symlink to " + target.path);
+      mapRFileSystem.createSymlink(src.stat.getSymlink(), target.path, false);
+    }
+  }
   @Override
   protected void recursePath(PathData src) throws IOException {
+    if(src.stat.isSymlink()) {
+      if(keepLinks) {
+        return;
+      }
+      if(isParentLoop(src) || isLoop(src)) {
+        fixLoop(src);
+        return;
+      }
+      String symlinkDestinationRawPath = FileUtil.fixSymlinkPath(src).toUri().getRawPath();
+      String symlinkPath = src.stat.getPath().toUri().getRawPath();
+      Set<String> realPathVisitCounter = loopLocator.computeIfAbsent(symlinkDestinationRawPath, k -> new HashSet<>());
+      realPathVisitCounter.add(symlinkPath);
+    }
     PathData savedDst = dst;
     try {
       // modify dst as we descend to append the basename of the

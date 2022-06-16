@@ -154,7 +154,7 @@ class CopyCommands {
   static class Cp extends CopyCommandWithMultiThread {
     public static final String NAME = "cp";
     public static final String USAGE =
-        "[-f] [-p | -p[topax]] [-d] [-t <thread count>]"
+        "[-f] [-p | -p[topax]] [-P] [-d] [-t <thread count>]"
             + " [-q <thread pool queue size>] <src> ... <dst>";
     public static final String DESCRIPTION =
         "Copy files that match the file pattern <src> to a destination."
@@ -168,6 +168,8 @@ class CopyCommands {
             + "namespace extended attributes are preserved is independent of "
             + "the -p flag.\n"
             + "  -f : Overwrite the destination if it already exists.\n"
+            + "Passing -P disables traverse by symbolic link, symbolic link"
+            + " will be copied instead."
             + "  -d : Skip creation of temporary file(<dst>._COPYING_).\n"
             + "  -t <thread count> : Number of threads to be used, "
             + "default is 1.\n"
@@ -177,7 +179,7 @@ class CopyCommands {
     @Override
     protected void processOptions(LinkedList<String> args) throws IOException {
       popPreserveOption(args);
-      CommandFormat cf = new CommandFormat(2, Integer.MAX_VALUE, "f", "d");
+      CommandFormat cf = new CommandFormat(2, Integer.MAX_VALUE, "f", "d", "P");
       cf.addOptionWithValue("t");
       cf.addOptionWithValue("q");
       cf.parse(args);
@@ -185,6 +187,7 @@ class CopyCommands {
       setOverwrite(cf.getOpt("f"));
       setThreadCount(cf.getOptValue("t"));
       setThreadPoolQueueSize(cf.getOptValue("q"));
+      setKeepLinks(cf.getOpt("P"));
       // should have a -r option
       setRecursive(true);
       getRemoteDestination(args);
