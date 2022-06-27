@@ -1263,10 +1263,11 @@ public class UserGroupInformation {
 
     setLoginUser(u);
 
+    String keytabFileName = path == null ? null : new File(path).getName();
     LOG.info(
         "Login successful for user {} using keytab file {}. Keytab auto"
             + " renewal enabled : {}",
-        user, new File(path).getName(), isKerberosKeyTabLoginRenewalEnabled());
+        user, keytabFileName, isKerberosKeyTabLoginRenewalEnabled());
   }
 
   /**
