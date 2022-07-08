@@ -206,6 +206,10 @@ public enum DistCpOptionSwitch {
           + "system implements getBlockLocations method and the target file "
           + "system implements concat method")),
 
+  KEEP_LINKS(DistCpConstants.CONF_LABEL_KEEP_LINKS,
+      new Option("P", false, "Passing -P disables traverse by symbolic link, "
+          + "symbolic link will be copied instead. This switch is only applicable when system is MapRFS")),
+
   /**
    * Configurable copy buffer size.
    */

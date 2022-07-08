@@ -139,6 +139,10 @@ public class OptionsParser {
           getVal(command, DistCpOptionSwitch.FILTERS.getSwitch()));
     }
 
+    if (command.hasOption(DistCpOptionSwitch.KEEP_LINKS.getSwitch())) {
+      builder.withKeepLinks(true);
+    }
+
     if (command.hasOption(DistCpOptionSwitch.LOG_PATH.getSwitch())) {
       builder.withLogPath(
           new Path(getVal(command, DistCpOptionSwitch.LOG_PATH.getSwitch())));

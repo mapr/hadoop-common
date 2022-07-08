@@ -154,7 +154,7 @@ public class RetriableFileCopyCommand extends RetriableCommand {
       long bytesRead = copyToFile(targetPath, targetFS, source,
           offset, context, fileAttributes, sourceChecksum, sourceStatus);
 
-      if (!source.isSplit()) {
+      if (!source.isSplit() && !source.isSymlink()) {
         DistCpUtils.compareFileLengthsAndChecksums(source.getLen(), sourceFS,
                 sourcePath, sourceChecksum, targetFS,
                 targetPath, skipCrc, offset + bytesRead);
@@ -197,6 +197,13 @@ public class RetriableFileCopyCommand extends RetriableCommand {
       EnumSet<FileAttribute> fileAttributes, final FileChecksum sourceChecksum,
       FileStatus sourceStatus)
       throws IOException {
+    if(source.isSymlink()) {
+      if (targetFS instanceof AbstractMapRFileSystem) {
+        AbstractMapRFileSystem mapRFileSystem = (AbstractMapRFileSystem) targetFS;
+        mapRFileSystem.createSymlink(source.getSymlink(), targetPath, false);
+        return source.getLen();
+      }
+    }
     FsPermission permission = FsPermission.getFileDefault().applyUMask(
         FsPermission.getUMask(targetFS.getConf()));
     int copyBufferSize = context.getConfiguration().getInt(

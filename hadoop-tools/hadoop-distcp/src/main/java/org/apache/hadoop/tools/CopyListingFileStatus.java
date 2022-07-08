@@ -95,12 +95,13 @@ public final class CopyListingFileStatus implements Writable {
   private long chunkLength = Long.MAX_VALUE;
 
   private Path symlink = null;
+  private Path sourceLink = null;
 
   /**
    * Default constructor.
    */
   public CopyListingFileStatus() {
-    this(0, false, 0, 0, 0, 0, null, null, null, null);
+    this(0, false, 0, 0, 0, 0, null, null, null, null, null);
   }
 
   /**
@@ -109,23 +110,23 @@ public final class CopyListingFileStatus implements Writable {
    *
    * @param fileStatus FileStatus to copy
    */
-  public CopyListingFileStatus(FileStatus fileStatus) {
+  public CopyListingFileStatus(FileStatus fileStatus) throws IOException {
     this(fileStatus.getLen(), fileStatus.isDirectory(),
         fileStatus.getReplication(), fileStatus.getBlockSize(),
         fileStatus.getModificationTime(), fileStatus.getAccessTime(),
         fileStatus.getPermission(), fileStatus.getOwner(),
         fileStatus.getGroup(),
-        fileStatus.getPath());
+        fileStatus.getPath(), (fileStatus.isSymlink() ? fileStatus.getSymlink() : null));
   }
 
   public CopyListingFileStatus(FileStatus fileStatus,
-      long chunkOffset, long chunkLength) {
+      long chunkOffset, long chunkLength) throws IOException {
     this(fileStatus.getLen(), fileStatus.isDirectory(),
         fileStatus.getReplication(), fileStatus.getBlockSize(),
         fileStatus.getModificationTime(), fileStatus.getAccessTime(),
         fileStatus.getPermission(), fileStatus.getOwner(),
         fileStatus.getGroup(),
-        fileStatus.getPath());
+        fileStatus.getPath(), (fileStatus.isSymlink() ? fileStatus.getSymlink() : null));
     this.chunkOffset = chunkOffset;
     this.chunkLength = chunkLength;
   }
@@ -134,16 +135,16 @@ public final class CopyListingFileStatus implements Writable {
   public CopyListingFileStatus(long length, boolean isdir,
       int blockReplication, long blocksize, long modificationTime,
       long accessTime, FsPermission permission, String owner, String group,
-      Path path) {
+      Path path, Path symlink) {
     this(length, isdir, blockReplication, blocksize, modificationTime,
-        accessTime, permission, owner, group, path, 0, Long.MAX_VALUE);
+        accessTime, permission, owner, group, path, 0, Long.MAX_VALUE, symlink);
   }
 
   @SuppressWarnings("checkstyle:parameternumber")
   public CopyListingFileStatus(long length, boolean isdir,
       int blockReplication, long blocksize, long modificationTime,
       long accessTime, FsPermission permission, String owner, String group,
-      Path path, long chunkOffset, long chunkLength) {
+      Path path, long chunkOffset, long chunkLength, Path symlink) {
     this.length = length;
     this.isdir = isdir;
     this.blockReplication = (short)blockReplication;
@@ -162,6 +163,7 @@ public final class CopyListingFileStatus implements Writable {
     this.path = path;
     this.chunkOffset = chunkOffset;
     this.chunkLength = chunkLength;
+    this.symlink = symlink;
   }
 
   public CopyListingFileStatus(CopyListingFileStatus other) {
@@ -280,6 +282,17 @@ public final class CopyListingFileStatus implements Writable {
   }
   public Path getSymlink() {
     return symlink;
+  }
+
+  public void setSourceLink(Path p) {
+    this.sourceLink = p;
+  }
+  public Path getSourceLink() {
+    return sourceLink;
+  }
+
+  public boolean isSymlink() {
+    return getSymlink() != null;
   }
 
   public void setPath(Path path) {

@@ -35,7 +35,7 @@ public class TestCopyListingFileStatus {
   public void testToString() {
     CopyListingFileStatus src = new CopyListingFileStatus(
         4344L, false, 2, 512 << 20, 1234L, 5678L, new FsPermission((short)0512),
-        "dingo", "yaks", new Path("hdfs://localhost:4344"));
+        "dingo", "yaks", new Path("hdfs://localhost:4344"), null);
     src.toString();
     src = new CopyListingFileStatus();
     src.toString();
@@ -45,7 +45,7 @@ public class TestCopyListingFileStatus {
   public void testCopyListingFileStatusSerialization() throws Exception {
     CopyListingFileStatus src = new CopyListingFileStatus(
         4344L, false, 2, 512 << 20, 1234L, 5678L, new FsPermission((short)0512),
-        "dingo", "yaks", new Path("hdfs://localhost:4344"));
+        "dingo", "yaks", new Path("hdfs://localhost:4344"), null);
     DataOutputBuffer dob = new DataOutputBuffer();
     src.write(dob);
 

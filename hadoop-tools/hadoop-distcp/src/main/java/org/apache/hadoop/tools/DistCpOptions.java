@@ -110,6 +110,9 @@ public final class DistCpOptions {
   // content at their s1, if src is not the same as tgt.
   private final boolean useRdiff;
 
+  /** Flag to save symlink*/
+  private boolean keepLinks = false;
+
   /** Whether to log additional info (path, size) in the SKIP/COPY log. */
   private final boolean verboseLog;
 
@@ -233,6 +236,8 @@ public final class DistCpOptions {
     this.useIterator = builder.useIterator;
 
     this.updateRoot = builder.updateRoot;
+
+    this.keepLinks = builder.keepLinks;
   }
 
   public Path getSourceFileListing() {
@@ -383,6 +388,10 @@ public final class DistCpOptions {
     return updateRoot;
   }
 
+  public boolean shouldKeepLinks() {
+    return keepLinks;
+  }
+
   /**
    * Add options to configuration. These will be used in the Mapper/committer
    *
@@ -439,6 +448,9 @@ public final class DistCpOptions {
 
     DistCpOptionSwitch.addToConf(conf, DistCpOptionSwitch.UPDATE_ROOT,
         String.valueOf(updateRoot));
+
+    DistCpOptionSwitch.addToConf(conf, DistCpOptionSwitch.KEEP_LINKS,
+            String.valueOf(keepLinks));
   }
 
   /**
@@ -478,6 +490,7 @@ public final class DistCpOptions {
         ", directWrite=" + directWrite +
         ", useiterator=" + useIterator +
         ", updateRoot=" + updateRoot +
+        ", keepLinks=" + keepLinks +
         '}';
   }
 
@@ -508,6 +521,8 @@ public final class DistCpOptions {
     private boolean useRdiff = false;
     private String fromSnapshot;
     private String toSnapshot;
+
+    private boolean keepLinks = false;
 
     private String filtersFile;
 
@@ -815,6 +830,11 @@ public final class DistCpOptions {
 
     public Builder withUpdateRoot(boolean updateRootAttrs) {
       this.updateRoot = updateRootAttrs;
+      return this;
+    }
+
+    public Builder withKeepLinks(boolean keepLinks) {
+      this.keepLinks = keepLinks;
       return this;
     }
   }
