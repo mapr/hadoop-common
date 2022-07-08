@@ -92,8 +92,10 @@ public class TestGlobbedCopyListing {
   private static void recordInExpectedValues(String path) throws Exception {
     FileSystem fileSystem = cluster.getFileSystem();
     Path sourcePath = new Path(fileSystem.getUri().toString() + path);
+    FileListingEntry root = DistCpUtils.pathToFileListingEntry(new Path("/tmp/source"), fileSystem);
+    FileListingEntry child = DistCpUtils.pathToFileListingEntry(sourcePath, fileSystem);
     expectedValues.put(sourcePath.toString(), DistCpUtils.getRelativePath(
-        new Path("/tmp/source"), sourcePath));
+            root, child));
   }
 
   @AfterClass

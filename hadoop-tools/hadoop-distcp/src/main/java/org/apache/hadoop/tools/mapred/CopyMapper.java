@@ -142,7 +142,6 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
     Path sourcePath = sourceFileStatus.getPath();
     if (LOG.isDebugEnabled())
       LOG.debug("DistCpMapper::map(): Received " + sourcePath + ", " + relPath);
-
     Path target = new Path(targetWorkPath.makeQualified(targetFS.getUri(),
                           targetFS.getWorkingDirectory()) + relPath.toString());
 
@@ -163,9 +162,6 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
         sourceFS = sourcePath.getFileSystem(conf);
         final boolean preserveXAttrs =
             fileAttributes.contains(FileAttribute.XATTR);
-        if(sourceFileStatus.getSymlink() != null){
-          sourcePath = sourceFileStatus.getSymlink();
-        }
         sourceCurrStatus = DistCpUtils.toCopyListingFileStatusHelper(sourceFS,
             sourceFS.getFileStatus(sourcePath),
             fileAttributes.contains(FileAttribute.ACL),
@@ -175,7 +171,6 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
       } catch (FileNotFoundException e) {
         throw new IOException(new RetriableFileCopyCommand.CopyReadException(e));
       }
-
       FileStatus targetStatus = null;
 
       try {

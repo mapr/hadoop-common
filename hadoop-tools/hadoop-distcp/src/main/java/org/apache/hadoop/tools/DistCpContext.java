@@ -195,6 +195,10 @@ public class DistCpContext {
     return targetPathExists;
   }
 
+  public final boolean shouldKeepLinks() {
+    return options.shouldKeepLinks();
+  }
+
   public void appendToConf(Configuration conf) {
     options.appendToConf(conf);
   }

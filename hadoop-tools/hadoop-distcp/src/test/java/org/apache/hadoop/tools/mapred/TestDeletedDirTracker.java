@@ -18,6 +18,7 @@
 
 package org.apache.hadoop.tools.mapred;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -171,7 +172,7 @@ public class TestDeletedDirTracker extends Assert {
    * each with 24 files.
    * @return a sorted list.
    */
-  protected List<CopyListingFileStatus> buildStatusList() {
+  protected List<CopyListingFileStatus> buildStatusList() throws IOException {
     List<CopyListingFileStatus> statusList = new ArrayList<>();
     // recursive create of many files
     for (int y = 0; y <= 20; y++) {
@@ -197,7 +198,7 @@ public class TestDeletedDirTracker extends Assert {
   }
 
 
-  private void expectShouldDelete(final Path path, boolean isDir) {
+  private void expectShouldDelete(final Path path, boolean isDir) throws IOException {
     expectShouldDelete(newStatus(path, isDir));
   }
 
@@ -206,7 +207,7 @@ public class TestDeletedDirTracker extends Assert {
         shouldDelete(status));
   }
 
-  private boolean shouldDelete(final Path path, final boolean isDir) {
+  private boolean shouldDelete(final Path path, final boolean isDir) throws IOException {
     return shouldDelete(newStatus(path, isDir));
   }
 
@@ -214,7 +215,7 @@ public class TestDeletedDirTracker extends Assert {
     return tracker.shouldDelete(status);
   }
 
-  private void expectShouldNotDelete(final Path path, boolean isDir) {
+  private void expectShouldNotDelete(final Path path, boolean isDir) throws IOException {
     expectShouldNotDelete(newStatus(path, isDir));
   }
 
@@ -225,15 +226,15 @@ public class TestDeletedDirTracker extends Assert {
   }
 
   private CopyListingFileStatus newStatus(final Path path,
-      final boolean isDir) {
+      final boolean isDir) throws IOException {
     return new CopyListingFileStatus(new FileStatus(0, isDir, 0, 0, 0, path));
   }
 
-  private CopyListingFileStatus dirStatus(final Path path) {
+  private CopyListingFileStatus dirStatus(final Path path) throws IOException {
     return newStatus(path, true);
   }
 
-  private CopyListingFileStatus fileStatus(final Path path) {
+  private CopyListingFileStatus fileStatus(final Path path) throws IOException {
     return newStatus(path, false);
   }
 

@@ -255,10 +255,9 @@ public abstract class CopyListing extends Configured {
    * @param fileStatus the copy listing file status
    * @return the key for the sequence file entry
    */
-  protected Text getFileListingKey(Path sourcePathRoot,
+  protected Text getFileListingKey(FileListingEntry  listingEntry,
       CopyListingFileStatus fileStatus) {
-    return new Text(DistCpUtils.getRelativePath(sourcePathRoot,
-        fileStatus.getPath()));
+    return new Text(DistCpUtils.getRelativePath(listingEntry));
   }
 
   /**

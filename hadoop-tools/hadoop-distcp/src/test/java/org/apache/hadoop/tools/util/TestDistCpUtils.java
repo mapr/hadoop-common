@@ -37,6 +37,7 @@ import org.apache.hadoop.tools.CopyListingFileStatus;
 import org.apache.hadoop.tools.DistCpConstants;
 import org.apache.hadoop.tools.DistCpOptionSwitch;
 import org.apache.hadoop.tools.DistCpOptions.FileAttribute;
+import org.apache.hadoop.tools.FileListingEntry;
 import org.apache.hadoop.util.ToolRunner;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -98,17 +99,31 @@ public class TestDistCpUtils {
   }
 
   @Test
-  public void testGetRelativePathRoot() {
+  public void testGetRelativePathRoot() throws IOException {
+    FileSystem fs = FileSystem.get(config);
     Path root = new Path("/");
     Path child = new Path("/a");
-    assertThat(DistCpUtils.getRelativePath(root, child)).isEqualTo("/a");
+    createFile(fs, child);
+    FileListingEntry rootListing = new FileListingEntry();
+    rootListing.setSourceRealPath(fs.getFileStatus(root));
+    FileListingEntry childListing = new FileListingEntry();
+    childListing.setSourceRealPath(fs.getFileStatus(root));
+    childListing.setParent(rootListing);
+    assertThat(DistCpUtils.getRelativePath(childListing)).isEqualTo( "/a");
   }
 
   @Test
-  public void testGetRelativePath() {
-    Path root = new Path("/tmp/abc");
-    Path child = new Path("/tmp/abc/xyz/file");
-    assertThat(DistCpUtils.getRelativePath(root, child)).isEqualTo("/xyz/file");
+  public void testGetRelativePath() throws IOException {
+    FileSystem fs = FileSystem.get(config);
+    Path root = new Path("/tmp/abc123/xyz");
+    Path child = new Path("/tmp/abc123/xyz/file");
+    createFile(fs, child);
+    FileListingEntry rootListing = new FileListingEntry();
+    rootListing.setSourceRealPath(fs.getFileStatus(root));
+    FileListingEntry childListing = new FileListingEntry();
+    childListing.setSourceRealPath(fs.getFileStatus(root));
+    childListing.setParent(rootListing);
+    assertThat(DistCpUtils.getRelativePath(childListing)).isEqualTo( "/file");
   }
 
   @Test
@@ -1421,9 +1436,11 @@ public class TestDistCpUtils {
         if (status.isDirectory()) {
           stack.push(status.getPath());
         }
+        FileListingEntry targetBaseListingEntry = DistCpUtils.pathToFileListingEntry(new Path(targetBase), fs);
+        FileListingEntry statusListingEntry = DistCpUtils.pathToFileListingEntry( status.getPath(), fs);
         Path p = new Path(sourceBase + "/" +
-            DistCpUtils.getRelativePath(new Path(targetBase),
-                status.getPath()));
+            DistCpUtils.getRelativePath(targetBaseListingEntry,
+                    statusListingEntry));
         ContractTestUtils.assertPathExists(fs,
             "path in sync with " + status.getPath(), p);
       }

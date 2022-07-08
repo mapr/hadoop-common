@@ -55,6 +55,7 @@ import org.apache.hadoop.tools.CopyListingFileStatus;
 import org.apache.hadoop.tools.DistCpConstants;
 import org.apache.hadoop.tools.DistCpOptionSwitch;
 import org.apache.hadoop.tools.DistCpOptions;
+import org.apache.hadoop.tools.FileListingEntry;
 import org.apache.hadoop.tools.StubContext;
 import org.apache.hadoop.tools.util.DistCpUtils;
 import org.apache.hadoop.util.DataChecksum;
@@ -322,7 +323,9 @@ public class TestCopyMapper {
         numFiles++;
       }
 
-      copyMapper.map(new Text(DistCpUtils.getRelativePath(new Path(SOURCE_PATH), path)),
+      FileListingEntry root = DistCpUtils.pathToFileListingEntry(new Path(SOURCE_PATH), fs);
+      FileListingEntry child = DistCpUtils.pathToFileListingEntry(path, fs);
+      copyMapper.map(new Text(DistCpUtils.getRelativePath(root, child)),
               new CopyListingFileStatus(cluster.getFileSystem().getFileStatus(
                   path)), context);
     }
@@ -378,6 +381,8 @@ public class TestCopyMapper {
     int numFiles = 0;
     int numDirs = 0;
     for (Path path : pathList) {
+      FileListingEntry root = DistCpUtils.pathToFileListingEntry(new Path(SOURCE_PATH), fs);
+      FileListingEntry child = DistCpUtils.pathToFileListingEntry(path, fs);
       if (fs.getFileStatus(path).isDirectory()) {
         numDirs++;
       } else {
@@ -385,7 +390,7 @@ public class TestCopyMapper {
       }
 
       copyMapper.map(
-          new Text(DistCpUtils.getRelativePath(new Path(SOURCE_PATH), path)),
+          new Text(DistCpUtils.getRelativePath(root, child)),
           new CopyListingFileStatus(fs.getFileStatus(path)), context);
     }
 
@@ -439,7 +444,9 @@ public class TestCopyMapper {
       Mapper<Text, CopyListingFileStatus, Text, Text>.Context context) {
     try {
       for (Path path : pathList) {
-        copyMapper.map(new Text(DistCpUtils.getRelativePath(new Path(SOURCE_PATH), path)),
+        FileListingEntry root = DistCpUtils.pathToFileListingEntry(new Path(SOURCE_PATH), fs);
+        FileListingEntry child = DistCpUtils.pathToFileListingEntry(path, fs);
+        copyMapper.map(new Text(DistCpUtils.getRelativePath(root, child)),
                 new CopyListingFileStatus(fs.getFileStatus(path)), context);
       }
 
@@ -520,8 +527,9 @@ public class TestCopyMapper {
               workPath);
       copyMapper.setup(context);
 
-      copyMapper.map(new Text(DistCpUtils.getRelativePath(new Path(SOURCE_PATH),
-          pathList.get(0))),
+      FileListingEntry root = DistCpUtils.pathToFileListingEntry(new Path(SOURCE_PATH), fs);
+      FileListingEntry child = DistCpUtils.pathToFileListingEntry(pathList.get(0), fs);
+      copyMapper.map(new Text(DistCpUtils.getRelativePath(root, child)),
           new CopyListingFileStatus(fs.getFileStatus(pathList.get(0))), context);
 
       Assert.assertTrue("There should have been an exception.", false);
@@ -925,7 +933,9 @@ public class TestCopyMapper {
         final FileStatus fileStatus = fs.getFileStatus(path);
         if (!fileStatus.isDirectory()) {
           fs.delete(path, true);
-          copyMapper.map(new Text(DistCpUtils.getRelativePath(new Path(SOURCE_PATH), path)),
+          FileListingEntry root = DistCpUtils.pathToFileListingEntry(new Path(SOURCE_PATH), fs);
+          FileListingEntry child = DistCpUtils.pathToFileListingEntry(path, fs);
+          copyMapper.map(new Text(DistCpUtils.getRelativePath(root, child)),
                   new CopyListingFileStatus(fileStatus), context);
         }
       }
@@ -1063,9 +1073,9 @@ public class TestCopyMapper {
 
       for (Path path : pathList) {
         final FileStatus fileStatus = fs.getFileStatus(path);
-        copyMapper.map(
-            new Text(
-                DistCpUtils.getRelativePath(new Path(SOURCE_PATH), path)),
+        FileListingEntry root = DistCpUtils.pathToFileListingEntry(new Path(SOURCE_PATH), fs);
+        FileListingEntry child = DistCpUtils.pathToFileListingEntry(path, fs);
+        copyMapper.map(new Text(DistCpUtils.getRelativePath(root, child)),
             new CopyListingFileStatus(fileStatus), context);
       }
 
@@ -1114,9 +1124,9 @@ public class TestCopyMapper {
 
       for (Path path : pathList) {
         final FileStatus fileStatus = fs.getFileStatus(path);
-        copyMapper.map(
-            new Text(
-                DistCpUtils.getRelativePath(new Path(SOURCE_PATH), path)),
+        FileListingEntry root = DistCpUtils.pathToFileListingEntry(new Path(SOURCE_PATH), fs);
+        FileListingEntry child = DistCpUtils.pathToFileListingEntry(path, fs);
+        copyMapper.map(new Text(DistCpUtils.getRelativePath(root, child)),
             new CopyListingFileStatus(fileStatus), context);
       }
 
@@ -1166,7 +1176,9 @@ public class TestCopyMapper {
 
       for (Path path : pathList) {
         final FileStatus fileStatus = fs.getFileStatus(path);
-        copyMapper.map(new Text(DistCpUtils.getRelativePath(new Path(SOURCE_PATH), path)),
+        FileListingEntry root = DistCpUtils.pathToFileListingEntry(new Path(SOURCE_PATH), fs);
+        FileListingEntry child = DistCpUtils.pathToFileListingEntry(path, fs);
+        copyMapper.map(new Text(DistCpUtils.getRelativePath(root, child)),
                 new CopyListingFileStatus(fileStatus), context);
       }
 
@@ -1241,8 +1253,9 @@ public class TestCopyMapper {
         fs.getFileStatus(sourceFilePath));
 
       long before = fs.getFileStatus(targetFilePath).getModificationTime();
-      copyMapper.map(new Text(DistCpUtils.getRelativePath(
-              new Path(SOURCE_PATH), sourceFilePath)), sourceFileStatus, context);
+      FileListingEntry root = DistCpUtils.pathToFileListingEntry(new Path(SOURCE_PATH), fs);
+      FileListingEntry child = DistCpUtils.pathToFileListingEntry(sourceFilePath, fs);
+      copyMapper.map(new Text(DistCpUtils.getRelativePath(root, child)), sourceFileStatus, context);
       long after = fs.getFileStatus(targetFilePath).getModificationTime();
 
       Assert.assertTrue("File should have been skipped", before == after);
@@ -1254,8 +1267,9 @@ public class TestCopyMapper {
 
       before = fs.getFileStatus(targetFilePath).getModificationTime();
       try { Thread.sleep(2); } catch (Throwable ignore) {}
-      copyMapper.map(new Text(DistCpUtils.getRelativePath(
-              new Path(SOURCE_PATH), sourceFilePath)), sourceFileStatus, context);
+      root = DistCpUtils.pathToFileListingEntry(new Path(SOURCE_PATH), fs);
+      child = DistCpUtils.pathToFileListingEntry(sourceFilePath, fs);
+      copyMapper.map(new Text(DistCpUtils.getRelativePath(root, child)), sourceFileStatus, context);
       after = fs.getFileStatus(targetFilePath).getModificationTime();
 
       Assert.assertTrue("File should have been overwritten.", before < after);
@@ -1300,7 +1314,9 @@ public class TestCopyMapper {
 
       for (Path path : pathList) {
         final FileStatus fileStatus = fs.getFileStatus(path);
-        copyMapper.map(new Text(DistCpUtils.getRelativePath(new Path(SOURCE_PATH), path)),
+        FileListingEntry root = DistCpUtils.pathToFileListingEntry(new Path(SOURCE_PATH), fs);
+        FileListingEntry child = DistCpUtils.pathToFileListingEntry(path, fs);
+        copyMapper.map(new Text(DistCpUtils.getRelativePath(root, child)),
                 new CopyListingFileStatus(fileStatus), context);
       }
 

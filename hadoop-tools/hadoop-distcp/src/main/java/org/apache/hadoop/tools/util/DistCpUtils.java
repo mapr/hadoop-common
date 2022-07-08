@@ -43,16 +43,20 @@ import org.apache.hadoop.tools.CopyListing.XAttrsNotSupportedException;
 import org.apache.hadoop.tools.CopyListingFileStatus;
 import org.apache.hadoop.tools.DistCpContext;
 import org.apache.hadoop.tools.DistCpOptions.FileAttribute;
+import org.apache.hadoop.tools.FileListingEntry;
 import org.apache.hadoop.tools.mapred.UniformSizeInputFormat;
 import org.apache.hadoop.util.StringUtils;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.LinkedList;
+import java.util.Set;
 
 /**
  * Utility functions used in DistCp.
@@ -137,16 +141,59 @@ public class DistCpUtils {
    *         If childPath = /file and
    *            sourceRootPath = /
    * Relative path would be /file
-   * @param sourceRootPath - Source root path
-   * @param childPath - Path for which relative path is required
+   * @param listingEntry - listingEntry
    * @return - Relative portion of the child path (always prefixed with /
    *           unless it is empty
    */
+  public static String getRelativePath(FileListingEntry listingEntry) {
+    String childPathString = Path.SEPARATOR + (listingEntry.isSymlink() ? listingEntry.getSourceLinkPath().getName() : listingEntry.getSourceRealPath().getPath().getName());
+    FileListingEntry listingEntryTmp = listingEntry;
+    while((listingEntryTmp = listingEntryTmp.getParent()) != null) {
+      if(listingEntryTmp.isSymlink()) {
+        if(!listingEntryTmp.getSourceLinkPath().toUri().getPath().equals("/")) {
+          childPathString = Path.SEPARATOR + listingEntryTmp.getSourceLinkPath().getName() + childPathString;
+        }
+      } else {
+        if(!listingEntryTmp.getSourceRealPath().getPath().toUri().getPath().equals("/")) {
+          childPathString = Path.SEPARATOR + listingEntryTmp.getSourceRealPath().getPath().getName() + childPathString;
+        }
+      }
+    }
+    return childPathString;
+  }
+
   public static String getRelativePath(Path sourceRootPath, Path childPath) {
     String childPathString = childPath.toUri().getPath();
     String sourceRootPathString = sourceRootPath.toUri().getPath();
     return sourceRootPathString.equals("/") ? childPathString :
-        childPathString.substring(sourceRootPathString.length());
+            childPathString.substring(sourceRootPathString.length());
+  }
+
+  public static String getRelativePath(FileListingEntry root, FileListingEntry child) {
+    String childPathString = Path.SEPARATOR + (child.isSymlink() ? child.getSourceLinkPath().getName() : child.getSourceRealPath().getPath().getName());
+    FileListingEntry childTmp = child;
+    while(!(childTmp = childTmp.getParent()).getSourceRealPath().equals(root.getSourceRealPath())) {
+      if(!childTmp.getSourceRealPath().getPath().toUri().getPath().equals("/")) {
+        childPathString = Path.SEPARATOR + childTmp.getSourceRealPath().getPath().getName() + childPathString;
+      }
+    }
+    return childPathString;
+  }
+
+  public static FileListingEntry pathToFileListingEntry(Path path, FileSystem fs) throws IOException {
+    FileListingEntry topEntry = new FileListingEntry();
+    topEntry.setSourceRealPath(fs.getFileStatus(path));
+    Path tmpPath = path;
+    FileListingEntry tmpEntry = new FileListingEntry();
+    topEntry.setParent(tmpEntry);
+    while(!(tmpPath = tmpPath.getParent()).toUri().getPath().equals("/")) {
+      tmpEntry.setSourceRealPath(fs.getFileStatus(tmpPath));
+      FileListingEntry tmpEntry2 = new FileListingEntry();
+      tmpEntry.setParent(tmpEntry2);
+      tmpEntry = tmpEntry2;
+    }
+    tmpEntry.setSourceRealPath(fs.getFileStatus(tmpPath));
+    return topEntry;
   }
 
   /**
@@ -322,7 +369,7 @@ public class DistCpUtils {
    * If preserving XAttrs, populates the CopyListingFileStatus with the XAttrs.
    *
    * @param fileSystem FileSystem containing the file
-   * @param fileStatus FileStatus of file
+   * @param listingEntry listingEntry
    * @param preserveAcls boolean true if preserving ACLs
    * @param preserveXAttrs boolean true if preserving XAttrs
    * @param preserveRawXAttrs boolean true if preserving raw.* XAttrs
@@ -330,17 +377,24 @@ public class DistCpUtils {
    * @return list of CopyListingFileStatus
    * @throws IOException if there is an I/O error
    */
-  public static LinkedList<CopyListingFileStatus> toCopyListingFileStatus(
-      FileSystem fileSystem, FileStatus fileStatus, boolean preserveAcls,
+  public static void toCopyListingFileStatus(
+      FileSystem fileSystem, FileListingEntry listingEntry, boolean preserveAcls,
       boolean preserveXAttrs, boolean preserveRawXAttrs, int blocksPerChunk)
           throws IOException {
     LinkedList<CopyListingFileStatus> copyListingFileStatus =
         new LinkedList<CopyListingFileStatus>();
 
+    FileStatus fileStatus = listingEntry.getSourceRealPath();
     final CopyListingFileStatus clfs = toCopyListingFileStatusHelper(
         fileSystem, fileStatus, preserveAcls,
         preserveXAttrs, preserveRawXAttrs,
         0, fileStatus.getLen());
+    if(fileStatus.isSymlink()) {
+      clfs.setSymlink(fileStatus.getSymlink());
+    }
+    if (listingEntry.getSourceLinkPath() != null) {
+      clfs.setSourceLink(listingEntry.getSourceLinkPath());
+    }
     final long blockSize = fileStatus.getBlockSize();
     if (LOG.isDebugEnabled()) {
       LOG.debug("toCopyListing: " + fileStatus + " chunkSize: "
@@ -349,7 +403,8 @@ public class DistCpUtils {
     }
     if ((blocksPerChunk > 0) &&
         !fileStatus.isDirectory() &&
-        (fileStatus.getLen() > blockSize * blocksPerChunk)) {
+        (fileStatus.getLen() > blockSize * blocksPerChunk) &&
+        !fileStatus.isSymlink()) {
       // split only when the file size is larger than the intended chunk size
       final BlockLocation[] blockLocations;
       blockLocations = fileSystem.getFileBlockLocations(fileStatus, 0,
@@ -388,21 +443,59 @@ public class DistCpUtils {
       copyListingFileStatus.add(clfs);
     }
 
-    return copyListingFileStatus;
+    listingEntry.setCopyListingFileStatus(copyListingFileStatus);
   }
 
-  public static FileStatus getOriginalFileStatus(FileStatus sourceStatus, Configuration conf){
+  public static FileListingEntry getOriginalFileStatus(FileStatus sourceStatus, Configuration conf, boolean keepLinks, Map<String, Set<String>> loopLocator){
+    FileListingEntry entry = new FileListingEntry();
     try {
-      if(sourceStatus.isSymlink()){
+      entry.setKeepLink(keepLinks);
+      if (sourceStatus.isSymlink() && !keepLinks && !isParentLoop(sourceStatus, conf) && !isLoop(sourceStatus, loopLocator)) {
         final FileSystem symlinkSourceFS = sourceStatus.getSymlink().getFileSystem(conf);
-        return symlinkSourceFS.getFileStatus(sourceStatus.getSymlink());
+        FileStatus symlinkDestination = symlinkSourceFS.getFileStatus(discloseRelativeSymlink(sourceStatus));
+        String symlinkDestinationRawPath = symlinkDestination.getPath().toUri().getRawPath();
+        Set<String> realPathVisitCounter = loopLocator.computeIfAbsent(symlinkDestinationRawPath, k -> new HashSet<>());
+        realPathVisitCounter.add(sourceStatus.getPath().toUri().getRawPath());
+        entry.setSourceRealPath(symlinkDestination);
+        entry.setSourceLinkPath(sourceStatus.getPath());
+      } else {
+        entry.setSourceRealPath(sourceStatus);
       }
     } catch (IOException e) {
-      e.printStackTrace();
+      LOG.error("", e);
     }
-    return sourceStatus;
+    return entry;
   }
 
+  public static boolean isParentLoop(FileStatus sourceStatus, Configuration conf) throws IOException {
+    final FileSystem symlinkSourceFS = sourceStatus.getSymlink().getFileSystem(conf);
+    Path symlinkDestinationPath = discloseRelativeSymlink(sourceStatus);
+    Path symlinkLocationPath = sourceStatus.getPath().getParent();
+    String symlinkDestination = symlinkSourceFS.makeQualified(symlinkDestinationPath).toUri().getRawPath();
+    String symlinkLocation = symlinkSourceFS.makeQualified(symlinkLocationPath).toUri().getRawPath();
+    boolean isLoop = symlinkLocation.startsWith(symlinkDestination);
+    if(isLoop) {
+      LOG.warn("Symlink " + sourceStatus.getPath() + " leads to it's parent directory " + symlinkDestination
+              + ". Copied as symlink");
+    }
+    return isLoop;
+  }
+
+  public static boolean isLoop(FileStatus src, Map<String, Set<String>> loopLocator) throws IOException {
+    String symlinkDestination = discloseRelativeSymlink(src).toUri().getRawPath();
+    String symlinkPath = src.getPath().toUri().getRawPath();
+    Set<String> realPathVisitCounter = loopLocator.get(symlinkDestination);
+    boolean isLoop = (realPathVisitCounter != null && realPathVisitCounter.contains(symlinkPath));
+    if(isLoop) {
+      LOG.warn("Symlink " + src.getPath() + " causes copy loop, copied as symlink. Link leads to " + symlinkDestination);
+    }
+    return isLoop;
+  }
+
+  public static Path discloseRelativeSymlink(FileStatus stat) throws IOException {
+    return stat.getSymlink().toString().startsWith("/") ? stat.getSymlink() :
+            new Path(stat.getPath().getParent(), stat.getSymlink());
+  }
 
   /**
    * Converts a FileStatus to a CopyListingFileStatus.  If preserving ACLs,
