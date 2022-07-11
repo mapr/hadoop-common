@@ -20,11 +20,15 @@ package org.apache.hadoop.fs.http.server;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.web.WebHdfsConstants;
+import org.apache.hadoop.security.authentication.server.AbstractMaprAuthenticationHandler;
 import org.apache.hadoop.security.authentication.server.AuthenticationFilter;
+import org.apache.hadoop.security.authentication.server.KerberosAuthenticationHandler;
+import org.apache.hadoop.security.authentication.server.MultiMechsAuthenticationHandler;
 import org.apache.hadoop.security.authentication.util.RandomSignerSecretProvider;
 import org.apache.hadoop.security.authentication.util.SignerSecretProvider;
 import org.apache.hadoop.security.token.delegation.web.DelegationTokenAuthenticationFilter;
 import org.apache.hadoop.security.token.delegation.web.KerberosDelegationTokenAuthenticationHandler;
+import org.apache.hadoop.security.token.delegation.web.MaprDelegationTokenAuthenticationHandler;
 
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
@@ -119,7 +123,7 @@ public class HttpFSAuthenticationFilter
       dtkind = WebHdfsConstants.SWEBHDFS_TOKEN_KIND.toString();
     }
     props.setProperty(KerberosDelegationTokenAuthenticationHandler.TOKEN_KIND,
-                      dtkind);
+              dtkind);
     return props;
   }
 

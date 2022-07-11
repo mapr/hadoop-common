@@ -276,6 +276,29 @@ if [[ ${HADOOP_WORKER_MODE} = true ]]; then
   exit $?
 fi
 
+if [[ "${HADOOP_SUBCMD}" = "httpfs" ]]; then
+  #file client impersonation
+  MAPR_IMPERSONATION_ENABLED="True"
+  export MAPR_IMPERSONATION_ENABLED
+  if [ -f "${HADOOP_HOME}"/etc/hadoop/isSecure ] ; then
+    if grep --quiet  secure=true "${HADOOP_HOME}"/etc/hadoop/isSecure; then
+      HADOOP_OPTS="${HADOOP_OPTS} -Dhttpfs.hadoop.authentication.type=multiauth";
+      HADOOP_OPTS="${HADOOP_OPTS} -Dhttpfs.authentication.type=multiauth";
+    fi
+  else
+    if grep --quiet  secure=true $MAPR_HOME/conf/mapr-clusters.conf; then
+      HADOOP_OPTS="${HADOOP_OPTS} -Dhttpfs.hadoop.authentication.type=multiauth";
+      HADOOP_OPTS="${HADOOP_OPTS} -Dhttpfs.authentication.type=multiauth";
+    fi
+  fi
+  # Used for determining if FIPS is enabled
+  env=${MAPR_HOME}/conf/env.sh
+  [ -f $env ] && . $env
+
+  HADOOP_OPTS="${HADOOP_OPTS} ${MAPR_COMMON_JAVA_OPTS}"
+
+fi
+
 hadoop_subcommand_opts "${HADOOP_SHELL_EXECNAME}" "${HADOOP_SUBCMD}"
 
 # everything is in globals at this point, so call the generic handler

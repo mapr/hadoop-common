@@ -48,6 +48,7 @@ import org.apache.hadoop.hdfs.protocol.SnapshotDiffReport;
 import org.apache.hadoop.hdfs.protocol.SnapshottableDirectoryStatus;
 import org.apache.hadoop.hdfs.web.JsonUtil;
 import org.apache.hadoop.lib.service.FileSystemAccess;
+import org.apache.hadoop.maprfs.AbstractMapRFileSystem;
 import org.apache.hadoop.util.StringUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -176,6 +177,7 @@ public final class FSOperations {
     if (fileStatus.isSnapshotEnabled()) {
       json.put(HttpFSFileSystem.SNAPSHOT_BIT_JSON, true);
     }
+    json.put(HttpFSFileSystem.IS_TABLE, fileStatus.isTable());
     return json;
   }
 
@@ -1974,6 +1976,10 @@ public final class FSOperations {
       if (fs instanceof DistributedFileSystem) {
         DistributedFileSystem dfs = (DistributedFileSystem) fs;
         dfs.access(path, mode);
+        HttpFSServerWebApp.get().getMetrics().incrOpsCheckAccess();
+      } else if (fs instanceof AbstractMapRFileSystem) {
+        AbstractMapRFileSystem mfs = (AbstractMapRFileSystem) fs;
+        mfs.access(path, mode);
         HttpFSServerWebApp.get().getMetrics().incrOpsCheckAccess();
       } else {
         throw new UnsupportedOperationException("checkaccess is "

@@ -487,9 +487,12 @@ public class Server {
     for (String name : System.getProperties().stringPropertyNames()) {
       String value = System.getProperty(name);
       if (name.startsWith(getPrefix() + ".")) {
-        config.set(name, value);
-        String redacted = redactor.redact(name, value);
-        log.info("System property sets  {}: {}", name, redacted);
+        if (!(name.endsWith("authentication.type") && config.get(name) != null &&
+                !config.get(name).equals("simple"))) {
+          config.set(name, value);
+          String redacted = redactor.redact(name, value);
+          log.info("System property sets  {}: {}", name, redacted);
+        }
       }
     }
 

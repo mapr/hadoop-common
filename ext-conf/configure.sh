@@ -486,6 +486,32 @@ TL_RESTART
     fi
 }
 
+function ConfigureHttpFS() {
+    isSecureEnable isSecure
+    if [ ! -d "$HADOOP_HOME/temp" ]; then
+          mkdir "$HADOOP_HOME/temp"
+          chown ${MAPR_USER}:${MAPR_GROUP} "$HADOOP_HOME/temp"
+          chmod 777 "$HADOOP_HOME/temp"
+    fi
+    if [ "$isSecure" = "true" ] ; then
+        set_httpfs_ssl_variable true
+    else
+        set_httpfs_ssl_variable false
+    fi
+}
+
+set_httpfs_ssl_variable(){
+    set=$1
+
+    num=`sed -n '/httpfs.ssl.enabled/=' ${HADOOP_CONF_DIR}/httpfs-site.xml`
+    let num=num+1
+    if [ "$set" = "true" ]; then
+        sed -i "$num s/false/true/" ${HADOOP_CONF_DIR}/httpfs-site.xml
+    else
+        sed -i "$num s/true/false/" ${HADOOP_CONF_DIR}/httpfs-site.xml
+    fi
+}
+
 function ConfigureYarnLinuxContainerExecutor() {
     # Only configure container executor for yarn
     # Set the MapR specific values in container-executor.cfg
@@ -930,7 +956,7 @@ if [ ${#} -gt 0 ]; then
                 shift 1
                 ;;
             --customSecure | -c)
-                if [ -f "$OTSDB_HOME/etc/.not_configured_yet" ]; then
+                if [ -f "$HADOOP_HOME/etc/.not_configured_yet" ]; then
                     # hadoop added after secure 5.x cluster upgraded to customSecure
                     # 6.0 cluster. Deal with this by assuming a regular --secure path
                     :
@@ -1033,6 +1059,9 @@ fi
 if [ ! -z "$tl_ip" ]; then
     ConfigureTimeLineServer "$tl_ip"
 fi
+if [ -e "$MAPR_HOME/roles/httpfs" ]; then
+    ConfigureHttpFS
+fi
 
 #Always configure hadoop dir
 ConfigureHadoopDir
@@ -1057,6 +1086,9 @@ if hasRole "historyserver"; then
 fi
 if hasRole "timelineserver"; then
     installWardenConfFile timelineserver
+fi
+if hasRole "httpfs"; then
+    installWardenConfFile httpfs
 fi
 
 true

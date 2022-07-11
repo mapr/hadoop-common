@@ -14,4 +14,28 @@
 -->
 <configuration>
 
+    <!-- Hue HttpFS proxy user setting -->
+    <property>
+        <name>httpfs.proxyuser.mapr.hosts</name>
+        <value>*</value>
+    </property>
+
+    <property>
+        <name>httpfs.proxyuser.mapr.groups</name>
+        <value>*</value>
+    </property>
+
+    <property>
+        <name>httpfs.user.provider.user.pattern</name>
+        <value>^[A-Za-z_][A-Za-z0-9._-]*[$]?$</value>
+        <description>
+            Valid pattern for user and group names, it must be a valid java regex.
+        </description>
+    </property>
+
+    <property>
+        <name>httpfs.ssl.enabled</name>
+        <value>false</value>
+    </property>
+
 </configuration>
