@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 public class MultiMechsAuthenticationHandler implements AuthenticationHandler {
 
     private static Logger LOG = LoggerFactory.getLogger(MultiMechsAuthenticationHandler.class);
-    private static final String MTYPE = "multiauth";
+    public static final String MTYPE = "multiauth";
 
     // We can later do may be factory based one class registration
     public static enum AuthHandlerEnum {

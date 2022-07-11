@@ -143,6 +143,9 @@ public class DelegationTokenAuthenticationFilter
     } else if (authType.equals(AbstractMaprAuthenticationHandler.TYPE)) {
       props.setProperty(AUTH_TYPE,
               MaprDelegationTokenAuthenticationHandler.class.getName());
+    } else if (authType.equals(MultiMechsAuthenticationHandler.MTYPE)) {
+        props.setProperty(AUTH_TYPE,
+                MultiMechsAuthenticationHandler.class.getName());
     } else if (authType.equals(MultiSchemeAuthenticationHandler.TYPE)) {
       props.setProperty(AUTH_TYPE,
           MultiSchemeDelegationTokenAuthenticationHandler.class.getName());

@@ -169,6 +169,8 @@ public class HttpFSFileSystem extends FileSystem
 
   public static final String UPLOAD_CONTENT_TYPE= "application/octet-stream";
 
+  public static final String PLAIN_TEXT_CONTENT_TYPE = "plain/text";
+
   public static final String SNAPSHOT_JSON = "Path";
 
   public enum FILE_TYPE {
@@ -216,6 +218,7 @@ public class HttpFSFileSystem extends FileSystem
   public static final String USED_JSON = "used";
   public static final String REMAINING_JSON = "remaining";
 
+  public static final String IS_TABLE = "isTable";
   public static final String FILE_CHECKSUM_JSON = "FileChecksum";
   public static final String CHECKSUM_ALGORITHM_JSON = "algorithm";
   public static final String CHECKSUM_BYTES_JSON = "bytes";

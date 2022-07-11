@@ -1472,6 +1472,9 @@ function hadoop_java_setup
 ## @replaceable  yes
 function hadoop_finalize_libpaths
 {
+  if [[ "${HADOOP_SUBCMD}" = "httpfs" ]]; then
+    JAVA_LIBRARY_PATH="${JAVA_LIBRARY_PATH}:${MAPR_HOME}/lib"
+  fi
   if [[ -n "${JAVA_LIBRARY_PATH}" ]]; then
     hadoop_translate_cygwin_path JAVA_LIBRARY_PATH
     hadoop_add_param HADOOP_OPTS java.library.path \

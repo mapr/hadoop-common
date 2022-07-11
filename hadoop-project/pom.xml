@@ -226,6 +226,7 @@
     <yarnpkg.version>v1.22.5</yarnpkg.version>
     <apache-ant.version>1.10.13</apache-ant.version>
     <jmh.version>1.20</jmh.version>
+    <jpam.version>1.1</jpam.version>
   </properties>
 
   <dependencyManagement>
@@ -1371,6 +1372,11 @@
         <groupId>net.sf.kosmosfs</groupId>
         <artifactId>kfs</artifactId>
         <version>0.3</version>
+      </dependency>
+      <dependency>
+        <groupId>net.sf.jpam</groupId>
+        <artifactId>jpam</artifactId>
+        <version>${jpam.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.ant</groupId>

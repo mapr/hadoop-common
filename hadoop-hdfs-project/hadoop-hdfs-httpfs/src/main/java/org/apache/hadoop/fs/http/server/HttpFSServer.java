@@ -25,6 +25,7 @@ import org.apache.hadoop.fs.XAttrCodec;
 import org.apache.hadoop.fs.XAttrSetFlag;
 import org.apache.hadoop.fs.http.client.HttpFSFileSystem;
 import org.apache.hadoop.fs.http.client.HttpFSUtils;
+import org.apache.hadoop.fs.http.server.FSOperations.FSFileStatus;
 import org.apache.hadoop.fs.http.server.HttpFSParametersProvider.AccessTimeParam;
 import org.apache.hadoop.fs.http.server.HttpFSParametersProvider.AclPermissionParam;
 import org.apache.hadoop.fs.http.server.HttpFSParametersProvider.BlockSizeParam;
@@ -745,6 +746,8 @@ public class HttpFSServer {
           AUDIT_LOG.info("[{}]", path);
           response = Response.ok().type(MediaType.APPLICATION_JSON).build();
         } else {
+          // check if file exists
+          fsExecute(user, new FSFileStatus(path));
           response = Response.temporaryRedirect(redirectURL).build();
         }
         break;

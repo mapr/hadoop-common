@@ -40,6 +40,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.http.HttpServer2;
 import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 import org.apache.hadoop.security.AuthenticationFilterInitializer;
+import org.apache.hadoop.security.alias.CredentialProviderFactory;
 import org.apache.hadoop.security.authentication.server.ProxyUserAuthenticationFilterInitializer;
 import org.apache.hadoop.security.authorize.AccessControlList;
 import org.apache.hadoop.security.ssl.SSLFactory;
@@ -197,6 +198,10 @@ public class HttpFSServerWebServer {
     startupShutdownMessage(HttpFSServerWebServer.class, args, LOG);
     Configuration conf = new Configuration(true);
     Configuration sslConf = SSLFactory.readSSLConfiguration(conf, SSLFactory.Mode.SERVER);
+    String provider_path = conf.get(CredentialProviderFactory.CREDENTIAL_PROVIDER_PATH);
+    if (sslConf.get(CredentialProviderFactory.CREDENTIAL_PROVIDER_PATH) == null && provider_path != null) {
+      sslConf.set(CredentialProviderFactory.CREDENTIAL_PROVIDER_PATH, provider_path);
+    }
     HttpFSServerWebServer webServer =
         new HttpFSServerWebServer(conf, sslConf);
     webServer.start();

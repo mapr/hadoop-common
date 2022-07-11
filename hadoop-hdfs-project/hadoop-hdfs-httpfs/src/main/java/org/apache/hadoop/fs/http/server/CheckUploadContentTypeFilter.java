@@ -88,7 +88,8 @@ public class CheckUploadContentTypeFilter implements Filter {
         if ("true".equalsIgnoreCase(httpReq.getParameter(HttpFSParametersProvider.DataParam.NAME))) {
           String contentType = httpReq.getContentType();
           contentTypeOK =
-            HttpFSFileSystem.UPLOAD_CONTENT_TYPE.equalsIgnoreCase(contentType);
+            HttpFSFileSystem.UPLOAD_CONTENT_TYPE.equalsIgnoreCase(contentType) ||
+                    HttpFSFileSystem.PLAIN_TEXT_CONTENT_TYPE.equalsIgnoreCase(contentType);;
         }
       }
     }
