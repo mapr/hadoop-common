@@ -805,7 +805,10 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
     }
     // Add default resources
     addDefaultResource("core-default.xml");
-    addDefaultResource(CoreDefaultProperties.getProperties());
+    if(System.getenv("SKIP_MAPR_SPECIFIC_PROPERTIES") == null ||
+            System.getenv("SKIP_MAPR_SPECIFIC_PROPERTIES").equals("false") ){
+      addDefaultResource(CoreDefaultProperties.getProperties());
+    }
     addDefaultResource("core-site.xml");
   }
 

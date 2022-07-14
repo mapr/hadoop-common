@@ -101,8 +101,11 @@ public class YarnConfiguration extends Configuration {
 
   static {
     addDeprecatedKeys();
-    Configuration.addDefaultResource(YarnDefaultProperties.getProperties());
     Configuration.addDefaultResource(YARN_DEFAULT_CONFIGURATION_FILE);
+    if(System.getenv("SKIP_MAPR_SPECIFIC_PROPERTIES") == null ||
+            System.getenv("SKIP_MAPR_SPECIFIC_PROPERTIES").equals("false") ) {
+      Configuration.addDefaultResource(YarnDefaultProperties.getProperties());
+    }
     Configuration.addDefaultResource(YARN_SITE_CONFIGURATION_FILE);
     Configuration.addDefaultResource(RESOURCE_TYPES_CONFIGURATION_FILE);
   }
