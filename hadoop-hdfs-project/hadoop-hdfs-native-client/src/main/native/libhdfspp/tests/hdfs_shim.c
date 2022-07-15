@@ -591,3 +591,89 @@ int hdfsAllowSnapshot(hdfsFS fs, const char* path) {
 int hdfsDisallowSnapshot(hdfsFS fs, const char* path) {
   return libhdfspp_hdfsDisallowSnapshot(fs->libhdfsppRep, path);
 }
+
+hdfsFS hdfsConnectAsUid(const char* nn, tPort port, uid_t uid) {
+  REPORT_FUNCTION_NOT_IMPLEMENTED
+  return NULL;
+}
+
+tSize hdfsPwrite(hdfsFS fs, hdfsFile file, tOffset position, const void* buffer, tSize length) {
+  REPORT_FUNCTION_NOT_IMPLEMENTED
+  return NULL;
+}
+
+int hdfsSetRpcTimeout(int seconds) {
+  REPORT_FUNCTION_NOT_IMPLEMENTED
+  return NULL;
+}
+
+tSize hdfsGetNameContainerSizeBytes(hdfsFS fs, const char *path) {
+  REPORT_FUNCTION_NOT_IMPLEMENTED
+  return NULL;
+}
+
+hdfsFile hdfsOpenFile2(hdfsFS fs, const char* path, int flags, int bufferSize, short replication,
+                        tSize blocksize, tSize *nameSizeInBytes) {
+  REPORT_FUNCTION_NOT_IMPLEMENTED
+  return NULL;
+}
+
+int hdfsCreateDirectory2(hdfsFS fs, const char* path, tSize *nameSizeInBytes) {
+  REPORT_FUNCTION_NOT_IMPLEMENTED
+  return NULL;
+}
+
+int hdfsExists2(hdfsFS fs, const char *path) {
+  REPORT_FUNCTION_NOT_IMPLEMENTED
+  return NULL;
+}
+
+int hdfsSetThreads(int threads) {
+  REPORT_FUNCTION_NOT_IMPLEMENTED
+  return NULL;
+}
+
+int hdfsGetPathFromFid2(hdfsFS fs, uint32_t cid, uint32_t cinum, uint32_t uniq, char* path) {
+  REPORT_FUNCTION_NOT_IMPLEMENTED
+  return NULL;
+}
+
+int hdfsGetPathFromFidStr(hdfsFS fs, char *fidStr, char *path) {
+  REPORT_FUNCTION_NOT_IMPLEMENTED
+  return NULL;
+}
+
+char* hdfsGetVolumeName(hdfsFS fs, uint32_t volid) {
+  REPORT_FUNCTION_NOT_IMPLEMENTED
+  return NULL;
+}
+
+int hdfsSetXattr(hdfsFS fs, const char* path, const char *name, int nameLen, char *value, int valueLen) {
+  REPORT_FUNCTION_NOT_IMPLEMENTED
+  return NULL;
+}
+
+int hdfsGetXattr(hdfsFS fs, const char* path, const char *name, char *val, size_t size) {
+  REPORT_FUNCTION_NOT_IMPLEMENTED
+  return NULL;
+}
+
+int hdfsSetTicketAndKeyFile(const char *fname) {
+  REPORT_FUNCTION_NOT_IMPLEMENTED
+  return NULL;
+}
+
+int hdfsSetAces(hdfsFS fs, const char *path, hdfsFileAces *faces, int isSet, int isRecursive) {
+  REPORT_FUNCTION_NOT_IMPLEMENTED
+  return NULL;
+}
+
+int hdfsGetAces(hdfsFS fs, const char *path, void *aceBuf, int bufLen, hdfsFileAces *faces) {
+  REPORT_FUNCTION_NOT_IMPLEMENTED
+  return NULL;
+}
+
+int hdfsDeleteAces(hdfsFS fs, const char *path) {
+  REPORT_FUNCTION_NOT_IMPLEMENTED
+  return NULL;
+}

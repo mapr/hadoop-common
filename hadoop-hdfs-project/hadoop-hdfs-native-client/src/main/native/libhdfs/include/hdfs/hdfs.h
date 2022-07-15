@@ -23,6 +23,8 @@
 #include <fcntl.h> /* for O_RDONLY, O_WRONLY */
 #include <stdint.h> /* for uint64_t, etc. */
 #include <time.h> /* for time_t */
+#include <unistd.h>
+#include <sys/types.h>
 
 /*
  * Support export of DLL symbols during libhdfs build, and import of DLL symbols
@@ -232,6 +234,20 @@ extern  "C" {
      */
      LIBHDFS_EXTERNAL
      hdfsFS hdfsConnectAsUser(const char* nn, tPort port, const char *user);
+
+#ifndef WIN32
+    /**
+     * hdfsConnectAsUid - Connect to a hdfs file system as a specific user
+     * identified by a uid.
+     * Connect to the hdfs.
+     * @param nn   The NameNode.  See hdfsBuilderSetNameNode for details.
+     * @param port The port on which the server is listening.
+     * @param uid the user identifier (this is hadoop domain user).
+     * @return Returns a handle to the filesystem or NULL on error.
+     */
+     LIBHDFS_EXTERNAL
+     hdfsFS hdfsConnectAsUid(const char* nn, tPort port, uid_t uid);
+#endif
 
     /** 
      * hdfsConnect - Connect to a hdfs file system.
@@ -1084,6 +1100,110 @@ extern  "C" {
     LIBHDFS_EXTERNAL
     int hdfsUtime(hdfsFS fs, const char* path, tTime mtime, tTime atime);
 
+
+   /** MapR Additions:
+     * The following APIs are specific to MapR-Fs and are available ONLY
+     * when linked with libMapRClient, and NOT with libhdfs
+     */
+    /**
+     * hdfsPwrite - Write data into an open file at a given position
+     * @param fs The configured filesystem handle.
+     * @param file The file handle.
+     * @param position The position at which to write data
+     * @param buffer The data.
+     * @param length The no. of bytes to write.
+     * @return Returns the number of bytes written, -1 on error.
+     */
+    tSize hdfsPwrite(hdfsFS fs, hdfsFile file, tOffset position,
+                     const void* buffer, tSize length);
+
+    /**
+     * hdfsSetRpcTimeout
+     * Set the Rpc time out to CLDB and fileservers,
+     * hdfsSetRpcTimeout
+     * before calling one of the hdfsConnect() APIs.
+     * 'seconds' should be either 0 (no Timeout) OR >= 30 seconds
+     * Default value: 300 seconds
+     * Return 0 on success else -1
+     */
+    int hdfsSetRpcTimeout(int seconds);
+
+    /**
+     * hdfsGetNameContainerSizeBytes
+     * @param fs The configured filesystem handle.
+     * @param path the path to the file or directory
+     * Returns the size of Name Container in bytes on success, else 0
+     */
+    tSize hdfsGetNameContainerSizeBytes(hdfsFS fs, const char *path);
+
+    /**
+     * hdfsOpenFile2
+     * Same as hdfsOpenFile. In addition, it can fetch the size of the
+     * name container for the volume to which 'path' belongs.
+     * The fetched size is set in the 'nameSizeInBytes' parameter
+     */
+    hdfsFile hdfsOpenFile2(hdfsFS fs, const char* path, int flags,
+                          int bufferSize, short replication, tSize blocksize,
+                          tSize *nameSizeInBytes);
+
+    /**
+     * hdfsCreateDirectory2
+     * Same as hdfsOpenFile. In addition, it can fetch the size of the
+     * name container for the volume to which 'path' belongs.
+     * The fetched size is set in the 'nameSizeInBytes' parameter
+     */
+    int hdfsCreateDirectory2(hdfsFS fs, const char* path, tSize *nameSizeInBytes);
+
+    /**
+     * hdfsExists2 - Checks if a given path exists on the filesystem skipping
+     * the client cache.
+     * @param fs The configured filesystem handle.
+     * @param path The path to look for
+     * @return Returns 0 on success, -1 on error.
+     */
+    int hdfsExists2(hdfsFS fs, const char *path);
+
+    /**
+     * hdfsSetThreads
+     */
+    int hdfsSetThreads(int threads);
+
+    /**
+     * hdfsGetPathFromFid2 populates path based on FID (made of c, i, u)
+     * @param fs The configured filesystem handle.
+     * @param cid container id in the FID
+     * @param cinum inode number in FID
+     * @param uniq uniqifier in FID
+     * @param path to store FID path
+     * @return Returns 0 on success, -1 on error.
+     */
+    int hdfsGetPathFromFid2(hdfsFS fs, uint32_t cid, uint32_t cinum,
+                            uint32_t uniq, char* path);
+
+    /**
+     * hdfsGetPathFromFidStr populates path based on FID string (made of c, i, u)
+     * @param fs The configured filesystem handle.
+     * @param fidStr FID as string "c.i.u"
+     * @param path to store FID path
+     * @return Returns 0 on success, -1 on error.
+     */
+     int hdfsGetPathFromFidStr(hdfsFS fs, char *fidStr, char *path);
+
+    /** returns volume name from volume id
+     * hdfsGetVolumeName returns volume name from volume id
+     * @param fs The configured filesystem handle.
+     * @param volid volume id
+     * @return Return volume name on success, NULL on error
+     */
+     char* hdfsGetVolumeName(hdfsFS fs, uint32_t volid);
+
+
+    /*
+     * Internal Note: If more APIs are exported using this file, modify the
+     * src/fs/client/fileclient/cc/MapRClient.def to export
+     * the APIs in Windows.
+     */
+
     /**
      * Allocate a zero-copy options structure.
      *
@@ -1227,6 +1347,90 @@ extern  "C" {
      */
     LIBHDFS_EXTERNAL
     char* hdfsGetLastExceptionStackTrace();
+
+    /**
+    * hdfsSetXattr - Set Extended attribute to a file
+
+    * @param fs The configured filesystem handle.
+    * @param path the path to the file
+    * @param name the name of Xattr
+    * @param nameLen the name length of Xattr
+    * @param value the value to set to Xatttr
+    * @param valueLen the length of value
+    * @return 0 on success else -1 with proper errno set
+    */
+    LIBHDFS_EXTERNAL
+    int hdfsSetXattr(hdfsFS fs, const char* path, const char *name,
+                       int nameLen, char *value, int valueLen);
+
+    /**
+    * hdfsGetXattr - Get Extended attributes values from a file
+
+    * @param fs The configured filesystem handle.
+    * @param path the path to the file
+    * @param name the name of Xattr
+    * @param val the expected value of Xattr
+    * @param size the size of buffer
+    * @return the current size of the value of named Xattr on success
+    *         else -1 with proper errno set
+    */
+    LIBHDFS_EXTERNAL
+    int hdfsGetXattr(hdfsFS fs, const char* path, const char *name,
+                           char *val, size_t size);
+
+    /**
+     * hdfsSetTicketAndKeyFile - sets ticket and key file in global security object
+     * @param fname   Location of Ticket and Key file
+     * @return        On success returns 0 or error
+     */
+    LIBHDFS_EXTERNAL
+    int hdfsSetTicketAndKeyFile(const char *fname);
+
+    typedef struct {
+      char *readAce;
+      char *writeAce;
+      char *executeAce;
+      char *addChildAce;
+      char *deleteChildAce;
+      char *lookupAce;
+      char *readDirAce;
+    } hdfsFileAces;
+
+    /**
+     * hdfsSetAces -- sets aces for a file/directory
+     * @param fs The configured filesystem handle.
+     * @param path the path to the file/directory
+     * @param faces the expected aces for file/directory
+     * @param isSet if set existing aces will be replaced with input aces,
+     *              otherwise existing aces merged with input aces
+     * @param isRecursive if set aces will be set recursively
+     * @return On success returns 0 or error
+     */
+    LIBHDFS_EXTERNAL
+    int hdfsSetAces(hdfsFS fs, const char *path, hdfsFileAces *faces,
+                    int isSet, int isRecursive);
+
+    /**
+     * hdfsGetAces - gets aces of a file/directory
+     * @param fs The configured filesystem handle.
+     * @param path the path to the file/directory
+     * @param aceBuf buffuer to hold ace entries
+     * @param bufLen length of the aceBuf
+     * @param faces available aces will be filled into this
+     * @return On success returns 0 or error
+     *         error(ERANGE): aceBuf is too less to hold ace entries
+     */
+    LIBHDFS_EXTERNAL
+    int hdfsGetAces(hdfsFS fs, const char *path, void *aceBuf,
+                    int bufLen, hdfsFileAces *faces);
+
+    /**
+     * hdfsDeleteAces - deletes aces of a file/directory
+     * @param fs The configured filesystem handle.
+     * @param path the path to the file/directory
+     */
+    LIBHDFS_EXTERNAL
+    int hdfsDeleteAces(hdfsFS fs, const char *path);
 
 #ifdef __cplusplus
 }
