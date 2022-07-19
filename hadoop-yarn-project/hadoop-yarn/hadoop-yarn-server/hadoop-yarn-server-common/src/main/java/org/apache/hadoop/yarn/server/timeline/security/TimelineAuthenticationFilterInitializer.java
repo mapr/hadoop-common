@@ -67,6 +67,8 @@ public class TimelineAuthenticationFilterInitializer extends FilterInitializer {
                 TIMELINE_HTTP_AUTH_PREFIX);
 
     filterConfig.putAll(timelineAuthProps);
+    filterConfig.put(DelegationTokenAuthenticationHandler.TOKEN_KIND,
+            TimelineDelegationTokenIdentifier.KIND_NAME.toString());
   }
 
   protected Map<String, String> getFilterConfig() {
