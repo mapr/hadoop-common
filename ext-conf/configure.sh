@@ -420,7 +420,10 @@ function ConfigureTimeLineServer() {
         logInfo "Backing up \"$HADOOP_HOME/etc/hadoop/yarn-site.xml\" to \"$HADOOP_HOME/etc/hadoop/yarn-site-${YSTIMESTAMP}.xml\""
         cp ${YarnSiteFile} $HADOOP_HOME/etc/hadoop/yarn-site-${YSTIMESTAMP}.xml
     fi
-
+    isSecure=$(head -1 ${MAPR_HOME}/conf/mapr-clusters.conf | grep -o 'secure=\w*' | cut -d= -f2)
+    if [ "$isSecure" = "true" ] && [ -f "${MAPR_HOME}/conf/mapruserticket" ]; then
+        export MAPR_TICKETFILE_LOCATION="${MAPR_HOME}/conf/mapruserticket"
+    fi
     # Copy the timeline service jar to HDFS from where HBase can load it. It is needed for the flowrun table creation in the schema creator.
     if ! hadoop fs -stat /hbase/coprocessor &> /dev/null; then
         hadoop fs -mkdir -p /hbase/coprocessor
