@@ -20,8 +20,11 @@ package org.apache.hadoop.yarn.server.nodemanager.containermanager.launcher;
 
 import static org.apache.hadoop.fs.CreateFlag.CREATE;
 import static org.apache.hadoop.fs.CreateFlag.OVERWRITE;
+import static org.apache.hadoop.yarn.conf.YarnConfiguration.LIBJVM_SO_PATH;
+import static org.apache.hadoop.yarn.conf.YarnConfiguration.LIBJVM_SO_PATH_DEFAULT;
 import static org.apache.hadoop.yarn.server.nodemanager.ContainerExecutor.TOKEN_FILE_NAME_FMT;
 
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.server.nodemanager.executor.DeletionAsUserContext;
 
 import java.io.DataOutputStream;
@@ -57,6 +60,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.LocalDirAllocator;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.util.Shell;
@@ -99,6 +103,8 @@ import org.apache.hadoop.yarn.server.nodemanager.util.ProcessIdFileReader;
 import org.apache.hadoop.yarn.server.security.AMSecretKeys;
 import org.apache.hadoop.yarn.util.Apps;
 import org.apache.hadoop.yarn.util.AuxiliaryServiceHelper;
+import org.apache.hadoop.yarn.util.DFSLoggingHandler;
+import org.apache.hadoop.yarn.util.TaskLogUtil;
 
 import org.apache.hadoop.classification.VisibleForTesting;
 import org.slf4j.Logger;
@@ -149,6 +155,22 @@ public class ContainerLaunch implements Callable<Integer> {
   protected Path pidFilePath = null;
 
   protected final LocalDirsHandlerService dirsHandler;
+
+  /**
+   * Permission for application log directories.
+   * The SGID permission is set so that any file or directory created
+   * under it will have its group set to the group of this directory.
+   * The group of this directory is same as the user running NM. This allows
+   * NM to perform management operations on it such as read, delete, etc.
+   */
+  private static final FsPermission APP_LOG_DIR_PERM =
+          FsPermission.createImmutable((short) 02750);
+
+  /**
+   * Permission for application log files.
+   */
+  private static final FsPermission APP_LOG_PERM =
+          FsPermission.createImmutable((short) 0640);
 
   private final Lock launchLock = new ReentrantLock();
 
@@ -243,14 +265,25 @@ public class ContainerLaunch implements Callable<Integer> {
       Map<Path, List<String>> localResources = getLocalizedResources();
 
       final String user = container.getUser();
+      final String group = UserGroupInformation.createRemoteUser(user).getPrimaryGroupName();
       // /////////////////////////// Variable expansion
       // Before the container script gets written out.
       List<String> newCmds = new ArrayList<String>(command.size());
       String appIdStr = app.getAppId().toString();
       String relativeContainerLogDir = ContainerLaunch
           .getRelativeContainerLogDir(appIdStr, containerIdStr);
-      containerLogDir =
-          dirsHandler.getLogPathForWrite(relativeContainerLogDir, false);
+      containerLogDir = null;
+      // The actual expansion of environment variables happens after calling
+      // sanitizeEnv.  This allows variables specified in NM_ADMIN_USER_ENV
+      // to reference user or container-defined variables.
+      Map<String, String> environment = launchContext.getEnvironment();
+      if (TaskLogUtil.isDfsLoggingEnabled(environment)) {
+        containerLogDir = createLogDir(appIdStr, relativeContainerLogDir, user, group);
+      } else {
+        containerLogDir =
+                dirsHandler.getLogPathForWrite(relativeContainerLogDir, false);
+        // The log dir creation for local FS happens inside container-executor.c
+      }
       recordContainerLogDir(containerID, containerLogDir.toString());
       for (String str : command) {
         // TODO: Should we instead work via symlinks without this grammar?
@@ -258,10 +291,6 @@ public class ContainerLaunch implements Callable<Integer> {
       }
       launchContext.setCommands(newCmds);
 
-      // The actual expansion of environment variables happens after calling
-      // addConfigsToEnv.  This allows variables specified in NM_ADMIN_USER_ENV
-      // to reference user or container-defined variables.
-      Map<String, String> environment = launchContext.getEnvironment();
       // /////////////////////////// End of variable expansion
 
       // Use this to track variables that are added to the environment by nm.
@@ -348,6 +377,16 @@ public class ContainerLaunch implements Callable<Integer> {
           ApplicationConstants.CONTAINER_TOKEN_FILE_ENV_NAME,
           new Path(containerWorkDir,
               FINAL_CONTAINER_TOKENS_FILE).toUri().getPath());
+
+      // Add the native libraries to LD_LIBRARY_PATH. This is currently being
+      // done for map reduce containers, but not for MRAppMaster. Adding it
+      // here benefits all app masters.
+      Apps.setEnvFromInputString(environment,
+              YarnConfiguration.HADOOP_NATIVE_LIB_ENV,
+              File.pathSeparator);
+
+      String libJvmPath = conf.get(LIBJVM_SO_PATH, LIBJVM_SO_PATH_DEFAULT);
+      Apps.addToEnvironment(environment, Environment.LD_LIBRARY_PATH.name(), libJvmPath, File.pathSeparator);
 
       // /////////// Write out the container-script in the nmPrivate space.
       try (DataOutputStream containerScriptOutStream =
@@ -747,7 +786,12 @@ public class ContainerLaunch implements Callable<Integer> {
 
     // Append container prelaunch stderr to diagnostics
     try {
-      fileSystem = FileSystem.getLocal(conf).getRaw();
+      final Map<String, String> env = container.getLaunchContext().getEnvironment();
+      if (TaskLogUtil.isDfsLoggingEnabled(env)) {
+        fileSystem = FileSystem.get(conf);
+      } else {
+        fileSystem = FileSystem.getLocal(conf).getRaw();
+      }
       FileStatus preLaunchErrorFileStatus = fileSystem
           .getFileStatus(new Path(containerLogDir, ContainerLaunch.CONTAINER_PRE_LAUNCH_STDERR));
 
@@ -819,7 +863,13 @@ public class ContainerLaunch implements Callable<Integer> {
 
   private byte[] tailFile(Path filePath, long fileSize, long tailSizeInBytes) throws IOException {
     FSDataInputStream errorFileIS = null;
-    FileSystem fileSystem = FileSystem.getLocal(conf).getRaw();
+    FileSystem fileSystem;
+    final Map<String, String> env = container.getLaunchContext().getEnvironment();
+    if (TaskLogUtil.isDfsLoggingEnabled(env)) {
+      fileSystem = FileSystem.get(conf);
+    } else {
+      fileSystem = FileSystem.getLocal(conf).getRaw();
+    }
     try {
       long startPosition =
           (fileSize < tailSizeInBytes) ? 0 : fileSize - tailSizeInBytes;
@@ -1140,7 +1190,14 @@ public class ContainerLaunch implements Callable<Integer> {
         throw new IOException("Stdout path must be absolute");
       }
       redirectStdOut = true;
-      setStdOut(new Path(stdoutDir, stdOutFile));
+      Path stdoutFilePath;
+      if (TaskLogUtil.isDfsLoggingEnabled()) {
+        DFSLoggingHandler dfsLoggingHandler = TaskLogUtil.getDFSLoggingHandler();
+        stdoutFilePath = dfsLoggingHandler.getLogFileForWrite(stdoutDir, stdOutFile);
+      } else {
+        stdoutFilePath = new Path(stdoutDir, stdOutFile);
+      }
+      setStdOut(stdoutFilePath);
     }
 
     /**
@@ -1154,7 +1211,14 @@ public class ContainerLaunch implements Callable<Integer> {
         throw new IOException("Stdout path must be absolute");
       }
       redirectStdErr = true;
-      setStdErr(new Path(stderrDir, stdErrFile));
+      Path stderrFilePath;
+      if (TaskLogUtil.isDfsLoggingEnabled()) {
+        DFSLoggingHandler dfsLoggingHandler = TaskLogUtil.getDFSLoggingHandler();
+        stderrFilePath = dfsLoggingHandler.getLogFileForWrite(stderrDir, stdErrFile);
+      } else {
+        stderrFilePath = new Path(stderrDir, stdErrFile);
+      }
+      setStdErr(stderrFilePath);
     }
 
     protected abstract void setStdOut(Path stdout) throws IOException;
@@ -1333,18 +1397,28 @@ public class ContainerLaunch implements Callable<Integer> {
 
     @Override
     public void setStdOut(final Path stdout) throws IOException {
-      line("export ", ENV_PRELAUNCH_STDOUT, "=\"", stdout.toString(), "\"");
-      // tee is needed for DefaultContainerExecutor error propagation to stdout
-      // Close stdout of subprocess to prevent it from writing to the stdout file
-      line("exec >\"${" + ENV_PRELAUNCH_STDOUT + "}\"");
+      if (TaskLogUtil.isDfsLoggingEnabled()) {
+        DFSLoggingHandler dfsLoggingHandler = TaskLogUtil.getDFSLoggingHandler();
+        line("exec > >(" + dfsLoggingHandler.getStdOutCommand(stdout.toString()) + ")");
+      } else {
+        line("export ", ENV_PRELAUNCH_STDOUT, "=\"", stdout.toString(), "\"");
+        // tee is needed for DefaultContainerExecutor error propagation to stdout
+        // Close stdout of subprocess to prevent it from writing to the stdout file
+        line("exec >\"${" + ENV_PRELAUNCH_STDOUT + "}\"");
+      }
     }
 
     @Override
     public void setStdErr(final Path stderr) throws IOException {
-      line("export ", ENV_PRELAUNCH_STDERR, "=\"", stderr.toString(), "\"");
-      // tee is needed for DefaultContainerExecutor error propagation to stderr
-      // Close stdout of subprocess to prevent it from writing to the stdout file
-      line("exec 2>\"${" + ENV_PRELAUNCH_STDERR + "}\"");
+      if (TaskLogUtil.isDfsLoggingEnabled()) {
+        DFSLoggingHandler dfsLoggingHandler = TaskLogUtil.getDFSLoggingHandler();
+        line("exec  2> >(" + dfsLoggingHandler.getStdOutCommand(stderr.toString()) + ")");
+      } else {
+        line("export ", ENV_PRELAUNCH_STDERR, "=\"", stderr.toString(), "\"");
+        // tee is needed for DefaultContainerExecutor error propagation to stderr
+        // Close stdout of subprocess to prevent it from writing to the stdout file
+        line("exec 2>\"${" + ENV_PRELAUNCH_STDERR + "}\"");
+      }
     }
 
     @Override
@@ -1375,31 +1449,48 @@ public class ContainerLaunch implements Callable<Integer> {
     @Override
     public void copyDebugInformation(Path src, Path dest) throws IOException {
       line("# Creating copy of launch script");
-      line("cp \"", src.toUri().getPath(), "\" \"", dest.toUri().getPath(),
-          "\"");
-      // set permissions to 640 because we need to be able to run
-      // log aggregation in secure mode as well
-      if(dest.isAbsolute()) {
-        line("chmod 640 \"", dest.toUri().getPath(), "\"");
+      if (TaskLogUtil.isDfsLoggingEnabled()) {
+        DFSLoggingHandler dfsLoggingHandler = TaskLogUtil.getDFSLoggingHandler();
+        line("cat \"", src.toUri().getPath(), "\" | ", dfsLoggingHandler.getStdOutCommand(dest.toString()));
+      } else {
+        line("cp \"", src.toUri().getPath(), "\" \"", dest.toUri().getPath(),
+                "\"");
+        // set permissions to 640 because we need to be able to run
+        // log aggregation in secure mode as well
+        if(dest.isAbsolute()) {
+          line("chmod 640 \"", dest.toUri().getPath(), "\"");
+        }
       }
     }
 
     @Override
     public void listDebugInformation(Path output) throws  IOException {
       line("# Determining directory contents");
-      line("echo \"ls -l:\" 1>\"", output.toString(), "\"");
-      line("ls -l 1>>\"", output.toString(), "\"");
+      String outputString;
+      if (TaskLogUtil.isDfsLoggingEnabled()) {
+        outputString = output.getName();
+      } else {
+        outputString = output.toString();
+      }
+
+      line("echo \"ls -l:\" 1>\"", outputString, "\"");
+      line("ls -l 1>>\"", outputString, "\"");
 
       // don't run error check because if there are loops
       // find will exit with an error causing container launch to fail
       // find will follow symlinks outside the work dir if such sylimks exist
       // (like public/app local resources)
-      line("echo \"find -L . -maxdepth 5 -ls:\" 1>>\"", output.toString(),
-          "\"");
-      line("find -L . -maxdepth 5 -ls 1>>\"", output.toString(), "\"");
+      line("echo \"find -L . -maxdepth 5 -ls:\" 1>>\"", outputString,
+              "\"");
+      line("find -L . -maxdepth 5 -ls 1>>\"", outputString, "\"");
       line("echo \"broken symlinks(find -L . -maxdepth 5 -type l -ls):\" 1>>\"",
-          output.toString(), "\"");
-      line("find -L . -maxdepth 5 -type l -ls 1>>\"", output.toString(), "\"");
+              outputString, "\"");
+      line("find -L . -maxdepth 5 -type l -ls 1>>\"", outputString, "\"");
+
+      if (TaskLogUtil.isDfsLoggingEnabled()) {
+        DFSLoggingHandler dfsLoggingHandler = TaskLogUtil.getDFSLoggingHandler();
+        line("cat \"", outputString, "\" | ", dfsLoggingHandler.getStdOutCommand(output.toString()));
+      }
     }
 
     @Override
@@ -1823,6 +1914,61 @@ public class ContainerLaunch implements Callable<Integer> {
 
   public static String getExitCodeFile(String pidFile) {
     return pidFile + EXIT_CODE_FILE_SUFFIX;
+  }
+
+  /**
+   * Creates the log directories and files for the given container and sets the
+   * owner and permission. If the application directory does not exist, then it
+   * is created first.
+   *
+   * While setting the ownership, the group is not set. So it still points to the
+   * group of the user running NM. This is the behavior for log dir created in
+   * local file system.
+   *
+   * @return created container log dir path
+   */
+  private Path createLogDir(String appIdStr, String relativeContainerLogDir,
+                            String user, String group) throws IOException {
+
+    FileSystem fs = FileSystem.get(conf);
+    Path appLogDir = TaskLogUtil.getDFSLoggingHandler()
+            .getLogDirForWrite(appIdStr);
+
+    // Create the app log dir if not present. This will only happen for
+    // the app master container.
+    if (!fs.exists(appLogDir)) {
+      FileSystem.mkdirs(fs, appLogDir, APP_LOG_DIR_PERM);
+      fs.setOwner(appLogDir, user, group);
+    }
+
+    Path containerLogDir = TaskLogUtil.getDFSLoggingHandler()
+            .getLogDirForWrite(relativeContainerLogDir);
+    FileSystem.mkdirs(fs, containerLogDir, APP_LOG_DIR_PERM);
+    fs.setOwner(containerLogDir, user, group);
+
+    // Create the 3 log files
+    createEmptyLogFile(new Path(containerLogDir, ApplicationConstants.STDOUT),
+            user, group, fs);
+    createEmptyLogFile(new Path(containerLogDir, ApplicationConstants.STDERR),
+            user, group, fs);
+    createEmptyLogFile(new Path(containerLogDir, ApplicationConstants.SYSLOG),
+            user, group, fs);
+
+    // Create the prelaunch log files
+    createEmptyLogFile(new Path(containerLogDir, CONTAINER_PRE_LAUNCH_STDOUT),
+            user, group, fs);
+    createEmptyLogFile(new Path(containerLogDir, CONTAINER_PRE_LAUNCH_STDERR),
+            user, group, fs);
+
+    return containerLogDir;
+  }
+
+  private void createEmptyLogFile(Path path, String user, String group, FileSystem fs)
+          throws IOException {
+
+    fs.createNewFile(path);
+    fs.setOwner(path, user, group);
+    fs.setPermission(path, APP_LOG_PERM);
   }
 
   private void recordContainerLogDir(ContainerId containerId,

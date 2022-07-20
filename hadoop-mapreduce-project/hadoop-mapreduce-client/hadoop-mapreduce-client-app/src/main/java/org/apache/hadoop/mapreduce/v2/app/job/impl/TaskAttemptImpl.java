@@ -948,6 +948,8 @@ public abstract class TaskAttemptImpl implements
       throw new YarnRuntimeException(e);
     }
 
+    environment.put(YarnConfiguration.DFS_LOGGING_SUPPORTED, "true");
+
     // Construct the actual Container
     // The null fields are per-container and will be constructed for each
     // container separately.

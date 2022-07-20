@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.TaskLog.LogName;
 import org.apache.hadoop.mapreduce.MRJobConfig;
@@ -31,6 +33,8 @@ import org.apache.hadoop.mapreduce.v2.util.MRApps;
 import org.apache.hadoop.yarn.api.ApplicationConstants;
 import org.apache.hadoop.yarn.api.ApplicationConstants.Environment;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.apache.hadoop.yarn.util.DFSLoggingHandler;
+import org.apache.hadoop.yarn.util.TaskLogUtil;
 
 @SuppressWarnings("deprecation")
 public class MapReduceChildJVM {
@@ -113,6 +117,13 @@ public class MapReduceChildJVM {
 
     Vector<String> vargs = new Vector<String>(8);
 
+    // If direct DFS logging is enabled, then wrap the command in parenthesis,
+    // so that the output can be redirected to target DFS logging handler
+    // for writing to DFS.
+    if (TaskLogUtil.isDfsLoggingEnabled()) {
+      vargs.add("(");
+    }
+
     vargs.add(MRApps.crossPlatformifyMREnv(task.conf, Environment.JAVA_HOME)
         + "/bin/java");
 
@@ -176,8 +187,20 @@ public class MapReduceChildJVM {
 
     // Finally add the jvmID
     vargs.add(String.valueOf(jvmID.getId()));
-    vargs.add("1>" + getTaskLogFile(TaskLog.LogName.STDOUT));
-    vargs.add("2>" + getTaskLogFile(TaskLog.LogName.STDERR));
+    String stdout = getTaskLogFile(TaskLog.LogName.STDOUT);
+    String stderr = getTaskLogFile(TaskLog.LogName.STDERR);
+    if (TaskLogUtil.isDfsLoggingEnabled()) {
+      DFSLoggingHandler dfsLoggingHandler = TaskLogUtil.getDFSLoggingHandler();
+      vargs.add(" | ");
+      vargs.add(dfsLoggingHandler.getStdOutCommand(stdout));
+
+      vargs.add(" ; exit $? ) 2>&1 | ");
+      vargs.add(dfsLoggingHandler.getStdOutCommand(stderr));
+      vargs.add(" ; exit $?");
+    } else {
+      vargs.add("1>" + getTaskLogFile(TaskLog.LogName.STDOUT));
+      vargs.add("2>" + getTaskLogFile(TaskLog.LogName.STDERR));
+    }
 
     // Final commmand
     StringBuilder mergedCommand = new StringBuilder();

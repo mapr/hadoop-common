@@ -39,6 +39,7 @@ import org.apache.hadoop.ha.ActiveStandbyElector;
 import org.apache.hadoop.http.HttpConfig;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.authentication.server.AuthenticationFilter;
+import org.apache.hadoop.util.Shell;
 import org.apache.hadoop.util.BasicDiskValidator;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.yarn.api.ApplicationConstants;
@@ -98,6 +99,7 @@ public class YarnConfiguration extends Configuration {
   static {
     addDeprecatedKeys();
     Configuration.addDefaultResource(YARN_DEFAULT_CONFIGURATION_FILE);
+    Configuration.addDefaultResource(YarnDefaultProperties.getProperties());
     if(System.getenv("SKIP_MAPR_SPECIFIC_PROPERTIES") == null ||
             System.getenv("SKIP_MAPR_SPECIFIC_PROPERTIES").equals("false") ) {
       Configuration.addDefaultResource(YarnDefaultProperties.getProperties());
@@ -1547,6 +1549,39 @@ public class YarnConfiguration extends Configuration {
    * */
   public static String NM_CREATE_SPARK_VOLUME = NM_PREFIX + "create-spark-volume";
   public static boolean DEFAULT_NM_CREATE_SPARK_VOLUME = false;
+
+  public static final String DFS_LOGGING_PREFIX = YARN_PREFIX + "dfs-logging.";
+
+  /**
+   * Whether to save logs directly in DFS instead of writing to local file
+   * system. This is a global setting and applies to all applications.
+   *
+   * Note: Since this feature is only applicable to MapReduce now, we use a
+   * mapreduce specific name. Ideally, it should be called
+   * yarn.dfs-logging.enable.
+   */
+  public static final String ENABLE_DFS_LOGGING = YARN_PREFIX
+          + "use-central-logging-for-mapreduce-only";
+
+  /**
+   * Whether an application supports writing directly to DFS.
+   * This setting can be used as an override when the global ENABLE_DFS_LOGGING
+   * is set to true, but an application does not use the APIs to write to DFS.
+   * Instead it just writes it to local file system.
+   */
+  public static final String DFS_LOGGING_SUPPORTED = "yarn_dfs_logging_supported";
+
+  /**
+   * Implementation class for handling DFS logging.
+   */
+  public static final String DFS_LOGGING_HANDLER_CLASS = DFS_LOGGING_PREFIX
+          + "handler-class";
+
+  /**
+   * A regex to match log directories.
+   */
+  public static final String DFS_LOGGING_DIR_GLOB = DFS_LOGGING_PREFIX
+          + "dir-glob";
 
   /** Whether to enable log aggregation */
   public static final String LOG_AGGREGATION_ENABLED = YARN_PREFIX
@@ -4898,6 +4933,18 @@ public class YarnConfiguration extends Configuration {
    */
   public static final String YARN_EXT_TOKEN_MANAGER = YARN_PREFIX
           + "external.token.manager";
+
+  /**
+   * Hadoop native lib environment variable.
+   */
+  public static final String HADOOP_NATIVE_LIB_ENV =
+          Shell.WINDOWS ?
+                  "PATH=%PATH%;%HADOOP_COMMON_HOME%\\bin":
+                  "LD_LIBRARY_PATH=$HADOOP_COMMON_HOME/lib/native";
+
+  public static final String LIBJVM_SO_PATH = YARN_PREFIX + "libjvm.path";
+
+  public static final String LIBJVM_SO_PATH_DEFAULT = System.getProperty("sun.boot.library.path") + "/server";
 
   public static final String NODELABEL_CONFIGURATION_TYPE =
       NODE_LABELS_PREFIX + "configuration-type";

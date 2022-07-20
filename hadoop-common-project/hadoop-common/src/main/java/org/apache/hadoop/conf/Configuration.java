@@ -335,15 +335,8 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
    * List of default Resources. Resources are loaded in the order of the list 
    * entries
    */
-  private static final CopyOnWriteArrayList<String> defaultResources =
-    new CopyOnWriteArrayList<String>();
-
-  /**
-   * List of extra default Resources as Properties. Resources are loaded in the order of the list
-   * entries
-   */
-  private static final CopyOnWriteArrayList<Properties> extraDefaultResources =
-          new CopyOnWriteArrayList<>();
+  private static final CopyOnWriteArrayList<Object> defaultResources =
+    new CopyOnWriteArrayList<Object>();
 
   private static final Map<ClassLoader, Map<String, WeakReference<Class<?>>>>
     CACHE_CLASSES = new WeakHashMap<ClassLoader, Map<String, WeakReference<Class<?>>>>();
@@ -919,10 +912,12 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
    * @param properties with properties
    */
   public static synchronized void addDefaultResource(Properties properties) {
-    extraDefaultResources.add(properties);
-    for(Configuration conf : REGISTRY.keySet()) {
-      if(conf.loadDefaults) {
-        conf.reloadConfiguration();
+    if(!defaultResources.contains(properties)) {
+      defaultResources.add(properties);
+      for (Configuration conf : REGISTRY.keySet()) {
+        if (conf.loadDefaults) {
+          conf.reloadConfiguration();
+        }
       }
     }
   }
@@ -3109,12 +3104,8 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
                              boolean fullReload,
                              boolean quiet) {
     if(loadDefaults && fullReload) {
-      for (String resource : defaultResources) {
+      for (Object resource : defaultResources) {
         loadResource(properties, new Resource(resource, false), quiet);
-      }
-      for (Properties config : extraDefaultResources) {
-        // set quiet to true
-        loadResource(properties, new Resource(config, false), true);
       }
     }
     
@@ -3139,6 +3130,7 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
         returnCachedProperties = true;
       } else if (resource instanceof Properties) {
         overlay(properties, (Properties)resource);
+        return null;
       }
 
       XMLStreamReader2 reader = getStreamReader(wrapper, quiet);
@@ -3932,7 +3924,6 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
     sb.append("Configuration: ");
     if(loadDefaults) {
       toString(defaultResources, sb);
-      toString(extraDefaultResources, sb);
       if(resources.size()>0) {
         sb.append(", ");
       }

@@ -35,7 +35,7 @@ import org.apache.hadoop.mapreduce.v2.proto.MRProtos.TaskAttemptIdProto;
 import org.apache.hadoop.mapreduce.v2.util.MRProtoUtils;
 import org.apache.hadoop.yarn.api.records.impl.pb.ProtoBase;
 
-import com.google.protobuf.ByteString;
+import org.apache.hadoop.thirdparty.protobuf.ByteString;
 
 public class TaskAttemptCompletionEventPBImpl extends ProtoBase<TaskAttemptCompletionEventProto> implements TaskAttemptCompletionEvent {
   TaskAttemptCompletionEventProto proto = TaskAttemptCompletionEventProto.getDefaultInstance();

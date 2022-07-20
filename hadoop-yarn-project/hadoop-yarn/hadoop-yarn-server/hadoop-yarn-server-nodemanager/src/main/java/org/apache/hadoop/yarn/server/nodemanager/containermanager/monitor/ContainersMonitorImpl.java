@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileUtil;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.util.StringUtils.TraditionalBinaryPrefix;
 import org.apache.hadoop.yarn.api.records.ContainerExitStatus;
@@ -901,11 +902,11 @@ public class ContainersMonitorImpl extends AbstractService implements
             continue;
           }
           try {
-            List<File> logDirs = ContainerLogsUtils.getContainerLogDirs(
+            List<Path> logDirs = ContainerLogsUtils.getContainerLogDirs(
                 containerId, container.getUser(), context);
             long totalLogDataBytes = 0;
-            for (File dir : logDirs) {
-              long currentDirSizeBytes = FileUtil.getDU(dir);
+            for (Path dir : logDirs) {
+              long currentDirSizeBytes = FileUtil.getDU(new File(dir.toString()));
               totalLogDataBytes += currentDirSizeBytes;
               String killMsg = null;
               if (currentDirSizeBytes > logDirSizeLimit) {

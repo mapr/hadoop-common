@@ -23,6 +23,7 @@ import static org.apache.hadoop.yarn.util.StringHelper.ujoin;
 
 import javax.xml.bind.annotation.*;
 
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.yarn.api.records.ContainerExitStatus;
 import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.api.records.ContainerStatus;
@@ -158,10 +159,11 @@ public class ContainerInfo {
       Context nmContext) {
     List<String> logFiles = new ArrayList<>();
     try {
-      List<File> logDirs =
+      List<Path> logDirs =
           ContainerLogsUtils.getContainerLogDirs(id, remoteUser, nmContext);
-      for (File containerLogsDir : logDirs) {
-        File[] logs = containerLogsDir.listFiles();
+      for (Path containerLogsDir : logDirs) {
+        File containerLogsDirFile = new File(containerLogsDir.toString());
+        File[] logs = containerLogsDirFile.listFiles();
         if (logs != null) {
           for (File log : logs) {
             if (log.isFile()) {

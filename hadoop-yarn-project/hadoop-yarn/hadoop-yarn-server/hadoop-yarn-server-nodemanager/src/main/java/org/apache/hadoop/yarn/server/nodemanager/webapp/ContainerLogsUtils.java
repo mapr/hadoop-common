@@ -18,11 +18,12 @@
 package org.apache.hadoop.yarn.server.nodemanager.webapp;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SecureIOUtils;
@@ -31,6 +32,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.records.ApplicationAccessType;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ContainerId;
+import org.apache.hadoop.yarn.api.records.ContainerLaunchContext;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.server.nodemanager.Context;
 import org.apache.hadoop.yarn.server.nodemanager.LocalDirsHandlerService;
@@ -39,21 +41,25 @@ import org.apache.hadoop.yarn.server.nodemanager.containermanager.container.Cont
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.container.ContainerState;
 import org.apache.hadoop.yarn.server.nodemanager.containermanager.launcher.ContainerLaunch;
 
+import org.apache.hadoop.yarn.util.TaskLogUtil;
 import org.apache.hadoop.yarn.webapp.NotFoundException;
+import org.apache.hadoop.yarn.webapp.log.DFSContainerLogsUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Contains utilities for fetching a user's log file in a secure fashion.
+ * It supports retrieving logs from both local file system and distributed file
+ * system depending on where the logs are stored.
  */
 public class ContainerLogsUtils {
   public static final Logger LOG = LoggerFactory.getLogger(ContainerLogsUtils.class);
   
   /**
-   * Finds the local directories that logs for the given container are stored
+   * Finds the directories that logs for the given container are stored
    * on.
    */
-  public static List<File> getContainerLogDirs(ContainerId containerId,
+  public static List<Path> getContainerLogDirs(ContainerId containerId,
       String remoteUser, Context context) throws YarnException {
     Container container = context.getContainers().get(containerId);
 
@@ -67,21 +73,30 @@ public class ContainerLogsUtils {
     // reading container logs. 
     if (container != null) {
       checkState(container.getContainerState());
+      if (isDfsLoggingEnabled(containerId, context)) {
+        try {
+          return DFSContainerLogsUtils.getContainerLogDirs(containerId);
+        } catch (IOException e) {
+          LOG.warn("Failed to find logs for container: " + containerId, e);
+          throw new NotFoundException("Cannot find logs for container: "
+                  + containerId);
+        }
+      }
     }
 
     return getContainerLogDirs(containerId, context.getLocalDirsHandler());
   }
 
-  static List<File> getContainerLogDirs(ContainerId containerId,
+  static List<Path> getContainerLogDirs(ContainerId containerId,
       LocalDirsHandlerService dirsHandler) throws YarnException {
     List<String> logDirs = dirsHandler.getLogDirsForRead();
-    List<File> containerLogDirs = new ArrayList<File>(logDirs.size());
+    List<Path> containerLogDirs = new ArrayList<Path>(logDirs.size());
     for (String logDir : logDirs) {
       logDir = new File(logDir).toURI().getPath();
       String appIdStr = containerId
           .getApplicationAttemptId().getApplicationId().toString();
-      File appLogDir = new File(logDir, appIdStr);
-      containerLogDirs.add(new File(appLogDir, containerId.toString()));
+      Path appLogDir = new Path(logDir, appIdStr);
+      containerLogDirs.add(new Path(appLogDir, containerId.toString()));
     }
     return containerLogDirs;
   }
@@ -89,7 +104,7 @@ public class ContainerLogsUtils {
   /**
    * Finds the log file with the given filename for the given container.
    */
-  public static File getContainerLogFile(ContainerId containerId,
+  public static Path getContainerLogFile(ContainerId containerId,
       String fileName, String remoteUser, Context context) throws YarnException {
     Container container = context.getContainers().get(containerId);
 
@@ -99,15 +114,14 @@ public class ContainerLogsUtils {
       checkState(container.getContainerState());
     }
 
+    String relativeContainerLogDir = ContainerLaunch.getRelativeContainerLogDir(
+            application.getAppId().toString(), containerId.toString());
+
+    String relativeFileName = relativeContainerLogDir + Path.SEPARATOR + fileName;
+
     try {
       LocalDirsHandlerService dirsHandler = context.getLocalDirsHandler();
-      String relativeContainerLogDir = ContainerLaunch.getRelativeContainerLogDir(
-          application.getAppId().toString(), containerId.toString());
-      Path logPath = dirsHandler.getLogPathToRead(
-          relativeContainerLogDir + Path.SEPARATOR + fileName);
-      URI logPathURI = new File(logPath.toString()).toURI();
-      File logFile = new File(logPathURI.getPath());
-      return logFile;
+      return dirsHandler.getLogPathToRead(relativeFileName);
     } catch (IOException e) {
       LOG.warn("Failed to find log file", e);
       throw new NotFoundException("Cannot find this log on the local disk.");
@@ -158,26 +172,74 @@ public class ContainerLogsUtils {
     }
   }
   
-  public static FileInputStream openLogFileForRead(String containerIdStr, File logFile,
-      Context context) throws IOException {
+  public static InputStream openLogFileForRead(String containerIdStr, Path logFile,
+                                               String remoteUser, Context context) throws IOException {
     ContainerId containerId = ContainerId.fromString(containerIdStr);
-    ApplicationId applicationId = containerId.getApplicationAttemptId()
-        .getApplicationId();
-    String user = context.getApplications().get(
-        applicationId).getUser();
+
+    if (isDfsLoggingEnabled(containerId, context)) {
+      return DFSContainerLogsUtils.openLogFileForRead(containerIdStr, logFile, remoteUser);
+    }
 
     try {
-      return SecureIOUtils.openForRead(logFile, user, null);
+      File file = new File(logFile.toString());
+      return SecureIOUtils.openForRead(file, remoteUser, null);
     } catch (PermissionNotMatchException ex) {
       LOG.error(
-              "Exception reading log file " + logFile, ex);
+              "Exception reading log file " + logFile.toString(), ex);
       throw new IOException("Exception reading log file. User '"
-            + user
+            + remoteUser
             + "' doesn't own requested log file : "
               + logFile.toString(), ex);
     } catch (IOException e) {
         throw new IOException("Exception reading log file. It might be because log "
-            + "file was aggregated : " + logFile.getName(), e);
+            + "file was aggregated : " + logFile.toString(), e);
+      }
+  }
+
+  public static long getFileLength(Path logFile, ContainerId containerId,
+                                   Context context) throws IOException {
+    if (isDfsLoggingEnabled(containerId, context)) {
+      return DFSContainerLogsUtils.getFileLength(logFile);
     }
+
+    return new File(logFile.toString()).length();
+  }
+
+  public static Path[] getFilesInDir(Path dir, ContainerId containerId,
+                                     Context context) throws IOException {
+    if (isDfsLoggingEnabled(containerId, context)) {
+      return DFSContainerLogsUtils.getFilesInDir(dir);
+    }
+
+    Path[] paths = null;
+    File[] files = new File(dir.toString()).listFiles();
+    if (files != null) {
+      paths = new Path[files.length];
+      for (int i = 0; i < files.length; i++) {
+        paths[i] = new Path(files[i].getAbsolutePath());
+      }
+    }
+
+    return paths;
+  }
+
+  private static boolean isDfsLoggingEnabled(ContainerId containerId,
+                                             Context context) {
+
+    Container container = context.getContainers().get(containerId);
+    if (container == null) {
+      // This means the container is completed. So the logs should be
+      // retrieved through history server.
+      return false;
+    }
+
+    ContainerLaunchContext launchContext = container.getLaunchContext();
+    Map<String, String> env = launchContext.getEnvironment();
+    if (env != null) {
+      if (TaskLogUtil.isDfsLoggingEnabled(env)) {
+        return true;
+      }
+    }
+    return false;
   }
 }

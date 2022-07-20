@@ -132,7 +132,7 @@ public final class LogToolUtils {
 
   public static void outputContainerLogThroughZeroCopy(String containerId,
       String nodeId, String fileName, long fileLength, long outputSize,
-      String lastModifiedTime, FileInputStream fis, OutputStream os,
+      String lastModifiedTime, InputStream is, OutputStream os,
       ContainerLogAggregationType logType) throws IOException {
     long toSkip = 0;
     long totalBytesToRead = fileLength;
@@ -155,19 +155,15 @@ public final class LogToolUtils {
 
     if (totalBytesToRead > 0) {
       // output log content
-      FileChannel inputChannel = fis.getChannel();
-      WritableByteChannel outputChannel = Channels.newChannel(os);
-      long position = toSkip;
-      while (totalBytesToRead > 0) {
-        long transferred =
-            inputChannel.transferTo(position, totalBytesToRead, outputChannel);
-        totalBytesToRead -= transferred;
-        position += transferred;
+
+      is.skip(toSkip);
+      byte[] buf = new byte[8192];
+      int length;
+      while ((length = is.read(buf)) != -1) {
+        os.write(buf, 0, length);
       }
-      os.flush();
     }
   }
-
 
   /**
    * Create the container log file under given (local directory/nodeId) and

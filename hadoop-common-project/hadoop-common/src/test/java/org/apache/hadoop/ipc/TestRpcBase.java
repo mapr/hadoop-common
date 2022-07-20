@@ -502,7 +502,7 @@ public class TestRpcBase {
     }
 
     @Override
-    public TestProtos.AuthMethodResponseProto getAuthMethod(com.google.protobuf.RpcController controller, TestProtos.EmptyRequestProto request) throws com.google.protobuf.ServiceException {
+    public TestProtos.AuthMethodResponseProto getAuthMethod(org.apache.hadoop.thirdparty.protobuf.RpcController controller, TestProtos.EmptyRequestProto request) throws org.apache.hadoop.thirdparty.protobuf.ServiceException {
       return null;
     }
 /*

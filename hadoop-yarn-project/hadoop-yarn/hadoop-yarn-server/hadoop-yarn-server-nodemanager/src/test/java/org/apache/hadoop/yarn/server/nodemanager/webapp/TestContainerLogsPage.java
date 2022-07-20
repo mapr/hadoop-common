@@ -116,7 +116,7 @@ public class TestContainerLogsPage {
             appId, 1);
     container.setState(ContainerState.RUNNING);
     nmContext.getContainers().put(container1, container);   
-    List<File> files = null;
+    List<Path> files = null;
     files = ContainerLogsUtils.getContainerLogDirs(container1, user, nmContext);
     Assert.assertTrue(!(files.get(0).toString().contains("file:")));
     
@@ -140,7 +140,7 @@ public class TestContainerLogsPage {
     nmContext.getApplications().put(appId, app);
     container.setState(ContainerState.RUNNING);
     nmContext.getContainers().put(container1, container);
-    List<File> dirs =
+    List<Path> dirs =
         ContainerLogsUtils.getContainerLogDirs(container1, user, nmContext);
     File containerLogDir = new File(absLogDir, appId + "/" + container1);
     Assert.assertTrue(dirs.contains(containerLogDir));
@@ -186,8 +186,8 @@ public class TestContainerLogsPage {
     String fileName = "fileName";
     File containerLogFile = new File(containerLogDir, fileName);
     containerLogFile.createNewFile();
-    File file = ContainerLogsUtils.getContainerLogFile(containerId,
-        fileName, user, nmContext);
+    File file = new File(ContainerLogsUtils.getContainerLogFile(containerId,
+        fileName, user, nmContext).toString());
     Assert.assertEquals(containerLogFile.toURI().toString(),
         file.toURI().toString());
     FileUtil.fullyDelete(absLogDir);
@@ -313,7 +313,7 @@ public class TestContainerLogsPage {
     ContainerId containerId = mock(ContainerIdPBImpl.class);
     when(containerId.getApplicationAttemptId()).thenReturn(appAttemptId);
     
-    List<File> logDirFiles = ContainerLogsUtils.getContainerLogDirs(
+    List<Path> logDirFiles = ContainerLogsUtils.getContainerLogDirs(
       containerId, localDirs);
     
     Assert.assertTrue("logDir lost drive letter " +
@@ -360,7 +360,7 @@ public class TestContainerLogsPage {
     when(context.getApplications()).thenReturn(applications);
     when(context.getContainers()).thenReturn(containers);
     
-    File logFile = ContainerLogsUtils.getContainerLogFile(containerId,
+    Path logFile = ContainerLogsUtils.getContainerLogFile(containerId,
       "fileName", null, context);
       
     Assert.assertTrue("logFile lost drive letter " +

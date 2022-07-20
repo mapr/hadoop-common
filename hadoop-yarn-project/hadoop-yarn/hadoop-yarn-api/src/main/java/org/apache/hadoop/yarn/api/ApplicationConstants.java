@@ -127,6 +127,8 @@ public interface ApplicationConstants {
 
   String STDOUT = "stdout";
 
+  String SYSLOG = "syslog";
+
   /**
    * The type of launch for the container.
    */

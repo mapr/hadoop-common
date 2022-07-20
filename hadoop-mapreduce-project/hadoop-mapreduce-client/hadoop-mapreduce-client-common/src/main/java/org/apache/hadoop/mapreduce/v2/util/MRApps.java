@@ -69,6 +69,8 @@ import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 import org.apache.hadoop.yarn.util.Apps;
+import org.apache.hadoop.yarn.util.TaskLogUtil;
+import org.apache.log4j.RollingFileAppender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -639,9 +641,9 @@ public class MRApps extends Apps {
       // log should be rolled
       vargs.add("-D" + YarnConfiguration.YARN_APP_CONTAINER_LOG_BACKUPS + "="
           + numBackups);
-      vargs.add("-Dhadoop.root.logger=" + logLevel + ",CRLA");
+      vargs.add("-Dhadoop.root.logger=" + logLevel + "," + TaskLogUtil.getRollingAppender());
     } else {
-      vargs.add("-Dhadoop.root.logger=" + logLevel + ",CLA");
+      vargs.add("-Dhadoop.root.logger=" + logLevel + "," + TaskLogUtil.getAppender());
     }
     vargs.add("-Dhadoop.root.logfile=" + TaskLog.LogName.SYSLOG);
 
