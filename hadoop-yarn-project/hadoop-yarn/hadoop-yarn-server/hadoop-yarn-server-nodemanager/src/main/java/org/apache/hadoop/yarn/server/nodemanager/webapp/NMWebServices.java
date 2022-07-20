@@ -18,8 +18,8 @@
 package org.apache.hadoop.yarn.server.nodemanager.webapp;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.security.Principal;
@@ -435,7 +435,7 @@ public class NMWebServices {
           containerId);
     }
     final boolean isRunning = tempIsRunning;
-    File logFile = null;
+    org.apache.hadoop.fs.Path logFile = null;
     try {
       logFile = ContainerLogsUtils.getContainerLogFile(
           containerId, filename, request.getRemoteUser(), nmContext);
@@ -452,7 +452,8 @@ public class NMWebServices {
       return Response.serverError().entity(ex.getMessage()).build();
     }
     final long bytes = parseLongParam(size);
-    final String lastModifiedTime = Times.format(logFile.lastModified());
+    File file = new File(logFile.toString());
+    final String lastModifiedTime = Times.format(file.lastModified());
     final String outputFileName = filename;
     String contentType = WebAppUtils.getDefaultLogContentType();
     if (format != null && !format.isEmpty()) {
@@ -466,9 +467,9 @@ public class NMWebServices {
     }
 
     try {
-      final FileInputStream fis = ContainerLogsUtils.openLogFileForRead(
-          containerIdStr, logFile, nmContext);
-      final long fileLength = logFile.length();
+      final InputStream fis = ContainerLogsUtils.openLogFileForRead(
+          containerIdStr, logFile, request.getRemoteUser(), nmContext);
+      final long fileLength = ContainerLogsUtils.getFileLength(logFile, containerId, nmContext);
 
       StreamingOutput stream = new StreamingOutput() {
         @Override

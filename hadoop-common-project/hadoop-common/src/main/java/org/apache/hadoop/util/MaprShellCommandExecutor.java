@@ -1,6 +1,6 @@
 package org.apache.hadoop.util;
 
-import com.google.common.annotations.VisibleForTesting;
+import org.apache.hadoop.thirdparty.com.google.common.annotations.VisibleForTesting;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
 import org.slf4j.Logger;

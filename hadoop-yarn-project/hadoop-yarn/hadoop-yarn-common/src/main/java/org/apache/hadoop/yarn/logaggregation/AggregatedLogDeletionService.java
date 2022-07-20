@@ -33,6 +33,7 @@ import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.security.AccessControlException;
@@ -46,6 +47,8 @@ import org.apache.hadoop.yarn.client.ClientRMProxy;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.ApplicationNotFoundException;
 import org.apache.hadoop.yarn.exceptions.YarnException;
+import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
+import org.apache.hadoop.yarn.util.TaskLogUtil;
 
 import org.apache.hadoop.thirdparty.com.google.common.annotations.VisibleForTesting;
 
@@ -63,6 +66,7 @@ public class AggregatedLogDeletionService extends AbstractService {
   
   static class LogDeletionTask extends TimerTask {
     private Configuration conf;
+    private FileSystem fs;
     private long retentionMillis;
     private String suffix = null;
     private Path remoteRootLogDir = null;
@@ -70,8 +74,21 @@ public class AggregatedLogDeletionService extends AbstractService {
     private static boolean isLocalNodeLogAggregation = false;
     private static NodeLocalMetadataReader nodeLocalMetadataReader;
 
+    /**
+     * Log directories that are specified using a glob instead of
+     * specific directory like <code>remoteRoolLogDir</code>.
+     * This option is useful when logs for an application are written to
+     * different directory hierarchies.
+     */
+    private Path[] dfsLoggingDirs = null;
+
     public LogDeletionTask(Configuration conf, long retentionSecs, ApplicationClientProtocol rmClient) {
       this.conf = conf;
+      try {
+        this.fs = FileSystem.get(conf);
+      } catch (IOException e) {
+        throw new YarnRuntimeException(e);
+      }
       this.retentionMillis = retentionSecs * 1000;
       if(YarnConfiguration.isNodeLocalAggregationEnabled(conf)) {
         this.suffix = conf.get(YarnConfiguration.NODE_LOCAL_AGGREGATION_METADATA_DIR_NAME,
@@ -89,6 +106,8 @@ public class AggregatedLogDeletionService extends AbstractService {
         this.remoteRootLogDir = fileController.getRemoteRootLogDir();
       }
       this.rmClient = rmClient;
+
+      determineMatchingLogDirs(conf);
     }
     
     @Override
@@ -96,7 +115,6 @@ public class AggregatedLogDeletionService extends AbstractService {
       long cutoffMillis = System.currentTimeMillis() - retentionMillis;
       LOG.info("aggregated log deletion started.");
       try {
-        FileSystem fs = remoteRootLogDir.getFileSystem(conf);
         for(FileStatus userDir : fs.listStatus(remoteRootLogDir)) {
           if(userDir.isDirectory()) {
             String appOwner = userDir.getPath().getName();
@@ -127,9 +145,30 @@ public class AggregatedLogDeletionService extends AbstractService {
         logException("Error reading root log dir this deletion " +
             "attempt is being aborted", t);
       }
+
+      if (dfsLoggingDirs != null) {
+        for (Path dfsLoggingDir : dfsLoggingDirs) {
+          LOG.debug("Deleting log dirs from: " + dfsLoggingDir);
+          deleteOldLogDirsFrom(dfsLoggingDir, cutoffMillis, fs, rmClient);
+        }
+      }
+
       LOG.info("aggregated log deletion finished.");
     }
-    
+
+    private void determineMatchingLogDirs(Configuration conf) {
+      String logDirGlob = conf.get(YarnConfiguration.DFS_LOGGING_DIR_GLOB);
+      if (logDirGlob != null) {
+        try {
+          this.dfsLoggingDirs =  FileUtil.stat2Paths(
+                  fs.globStatus(new Path(logDirGlob)));
+        } catch (IOException e) {
+          LOG.error("Unable to initialize DFS logging dirs using glob: "
+                  + logDirGlob);
+        }
+      }
+    }
+
     private static void deleteOldLogDirsFrom(Path dir, long cutoffMillis, 
         FileSystem fs, ApplicationClientProtocol rmClient) {
       FileStatus[] appDirs;
@@ -288,7 +327,9 @@ public class AggregatedLogDeletionService extends AbstractService {
   private void scheduleLogDeletionTask() throws IOException {
     Configuration conf = getConfig();
     if (!conf.getBoolean(YarnConfiguration.LOG_AGGREGATION_ENABLED,
-        YarnConfiguration.DEFAULT_LOG_AGGREGATION_ENABLED) && !YarnConfiguration.isNodeLocalAggregationEnabled(conf)) {
+        YarnConfiguration.DEFAULT_LOG_AGGREGATION_ENABLED)
+            && !YarnConfiguration.isNodeLocalAggregationEnabled(conf)
+            && !TaskLogUtil.isDfsLoggingEnabled()) {
       // Log aggregation is not enabled so don't bother
       return;
     }

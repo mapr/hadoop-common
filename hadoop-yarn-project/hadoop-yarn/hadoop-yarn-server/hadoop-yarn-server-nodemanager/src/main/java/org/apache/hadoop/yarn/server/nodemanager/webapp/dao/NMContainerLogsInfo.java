@@ -24,6 +24,8 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.logaggregation.ContainerLogAggregationType;
@@ -59,10 +61,11 @@ public class NMContainerLogsInfo extends ContainerLogsInfo {
       ContainerId id, String remoteUser, Context nmContext)
       throws YarnException {
     List<ContainerLogFileInfo> logFiles = new ArrayList<>();
-    List<File> logDirs = ContainerLogsUtils.getContainerLogDirs(
+    List<Path> logDirs = ContainerLogsUtils.getContainerLogDirs(
         id, remoteUser, nmContext);
-    for (File containerLogsDir : logDirs) {
-      File[] logs = containerLogsDir.listFiles();
+    for (Path containerLogsDir : logDirs) {
+      File containerLogsDirFile = new File(containerLogsDir.toString());
+      File[] logs = containerLogsDirFile.listFiles();
       if (logs != null) {
         for (File log : logs) {
           if (log.isFile()) {

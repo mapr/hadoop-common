@@ -18,6 +18,7 @@
 
 package org.apache.hadoop.yarn.server.nodemanager.containermanager.monitor;
 
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.thirdparty.com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.thirdparty.com.google.common.base.Preconditions;
 import org.apache.hadoop.yarn.exceptions.YarnException;
@@ -895,11 +896,11 @@ public class ContainersMonitorImpl extends AbstractService implements
             continue;
           }
           try {
-            List<File> logDirs = ContainerLogsUtils.getContainerLogDirs(
+            List<Path> logDirs = ContainerLogsUtils.getContainerLogDirs(
                 containerId, container.getUser(), context);
             long totalLogDataBytes = 0;
-            for (File dir : logDirs) {
-              long currentDirSizeBytes = FileUtil.getDU(dir);
+            for (Path dir : logDirs) {
+              long currentDirSizeBytes = FileUtil.getDU(new File(dir.toString()));
               totalLogDataBytes += currentDirSizeBytes;
               String killMsg = null;
               if (currentDirSizeBytes > logDirSizeLimit) {

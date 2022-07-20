@@ -98,6 +98,8 @@ import org.apache.hadoop.yarn.util.Apps;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.apache.hadoop.yarn.util.UnitsConversionUtil;
 import org.apache.hadoop.yarn.util.resource.ResourceUtils;
+import org.apache.hadoop.yarn.util.DFSLoggingHandler;
+import org.apache.hadoop.yarn.util.TaskLogUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -443,6 +445,12 @@ public class YARNRunner implements ClientProtocol {
 
   private List<String> setupAMCommand(Configuration jobConf) {
     List<String> vargs = new ArrayList<>(8);
+    // If direct DFS logging is enabled, then wrap the command in parenthesis,
+    // so that the output can be redirected to target DFS logging handler
+    // for writing to DFS.
+    if (TaskLogUtil.isDfsLoggingEnabled()) {
+      vargs.add("(");
+    }
     vargs.add(MRApps.crossPlatformifyMREnv(jobConf, Environment.JAVA_HOME)
         + "/bin/java");
 
@@ -497,10 +505,23 @@ public class YARNRunner implements ClientProtocol {
     }
 
     vargs.add(MRJobConfig.APPLICATION_MASTER_CLASS);
-    vargs.add("1>" + ApplicationConstants.LOG_DIR_EXPANSION_VAR +
-        Path.SEPARATOR + ApplicationConstants.STDOUT);
-    vargs.add("2>" + ApplicationConstants.LOG_DIR_EXPANSION_VAR +
-        Path.SEPARATOR + ApplicationConstants.STDERR);
+    if (TaskLogUtil.isDfsLoggingEnabled()) {
+      DFSLoggingHandler dfsLoggingHandler = TaskLogUtil.getDFSLoggingHandler();
+      vargs.add(" | ");
+      vargs.add(dfsLoggingHandler.getStdOutCommand(
+              ApplicationConstants.LOG_DIR_EXPANSION_VAR
+                      + Path.SEPARATOR + ApplicationConstants.STDOUT));
+      vargs.add(" ; exit $? ) 2>&1 | ");
+      vargs.add(dfsLoggingHandler.getStdOutCommand(
+              ApplicationConstants.LOG_DIR_EXPANSION_VAR
+                      + Path.SEPARATOR + ApplicationConstants.STDERR));
+      vargs.add(" ; exit $?");
+    } else {
+      vargs.add("1>" + ApplicationConstants.LOG_DIR_EXPANSION_VAR
+              + Path.SEPARATOR + ApplicationConstants.STDOUT);
+      vargs.add("2>" + ApplicationConstants.LOG_DIR_EXPANSION_VAR
+              + Path.SEPARATOR + ApplicationConstants.STDERR);
+    }
     return vargs;
   }
 
@@ -516,12 +537,15 @@ public class YARNRunner implements ClientProtocol {
     }
     vargsFinal.add(mergedCommand.toString());
 
-    LOG.debug("Command to launch container for ApplicationMaster is : "
-        + mergedCommand);
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("Command to launch container for ApplicationMaster is : "
+              + mergedCommand);
+    }
 
     // Setup the CLASSPATH in environment
     // i.e. add { Hadoop jars, job jar, CWD } to classpath.
     Map<String, String> environment = new HashMap<>();
+    environment.put(YarnConfiguration.DFS_LOGGING_SUPPORTED, "true");
     MRApps.setClasspath(environment, conf);
 
     // Shell

@@ -36,6 +36,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.hadoop.hdfs.protocol.datatransfer.IOStreamPair;
+import org.apache.hadoop.yarn.util.DFSLoggingHandler;
+import org.apache.hadoop.yarn.util.TaskLogUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -410,11 +412,6 @@ public abstract class ContainerExecutor implements Configurable {
     // Add "set -o pipefail -e" to validate launch_container script.
     sb.setExitOnFailure();
 
-    //Redirect stdout and stderr for launch_container script
-    sb.stdout(logDir, CONTAINER_PRE_LAUNCH_STDOUT);
-    sb.stderr(logDir, CONTAINER_PRE_LAUNCH_STDERR);
-
-
     if (environment != null) {
       sb.echo("Setting up env variables");
       // Whitelist environment variables are treated specially.
@@ -445,6 +442,10 @@ public abstract class ContainerExecutor implements Configurable {
       }
     }
 
+    //Redirect stdout and stderr for launch_container script
+    sb.stdout(logDir, CONTAINER_PRE_LAUNCH_STDOUT);
+    sb.stderr(logDir, CONTAINER_PRE_LAUNCH_STDERR);
+
     if (resources != null) {
       sb.echo("Setting up job resources");
       Map<Path, Path> symLinks = resolveSymLinks(resources, user);
@@ -458,9 +459,18 @@ public abstract class ContainerExecutor implements Configurable {
         getConf().getBoolean(YarnConfiguration.NM_LOG_CONTAINER_DEBUG_INFO,
         YarnConfiguration.DEFAULT_NM_LOG_CONTAINER_DEBUG_INFO)) {
       sb.echo("Copying debugging information");
-      sb.copyDebugInformation(new Path(outFilename),
-          new Path(logDir, outFilename));
-      sb.listDebugInformation(new Path(logDir, DIRECTORY_CONTENTS));
+
+      Path scriptPath, dirContentPath;
+      if (TaskLogUtil.isDfsLoggingEnabled()) {
+        DFSLoggingHandler dfsLoggingHandler = TaskLogUtil.getDFSLoggingHandler();
+        scriptPath = dfsLoggingHandler.getLogFileForWrite(logDir, outFilename);
+        dirContentPath = dfsLoggingHandler.getLogFileForWrite(logDir, DIRECTORY_CONTENTS);
+      } else {
+        scriptPath = new Path(logDir, outFilename);
+        dirContentPath = new Path(logDir, DIRECTORY_CONTENTS);
+      }
+      sb.copyDebugInformation(new Path(outFilename), scriptPath);
+      sb.listDebugInformation(dirContentPath);
     }
     sb.echo("Launching container");
     sb.command(command);

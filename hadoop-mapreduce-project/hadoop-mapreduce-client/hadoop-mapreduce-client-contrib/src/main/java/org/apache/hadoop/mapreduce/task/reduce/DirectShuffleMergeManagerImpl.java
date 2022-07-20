@@ -59,7 +59,7 @@ import org.apache.hadoop.mapreduce.task.reduce.MapOutput.MapOutputComparator;
 import org.apache.hadoop.util.Progress;
 import org.apache.hadoop.util.ReflectionUtils;
 
-import com.google.common.annotations.VisibleForTesting;
+import org.apache.hadoop.thirdparty.com.google.common.annotations.VisibleForTesting;
 
 @SuppressWarnings(value={"unchecked"})
 @InterfaceAudience.LimitedPrivate({"MapReduce"})

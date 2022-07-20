@@ -167,16 +167,14 @@ public class YarnDefaultProperties extends Properties {
         props.put(YarnConfiguration.RM_SCHEDULER, FAIR_SCHEDULER_CLASS);
 
         props.put(YarnConfiguration.LOG_AGGREGATION_ENABLED, "false");
+        props.put(YarnConfiguration.ENABLE_DFS_LOGGING, "false");
+        props.put(YarnConfiguration.DFS_LOGGING_HANDLER_CLASS, "org.apache.hadoop.yarn.util.MapRFSLoggingHandler");
 
-        /* TODO DFS Logging */
-//        put(YarnConfiguration.ENABLE_DFS_LOGGING, "false");
-//        put(YarnConfiguration.DFS_LOGGING_HANDLER_CLASS, "org.apache.hadoop.yarn.util.MapRFSLoggingHandler");
-//
-//        put(YarnConfiguration.DFS_LOGGING_DIR_GLOB,
-//                FS_DEFAULT_NAME
-//                        + DEFAULT_MAPR_LOCAL_VOL_PATH
-//                        + Path.SEPARATOR
-//                        + "*/logs/yarn/userlogs");
+        props.put(YarnConfiguration.DFS_LOGGING_DIR_GLOB,
+                FS_DEFAULT_NAME
+                        + DEFAULT_MAPR_LOCAL_VOL_PATH
+                        + Path.SEPARATOR
+                        + "*/logs/yarn/userlogs");
 
         // Default retention to 30 days
         props.put(YarnConfiguration.LOG_AGGREGATION_RETAIN_SECONDS, 30 * 24 * 3600 + "");
