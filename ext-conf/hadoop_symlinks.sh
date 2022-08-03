@@ -67,6 +67,8 @@ function createSymlinks() {
   ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/audience-annotations-0.*.jar __PREFIX__/lib/
   rm -f __PREFIX__/lib/commons-cli-1.*.jar
   ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/commons-cli-1.*.jar __PREFIX__/lib/
+  rm -f __PREFIX__/lib/commons-lang3-3.*.jar
+  ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/commons-lang3-3.*.jar __PREFIX__/lib/
   rm -f __PREFIX__/lib/htrace-*.jar
   ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/htrace-*.jar  __PREFIX__/lib/
   rm -f __PREFIX__/lib/hadoop-auth-*.jar
