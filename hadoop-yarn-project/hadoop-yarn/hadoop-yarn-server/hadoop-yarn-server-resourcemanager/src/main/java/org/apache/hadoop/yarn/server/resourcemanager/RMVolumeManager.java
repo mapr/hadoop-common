@@ -72,12 +72,12 @@ public class RMVolumeManager extends VolumeManager {
     @Override
     public void createVolumes(Configuration conf) throws Exception {
         waitForYarnPathCreated(conf);
+        // create separate volume for general RM dir
+        createVolume("");
         if(conf.get(CommonConfigurationKeysPublic.HADOOP_SECURITY_TOKEN_MECHANISM, UserGroupInformation.DIGEST_AUTH_MECHANISM).
                 equalsIgnoreCase(UserGroupInformation.SCRAM_AUTH_MECHANISM)){
             ScramCredentialScriptUtil.checkAndCopyScramCreds(conf, "resourceManager");
         }
-        // create separate volume for general RM dir
-        createVolume("");
         createDir(conf.get(YarnDefaultProperties.RM_SYSTEM_DIR, YarnDefaultProperties.DEFAULT_RM_SYSTEM_DIR),
                 YarnAppUtil.RM_SYSTEM_DIR_PERMISSION);
 
