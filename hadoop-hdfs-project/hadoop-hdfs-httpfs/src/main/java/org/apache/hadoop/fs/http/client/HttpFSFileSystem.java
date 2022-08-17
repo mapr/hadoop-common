@@ -26,6 +26,7 @@ import java.util.List;
 import org.apache.hadoop.thirdparty.com.google.common.base.Charsets;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.CommonPathCapabilities;
 import org.apache.hadoop.fs.ContentSummary;
 import org.apache.hadoop.fs.DelegationTokenRenewer;
@@ -94,6 +95,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import static org.apache.hadoop.fs.http.client.HttpFSUtils.jsonParse;
 import static org.apache.hadoop.fs.impl.PathCapabilitiesSupport.validatePathCapabilityArgs;
 
 /**
@@ -137,6 +139,8 @@ public class HttpFSFileSystem extends FileSystem
   public static final String OLD_SNAPSHOT_NAME_PARAM = "oldsnapshotname";
   public static final String FSACTION_MODE_PARAM = "fsaction";
   public static final String EC_POLICY_NAME_PARAM = "ecpolicy";
+  public static final String OFFSET_PARAM = "offset";
+  public static final String LENGTH_PARAM = "length";
 
   public static final Short DEFAULT_PERMISSION = 0755;
   public static final String ACLSPEC_DEFAULT = "";
@@ -239,6 +243,16 @@ public class HttpFSFileSystem extends FileSystem
 
   public static final String STORAGE_POLICIES_JSON = "BlockStoragePolicies";
   public static final String STORAGE_POLICY_JSON = "BlockStoragePolicy";
+
+  public static final String LOCATED_BLOCKS_JSON = "LocatedBlocks";
+  public static final String LOCATED_BLOCKS_LOCATIONS_JSON = "locations";
+  public static final String LOCATED_BLOCKS_LOCATION_CORRUPT_JSON = "corrupt";
+  public static final String LOCATED_BLOCKS_LOCATION_OFFSET_JSON = "offset";
+  public static final String LOCATED_BLOCKS_LOCATION_LENGTH_JSON = "length";
+  public static final String LOCATED_BLOCKS_LOCATION_HOSTS_JSON = "hosts";
+  public static final String LOCATED_BLOCKS_LOCATION_NAMES_JSON = "names";
+  public static final String LOCATED_BLOCKS_LOCATION_TOPOLOGYPATHS_JSON =
+          "topologyPaths";
 
   public static final int HTTP_TEMPORARY_REDIRECT = 307;
 
@@ -695,6 +709,69 @@ public class HttpFSFileSystem extends FileSystem
     JSONObject json = (JSONObject) HttpFSUtils.jsonParse(conn);
     return (Boolean) json.get(RENAME_JSON);
   }
+
+  /**
+   * Return an array containing hostnames, offset and size of portions of the
+   * given file. For a nonexistent file or regions, null will be returned.
+   *
+   * This call is most helpful with DFS, where it returns hostnames of machines
+   * that contain the given file.
+   *
+   * @param file FilesStatus to get data from
+   * @param start offset into the given file
+   * @param len length for which to get locations for
+   * @return the block location array
+   */
+  @Override
+  public BlockLocation[] getFileBlockLocations(FileStatus file, long start,
+                                               long len) throws IOException {
+    Map<String, String> params = new HashMap<String, String>();
+    params.put(OP_PARAM, Operation.GETFILEBLOCKLOCATIONS.toString());
+    params.put(OFFSET_PARAM, Long.toString(start));
+    params.put(LENGTH_PARAM, Long.toString(len));
+    HttpURLConnection conn =
+            getConnection(Operation.GETFILEBLOCKLOCATIONS.getMethod(), params,
+                    file.getPath(), true);
+    HttpExceptionUtils.validateResponse(conn, HttpURLConnection.HTTP_OK);
+    JSONObject json = (JSONObject) jsonParse(conn);
+    json = (JSONObject) json.get(LOCATED_BLOCKS_JSON);
+    JSONArray jsonArray = (JSONArray) json.get(LOCATED_BLOCKS_LOCATIONS_JSON);
+    BlockLocation[] locations = new BlockLocation[jsonArray.size()];
+    for (int i = 0; i < jsonArray.size(); i++) {
+      locations[i] = createBlockLocation((JSONObject) jsonArray.get(i));
+    }
+    return locations;
+  }
+
+  private BlockLocation createBlockLocation(JSONObject json) throws IOException {
+    BlockLocation location = new BlockLocation();
+    location.setCorrupt((Boolean) json
+            .get(LOCATED_BLOCKS_LOCATION_CORRUPT_JSON));
+    location.setOffset((Long) json.get(LOCATED_BLOCKS_LOCATION_OFFSET_JSON));
+    location.setLength((Long) json.get(LOCATED_BLOCKS_LOCATION_LENGTH_JSON));
+
+    JSONArray array = (JSONArray) json.get(LOCATED_BLOCKS_LOCATION_HOSTS_JSON);
+    String[] hosts = new String[array.size()];
+    for (int i = 0; i < array.size(); i++) {
+      hosts[i] = (String) array.get(i);
+    }
+    location.setHosts(hosts);
+    array = (JSONArray) json.get(LOCATED_BLOCKS_LOCATION_NAMES_JSON);
+    String[] names = new String[array.size()];
+    for (int i = 0; i < array.size(); i++) {
+      names[i] = (String) array.get(i);
+    }
+    location.setNames(names);
+
+    array = (JSONArray) json.get(LOCATED_BLOCKS_LOCATION_TOPOLOGYPATHS_JSON);
+    String[] topologyPaths = new String[array.size()];
+    for (int i = 0; i < array.size(); i++) {
+      topologyPaths[i] = (String) array.get(i);
+    }
+    location.setTopologyPaths(topologyPaths);
+    return location;
+  }
+
 
   /**
    * Delete a file.

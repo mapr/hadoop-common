@@ -370,7 +370,22 @@ public class HttpFSServer {
       break;
     }
     case GETFILEBLOCKLOCATIONS: {
-      response = Response.status(Response.Status.BAD_REQUEST).build();
+      long offset = 0;
+      long len = -1;
+      Long offsetParm = params.get(OffsetParam.NAME, OffsetParam.class);
+      Long lenParm = params.get(LenParam.NAME, LenParam.class);
+      AUDIT_LOG.info("[{}] offset [{}] len [{}]", new Object[] { path,
+              offsetParm, lenParm });
+      if (offsetParm != null && offsetParm.longValue() > 0) {
+        offset = offsetParm.longValue();
+      }
+      if (lenParm != null && lenParm.longValue() >= 0) {
+        len = lenParm.longValue();
+      }
+      FSOperations.FSFileBlockLocations command =
+              new FSOperations.FSFileBlockLocations(path, offset, len);
+      Map json = fsExecute(user, command);
+      response = Response.ok(json).type(MediaType.APPLICATION_JSON).build();
       break;
     }
     case GETACLSTATUS: {
