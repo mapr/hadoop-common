@@ -101,7 +101,7 @@ class ReduceTaskStatus extends TaskStatus {
 
   @Override
   public List<TaskAttemptID> getFetchFailedMaps() {
-    return failedFetchTasks;
+    return new ArrayList<TaskAttemptID>(failedFetchTasks);
   }
   
   @Override
@@ -152,10 +152,11 @@ class ReduceTaskStatus extends TaskStatus {
   @Override
   public void write(DataOutput out) throws IOException {
     super.write(out);
+    List<TaskAttemptID> failedFetchTasksCopy = new ArrayList<TaskAttemptID>(failedFetchTasks);
     out.writeLong(shuffleFinishTime);
     out.writeLong(sortFinishTime);
-    out.writeInt(failedFetchTasks.size());
-    for (TaskAttemptID taskId : failedFetchTasks) {
+    out.writeInt(failedFetchTasksCopy.size());
+    for (TaskAttemptID taskId : failedFetchTasksCopy) {
       taskId.write(out);
     }
   }

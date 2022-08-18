@@ -125,6 +125,10 @@ public class DirectShuffle<K,V> implements ShuffleConsumerPlugin<K, V>,
 	          
 	          synchronized (this) {
 	            if (throwable != null) {
+					eventFetcher.shutDown();
+					for (DirectShuffleFetcher<K,V> fetcher : fetchers) {
+						fetcher.shutDown();
+					}
 	              throw new ShuffleError("error in shuffle in " + throwingThreadName,
 	                                     throwable);
 	            }

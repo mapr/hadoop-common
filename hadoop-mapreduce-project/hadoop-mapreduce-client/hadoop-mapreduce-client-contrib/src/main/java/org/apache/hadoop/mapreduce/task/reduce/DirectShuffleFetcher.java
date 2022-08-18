@@ -161,6 +161,11 @@ public class DirectShuffleFetcher<K, V> extends Thread {
     shouldExit = true;
     // Send interrupt signal to shutdown the thread.
     this.interrupt();
+    try {
+      join(5000);
+    } catch (InterruptedException ie) {
+      LOG.warn("Got interrupt while joining " + getName(), ie);
+    }
   }
 
   /**
