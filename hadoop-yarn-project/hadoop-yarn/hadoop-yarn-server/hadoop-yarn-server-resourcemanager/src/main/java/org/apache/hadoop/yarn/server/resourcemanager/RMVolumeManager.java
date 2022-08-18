@@ -4,11 +4,11 @@
 package org.apache.hadoop.yarn.server.resourcemanager;
 
 import com.google.gson.JsonArray;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.util.MaprShellCommandExecutor;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.rpcauth.RpcAuthRegistry;
+import org.apache.hadoop.util.MaprShellCommandExecutor;
 import org.apache.hadoop.yarn.util.ScramCredentialScriptUtil;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -33,6 +33,7 @@ public class RMVolumeManager extends VolumeManager {
     private String rmDir;
     private String rmSystemDir;
     private String rmStagingDir;
+    private String newHSVolumeMountPath;
 
     public RMVolumeManager() {
         super(YarnDefaultProperties.RM_VOLUME_MANAGER_SERVICE);
@@ -60,20 +61,34 @@ public class RMVolumeManager extends VolumeManager {
                 && new Path(rmStagingDir).toUri().getRawPath().startsWith(new Path(rmDir).toUri().getRawPath())
                 && new Path(rmSystemDir).toUri().getRawPath().startsWith(new Path(rmDir).toUri().getRawPath());
 
-        verifyRMVolumeMountPoint();
-        createVolumes(conf);
-        if(newVolumePathSupportEnabled) {
-            moveVolumeDataAfterUpgrade();
+        try {
+            lockVolume(RM_VOLUME_NAME);
+            // unmount if necessary
+            verifyRMVolumeMountPoint();
+            if(useVolumeSharding) {
+                verifyRMShardedVolumesMountPoints();
+            }
+            createVolumes(conf);
+            if(newHSVolumeMountPath != null && !isVolumeMounted(HS_VOLUME_NAME)) {
+                mountVolume(HS_VOLUME_NAME, newHSVolumeMountPath);
+            }
+            RMVolumeShardingUtil.rebalanceVolumes(rmSystemDir, volumeCount, useVolumeSharding, rmDir, fs);
+            RMVolumeShardingUtil.rebalanceVolumes(rmStagingDir, volumeCount, useVolumeSharding, rmDir, fs);
+        } finally {
+            unlockVolume(RM_VOLUME_NAME);
         }
-        RMVolumeShardingUtil.rebalanceVolumes(rmSystemDir, volumeCount, useVolumeSharding, rmDir, fs);
-        RMVolumeShardingUtil.rebalanceVolumes(rmStagingDir, volumeCount, useVolumeSharding, rmDir, fs);
     }
 
     @Override
     public void createVolumes(Configuration conf) throws Exception {
-        waitForYarnPathCreated(conf);
+        waitForYarnPathCreated();
         // create separate volume for general RM dir
-        createVolume("");
+        if(!isVolumeMounted(RM_VOLUME_NAME)) {
+            createVolume("");
+            if (newVolumePathSupportEnabled) {
+                moveVolumeDataAfterUpgrade();
+            }
+        }
         if(conf.get(CommonConfigurationKeysPublic.HADOOP_SECURITY_TOKEN_MECHANISM, UserGroupInformation.DIGEST_AUTH_MECHANISM).
                 equalsIgnoreCase(UserGroupInformation.SCRAM_AUTH_MECHANISM)){
             ScramCredentialScriptUtil.checkAndCopyScramCreds(conf, "resourceManager");
@@ -86,7 +101,9 @@ public class RMVolumeManager extends VolumeManager {
 
         if(useVolumeSharding) {
             for (int volumeNumber = 0; volumeNumber < volumeCount; volumeNumber++) {
-                createVolume(Integer.toString(volumeNumber));
+                if(!isVolumeMounted(RM_VOLUME_NAME + "_" + volumeNumber)) {
+                    createVolume(Integer.toString(volumeNumber));
+                }
                 createDir(rmSystemDir.replaceAll(rmDir, rmDir + Path.SEPARATOR + volumeNumber),
                         YarnAppUtil.RM_SYSTEM_DIR_PERMISSION);
 
@@ -97,55 +114,59 @@ public class RMVolumeManager extends VolumeManager {
     }
 
     private void verifyRMVolumeMountPoint() throws IOException {
-        String rmVolumeName = "mapr.resourcemanager.volume";
-        MaprShellCommandExecutor executor = new MaprShellCommandExecutor();
-
-        String[] volumeListCommand = new String[] {"volume", "list"};
-        Map<String, String> volumeListParams = new HashMap<>();
-        volumeListParams.put("columns", "volumename,mountdir,mounted");
-        volumeListParams.put("filter", "[n=="+ rmVolumeName +"]");
-
-        JsonArray result = executor.execute(volumeListCommand, volumeListParams, false);
-        if(result != null && result.size() > 0) {
-            String volumeName = result.get(0).getAsJsonObject().get("volumename").getAsString();
-            String rmVolumePath = result.get(0).getAsJsonObject().get("mountdir").getAsString();
-            int mounted = result.get(0).getAsJsonObject().get("mounted").getAsInt();
-            if(!rmVolumePath.equals(mountPath) && volumeName.equals(rmVolumeName) && mounted == 1 && newVolumePathSupportEnabled) {
-                verifyHSVolumeMountPoint(rmVolumePath);
-                LOG.info("Volume " + rmVolumeName + " is mounted at " + rmVolumePath + ". Mount path is configured as " + mountPath);
-                String[] volumeUnmountCommand = new String[] {"volume", "unmount"};
-                Map<String, String> volumeUnmountParams = new HashMap<>();
-                volumeUnmountParams.put("name", rmVolumeName);
-                executor.execute(volumeUnmountCommand, volumeUnmountParams, false);
+        Map<String, String> volumeInfo = getVolumeInfo(RM_VOLUME_NAME);
+        if(volumeInfo != null) {
+            String rmVolumePath = volumeInfo.get(VOLUME_PATH);
+            int mounted = Integer.parseInt(volumeInfo.get(VOLUME_MOUNTED));
+            if(mounted != 1) {
+                return;
+            }
+            // newVolumePathSupportEnabled disabled, while volume already remounted to new path
+            if(rmVolumePath.equals(rmDir) && !newVolumePathSupportEnabled) {
+                LOG.warn("Volume " + RM_VOLUME_NAME + " is mounted at " + rmDir + ". Disabling for property " +
+                        YarnDefaultProperties.RM_DIR_VOLUME_NEW_PATH_SUPPORT_ENABLED + " is not supported. Continue as new-volume-path-support is true");
+                // newVolumePathSupportEnabled enabled, remount required, but HS volume should be checked first
+            } else if(!rmVolumePath.equals(mountPath)) {
+                if(isHSVolumeChildForRMVolume(rmVolumePath)) {
+                    unmountVolume(HS_VOLUME_NAME);
+                }
+                LOG.info("Volume " + RM_VOLUME_NAME + " is mounted at " + rmVolumePath + ". Mount path is configured as " + mountPath);
+                unmountVolume(RM_VOLUME_NAME);
             }
         }
     }
 
-    private void verifyHSVolumeMountPoint(String rmVolumePath) throws IOException {
-        String hsVolumeName = "mapr.historyserver.volume";
-        String rmVolumeName = "mapr.resourcemanager.volume";
-
-        MaprShellCommandExecutor executor = new MaprShellCommandExecutor();
-
-        String[] volumeListCommand = new String[] {"volume", "list"};
-        Map<String, String> volumeListParams = new HashMap<>();
-        volumeListParams.put("columns", "volumename,mountdir,mounted");
-        volumeListParams.put("filter", "[n=="+ hsVolumeName +"]");
-
-        JsonArray result = executor.execute(volumeListCommand, volumeListParams, false);
-        if(result != null && result.size() > 0) {
-            String volumeName = result.get(0).getAsJsonObject().get("volumename").getAsString();
-            String hsVolumePath = result.get(0).getAsJsonObject().get("mountdir").getAsString();
-            int mounted = result.get(0).getAsJsonObject().get("mounted").getAsInt();
-            if(hsVolumePath.startsWith(rmVolumePath + Path.SEPARATOR) && volumeName.equals(hsVolumeName) && mounted == 1) {
-                LOG.info("Volume " + hsVolumeName + " with path " + hsVolumePath + " is child of " + rmVolumeName + " with path " + rmVolumePath + "" +
-                        ". Before unmount " + rmVolumeName + " need to unmount " + hsVolumeName);
-                String[] volumeUnmountCommand = new String[] {"volume", "unmount"};
-                Map<String, String> volumeUnmountParams = new HashMap<>();
-                volumeUnmountParams.put("name", hsVolumeName);
-                executor.execute(volumeUnmountCommand, volumeUnmountParams, false);
+    private void verifyRMShardedVolumesMountPoints() throws IOException {
+        for (int volumeNumber = 0; volumeNumber < volumeCount; volumeNumber++) {
+            String shardedVolumeName = RM_VOLUME_NAME + "_" + volumeNumber;
+            String volumePath = rmDir + Path.SEPARATOR + volumeNumber;
+            Map<String, String> volumeInfo = getVolumeInfo(shardedVolumeName);
+            if (volumeInfo != null) {
+                String mountedPath = volumeInfo.get(VOLUME_PATH);
+                int mounted = Integer.parseInt(volumeInfo.get(VOLUME_MOUNTED));
+                if (mounted != 1) {
+                    return;
+                }
+                if(!mountedPath.equals(volumePath)) {
+                    unmountVolume(shardedVolumeName);
+                }
             }
         }
+    }
+
+    private boolean isHSVolumeChildForRMVolume(String rmVolumePath) throws IOException {
+        Map<String, String> volumeInfo = getVolumeInfo(HS_VOLUME_NAME);
+        if(volumeInfo != null) {
+            String hsVolumePath = volumeInfo.get(VOLUME_PATH);
+            int mounted = Integer.parseInt(volumeInfo.get(VOLUME_MOUNTED));
+            if(hsVolumePath.startsWith(rmVolumePath + Path.SEPARATOR) && mounted == 1) {
+                newHSVolumeMountPath = hsVolumePath;
+                LOG.info("Volume " + HS_VOLUME_NAME + " with path " + hsVolumePath + " is child of " + RM_VOLUME_NAME + " with path " + rmVolumePath + "" +
+                        ". Before unmount " + RM_VOLUME_NAME + " need to unmount " + HS_VOLUME_NAME);
+                return true;
+            }
+        }
+        return false;
     }
 
     private void moveVolumeDataAfterUpgrade() throws IOException {
@@ -154,7 +175,9 @@ public class RMVolumeManager extends VolumeManager {
             FileStatus[] oldData = fs.listStatus(oldRMDir);
             for(FileStatus srcDir: oldData) {
                 Path dstDir = new Path(mountPath, srcDir.getPath().getName());
-                fs.rename(srcDir.getPath(), dstDir);
+                if(!fs.exists(dstDir)) {
+                    fs.rename(srcDir.getPath(), dstDir);
+                }
             }
             oldData = fs.listStatus(oldRMDir);
             if(oldData.length == 0) {

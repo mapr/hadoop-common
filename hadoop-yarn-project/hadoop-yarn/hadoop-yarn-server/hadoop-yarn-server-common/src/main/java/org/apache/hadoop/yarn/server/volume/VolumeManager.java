@@ -1,11 +1,13 @@
 package org.apache.hadoop.yarn.server.volume;
 
+import com.google.gson.JsonArray;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.util.BaseMapRUtil;
+import org.apache.hadoop.util.MaprShellCommandExecutor;
 import org.apache.hadoop.util.RMVolumeShardingUtil;
 import org.apache.hadoop.util.Shell;
 import org.apache.hadoop.yarn.conf.YarnDefaultProperties;
@@ -14,18 +16,29 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public abstract class VolumeManager extends ConfigurableAuxiliaryService {
 
+    public static final String VOLUME_NAME = "name";
+    public static final String VOLUME_PATH = "path";
+    public static final String VOLUME_MOUNTED = "mounted";
+    public static final String HS_VOLUME_NAME = "mapr.historyserver.volume";
+    public static final String RM_VOLUME_NAME = "mapr.resourcemanager.volume";
+
     protected Logger LOG = LoggerFactory.getLogger(VolumeManager.class);
     protected String volumeLogfilePath;
     protected String volumeMode;
     protected String mountPath;
+    protected Path yarnDir;
     protected boolean newVolumePathSupportEnabled;
     protected FileSystem fs;
+
+    private static final long timestamp = System.currentTimeMillis();
 
     public VolumeManager(String name) {
         super(name);
@@ -36,6 +49,7 @@ public abstract class VolumeManager extends ConfigurableAuxiliaryService {
         fs = FileSystem.get(conf);
         newVolumePathSupportEnabled = conf.getBoolean(YarnDefaultProperties.RM_DIR_VOLUME_NEW_PATH_SUPPORT_ENABLED, YarnDefaultProperties.DEFAULT_RM_DIR_VOLUME_NEW_PATH_SUPPORT_ENABLED);
         volumeLogfilePath = RMVolumeShardingUtil.getPathToVolumeLog();
+        yarnDir = new Path(conf.get(YarnDefaultProperties.YARN_DIR, YarnDefaultProperties.DEFAULT_YARN_DIR));
     }
 
     public abstract void createVolumes(Configuration conf) throws Exception;
@@ -106,9 +120,8 @@ public abstract class VolumeManager extends ConfigurableAuxiliaryService {
         }
     }
 
-    protected void waitForYarnPathCreated(Configuration conf) throws Exception {
+    protected void waitForYarnPathCreated() throws Exception {
         int timeout = 200;
-        Path yarnDir = new Path(conf.get(YarnDefaultProperties.YARN_DIR, YarnDefaultProperties.DEFAULT_YARN_DIR));
         Path yarnParentDir = yarnDir.getParent();
         if(!fs.exists(yarnParentDir)) {
             LOG.info("Waiting for Yarn parent directory creation("+ yarnParentDir.toString() +") before mounting RM volumes");
@@ -153,6 +166,18 @@ public abstract class VolumeManager extends ConfigurableAuxiliaryService {
         }
     }
 
+    protected void copyPermissionsIfNeeded(FileStatus srcStatus, Path dst) throws Exception {
+        Path src = srcStatus.getPath();
+
+        if (srcStatus.isDirectory()) {
+            List<FileStatus> contents = Arrays.asList(fs.listStatus(src));
+            for (FileStatus innerFile : contents) {
+                copyPermissionsIfNeeded(innerFile, new Path(dst, innerFile.getPath().getName()));
+            }
+        }
+        copyOwnerAndPermission(srcStatus, dst);
+    }
+
     protected void copyOwnerAndPermission(FileStatus srcStatus, Path dst) throws Exception {
         FileStatus dstFileStatus = fs.getFileStatus(dst);
         FsPermission srcFilePermission = srcStatus.getPermission();
@@ -163,6 +188,100 @@ public abstract class VolumeManager extends ConfigurableAuxiliaryService {
         }
         if(!dstFileStatus.getOwner().equals(srcFileOwner) || !dstFileStatus.getGroup().equals(srcFileGroup)) {
             fs.setOwner(dst, srcFileOwner, srcFileGroup);
+        }
+    }
+
+    protected Map<String, String> getVolumeInfo(String volumeName) throws IOException {
+        MaprShellCommandExecutor executor = new MaprShellCommandExecutor();
+
+        String[] volumeListCommand = new String[] {"volume", "list"};
+        Map<String, String> volumeListParams = new HashMap<>();
+        volumeListParams.put("columns", "volumename,mountdir,mounted");
+        volumeListParams.put("filter", "[n=="+ volumeName +"]");
+
+        JsonArray result = executor.execute(volumeListCommand, volumeListParams, false);
+        if(result != null && result.size() > 0) {
+            String name = result.get(0).getAsJsonObject().get("volumename").getAsString();
+            String path = result.get(0).getAsJsonObject().get("mountdir").getAsString();
+            String mounted = result.get(0).getAsJsonObject().get("mounted").getAsString();
+            Map<String, String> volumeInfo = new HashMap<>();
+            volumeInfo.put(VOLUME_NAME, name);
+            volumeInfo.put(VOLUME_PATH, path);
+            volumeInfo.put(VOLUME_MOUNTED, mounted);
+            return volumeInfo;
+        }
+        return null;
+    }
+
+    protected boolean isVolumeMounted(String volumeName) throws IOException {
+        Map<String, String> volumeInfo = getVolumeInfo(volumeName);
+        if(volumeInfo != null) {
+            return Integer.parseInt(volumeInfo.get(VOLUME_MOUNTED)) == 1;
+        }
+        return false;
+    }
+
+    protected void mountVolume(String volumeName, String volumeMountPath) throws IOException {
+        MaprShellCommandExecutor executor = new MaprShellCommandExecutor();
+        String[] command = new String[] {"volume", "mount"};
+        Map<String, String> params = new HashMap<>();
+        params.put("name", volumeName);
+        params.put("path", volumeMountPath);
+        executor.execute(command, params, false);
+    }
+
+    protected void unmountVolume(String volumeName) throws IOException {
+        MaprShellCommandExecutor executor = new MaprShellCommandExecutor();
+        String[] command = new String[] {"volume", "unmount"};
+        Map<String, String> params = new HashMap<>();
+        params.put("name", volumeName);
+        executor.execute(command, params, false);
+    }
+
+    protected void lockVolume(String volumeName) throws Exception {
+        waitForYarnPathCreated();
+        Path yarnParentDir = yarnDir.getParent();
+        Path lockFile = new Path(yarnParentDir, volumeName + "_lock");
+        Path lockFileID = new Path(lockFile, BaseMapRUtil.getMapRHostName() + "_" + timestamp);
+
+        if(!fs.exists(lockFile)) {
+            LOG.debug("Volume creation locked by current instance, lockfile is " + lockFileID.toString());
+            fs.mkdirs(lockFileID);
+        } else {
+            LOG.info("Volume creation ("+ volumeName +") is performed by another VolumeManager instance, waiting for completion, lockfile is " + lockFile.toString());
+            waitForLockRelease(lockFile);
+            lockVolume(volumeName);
+        }
+    }
+
+    protected void unlockVolume(String volumeName) throws IOException {
+        Path yarnParentDir = yarnDir.getParent();
+        Path lockFile = new Path(yarnParentDir, volumeName + "_lock");
+        Path lockFileID = new Path(lockFile, BaseMapRUtil.getMapRHostName() + "_" + timestamp);
+
+        if(fs.exists(lockFileID)) {
+            fs.delete(lockFile, true);
+        }
+    }
+
+    protected void waitForLockRelease(Path lockFile) throws Exception {
+        int timeout = 200;
+        for(int i = 0; i < timeout; i++) {
+            if(fs.exists(lockFile)) {
+                TimeUnit.SECONDS.sleep(3);
+            } else {
+                break;
+            }
+        }
+        if(fs.exists(lockFile)) {
+            long creationTime = fs.getFileStatus(lockFile).getModificationTime();
+            long currentMillis = System.currentTimeMillis();
+            if((currentMillis - creationTime) > (590 * 1000)) { // 10 minutes
+                // force release lock
+                fs.delete(lockFile, true);
+            } else {
+                throw new RuntimeException("Volume creation lock wait timeout");
+            }
         }
     }
 }
