@@ -116,7 +116,7 @@ public class YarnDefaultProperties extends Properties {
         props.put(YarnConfiguration.APPLICATION_HISTORY_AUX_SERVICES,
                 APP_HISTORY_VOLUME_MANAGER_SERVICE);
         props.put(String.format(YarnConfiguration.AUX_SERVICE_FMT, APP_HISTORY_VOLUME_MANAGER_SERVICE),
-                "org.apache.hadoop.yarn.server.resourcemanager.RMVolumeManager");
+                "org.apache.hadoop.yarn.server.applicationhistoryservice.HSVolumeManager");
 
         // Configuration for RM's RPC services
         props.put(YarnConfiguration.RM_ADDRESS,
