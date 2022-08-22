@@ -71,8 +71,6 @@ function createSymlinks() {
   ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/commons-cli-1.*.jar __PREFIX__/lib/
   rm -f __PREFIX__/lib/commons-lang3-3.*.jar
   ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/commons-lang3-3.*.jar __PREFIX__/lib/
-  rm -f __PREFIX__/lib/htrace-*.jar
-  ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/htrace-*.jar  __PREFIX__/lib/
   rm -f __PREFIX__/lib/hadoop-auth-*.jar
   ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/hadoop-auth-__VERSION_3DIGIT__*.jar __PREFIX__/lib/
   rm -f __PREFIX__/lib/hadoop-yarn-api-*.jar
@@ -83,8 +81,9 @@ function createSymlinks() {
   ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/yarn/hadoop-yarn-common-__VERSION_3DIGIT__*.jar __PREFIX__/lib/
 
   ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/audience-annotations-0.*.jar __PREFIX__/lib/
-  ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/activation-1.*.jar __PREFIX__/lib/
 
+  rm -f __PREFIX__/lib/hadoop-shaded-protobuf_*.jar
+  ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/hadoop-shaded-protobuf_*.jar /opt/mapr/lib
   rm -f __PREFIX__/lib/hadoop-shaded-guava-*.jar
   ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/hadoop-shaded-guava-*.jar __PREFIX__/lib/
   rm -f __PREFIX__/lib/woodstox-core-*.jar
