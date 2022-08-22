@@ -206,10 +206,28 @@ public class NodeManagerHardwareUtils {
    */
   public static int getVCores(ResourceCalculatorPlugin plugin,
       Configuration conf) {
+    String message;
+    int cores = -1;
     if (!isHardwareDetectionEnabled(conf) || plugin == null) {
-      return getConfiguredVCores(conf);
+      cores = getConfiguredVCores(conf);
+    }else {
+      cores =  getVCoresInternal(plugin, conf);
     }
-    return getVCoresInternal(plugin, conf);
+    /*MAPRYARN-211.
+     * This problem occurs when there node has less than 5 CPU.
+     * Warden uses the following formula to calculate yarn.nodemanager.resource.cpu-vcores:
+     * [# CPU cores on node] – [# of CPU cores assigned to MapR Filesystem].
+     * And MapR Filesystem user 4 CPU core by default.*/
+    float physicalCores =
+            NodeManagerHardwareUtils.getContainersCPUs(plugin, conf);
+    if (cores <= 0 && physicalCores <= 4.0) {
+      cores = (int) Math.min(YarnConfiguration.DEFAULT_NM_VCORES, physicalCores);
+      message = "Illegal value for " + YarnConfiguration.NM_VCORES
+              + ". Value must be greater than 0."
+              + " Further the variable " + YarnConfiguration.NM_VCORES + "=" + cores;
+      LOG.warn(message);
+    }
+    return cores;
   }
 
   private static int getVCoresInternal(ResourceCalculatorPlugin plugin,
@@ -237,21 +255,6 @@ public class NodeManagerHardwareUtils {
         throw new IllegalArgumentException(message);
       }
     }
-    /*MAPRYARN-211.
-     * This problem occurs when there node has less than 5 CPU.
-     * Warden uses the following formula to calculate yarn.nodemanager.resource.cpu-vcores:
-     * [# CPU cores on node] – [# of CPU cores assigned to MapR Filesystem].
-     * And MapR Filesystem user 4 CPU core by default.*/
-    float physicalCores =
-            NodeManagerHardwareUtils.getContainersCPUs(plugin, conf);
-    if (cores <= 0 && physicalCores <= 4.0) {
-      cores = (int) Math.min(YarnConfiguration.DEFAULT_NM_VCORES, physicalCores);
-      message = "Illegal value for " + YarnConfiguration.NM_VCORES
-              + ". Value must be greater than 0."
-              + " Further the variable " + YarnConfiguration.NM_VCORES + "=" + cores;
-      LOG.warn(message);
-    }
-
     return cores;
   }
 
