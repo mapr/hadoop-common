@@ -225,8 +225,8 @@ public class LocalJobRunner implements ClientProtocol {
       conf.setClass(MRConfig.TASK_LOCAL_OUTPUT_CLASS, MROutputFiles.class, MapOutputFile.class);
       conf.setClass(MRJobConfig.MAP_OUTPUT_COLLECTOR_CLASS_ATTR, MapTask.MapOutputBuffer.class, MapOutputCollector.class);
       conf.setClass(MRConfig.SHUFFLE_CONSUMER_PLUGIN, Shuffle.class, ShuffleConsumerPlugin.class);
-      conf.setClass("mapred.ifile.output.stream.class", IFileOutputStream.class, IFileOutputStream.class);
-      conf.setClass("mapred.ifile.output.input.class", IFileInputStream.class, IFileInputStream.class);
+      conf.setClass(MRConfig.MAPRED_IFILE_OUTPUTSTREAM, IFileOutputStream.class, IFileOutputStream.class);
+      conf.setClass(MRConfig.MAPRED_IFILE_INPUTSTREAM, IFileInputStream.class, IFileInputStream.class);
     }
 
     protected abstract class RunnableWithThrowable implements Runnable {
