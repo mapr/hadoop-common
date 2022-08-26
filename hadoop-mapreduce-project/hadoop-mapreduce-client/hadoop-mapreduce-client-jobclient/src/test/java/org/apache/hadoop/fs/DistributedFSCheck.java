@@ -141,6 +141,10 @@ public class DistributedFSCheck extends TestCase {
       listSubtree(symlink, writer);
       return;
     }
+    //KV file types is not a file or directory. This type returns itself during listing, that's why should skip listing for them.
+    if (!rootStatus.isDirectory() && !rootStatus.isFile() && !rootStatus.isSymlink()) {
+      return;
+    }
     
     FileStatus [] children = null;
     try {
