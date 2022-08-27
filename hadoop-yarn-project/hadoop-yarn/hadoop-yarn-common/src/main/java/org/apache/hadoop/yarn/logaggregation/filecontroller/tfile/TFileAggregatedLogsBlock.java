@@ -47,14 +47,16 @@ public class TFileAggregatedLogsBlock extends LogAggregationHtmlBlock {
   private final Configuration conf;
   private Path remoteRootLogDir;
   private String remoteRootLogDirSuffix;
+  private String remoteOlderRootLogDirSuffix;
 
   @Inject
   public TFileAggregatedLogsBlock(ViewContext ctx, Configuration conf,
-      Path remoteRootLogDir, String remoteRootLogDirSuffix) {
+      Path remoteRootLogDir, String remoteRootLogDirSuffix, String remoteOlderRootLogDirSuffix) {
     super(ctx);
     this.conf = conf;
     this.remoteRootLogDir = remoteRootLogDir;
     this.remoteRootLogDirSuffix = remoteRootLogDirSuffix;
+    this.remoteOlderRootLogDirSuffix = remoteOlderRootLogDirSuffix;
   }
 
   @Override
@@ -69,7 +71,7 @@ public class TFileAggregatedLogsBlock extends LogAggregationHtmlBlock {
     try {
       nodeFiles = LogAggregationUtils
           .getRemoteNodeFileDir(conf, params.getAppId(),
-          params.getAppOwner(), remoteRootLogDir, remoteRootLogDirSuffix);
+          params.getAppOwner(), remoteRootLogDir, remoteRootLogDirSuffix, remoteOlderRootLogDirSuffix);
     } catch (RuntimeException e) {
       throw e;
     } catch (Exception ex) {

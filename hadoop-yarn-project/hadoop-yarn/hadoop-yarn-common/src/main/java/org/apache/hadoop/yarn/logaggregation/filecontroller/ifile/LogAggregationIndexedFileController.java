@@ -510,7 +510,7 @@ public class LogAggregationIndexedFileController
     long size = logRequest.getBytes();
     RemoteIterator<FileStatus> nodeFiles = LogAggregationUtils
         .getRemoteNodeFileDir(conf, appId, logRequest.getAppOwner(),
-        this.remoteRootLogDir, this.remoteRootLogDirSuffix);
+        this.remoteRootLogDir, this.remoteRootLogDirSuffix, this.remoteOlderRootLogDirSuffix);
     if (!nodeFiles.hasNext()) {
       throw new IOException("There is no available log file for "
           + "application:" + appId);
@@ -668,7 +668,7 @@ public class LogAggregationIndexedFileController
         : LogAggregationUtils.getNodeString(nodeId);
     RemoteIterator<FileStatus> nodeFiles = LogAggregationUtils
         .getRemoteNodeFileDir(conf, appId, appOwner, this.remoteRootLogDir,
-        this.remoteRootLogDirSuffix);
+        this.remoteRootLogDirSuffix, this.remoteOlderRootLogDirSuffix);
     if (!nodeFiles.hasNext()) {
       throw new IOException("There is no available log file for "
           + "application:" + appId);
@@ -912,7 +912,7 @@ public class LogAggregationIndexedFileController
   public Path getOlderRemoteAppLogDir(ApplicationId appId, String user)
       throws IOException {
     return LogAggregationUtils.getOlderRemoteAppLogDir(conf, appId, user,
-        this.remoteRootLogDir, this.remoteRootLogDirSuffix);
+        this.remoteRootLogDir, this.remoteOlderRootLogDirSuffix);
   }
 
   @Private
