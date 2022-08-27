@@ -90,7 +90,8 @@ public class IndexedFileAggregatedLogsBlock extends LogAggregationHtmlBlock {
       nodeFiles = LogAggregationUtils
           .getRemoteNodeFileList(conf, appId, appOwner,
               this.fileController.getRemoteRootLogDir(),
-              this.fileController.getRemoteRootLogDirSuffix());
+              this.fileController.getRemoteRootLogDirSuffix(),
+              this.fileController.getRemoteOlderRootLogDirSuffix());
     } catch(Exception ex) {
       html.h1("Unable to locate any logs for container "
           + containerId.toString());

@@ -176,7 +176,7 @@ public class LogAggregationTFileController
     long size = logRequest.getBytes();
     RemoteIterator<FileStatus> nodeFiles = LogAggregationUtils
         .getRemoteNodeFileDir(conf, appId, logRequest.getAppOwner(),
-        remoteRootLogDir, remoteRootLogDirSuffix);
+        remoteRootLogDir, remoteRootLogDirSuffix, remoteOlderRootLogDirSuffix);
     byte[] buf = new byte[65535];
     while (nodeFiles != null && nodeFiles.hasNext()) {
       final FileStatus thisNodeFile = nodeFiles.next();
@@ -274,7 +274,7 @@ public class LogAggregationTFileController
         : LogAggregationUtils.getNodeString(nodeId);
     RemoteIterator<FileStatus> nodeFiles = LogAggregationUtils
         .getRemoteNodeFileDir(conf, appId, appOwner,
-        remoteRootLogDir, remoteRootLogDirSuffix);
+        remoteRootLogDir, remoteRootLogDirSuffix, remoteOlderRootLogDirSuffix);
     if (nodeFiles == null) {
       throw new IOException("There is no available log file for "
           + "application:" + appId);
@@ -339,7 +339,7 @@ public class LogAggregationTFileController
   @Override
   public void renderAggregatedLogsBlock(Block html, ViewContext context) {
     TFileAggregatedLogsBlock block = new TFileAggregatedLogsBlock(
-        context, conf, remoteRootLogDir, remoteRootLogDirSuffix);
+        context, conf, remoteRootLogDir, remoteRootLogDirSuffix, remoteOlderRootLogDirSuffix);
     block.render(html);
   }
 

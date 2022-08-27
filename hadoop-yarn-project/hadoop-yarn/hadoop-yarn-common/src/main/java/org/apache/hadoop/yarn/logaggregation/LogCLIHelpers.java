@@ -335,7 +335,8 @@ public class LogCLIHelpers implements Configurable {
       try {
         nodeFiles = LogAggregationUtils.getRemoteNodeFileDir(conf, appId,
           appOwner, fileFormat.getRemoteRootLogDir(),
-          fileFormat.getRemoteRootLogDirSuffix());
+          fileFormat.getRemoteRootLogDirSuffix(),
+          fileFormat.getRemoteOlderRootLogDirSuffix());
       } catch (FileNotFoundException fnf) {
         logDirNotExist(fileFormat.getRemoteAppLogDir(appId,
           appOwner).toString());

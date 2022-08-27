@@ -382,7 +382,7 @@ public class TestAggregatedLogsBlock {
 
     @Inject
     TFileAggregatedLogsBlockForTest(ViewContext ctx, Configuration conf) {
-      super(ctx, conf, new Path("target/logs"), "logs");
+      super(ctx, conf, new Path("target/logs"), "logs", "logs");
     }
 
     public void render(Block html) {

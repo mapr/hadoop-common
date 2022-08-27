@@ -263,7 +263,7 @@ public class LogAggregationUtils {
    */
   public static RemoteIterator<FileStatus> getRemoteNodeFileDir(
       Configuration conf, ApplicationId appId, String appOwner,
-      org.apache.hadoop.fs.Path remoteRootLogDir, String suffix)
+      org.apache.hadoop.fs.Path remoteRootLogDir, String suffix, String oldSuffix)
       throws IOException {
     RemoteIterator<FileStatus> nodeFilesCur= null;
     RemoteIterator<FileStatus> nodeFilesPrev = null;
@@ -282,7 +282,7 @@ public class LogAggregationUtils {
     if (isOlderPathEnabled(conf)) {
       try {
         Path remoteAppLogDir = getOlderRemoteAppLogDir(conf, appId, appOwner,
-            remoteRootLogDir, suffix);
+            remoteRootLogDir, oldSuffix);
         nodeFilesPrev = getNodeFiles(conf,
                 remoteAppLogDir, appId, appOwner);
       } catch (IOException ex) {
@@ -331,7 +331,7 @@ public class LogAggregationUtils {
    */
   public static List<FileStatus> getRemoteNodeFileList(
       Configuration conf, ApplicationId appId, String appOwner,
-      org.apache.hadoop.fs.Path remoteRootLogDir, String suffix)
+      org.apache.hadoop.fs.Path remoteRootLogDir, String suffix, String oldSuffix)
       throws IOException {
     StringBuilder diagnosticsMsg = new StringBuilder();
     List<FileStatus> nodeFiles = new ArrayList<>();
@@ -352,7 +352,7 @@ public class LogAggregationUtils {
     if (isOlderPathEnabled(conf)) {
       try {
         Path remoteAppLogDir = getOlderRemoteAppLogDir(conf, appId, appOwner,
-            remoteRootLogDir, suffix);
+            remoteRootLogDir, oldSuffix);
         Path qualifiedLogDir = FileContext.getFileContext(conf).
             makeQualified(remoteAppLogDir);
         nodeFiles.addAll(Arrays.asList(FileContext.getFileContext(

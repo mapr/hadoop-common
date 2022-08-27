@@ -103,6 +103,7 @@ public abstract class LogAggregationFileController {
   protected Configuration conf;
   protected Path remoteRootLogDir;
   protected String remoteRootLogDirSuffix;
+  protected String remoteOlderRootLogDirSuffix;
   protected int retentionSize;
   protected String fileControllerName;
 
@@ -132,6 +133,7 @@ public abstract class LogAggregationFileController {
 
     extractRemoteRootLogDir();
     extractRemoteRootLogDirSuffix();
+    extractRemoteOlderRootLogDirSuffix();
 
     initInternal(conf);
   }
@@ -156,6 +158,14 @@ public abstract class LogAggregationFileController {
    */
   public String getRemoteRootLogDirSuffix() {
     return this.remoteRootLogDirSuffix;
+  }
+
+  /**
+   * Get the log aggregation directory suffix.
+   * @return the log aggregation directory suffix
+   */
+  public String getRemoteOlderRootLogDirSuffix() {
+    return this.remoteOlderRootLogDirSuffix;
   }
 
   /**
@@ -267,6 +277,25 @@ public abstract class LogAggregationFileController {
           YarnConfiguration.NM_REMOTE_APP_LOG_DIR_SUFFIX,
           YarnConfiguration.DEFAULT_NM_REMOTE_APP_LOG_DIR_SUFFIX)
           + "-" + fileControllerName.toLowerCase();
+    }
+  }
+
+  /**
+   * Sets the remoteRootOlderLogDirSuffix class variable extracting
+   * {@link YarnConfiguration#LOG_AGGREGATION_REMOTE_APP_LOG_DIR_SUFFIX_FMT}
+   * from the configuration, or
+   * {@link YarnConfiguration#NM_REMOTE_APP_LOG_DIR_SUFFIX}
+   */
+  protected void extractRemoteOlderRootLogDirSuffix() {
+    String suffix = String.format(
+            YarnConfiguration.LOG_AGGREGATION_REMOTE_APP_LOG_DIR_SUFFIX_FMT,
+            fileControllerName);
+    remoteOlderRootLogDirSuffix = conf.get(suffix);
+    if (remoteOlderRootLogDirSuffix == null
+            || remoteOlderRootLogDirSuffix.isEmpty()) {
+      remoteOlderRootLogDirSuffix = conf.get(
+          YarnConfiguration.NM_REMOTE_APP_LOG_DIR_SUFFIX,
+          YarnConfiguration.DEFAULT_NM_REMOTE_APP_LOG_DIR_SUFFIX);
     }
   }
 
@@ -527,7 +556,7 @@ public abstract class LogAggregationFileController {
   public Path getOlderRemoteAppLogDir(ApplicationId appId, String appOwner)
       throws IOException {
     return LogAggregationUtils.getOlderRemoteAppLogDir(conf, appId, appOwner,
-        this.remoteRootLogDir, this.remoteRootLogDirSuffix);
+        this.remoteRootLogDir, this.remoteOlderRootLogDirSuffix);
   }
 
   protected void cleanOldLogs(Path remoteNodeLogFileForApp,
