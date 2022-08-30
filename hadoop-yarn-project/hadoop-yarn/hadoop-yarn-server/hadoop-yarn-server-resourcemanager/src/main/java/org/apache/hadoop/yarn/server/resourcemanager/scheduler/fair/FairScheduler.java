@@ -496,6 +496,7 @@ public class FairScheduler extends
         queueName = "root.recovery";
         queue = queueMgr.getLeafQueue(queueName, true, applicationId);
       }
+      queueName = queue.getQueueName();
 
       // Skip ACL check for recovering applications: they have been accepted
       // in the queue already recovery should not break that.
