@@ -956,10 +956,12 @@ int is_whitelisted(const char *user) {
  * Returns NULL on failure
  */
 struct passwd* check_user(const char *user) {
+  /** commented out the root check
   if (strcmp(user, "root") == 0) {
     fprintf(LOGFILE, "Running as root is not allowed\n");
     return NULL;
   }
+  */
   char *min_uid_str = get_section_value(MIN_USERID_KEY, &executor_cfg);
   int min_uid = DEFAULT_MIN_USERID;
   if (min_uid_str != NULL) {
