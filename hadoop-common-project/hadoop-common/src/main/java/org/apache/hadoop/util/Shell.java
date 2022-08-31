@@ -34,6 +34,7 @@ import java.util.TimerTask;
 import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.hadoop.security.alias.AbstractJavaKeyStoreProvider;
 import org.apache.hadoop.thirdparty.com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
@@ -75,6 +76,8 @@ public abstract class Shell {
    * Environment variable for Hadoop's home dir: {@value}.
    */
   public static final String ENV_HADOOP_HOME = "HADOOP_HOME";
+  public static final String ENV_HADOOP_OPTS = "HADOOP_OPTS";
+  public static final String ENV_MAPR_JMX_OPTS = "MAPR_JMX_OPTS";
 
   /**
    * query to see if system is Java 7 or later.
@@ -916,6 +919,26 @@ public abstract class Shell {
 
     if (environment != null) {
       builder.environment().putAll(this.environment);
+    }
+
+    // Remove all env vars from the Builder to prevent leaking of env vars from
+    // the parent process.
+    if (!inheritParentEnv) {
+      // Only do this for HADOOP_CREDSTORE_PASSWORD
+      // Sometimes daemons are configured to use the CredentialProvider feature
+      // and given their jceks password via an environment variable.  We need to
+      // make sure to remove it so it doesn't leak to child processes, which
+      // might be owned by a different user.  For example, the NodeManager
+      // running a User's container.
+      builder.environment().remove(
+              AbstractJavaKeyStoreProvider.CREDENTIAL_PASSWORD_ENV_VAR);
+    }
+
+    String jmx_opts = builder.environment().get(ENV_MAPR_JMX_OPTS);
+    if (jmx_opts != null) {
+      String hadoop_opts = builder.environment().get(ENV_HADOOP_OPTS);
+      hadoop_opts = hadoop_opts.replaceAll(jmx_opts, "");
+      builder.environment().put(ENV_HADOOP_OPTS, hadoop_opts);
     }
 
     if (dir != null) {
