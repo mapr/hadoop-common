@@ -26,7 +26,6 @@ import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.HADOOP_SECURITY
 import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.HADOOP_TOKEN_FILES;
 import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.HADOOP_TOKENS;
 import static org.apache.hadoop.security.UGIExceptionMessages.*;
-import static org.apache.hadoop.util.PlatformName.IBM_JAVA;
 import static org.apache.hadoop.util.StringUtils.getTrimmedStringCollection;
 
 import org.apache.hadoop.thirdparty.com.google.common.annotations.VisibleForTesting;
@@ -63,15 +62,12 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import javax.security.auth.DestroyFailedException;
 import javax.security.auth.Subject;
-import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.kerberos.KerberosPrincipal;
 import javax.security.auth.kerberos.KerberosTicket;
 import javax.security.auth.login.AppConfigurationEntry;
-import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
 import javax.security.auth.login.Configuration.Parameters;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
-import javax.security.auth.spi.LoginModule;
 
 import org.apache.hadoop.io.retry.RetryPolicies;
 import org.apache.hadoop.classification.InterfaceAudience;
@@ -94,7 +90,6 @@ import org.apache.hadoop.security.SaslRpcServer.AuthMethod;
 import org.apache.hadoop.security.login.HadoopLoginModule;
 import org.apache.hadoop.security.rpcauth.RpcAuthMethod;
 import org.apache.hadoop.security.rpcauth.RpcAuthRegistry;
-import org.apache.hadoop.security.authentication.util.KerberosUtil;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.TokenIdentifier;
 import org.apache.hadoop.util.Shell;
@@ -556,14 +551,6 @@ public class UserGroupInformation {
     } finally {
       t.setContextClassLoader(oldCCL);
     }
-  }
-
-  private static LoginContext newLoginContextWithKeyTab(String appName,
-                                                        Subject subject, String keytab, String principal) throws LoginException {
-    Map<String,String> overrideOptions = new HashMap<String, String>();
-    overrideOptions.put("keyTab", keytab);
-    overrideOptions.put("principal", principal);
-    return newLoginContext(appName, subject, overrideOptions);
   }
 
   private static javax.security.auth.login.Configuration getJAASConf() {
@@ -2079,26 +2066,29 @@ public class UserGroupInformation {
   /**
    * Login a subject with the given parameters.  If the subject is null,
    * the login context used to create the subject will be attached.
-   * @param subject to login, null for new subject.
-   * @param params for login, null for externally managed ugi.
+   *
+   * @param subject         to login, null for new subject.
+   * @param params          for login, null for externally managed ugi.
    * @return UserGroupInformation for subject
    * @throws IOException
    */
   private static UserGroupInformation doSubjectLogin(
-      Subject subject, LoginParams params) throws IOException {
+          Subject subject, LoginParams params) throws IOException {
     ensureInitialized();
-    // initial default login.
-    if (subject == null && params == null) {
-      params = LoginParams.getDefaults();
-    }
+    if (subject == null)
+      subject = new Subject();
+
     try {
       HadoopLoginContext login;
       if (params == null) {
         login = newLoginContext(
                 userJAASConfName, subject, null);
       } else {
+        Map<String, String> overrideOptions = new HashMap<>();
+        overrideOptions.put("keyTab", params.get(LoginParam.KEYTAB));
+        overrideOptions.put("principal", params.get(LoginParam.PRINCIPAL));
         login = newLoginContext(
-                userJAASConfName, subject, params.getParams());
+                serviceJAASConfName, subject, overrideOptions);
       }
       login.login();
       UserGroupInformation ugi = new UserGroupInformation(login.getSubject(), userJAASConfName);
