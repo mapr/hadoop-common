@@ -944,6 +944,14 @@ public class Configuration implements Iterable<Map.Entry<String,String>>,
     addResourceObject(new Resource(name, restrictedParser));
   }
 
+  public void addResource(Properties props) {
+    addResourceObject(new Resource(props));
+  }
+
+  public void addResource(Properties props, boolean restrictedParser) {
+    addResourceObject(new Resource(props, restrictedParser));
+  }
+
   /**
    * Add a configuration resource. 
    * 

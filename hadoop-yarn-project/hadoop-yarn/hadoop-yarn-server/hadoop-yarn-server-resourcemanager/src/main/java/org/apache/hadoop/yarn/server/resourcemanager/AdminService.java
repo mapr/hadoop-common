@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.hadoop.yarn.conf.YarnDefaultProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
@@ -417,8 +418,11 @@ public class AdminService extends CompositeService implements
 
   protected Configuration loadNewConfiguration()
       throws IOException, YarnException {
+    // load default configured 'disks' resources
+    Configuration defaultDiskResourcesConfiguration = new Configuration(false);
+    defaultDiskResourcesConfiguration.addResource(YarnDefaultProperties.getProperties());
     // Retrieve yarn-site.xml in order to refresh scheduling monitor properties.
-    Configuration conf = getConfiguration(new Configuration(false),
+    Configuration conf = getConfiguration(defaultDiskResourcesConfiguration,
         YarnConfiguration.YARN_SITE_CONFIGURATION_FILE,
         YarnConfiguration.RESOURCE_TYPES_CONFIGURATION_FILE);
     // The reason we call Configuration#size() is because when getConfiguration
