@@ -811,6 +811,13 @@ class S3ABlockOutputStream extends OutputStream implements
     handleSyncableInvocation();
   }
 
+  @Override
+  @Deprecated
+  public void sync() throws IOException {
+    // Sync has been deprecated in favor of hsync.
+    hsync();
+  }
+
   /**
    * Shared processing of Syncable operation reporting/downgrade.
    * @throws UnsupportedOperationException if required.

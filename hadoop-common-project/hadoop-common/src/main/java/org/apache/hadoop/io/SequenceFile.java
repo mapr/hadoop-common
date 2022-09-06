@@ -1362,7 +1362,8 @@ public class SequenceFile {
 
     /** @return Returns the compression codec of data in this file. */
     public CompressionCodec getCompressionCodec() { return codec; }
-    
+
+      @Override
     /**
      * create a sync point.
      * @throws IOException raised on errors performing I/O.

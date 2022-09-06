@@ -131,6 +131,14 @@ public class FSDataOutputStream extends DataOutputStream
   }
 
   @Override  // Syncable
+  @Deprecated
+  public void sync() throws IOException {
+    if (wrappedStream instanceof Syncable) {
+      ((Syncable)wrappedStream).sync();
+    }
+  }
+
+  @Override  // Syncable
   public void hflush() throws IOException {
     if (wrappedStream instanceof Syncable) {
       ((Syncable)wrappedStream).hflush();

@@ -514,6 +514,13 @@ public class RawLocalFileSystem extends FileSystem {
     }
 
     @Override
+    @Deprecated
+    public void sync() throws IOException {
+      // Sync has been deprecated in favor of hsync.
+      hsync();
+    }
+
+    @Override
     public boolean hasCapability(String capability) {
       // a bit inefficient, but intended to make it easier to add
       // new capabilities.

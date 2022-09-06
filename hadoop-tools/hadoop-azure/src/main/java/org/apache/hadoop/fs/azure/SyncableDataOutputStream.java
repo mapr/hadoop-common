@@ -75,6 +75,13 @@ public class SyncableDataOutputStream extends DataOutputStream
   }
 
   @Override
+  @Deprecated
+  public void sync() throws IOException {
+    // Sync has been deprecated in favor of hsync.
+    hsync();
+  }
+
+  @Override
   public void close() throws IOException {
     IOException ioeFromFlush = null;
     try {

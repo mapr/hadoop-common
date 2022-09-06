@@ -602,6 +602,13 @@ public class DFSOutputStream extends FSOutputSummer
     }
   }
 
+  @Override
+  @Deprecated
+  public void sync() throws IOException {
+    // Sync has been deprecated in favor of hsync.
+    hsync();
+  }
+
   /**
    * The expected semantics is all data have flushed out to all replicas
    * and all replicas have done posix fsync equivalent - ie the OS has

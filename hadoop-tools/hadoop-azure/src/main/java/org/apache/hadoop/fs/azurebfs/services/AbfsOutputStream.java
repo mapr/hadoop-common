@@ -461,6 +461,13 @@ public class AbfsOutputStream extends OutputStream implements Syncable,
     }
   }
 
+  @Override
+  @Deprecated
+  public void sync() throws IOException {
+    // Sync has been deprecated in favor of hsync.
+    hsync();
+  }
+
   /** Flush out the data in client's user buffer. After the return of
    * this call, new readers will see the data.
    * @throws IOException if any error occurs

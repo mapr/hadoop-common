@@ -159,6 +159,13 @@ public class TestCryptoStreams extends CryptoStreamsTestBase {
     }
 
     @Override
+    @Deprecated
+    public void sync() throws IOException {
+      // Sync has been deprecated in favor of hsync.
+      hsync();
+    }
+
+    @Override
     public boolean hasCapability(String capability) {
       switch (capability.toLowerCase()) {
       case StreamCapabilities.HFLUSH:

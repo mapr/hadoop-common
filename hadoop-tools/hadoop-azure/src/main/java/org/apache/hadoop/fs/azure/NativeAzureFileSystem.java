@@ -1089,6 +1089,13 @@ public class NativeAzureFileSystem extends FileSystem {
       }
     }
 
+    @Override
+    @Deprecated
+    public void sync() throws IOException {
+      // Sync has been deprecated in favor of hsync.
+      hsync();
+    }
+
     /**
      * Propagate probe of stream capabilities to nested stream
      * (if supported), else return false.
