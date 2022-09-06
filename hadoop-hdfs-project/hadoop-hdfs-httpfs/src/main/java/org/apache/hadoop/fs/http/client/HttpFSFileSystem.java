@@ -174,7 +174,7 @@ public class HttpFSFileSystem extends FileSystem
   public static final String SNAPSHOT_JSON = "Path";
 
   public enum FILE_TYPE {
-    FILE, DIRECTORY, SYMLINK;
+    FILE, DIRECTORY, SYMLINK, TABLE;
 
     public static FILE_TYPE getType(FileStatus fileStatus) {
       if (fileStatus.isFile()) {
@@ -185,6 +185,9 @@ public class HttpFSFileSystem extends FileSystem
       }
       if (fileStatus.isSymlink()) {
         return SYMLINK;
+      }
+      if (fileStatus.isTable()) {
+        return TABLE;
       }
       throw new IllegalArgumentException("Could not determine filetype for: " +
                                          fileStatus.getPath());
