@@ -528,6 +528,13 @@ public class BlockBlobAppendStream extends OutputStream implements Syncable,
     }
   }
 
+  @Override
+  @Deprecated
+  public void sync() throws IOException {
+    // Sync has been deprecated in favor of hsync.
+    hsync();
+  }
+
   /**
    * Force all data in the output stream to be written to Azure storage.
    * Wait to return until this is complete.

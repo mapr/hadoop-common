@@ -1336,7 +1336,8 @@ public class SequenceFile {
 
     /** Returns the compression codec of data in this file. */
     public CompressionCodec getCompressionCodec() { return codec; }
-    
+
+    @Override
     /** create a sync point */
     public void sync() throws IOException {
       if (sync != null && lastSyncPos != out.getPos()) {

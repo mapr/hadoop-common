@@ -357,20 +357,12 @@ public class MaprfsLogAppender extends AppenderSkeleton
         }
     }
 
-//    @Override
-//    public void hsync() {
-//        if (fsout == null) return;
-//        try {
-//            fsout.hsync();
-//        } catch (IOException e) {
-//            LogLog.error(
-//                    "Could not write to: "
-//                            + fsout.getWrappedStream().toString()
-//                            + ". Failing over to local logging", e);
-//        } catch (Throwable t) {
-//            LogLog.error("Fatal error while trying to write to maprfs.", t);
-//        }
-//    }
+    @Override
+    @Deprecated
+    public void sync() throws IOException {
+        // Sync has been deprecated in favor of hsync.
+        hsync();
+    }
 
     @Override
     public void hsync() {

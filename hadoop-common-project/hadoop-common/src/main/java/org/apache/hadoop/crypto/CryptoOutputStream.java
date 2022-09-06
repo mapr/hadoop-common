@@ -304,6 +304,13 @@ public class CryptoOutputStream extends FilterOutputStream implements
       ((Syncable)out).hsync();
     }
   }
+
+  @Override
+  @Deprecated
+  public void sync() throws IOException {
+    // Sync has been deprecated in favor of hsync.
+    hsync();
+  }
   
   /** Forcibly free the direct buffers. */
   private void freeBuffers() {
