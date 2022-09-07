@@ -1226,6 +1226,11 @@ public abstract class AbstractCSQueue implements CSQueue {
     return this.queueAppLifetimeSettings.getMaxParallelApps();
   }
 
+  @Override
+  public String getLabel() {
+    return null;
+  }
+
   abstract int getNumRunnableApps();
 
   protected void updateAbsoluteCapacities() {

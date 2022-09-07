@@ -76,6 +76,8 @@ public class AllocationFileParser {
       "defaultQueueSchedulingPolicy";
   private static final String DEFAULT_QUEUE_SCHEDULING_MODE =
       "defaultQueueSchedulingMode";
+  private static final String DEFAULT_QUEUE_LABEL =
+          "defaultQueueLabel";
 
   private static final Set<String> VALID_TAG_NAMES =
       Sets.newHashSet(QUEUE_MAX_RESOURCES_DEFAULT, USER_MAX_APPS_DEFAULT,
@@ -84,7 +86,7 @@ public class AllocationFileParser {
           DEFAULT_FAIR_SHARE_PREEMPTION_THRESHOLD, QUEUE_MAX_AM_SHARE_DEFAULT,
           RESERVATION_PLANNER, RESERVATION_AGENT, RESERVATION_ADMISSION_POLICY,
           QUEUE_PLACEMENT_POLICY, QUEUE, POOL, USER,
-          DEFAULT_QUEUE_SCHEDULING_POLICY, DEFAULT_QUEUE_SCHEDULING_MODE);
+          DEFAULT_QUEUE_SCHEDULING_POLICY, DEFAULT_QUEUE_SCHEDULING_MODE, DEFAULT_QUEUE_LABEL);
 
   private final NodeList elements;
   private final Map<String, String> textValues = Maps.newHashMap();
@@ -199,6 +201,11 @@ public class AllocationFileParser {
   public int getQueueMaxAppsDefault() {
     Optional<String> value = getTextValue(QUEUE_MAX_APPS_DEFAULT);
     return value.map(Integer::parseInt).orElse(Integer.MAX_VALUE);
+  }
+
+  public String getDefaultQueueLabel() {
+    Optional<String> value = getTextValue(DEFAULT_QUEUE_LABEL);
+    return value.orElse(null);
   }
 
   public float getDefaultFairSharePreemptionThreshold() {

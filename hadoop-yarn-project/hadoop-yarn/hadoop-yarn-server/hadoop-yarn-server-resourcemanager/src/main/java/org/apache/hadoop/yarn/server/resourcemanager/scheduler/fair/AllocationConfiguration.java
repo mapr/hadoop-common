@@ -88,6 +88,9 @@ public class AllocationConfiguration extends ReservationSchedulerConfiguration {
 
   private final Map<String, SchedulingPolicy> schedulingPolicies;
 
+  private final Map<String, String> labels;
+  private final String defaultQueueLabel;
+
   private final SchedulingPolicy defaultSchedulingPolicy;
 
   //Map for maximum container resource allocation per queues by queue name
@@ -144,6 +147,8 @@ public class AllocationConfiguration extends ReservationSchedulerConfiguration {
     this.nonPreemptableQueues = queueProperties.getNonPreemptableQueues();
     this.queueMaxContainerAllocationMap =
         queueProperties.getMaxContainerAllocation();
+    this.labels = queueProperties.getQueueLabels();
+    this.defaultQueueLabel = allocationFileParser.getDefaultQueueLabel();
   }
 
   /**
@@ -179,6 +184,8 @@ public class AllocationConfiguration extends ReservationSchedulerConfiguration {
     QueuePlacementPolicy.fromConfiguration(scheduler);
     nonPreemptableQueues = new HashSet<>();
     queueMaxContainerAllocationMap = new HashMap<>();
+    this.labels = new HashMap<String, String>();
+    this.defaultQueueLabel = null;
   }
 
   /**
@@ -355,6 +362,14 @@ public class AllocationConfiguration extends ReservationSchedulerConfiguration {
     return globalReservationQueueConfig.getAvgOverTimeMultiplier() * 100;
   }
 
+  public Map<String, String> getLabels() {
+    return labels;
+  }
+
+  public String getDefaultQueueLabel() {
+    return defaultQueueLabel;
+  }
+
   @Override
   public float getInstantaneousMaxCapacity(String queue) {
     return globalReservationQueueConfig.getMaxOverTimeMultiplier() * 100;
@@ -415,6 +430,9 @@ public class AllocationConfiguration extends ReservationSchedulerConfiguration {
     queue.setMaxAMShare(getQueueMaxAMShare(name));
     queue.setMaxChildQueueResource(getMaxChildResources(name));
     queue.setMaxContainerAllocation(getQueueMaxContainerAllocation(name));
+    queue.setLabel(queue.refreshLabel());
+    queue.setDefaultLabel(getDefaultQueueLabel());
+    queue.updateLabel();
 
     // Set queue metrics.
     queue.getMetrics().setMinShare(queue.getMinShare());

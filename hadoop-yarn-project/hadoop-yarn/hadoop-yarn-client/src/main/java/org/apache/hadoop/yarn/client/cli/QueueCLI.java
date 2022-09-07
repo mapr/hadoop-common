@@ -321,6 +321,12 @@ public class QueueCLI extends YarnCLI {
     }
     writer.println(labelList);
 
+    String queueLabel = queueInfo.getQueueLabel();
+    if(queueLabel != null && !queueLabel.trim().isEmpty()) {
+      writer.print("\tLabel : ");
+      writer.println(queueLabel);
+    }
+
     Boolean preemptStatus = queueInfo.getPreemptionDisabled();
     if (preemptStatus != null) {
       writer.print("\tPreemption : ");

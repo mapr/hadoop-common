@@ -22,7 +22,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.HashSet;
+import java.util.Arrays;
 
+import org.apache.hadoop.yarn.nodelabels.CommonNodeLabelsManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
@@ -48,6 +51,8 @@ import org.apache.hadoop.yarn.util.resource.Resources;
 
 import org.apache.hadoop.classification.VisibleForTesting;
 
+import static org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.QueueManager.ROOT_QUEUE;
+
 @Private
 @Unstable
 public abstract class FSQueue implements Queue, Schedulable {
@@ -63,7 +68,10 @@ public abstract class FSQueue implements Queue, Schedulable {
   private final YarnAuthorizationProvider authorizer;
   private final PrivilegedEntity queueEntity;
   private final FSQueueMetrics metrics;
-  
+
+  protected String label;
+  protected String defaultLabel;
+
   protected final FSParentQueue parent;
   protected final RecordFactory recordFactory =
       RecordFactoryProvider.getRecordFactory(null);
@@ -237,11 +245,15 @@ public abstract class FSQueue implements Queue, Schedulable {
     queueInfo.setSchedulerType("FairScheduler");
     queueInfo.setQueueName(getQueueName());
 
-    if (scheduler.getClusterResource().getMemorySize() == 0) {
+    Resource clusterResource = scheduler.isResourcesBasedOnLabelsEnabled() ?
+            scheduler.getClusterResource(label) :
+            scheduler.getClusterResource();
+
+    if (clusterResource.getMemorySize() == 0) {
       queueInfo.setCapacity(0.0f);
     } else {
       queueInfo.setCapacity((float) getFairShare().getMemorySize() /
-          scheduler.getClusterResource().getMemorySize());
+              clusterResource.getMemorySize());
     }
 
     if (getFairShare().getMemorySize() == 0) {
@@ -291,6 +303,12 @@ public abstract class FSQueue implements Queue, Schedulable {
     queueInfo.setChildQueues(childQueueInfos);
     queueInfo.setQueueState(QueueState.RUNNING);
     queueInfo.setQueueStatistics(getQueueStatistics());
+    queueInfo.setQueueLabel((label == null)
+            ? CommonNodeLabelsManager.NO_LABEL
+            : label);
+    queueInfo.setAccessibleNodeLabels(new HashSet<>(Arrays.asList((label == null)
+            ? CommonNodeLabelsManager.NO_LABEL
+            : label)));
     return queueInfo;
   }
 
@@ -330,8 +348,15 @@ public abstract class FSQueue implements Queue, Schedulable {
 
   @Override
   public void setFairShare(Resource fairShare) {
-    this.fairShare = fairShare;
-    metrics.setFairShare(fairShare);
+    Resource clusterResource = scheduler.isResourcesBasedOnLabelsEnabled() ?
+            scheduler.getClusterResource(label) :
+            scheduler.getClusterResource();
+    if (!name.equals(ROOT_QUEUE) && clusterResource != null && scheduler.isResourcesBasedOnLabelsEnabled()) {
+      this.fairShare = Resources.componentwiseMin(fairShare, clusterResource);
+    } else {
+      this.fairShare = fairShare;
+    }
+    metrics.setFairShare(this.fairShare);
     LOG.debug("The updated fairShare for {} is {}", getName(), fairShare);
   }
 
@@ -344,8 +369,15 @@ public abstract class FSQueue implements Queue, Schedulable {
   }
 
   void setSteadyFairShare(Resource steadyFairShare) {
-    this.steadyFairShare = steadyFairShare;
-    metrics.setSteadyFairShare(steadyFairShare);
+    Resource clusterResource = scheduler.isResourcesBasedOnLabelsEnabled() ?
+            scheduler.getClusterResource(label) :
+            scheduler.getClusterResource();
+    if (!name.equals(ROOT_QUEUE) && clusterResource != null && scheduler.isResourcesBasedOnLabelsEnabled()) {
+      this.steadyFairShare = Resources.componentwiseMin(steadyFairShare, clusterResource);
+    } else {
+      this.steadyFairShare = steadyFairShare;
+    }
+    metrics.setSteadyFairShare(this.steadyFairShare);
   }
 
   public boolean hasAccess(QueueACL acl, UserGroupInformation user) {
@@ -510,7 +542,45 @@ public abstract class FSQueue implements Queue, Schedulable {
     // TODO, add implementation for FS
     return null;
   }
-  
+
+  protected String refreshLabel() {
+    String labelStr = scheduler.getAllocationConfiguration().getLabels().get(getName());
+    if ( labelStr == null && parent != null ) {
+      return parent.refreshLabel();
+    }
+
+    if ( labelStr != null ) {
+      return labelStr;
+    } else {
+      return CommonNodeLabelsManager.NO_LABEL;
+    }
+
+  }
+
+  protected void updateLabel() {
+    if (!name.equals(ROOT_QUEUE) &&
+            (label == null || CommonNodeLabelsManager.NO_LABEL.equals(label)) && defaultLabel != null) {
+      setLabel(defaultLabel);
+    }
+  }
+
+  @Override
+  public String getLabel() {
+    return label;
+  }
+
+  public void setLabel(String label) {
+    this.label = label;
+  }
+
+  public String getDefaultLabel() {
+    return defaultLabel;
+  }
+
+  public void setDefaultLabel(String defaultLabel) {
+    this.defaultLabel = defaultLabel;
+  }
+
   @Override
   public void incPendingResource(String nodeLabel, Resource resourceToInc) {
   }

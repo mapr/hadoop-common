@@ -356,6 +356,9 @@ public class QueueManager {
       // Only create a leaf queue at the very end
       if (!i.hasNext() && (queueType != FSQueueType.PARENT)) {
         FSLeafQueue leafQueue = new FSLeafQueue(queueName, scheduler, parent);
+        leafQueue.setLabel(leafQueue.refreshLabel());
+        leafQueue.setDefaultLabel(queueConf.getDefaultQueueLabel());
+        leafQueue.updateLabel();
         leafQueues.add(leafQueue);
         queue = leafQueue;
       } else {

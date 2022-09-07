@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -48,6 +49,9 @@ import org.apache.hadoop.yarn.api.records.RejectionReason;
 import org.apache.hadoop.yarn.api.records.RejectedSchedulingRequest;
 import org.apache.hadoop.yarn.api.records.SchedulingRequest;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.apache.hadoop.yarn.nodelabels.CommonNodeLabelsManager;
+import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttemptImpl;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.LabelExpressionHandlingHelper;
 import org.apache.hadoop.yarn.server.resourcemanager.RMContext;
 import org.apache.hadoop.yarn.server.resourcemanager.ResourceManager;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainer;
@@ -607,6 +611,53 @@ public class AppSchedulingInfo {
         return placesBlacklistedByApp.contains(resourceName);
       }
     }
+  }
+
+  public boolean isBlackListedBasedOnLabels(String resourceName) {
+    if(!YarnConfiguration.areNodeLabelsEnabled(rmContext.getYarnConfiguration())) {
+      return false;
+    }
+    SchedulerRequestKey requestKey = null;
+    synchronized (this) {
+      Optional<SchedulerRequestKey> key = schedulerKeys.stream().filter(k -> k.getPriority().equals(RMAppAttemptImpl.AM_CONTAINER_PRIORITY)).findFirst();
+      if(key.isPresent()) {
+        requestKey = key.get();
+      } else {
+        try {
+          requestKey = schedulerKeys.first();
+        } catch (NoSuchElementException e) {
+          // skip
+        }
+        if(requestKey == null) {
+          LOG.debug("schedulerKeys is empty. Marking resource as not blacklisted");
+          return false;
+        }
+      }
+    }
+    // Get ResourceRequest for AppMaster as it will determine whole App label
+    AppPlacementAllocator ap = schedulerKeyToAppPlacementAllocator.get(requestKey);
+
+    ResourceRequest req = (ResourceRequest)ap.getResourceRequests().get(resourceName);
+
+    if ( req == null ) {
+      req = (ResourceRequest)ap.getResourceRequests().get(ResourceRequest.ANY);
+    }
+    if ( req != null ) {
+      String appLabelExpression = req.getNodeLabelExpression();
+      String queueLabel = queue.getLabel();
+
+      String activeLabel = queueLabel;
+      if(activeLabel == null || CommonNodeLabelsManager.NO_LABEL.equals(activeLabel)) {
+        activeLabel = appLabelExpression;
+      }
+      if(activeLabel == null || CommonNodeLabelsManager.NO_LABEL.equals(activeLabel)) {
+        activeLabel = null;
+      }
+
+      LabelExpressionHandlingHelper.LabelApplicabilityStatus blackListStatus = LabelExpressionHandlingHelper.isNodeApplicableForApp(resourceName, activeLabel, rmContext.getNodeLabelManager());
+      return blackListStatus.equals(LabelExpressionHandlingHelper.LabelApplicabilityStatus.NODE_DOES_NOT_HAVE_LABEL);
+    }
+    return false;
   }
 
   public ContainerRequest allocate(NodeType type,

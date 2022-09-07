@@ -32,6 +32,8 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.FSLeafQueue;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.FSQueue;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.FairScheduler;
 import org.apache.hadoop.yarn.util.resource.Resources;
+import org.apache.hadoop.yarn.api.records.Resource;
+import org.apache.hadoop.yarn.nodelabels.CommonNodeLabelsManager;
 
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -66,6 +68,7 @@ public class FairSchedulerQueueInfo {
 
   private String queueName;
   private String schedulingPolicy;
+  private String label;
 
   private boolean preemptable;
 
@@ -79,22 +82,26 @@ public class FairSchedulerQueueInfo {
     
     queueName = queue.getName();
     schedulingPolicy = queue.getPolicy().getName();
-    
+
+    String labelE = queue.getLabel();
+    label = ( labelE == null ) ? CommonNodeLabelsManager.NO_LABEL : labelE;
+
+    Resource clusterQueueResource = getAvailableClusterResource(queue, scheduler);
+
     clusterResources = new ResourceInfo(scheduler.getClusterResource());
     
     amUsedResources = new ResourceInfo(queue.getMetrics().getAMResourceUsage());
     amMaxResources = new ResourceInfo(queue.getMetrics().getMaxAMShare());
     usedResources = new ResourceInfo(queue.getResourceUsage());
     demandResources = new ResourceInfo(queue.getDemand());
-    fractionMemUsed = (float)usedResources.getMemorySize() /
-        clusterResources.getMemorySize();
+    fractionMemUsed = (float)usedResources.getMemorySize() / clusterQueueResource.getMemorySize();
 
     steadyFairResources = new ResourceInfo(queue.getSteadyFairShare());
     fairResources = new ResourceInfo(queue.getFairShare());
     minResources = new ResourceInfo(queue.getMinShare());
     maxResources = new ResourceInfo(
         Resources.componentwiseMin(queue.getMaxShare(),
-            scheduler.getClusterResource()));
+                clusterQueueResource));
     maxContainerAllocation =
         new ResourceInfo(scheduler.getMaximumResourceCapability(queueName));
     reservedResources = new ResourceInfo(queue.getReservedResource());
@@ -118,6 +125,16 @@ public class FairSchedulerQueueInfo {
 
     preemptable = queue.isPreemptable();
     childQueues = getChildQueues(queue, scheduler);
+  }
+
+  private Resource getAvailableClusterResource(FSQueue queue, FairScheduler scheduler) {
+    boolean isResourcesBasedOnLabelsEnabled = scheduler.isResourcesBasedOnLabelsEnabled();
+    if (isResourcesBasedOnLabelsEnabled
+            && !scheduler.getRMContext().getNodeLabelManager().getClusterNodeLabelNames().isEmpty()
+            && !"root".equals(queueName)) {
+      return scheduler.getClusterResource(queue.getLabel());
+    }
+    return scheduler.getClusterResource();
   }
 
   public long getAllocatedContainers() {
@@ -257,6 +274,10 @@ public class FairSchedulerQueueInfo {
    */
   public String getSchedulingPolicy() {
     return schedulingPolicy;
+  }
+
+  public String getLabel() {
+    return label;
   }
 
   public Collection<FairSchedulerQueueInfo> getChildQueues() {

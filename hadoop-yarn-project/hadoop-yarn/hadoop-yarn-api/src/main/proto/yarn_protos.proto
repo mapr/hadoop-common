@@ -653,6 +653,7 @@ message QueueInfoProto {
   optional int64 steadyFairShareMemory = 25;
   optional string subClusterId = 26;
   optional int32 maxRunningApp = 27;
+  optional string queueLabel = 28;
 }
 
 message QueueConfigurationsProto {

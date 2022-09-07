@@ -43,6 +43,7 @@ import java.util.TreeSet;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
 /**
  * Helper library that:
@@ -166,6 +167,26 @@ public class ClusterNodeTracker<N extends SchedulerNode> {
 
   public Resource getClusterCapacity() {
     return staleClusterCapacity;
+  }
+
+  public Resource getClusterCapacity(Set<NodeId> nodesByLabel) {
+    Resource clusterLabelResource = Resource.newInstance(0, 0);
+    if(nodesByLabel != null) {
+      for (NodeId nodeId : nodesByLabel) {
+        if(nodes.size() > 0) {
+          List<NodeId> nodeIds = nodes.keySet().stream().filter(e -> e.getHost().equals(nodeId.getHost())).collect(Collectors.toList());
+          for(NodeId n: nodeIds) {
+            N node = nodes.get(n);
+            if(node != null) {
+              Resources.addTo(clusterLabelResource, node.getTotalResource());
+            }
+          }
+        } else {
+          LOG.debug("Get cluster capacity by label, nodes map is empty");
+        }
+      }
+    }
+    return clusterLabelResource;
   }
 
   public N removeNode(NodeId nodeId) {
