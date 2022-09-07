@@ -22,6 +22,7 @@ import static org.apache.hadoop.yarn.util.StringHelper.join;
 
 import java.util.Collection;
 
+import org.apache.commons.text.StringEscapeUtils;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.yarn.server.resourcemanager.ResourceManager;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.FairScheduler;
@@ -78,6 +79,7 @@ public class FairSchedulerPage extends RmView {
           __("Num Pending Applications:", qinfo.getNumPendingApplications()).
           __("Min Resources:", qinfo.getMinResources().toString()).
           __("Max Resources:", qinfo.getMaxResources().toString()).
+          __("Queue Label:", StringEscapeUtils.escapeHtml3(qinfo.getLabel())).
           __("Max Container Allocation:",
               qinfo.getMaxContainerAllocation().toString()).
           __("Reserved Resources:", qinfo.getReservedResources().toString());

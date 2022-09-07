@@ -184,6 +184,19 @@ public class FairSchedulerConfiguration extends Configuration {
       CONF_PREFIX + "preemption.cluster-utilization-threshold";
   protected static final float DEFAULT_PREEMPTION_THRESHOLD = 0.8f;
 
+  /** Whether preemption utilization threshold based on node labels is enabled.
+   *  Preemption can happen when the threshold of using some resource
+   *  is exceeded in the nodes that have the same label.
+   */
+  protected static final String PREEMPTION_THRESHOLD_BASED_ON_LABELS_ENABLED =
+          PREEMPTION_THRESHOLD + ".based-on-labels-enabled";
+  protected static final boolean DEFAULT_PREEMPTION_THRESHOLD_BASED_ON_LABELS_ENABLED = false;
+
+  /** Whether computing of resources based on node labels is enabled. */
+  public static final String RESOURCES_BASED_ON_LABELS_ENABLED =
+          CONF_PREFIX + "resources-based-on-labels-enabled";
+  public static final boolean DEFAULT_RESOURCES_BASED_ON_LABELS_ENABLED = false;
+
   public static final String WAIT_TIME_BEFORE_KILL = CONF_PREFIX +
       "waitTimeBeforeKill";
   public static final int DEFAULT_WAIT_TIME_BEFORE_KILL = 15000;
@@ -412,6 +425,16 @@ public class FairSchedulerConfiguration extends Configuration {
 
   public float getPreemptionUtilizationThreshold() {
     return getFloat(PREEMPTION_THRESHOLD, DEFAULT_PREEMPTION_THRESHOLD);
+  }
+
+  public boolean isPreemptionThresholdBasedOnLabelsEnabled() {
+    return getBoolean(PREEMPTION_THRESHOLD_BASED_ON_LABELS_ENABLED,
+            DEFAULT_PREEMPTION_THRESHOLD_BASED_ON_LABELS_ENABLED);
+  }
+
+  public boolean isResourcesBasedOnLabelsEnabled() {
+    return getBoolean(RESOURCES_BASED_ON_LABELS_ENABLED,
+            DEFAULT_RESOURCES_BASED_ON_LABELS_ENABLED);
   }
 
   public boolean getAssignMultiple() {

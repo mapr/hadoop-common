@@ -71,6 +71,10 @@ public class FSSchedulerNode extends SchedulerNode {
     super(node, usePortForNodeName);
   }
 
+  public FSSchedulerNode(RMNode node, boolean usePortForNodeName, Set<String> labelsOnNode) {
+    super(node, usePortForNodeName, labelsOnNode);
+  }
+
   /**
    * Total amount of reserved resources including reservations and preempted
    * containers.

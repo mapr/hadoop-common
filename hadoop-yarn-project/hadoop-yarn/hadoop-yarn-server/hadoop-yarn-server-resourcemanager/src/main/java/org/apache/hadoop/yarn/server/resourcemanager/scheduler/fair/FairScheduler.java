@@ -22,6 +22,8 @@ import org.apache.hadoop.thirdparty.com.google.common.annotations.VisibleForTest
 import org.apache.hadoop.thirdparty.com.google.common.base.Preconditions;
 import org.apache.hadoop.thirdparty.com.google.common.collect.Lists;
 import org.apache.hadoop.thirdparty.com.google.common.util.concurrent.SettableFuture;
+import org.apache.hadoop.yarn.nodelabels.CommonNodeLabelsManager;
+import org.apache.hadoop.yarn.server.resourcemanager.nodelabels.RMNodeLabelsManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.LimitedPrivate;
@@ -216,6 +218,9 @@ public class FairScheduler extends
 
   private boolean migration;
   private boolean noTerminalRuleCheck;
+  protected boolean isPreemptionThresholdBasedOnLabelsEnabled;
+  // Whether computing of resources based on node labels is enabled
+  protected boolean isResourcesBasedOnLabelsEnabled;
 
   public FairScheduler() {
     super(FairScheduler.class.getName());
@@ -373,9 +378,24 @@ public class FairScheduler extends
     readLock.lock();
     try {
       // Update starvation stats and identify starved applications
-      if (shouldAttemptPreemption()) {
-        for (FSLeafQueue queue : queueMgr.getLeafQueues()) {
-          queue.updateStarvedApps();
+      if (!isPreemptionThresholdBasedOnLabelsEnabled) {
+        if (shouldAttemptPreemption()) {
+          for (FSLeafQueue queue : queueMgr.getLeafQueues()) {
+            queue.updateStarvedApps();
+          }
+        }
+      } else {
+        Set<String> allLabels = rmContext.getNodeLabelManager().getClusterNodeLabelNames();
+        for (String label : allLabels) {
+          List<FSLeafQueue> fsLeafQueues = new ArrayList<>(queueMgr.getLeafQueues());
+          fsLeafQueues = (List<FSLeafQueue>)(List<?>)getAvailableQueuesForLabel(fsLeafQueues, label);
+
+          Resource allocatedResource = getAllocatedResourceForQueues(fsLeafQueues);
+          if (shouldAttemptPreemption(label, allocatedResource)) {
+            for (FSLeafQueue queue : fsLeafQueues) {
+              queue.updateStarvedApps();
+            }
+          }
         }
       }
 
@@ -390,6 +410,52 @@ public class FairScheduler extends
       readLock.unlock();
     }
     fsOpDurations.addUpdateThreadRunDuration(getClock().getTime() - start);
+  }
+
+  /**
+   * Get queues which have a label and
+   * their parent queue has this label too or doesn't have any label
+   * to be able to give resources to child queues
+   * @param queues
+   * @param label
+   * @param parentLabel
+   * @return
+   */
+  protected List<FSQueue> getAvailableQueuesForLabel(List<? extends FSQueue> queues,
+                                                     String label, String parentLabel) {
+    List<FSQueue> queuesWithLabel = new ArrayList<>();
+    if (label == null) {
+      queuesWithLabel.addAll(queues);
+      return queuesWithLabel;
+    }
+
+    for (FSQueue queue : queues) {
+      String queueLabel = queue.getLabel();
+
+      if (queueLabel != null && label.equals(queueLabel)
+              && (parentLabel == null || CommonNodeLabelsManager.NO_LABEL.equals(parentLabel) || parentLabel.equals(queueLabel))) {
+        queuesWithLabel.add(queue);
+      }
+    }
+    return queuesWithLabel;
+  }
+
+  protected List<FSQueue> getAvailableQueuesForLabel(List<? extends FSQueue> queues,
+                                                     String labelExp) {
+    return getAvailableQueuesForLabel(queues,  labelExp, null);
+  }
+
+  /**
+   * Get total allocated resources for queues
+   * @param queues
+   * @return The total allocated resources for queues
+   */
+  protected Resource getAllocatedResourceForQueues(List<? extends FSQueue> queues) {
+    Resource totalAllocatedResources = Resources.createResource(0, 0);
+    for (FSQueue queue : queues) {
+      Resources.addTo(totalAllocatedResources, queue.getMetrics().getAllocatedResources());
+    }
+    return totalAllocatedResources;
   }
 
   public RMContainerTokenSecretManager
@@ -760,8 +826,10 @@ public class FairScheduler extends
       RMNode node) {
     writeLock.lock();
     try {
+      RMNodeLabelsManager labelsManager = rmContext.getNodeLabelManager();
+      Set<String> labelsOnNode = labelsManager.getLabelsOnNode(node.getNodeID());
       FSSchedulerNode schedulerNode = new FSSchedulerNode(node,
-          usePortForNodeName);
+              usePortForNodeName, labelsOnNode);
       nodeTracker.addNode(schedulerNode);
 
       triggerUpdate();
@@ -1195,11 +1263,30 @@ public class FairScheduler extends
    */
   private boolean shouldAttemptPreemption() {
     if (context.isPreemptionEnabled()) {
-      return (context.getPreemptionUtilizationThreshold() < Math.max(
-          (float) rootMetrics.getAllocatedMB() /
-              getClusterResource().getMemorySize(),
-          (float) rootMetrics.getAllocatedVirtualCores() /
-              getClusterResource().getVirtualCores()));
+      Resource allocatedResource = rootMetrics.getAllocatedResources();
+      Resource clusterResource = getClusterResource();
+      return (context.getPreemptionUtilizationThreshold() < Math.max(Math.max(
+              (float) allocatedResource.getMemorySize() / clusterResource.getMemorySize(),
+              (float) allocatedResource.getVirtualCores() / clusterResource.getVirtualCores()),
+              (float) allocatedResource.getDisks() / clusterResource.getDisks()));
+    }
+    return false;
+  }
+
+  /**
+   * Check if preemption is enabled and the <b>per-label</b> utilization threshold for
+   * preemption is met.
+   * @param label
+   * @param allocatedResource Resources that allocated in queues which marked by the label
+   * @return true if preemption should be attempted, false otherwise.
+   */
+  private boolean shouldAttemptPreemption(String label, Resource allocatedResource) {
+    if (context.isPreemptionEnabled()) {
+      Resource clusterResource = getClusterResource(label);
+      return (context.getPreemptionUtilizationThreshold() < Math.max(Math.max(
+              (float) allocatedResource.getMemorySize() / clusterResource.getMemorySize(),
+              (float) allocatedResource.getVirtualCores() / clusterResource.getVirtualCores()),
+              (float) allocatedResource.getDisks() / clusterResource.getDisks()));
     }
     return false;
   }
@@ -1433,6 +1520,9 @@ public class FairScheduler extends
       sizeBasedWeight = this.conf.getSizeBasedWeight();
       usePortForNodeName = this.conf.getUsePortForNodeName();
       reservableNodesRatio = this.conf.getReservableNodes();
+      isPreemptionThresholdBasedOnLabelsEnabled =
+              this.conf.isPreemptionThresholdBasedOnLabelsEnabled();
+      isResourcesBasedOnLabelsEnabled = this.conf.isResourcesBasedOnLabelsEnabled();
 
       updateInterval = this.conf.getUpdateInterval();
       if (updateInterval < 0) {
@@ -2028,4 +2118,24 @@ public class FairScheduler extends
   public boolean isNoTerminalRuleCheck() {
     return noTerminalRuleCheck;
   }
+
+  public boolean isResourcesBasedOnLabelsEnabled() {
+    return isResourcesBasedOnLabelsEnabled;
+  }
+
+  /**
+   * Get the resource capacity of the cluster that is available to the label.
+   * @param label
+   * @return resource capacity of the cluster that is available to the label.
+   * If the label is null returns the whole resource capacity of the cluster.
+   */
+  public Resource getClusterResource(String label) {
+    if (label == null) {
+      return nodeTracker.getClusterCapacity();
+    }
+    RMNodeLabelsManager labelsManager = rmContext.getNodeLabelManager();
+    Set<NodeId> nodesForLabel = labelsManager.getLabelsToNodes().get(label);
+    return nodeTracker.getClusterCapacity(nodesForLabel);
+  }
+
 }

@@ -1026,6 +1026,15 @@ public class SchedulerApplicationAttempt implements SchedulableEntity {
     }
   }
 
+  public boolean isPlaceBlackListedBasedOnLabels(String resourceName) {
+    readLock.lock();
+    try {
+      return this.appSchedulingInfo.isBlackListedBasedOnLabels(resourceName);
+    } finally {
+      readLock.unlock();
+    }
+  }
+
   public int addMissedNonPartitionedRequestSchedulingOpportunity(
       SchedulerRequestKey schedulerKey) {
     try {

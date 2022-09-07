@@ -232,6 +232,11 @@ public class FifoScheduler extends
       // TODO add implementation for FIFO scheduler
 
     }
+
+    @Override
+    public String getLabel() {
+      return null;
+    }
   };
 
   public FifoScheduler() {

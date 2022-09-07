@@ -18,6 +18,7 @@
 
 package org.apache.hadoop.yarn.server.resourcemanager.scheduler;
 
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.FSAppAttempt;
 import org.slf4j.Logger;
 
 public class SchedulerAppUtils {
@@ -25,7 +26,8 @@ public class SchedulerAppUtils {
   public static boolean isPlaceBlacklisted(
       SchedulerApplicationAttempt application, SchedulerNode node,
       Logger log) {
-    if (application.isPlaceBlacklisted(node.getNodeName())) {
+    if (application.isPlaceBlacklisted(node.getNodeName())
+            || (application instanceof FSAppAttempt && application.isPlaceBlackListedBasedOnLabels(node.getNodeName()))) {
       log.debug("Skipping 'host' {} for {} since it has been blacklisted",
           node.getNodeName(), application.getApplicationId());
       return true;

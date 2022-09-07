@@ -614,6 +614,7 @@ message QueueInfoProto {
   optional bool preemptionDisabled = 11;
   repeated QueueConfigurationsMapProto queueConfigurationsMap = 12;
   optional bool intraQueuePreemptionDisabled = 13;
+  optional string queueLabel = 14;
 }
 
 message QueueConfigurationsProto {

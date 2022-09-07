@@ -430,6 +430,21 @@ public class QueueInfoPBImpl extends QueueInfo {
     builder.setDefaultNodeLabelExpression(defaultNodeLabelExpression);
   }
 
+  public String getQueueLabel() {
+    QueueInfoProtoOrBuilder p = viaProto ? proto : builder;
+    return (p.hasQueueLabel()) ? p.getQueueLabel() : null;
+  }
+
+  @Override
+  public void setQueueLabel(String queueLabel) {
+    maybeInitBuilder();
+    if (queueLabel == null) {
+      builder.clearQueueLabel();
+      return;
+    }
+    builder.setQueueLabel(queueLabel);
+  }
+
   private QueueStatistics convertFromProtoFormat(QueueStatisticsProto q) {
     return new QueueStatisticsPBImpl(q);
   }

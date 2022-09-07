@@ -1440,5 +1440,10 @@ public abstract class AbstractCSQueue implements CSQueue {
     return maxParallelApps;
   }
 
+  @Override
+  public String getLabel() {
+    return null;
+  }
+
   abstract int getNumRunnableApps();
 }

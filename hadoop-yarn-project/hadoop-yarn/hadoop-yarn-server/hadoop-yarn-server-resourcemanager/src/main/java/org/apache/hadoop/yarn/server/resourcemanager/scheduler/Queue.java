@@ -138,4 +138,6 @@ public interface Queue {
    *          reserved resource asked
    */
   public void decReservedResource(String partition, Resource reservedRes);
+
+  public String getLabel();
 }

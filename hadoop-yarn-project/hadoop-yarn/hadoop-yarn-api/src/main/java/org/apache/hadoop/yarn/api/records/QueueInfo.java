@@ -197,7 +197,15 @@ public abstract class QueueInfo {
   @Private
   @Unstable
   public abstract void setQueueState(QueueState queueState);
-  
+
+  @Public
+  @Unstable
+  public abstract String getQueueLabel();
+
+  @Private
+  @Unstable
+  public abstract void setQueueLabel(String queueLabel);
+
   /**
    * Get the <code>accessible node labels</code> of the queue.
    * @return <code>accessible node labels</code> of the queue

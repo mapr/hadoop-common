@@ -54,6 +54,7 @@ public class QueueProperties {
   private final Set<String> nonPreemptableQueues;
   private final Map<FSQueueType, Set<String>> configuredQueues;
   private final Map<String, Resource> queueMaxContainerAllocation;
+  private final Map<String, String> queueLabels;
 
   QueueProperties(Builder builder) {
     this.reservableQueues = builder.reservableQueues;
@@ -72,6 +73,7 @@ public class QueueProperties {
     this.reservationAcls = builder.reservationAcls;
     this.queueAcls = builder.queueAcls;
     this.queueMaxContainerAllocation = builder.queueMaxContainerAllocation;
+    this.queueLabels = builder.queueLabels;
   }
 
   public Map<FSQueueType, Set<String>> getConfiguredQueues() {
@@ -139,6 +141,10 @@ public class QueueProperties {
     return queueMaxContainerAllocation;
   }
 
+  public Map<String, String> getQueueLabels() {
+    return queueLabels;
+  }
+
     /**
    * Builder class for {@link QueueProperties}.
    * All methods are adding queue properties to the maps of this builder
@@ -171,6 +177,7 @@ public class QueueProperties {
     // configuredQueues is segregated based on whether it is a leaf queue
     // or a parent queue. This information is used for creating queues.
     private Map<FSQueueType, Set<String>> configuredQueues = new HashMap<>();
+    private Map<String, String> queueLabels = new HashMap<>();
 
     Builder() {
       for (FSQueueType queueType : FSQueueType.values()) {
@@ -262,6 +269,11 @@ public class QueueProperties {
     public Builder queueMaxContainerAllocation(String queueName,
         Resource value) {
       queueMaxContainerAllocation.put(queueName, value);
+      return this;
+    }
+
+    public Builder queueLabels(String queueName, String label) {
+      queueLabels.put(queueName, label);
       return this;
     }
 

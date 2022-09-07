@@ -21,6 +21,7 @@ package org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -95,7 +96,25 @@ public class FSParentQueue extends FSQueue {
   void updateInternal() {
     readLock.lock();
     try {
-      policy.computeShares(childQueues, getFairShare());
+      if(scheduler.isResourcesBasedOnLabelsEnabled()) {
+        Set<String> labels = scheduler.getRMContext().getNodeLabelManager().getClusterNodeLabelNames();
+        if (!labels.isEmpty() && scheduler.isResourcesBasedOnLabelsEnabled()) {
+          for (String labelExp : labels) {
+            Resource clusterResourceForLabel = scheduler.getClusterResource(labelExp);
+            Resource availableResources = Resources.componentwiseMin(
+                    getFairShare(), clusterResourceForLabel);
+
+            List<FSQueue> availableQueues = scheduler.getAvailableQueuesForLabel(
+                    childQueues, labelExp, label);
+            policy.computeShares(availableQueues, availableResources);
+          }
+        } else {
+          policy.computeShares(childQueues, getFairShare());
+        }
+      } else {
+        policy.computeShares(childQueues, getFairShare());
+      }
+
       for (FSQueue childQueue : childQueues) {
         childQueue.getMetrics().setFairShare(childQueue.getFairShare());
         childQueue.updateInternal();
@@ -108,7 +127,26 @@ public class FSParentQueue extends FSQueue {
   void recomputeSteadyShares() {
     readLock.lock();
     try {
-      policy.computeSteadyShares(childQueues, getSteadyFairShare());
+      if(scheduler.isResourcesBasedOnLabelsEnabled()) {
+        Set<String> labels = scheduler.getRMContext().getNodeLabelManager().getClusterNodeLabelNames();
+        if (!labels.isEmpty() && scheduler.isResourcesBasedOnLabelsEnabled()) {
+          for (String labelExp : labels) {
+            Resource clusterResourceForLabel = scheduler.getClusterResource(labelExp);
+            Resource availableResources = Resources.componentwiseMin(
+                    getSteadyFairShare(), clusterResourceForLabel);
+
+            List<FSQueue> availableQueues = scheduler.getAvailableQueuesForLabel(
+                    childQueues, labelExp, label);
+
+            policy.computeSteadyShares(availableQueues, availableResources);
+          }
+        } else {
+          policy.computeSteadyShares(childQueues, getSteadyFairShare());
+        }
+      } else {
+        policy.computeSteadyShares(childQueues, getSteadyFairShare());
+      }
+
       for (FSQueue childQueue : childQueues) {
         childQueue.getMetrics()
             .setSteadyFairShare(childQueue.getSteadyFairShare());

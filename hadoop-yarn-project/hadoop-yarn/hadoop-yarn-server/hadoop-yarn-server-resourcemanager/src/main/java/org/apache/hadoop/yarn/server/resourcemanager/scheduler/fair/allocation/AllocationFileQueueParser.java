@@ -72,6 +72,7 @@ public class AllocationFileQueueParser {
   private static final String ALLOW_PREEMPTION_FROM = "allowPreemptionFrom";
   private static final String QUEUE = "queue";
   private static final String POOL = "pool";
+  private static final String LABEL = "label";
 
   private final List<Element> elements;
 
@@ -216,6 +217,9 @@ public class AllocationFileQueueParser {
         if (!Boolean.parseBoolean(text)) {
           builder.nonPreemptableQueues(queueName);
         }
+      } else if (LABEL.equals(field.getTagName())) {
+        String text = ((Text) field.getFirstChild()).getData();
+        builder.queueLabels(queueName, text);
       } else if (QUEUE.endsWith(field.getTagName())
           || POOL.equals(field.getTagName())) {
         loadQueue(queueName, field, builder);
