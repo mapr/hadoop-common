@@ -320,7 +320,7 @@ public abstract class FSQueue implements Queue, Schedulable {
     Resource clusterResource = scheduler.isResourcesBasedOnLabelsEnabled() ?
             scheduler.getClusterResource(label) :
             scheduler.getClusterResource();
-    if (clusterResource != null && scheduler.isResourcesBasedOnLabelsEnabled()) {
+    if (!name.equals(ROOT_QUEUE) && clusterResource != null && scheduler.isResourcesBasedOnLabelsEnabled()) {
       this.fairShare = Resources.componentwiseMin(fairShare, clusterResource);
     } else {
       this.fairShare = fairShare;
@@ -338,7 +338,7 @@ public abstract class FSQueue implements Queue, Schedulable {
     Resource clusterResource = scheduler.isResourcesBasedOnLabelsEnabled() ?
             scheduler.getClusterResource(label) :
             scheduler.getClusterResource();
-    if (clusterResource != null && scheduler.isResourcesBasedOnLabelsEnabled()) {
+    if (!name.equals(ROOT_QUEUE) && clusterResource != null && scheduler.isResourcesBasedOnLabelsEnabled()) {
       this.steadyFairShare = Resources.componentwiseMin(steadyFairShare, clusterResource);
     } else {
       this.steadyFairShare = steadyFairShare;

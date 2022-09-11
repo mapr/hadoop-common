@@ -453,7 +453,12 @@ public class FairScheduler extends
   protected Resource getAllocatedResourceForQueues(List<? extends FSQueue> queues) {
     Resource totalAllocatedResources = Resources.createResource(0, 0);
     for (FSQueue queue : queues) {
-      Resources.addTo(totalAllocatedResources, queue.getMetrics().getAllocatedResources());
+      if(queue.getLabel() != null && !queue.getLabel().equals(CommonNodeLabelsManager.NO_LABEL)) {
+        Resource allocatedRes = queue.getMetrics().getPartitionQueueMetrics(queue.getLabel()).getAllocatedResources();
+        Resources.addTo(totalAllocatedResources, allocatedRes);
+      } else {
+        Resources.addTo(totalAllocatedResources, queue.getMetrics().getAllocatedResources());
+      }
     }
     return totalAllocatedResources;
   }
@@ -977,6 +982,14 @@ public class FairScheduler extends
     // Sanity check
     normalizeResourceRequests(ask, queue.getName());
 
+    if(queue.getLabel() != null) {
+      for (ResourceRequest resReq : ask) {
+        if (resReq.getNodeLabelExpression() == null && ResourceRequest.ANY
+                .equals(resReq.getResourceName())) {
+          resReq.setNodeLabelExpression(queue.getLabel());
+        }
+      }
+    }
     // TODO, normalize SchedulingRequest
 
     // Record container allocation start time

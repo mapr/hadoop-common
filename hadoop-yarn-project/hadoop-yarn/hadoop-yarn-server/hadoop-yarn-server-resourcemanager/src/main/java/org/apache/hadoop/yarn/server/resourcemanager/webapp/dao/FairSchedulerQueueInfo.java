@@ -129,7 +129,9 @@ public class FairSchedulerQueueInfo {
 
   private Resource getAvailableClusterResource(FSQueue queue, FairScheduler scheduler) {
     boolean isResourcesBasedOnLabelsEnabled = scheduler.isResourcesBasedOnLabelsEnabled();
-    if (isResourcesBasedOnLabelsEnabled) {
+    if (isResourcesBasedOnLabelsEnabled
+            && !scheduler.getRMContext().getNodeLabelManager().getClusterNodeLabelNames().isEmpty()
+            && !"root".equals(queueName)) {
       return scheduler.getClusterResource(queue.getLabel());
     }
     return scheduler.getClusterResource();
