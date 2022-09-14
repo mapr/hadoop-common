@@ -28,7 +28,10 @@ project (libhdfspp)
 
 cmake_minimum_required(VERSION 2.8)
 
+find_package (Boost 1.72.0 REQUIRED COMPONENTS date_time)
+
 enable_testing()
+set(CMAKE_CXX_STANDARD 17)
 include (CTest)
 
 SET(BUILD_SHARED_HDFSPP TRUE CACHE STRING "BUILD_SHARED_HDFSPP defaulting to 'TRUE'")
@@ -49,10 +52,23 @@ find_package(Threads)
 
 include(CheckCXXSourceCompiles)
 include(CheckSymbolExists)
+include(FetchContent)
+
+# Install googletest
+# As per the approach documented in the GoogleTest repo -
+# https://github.com/google/googletest/blob/e649993a402d96afe25fbf3413749adf0f2947f6/googletest/README.md#incorporating-into-an-existing-cmake-project
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/703bd9caab50b139428cea1aaff9974ebee5742e.zip
+)
+# The commit SHA 703bd9caab50b139428cea1aaff9974ebee5742e in the URL above corresponds to the
+# tag release-1.10.0 in the googletest repository.
+# For Windows: Prevent overriding the parent project's compiler/linker settings
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
 
 # Check if thread_local is supported
 unset (THREAD_LOCAL_SUPPORTED CACHE)
-set (CMAKE_CXX_STANDARD 11)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 set (CMAKE_REQUIRED_LIBRARIES ${CMAKE_THREAD_LIBS_INIT})
 check_cxx_source_compiles(
@@ -154,13 +170,11 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0")
 
 if(UNIX)
-set (CMAKE_CXX_STANDARD 11)
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -g -fPIC -fno-strict-aliasing")
 set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -fPIC -fno-strict-aliasing")
 endif()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set(CMAKE_CXX_STANDARD 11)
     add_definitions(-DASIO_HAS_STD_ADDRESSOF -DASIO_HAS_STD_ARRAY -DASIO_HAS_STD_ATOMIC -DASIO_HAS_CSTDINT -DASIO_HAS_STD_SHARED_PTR -DASIO_HAS_STD_TYPE_TRAITS -DASIO_HAS_VARIADIC_TEMPLATES -DASIO_HAS_STD_FUNCTION -DASIO_HAS_STD_CHRONO -DASIO_HAS_STD_SYSTEM_ERROR)
 endif ()
 
@@ -208,6 +222,9 @@ if(HADOOP_BUILD)
 
   # Gather the Hadoop files and resources that libhdfs++ needs to build
   copy_on_demand(../libhdfs/include/*.h* ${HADOOP_IMPORT_DIR}/include)
+  if(MSVC)
+    copy_on_demand(../libhdfs/os/windows/unistd.h ${HADOOP_IMPORT_DIR}/include)
+  endif(MSVC)
   copy_on_demand(${CMAKE_CURRENT_LIST_DIR}/../../../../../hadoop-hdfs-client/src/main/proto/*.proto ${HADOOP_IMPORT_DIR}/proto/hdfs)
   copy_on_demand(${CMAKE_CURRENT_LIST_DIR}/../../../../../../hadoop-common-project/hadoop-common/src/main/proto/*.proto  ${HADOOP_IMPORT_DIR}/proto/hadoop)
   copy_on_demand(${CMAKE_CURRENT_LIST_DIR}/../../../../../../hadoop-common-project/hadoop-common/src/test/proto/*.proto  ${HADOOP_IMPORT_DIR}/proto/hadoop_test)
@@ -228,9 +245,10 @@ include_directories(
 
 include_directories( SYSTEM
   ${PROJECT_BINARY_DIR}/lib/proto
-  third_party/asio-1.10.2/include
+  ${Boost_INCLUDE_DIRS}
   third_party/rapidxml-1.13
-  third_party/gmock-1.7.0
+  ${gtest_SOURCE_DIR}/include
+  ${gmock_SOURCE_DIR}/include
   third_party/tr2
   third_party/protobuf
   third_party/uriparser2
@@ -239,12 +257,12 @@ include_directories( SYSTEM
   ${PROTOBUF_INCLUDE_DIRS}
 )
 
-
-add_subdirectory(third_party/gmock-1.7.0)
 add_subdirectory(third_party/uriparser2)
 add_subdirectory(lib)
 if(NOT HDFSPP_LIBRARY_ONLY)
-    add_subdirectory(tests)
+    if(NOT MSVC)
+        add_subdirectory(tests)
+    endif(NOT MSVC)
     add_subdirectory(examples)
     add_subdirectory(tools)
 endif()
@@ -260,8 +278,9 @@ if(NEED_LINK_DL)
 endif()
 
 set(LIBHDFSPP_VERSION "0.1.0")
-set(LIBHDFSPP_ALL_OBJECTS $<TARGET_OBJECTS:bindings_c_obj> $<TARGET_OBJECTS:fs_obj> $<TARGET_OBJECTS:rpc_obj> $<TARGET_OBJECTS:reader_obj> $<TARGET_OBJECTS:proto_obj> $<TARGET_OBJECTS:connection_obj> $<TARGET_OBJECTS:common_obj> $<TARGET_OBJECTS:uriparser2_obj>)
-if (HADOOP_BUILD)
+set(LIBHDFSPP_ALL_OBJECTS $<TARGET_OBJECTS:x_platform_obj> $<TARGET_OBJECTS:bindings_c_obj> $<TARGET_OBJECTS:fs_obj> $<TARGET_OBJECTS:rpc_obj> $<TARGET_OBJECTS:reader_obj> $<TARGET_OBJECTS:proto_obj> $<TARGET_OBJECTS:connection_obj> $<TARGET_OBJECTS:common_obj> $<TARGET_OBJECTS:uriparser2_obj>)
+# HDFS-16464: We don't support building Hadoop DLL for Windows yet.
+if (HADOOP_BUILD AND NOT MSVC)
   hadoop_add_dual_library(hdfspp ${EMPTY_FILE_CC} ${LIBHDFSPP_ALL_OBJECTS})
   hadoop_target_link_dual_libraries(hdfspp
     ${LIB_DL}
@@ -269,23 +288,23 @@ if (HADOOP_BUILD)
     ${OPENSSL_LIBRARIES}
     ${SASL_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
-  )
+    ${Boost_LIBRARIES})
   set_target_properties(hdfspp PROPERTIES SOVERSION ${LIBHDFSPP_VERSION})
   hadoop_dual_output_directory(hdfspp ${OUT_DIR})
-else (HADOOP_BUILD)
+else (HADOOP_BUILD AND NOT MSVC)
   add_library(hdfspp_static STATIC ${EMPTY_FILE_CC} ${LIBHDFSPP_ALL_OBJECTS})
-  target_link_libraries(hdfspp_static
+  target_link_libraries(hdfspp_static PUBLIC
     ${LIB_DL}
     ${PROTOBUF_LIBRARY}
     ${OPENSSL_LIBRARIES}
     ${SASL_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
-    )
-  if(BUILD_SHARED_HDFSPP)
+    ${Boost_LIBRARIES})
+  if(BUILD_SHARED_HDFSPP AND NOT MSVC)
     add_library(hdfspp SHARED ${EMPTY_FILE_CC} ${LIBHDFSPP_ALL_OBJECTS})
     set_target_properties(hdfspp PROPERTIES SOVERSION ${LIBHDFSPP_VERSION})
-  endif(BUILD_SHARED_HDFSPP)
-endif (HADOOP_BUILD)
+  endif(BUILD_SHARED_HDFSPP AND NOT MSVC)
+endif (HADOOP_BUILD AND NOT MSVC)
 
 # Set up make install targets
 # Can be installed to a particular location via "make DESTDIR=... install"
@@ -295,9 +314,9 @@ install(FILES ${LIBHDFSPP_HEADER_FILES} DESTINATION include/hdfspp)
 install(FILES ${LIBHDFS_HEADER_FILES} DESTINATION include/hdfs)
 
 install(TARGETS hdfspp_static ARCHIVE DESTINATION lib)
-if(BUILD_SHARED_HDFSPP)
+if(BUILD_SHARED_HDFSPP AND NOT MSVC)
   install(TARGETS hdfspp LIBRARY DESTINATION lib)
-endif(BUILD_SHARED_HDFSPP)
+endif(BUILD_SHARED_HDFSPP AND NOT MSVC)
 
 add_custom_target(
     InstallToBuildDirectory
