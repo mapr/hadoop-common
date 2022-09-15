@@ -71,7 +71,7 @@ pipeline {
                     sh "cat ${env.mvn_settings} > settings.xml"
                   }
                   withCredentials([usernamePassword(credentialsId: 'artifactory_user_pass', passwordVariable: 'pass', usernameVariable: 'user')]) {
-                    docker.image("dfdkr.mip.storage.hpecorp.net/ubuntu18-java11-gcc7:hadoop3").inside (
+                    docker.image("dfdkr.mip.storage.hpecorp.net/ubuntu18-java11-gcc9:hadoop334").inside (
                     "-e MAPR_MIRROR=${MAPR_MIRROR} \
                     -e MAPR_CENTRAL=${MAPR_CENTRAL} \
                     -e MAVEN_CENTRAL=${MAVEN_CENTRAL} \
@@ -143,7 +143,7 @@ pipeline {
                     sh "cat ${env.mvn_settings} > settings.xml"
                   }
                   withCredentials([usernamePassword(credentialsId: 'artifactory_user_pass', passwordVariable: 'pass', usernameVariable: 'user')]) {
-                    docker.image("dfdkr.mip.storage.hpecorp.net/centos8-java11-gcc8:hadoop3").inside (
+                    docker.image("dfdkr.mip.storage.hpecorp.net/centos8-java11-gcc9:hadoop334").inside (
                     "-e MAPR_MIRROR=${MAPR_MIRROR} \
                     -e MAPR_CENTRAL=${MAPR_CENTRAL} \
                     -e MAVEN_CENTRAL=${MAVEN_CENTRAL} \
@@ -168,6 +168,7 @@ pipeline {
                         rm -rf ${env.PROJECT}; git clone git@github.com:mapr/private-pkg.git ${env.PROJECT}; \
                         cd ${env.PROJECT}; \
                         git checkout MEP-9.0.0 ; \
+                        source /opt/rh/gcc-toolset-9/enable ; \
                         make mapr-hadoop-util-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS} ; \
                         make mapr-hadoop-client-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS} ; \
                         make mapr-hadoop-core-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS} ; \
