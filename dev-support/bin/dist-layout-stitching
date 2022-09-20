@@ -124,6 +124,7 @@ run mkdir licenses-binary
 run cp -p "${ROOT}/licenses-binary"/* licenses-binary/
 run cp -p "${ROOT}/NOTICE-binary" .
 run cp -p "${ROOT}/README.txt" .
+run cp -r $ROOT/ext-conf .
 
 # Copy hadoop-common first so that it have always have all dependencies.
 # Remaining projects will copy only libraries which are not present already in 'share' directory.
