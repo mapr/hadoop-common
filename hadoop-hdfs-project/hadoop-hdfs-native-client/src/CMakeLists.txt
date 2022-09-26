@@ -60,6 +60,7 @@ check_c_source_compiles("#include <emmintrin.h>\nint main(void) { __m128d sum0 =
 
 set(_FUSE_DFS_VERSION 0.1.0)
 configure_file(${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
+configure_file(${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/native/config.h)
 
 # Check if we need to link dl library to get dlopen.
 # dlopen on Linux is in separate library but on FreeBSD its in libc
