@@ -54,18 +54,20 @@ include(CheckCXXSourceCompiles)
 include(CheckSymbolExists)
 include(FetchContent)
 
-# Install googletest
-# As per the approach documented in the GoogleTest repo -
-# https://github.com/google/googletest/blob/e649993a402d96afe25fbf3413749adf0f2947f6/googletest/README.md#incorporating-into-an-existing-cmake-project
-FetchContent_Declare(
-  googletest
-  URL https://github.com/google/googletest/archive/703bd9caab50b139428cea1aaff9974ebee5742e.zip
-)
-# The commit SHA 703bd9caab50b139428cea1aaff9974ebee5742e in the URL above corresponds to the
-# tag release-1.10.0 in the googletest repository.
-# For Windows: Prevent overriding the parent project's compiler/linker settings
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
+if (NOT APPLE)
+    # Install googletest
+    # As per the approach documented in the GoogleTest repo -
+    # https://github.com/google/googletest/blob/e649993a402d96afe25fbf3413749adf0f2947f6/googletest/README.md#incorporating-into-an-existing-cmake-project
+    FetchContent_Declare(
+      googletest
+      URL https://github.com/google/googletest/archive/703bd9caab50b139428cea1aaff9974ebee5742e.zip
+    )
+    # The commit SHA 703bd9caab50b139428cea1aaff9974ebee5742e in the URL above corresponds to the
+    # tag release-1.10.0 in the googletest repository.
+    # For Windows: Prevent overriding the parent project's compiler/linker settings
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(googletest)
+endif (NOT APPLE)
 
 # Check if thread_local is supported
 unset (THREAD_LOCAL_SUPPORTED CACHE)
@@ -244,8 +246,10 @@ include_directories( SYSTEM
   ${PROJECT_BINARY_DIR}/lib/proto
   ${Boost_INCLUDE_DIRS}
   third_party/rapidxml-1.13
-  ${gtest_SOURCE_DIR}/include
-  ${gmock_SOURCE_DIR}/include
+  if (NOT APPLE)
+      ${gtest_SOURCE_DIR}/include
+      ${gmock_SOURCE_DIR}/include
+  endif (NOT APPLE)
   third_party/tr2
   third_party/protobuf
   third_party/uriparser2
@@ -257,7 +261,9 @@ include_directories( SYSTEM
 add_subdirectory(third_party/uriparser2)
 add_subdirectory(lib)
 if(NOT HDFSPP_LIBRARY_ONLY)
-    add_subdirectory(tests)
+    if(NOT MSVC AND NOT APPLE)
+        add_subdirectory(tests)
+    endif(NOT MSVC AND NOT APPLE)
     add_subdirectory(examples)
     add_subdirectory(tools)
 endif()
