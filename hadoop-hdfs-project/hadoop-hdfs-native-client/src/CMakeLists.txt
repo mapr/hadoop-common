@@ -46,6 +46,11 @@ if (MSVC)
 
 endif (MSVC)
 
+if (APPLE)
+    # Indicates C++17 standard for boost library (1.72 version)
+    add_compile_definitions(_HAS_AUTO_PTR_ETC=0)
+endif(APPLE)
+
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/../../../hadoop-common-project/hadoop-common)
 include(HadoopCommon)
 
