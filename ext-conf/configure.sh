@@ -424,15 +424,16 @@ function ConfigureTimeLineServer() {
     if [ "$isSecure" = "true" ] && [ -f "${MAPR_HOME}/conf/mapruserticket" ]; then
         export MAPR_TICKETFILE_LOCATION="${MAPR_HOME}/conf/mapruserticket"
     fi
-    # Copy the timeline service jar to HDFS from where HBase can load it. It is needed for the flowrun table creation in the schema creator.
-    if ! hadoop fs -stat /hbase/coprocessor &> /dev/null; then
-        hadoop fs -mkdir -p /hbase/coprocessor
-    fi
+    if [ "$isOnlyRoles" = "1" ]; then
+        # Copy the timeline service jar to HDFS from where HBase can load it. It is needed for the flowrun table creation in the schema creator.
+        if ! hadoop fs -stat /hbase/coprocessor &> /dev/null; then
+            hadoop fs -mkdir -p /hbase/coprocessor
+        fi
 
-    if ! hadoop fs -stat /hbase/coprocessor/hadoop-yarn-server-timelineservice.jar &> /dev/null; then
-        hadoop fs -put -f "${HADOOP_HOME}"/share/hadoop/yarn/timelineservice/hadoop-yarn-server-timelineservice-hbase-coprocessor-* /hbase/coprocessor/hadoop-yarn-server-timelineservice.jar
+        if ! hadoop fs -stat /hbase/coprocessor/hadoop-yarn-server-timelineservice.jar &> /dev/null; then
+            hadoop fs -put -f "${HADOOP_HOME}"/share/hadoop/yarn/timelineservice/hadoop-yarn-server-timelineservice-hbase-coprocessor-* /hbase/coprocessor/hadoop-yarn-server-timelineservice.jar
+        fi
     fi
-
     # Set emit-timeline-data property for mapreduce jobs
     if ! grep -q "mapreduce.job.emit-timeline-data" "${HADOOP_HOME}/etc/hadoop/mapred-site.xml"; then
         sed -i "/^<\/configuration>/i <property>\n\t<name>mapreduce.job.emit-timeline-data<\/name>\n\t<value>true<\/value>\n<\/property>" "${MapredSiteFile}"
