@@ -198,6 +198,7 @@ function hadoopcmd_case
     ;;
     mfs)
       HADOOP_CLASSNAME=com.mapr.fs.clicommands.MapRCliCommands
+      hadoop_add_param HADOOP_OPTS mapr.library.flatclass "-Dmapr.library.flatclass"
     ;;
     conf)
       HADOOP_CLASSNAME=org.apache.hadoop.mapreduce.util.ConfigUtil
