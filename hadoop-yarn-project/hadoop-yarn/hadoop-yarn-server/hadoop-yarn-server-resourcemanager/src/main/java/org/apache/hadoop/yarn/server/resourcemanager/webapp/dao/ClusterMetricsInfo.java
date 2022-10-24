@@ -27,6 +27,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.QueueMetrics;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacityScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.ParentQueue;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.FairScheduler;
 
 @XmlRootElement(name = "clusterMetrics")
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -138,6 +139,22 @@ public class ClusterMetricsInfo {
             cs.getRootQueue().getQueueResourceUsage().getAllReserved());
         totalAllocatedContainersAcrossPartition =
             ((ParentQueue) cs.getRootQueue()).getNumContainers();
+        crossPartitionMetricsAvailable = true;
+      }
+    } else if(rs instanceof FairScheduler) {
+      FairScheduler fs = (FairScheduler) rs;
+      this.totalMB = availableMB + allocatedMB + reservedMB;
+      this.totalVirtualCores =
+              availableVirtualCores + allocatedVirtualCores + reservedVirtualCores;
+      if(fs.getQueueManager().getRootQueue() != null
+          && fs.getQueueManager().getRootQueue().getMetrics() != null) {
+        totalUsedResourcesAcrossPartition = new ResourceInfo(
+                fs.getQueueManager().getRootQueue().getResourceUsage());
+        totalClusterResourcesAcrossPartition = new ResourceInfo(
+                fs.getClusterResource());
+        totalReservedResourcesAcrossPartition = new ResourceInfo(
+                fs.getQueueManager().getRootQueue().getReservedResource());
+        totalAllocatedContainersAcrossPartition = fs.getQueueManager().getRootQueue().getMetrics().getAllocatedContainers();
         crossPartitionMetricsAvailable = true;
       }
     } else {
