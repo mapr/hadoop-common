@@ -70,8 +70,7 @@ public final class FairQueuePlacementUtils {
    */
   protected static String assureRoot(String queueName) {
     if (queueName != null && !queueName.isEmpty()) {
-      if (!queueName.startsWith(ROOT_QUEUE + DOT) &&
-          !queueName.equals(ROOT_QUEUE)) {
+      if (!queueName.startsWith(ROOT_QUEUE + DOT)) {
         queueName = ROOT_QUEUE + DOT + queueName;
       }
     } else {
