@@ -1076,7 +1076,7 @@ ConfigureHadoopDir
 ConfigureHadoop
 UpdateFileClientConfig
 ConfigureJMHadoopProperties "${INSTALL_DIR}/conf/hadoop-metrics.properties"
-if [ "$(uname)" != "Darwin" ]; then
+if [ "$(uname)" != "Darwin" ] && [ "$isOnlyRoles" != "1" ]; then
     ConfigureYarnLinuxContainerExecutor
 fi
 
