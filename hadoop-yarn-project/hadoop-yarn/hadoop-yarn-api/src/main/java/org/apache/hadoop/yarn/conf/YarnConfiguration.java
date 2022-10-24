@@ -376,7 +376,7 @@ public class YarnConfiguration extends Configuration {
    */
   public static final String YARN_WEBAPP_UI2_ENABLE = "yarn."
       + "webapp.ui2.enable";
-  public static final boolean DEFAULT_YARN_WEBAPP_UI2_ENABLE = false;
+  public static final boolean DEFAULT_YARN_WEBAPP_UI2_ENABLE = true;
 
   public static final String YARN_WEBAPP_UI2_WARFILE_PATH = "yarn."
       + "webapp.ui2.war-file-path";

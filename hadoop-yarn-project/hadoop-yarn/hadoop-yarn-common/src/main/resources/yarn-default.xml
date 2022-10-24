@@ -266,7 +266,7 @@
   <property>
     <description>To enable RM web ui2 application.</description>
     <name>yarn.webapp.ui2.enable</name>
-    <value>false</value>
+    <value>true</value>
   </property>
 
   <property>
@@ -282,7 +282,7 @@
       Enable services rest api on ResourceManager.
     </description>
     <name>yarn.webapp.api-service.enable</name>
-    <value>false</value>
+    <value>true</value>
   </property>
 
   <property>
