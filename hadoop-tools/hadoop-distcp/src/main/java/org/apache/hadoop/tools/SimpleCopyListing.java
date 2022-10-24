@@ -479,11 +479,7 @@ public class SimpleCopyListing extends CopyListing {
 
 
     if (solitaryFile) {
-      if (!targetPathExists || targetFS.isFile(target)) {
-        return sourceStatus.getPath();
-      } else {
-        return sourceStatus.getPath().getParent();
-      }
+      return sourceStatus.getPath();
     } else {
       boolean specialHandling =
           (context.getSourcePaths().size() == 1 &&
@@ -491,9 +487,11 @@ public class SimpleCopyListing extends CopyListing {
               context.shouldSyncFolder() ||
               context.shouldOverwrite();
 
-      if ((specialHandling && (sourceStatus.isDirectory() ||
-              (sourceStatus.isSymlink() && getOriginalFileStatus(sourceStatus, getConf(), context.shouldKeepLinks(), loopLocator).getSourceRealPath().isDirectory()))) ||
-          sourceStatus.getPath().isRoot()) {
+      boolean simpleFile = !sourceStatus.isDirectory() &&
+              !(sourceStatus.isSymlink() && getOriginalFileStatus(sourceStatus, getConf(), context.shouldKeepLinks(), loopLocator).getSourceRealPath().isDirectory());
+      if ((specialHandling && (sourceStatus.isDirectory() || !simpleFile)) ||
+              simpleFile ||
+              sourceStatus.getPath().isRoot()) {
         return sourceStatus.getPath();
       } else {
         return sourceStatus.getPath().getParent();
