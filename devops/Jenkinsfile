@@ -103,6 +103,7 @@ pipeline {
                         make mapr-nodemanager-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS}; \
                         make mapr-historyserver-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS}; \
                         make mapr-timelineserver-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS}; \
+                        make mapr-timelineserverv1-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS}; \
                         make mapr-httpfs-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS}; \
                         make mapr-hadoop-${COMPONENT_VERSION}-${MEP_VER}-deploy TIMESTAMP=${ID} ${MAKEFILE_ARGS}; \
                       """
@@ -176,6 +177,7 @@ pipeline {
                         make mapr-nodemanager-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS}; \
                         make mapr-historyserver-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS}; \
                         make mapr-timelineserver-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS}; \
+                        make mapr-timelineserverv1-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS}; \
                         make mapr-httpfs-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS}; \
                         make mapr-hadoop-${COMPONENT_VERSION}-${MEP_VER}-deploy TIMESTAMP=${ID} ${MAKEFILE_ARGS}; \
                       """
