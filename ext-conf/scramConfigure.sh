@@ -1,11 +1,11 @@
 #!/bin/bash
 # This gets fillled out at package time
-HADOOP_HOME="${HADOOP_HOME:-__INSTALL__}"
+HADOOP_HOME="${HADOOP_HOME:-__PREFIX_INSTALL__/hadoop/hadoop-__VERSION_3DIGIT__}"
 HADOOP_CONF_DIR="${HADOOP_HOME}/etc/hadoop"
 HADOOP_SCRAM_CONF_DIR=${HADOOP_CONF_DIR}/scram
 HADOOP_SCRAM_CONF=${HADOOP_SCRAM_CONF_DIR}/scram-site.xml
 HADOOP_SSL_CONFIG=${HADOOP_CONF_DIR}/ssl-server.xml
-MAPR_HOME=${MAPR_HOME:-__PREFIX__}
+MAPR_HOME=${MAPR_HOME:-__PREFIX_INSTALL__}
 MAPR_CLUSTRERS_CONF_FILE=${MAPR_HOME}/conf/mapr-clusters.conf
 
 isFips="false"

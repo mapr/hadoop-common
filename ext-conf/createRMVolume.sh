@@ -5,7 +5,7 @@
 ## Called by JobTracker/ResourceManager/HistoryServer
 # accepts hostname and mountpoint
 
-MAPR_HOME=${MAPR_HOME:-/opt/mapr}
+MAPR_HOME=${MAPR_HOME:-__PREFIX_INSTALL__}
 
 function usage() {
   echo >&2 "usage: $0 <hostname> <vol mount point> <<full directory path for ${SHORT_NAME} dirs>"

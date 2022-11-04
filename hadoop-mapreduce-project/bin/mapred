@@ -122,7 +122,7 @@ function mapredcmd_case
 
 bin=$(cd -P -- "$(dirname -- "${MYNAME}")" >/dev/null && pwd -P)
 
-MAPR_HOME=${MAPR_HOME:-"/opt/mapr"}
+MAPR_HOME=${MAPR_HOME:-__PREFIX_INSTALL__}
 HADOOP_VERSION=`cat ${MAPR_HOME}/hadoop/hadoopversion`
 HADOOP_HOME=${MAPR_HOME}/hadoop/hadoop-${HADOOP_VERSION}
 

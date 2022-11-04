@@ -31,7 +31,7 @@
 ##
 
 # source /opt/mapr/conf/env.sh to inherit MapR's env variables into 'bin/hadoop' script.
-BASEMAPR=${MAPR_HOME:-/opt/mapr}
+BASEMAPR=${MAPR_HOME:-__PREFIX_INSTALL__}
 env=${BASEMAPR}/conf/env.sh
 [ -f $env ] && . $env
 

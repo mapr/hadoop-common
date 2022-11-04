@@ -18,11 +18,11 @@
 #
 
 # This gets fillled out at package time
-HADOOP_HOME="${HADOOP_HOME:-__INSTALL__}"
+HADOOP_HOME="${HADOOP_HOME:-__PREFIX_INSTALL__/hadoop/hadoop-__VERSION_3DIGIT__}"
 HADOOP_CONF_DIR="${HADOOP_HOME}/etc/hadoop"
 HADOOP_SSL_CLIENT_FILE=${HADOOP_CONF_DIR}/ssl-client.xml
 HADOOP_SSL_SERVER_FILE=${HADOOP_CONF_DIR}/ssl-server.xml
-MAPR_HOME=${MAPR_HOME:-__PREFIX__}
+MAPR_HOME=${MAPR_HOME:-__PREFIX_INSTALL__}
 HADOOP_BASE="${MAPR_HOME}/hadoop"
 NOW=$(date "+%Y%m%d_%H%M%S")
 WARDEN_START_KEY="service.command.start"

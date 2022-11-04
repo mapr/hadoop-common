@@ -258,7 +258,7 @@ ${HADOOP_COMMON_HOME}/${HADOOP_COMMON_LIB_JARS_DIR}"
   esac
 }
 
-MAPR_HOME=${MAPR_HOME:-"/opt/mapr"}
+MAPR_HOME=${MAPR_HOME:-__PREFIX_INSTALL__}
 env=${MAPR_HOME}/conf/env.sh
 [ -f $mapred-env.sh ] && . $env
 HADOOP_VERSION=`cat ${MAPR_HOME}/hadoop/hadoopversion`

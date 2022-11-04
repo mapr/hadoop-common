@@ -1,8 +1,8 @@
 #!/bin/bash
 
-MAPR_HOME=${MAPR_HOME:-/opt/mapr}
+MAPR_HOME=${MAPR_HOME:-__PREFIX_INSTALL__}
 ROLES_DIR="$MAPR_HOME/roles"
-HADOOP_HOME="${HADOOP_HOME:-__INSTALL__}"
+HADOOP_HOME="${HADOOP_HOME:-__PREFIX_INSTALL__/hadoop/hadoop-__VERSION_3DIGIT__}"
 JHS_PID_FILE="$MAPR_HOME"/pid/hadoop-mapr-historyserver.pid
 NM_PID_FILE="$MAPR_HOME"/pid/hadoop-mapr-nodemanager.pid
 RM_PID_FILE="$MAPR_HOME"/pid/hadoop-mapr-resourcemanager.pid
