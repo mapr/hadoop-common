@@ -197,7 +197,7 @@
 # export YARN_SERVICE_EXAMPLES_DIR = $HADOOP_YARN_HOME/share/hadoop/yarn/yarn-service-examples
 # export YARN_CONTAINER_RUNTIME_DOCKER_RUN_OVERRIDE_DISABLE=true
 
-BASEMAPR=${MAPR_HOME:-/opt/mapr}
+BASEMAPR=${MAPR_HOME:-__PREFIX_INSTALL__}
 env=${BASEMAPR}/conf/env.sh
 [ -f $env ] && . $env
 

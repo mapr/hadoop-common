@@ -871,8 +871,9 @@ function hadoop_basic_init
   fi
 
   # define MAPR_HOME
-  if [[ -d "/opt/mapr" ]]; then
-    export MAPR_HOME="/opt/mapr"
+  BASEDIR=${MAPR_HOME:-__PREFIX_INSTALL__}
+  if [[ -d ${BASEDIR} ]]; then
+    export MAPR_HOME=${BASEDIR}
   fi
 
   # if for some reason the shell doesn't have $USER defined
