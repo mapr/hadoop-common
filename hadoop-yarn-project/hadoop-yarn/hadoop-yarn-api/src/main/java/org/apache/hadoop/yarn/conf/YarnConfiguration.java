@@ -2255,7 +2255,7 @@ public class YarnConfiguration extends Configuration {
   public static final String NM_CONTAINER_LOCALIZER_JAVA_OPTS_KEY =
       NM_PREFIX + "container-localizer.java.opts";
   public static final String NM_CONTAINER_LOCALIZER_JAVA_OPTS_DEFAULT =
-      "-Xmx256m";
+      "-Xmx256m --add-opens java.base/java.lang=ALL-UNNAMED";
 
   /** The log level of container localizer process. */
   public static final String NM_CONTAINER_LOCALIZER_LOG_LEVEL=

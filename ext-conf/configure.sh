@@ -854,7 +854,7 @@ function checkAndConfigureFIPSProperties() {
           sed -i -e "s|</configuration>|  <property>\n   <name>hadoop.security.token.authentication.method</name>\n    <value>SCRAM-SHA-256</value>\n    <description>\n      SASL mechanism for token authentication.\n    </description>\n  </property>\n</configuration>|" "${HADOOP_HOME}/etc/hadoop/core-site.xml"
       fi
       if ! grep -q "yarn.nodemanager.container-localizer.java.opts" "${HADOOP_HOME}/etc/hadoop/yarn-site.xml"; then
-          sed -i -e "s|</configuration>|  <property>\n   <name>yarn.nodemanager.container-localizer.java.opts</name>\n    <value>-Xmx256m -Djava.security.properties=/opt/mapr/conf/java.security.fips</value>\n  </property>\n</configuration>|" "${HADOOP_HOME}/etc/hadoop/yarn-site.xml"
+          sed -i -e "s|</configuration>|  <property>\n   <name>yarn.nodemanager.container-localizer.java.opts</name>\n    <value>-Xmx256m --add-opens java.base/java.lang=ALL-UNNAMED -Djava.security.properties=/opt/mapr/conf/java.security.fips</value>\n  </property>\n</configuration>|" "${HADOOP_HOME}/etc/hadoop/yarn-site.xml"
       fi
   fi
   if [ "$isFips" == "true" ] || grep -q "<value>SCRAM-SHA-256</value>" "${HADOOP_HOME}/etc/hadoop/core-site.xml"; then

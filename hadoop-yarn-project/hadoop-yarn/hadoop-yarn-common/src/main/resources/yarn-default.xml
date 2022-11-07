@@ -1393,7 +1393,7 @@
     <description>
     </description>
     <name>yarn.nodemanager.container-localizer.java.opts</name>
-    <value>-Xmx256m</value>
+    <value>-Xmx256m --add-opens java.base/java.lang=ALL-UNNAMED</value>
   </property>
 
   <property>
