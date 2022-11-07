@@ -2335,7 +2335,7 @@ public class YarnConfiguration extends Configuration {
   public static final String NM_CONTAINER_LOCALIZER_JAVA_OPTS_KEY =
       NM_PREFIX + "container-localizer.java.opts";
   public static final String NM_CONTAINER_LOCALIZER_JAVA_OPTS_DEFAULT =
-      "-Xmx256m";
+      "-Xmx256m --add-opens java.base/java.lang=ALL-UNNAMED";
 
   /** The admin JVM options used on forking ContainerLocalizer process
       by container executor. */
