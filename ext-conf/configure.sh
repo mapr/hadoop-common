@@ -198,8 +198,9 @@ function UpdateFileClientConfig() {
     N
     s/\('"$key"' *\n* *<value>\)\(.*\)\(<\/value>\)/\1'"$value"'\3/
   }' "$hmrConf"
-
-    UpdateMapredSiteXmlForTezSSL
+    if [ "$isOnlyRoles" != "1" ] && [ "$customSecCluster" != "1" ]; then
+        UpdateMapredSiteXmlForTezSSL
+    fi
 }
 function ConfigureCommon() {
     # Remove old maprfs jars.
@@ -969,14 +970,14 @@ if [ ${#} -gt 0 ]; then
                 if [ -f "$HADOOP_HOME/etc/.not_configured_yet" ]; then
                     # hadoop added after secure 5.x cluster upgraded to customSecure
                     # 6.0 cluster. Deal with this by assuming a regular --secure path
-                    :
+                    customSecCluster=0
                 else
                     # this is a little tricky. It either means a simpel configure.sh -R run
                     # or it means that hadoop was part of the 5.x to 6.0 upgrade
                     # At the moment hadoop knows of no other security settings besides jmx
                     # and port numbers the jmx uses. Since we have no way of detecting what
                     # these ports are - we assume for now they don't change.
-                    :
+                    customSecCluster=1
                 fi
                 secureCluster=1
                 shift 1
