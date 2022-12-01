@@ -208,6 +208,7 @@ HADOOP_OPTS="$HADOOP_OPTS -XX:+UseParallelGC"
 #MAPRHADOOP-119: Skip "Logging initialized" messages
 HADOOP_OPTS="$HADOOP_OPTS -Dorg.eclipse.jetty.util.log.announce=false"
 
+YARN_TIMELINESERVER_OPTS="${YARN_TIMELINESERVER_OPTS} --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.math=ALL-UNNAMED  --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.util.concurrent=ALL-UNNAMED --add-opens java.base/java.net=ALL-UNNAMED --add-opens java.base/java.text=ALL-UNNAMED"
 YARN_RESOURCEMANAGER_OPTS="$YARN_RESOURCEMANAGER_OPTS -Dfs.cache.lru.enable=true"
 export YARN_RESOURCEMANAGER_OPTS="${YARN_RESOURCEMANAGER_OPTS} ${MAPR_LOGIN_OPTS}"
 export YARN_NODEMANAGER_OPTS="${YARN_NODEMANAGER_OPTS} ${MAPR_LOGIN_OPTS}"
