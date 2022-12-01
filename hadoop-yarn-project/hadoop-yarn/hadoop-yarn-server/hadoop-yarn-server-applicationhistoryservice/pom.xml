@@ -263,6 +263,20 @@
         <artifactId>maven-jar-plugin</artifactId>
         <executions>
           <execution>
+            <id>prepare-jar</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+            <configuration>
+              <archive>
+                <manifestEntries>
+                  <Add-Opens>java.base/java.lang java.base/java.math java.base/java.util java.base/java.util.concurrent java.base/java.net java.base/java.text</Add-Opens>
+                </manifestEntries>
+              </archive>
+            </configuration>
+          </execution>
+          <execution>
             <goals>
               <goal>test-jar</goal>
             </goals>
