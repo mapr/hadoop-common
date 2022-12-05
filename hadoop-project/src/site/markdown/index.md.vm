@@ -15,118 +15,105 @@
 Apache Hadoop ${project.version}
 ================================
 
-Apache Hadoop ${project.version} incorporates a number of significant
-enhancements over the previous major release line (hadoop-3.2).
+Apache Hadoop ${project.version} is an update to the Hadoop 3.3.x release branch.
 
-Overview
-========
+Overview of Changes
+===================
 
 Users are encouraged to read the full set of release notes.
 This page provides an overview of the major changes.
 
-ARM Support
-------------
-This is the first release to support ARM architectures.
-
-Upgrade protobuf from 2.5.0 to something newer
----------------------------------------------
-Protobuf upgraded to 3.7.1 as protobuf-2.5.0 reached EOL.
-
-Java 11 runtime support
-------------------
-
-Java 11 runtime support is completed.
-
-Shaded Guava from thirdparty
---------------------------------
-Hadoop now switches to use a shaded version of Guava from
-`hadoop-thirdparty` which helps to remove Guava version conflicts with
-downstream applications.
-
-Adoption of lz4-java and snappy-java
-----------------------------------
-For LZ4 and Snappy compression codec, Hadoop now moves to use `lz4-java`
-and `snappy-java` instead of requring the native libraries of these to
-be installed on the systems running Hadoop.
-
-Support impersonation for AuthenticationFilter
----------------------------------------------
-
-External services or YARN service may need to call into WebHDFS or YARN REST API on behave of the user using web
-protocols. It would be good to support impersonation mechanism in AuthenticationFilter or similar extensions.
-
-
-s3A Enhancements
-------------------
-Lots of enhancements to the S3A code including Delegation Token support, better handling of 404 caching,
- S3guard performance, resilience improvements
-
-ABFS Enhancements
---------------------
-Address issues which surface in the field and tune things which need tuning, add more tests where appropriate.
-Improve docs, especially troubleshooting.
-
-HDFS RBF stabilization
---------------------
-
-HDFS Router now supports security. Also contains many bug fixes and improvements.
-
-Support non-volatile storage class memory(SCM) in HDFS cache directives	.
------------------------------------------------------------------------
-
-Aims to enable storage class memory first in read cache.
-Although storage class memory has non-volatile characteristics, to keep the same behavior as current read only cache,
-we don't use its persistent characteristics currently.
-
-
-Application Catalog for YARN applications.
------------------------------------------
-
-application catalog system which provides an editorial and search interface for YARN applications.
-This improves usability of YARN for manage the life cycle of applications.
-
-
-Incorporate Tencent Cloud COS File System Implementation
--------------------------------------------------------
-
-HDFS Router-Based Federation
----------------------
-HDFS Router-Based Federation adds a RPC routing layer that provides a federated
-view of multiple HDFS namespaces. This is similar to the existing
-[ViewFs](./hadoop-project-dist/hadoop-hdfs/ViewFs.html)) and
-[HDFS Federation](./hadoop-project-dist/hadoop-hdfs/Federation.html)
-functionality, except the mount table is managed on the server-side by the
-routing layer rather than on the client. This simplifies access to a federated
-cluster for existing HDFS clients.
-
-See [HDFS-10467](https://issues.apache.org/jira/browse/HDFS-10467) and the
-HDFS Router-based Federation
-[documentation](./hadoop-project-dist/hadoop-hdfs-rbf/HDFSRouterFederation.html) for
-more details.
-
-API-based configuration of Capacity Scheduler queue configuration
-----------------------
-
-The OrgQueue extension to the capacity scheduler provides a programmatic way to
-change configurations by providing a REST API that users can call to modify
-queue configurations. This enables automation of queue configuration management
-by administrators in the queue's `administer_queue` ACL.
-
-See [YARN-5734](https://issues.apache.org/jira/browse/YARN-5734) and the
-[Capacity Scheduler documentation](./hadoop-yarn/hadoop-yarn-site/CapacityScheduler.html) for more information.
-
-YARN Resource Types
+Vectored IO API
 ---------------
 
-The YARN resource model has been generalized to support user-defined countable resource types beyond CPU and memory. For instance, the cluster administrator could define resources like GPUs, software licenses, or locally-attached storage. YARN tasks can then be scheduled based on the availability of these resources.
+The `PositionedReadable` interface has now added an operation for
+Vectored (also known as Scatter/Gather IO):
 
-See [YARN-3926](https://issues.apache.org/jira/browse/YARN-3926) and the [YARN resource model documentation](./hadoop-yarn/hadoop-yarn-site/ResourceModel.html) for more information.
+```java
+void readVectored(List<? extends FileRange> ranges, IntFunction<ByteBuffer> allocate)
+```
+
+All the requested ranges will be retrieved into the supplied byte buffers -possibly asynchronously,
+possibly in parallel, with results potentially coming in out-of-order.
+
+1. The default implementation uses a series of `readFully()` calls, so delivers
+   equivalent performance.
+2. The local filesystem uses java native IO calls for higher performance reads than `readFully()`
+3. The S3A filesystem issues parallel HTTP GET requests in different threads.
+
+Benchmarking of (modified) ORC and Parquet clients through `file://` and `s3a://`
+show tangible improvements in query times.
+
+Further Reading: [FsDataInputStream](./hadoop-project-dist/hadoop-common/filesystem/fsdatainputstream.html).
+
+Manifest Committer for Azure ABFS and google GCS performance
+------------------------------------------------------------
+
+A new "intermediate manifest committer" uses a manifest file
+to commit the work of successful task attempts, rather than
+renaming directories.
+Job commit is matter of reading all the manifests, creating the
+destination directories (parallelized) and renaming the files,
+again in parallel.
+
+This is fast and correct on Azure Storage and Google GCS,
+and should be used there instead of the classic v1/v2 file
+output committers.
+
+It is also safe to use on HDFS, where it should be faster
+than the v1 committer. It is however optimized for
+cloud storage where list and rename operations are significantly
+slower; the benefits may be less.
+
+More details are available in the
+[manifest committer](./hadoop-mapreduce-client/hadoop-mapreduce-client-core/manifest_committer.html).
+documentation.
+
+Transitive CVE fixes
+--------------------
+
+A lot of dependencies have been upgraded to address recent CVEs.
+Many of the CVEs were not actually exploitable through the Hadoop
+so much of this work is just due diligence.
+However applications which have all the library is on a class path may
+be vulnerable, and the ugprades should also reduce the number of false
+positives security scanners report.
+
+We have not been able to upgrade every single dependency to the latest
+version there is. Some of those changes are just going to be incompatible.
+If you have concerns about the state of a specific library, consult the apache JIRA
+issue tracker to see what discussions have taken place about the library in question.
+
+As an open source project, contributions in this area are always welcome,
+especially in testing the active branches, testing applications downstream of
+those branches and of whether updated dependencies trigger regressions.
+
+HDFS: Router Based Federation
+-----------------------------
+
+A lot of effort has been invested into stabilizing/improving the HDFS Router Based Federation feature.
+
+1. HDFS-13522, HDFS-16767 & Related Jiras: Allow Observer Reads in HDFS Router Based Federation.
+2. HDFS-13248: RBF supports Client Locality
+
+
+HDFS: Dynamic Datanode Reconfiguration
+--------------------------------------
+
+HDFS-16400, HDFS-16399, HDFS-16396, HDFS-16397, HDFS-16413, HDFS-16457.
+
+A number of Datanode configuration options can be changed without having to restart
+the datanode. This makes it possible to tune deployment configurations without
+cluster-wide Datanode Restarts.
+
+See [DataNode.java](https://github.com/apache/hadoop/blob/branch-3.3.5/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/datanode/DataNode.java#L346-L361)
+for the list of dynamically reconfigurable attributes.
 
 Getting Started
 ===============
 
 The Hadoop documentation includes the information you need to get started using
-Hadoop. Begin with the
+Hadoop. Begin with the 
 [Single Node Setup](./hadoop-project-dist/hadoop-common/SingleCluster.html)
 which shows you how to set up a single-node Hadoop installation.
 Then move on to the
