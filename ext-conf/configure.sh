@@ -967,7 +967,7 @@ if [ ${#} -gt 0 ]; then
                 shift 1
                 ;;
             --customSecure | -c)
-                if [ -f "$HADOOP_HOME/etc/.not_configured_yet" ]; then
+                if [ -f "$HADOOP_HOME/etc/hadoop/.not_configured_yet" ]; then
                     # hadoop added after secure 5.x cluster upgraded to customSecure
                     # 6.0 cluster. Deal with this by assuming a regular --secure path
                     customSecCluster=0
@@ -1079,8 +1079,11 @@ ConfigureHadoopDir
 ConfigureHadoop
 UpdateFileClientConfig
 ConfigureJMHadoopProperties "${INSTALL_DIR}/conf/hadoop-metrics.properties"
-if [ "$(uname)" != "Darwin" ] && [ "$isOnlyRoles" != "1" ]; then
+if [ "$(uname)" != "Darwin" ] && [[ "$isOnlyRoles" != "1" || -f "$HADOOP_HOME/etc/hadoop/.not_configured_executor" ]]; then
     ConfigureYarnLinuxContainerExecutor
+    if [ -f "$HADOOP_HOME/etc/hadoop/.not_configured_executor" ]; then
+        rm -f "$HADOOP_HOME/etc/hadoop/.not_configured_executor"
+    fi
 fi
 
 # TODO - this one is incomplete
