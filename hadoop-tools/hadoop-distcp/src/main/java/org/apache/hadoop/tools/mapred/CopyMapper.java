@@ -164,7 +164,11 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
     String relPathStr = relPath.toString();
     Path target = null;
     if (relPathStr.isEmpty()) {
-      target = qualifiedBaseTarget;
+      if (!sourceFileStatus.isDirectory()) {
+        target = Path.mergePaths(qualifiedBaseTarget, new Path("/" + sourcePath.getName()));
+      } else {
+        target = qualifiedBaseTarget;
+      }
     } else {
       Path remainingPath = new Path(relPath.toString());
       // Merge paths instead of concatenating to avoid misinterpreting the path
