@@ -221,7 +221,7 @@
     <yarnpkg.version>v1.22.5</yarnpkg.version>
     <apache-ant.version>1.10.11</apache-ant.version>
     <jpam.version>1.1</jpam.version>
-    <jettison.version>1.5.1</jettison.version>
+    <jettison.version>1.5.2</jettison.version>
   </properties>
 
   <dependencyManagement>
