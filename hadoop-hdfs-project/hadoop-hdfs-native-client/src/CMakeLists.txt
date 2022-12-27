@@ -58,10 +58,10 @@ include(HadoopCommon)
 # alternative to POSIX thread local storage.
 include(CheckCSourceCompiles)
 check_c_source_compiles("int main(void) { static __thread int i = 0; return 0; }" HAVE_BETTER_TLS)
-
-# Check to see if we have Intel SSE intrinsics.
-check_c_source_compiles("#include <emmintrin.h>\nint main(void) { __m128d sum0 = _mm_set_pd(0.0,0.0); return 0; }" HAVE_INTEL_SSE_INTRINSICS)
-
+if (NOT APPLE)
+    # Check to see if we have Intel SSE intrinsics.
+    check_c_source_compiles("#include <emmintrin.h>\nint main(void) { __m128d sum0 = _mm_set_pd(0.0,0.0); return 0; }" HAVE_INTEL_SSE_INTRINSICS)
+endif (NOT APPLE)
 set(_FUSE_DFS_VERSION 0.1.0)
 configure_file(${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 configure_file(${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/native/config.h)
@@ -115,7 +115,9 @@ function(build_libhdfs_test NAME LIBRARY)
         if (IS_ABSOLUTE ${FIL})
             list(APPEND FILES ${FIL})
         else()
-            list(APPEND FILES ${CMAKE_SOURCE_DIR}/main/native/libhdfs-tests/${FIL})
+            if (NOT APPLE)
+                list(APPEND FILES ${CMAKE_SOURCE_DIR}/main/native/libhdfs-tests/${FIL})
+            endif (NOT APPLE)
         endif()
     endforeach()
     add_executable("${NAME}_${LIBRARY}" $<TARGET_OBJECTS:x_platform_obj_c_api> $<TARGET_OBJECTS:x_platform_obj> ${FILES})
@@ -180,7 +182,9 @@ else()
 endif()
 
 add_subdirectory(main/native/libhdfs)
-add_subdirectory(main/native/libhdfs-tests)
+if (NOT APPLE)
+    add_subdirectory(main/native/libhdfs-tests)
+endif (NOT APPLE)
 add_subdirectory(main/native/libhdfs-examples)
 
 # Temporary fix to disable Libhdfs++ build on older systems that do not support thread_local

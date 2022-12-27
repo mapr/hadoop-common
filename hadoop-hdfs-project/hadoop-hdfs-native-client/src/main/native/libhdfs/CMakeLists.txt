@@ -57,6 +57,7 @@ set(LIBHDFS_VERSION "0.0.0")
 set_target_properties(hdfs PROPERTIES
     SOVERSION ${LIBHDFS_VERSION})
 
+if (NOT APPLE)
 build_libhdfs_test(test_libhdfs_ops hdfs_static test_libhdfs_ops.c)
 link_libhdfs_test(test_libhdfs_ops hdfs_static native_mini_dfs ${JAVA_JVM_LIBRARY})
 add_libhdfs_test(test_libhdfs_ops hdfs_static)
@@ -64,6 +65,7 @@ add_libhdfs_test(test_libhdfs_ops hdfs_static)
 build_libhdfs_test(test_libhdfs_threaded hdfs_static expect.c test_libhdfs_threaded.c ${OS_DIR}/thread.c)
 link_libhdfs_test(test_libhdfs_threaded hdfs_static native_mini_dfs)
 add_libhdfs_test(test_libhdfs_threaded hdfs_static)
+endif()
 
 if (NOT WIN32 AND NOT APPLE)
 build_libhdfs_test(test_libhdfs_zerocopy hdfs_static expect.c test_libhdfs_zerocopy.c)
@@ -73,7 +75,7 @@ endif()
 
 # Skip vecsum on Windows.  This could be made to work in the future by
 # introducing an abstraction layer over the sys/mman.h functions.
-if(NOT WIN32)
+if(NOT WIN32 AND NOT APPLE )
     build_libhdfs_test(test_libhdfs_vecsum hdfs vecsum.c)
     set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
