@@ -79,6 +79,7 @@ public abstract class Shell {
   public static final String ENV_HADOOP_HOME = "HADOOP_HOME";
   public static final String ENV_HADOOP_OPTS = "HADOOP_OPTS";
   public static final String ENV_MAPR_JMX_OPTS = "MAPR_JMX_OPTS";
+  public static final String ENV_DEBUG_OPTS = "DEBUG_OPTS";
 
   /**
    * query to see if system is Java 7 or later.
@@ -997,6 +998,13 @@ public abstract class Shell {
 
     String jmx_opts = builder.environment().get(ENV_MAPR_JMX_OPTS);
     if (jmx_opts != null) {
+      String hadoop_opts = builder.environment().get(ENV_HADOOP_OPTS);
+      hadoop_opts = hadoop_opts.replaceAll(jmx_opts, "");
+      builder.environment().put(ENV_HADOOP_OPTS, hadoop_opts);
+    }
+
+    String debug_opts = builder.environment().get(ENV_DEBUG_OPTS);
+    if (debug_opts != null) {
       String hadoop_opts = builder.environment().get(ENV_HADOOP_OPTS);
       hadoop_opts = hadoop_opts.replaceAll(jmx_opts, "");
       builder.environment().put(ENV_HADOOP_OPTS, hadoop_opts);
