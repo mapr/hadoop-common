@@ -94,6 +94,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.NodeAddedSc
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.NodeRemovedSchedulerEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.NodeResourceUpdateSchedulerEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.NodeUpdateSchedulerEvent;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.NodeLabelsUpdateSchedulerEvent;
 
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.ReleaseContainerEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEvent;
@@ -827,6 +828,64 @@ public class FairScheduler extends
     }
   }
 
+  /**
+   * Process node labels update.
+   */
+  private void updateNodeLabelsAndQueueResource(
+          NodeLabelsUpdateSchedulerEvent labelUpdateEvent) {
+    writeLock.lock();
+    try {
+      Set<String> updateLabels = new HashSet<String>();
+      for (Entry<NodeId, Set<String>> entry : labelUpdateEvent
+              .getUpdatedNodeToLabels().entrySet()) {
+        NodeId id = entry.getKey();
+        Set<String> labels = entry.getValue();
+        FSSchedulerNode node = nodeTracker.getNode(id);
+
+        if (node != null) {
+          // Update old partition to list.
+          updateLabels.add(node.getPartition());
+        }
+        updateLabelsOnNode(id, labels);
+        updateLabels.addAll(labels);
+      }
+      refreshLabelToNodeCache(updateLabels);
+      Resource clusterResource = getClusterResource();
+      queueMgr.getRootQueue().setSteadyFairShare(clusterResource);
+      queueMgr.getRootQueue().recomputeSteadyShares();
+
+    } finally {
+      writeLock.unlock();
+    }
+  }
+
+
+  /**
+   * Process node labels update on a node.
+   */
+  private void updateLabelsOnNode(NodeId nodeId,
+                                  Set<String> newLabels) {
+    FSSchedulerNode node = nodeTracker.getNode(nodeId);
+    if (null == node) {
+      return;
+    }
+
+    // Update node labels after we've done this
+    node.updateLabels(newLabels);
+  }
+
+  private void refreshLabelToNodeCache(Set<String> updateLabels) {
+    Map<String, Set<NodeId>> labelMapping = rmContext.getNodeLabelManager()
+            .getLabelsToNodes(updateLabels);
+    for (String label : updateLabels) {
+      Set<NodeId> nodes = labelMapping.get(label);
+      if (nodes == null) {
+        continue;
+      }
+      nodeTracker.updateNodesPerPartition(label, nodes);
+    }
+  }
+
   private void addNode(List<NMContainerStatus> containerReports,
       RMNode node) {
     writeLock.lock();
@@ -836,6 +895,12 @@ public class FairScheduler extends
       FSSchedulerNode schedulerNode = new FSSchedulerNode(node,
               usePortForNodeName, labelsOnNode);
       nodeTracker.addNode(schedulerNode);
+
+      // update this node to node label manager
+      if (labelsManager != null) {
+        labelsManager.activateNode(node.getNodeID(),
+                schedulerNode.getTotalResource());
+      }
 
       triggerUpdate();
 
@@ -984,8 +1049,8 @@ public class FairScheduler extends
 
     if(queue.getLabel() != null) {
       for (ResourceRequest resReq : ask) {
-        if (resReq.getNodeLabelExpression() == null && ResourceRequest.ANY
-                .equals(resReq.getResourceName())) {
+        if ((resReq.getNodeLabelExpression() == null || resReq.getNodeLabelExpression().isEmpty()) &&
+                ResourceRequest.ANY.equals(resReq.getResourceName())) {
           resReq.setNodeLabelExpression(queue.getLabel());
         }
       }
@@ -1326,6 +1391,15 @@ public class FairScheduler extends
       }
       NodeRemovedSchedulerEvent nodeRemovedEvent = (NodeRemovedSchedulerEvent)event;
       removeNode(nodeRemovedEvent.getRemovedRMNode());
+      break;
+    case NODE_LABELS_UPDATE:
+      if (!(event instanceof NodeLabelsUpdateSchedulerEvent)) {
+        throw new RuntimeException("Unexpected event type: " + event);
+      }
+      NodeLabelsUpdateSchedulerEvent labelUpdateEvent =
+                (NodeLabelsUpdateSchedulerEvent) event;
+
+      updateNodeLabelsAndQueueResource(labelUpdateEvent);
       break;
     case NODE_UPDATE:
       if (!(event instanceof NodeUpdateSchedulerEvent)) {
