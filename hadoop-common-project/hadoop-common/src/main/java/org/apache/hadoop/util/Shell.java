@@ -1006,7 +1006,7 @@ public abstract class Shell {
     String debug_opts = builder.environment().get(ENV_DEBUG_OPTS);
     if (debug_opts != null) {
       String hadoop_opts = builder.environment().get(ENV_HADOOP_OPTS);
-      hadoop_opts = hadoop_opts.replaceAll(jmx_opts, "");
+      hadoop_opts = hadoop_opts.replaceAll(debug_opts, "");
       builder.environment().put(ENV_HADOOP_OPTS, hadoop_opts);
     }
 
