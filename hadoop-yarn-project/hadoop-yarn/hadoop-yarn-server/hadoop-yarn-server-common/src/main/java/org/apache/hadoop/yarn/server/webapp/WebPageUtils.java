@@ -54,16 +54,18 @@ public class WebPageUtils {
     StringBuilder sb = new StringBuilder();
     sb.append("[\n")
       .append("{'sType':'natural', 'aTargets': [0], ")
-      .append("'mRender': parseHadoopID },\n")
-      .append("{'sType':'num-ignore-str', 'aTargets': [7, 8, 9], ")
-      .append("'mRender': renderHadoopDate },\n");
+      .append("'mRender': parseHadoopID },\n");
     if (isResourceManager) {
+      sb.append("{'sType':'num-ignore-str', 'aTargets': [7, 8, 9], ")
+        .append("'mRender': renderHadoopDate },\n");
       // Update following line if any column added in RM page before column 11
       sb.append("{'sType':'num-ignore-str', ")
         .append("'aTargets': [12, 13, 14, 15, 16] },\n");
       // set progress column index to 21
       progressIndex = "[21]";
     } else if (isFairSchedulerPage) {
+      sb.append("{'sType':'num-ignore-str', 'aTargets': [6, 7, 8], ")
+        .append("'mRender': renderHadoopDate },\n");
       // Update following line if any column added in scheduler page before column 11
       sb.append("{'sType':'num-ignore-str', ")
         .append("'aTargets': [11, 12, 13, 14, 15] },\n");
