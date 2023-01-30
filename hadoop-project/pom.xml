@@ -93,7 +93,7 @@
     <hadoop.protobuf.version>3.21.9</hadoop.protobuf.version>
     <protoc.path>${env.HADOOP_PROTOC_PATH}</protoc.path>
 
-    <hadoop-thirdparty.version>1.1.1.100-eep-910-SNAPSHOT</hadoop-thirdparty.version>
+    <hadoop-thirdparty.version>1.1.1.200-eep-911-SNAPSHOT</hadoop-thirdparty.version>
     <hadoop-thirdparty-protobuf.version>${hadoop-thirdparty.version}</hadoop-thirdparty-protobuf.version>
     <hadoop-thirdparty-guava.version>${hadoop-thirdparty.version}</hadoop-thirdparty-guava.version>
     <hadoop-thirdparty-shaded-prefix>org.apache.hadoop.thirdparty</hadoop-thirdparty-shaded-prefix>
@@ -105,7 +105,7 @@
     <findbugs.version>3.0.5</findbugs.version>
     <dnsjava.version>2.1.7</dnsjava.version>
 
-    <guava.version>30.1.1-jre</guava.version>
+    <guava.version>31.1-jre</guava.version>
     <guice.version>4.0</guice.version>
     <joda-time.version>2.9.9</joda-time.version>
 
