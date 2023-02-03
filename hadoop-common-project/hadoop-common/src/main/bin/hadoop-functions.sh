@@ -1277,6 +1277,20 @@ function hadoop_add_ldlibpath
   return ${status}
 }
 
+## @description  Check that file exists and add to the classpath
+## @description  environment
+## @audience     private
+## @stability    evolving
+## @replaceable  yes
+## @param        path
+function check_exists_add_to_classpath
+{
+    local path=$1
+    if ls $path 1> /dev/null 2>&1 ; then
+      hadoop_add_classpath $path
+    fi
+}
+
 ## @description  Add the common/core Hadoop components to the
 ## @description  environment
 ## @audience     private
@@ -1310,12 +1324,11 @@ function hadoop_add_common_to_classpath
 
   #Add MapR specific jar to classpath
   if [ -d "$MAPR_HOME/lib" ]; then
-    hadoop_add_classpath "$MAPR_HOME/lib/kvstore*.jar"
-    hadoop_add_classpath "$MAPR_HOME/lib/json-1.8.jar"
-    hadoop_add_classpath "$MAPR_HOME/lib/libprotodefs*.jar"
-    hadoop_add_classpath "$MAPR_HOME/lib/baseutils*.jar"
-    hadoop_add_classpath "$MAPR_HOME/lib/maprutil*.jar"
-    hadoop_add_classpath "$MAPR_HOME/lib/flexjson-2.1.jar"
+    check_exists_add_to_classpath $MAPR_HOME/lib/kvstore*.jar
+    check_exists_add_to_classpath $MAPR_HOME/lib/json-1.8.jar
+    check_exists_add_to_classpath $MAPR_HOME/lib/libprotodefs*.jar
+    check_exists_add_to_classpath $MAPR_HOME/lib/baseutils*.jar
+    check_exists_add_to_classpath $MAPR_HOME/lib/maprutil*.jar
   fi
 }
 
