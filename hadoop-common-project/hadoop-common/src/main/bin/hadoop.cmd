@@ -102,7 +102,6 @@ if exist %MAPR_HOME%\lib (
   set CLASSPATH=!CLASSPATH!;%MAPR_HOME%\lib\baseutils-0.1.jar
   set CLASSPATH=!CLASSPATH!;%MAPR_HOME%\lib\maprsecurity-0.1.jar
   set CLASSPATH=!CLASSPATH!;%MAPR_HOME%\lib\json-1.8.jar
-  set CLASSPATH=!CLASSPATH!;%MAPR_HOME%\lib\flexjson-2.1.jar
 )
 
 @rem Bug 10369 - Fix to run HBase shell, etc in windows
