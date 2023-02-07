@@ -53,6 +53,79 @@ pipeline {
 
     stage ("Main CI process") {
       parallel {
+        stage("Suse build") {
+          agent {label "sles1"}
+          stages {
+            stage("Checkout") {
+              steps {
+                script {
+                  checkout scm
+                }
+              }
+            }
+            stage("Build") {
+              steps {
+                script {
+                  configFileProvider([configFile(fileId: 'maven_settings', variable: 'mvn_settings')]) {
+                    sh "cat ${env.mvn_settings} > settings.xml"
+                  }
+                  withCredentials([usernamePassword(credentialsId: 'artifactory_user_pass', passwordVariable: 'pass', usernameVariable: 'user')]) {
+                    docker.image("dfdkr.mip.storage.hpecorp.net/suse-leap15-java11-gcc9:hadoop34").inside (
+                    "-e MAPR_MIRROR=${MAPR_MIRROR} \
+                    -e MAPR_CENTRAL=${MAPR_CENTRAL} \
+                    -e MAVEN_CENTRAL=${MAVEN_CENTRAL} \
+                    -e MAPR_MAVEN_REPO=${MAPR_MAVEN_REPO} \
+                    -e MAPR_MAVEN_USER=${user} \
+                    -e MAPR_MAVEN_PASS=${pass} \
+                    -e BUILD_NUMBER=${ID}.${BUILD_NUMBER} \
+                    -e MAPR_RELEASES_REPO=${MAPR_RELEASES_REPO} \
+                    -e MAPR_SNAPSHOTS_REPO=${MAPR_SNAPSHOTS_REPO} \
+                    -e ANT_OPTS=\"-Dhttp.proxyHost=${HPE_PROXY_HOST} -Dhttp.proxyPort=${HPE_PROXY_PORT} -Dhttps.proxyHost=${HPE_PROXY_HOST} -Dhttps.proxyPort=${HPE_PROXY_PORT} -Dhttp.nonProxyHosts='${HPE_PROXY_EXCEPTIONS}'\" \
+                    -e MAVEN_OPTS=\"-Dhttp.proxyHost=${HPE_PROXY_HOST} -Dhttp.proxyPort=${HPE_PROXY_PORT} -Dhttps.proxyHost=${HPE_PROXY_HOST} -Dhttps.proxyPort=${HPE_PROXY_PORT} -Dhttp.nonProxyHosts='${HPE_PROXY_EXCEPTIONS}'\" \
+                    -v /root/.m2:/root/.m2:rw \
+                    -v /root/yum-proxy.conf:/etc/yum.conf:ro \
+                    -v /etc/hosts:/etc/hosts:ro \
+                    -v /root/apt-proxy.conf:/etc/apt/apt.conf.d/proxy.conf:ro \
+                    -v /root/.gradle/gradle.properties:/root/.gradle/gradle.properties:ro \
+                    -v /etc/profile.d/proxy.sh:/etc/profile.d/proxy.sh:ro \
+                    -v /etc/localtime:/etc/localtime:ro \
+                    -v /root/.ssh:/root/.ssh:rw \
+                    -v ${WORKSPACE}/settings.xml:/root/.m2/settings.xml:ro") {
+                      sh """
+                        source /etc/profile.d/proto-profile.sh
+                        rm -rf ${env.PROJECT}; git clone git@github.com:mapr/private-pkg.git ${env.PROJECT}; \
+                        cd ${env.PROJECT}; \
+                        git checkout MEP-9.1.0 ; \
+                        make mapr-hadoop-util-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS} ; \
+                        make mapr-hadoop-client-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS} ; \
+                        make mapr-hadoop-core-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS} ; \
+                        make mapr-resourcemanager-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS}; \
+                        make mapr-nodemanager-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS}; \
+                        make mapr-historyserver-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS}; \
+                        make mapr-timelineserver-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS}; \
+                        make mapr-timelineserverv1-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS}; \
+                        make mapr-httpfs-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS}; \
+                        make mapr-hadoop-${COMPONENT_VERSION}-${MEP_VER}-deploy TIMESTAMP=${ID} ${MAKEFILE_ARGS}; \
+                     """
+                    }
+                  }
+                }
+              }
+            }
+
+            stage("Upload to Artifactory") {
+              steps {
+                script {
+                  from = "${WORKSPACE}/${env.PROJECT}/dist/*"
+                  to = "${env.ARTIFACTORY_PATH_SUSE}"
+                  props = "release=${params.BUILD_TYPE}"
+                  artifactory.uploadArtifactsAndBuildInfo(ARTIFACTORY_SERVER, from, to, props)
+                }
+              }
+            }
+          }
+        }
+
         stage("Ubuntu build") {
           agent {label "ubuntu"}
           stages {
