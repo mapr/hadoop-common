@@ -35,10 +35,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.thirdparty.com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.thirdparty.com.google.common.base.Charsets;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.impl.Jdk14Logger;
-import org.apache.commons.logging.impl.Log4JLogger;
 import org.apache.hadoop.HadoopIllegalArgumentException;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
@@ -52,6 +48,8 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.ServletUtil;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 /**
  * Change log level in runtime.
@@ -341,22 +339,14 @@ public class LogLevel {
         out.println(MARKER
             + "Submitted Class Name: <b>" + logName + "</b><br />");
 
-        Log log = LogFactory.getLog(logName);
+        Logger log = Logger.getLogger(logName);
         out.println(MARKER
             + "Log Class: <b>" + log.getClass().getName() +"</b><br />");
         if (level != null) {
           out.println(MARKER + "Submitted Level: <b>" + level + "</b><br />");
         }
 
-        if (log instanceof Log4JLogger) {
-          process(((Log4JLogger)log).getLogger(), level, out);
-        }
-        else if (log instanceof Jdk14Logger) {
-          process(((Jdk14Logger)log).getLogger(), level, out);
-        }
-        else {
-          out.println("Sorry, " + log.getClass() + " not supported.<br />");
-        }
+        process(log, level, out);
       }
 
       out.println(FORMS);
@@ -372,14 +362,14 @@ public class LogLevel {
         + "<input type='submit' value='Set Log Level' />"
         + "</form>";
 
-    private static void process(org.apache.log4j.Logger log, String level,
+    private static void process(Logger log, String level,
         PrintWriter out) throws IOException {
       if (level != null) {
-        if (!level.equalsIgnoreCase(org.apache.log4j.Level.toLevel(level)
+        if (!level.equalsIgnoreCase(Level.toLevel(level)
             .toString())) {
           out.println(MARKER + "Bad Level : <b>" + level + "</b><br />");
         } else {
-          log.setLevel(org.apache.log4j.Level.toLevel(level));
+          log.setLevel(Level.toLevel(level));
           out.println(MARKER + "Setting Level to " + level + " ...<br />");
         }
       }
@@ -387,21 +377,5 @@ public class LogLevel {
           + "Effective Level: <b>" + log.getEffectiveLevel() + "</b><br />");
     }
 
-    private static void process(java.util.logging.Logger log, String level,
-        PrintWriter out) throws IOException {
-      if (level != null) {
-        String levelToUpperCase = level.toUpperCase();
-        try {
-          log.setLevel(java.util.logging.Level.parse(levelToUpperCase));
-        } catch (IllegalArgumentException e) {
-          out.println(MARKER + "Bad Level : <b>" + level + "</b><br />");
-        }
-        out.println(MARKER + "Setting Level to " + level + " ...<br />");
-      }
-
-      java.util.logging.Level lev;
-      for(; (lev = log.getLevel()) == null; log = log.getParent());
-      out.println(MARKER + "Effective Level: <b>" + lev + "</b><br />");
-    }
   }
 }

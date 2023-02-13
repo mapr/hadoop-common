@@ -1850,7 +1850,7 @@ public class TestRouterRpc {
   @Test
   public void testMkdirsWithCallerContext() throws IOException {
     GenericTestUtils.LogCapturer auditlog =
-        GenericTestUtils.LogCapturer.captureLogs(FSNamesystem.auditLog);
+        GenericTestUtils.LogCapturer.captureLogs(FSNamesystem.AUDIT_LOG);
 
     // Current callerContext is null
     assertNull(CallerContext.getCurrent());
@@ -1886,7 +1886,7 @@ public class TestRouterRpc {
   @Test
   public void testAddClientIpPortToCallerContext() throws IOException {
     GenericTestUtils.LogCapturer auditLog =
-        GenericTestUtils.LogCapturer.captureLogs(FSNamesystem.auditLog);
+        GenericTestUtils.LogCapturer.captureLogs(FSNamesystem.AUDIT_LOG);
 
     // 1. ClientIp and ClientPort are not set on the client.
     // Set client context.
