@@ -714,6 +714,13 @@
                         <exclude>**/*.java</exclude>
                       </excludes>
                     </filter>
+                    <!-- Remove hdfs-default backup -->
+                    <filter>
+                      <artifact>*:*</artifact>
+                      <excludes>
+                        <exclude>**/*.backup</exclude>
+                      </excludes>
+                    </filter>
                     <!-- We pull in several test jars; keep out the actual test classes -->
                     <filter>
                       <artifact>*:*</artifact>
