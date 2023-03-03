@@ -387,6 +387,9 @@ public class SchedulerUtils {
         checkQueueLabelInLabelManager(labelExp, rmContext);
       }
     }
+    if (queueInfo != null && queueInfo.getQueueLabel() != null && !queueInfo.getQueueLabel().isEmpty()) {
+      checkQueueLabelInLabelManager(queueInfo.getQueueLabel(), rmContext);
+    }
   }
 
   private static Map<String, ResourceInformation> getZeroResources(
