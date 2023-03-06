@@ -599,7 +599,7 @@ abstract class CommandWithDestination extends FsCommand {
                       null,
                       null);
       } else {
-        return create(item.path, true);
+        return fs.create(item.path, true);
       }
     }
 
