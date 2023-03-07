@@ -32,6 +32,7 @@ import org.apache.hadoop.io.nativeio.NativeIO;
 import org.apache.hadoop.io.nativeio.NativeIO.POSIX.Stat;
 import org.apache.hadoop.security.UserGroupInformation;
 
+import org.apache.hadoop.security.authorize.AccessControlList;
 import org.apache.hadoop.thirdparty.com.google.common.annotations.VisibleForTesting;
 
 /**
@@ -267,13 +268,13 @@ public class SecureIOUtils {
     boolean success = true;
     if (expectedOwner != null &&
         !expectedOwner.equals(owner)) {
+      UserGroupInformation ugi =
+              UserGroupInformation.createRemoteUser(expectedOwner);
       if (Path.WINDOWS) {
-        UserGroupInformation ugi =
-            UserGroupInformation.createRemoteUser(expectedOwner);
         final String adminsGroupString = "Administrators";
         success = owner.equals(adminsGroupString)
-            && ugi.getGroups().contains(adminsGroupString);
-      } else {
+                && ugi.getGroups().contains(adminsGroupString);
+      } else if (!checkIfUserYarnAdmin(expectedOwner, ugi.getGroupNames())) {
         success = false;
       }
     }
@@ -282,6 +283,23 @@ public class SecureIOUtils {
           "Owner '" + owner + "' for path " + f + " did not match " +
               "expected owner '" + expectedOwner + "'");
     }
+  }
+
+  private static boolean checkIfUserYarnAdmin(String user, String[] expectedGroups) {
+    Configuration conf = new Configuration();
+    if (conf.getBoolean("yarn.acl.enable", false)) {
+      AccessControlList accessControlList = new AccessControlList(conf.get("yarn.admin.acl"));
+      if (accessControlList.isAllAllowed() || accessControlList.getUsers().contains(user)) {
+        return true;
+      } else {
+        for (String expectedGroup : expectedGroups) {
+          if (accessControlList.getGroups().contains(expectedGroup)) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
   }
 
   /**
