@@ -67,8 +67,8 @@
 
     <!-- bc version -->
     <bcfips.version>1.0.2.3</bcfips.version>
-    <bctlsfips.version>1.0.13</bctlsfips.version>
-    <bcpkixfips.version>1.0.6</bcpkixfips.version>
+    <bctlsfips.version>1.0.14.1</bctlsfips.version>
+    <bcpkixfips.version>1.0.7</bcpkixfips.version>
 
     <!-- jersey version -->
     <jersey.version>1.19.4</jersey.version>
