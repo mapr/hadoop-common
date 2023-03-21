@@ -49,19 +49,19 @@ yarn licenses v1.22.5
 │     ├─ VendorName: Isaac Z. Schlueter
 │     └─ VendorUrl: https://github.com/npm/wrappy
 └─ MIT
-   ├─ angular-loader@1.6.10
+   ├─ angular-loader@1.8.3
    │  ├─ URL: https://github.com/angular/angular.js.git
    │  ├─ VendorName: Angular Core Team
    │  └─ VendorUrl: http://angularjs.org/
-   ├─ angular-mocks@1.6.10
+   ├─ angular-mocks@1.8.3
    │  ├─ URL: https://github.com/angular/angular.js.git
    │  ├─ VendorName: Angular Core Team
    │  └─ VendorUrl: http://angularjs.org/
-   ├─ angular-route@1.6.10
+   ├─ angular-route@1.8.3
    │  ├─ URL: https://github.com/angular/angular.js.git
    │  ├─ VendorName: Angular Core Team
    │  └─ VendorUrl: http://angularjs.org/
-   ├─ angular@1.6.10
+   ├─ angular@1.8.3
    │  ├─ URL: https://github.com/angular/angular.js.git
    │  ├─ VendorName: Angular Core Team
    │  └─ VendorUrl: http://angularjs.org/
