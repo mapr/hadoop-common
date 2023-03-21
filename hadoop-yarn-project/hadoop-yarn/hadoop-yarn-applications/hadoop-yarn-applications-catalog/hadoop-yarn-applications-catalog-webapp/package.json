@@ -7,10 +7,10 @@
     "license": "Apache 2.0",
     "dependencies": {
         "jquery": "3.3.1",
-        "angular-loader": "~1.6.4",
-        "angular-mocks": "~1.6.4",
-        "angular-route": "~1.6.4",
-        "angular": "~1.6.4",
+        "angular-loader": "~1.8.0",
+        "angular-mocks": "~1.8.0",
+        "angular-route": "~1.8.0",
+        "angular": "~1.8.0",
         "bootstrap": "~3.3.7",
         "roboto-fontface": "0.10.0"
     },
