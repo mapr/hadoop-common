@@ -1618,6 +1618,11 @@
         </exclusions>
       </dependency>
       <dependency>
+        <groupId>org.apache.zookeeper</groupId>
+        <artifactId>zookeeper-jute</artifactId>
+        <version>${zookeeper.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.jline</groupId>
         <artifactId>jline</artifactId>
         <version>${jline.version}</version>
