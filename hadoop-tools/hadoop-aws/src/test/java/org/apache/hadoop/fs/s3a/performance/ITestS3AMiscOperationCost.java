@@ -74,9 +74,32 @@ public class ITestS3AMiscOperationCost extends AbstractS3ACostTest {
   }
 
   public ITestS3AMiscOperationCost(final String name,
-      final boolean keepMarkers) {
+                                   final boolean keepMarkers,
+                                   final boolean auditing) {
     super(keepMarkers);
+    this.auditing = auditing;
   }
+
+  @Override
+  public Configuration createConfiguration() {
+    final Configuration conf = super.createConfiguration();
+    removeBaseAndBucketOverrides(conf, AUDIT_ENABLED);
+    conf.setBoolean(AUDIT_ENABLED, auditing);
+    return conf;
+  }
+
+  /**
+   * Expected audit count when auditing is enabled; expect 0
+   * when disabled.
+   * @param expected expected value.
+   * @return the probe.
+   */
+  protected OperationCostValidator.ExpectedProbe withAuditCount(
+          final int expected) {
+    return probe(AUDIT_SPAN_CREATION,
+            auditing ? expected : 0);
+  }
+
 
   /**
    * Common operation which should be low cost as possible.
