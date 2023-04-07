@@ -3,6 +3,7 @@ package org.apache.hadoop.util;
 import org.apache.hadoop.thirdparty.com.google.common.annotations.VisibleForTesting;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,17 +33,24 @@ public class MaprShellCommandExecutor {
     public JsonArray execute(String[] command, Map<String, String> params, boolean skipMaprcli) throws IOException {
         executor = new Shell.ShellCommandExecutor(createArgs(command, params, skipMaprcli));
         LOG.info("Trying to execute command: " + executor.toString());
+        String output = "";
         try {
             executor.execute();
             if (skipMaprcli){
                 return null;
             }
-            String output = executor.getOutput();
+            output = executor.getOutput();
             if (output == null || output.isEmpty()) {
                 LOG.error("Output is empty");
                 throw new IOException("Empty output");
             }
-            return parser.parse(executor.getOutput()).getAsJsonObject().getAsJsonArray(DATA_FIELD);
+            return parser.parse(output).getAsJsonObject().getAsJsonArray(DATA_FIELD);
+        } catch (JsonSyntaxException e){
+            LOG.warn("Can't parse JSON output: " + output);
+            //Possible enabled debug log for Kerberos, which produces extra logs to maprcli command.
+            //It doesn't possible to disable kerberos debug for maprcli from outside.
+            //Trying to substring all output data to '{' character  to cut all debug logs
+            return parser.parse(output.substring(output.indexOf("{"))).getAsJsonObject().getAsJsonArray(DATA_FIELD);
         } catch (IOException e) {
             int exitCode = executor.getExitCode();
             if (exitCode != 0) {
