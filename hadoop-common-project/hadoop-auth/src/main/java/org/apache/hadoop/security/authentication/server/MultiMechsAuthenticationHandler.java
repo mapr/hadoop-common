@@ -119,6 +119,7 @@ public class MultiMechsAuthenticationHandler implements AuthenticationHandler {
     @Override
     public void init(Properties config) throws ServletException {
         int i = 0;
+        String kerberosDisable = String.valueOf(config.get("kerberos.disable"));
         while (true ) {
             String type = config.getProperty("type" + i);
             if ( type != null ) {
@@ -128,8 +129,11 @@ public class MultiMechsAuthenticationHandler implements AuthenticationHandler {
                 if ( subClass != null ) {
                     try {
                         MultiMechsAuthenticationHandler child = subClass.newInstance();
-                        child.init(config);
-                        children.add(child);
+                        if (!(kerberosDisable != null && kerberosDisable.equals("true")
+                                && child instanceof KerberosAuthHandler)) {
+                            child.init(config);
+                            children.add(child);
+                        }
                     } catch (InstantiationException ex) {
                         LOG.error("Unable to instantiate Authenticator Subclass of type: " + type + ". Will skip it", ex);
                     } catch (IllegalAccessException ex) {
