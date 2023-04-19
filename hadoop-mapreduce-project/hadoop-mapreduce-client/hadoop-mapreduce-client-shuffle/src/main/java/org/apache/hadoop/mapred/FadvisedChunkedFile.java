@@ -31,9 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import static org.apache.hadoop.io.nativeio.NativeIO.POSIX.POSIX_FADV_DONTNEED;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.stream.ChunkedFile;
+import org.jboss.netty.handler.stream.ChunkedFile;
 
 public class FadvisedChunkedFile extends ChunkedFile {
 
@@ -66,16 +64,16 @@ public class FadvisedChunkedFile extends ChunkedFile {
   }
 
   @Override
-  public ByteBuf readChunk(ChannelHandlerContext ctx) throws Exception {
+  public Object nextChunk() throws Exception {
     synchronized (closeLock) {
       if (fd.valid()) {
         if (manageOsCache && readaheadPool != null) {
           readaheadRequest = readaheadPool
               .readaheadStream(
-                  identifier, fd, currentOffset(), readaheadLength,
-                      endOffset(), readaheadRequest);
+                  identifier, fd, getCurrentOffset(), readaheadLength,
+                  getEndOffset(), readaheadRequest);
         }
-        return super.readChunk(ctx);
+        return super.nextChunk();
       } else {
         return null;
       }
@@ -90,12 +88,12 @@ public class FadvisedChunkedFile extends ChunkedFile {
         readaheadRequest = null;
       }
       if (fd.valid() &&
-          manageOsCache && endOffset() - startOffset() > 0) {
+          manageOsCache && getEndOffset() - getStartOffset() > 0) {
         try {
           NativeIO.POSIX.getCacheManipulator().posixFadviseIfPossible(
               identifier,
               fd,
-              startOffset(), endOffset() - startOffset(),
+              getStartOffset(), getEndOffset() - getStartOffset(),
               POSIX_FADV_DONTNEED);
         } catch (Throwable t) {
           LOG.warn("Failed to manage OS cache for " + identifier +
