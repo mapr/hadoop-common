@@ -40,8 +40,8 @@ function createSymlinks() {
   ln -sf ${MAPR_HOME}/lib/jackson-jaxrs-1.*.jar ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
   ln -sf ${MAPR_HOME}/lib/jackson-mapper-asl-1.*.jar ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
   ln -sf ${MAPR_HOME}/lib/jackson-xc-1.*.jar ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
-  rm -f ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/json-*.jar
-  ln -sf ${MAPR_HOME}/lib/json-*.jar ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  rm -f ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/json-[1-9].*.jar
+  ln -sf ${MAPR_HOME}/lib/json-[1-9].*.jar ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
   rm -f ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/central-logging-*.jar
   ln -sf ${MAPR_HOME}/lib/central-logging-*.jar ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
   rm -f  ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/zookeeper-3.*.jar
