@@ -201,15 +201,15 @@ public class IFile {
       if ( this.flushOnClose ) {
         out.flush();
       }
-
-      if ( checksumOut != null ) {
-        checksumOut.finish(decompressedBytesWritten, (rawOut.getPos() - start));
-      }
   
       if (compressOutput) {
         // Flush
         compressedOut.finish();
         compressedOut.resetState();
+      }
+
+      if (checksumOut != null) {
+        checksumOut.finish(decompressedBytesWritten, (rawOut.getPos() - start));
       }
       
       // Close the underlying stream iff we own it...
