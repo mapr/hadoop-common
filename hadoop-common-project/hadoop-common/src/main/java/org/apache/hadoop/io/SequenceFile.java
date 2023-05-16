@@ -2021,7 +2021,7 @@ public class SequenceFile {
               FS_OPTION_OPENFILE_READ_POLICY_SEQUENTIAL)
           .opt(FS_OPTION_OPENFILE_BUFFER_SIZE, bufferSize);
       if (length >= 0) {
-        builder.opt(FS_OPTION_OPENFILE_LENGTH, length);
+        builder.optLong(FS_OPTION_OPENFILE_LENGTH, length);
       }
       return awaitFuture(builder.build());
     }
