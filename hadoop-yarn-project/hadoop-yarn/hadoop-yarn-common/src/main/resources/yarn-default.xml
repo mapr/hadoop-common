@@ -2611,6 +2611,13 @@
   </property>
 
   <property>
+    <description>Enable redirect to endpoint for proxyserver
+     if it got SSLHandshake exception during proxying link</description>
+    <name>yarn.web-proxy.redirect.sslhandshake</name>
+    <value>true</value>>
+  </property>
+
+  <property>
     <description>Enable the web proxy connection timeout, default is enabled.</description>
     <name>yarn.resourcemanager.proxy.timeout.enabled</name>
     <value>true</value>

@@ -37,6 +37,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.net.ssl.SSLHandshakeException;
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
@@ -94,6 +95,8 @@ public class WebAppProxyServlet extends HttpServlet {
         "Authorization"));
 
   public static final String PROXY_USER_COOKIE_NAME = "proxy-user";
+
+  public static final String REDIRECT_PROP_FOR_SSL_ERROR = "yarn.web-proxy.redirect.sslhandshake";
 
   private transient List<TrackingUriPlugin> trackingUriPlugins;
   private final String rmAppPageUrlBase;
@@ -312,10 +315,10 @@ public class WebAppProxyServlet extends HttpServlet {
       base.setHeader("Cookie",
           PROXY_USER_COOKIE_NAME + "=" + URLEncoder.encode(user, "ASCII"));
     }
-    OutputStream out = resp.getOutputStream();
     HttpClient client = httpClientBuilder.build();
     try {
       HttpResponse httpResp = client.execute(base);
+      OutputStream out = resp.getOutputStream();
       resp.setStatus(httpResp.getStatusLine().getStatusCode());
       for (Header header : httpResp.getAllHeaders()) {
         resp.setHeader(header.getName(), header.getValue());
@@ -529,8 +532,17 @@ public class WebAppProxyServlet extends HttpServlet {
       if (userWasWarned && userApproved) {
         c = makeCheckCookie(id, true);
       }
-      proxyLink(req, resp, toFetch, c, getProxyHost(), method, id);
-
+      try {
+        proxyLink(req, resp, toFetch, c, getProxyHost(), method, id);
+      }catch (SSLHandshakeException ex) {
+        LOG.warn("Proxy server got SSLHandshake error for " + toFetch);
+        if(conf.getBoolean(REDIRECT_PROP_FOR_SSL_ERROR, true)) {
+          LOG.info("Trying to redirect to " + toFetch);
+          ProxyUtils.sendRedirect(req, resp, toFetch.toString());
+        } else {
+          throw ex;
+        }
+      }
     } catch(URISyntaxException | YarnException e) {
       throw new IOException(e); 
     }
