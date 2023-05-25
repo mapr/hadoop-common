@@ -910,8 +910,8 @@ public class UserGroupInformation {
 
   private String getKeytab() {
     HadoopLoginContext login = getLogin();
-    return (login != null)
-          ? (String) login.getConfiguration().getOverrideOptions().get(LoginParam.KEYTAB)
+    return (login != null && login.getConfiguration() != null)
+          ? (String) login.getConfiguration().getOverrideOptions().get("keyTab")
           : null;
   }
 
@@ -1440,8 +1440,12 @@ public class UserGroupInformation {
       login.logout();
       //login and also update the subject field of this instance to 
       //have the new credentials (pass it to the LoginContext constructor)
-      login = newLoginContext(
-              login.getAppName(), login.getSubject(), login.getConfiguration().getOverrideOptions());
+      if (login.getConfiguration() != null) {
+        login = newLoginContext(
+                login.getAppName(), login.getSubject(), login.getConfiguration().getOverrideOptions());
+      } else {
+        login = newLoginContext(login.getAppName(), login.getSubject(), null);
+      }
       LOG.debug("Initiating re-login for {}", getUserName());
       login.login();
       // this should be unnecessary.  originally added due to improper locking
@@ -2101,8 +2105,11 @@ public class UserGroupInformation {
   private static UserGroupInformation doSubjectLogin(
           Subject subject, LoginParams params) throws IOException {
     ensureInitialized();
-    if (subject == null)
+    boolean setLoginUser = false;
+    if (subject == null) {
       subject = new Subject();
+      setLoginUser = true;
+    }
 
     try {
       HadoopLoginContext login;
@@ -2122,8 +2129,10 @@ public class UserGroupInformation {
       ugi = new UserGroupInformation(login.getSubject(), userJAASConfName);
       // attach login context for relogin unless this was a pre-existing
       // subject.
-      if (subject == null) {
-        params.put(LoginParam.PRINCIPAL, ugi.getUserName());
+      if (subject == null || setLoginUser) {
+        if(UserGroupInformation.authenticationMethod == AuthenticationMethod.KERBEROS){
+          params.put(LoginParam.PRINCIPAL, ugi.getUserName());
+        }
         ugi.setLogin(login);
         ugi.setLastLogin(Time.now());
       }
