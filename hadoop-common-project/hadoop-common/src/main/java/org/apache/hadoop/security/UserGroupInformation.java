@@ -2168,6 +2168,7 @@ public class UserGroupInformation {
       if (params == null) {
         login = newLoginContext(
                 userJAASConfName, subject, null);
+        params = LoginParams.getDefaults();
       } else {
         Map<String, String> overrideOptions = new HashMap<>();
         overrideOptions.put("keyTab", params.get(LoginParam.KEYTAB));
