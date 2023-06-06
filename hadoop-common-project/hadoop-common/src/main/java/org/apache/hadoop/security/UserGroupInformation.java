@@ -1402,8 +1402,8 @@ public class UserGroupInformation {
     if (!shouldRelogin() || !isFromTicket()) {
       return;
     }
-    HadoopLoginContext login = newLoginContext(userJAASConfName, getSubject(), null);
-    LOG.info("Initiating re-login for " + getUserName());
+    HadoopLoginContext login = getLogin();
+    LOG.debug("Trying re-login for " + getUserName() + " from ticket cache");
     if (login == null) {
       throw new KerberosAuthException(MUST_FIRST_LOGIN);
     }
