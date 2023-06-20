@@ -1743,6 +1743,8 @@ public class TestDelegationTokenRenewer {
     yarnConf.setTimeDuration(
         YarnConfiguration.RM_DT_RENEWER_THREAD_RETRY_INTERVAL, 0,
         TimeUnit.SECONDS);
+    yarnConf.setTimeDuration(YarnConfiguration.RM_DT_RENEWER_THREAD_IDLE_BACKOFF_MS, 1,
+        TimeUnit.SECONDS);
     yarnConf.setInt(YarnConfiguration.RM_DT_RENEWER_THREAD_RETRY_MAX_ATTEMPTS,
         3);
     UserGroupInformation.setConfiguration(yarnConf);

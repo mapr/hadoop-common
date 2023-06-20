@@ -121,6 +121,7 @@ public class DelegationTokenRenewer extends AbstractService {
   private long tokenRenewerThreadTimeout;
   private long tokenRenewerThreadRetryInterval;
   private int tokenRenewerThreadRetryMaxAttempts;
+  private long tokenRenewerThreadIdleBackoffMs;
   private final Map<DelegationTokenRenewerEvent, Future<?>> futures =
       new ConcurrentHashMap<>();
   private boolean delegationTokenRenewerPoolTrackerFlag = true;
@@ -156,6 +157,10 @@ public class DelegationTokenRenewer extends AbstractService {
         conf.getTimeDuration(YarnConfiguration.RM_DT_RENEWER_THREAD_TIMEOUT,
             YarnConfiguration.DEFAULT_RM_DT_RENEWER_THREAD_TIMEOUT,
             TimeUnit.MILLISECONDS);
+    tokenRenewerThreadIdleBackoffMs =
+            conf.getTimeDuration(YarnConfiguration.RM_DT_RENEWER_THREAD_IDLE_BACKOFF_MS,
+                    YarnConfiguration.DEFAULT_RM_DT_RENEWER_THREAD_IDLE_BACKOFF_MS,
+                    TimeUnit.MILLISECONDS);
     tokenRenewerThreadRetryInterval = conf.getTimeDuration(
         YarnConfiguration.RM_DT_RENEWER_THREAD_RETRY_INTERVAL,
         YarnConfiguration.DEFAULT_RM_DT_RENEWER_THREAD_RETRY_INTERVAL,
@@ -987,6 +992,21 @@ public class DelegationTokenRenewer extends AbstractService {
     @Override
     public void run() {
       while (true) {
+        if (futures.isEmpty()) {
+          synchronized (this) {
+            try {
+              LOG.debug("Delegation token renewer pool is empty, waiting for {} ms.",
+                      tokenRenewerThreadIdleBackoffMs);
+              wait(tokenRenewerThreadIdleBackoffMs);
+            } catch (InterruptedException e) {
+              LOG.warn("Delegation token renewer pool tracker waiting interrupt occurred.");
+              Thread.currentThread().interrupt();
+            }
+          }
+          if (futures.isEmpty()) {
+            continue;
+          }
+        }
         for (Map.Entry<DelegationTokenRenewerEvent, Future<?>> entry : futures
             .entrySet()) {
           DelegationTokenRenewerEvent evt = entry.getKey();
@@ -1013,6 +1033,16 @@ public class DelegationTokenRenewer extends AbstractService {
           } catch (Exception e) {
             LOG.info("Problem in submitting renew tasks in token renewer "
                 + "thread.", e);
+          }
+          if (future.isDone() || future.isCancelled()) {
+            try {
+              futures.remove(evt);
+              LOG.info("Removed done or cancelled renewer tasks of {}" +
+                      " in token renewer thread.", evt.getApplicationId());
+            } catch (Exception e) {
+              LOG.warn("Problem in removing done or cancelled renew" +
+                      " tasks in token renewer thread.", e);
+            }
           }
         }
       }
