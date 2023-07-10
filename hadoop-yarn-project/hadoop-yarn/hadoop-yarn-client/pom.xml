@@ -17,10 +17,10 @@
   <parent>
     <artifactId>hadoop-yarn</artifactId>
     <groupId>org.apache.hadoop</groupId>
-    <version>3.3.5.0-eep-912-SNAPSHOT</version>
+    <version>3.3.5.100-eep-913-SNAPSHOT</version>
   </parent>
   <artifactId>hadoop-yarn-client</artifactId>
-  <version>3.3.5.0-eep-912-SNAPSHOT</version>
+  <version>3.3.5.100-eep-913-SNAPSHOT</version>
   <name>Apache Hadoop YARN Client</name>
 
   <properties>
