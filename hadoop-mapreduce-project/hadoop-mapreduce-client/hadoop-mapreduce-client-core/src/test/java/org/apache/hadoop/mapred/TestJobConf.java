@@ -151,11 +151,11 @@ public class TestJobConf {
     assertEquals("The variable key is no longer used.",
         JobConf.deprecatedString("key"));
     
-    // make sure mapreduce.map|reduce.java.opts are not set by default
-    // so that they won't override mapred.child.java.opts
-    assertNull("mapreduce.map.java.opts should not be set by default",
+    assertEquals("mapreduce.map.java.opts doesn't equals to expected value",
+            "-Xmx900m --add-opens java.base/java.lang=ALL-UNNAMED -XX:+UseParallelGC",
         conf.get(JobConf.MAPRED_MAP_TASK_JAVA_OPTS));
-    assertNull("mapreduce.reduce.java.opts should not be set by default",
+    assertEquals("mapreduce.reduce.java.opts doesn't equals to expected value",
+            "-Xmx2560m --add-opens java.base/java.lang=ALL-UNNAMED -XX:+UseParallelGC",
         conf.get(JobConf.MAPRED_REDUCE_TASK_JAVA_OPTS));
   }
 
@@ -250,6 +250,9 @@ public class TestJobConf {
     assertThat(configuration.getMemoryForReduceTask()).isEqualTo(2);
 
     configuration = new JobConf();
+    //unset map and reduce memory properties to correct calculation for UTs
+    configuration.unset(JobConf.MAPRED_MAP_TASK_JAVA_OPTS);
+    configuration.unset(JobConf.MAPRED_REDUCE_TASK_JAVA_OPTS);
     configuration.set("mapred.task.maxvmem" , String.valueOf(-1));
     configuration.set(MRJobConfig.MAP_MEMORY_MB,"-1");
     configuration.set(MRJobConfig.REDUCE_MEMORY_MB,"-1");
@@ -273,6 +276,11 @@ public class TestJobConf {
   @Test
   public void testNegativeValueForTaskVmem() {
     JobConf configuration = new JobConf();
+    //unset map and reduce memory properties to correct calculation for UTs
+    configuration.unset(JobConf.MAPRED_MAP_TASK_JAVA_OPTS);
+    configuration.unset(JobConf.MAPRED_REDUCE_TASK_JAVA_OPTS);
+    configuration.set("mapreduce.map.memory.mb","-1");
+    configuration.set("mapreduce.reduce.memory.mb", "-1");
 
     configuration.set(JobConf.MAPRED_TASK_MAXVMEM_PROPERTY, "-3");
     Assert.assertEquals(MRJobConfig.DEFAULT_MAP_MEMORY_MB,
@@ -293,6 +301,9 @@ public class TestJobConf {
   @Test
   public void testNegativeValuesForMemoryParams() {
     JobConf configuration = new JobConf();
+    //unset map and reduce memory properties to correct calculation for UTs
+    configuration.unset(JobConf.MAPRED_MAP_TASK_JAVA_OPTS);
+    configuration.unset(JobConf.MAPRED_REDUCE_TASK_JAVA_OPTS);
 
     configuration.set(MRJobConfig.MAP_MEMORY_MB, "-5");
     configuration.set(MRJobConfig.REDUCE_MEMORY_MB, "-6");
@@ -309,6 +320,9 @@ public class TestJobConf {
   @SuppressWarnings("deprecation")
   public void testMaxVirtualMemoryForTask() {
     JobConf configuration = new JobConf();
+    //unset map and reduce memory properties to correct calculation for UTs
+    configuration.unset(JobConf.MAPRED_MAP_TASK_JAVA_OPTS);
+    configuration.unset(JobConf.MAPRED_REDUCE_TASK_JAVA_OPTS);
 
     //get test case
     configuration.set(MRJobConfig.MAP_MEMORY_MB, String.valueOf(300));
@@ -317,6 +331,9 @@ public class TestJobConf {
         .isEqualTo(1024 * 1024 * 1024);
 
     configuration = new JobConf();
+    //unset map and reduce memory properties to correct calculation for UTs
+    configuration.unset(JobConf.MAPRED_MAP_TASK_JAVA_OPTS);
+    configuration.unset(JobConf.MAPRED_REDUCE_TASK_JAVA_OPTS);
     configuration.set(MRJobConfig.MAP_MEMORY_MB, String.valueOf(-1));
     configuration.set(MRJobConfig.REDUCE_MEMORY_MB, String.valueOf(200));
     assertThat(configuration.getMaxVirtualMemoryForTask())
