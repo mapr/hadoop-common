@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapreduce.MRConfig;
 import org.apache.hadoop.mapreduce.MRJobConfig;
 
 /**
@@ -186,6 +187,14 @@ public final class MRJobConfUtil {
     config.set("mapreduce.cluster.temp.dir", mapredHadoopTempDir.toString());
     config.set("mapreduce.cluster.local.dir",
         new Path(mapredHadoopTempDir, "local").toString());
+    //overwrite shuffle property to Apache for UTs
+    config.set(MRConfig.TASK_LOCAL_OUTPUT_CLASS, "org.apache.hadoop.mapred.YarnOutputFiles");
+    config.set(MRJobConfig.MAP_OUTPUT_COLLECTOR_CLASS_ATTR, "org.apache.hadoop.mapred.MapTask$MapOutputBuffer");
+    config.set(MRConfig.SHUFFLE_CONSUMER_PLUGIN, "org.apache.hadoop.mapreduce.task.reduce.Shuffle");
+    config.set(MRConfig.MAPRED_IFILE_OUTPUTSTREAM, "org.apache.hadoop.mapred.IFileOutputStream");
+    config.set(MRConfig.MAPRED_IFILE_INPUTSTREAM, "org.apache.hadoop.mapred.IFileInputStream");
+    config.set(MRConfig.MAPRED_LOCAL_MAP_OUTPUT, "true");
+    config.set(MRJobConfig.MAPREDUCE_JOB_SHUFFLE_PROVIDER_SERVICES, "mapr_direct_shuffle");
     return config;
   }
 }
