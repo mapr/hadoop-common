@@ -44,14 +44,15 @@ public class TestDistributedCache {
     }
 
     DistributedCache.addFileToClassPath(new Path("file:///a"), conf);
+    //updated expected value to be consistent with changes from a0ee214885d43a886a3e24169a601da92cef0077
     assertEquals("The mapreduce.job.classpath.files property was not "
-        + "set correctly", "file:/a", conf.get(MRJobConfig.CLASSPATH_FILES));
+        + "set correctly", "file:///a", conf.get(MRJobConfig.CLASSPATH_FILES));
     assertEquals("The mapreduce.job.cache.files property was not set "
         + "correctly", "file:///a", conf.get(MRJobConfig.CACHE_FILES));
 
     DistributedCache.addFileToClassPath(new Path("file:///b"), conf);
     assertEquals("The mapreduce.job.classpath.files property was not "
-        + "set correctly", "file:/a,file:/b",
+        + "set correctly", "file:///a,file:///b",
         conf.get(MRJobConfig.CLASSPATH_FILES));
     assertEquals("The mapreduce.job.cache.files property was not set "
         + "correctly", "file:///a,file:///b",
@@ -70,13 +71,13 @@ public class TestDistributedCache {
 
     DistributedCache.addFileToClassPath(new Path("file:///a"), conf, fs);
     assertEquals("The mapreduce.job.classpath.files property was not "
-        + "set correctly", "file:/a", conf.get(MRJobConfig.CLASSPATH_FILES));
+        + "set correctly", "file:///a", conf.get(MRJobConfig.CLASSPATH_FILES));
     assertEquals("The mapreduce.job.cache.files property was not set "
         + "correctly", "file:///a", conf.get(MRJobConfig.CACHE_FILES));
 
     DistributedCache.addFileToClassPath(new Path("file:///b"), conf, fs);
     assertEquals("The mapreduce.job.classpath.files property was not "
-        + "set correctly", "file:/a,file:/b",
+        + "set correctly", "file:///a,file:///b",
         conf.get(MRJobConfig.CLASSPATH_FILES));
     assertEquals("The mapreduce.job.cache.files property was not set "
         + "correctly", "file:///a,file:///b",
@@ -94,13 +95,13 @@ public class TestDistributedCache {
 
     DistributedCache.addFileToClassPath(new Path("file:///a"), conf, fs, true);
     assertEquals("The mapreduce.job.classpath.files property was not "
-        + "set correctly", "file:/a", conf.get(MRJobConfig.CLASSPATH_FILES));
+        + "set correctly", "file:///a", conf.get(MRJobConfig.CLASSPATH_FILES));
     assertEquals("The mapreduce.job.cache.files property was not set "
         + "correctly", "file:///a", conf.get(MRJobConfig.CACHE_FILES));
 
     DistributedCache.addFileToClassPath(new Path("file:///b"), conf, fs, true);
     assertEquals("The mapreduce.job.classpath.files property was not "
-        + "set correctly", "file:/a,file:/b",
+        + "set correctly", "file:///a,file:///b",
         conf.get(MRJobConfig.CLASSPATH_FILES));
     assertEquals("The mapreduce.job.cache.files property was not set "
         + "correctly", "file:///a,file:///b",
@@ -118,13 +119,13 @@ public class TestDistributedCache {
 
     DistributedCache.addFileToClassPath(new Path("file:///a"), conf, fs, false);
     assertEquals("The mapreduce.job.classpath.files property was not "
-        + "set correctly", "file:/a", conf.get(MRJobConfig.CLASSPATH_FILES));
+        + "set correctly", "file:///a", conf.get(MRJobConfig.CLASSPATH_FILES));
     assertEquals("The mapreduce.job.cache.files property was not set "
         + "correctly", "", conf.get(MRJobConfig.CACHE_FILES, ""));
 
     DistributedCache.addFileToClassPath(new Path("file:///b"), conf, fs, false);
     assertEquals("The mapreduce.job.classpath.files property was not "
-        + "set correctly", "file:/a,file:/b",
+        + "set correctly", "file:///a,file:///b",
         conf.get(MRJobConfig.CLASSPATH_FILES));
     assertEquals("The mapreduce.job.cache.files property was not set "
         + "correctly", "", conf.get(MRJobConfig.CACHE_FILES, ""));
