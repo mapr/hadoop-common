@@ -33,6 +33,7 @@ import org.apache.hadoop.mapred.SortedRanges.Range;
 import org.apache.hadoop.mapreduce.MRConfig;
 import org.apache.hadoop.mapreduce.MRJobConfig;
 import org.apache.hadoop.mapreduce.checkpoint.TaskCheckpointID;
+import org.apache.hadoop.mapreduce.util.MRJobConfUtil;
 import org.apache.hadoop.util.ExitUtil;
 import org.junit.After;
 import org.junit.Before;
@@ -200,6 +201,7 @@ public class TestTaskProgressReporter {
     testDir.mkdirs();
     testDir.deleteOnExit();
     JobConf conf = new JobConf();
+    MRJobConfUtil.setApacheShuffleConfForTesting(conf);
     conf.setStrings(MRConfig.LOCAL_DIR, "file://" + tmpPath);
     conf.setLong(MRJobConfig.JOB_SINGLE_DISK_LIMIT_BYTES, 1024L);
     conf.setBoolean(MRJobConfig.JOB_SINGLE_DISK_LIMIT_KILL_LIMIT_EXCEED,
@@ -266,6 +268,7 @@ public class TestTaskProgressReporter {
   @Test (timeout=10000)
   public void testTaskProgress() throws Exception {
     JobConf job = new JobConf();
+    MRJobConfUtil.setApacheShuffleConfForTesting(job);
     job.setLong(MRJobConfig.TASK_PROGRESS_REPORT_INTERVAL, 1000);
     Task task = new DummyTask();
     task.setConf(job);
@@ -310,6 +313,7 @@ public class TestTaskProgressReporter {
       }
     };
     JobConf conf = new JobConf();
+    MRJobConfUtil.setApacheShuffleConfForTesting(conf);
     // To disable task reporter sleeping
     conf.getLong(MRJobConfig.TASK_PROGRESS_REPORT_INTERVAL, 0);
     conf.setLong(MRJobConfig.TASK_LOCAL_WRITE_LIMIT_BYTES, limit);

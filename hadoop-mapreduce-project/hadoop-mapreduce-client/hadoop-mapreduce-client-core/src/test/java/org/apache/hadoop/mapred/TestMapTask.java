@@ -30,6 +30,7 @@ import org.apache.hadoop.mapreduce.MRConfig;
 import org.apache.hadoop.mapreduce.MRJobConfig;
 import org.apache.hadoop.mapreduce.TaskCounter;
 import org.apache.hadoop.mapreduce.TaskType;
+import org.apache.hadoop.mapreduce.util.MRJobConfUtil;
 import org.apache.hadoop.util.Progress;
 import org.junit.After;
 import org.junit.Before;
@@ -73,6 +74,7 @@ public class TestMapTask {
   @Test
   public void testShufflePermissions() throws Exception {
     JobConf conf = new JobConf();
+    MRJobConfUtil.setApacheShuffleConfForTesting(conf);
     conf.set(CommonConfigurationKeys.FS_PERMISSIONS_UMASK_KEY, "077");
     conf.set(MRConfig.LOCAL_DIR, testRootDir.getAbsolutePath());
     MapOutputFile mof = new MROutputFiles();
