@@ -292,7 +292,6 @@ public class MiniYARNCluster extends CompositeService {
     if (conf.getBoolean(TEST_CONF_RESET_RESOURCE_TYPES, true)) {
       ResourceUtils.resetResourceTypes(conf);
     }
-
     if (useRpc && !useFixedPorts) {
       throw new YarnRuntimeException("Invalid configuration!" +
           " Minicluster can use rpc only when configured to use fixed ports");

@@ -165,14 +165,7 @@ public class MockRM extends ResourceManager {
     this.useNullRMNodeLabelsManager = useNullRMNodeLabelsManager;
     this.useRealElector = useRealElector;
     conf.set(YarnConfiguration.YARN_API_SERVICES_ENABLE, "false");
-    if (!(conf instanceof YarnConfiguration)) {
-      conf = new YarnConfiguration(conf);
-    }
-    String auxService = conf.get("yarn.resourcemanager.aux-services");
-    if (auxService != null && auxService.equals("RMVolumeManager")) {
-      conf.unset("yarn.resourcemanager.aux-services");
-    }
-    init(conf);
+    init(conf instanceof YarnConfiguration ? conf : new YarnConfiguration(conf));
     if (store != null) {
       setRMStateStore(store);
     } else {

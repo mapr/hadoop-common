@@ -489,7 +489,7 @@ public class TestSSLFactory {
     // Create keys, certs, keystore, and truststore.
     KeyPair keyPair = KeyStoreTestUtil.generateKeyPair("RSA");
     X509Certificate cert = KeyStoreTestUtil.generateCertificate("CN=Test",
-      keyPair, 30, "SHA1withRSA");
+      keyPair, 30, "SHA256WithRSA");
     KeyStoreTestUtil.createKeyStore(keystore, password, keyPassword, "Test",
       keyPair.getPrivate(), cert);
     Map<String, X509Certificate> certs = Collections.singletonMap("server",

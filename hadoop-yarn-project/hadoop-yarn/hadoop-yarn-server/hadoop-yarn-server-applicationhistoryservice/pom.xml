@@ -198,7 +198,7 @@
     <!-- 'mvn dependency:analyze' fails to detect use of this dependency -->
     <dependency>
       <groupId>org.bouncycastle</groupId>
-      <artifactId>bcprov-jdk18on</artifactId>
+      <artifactId>bc-fips</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

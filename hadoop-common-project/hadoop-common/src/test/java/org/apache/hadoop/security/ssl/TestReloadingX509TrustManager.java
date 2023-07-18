@@ -83,8 +83,8 @@ public class TestReloadingX509TrustManager {
   @Test (timeout = 30000)
   public void testReload() throws Exception {
     KeyPair kp = generateKeyPair("RSA");
-    cert1 = generateCertificate("CN=Cert1", kp, 30, "SHA1withRSA");
-    cert2 = generateCertificate("CN=Cert2", kp, 30, "SHA1withRSA");
+    cert1 = generateCertificate("CN=Cert1", kp, 30, "SHA256WithRSA");
+    cert2 = generateCertificate("CN=Cert2", kp, 30, "SHA256WithRSA");
     String truststoreLocation = BASEDIR + "/testreload.jks";
     createTrustStore(truststoreLocation, "password", "cert1", cert1);
 
@@ -120,8 +120,8 @@ public class TestReloadingX509TrustManager {
   @Test (timeout = 30000)
   public void testReloadMissingTrustStore() throws Exception {
     KeyPair kp = generateKeyPair("RSA");
-    cert1 = generateCertificate("CN=Cert1", kp, 30, "SHA1withRSA");
-    cert2 = generateCertificate("CN=Cert2", kp, 30, "SHA1withRSA");
+    cert1 = generateCertificate("CN=Cert1", kp, 30, "SHA256WithRSA");
+    cert2 = generateCertificate("CN=Cert2", kp, 30, "SHA256WithRSA");
     String truststoreLocation = BASEDIR + "/testmissing.jks";
     createTrustStore(truststoreLocation, "password", "cert1", cert1);
 
@@ -160,8 +160,8 @@ public class TestReloadingX509TrustManager {
   @Test (timeout = 30000)
   public void testReloadCorruptTrustStore() throws Exception {
     KeyPair kp = generateKeyPair("RSA");
-    cert1 = generateCertificate("CN=Cert1", kp, 30, "SHA1withRSA");
-    cert2 = generateCertificate("CN=Cert2", kp, 30, "SHA1withRSA");
+    cert1 = generateCertificate("CN=Cert1", kp, 30, "SHA256WithRSA");
+    cert2 = generateCertificate("CN=Cert2", kp, 30, "SHA256WithRSA");
     String truststoreLocation = BASEDIR + "/testcorrupt.jks";
     createTrustStore(truststoreLocation, "password", "cert1", cert1);
 
@@ -212,8 +212,8 @@ public class TestReloadingX509TrustManager {
   @Test
   public void testNoPassword() throws Exception {
     KeyPair kp = generateKeyPair("RSA");
-    cert1 = generateCertificate("CN=Cert1", kp, 30, "SHA1withRSA");
-    cert2 = generateCertificate("CN=Cert2", kp, 30, "SHA1withRSA");
+    cert1 = generateCertificate("CN=Cert1", kp, 30, "SHA256WithRSA");
+    cert2 = generateCertificate("CN=Cert2", kp, 30, "SHA256WithRSA");
     String truststoreLocation = BASEDIR + "/testreload.jks";
     createTrustStore(truststoreLocation, "password", "cert1", cert1);
 

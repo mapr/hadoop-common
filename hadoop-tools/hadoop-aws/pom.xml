@@ -612,12 +612,12 @@
     <!-- Used to create SSL certs for a secure Keystore -->
     <dependency>
       <groupId>org.bouncycastle</groupId>
-      <artifactId>bcprov-jdk18on</artifactId>
-      <scope>test</scope>
+      <artifactId>bc-fips</artifactId>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.bouncycastle</groupId>
-      <artifactId>bcpkix-jdk18on</artifactId>
+      <artifactId>bcpkix-fips</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

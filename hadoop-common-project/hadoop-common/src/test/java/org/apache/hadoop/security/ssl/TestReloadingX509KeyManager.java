@@ -79,7 +79,7 @@ public class TestReloadingX509KeyManager {
     public void testReload() throws Exception {
         KeyPair kp = generateKeyPair("RSA");
         X509Certificate sCert = generateCertificate("CN=localhost, O=server", kp, 30,
-                        "SHA1withRSA");
+                        "SHA256WithRSA");
         String keystoreLocation = BASEDIR + "/testreload.jks";
         createKeyStore(keystoreLocation, "password", "cert1", kp.getPrivate(), sCert);
 
@@ -100,7 +100,7 @@ public class TestReloadingX509KeyManager {
             // Change the certificate with a new keypair
             final KeyPair anotherKP = generateKeyPair("RSA");
             sCert = KeyStoreTestUtil.generateCertificate("CN=localhost, O=server", anotherKP, 30,
-                            "SHA1withRSA");
+                            "SHA256WithRSA");
             createKeyStore(keystoreLocation, "password", "cert1", anotherKP.getPrivate(), sCert);
 
             GenericTestUtils.waitFor(new Supplier<Boolean>() {
@@ -117,7 +117,7 @@ public class TestReloadingX509KeyManager {
     @Test (timeout = 30000)
     public void testReloadMissingTrustStore() throws Exception {
         KeyPair kp = generateKeyPair("RSA");
-        X509Certificate cert1 = generateCertificate("CN=Cert1", kp, 30, "SHA1withRSA");
+        X509Certificate cert1 = generateCertificate("CN=Cert1", kp, 30, "SHA256WithRSA");
         String keystoreLocation = BASEDIR + "/testmissing.jks";
         createKeyStore(keystoreLocation, "password", "cert1", kp.getPrivate(), cert1);
 
@@ -156,7 +156,7 @@ public class TestReloadingX509KeyManager {
     @Test (timeout = 30000)
     public void testReloadCorruptTrustStore() throws Exception {
         KeyPair kp = generateKeyPair("RSA");
-        X509Certificate cert1 = generateCertificate("CN=Cert1", kp, 30, "SHA1withRSA");
+        X509Certificate cert1 = generateCertificate("CN=Cert1", kp, 30, "SHA256WithRSA");
         String keystoreLocation = BASEDIR + "/testmissing.jks";
         createKeyStore(keystoreLocation, "password", "cert1", kp.getPrivate(), cert1);
 

@@ -47,6 +47,7 @@ public class MiniMRClientClusterFactory {
     if (conf == null) {
       conf = new Configuration();
     }
+    conf.set("yarn.webapp.api-service.enable", "false");
 
     FileSystem fs = FileSystem.get(conf);
 
