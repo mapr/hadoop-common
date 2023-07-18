@@ -270,7 +270,7 @@ public class TestProxyCA {
     Mockito.when(defaultTrustManager.getAcceptedIssuers()).thenReturn(
         new X509Certificate[]{KeyStoreTestUtil.generateCertificate(
             "CN=foo", KeyStoreTestUtil.generateKeyPair("RSA"), 30,
-            "SHA1withRSA")});
+            "SHA256WithRSA")});
 
     Assert.assertArrayEquals(defaultTrustManager.getAcceptedIssuers(),
         trustManager.getAcceptedIssuers());
@@ -358,7 +358,7 @@ public class TestProxyCA {
     X509Certificate[]
         certChain = new X509Certificate[]{
         KeyStoreTestUtil.generateCertificate("CN=foo.com",
-            KeyStoreTestUtil.generateKeyPair("RSA"), 30, "SHA1withRSA")};
+            KeyStoreTestUtil.generateKeyPair("RSA"), 30, "SHA256WithRSA")};
     Mockito.verify(defaultTrustManager, Mockito.times(0))
         .checkServerTrusted(certChain, "RSA");
     trustManager.checkServerTrusted(certChain, "RSA");
@@ -368,9 +368,9 @@ public class TestProxyCA {
     // "real" cert x2
     certChain = new X509Certificate[]{
         KeyStoreTestUtil.generateCertificate("CN=foo.com",
-            KeyStoreTestUtil.generateKeyPair("RSA"), 30, "SHA1withRSA"),
+            KeyStoreTestUtil.generateKeyPair("RSA"), 30, "SHA256WithRSA"),
         KeyStoreTestUtil.generateCertificate("CN=foo.com",
-            KeyStoreTestUtil.generateKeyPair("RSA"), 30, "SHA1withRSA")};
+            KeyStoreTestUtil.generateKeyPair("RSA"), 30, "SHA256WithRSA")};
     Mockito.verify(defaultTrustManager, Mockito.times(0))
         .checkServerTrusted(certChain, "RSA");
     trustManager.checkServerTrusted(certChain, "RSA");
@@ -529,7 +529,7 @@ public class TestProxyCA {
             // "real" cert
             Certificate[] certChain = new Certificate[]{
                 KeyStoreTestUtil.generateCertificate("CN=foo.com",
-                    KeyStoreTestUtil.generateKeyPair("RSA"), 30, "SHA1withRSA")
+                    KeyStoreTestUtil.generateKeyPair("RSA"), 30, "SHA256WithRSA")
             };
             return certChain;
           }
@@ -552,7 +552,7 @@ public class TestProxyCA {
             // "real" cert
             Certificate[] certChain = new Certificate[]{
                 KeyStoreTestUtil.generateCertificate("CN=foo.com",
-                    KeyStoreTestUtil.generateKeyPair("RSA"), 30, "SHA1withRSA")
+                    KeyStoreTestUtil.generateKeyPair("RSA"), 30, "SHA256WithRSA")
             };
             return certChain;
           }

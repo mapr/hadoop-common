@@ -454,8 +454,6 @@ com.microsoft.azure:azure-keyvault-core:1.0.0
 com.microsoft.sqlserver:mssql-jdbc:6.2.1.jre7
 org.bouncycastle:bcpkix-fips:1.0.7
 org.bouncycastle:bctls-fips:1.0.14.1
-org.bouncycastle:bcpkix-jdk15on:1.60
-org.bouncycastle:bcprov-jdk15on:1.60
 org.checkerframework:checker-qual:2.5.2
 org.checkerframework:checker-qual:3.8.0
 org.codehaus.mojo:animal-sniffer-annotations:1.17

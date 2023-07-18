@@ -108,7 +108,7 @@
       <exclusions>
         <exclusion>
           <groupId>org.bouncycastle</groupId>
-          <artifactId>bcprov-jdk15on</artifactId>
+          <artifactId>bc-fips</artifactId>
         </exclusion>
       </exclusions>
     </dependency>

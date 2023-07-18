@@ -1675,6 +1675,18 @@
   </property>
 
   <property>
+    <description>Added disks as resource type to YARN</description>
+    <name>yarn.resource-types</name>
+    <value>disks</value>
+  </property>
+
+  <property>
+    <description>Default number of disks type that can be set to nodemanager</description>
+    <name>yarn.nodemanager.resource-type.disks</name>
+    <value>8000</value>
+  </property>
+
+  <property>
     <description>Flag to determine if logical processors(such as
     hyperthreads) should be counted as cores. Only applicable on Linux
     when yarn.nodemanager.resource.cpu-vcores is set to -1 and

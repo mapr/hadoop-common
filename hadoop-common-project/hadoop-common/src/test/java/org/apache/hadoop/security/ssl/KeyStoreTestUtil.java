@@ -43,28 +43,36 @@ import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
 import java.security.PrivateKey;
+import java.security.Provider;
+import java.security.Security;
 import java.security.SecureRandom;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import java.security.InvalidKeyException;
-import java.security.NoSuchProviderException;
-import java.security.SignatureException;
-import java.security.cert.CertificateEncodingException;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509KeyManager;
 import javax.net.ssl.X509TrustManager;
-import javax.security.auth.x500.X500Principal;
 
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.bouncycastle.x509.X509V1CertificateGenerator;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x509.BasicConstraints;
+import org.bouncycastle.cert.CertIOException;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
+import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.OperatorCreationException;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+
 
 public class KeyStoreTestUtil {
 
@@ -88,31 +96,35 @@ public class KeyStoreTestUtil {
    * @param dn the X.509 Distinguished Name, eg "CN=Test, L=London, C=GB"
    * @param pair the KeyPair
    * @param days how many days from now the Certificate is valid for
-   * @param algorithm the signing algorithm, eg "SHA1withRSA"
+   * @param algorithm the signing algorithm, eg "SHA256WithRSA"
    * @return the self-signed certificate
    */
   public static X509Certificate generateCertificate(String dn, KeyPair pair, int days, String algorithm)
-      throws CertificateEncodingException,
-             InvalidKeyException,
-             IllegalStateException,
-             NoSuchProviderException, NoSuchAlgorithmException, SignatureException{
+          throws CertificateException,
+          IllegalStateException,
+          OperatorCreationException, CertIOException {
 
     Date from = new Date();
     Date to = new Date(from.getTime() + days * 86400000l);
     BigInteger sn = new BigInteger(64, new SecureRandom());
     KeyPair keyPair = pair;
-    X509V1CertificateGenerator certGen = new X509V1CertificateGenerator();
-    X500Principal  dnName = new X500Principal(dn);
 
-    certGen.setSerialNumber(sn);
-    certGen.setIssuerDN(dnName);
-    certGen.setNotBefore(from);
-    certGen.setNotAfter(to);
-    certGen.setSubjectDN(dnName);
-    certGen.setPublicKey(keyPair.getPublic());
-    certGen.setSignatureAlgorithm(algorithm);
+    Provider bcProvider = new BouncyCastleFipsProvider();
+    Security.addProvider(bcProvider);
+    long now = System.currentTimeMillis();
+    Date startDate = new Date(now);
+    X500Name dnName = new X500Name(dn);
+    BigInteger certSerialNumber = new BigInteger(Long.toString(now));
+    Calendar calendar = Calendar.getInstance();
+    calendar.setTime(startDate);
+    calendar.add(Calendar.YEAR, 1);
+    Date endDate = calendar.getTime();
+    ContentSigner contentSigner = new JcaContentSignerBuilder(algorithm).build(keyPair.getPrivate());
+    JcaX509v3CertificateBuilder certBuilder = new JcaX509v3CertificateBuilder(dnName, certSerialNumber, startDate, endDate, dnName, keyPair.getPublic());
+    BasicConstraints basicConstraints = new BasicConstraints(true); // <-- true for CA, false for EndEntity
+    certBuilder.addExtension(new ASN1ObjectIdentifier("2.5.29.19"), true, basicConstraints); // Basic Constraints is usually marked as critical.
+    X509Certificate cert  = new JcaX509CertificateConverter().setProvider(bcProvider).getCertificate(certBuilder.build(contentSigner));
 
-    X509Certificate cert = certGen.generate(pair.getPrivate());
     return cert;
   }
 
@@ -322,7 +334,7 @@ public class KeyStoreTestUtil {
       KeyPair cKP = KeyStoreTestUtil.generateKeyPair("RSA");
       X509Certificate cCert =
         KeyStoreTestUtil.generateCertificate("CN=localhost, O=client", cKP, 30,
-                                             "SHA1withRSA");
+                                             "SHA256WithRSA");
       KeyStoreTestUtil.createKeyStore(clientKS, clientPassword, "client",
                                       cKP.getPrivate(), cCert);
       certs.put("client", cCert);
@@ -331,7 +343,7 @@ public class KeyStoreTestUtil {
     KeyPair sKP = KeyStoreTestUtil.generateKeyPair("RSA");
     X509Certificate sCert =
       KeyStoreTestUtil.generateCertificate("CN=localhost, O=server", sKP, 30,
-                                           "SHA1withRSA");
+                                           "SHA256WithRSA");
     KeyStoreTestUtil.createKeyStore(serverKS, serverPassword, "server",
                                     sKP.getPrivate(), sCert);
     certs.put("server", sCert);
