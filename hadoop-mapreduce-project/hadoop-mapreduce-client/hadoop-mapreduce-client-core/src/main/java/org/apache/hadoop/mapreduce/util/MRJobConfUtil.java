@@ -20,8 +20,6 @@ package org.apache.hadoop.mapreduce.util;
 import java.io.File;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.hadoop.mapred.*;
-import org.apache.hadoop.mapreduce.task.reduce.Shuffle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

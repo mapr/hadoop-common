@@ -53,6 +53,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.MRJobConfig;
+import org.apache.hadoop.mapreduce.util.MRJobConfUtil;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.mapreduce.v2.api.records.JobState;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskAttemptId;
@@ -1006,6 +1007,7 @@ public class TestRMContainerAllocator {
     LOG.info("Running testReportedAppProgress");
 
     Configuration conf = new Configuration();
+    MRJobConfUtil.setApacheShuffleConfForTesting(conf);
     final MyResourceManager rm = new MyResourceManager(conf);
     rm.start();
     DrainDispatcher rmDispatcher = (DrainDispatcher) rm.getRMContext()
@@ -1102,6 +1104,10 @@ public class TestRMContainerAllocator {
     rm.drainEvents();
     allocator.schedule();
     rm.drainEvents();
+    amNodeManager.nodeHeartbeat(true);
+    rm.drainEvents();
+    allocator.schedule();
+    rm.drainEvents();
 
     // Wait for all reduce-tasks to be running
     for (Task t : job.getTasks().values()) {
@@ -1158,6 +1164,7 @@ public class TestRMContainerAllocator {
     LOG.info("Running testReportedAppProgressWithOnlyMaps");
 
     Configuration conf = new Configuration();
+    MRJobConfUtil.setApacheShuffleConfForTesting(conf);
     final MyResourceManager rm = new MyResourceManager(conf);
     rm.start();
     DrainDispatcher rmDispatcher = (DrainDispatcher) rm.getRMContext()
@@ -1167,7 +1174,7 @@ public class TestRMContainerAllocator {
     RMApp rmApp = MockRMAppSubmitter.submitWithMemory(1024, rm);
     rm.drainEvents();
 
-    MockNM amNodeManager = rm.registerNode("amNM:1234", 11264);
+    MockNM amNodeManager = rm.registerNode("amNM:1234", 31264);
     amNodeManager.nodeHeartbeat(true);
     rm.drainEvents();
 
