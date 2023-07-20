@@ -33,3 +33,12 @@ services:
     environment:
       - SERVER_URL=http://server:8111
 
+  MySQL:
+    image: mysql
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql:/var/lib/mysql
+    env_file:
+      - mysql.env
+
