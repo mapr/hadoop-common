@@ -97,7 +97,6 @@ public class TestMerger {
     jobConf = new JobConf();
     // Set the temp directories a subdir of the test directory.
     MRJobConfUtil.setLocalDirectoriesConfigForTesting(jobConf, unitTestDir);
-    MRJobConfUtil.setApacheShuffleConfForTesting(jobConf);
     jobConf.set(MRConfig.FRAMEWORK_NAME, "local");
     fs = FileSystem.getLocal(jobConf);
   }

@@ -1008,7 +1008,7 @@ public class TestRMContainerAllocator {
     LOG.info("Running testReportedAppProgress");
 
     Configuration conf = new Configuration();
-    MRJobConfUtil.setApacheShuffleConfForTesting(conf);
+
     final MyResourceManager rm = new MyResourceManager(conf);
     rm.start();
     DrainDispatcher rmDispatcher = (DrainDispatcher) rm.getRMContext()
@@ -1165,7 +1165,7 @@ public class TestRMContainerAllocator {
     LOG.info("Running testReportedAppProgressWithOnlyMaps");
 
     Configuration conf = new Configuration();
-    MRJobConfUtil.setApacheShuffleConfForTesting(conf);
+
     final MyResourceManager rm = new MyResourceManager(conf);
     rm.start();
     DrainDispatcher rmDispatcher = (DrainDispatcher) rm.getRMContext()

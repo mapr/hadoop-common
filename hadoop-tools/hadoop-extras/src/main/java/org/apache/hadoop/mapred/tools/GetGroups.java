@@ -34,7 +34,10 @@ public class GetGroups extends GetGroupsBase {
 
   static {
     Configuration.addDefaultResource("mapred-default.xml");
-    Configuration.addDefaultResource(MapReduceDefaultProperties.getProperties());
+    if(System.getenv("SKIP_MAPR_SPECIFIC_PROPERTIES") == null ||
+            System.getenv("SKIP_MAPR_SPECIFIC_PROPERTIES").equals("false") ) {
+      Configuration.addDefaultResource(MapReduceDefaultProperties.getProperties());
+    }
     Configuration.addDefaultResource("mapred-site.xml");
   }
   

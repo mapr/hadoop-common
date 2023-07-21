@@ -74,7 +74,6 @@ public class TestMapTask {
   @Test
   public void testShufflePermissions() throws Exception {
     JobConf conf = new JobConf();
-    MRJobConfUtil.setApacheShuffleConfForTesting(conf);
     conf.set(CommonConfigurationKeys.FS_PERMISSIONS_UMASK_KEY, "077");
     conf.set(MRConfig.LOCAL_DIR, testRootDir.getAbsolutePath());
     MapOutputFile mof = new MROutputFiles();

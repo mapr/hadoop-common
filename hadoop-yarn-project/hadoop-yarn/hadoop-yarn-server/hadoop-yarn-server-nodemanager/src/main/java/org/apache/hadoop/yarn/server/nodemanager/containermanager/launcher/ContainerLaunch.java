@@ -385,6 +385,14 @@ public class ContainerLaunch implements Callable<Integer> {
               YarnConfiguration.HADOOP_NATIVE_LIB_ENV,
               File.pathSeparator);
 
+      // Add system variable for skip some configuration inside containers for UTs
+      if (System.getenv("SKIP_MAPR_SPECIFIC_PROPERTIES") != null) {
+        Apps.addToEnvironment(environment,
+                "SKIP_MAPR_SPECIFIC_PROPERTIES",
+                System.getenv("SKIP_MAPR_SPECIFIC_PROPERTIES"),
+                File.pathSeparator);
+      }
+
       String libJvmPath = conf.get(LIBJVM_SO_PATH, LIBJVM_SO_PATH_DEFAULT);
       Apps.addToEnvironment(environment, Environment.LD_LIBRARY_PATH.name(), libJvmPath, File.pathSeparator);
 
