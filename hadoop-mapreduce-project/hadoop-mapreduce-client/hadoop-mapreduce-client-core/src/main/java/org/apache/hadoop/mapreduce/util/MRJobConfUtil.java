@@ -190,22 +190,4 @@ public final class MRJobConfUtil {
     return config;
   }
 
-  /**
-   * Set Apache Shuffle as default shuffle for unit tests
-   * @param conf
-   * @return
-   */
-  public static Configuration setApacheShuffleConfForTesting(Configuration conf){
-    Configuration config =
-            (conf == null) ? new Configuration(): conf;
-    //overwrite shuffle property to Apache for UTs
-    config.set(MRConfig.TASK_LOCAL_OUTPUT_CLASS, "org.apache.hadoop.mapred.MROutputFiles");
-    config.set(MRJobConfig.MAP_OUTPUT_COLLECTOR_CLASS_ATTR, "org.apache.hadoop.mapred.MapTask$MapOutputBuffer");
-    config.set(MRConfig.SHUFFLE_CONSUMER_PLUGIN, "org.apache.hadoop.mapreduce.task.reduce.Shuffle");
-    config.set(MRConfig.MAPRED_IFILE_OUTPUTSTREAM, "org.apache.hadoop.mapred.IFileOutputStream");
-    config.set(MRConfig.MAPRED_IFILE_INPUTSTREAM, "org.apache.hadoop.mapred.IFileInputStream");
-    config.set(MRConfig.MAPRED_LOCAL_MAP_OUTPUT, "true");
-    config.set(MRJobConfig.MAPREDUCE_JOB_SHUFFLE_PROVIDER_SERVICES, "mapreduce_shuffle");
-    return config;
-  }
 }
