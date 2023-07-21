@@ -212,8 +212,8 @@ public class TestMergeManager {
   public void testIoSortDefaults() {
     final JobConf jobConf = new JobConf();
     //Updated expected values for Direct Shuffle config
-    assertEquals(256, jobConf.getInt(MRJobConfig.IO_SORT_FACTOR, 100));
-    assertEquals(480, jobConf.getInt(MRJobConfig.IO_SORT_MB, 10));
+    assertEquals(10, jobConf.getInt(MRJobConfig.IO_SORT_FACTOR, 100));
+    assertEquals(100, jobConf.getInt(MRJobConfig.IO_SORT_MB, 10));
   }
 
   @SuppressWarnings({ "unchecked", "deprecation" })
