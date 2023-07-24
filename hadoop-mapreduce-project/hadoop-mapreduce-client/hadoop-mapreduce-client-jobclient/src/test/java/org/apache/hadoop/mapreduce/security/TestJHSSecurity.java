@@ -30,6 +30,7 @@ import org.apache.hadoop.test.LambdaTestUtils;
 import org.junit.Assert;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.v2.api.HSClientProtocol;
@@ -43,6 +44,8 @@ import org.apache.hadoop.mapreduce.v2.hs.JHSDelegationTokenSecretManager;
 import org.apache.hadoop.mapreduce.v2.hs.JobHistoryServer;
 import org.apache.hadoop.mapreduce.v2.jobhistory.JHAdminConfig;
 import org.apache.hadoop.mapreduce.v2.util.MRBuilderUtils;
+import org.apache.hadoop.security.rpcauth.KerberosAuthMethod;
+import org.apache.hadoop.security.User;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod;
 import org.apache.hadoop.yarn.api.records.Token;
@@ -74,6 +77,10 @@ public class TestJHSSecurity {
 
     conf.set(CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION,
       "kerberos");
+    conf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+            User.class.getName());
+    conf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+            KerberosAuthMethod.class.getName());
     UserGroupInformation.setConfiguration(conf);
     
     final long initialInterval = 10000l;
