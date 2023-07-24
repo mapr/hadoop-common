@@ -573,6 +573,7 @@ public class TestJobHistoryEventHandler {
   public void testTimelineEventHandling() throws Exception {
     TestParams t = new TestParams(RunningAppContext.class, false);
     Configuration conf = new YarnConfiguration();
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     conf.setBoolean(YarnConfiguration.NM_RECOVERY_ENABLED, false);
     conf.setBoolean(YarnConfiguration.TIMELINE_SERVICE_ENABLED, true);
     long currentTime = System.currentTimeMillis();

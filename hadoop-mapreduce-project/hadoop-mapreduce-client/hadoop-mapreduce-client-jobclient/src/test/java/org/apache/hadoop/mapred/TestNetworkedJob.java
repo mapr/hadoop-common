@@ -379,6 +379,7 @@ public class TestNetworkedJob {
   private MiniMRClientCluster createMiniClusterWithCapacityScheduler()
       throws IOException {
     Configuration conf = new Configuration();
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     // Expected queue names depending on Capacity Scheduler queue naming
     conf.setClass(YarnConfiguration.RM_SCHEDULER, CapacityScheduler.class,
         CapacityScheduler.class);

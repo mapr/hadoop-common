@@ -42,6 +42,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskAttemptId;
 import org.apache.hadoop.mapreduce.v2.app.speculate.LegacyTaskRuntimeEstimator;
 import org.apache.hadoop.mapreduce.v2.app.speculate.TaskRuntimeEstimator;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -115,6 +116,7 @@ public class TestSpeculativeExecution {
     if (mrCluster == null) {
       mrCluster = new MiniMRYarnCluster(TestSpeculativeExecution.class.getName(), 4);
       Configuration conf = new Configuration();
+      conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
       mrCluster.init(conf);
       mrCluster.start();
     }

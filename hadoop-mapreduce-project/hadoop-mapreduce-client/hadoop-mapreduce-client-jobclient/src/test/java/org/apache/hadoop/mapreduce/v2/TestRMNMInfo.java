@@ -31,6 +31,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.yarn.api.records.NodeId;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.server.resourcemanager.MockNodes;
 import org.apache.hadoop.yarn.server.resourcemanager.RMContext;
 import org.apache.hadoop.yarn.server.resourcemanager.RMNMInfo;
@@ -77,6 +78,7 @@ public class TestRMNMInfo {
       mrCluster = new MiniMRYarnCluster(TestRMNMInfo.class.getName(),
                                         NUMNODEMANAGERS);
       Configuration conf = new Configuration();
+      conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
       mrCluster.init(conf);
       mrCluster.start();
     }

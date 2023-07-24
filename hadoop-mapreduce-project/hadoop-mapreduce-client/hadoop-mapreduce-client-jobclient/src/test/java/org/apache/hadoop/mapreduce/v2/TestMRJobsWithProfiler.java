@@ -85,6 +85,7 @@ public class TestMRJobsWithProfiler {
 
     if (mrCluster == null) {
       mrCluster = new MiniMRYarnCluster(TestMRJobsWithProfiler.class.getName());
+      CONF.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
       mrCluster.init(CONF);
       mrCluster.start();
     }

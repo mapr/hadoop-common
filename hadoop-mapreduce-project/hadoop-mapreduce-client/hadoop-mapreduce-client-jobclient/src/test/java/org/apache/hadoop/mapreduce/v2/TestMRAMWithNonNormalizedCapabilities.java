@@ -32,6 +32,7 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobStatus;
 import org.apache.hadoop.mapreduce.v2.MiniMRYarnCluster;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -69,7 +70,9 @@ public class TestMRAMWithNonNormalizedCapabilities {
 
     if (mrCluster == null) {
       mrCluster = new MiniMRYarnCluster(getClass().getSimpleName());
-      mrCluster.init(new Configuration());
+      Configuration conf = new Configuration();
+      conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
+      mrCluster.init(conf);
       mrCluster.start();
     }
     // Copy MRAppJar and make it private. TODO: FIXME. This is a hack to
@@ -79,7 +82,7 @@ public class TestMRAMWithNonNormalizedCapabilities {
   }
 
   /**
-   * To ensure nothing broken after we removed normalization 
+   * To ensure nothing broken after we removed normalization
    * from the MRAM side
    * @throws Exception
    */
@@ -103,7 +106,7 @@ public class TestMRAMWithNonNormalizedCapabilities {
     job.submit();
     boolean completed = job.waitForCompletion(true);
     Assert.assertTrue("Job should be completed", completed);
-    Assert.assertEquals("Job should be finished successfully", 
+    Assert.assertEquals("Job should be finished successfully",
                     JobStatus.State.SUCCEEDED, job.getJobState());
   }
 
