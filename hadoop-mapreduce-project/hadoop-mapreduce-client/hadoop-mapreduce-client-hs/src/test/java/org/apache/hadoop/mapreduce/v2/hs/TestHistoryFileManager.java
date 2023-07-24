@@ -27,7 +27,7 @@ import java.util.List;
 
 import org.apache.hadoop.mapreduce.v2.app.job.Job;
 import org.apache.hadoop.mapreduce.v2.jobhistory.JobHistoryUtils;
-import org.junit.Assert;
+import org.junit.*;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.fs.FileSystem;
@@ -47,11 +47,6 @@ import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 import org.apache.hadoop.yarn.util.Clock;
 import org.apache.hadoop.yarn.util.ControlledClock;
 import org.apache.hadoop.yarn.util.SystemClock;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
 import org.junit.rules.TestName;
 
 import static org.mockito.Mockito.*;
@@ -69,18 +64,12 @@ public class TestHistoryFileManager {
     coreSitePath = "." + File.separator + "target" + File.separator +
             "test-classes" + File.separator + "core-site.xml";
     Configuration conf = new HdfsConfiguration();
-    Configuration conf2 = new HdfsConfiguration();
     dfsCluster = new MiniDFSCluster.Builder(conf).build();
-    conf2.set(MiniDFSCluster.HDFS_MINIDFS_BASEDIR, conf.get(
-        MiniDFSCluster.HDFS_MINIDFS_BASEDIR, MiniDFSCluster.getBaseDirectory())
-        + "_2");
-    dfsCluster2 = new MiniDFSCluster.Builder(conf2).build();
   }
 
   @AfterClass
   public static void cleanUpClass() throws Exception {
     dfsCluster.shutdown();
-    dfsCluster2.shutdown();
   }
 
   @After
@@ -124,6 +113,7 @@ public class TestHistoryFileManager {
     testTryCreateHistoryDirs(dfsCluster.getConfiguration(0), true);
   }
 
+  @Ignore("Only one cluster can be existing at any point of time (See MiniDFSCluster#build())")
   @Test
   public void testCreateDirsWithAdditionalFileSystem() throws Exception {
     dfsCluster.getFileSystem().setSafeMode(
