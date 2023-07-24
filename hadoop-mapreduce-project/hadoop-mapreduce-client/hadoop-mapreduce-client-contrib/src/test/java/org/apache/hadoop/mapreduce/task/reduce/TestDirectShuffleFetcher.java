@@ -161,7 +161,7 @@ public class TestDirectShuffleFetcher {
       }
     };
     try {
-        when(rfs.openFid2(any(PathId.class), anyString(), anyInt())).thenReturn(fsin);
+        when(rfs.openFid2(any(PathId.class), any(), anyInt())).thenReturn(fsin);
       } catch (IOException e1) {
         fail();
       }
@@ -203,7 +203,7 @@ public class TestDirectShuffleFetcher {
     DirectShuffleFetcher<Text,Text> underTest = new FakeDirectShuffleFetcher<Text,Text>(1, job, id, ss, mm,
         r, metrics, except, mof, rfs);
     
-        when(rfs.openFid2(any(PathId.class), any(String.class), anyInt())).thenThrow(new FileNotFoundException());
+        when(rfs.openFid2(any(PathId.class), any(), anyInt())).thenThrow(new FileNotFoundException());
 
         MapOutputLocation loc = ss.getLocation();
         underTest.copyOutput(loc);
@@ -254,7 +254,7 @@ public class TestDirectShuffleFetcher {
       }
     };
     try {
-        when(rfs.openFid2(any(PathId.class), anyString(), anyInt())).thenReturn(fsin);
+        when(rfs.openFid2(any(PathId.class), any(), anyInt())).thenReturn(fsin);
       } catch (IOException e1) {
         fail();
       }
@@ -342,7 +342,7 @@ public class TestDirectShuffleFetcher {
       }
     };
     try {
-        when(rfs.openFid2(any(PathId.class), anyString(), anyInt())).thenReturn(fsin);
+        when(rfs.openFid2(any(PathId.class), any(), anyInt())).thenReturn(fsin);
       } catch (IOException e1) {
         fail();
       }
@@ -413,7 +413,7 @@ public class TestDirectShuffleFetcher {
       }
     };
     try {
-        when(rfs.openFid2(any(PathId.class), anyString(), anyInt())).thenReturn(fsin);
+        when(rfs.openFid2(any(PathId.class), any(), anyInt())).thenReturn(fsin);
       } catch (IOException e1) {
         fail();
       }
@@ -485,7 +485,7 @@ public class TestDirectShuffleFetcher {
       }
     };
     try {
-        when(rfs.openFid2(any(PathId.class), anyString(), anyInt())).thenReturn(fsin);
+        when(rfs.openFid2(any(PathId.class), any(), anyInt())).thenReturn(fsin);
       } catch (IOException e1) {
         fail();
       }
