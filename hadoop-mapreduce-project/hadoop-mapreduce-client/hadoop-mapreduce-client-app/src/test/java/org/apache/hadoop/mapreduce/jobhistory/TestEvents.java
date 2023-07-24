@@ -27,6 +27,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Set;
 
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -288,6 +289,7 @@ public class TestEvents {
     datum.setTaskid(taskId);
     datum.setTaskType("taskType");
     datum.setTrackerName("trackerName");
+    datum.setServicesMetaData(new HashMap<>());
     result.setDatum(datum);
     return result;
   }
@@ -335,6 +337,7 @@ public class TestEvents {
     datum.setTaskid(taskId);
     datum.setTaskType("taskType");
     datum.setTrackerName("trackerName");
+    datum.setServicesMetaData(new HashMap<>());
     result.setDatum(datum);
     return result;
   }
