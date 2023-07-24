@@ -40,6 +40,7 @@ import org.apache.hadoop.mapred.lib.IdentityMapper;
 import org.apache.hadoop.mapred.lib.IdentityReducer;
 import org.apache.hadoop.mapreduce.MRJobConfig;
 import org.apache.hadoop.mapreduce.filecache.DistributedCache;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -74,7 +75,9 @@ public class TestMROldApiJobs {
 
     if (mrCluster == null) {
       mrCluster = new MiniMRYarnCluster(TestMROldApiJobs.class.getName());
-      mrCluster.init(new Configuration());
+      Configuration conf = new Configuration();
+      conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
+      mrCluster.init(conf);
       mrCluster.start();
     }
 

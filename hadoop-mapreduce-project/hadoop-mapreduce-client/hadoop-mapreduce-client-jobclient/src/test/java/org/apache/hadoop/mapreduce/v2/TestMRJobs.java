@@ -164,6 +164,7 @@ public class TestMRJobs {
       mrCluster = new MiniMRYarnCluster(TestMRJobs.class.getName(),
           NUM_NODE_MGRS);
       Configuration conf = new Configuration();
+      conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
       conf.set("fs.defaultFS", remoteFs.getUri().toString());   // use HDFS
       conf.set(MRJobConfig.MR_AM_STAGING_DIR, "/apps_staging_dir");
       conf.setInt(YarnConfiguration.MAX_CLUSTER_LEVEL_APPLICATION_PRIORITY, 10);

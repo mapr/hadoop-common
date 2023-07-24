@@ -44,6 +44,7 @@ import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ContainerId;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppState;
 import org.apache.hadoop.yarn.util.Records;
@@ -88,7 +89,9 @@ public class TestMRJobsWithHistoryService {
 
     if (mrCluster == null) {
       mrCluster = new MiniMRYarnCluster(getClass().getName());
-      mrCluster.init(new Configuration());
+      Configuration conf = new Configuration();
+      conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
+      mrCluster.init(conf);
       mrCluster.start();
     }
 

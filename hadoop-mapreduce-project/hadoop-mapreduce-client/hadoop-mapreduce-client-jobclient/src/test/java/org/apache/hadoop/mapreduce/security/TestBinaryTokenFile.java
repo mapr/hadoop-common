@@ -178,7 +178,7 @@ public class TestBinaryTokenFile {
   @BeforeClass
   public static void setUp() throws Exception {
     final Configuration conf = new Configuration();
-
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     conf.set(MRConfig.FRAMEWORK_NAME, MRConfig.YARN_FRAMEWORK_NAME);
     conf.set(YarnConfiguration.RM_PRINCIPAL, "jt_id/" + SecurityUtil.HOSTNAME_PATTERN + "@APACHE.ORG");
 

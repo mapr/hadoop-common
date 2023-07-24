@@ -70,7 +70,7 @@ public class TestMRTimelineEventHandling {
   @Test
   public void testTimelineServiceStartInMiniCluster() throws Exception {
     Configuration conf = new YarnConfiguration();
-
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     /*
      * Timeline service should not start if the config is set to false
      * Regardless to the value of MAPREDUCE_JOB_EMIT_TIMELINE_DATA
@@ -116,6 +116,7 @@ public class TestMRTimelineEventHandling {
   @Test
   public void testMRTimelineEventHandling() throws Exception {
     Configuration conf = new YarnConfiguration();
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     conf.setBoolean(YarnConfiguration.TIMELINE_SERVICE_ENABLED, true);
     conf.setBoolean(MRJobConfig.MAPREDUCE_JOB_EMIT_TIMELINE_DATA, true);
     MiniMRYarnCluster cluster = null;
@@ -182,6 +183,7 @@ public class TestMRTimelineEventHandling {
         testDir + File.separator + "timeline_service_data";
 
     Configuration conf = new YarnConfiguration();
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     conf.setBoolean(YarnConfiguration.TIMELINE_SERVICE_ENABLED, true);
     // enable new timeline service
     conf.setFloat(YarnConfiguration.TIMELINE_SERVICE_VERSION, 2.0f);
@@ -472,6 +474,7 @@ public class TestMRTimelineEventHandling {
   public void testMapreduceJobTimelineServiceEnabled()
       throws Exception {
     Configuration conf = new YarnConfiguration();
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     conf.setBoolean(YarnConfiguration.TIMELINE_SERVICE_ENABLED, true);
     conf.setBoolean(MRJobConfig.MAPREDUCE_JOB_EMIT_TIMELINE_DATA, false);
     MiniMRYarnCluster cluster = null;
@@ -515,6 +518,7 @@ public class TestMRTimelineEventHandling {
     }
 
     conf = new YarnConfiguration();
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     conf.setBoolean(YarnConfiguration.TIMELINE_SERVICE_ENABLED, true);
     conf.setBoolean(MRJobConfig.MAPREDUCE_JOB_EMIT_TIMELINE_DATA, true);
     cluster = null;
