@@ -29,6 +29,7 @@ import java.net.InetSocketAddress;
 import java.security.PrivilegedExceptionAction;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.io.Text;
 
 import org.apache.hadoop.test.GenericTestUtils;
@@ -45,6 +46,8 @@ import org.apache.hadoop.security.SaslInputStream;
 import org.apache.hadoop.security.SaslRpcClient;
 import org.apache.hadoop.security.SaslRpcServer;
 import org.apache.hadoop.security.SecurityUtil;
+import org.apache.hadoop.security.rpcauth.KerberosAuthMethod;
+import org.apache.hadoop.security.User;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.event.Level;
@@ -66,6 +69,10 @@ public class TestUmbilicalProtocolWithJobToken {
   static {
     conf = new Configuration();
     conf.set(HADOOP_SECURITY_AUTHENTICATION, "kerberos");
+    conf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+            User.class.getName());
+    conf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+            KerberosAuthMethod.class.getName());
     UserGroupInformation.setConfiguration(conf);
   }
 

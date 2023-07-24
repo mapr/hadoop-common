@@ -68,7 +68,9 @@ import org.apache.hadoop.mapreduce.v2.api.protocolrecords.GetDelegationTokenResp
 import org.apache.hadoop.mapreduce.v2.util.MRApps;
 import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.security.SecurityUtil;
+import org.apache.hadoop.security.User;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.rpcauth.KerberosAuthMethod;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.yarn.api.ApplicationClientProtocol;
 import org.apache.hadoop.yarn.api.ApplicationConstants;
@@ -428,6 +430,10 @@ public class TestYARNRunner {
 
       conf.set(CommonConfigurationKeys.HADOOP_SECURITY_AUTHENTICATION,
           "kerberos");
+      conf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+              User.class.getName());
+      conf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+              KerberosAuthMethod.class.getName());
       UserGroupInformation.setConfiguration(conf);
       creds = new Credentials();
 
@@ -917,6 +923,10 @@ public class TestYARNRunner {
     jobConf.set("hadoop.tmp.dir", "testconfdir");
     jobConf.set(CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION,
         "kerberos");
+    jobConf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+            User.class.getName());
+    jobConf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+            KerberosAuthMethod.class.getName());
     jobConf.set("mapreduce.job.send-token-conf",
         "dfs.nameservices|^dfs.namenode.rpc-address.*$|^dfs.ha.namenodes.*$"
             + "|^dfs.client.failover.proxy.provider.*$"
