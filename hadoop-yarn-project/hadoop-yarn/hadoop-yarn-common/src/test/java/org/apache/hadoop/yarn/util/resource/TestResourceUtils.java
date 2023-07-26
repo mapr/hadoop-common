@@ -154,7 +154,7 @@ public class TestResourceUtils {
   @Test
   public void testGetResourceTypes() {
     Map<String, ResourceInformation> res = ResourceUtils.getResourceTypes();
-    Assert.assertEquals(2, res.size());
+    Assert.assertEquals(3, res.size());
     testMemoryAndVcores(res);
   }
 
@@ -163,15 +163,15 @@ public class TestResourceUtils {
     Configuration conf = new YarnConfiguration();
 
     ResourceFileInformation testFile1 =
-        new ResourceFileInformation("resource-types-1.xml", 2);
+        new ResourceFileInformation("resource-types-1.xml", 3);
     ResourceFileInformation testFile2 =
-        new ResourceFileInformation("resource-types-2.xml", 3);
+        new ResourceFileInformation("resource-types-2.xml", 4);
     testFile2.resourceNameUnitsMap.put("resource1", "G");
     ResourceFileInformation testFile3 =
-        new ResourceFileInformation("resource-types-3.xml", 3);
+        new ResourceFileInformation("resource-types-3.xml", 4);
     testFile3.resourceNameUnitsMap.put("resource2", "");
     ResourceFileInformation testFile4 =
-        new ResourceFileInformation("resource-types-4.xml", 5);
+        new ResourceFileInformation("resource-types-4.xml", 6);
     testFile4.resourceNameUnitsMap.put("resource1", "G");
     testFile4.resourceNameUnitsMap.put("resource2", "m");
     testFile4.resourceNameUnitsMap.put("yarn.io/gpu", "");
@@ -365,6 +365,8 @@ public class TestResourceUtils {
         ResourceInformation.newInstance("resource2", "m", 2L));
     test3Resources.setResourceInformation("yarn.io/gpu",
         ResourceInformation.newInstance("yarn.io/gpu", "", 1));
+    test3Resources.setResourceInformation("disks",
+            ResourceInformation.newInstance("disks", "", 8000));
     testRun.put("node-resources-2.xml", test3Resources);
 
     for (Map.Entry<String, Resource> entry : testRun.entrySet()) {
@@ -469,6 +471,8 @@ public class TestResourceUtils {
         ResourceInformation.newInstance("resource2", "M", 2L));
     test3Resources.setResourceInformation("yarn.io/gpu",
         ResourceInformation.newInstance("yarn.io/gpu", "", 1));
+    test3Resources.setResourceInformation("disks",
+            ResourceInformation.newInstance("disks", "", 8000));
     testRun.put("node-resources-3.xml", test3Resources);
 
     for (Map.Entry<String, Resource> entry : testRun.entrySet()) {
