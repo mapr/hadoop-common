@@ -152,6 +152,10 @@ public class YarnConfiguration extends Configuration {
   public static final String NM_RESOURCES_PREFIX =
       YarnConfiguration.NM_PREFIX + "resource-type.";
 
+  /** Amount of disks as resources */
+  public static final String NM_DISKS_RESOURCES =
+      YarnConfiguration.NM_RESOURCES_PREFIX + "disks";
+
   /** Delay before deleting resource to ease debugging of NM issues */
   public static final String DEBUG_NM_DELETE_DELAY_SEC =
     YarnConfiguration.NM_PREFIX + "delete.debug-delay-sec";
@@ -903,7 +907,7 @@ public class YarnConfiguration extends Configuration {
   /** Custom HA scheme(s) config */
   public static final String CUSTOM_RM_HA_ENABLED= RM_HA_PREFIX + "custom-ha-enabled";
 
-  public static final String CUSTOM_RM_HA_RMFINDER= RM_HA_PREFIX + "custom-ha-rmaddressfinder";
+  public static final String CUSTOM_RM_HA_RMFINDER = RM_HA_PREFIX + "custom-ha-rmaddressfinder";
   public static final boolean DEFAULT_CUSTOM_RM_HA_ENABLED = false;
 
   public static final String RM_HA_IDS = RM_HA_PREFIX + "rm-ids";
@@ -1560,13 +1564,6 @@ public class YarnConfiguration extends Configuration {
 
   public static final String NODE_LOCAL_LOG_AGGREGATION_NODE_ID =
     NODE_LOCAL_LOG_AGGREGATION + "node-id";
-
-  /** With enabled node-local aggregation indicates to try read logs from default
-   * log-aggregation directory if no data found using node-local aggregation
-   */
-  public static final String TRY_READ_LOGS_FROM_LOG_AGGREGATION_DIR =
-    NODE_LOCAL_LOG_AGGREGATION + "try-read-logs-from-log-aggregation-dir";
-  public static final boolean DEFAULT_TRY_READ_LOGS_FROM_LOG_AGGREGATION_DIR = true;
 
   /**
    * The remote log metadata dir will be created at
@@ -2973,6 +2970,10 @@ public class YarnConfiguration extends Configuration {
   public static final String PROXY_BIND_HOST =
       PROXY_PREFIX + "bind-host";
 
+  /** Redirect from proxy server */
+  public static final String PROXY_REDIRECT_SSLHANDSHAKE =
+      PROXY_PREFIX + "redirect.sslhandshake";
+
   /**
    * YARN Service Level Authorization
    */
@@ -4365,6 +4366,7 @@ public class YarnConfiguration extends Configuration {
                   "PATH=%PATH%;%HADOOP_COMMON_HOME%\\bin":
                   "LD_LIBRARY_PATH=$HADOOP_COMMON_HOME/lib/native";
 
+  /** Path to JDK libraries */
   public static final String LIBJVM_SO_PATH = YARN_PREFIX + "libjvm.path";
 
   public static final String LIBJVM_SO_PATH_DEFAULT = System.getProperty("sun.boot.library.path") + "/server";

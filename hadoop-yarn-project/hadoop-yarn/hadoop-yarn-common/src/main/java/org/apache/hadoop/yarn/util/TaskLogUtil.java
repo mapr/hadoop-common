@@ -40,9 +40,7 @@ public class TaskLogUtil {
     private static DFSLoggingHandler dfsLoggingHandler = null;
 
     static {
-        enableDfsLogging = Boolean.parseBoolean(
-                DEFAULT_CONF.get(YarnConfiguration.ENABLE_DFS_LOGGING, "false"));
-
+        enableDfsLogging = DEFAULT_CONF.getBoolean(YarnConfiguration.ENABLE_DFS_LOGGING, false);
         if (enableDfsLogging) {
             initializeHandler();
         }

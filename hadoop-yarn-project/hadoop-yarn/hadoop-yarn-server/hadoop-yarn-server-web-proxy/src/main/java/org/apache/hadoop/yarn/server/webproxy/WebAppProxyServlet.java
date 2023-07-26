@@ -95,9 +95,6 @@ public class WebAppProxyServlet extends HttpServlet {
         "Authorization"));
 
   public static final String PROXY_USER_COOKIE_NAME = "proxy-user";
-
-  public static final String REDIRECT_PROP_FOR_SSL_ERROR = "yarn.web-proxy.redirect.sslhandshake";
-
   private transient List<TrackingUriPlugin> trackingUriPlugins;
   private final String rmAppPageUrlBase;
   private final String ahsAppPageUrlBase;
@@ -536,7 +533,7 @@ public class WebAppProxyServlet extends HttpServlet {
         proxyLink(req, resp, toFetch, c, getProxyHost(), method, id);
       }catch (SSLHandshakeException ex) {
         LOG.warn("Proxy server got SSLHandshake error for " + toFetch);
-        if(conf.getBoolean(REDIRECT_PROP_FOR_SSL_ERROR, true)) {
+        if(conf.getBoolean(YarnConfiguration.PROXY_REDIRECT_SSLHANDSHAKE, true)) {
           LOG.info("Trying to redirect to " + toFetch);
           ProxyUtils.sendRedirect(req, resp, toFetch.toString());
         } else {

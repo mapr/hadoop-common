@@ -69,6 +69,9 @@ public class LogAggregationNodeLocalTFileController extends LogAggregationFileCo
   @Override
   protected void extractRemoteRootLogDir() {
     String remoteDir = conf.get(NODE_LOCAL_LOG_AGGREGATION_REMOTE_APP_LOG_DIR_FMT, DEFAULT_NODE_LOCAL_LOG_AGGREGATION_REMOTE_APP_LOG_DIR_FMT);
+    if (remoteDir == null || remoteDir.isEmpty()) {
+      remoteDir = DEFAULT_NODE_LOCAL_LOG_AGGREGATION_REMOTE_APP_LOG_DIR_FMT;
+    }
     String nodeId = conf.get(NODE_LOCAL_LOG_AGGREGATION_NODE_ID);
     if (nodeId == null || nodeId.isEmpty()) {
       // not init for readers
