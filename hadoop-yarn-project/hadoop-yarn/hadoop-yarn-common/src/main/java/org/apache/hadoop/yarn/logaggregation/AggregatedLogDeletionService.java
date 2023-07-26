@@ -157,7 +157,7 @@ public class AggregatedLogDeletionService extends AbstractService {
 
     private void determineMatchingLogDirs(Configuration conf) {
       String logDirGlob = conf.get(YarnConfiguration.DFS_LOGGING_DIR_GLOB);
-      if (logDirGlob != null) {
+      if (logDirGlob != null && !logDirGlob.isEmpty()) {
         try {
           this.dfsLoggingDirs =  FileUtil.stat2Paths(
                   fs.globStatus(new Path(logDirGlob)));

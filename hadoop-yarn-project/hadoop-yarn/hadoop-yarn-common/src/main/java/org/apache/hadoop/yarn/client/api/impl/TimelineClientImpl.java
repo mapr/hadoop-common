@@ -203,6 +203,9 @@ public class TimelineClientImpl extends TimelineClient {
     String keystoreType = sslConf.get(SSL_CLIENT_TRUSTSTORE_TYPE);
     if (keystoreType != null && keystoreType.equalsIgnoreCase(BouncyCastleFipsKeyStoreProvider.KEYSTORE_TYPE)) {
       String log_level =  conf.get(YarnConfiguration.BCFKS_LOG_LEVEL, YarnConfiguration.DEFAULT_BCFKS_LOG_LEVEL);
+      if (log_level == null || log_level.isEmpty()){
+        log_level = YarnConfiguration.DEFAULT_BCFKS_LOG_LEVEL;
+      }
       java.util.logging.Logger parent = java.util.logging.Logger.getLogger("org.bouncycastle.jsse");
       parent.setLevel(Level.parse(log_level));
 

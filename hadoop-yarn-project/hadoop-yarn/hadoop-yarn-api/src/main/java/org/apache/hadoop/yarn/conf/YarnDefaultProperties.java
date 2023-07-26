@@ -137,7 +137,7 @@ public class YarnDefaultProperties extends Properties {
             disk = (long) (Double.parseDouble(System.getProperty("nodemanager.resource.io-spindles")) * 1000);
         }
         props.put(YarnConfiguration.RESOURCE_TYPES, "disks");
-        props.put(YarnConfiguration.NM_RESOURCES_PREFIX + "disks", Long.toString(disk));
+        props.put(YarnConfiguration.NM_DISKS_RESOURCES, Long.toString(disk));
 
         // Shuffle Aux Services Configuration
         Configuration conf = new Configuration();

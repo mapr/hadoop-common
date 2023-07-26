@@ -5120,7 +5120,7 @@
       Default is 100
     </description>
   </property>
-  
+
   <property>
     <name>yarn.router.webapp.cross-origin.enabled</name>
     <value>false</value>
@@ -5131,7 +5131,7 @@
       configuration hadoop.http.filter.initializers in core-site.xml.
     </description>
   </property>
-  
+
   <property>
     <name>yarn.federation.state-store.max-applications</name>
     <value>1000</value>
@@ -5785,6 +5785,121 @@
     </description>
     <name>yarn.federation.gpg.webapp.read-timeout</name>
     <value>30s</value>
+  </property>
+
+
+  <property>
+    <description>Log level for BC fips library</description>
+    <name>yarn.bcfks.log.level</name>
+    <value></value>
+  </property>
+
+  <property>
+    <description>A regex to match log directories</description>
+    <name>yarn.dfs-logging.dir-glob</name>
+    <value></value>
+  </property>
+
+  <property>
+    <description>Implementation class for handling DFS logging</description>
+    <name>yarn.dfs-logging.handler-class</name>
+    <value></value>
+  </property>
+
+  <property>
+    <description>Class to instantiate and use for managing external tokens</description>
+    <name>yarn.external.token.manager</name>
+    <value></value>
+  </property>
+
+  <property>
+    <description>Class to instantiate and use for external token localization</description>
+    <name>yarn.nodemanager.external.token.localizer</name>
+    <value></value>
+  </property>
+
+  <property>
+    <description>Path to JDK libraries</description>
+    <name>yarn.libjvm.path</name>
+    <value></value>
+  </property>
+
+  <property>
+    <description>Path to log directory for local node aggregation</description>
+    <name>yarn.log-aggregation.nodeLocal.remote-app-log-dir</name>
+    <value></value>
+  </property>
+
+  <property>
+    <description>Enabling local node aggregation</description>
+    <name>yarn.node-local-log-aggregation.enable</name>
+    <value>false</value>
+  </property>
+
+  <property>
+    <description>Name of metadata file for local node aggregation</description>
+    <name>yarn.node-local-log-aggregation.metadata-filename</name>
+    <value>containers.seq</value>
+  </property>
+
+  <property>
+    <description>Path to metadata file for local node aggregation</description>
+    <name>yarn.node-local-log-aggregation.metadata-path</name>
+    <value>logsMeta</value>
+  </property>
+
+  <property>
+    <description>Node id for local node aggregation</description>
+    <name>yarn.node-local-log-aggregation.node-id</name>
+    <value></value>
+  </property>
+
+  <property>
+    <description>Nodemanager status server address</description>
+    <name>yarn.nodemanager.status.server.address</name>
+    <value>localhost:18044</value>
+  </property>
+
+  <property>
+    <description>Enabling Nodemanager status server</description>
+    <name>yarn.nodemanager.status.server.enabled</name>
+    <value>true</value>
+  </property>
+
+  <property>
+    <description>Resourcemanager status server address</description>
+    <name>yarn.resourcemanager.status.server.address</name>
+    <value>localhost:18090</value>
+  </property>
+
+  <property>
+    <description>Enabling Resourcemanager status server</description>
+    <name>yarn.resourcemanager.status.server.enabled</name>
+    <value>true</value>
+  </property>
+
+  <property>
+    <description>Auxiliary services to start as part of Resourcemanager</description>
+    <name>yarn.resourcemanager.aux-services</name>
+    <value></value>
+  </property>
+
+  <property>
+    <description>Enablig DF custome RM HA</description>
+    <name>yarn.resourcemanager.ha.custom-ha-enabled</name>
+    <value></value>
+  </property>
+
+  <property>
+    <description>Address of class that should find active RM when HA enabled</description>
+    <name>yarn.resourcemanager.ha.custom-ha-rmaddressfinder</name>
+    <value></value>
+  </property>
+
+  <property>
+    <description>Enabling centralized logging aggregation</description>
+    <name>yarn.use-central-logging-for-mapreduce-only</name>
+    <value>false</value>
   </property>
 
 </configuration>

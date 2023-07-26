@@ -394,6 +394,9 @@ public class ContainerLaunch implements Callable<Integer> {
       }
 
       String libJvmPath = conf.get(LIBJVM_SO_PATH, LIBJVM_SO_PATH_DEFAULT);
+      if(libJvmPath == null || libJvmPath.isEmpty()) {
+        libJvmPath = LIBJVM_SO_PATH_DEFAULT;
+      }
       Apps.addToEnvironment(environment, Environment.LD_LIBRARY_PATH.name(), libJvmPath, File.pathSeparator);
 
       // /////////// Write out the container-script in the nmPrivate space.
