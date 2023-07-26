@@ -43,6 +43,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import static org.apache.hadoop.registry.client.impl.zk.ZookeeperConfigOptions.PROP_ZK_ENABLE_SASL_CLIENT;
+
 public class TestRMEmbeddedElector extends ClientBaseWithFixes {
   private static final Logger LOG =
       LoggerFactory.getLogger(TestRMEmbeddedElector.class.getName());
@@ -81,6 +83,8 @@ public class TestRMEmbeddedElector extends ClientBaseWithFixes {
     HATestUtil.setRpcAddressForRM(RM2_NODE_ID, RM2_PORT_BASE, conf);
 
     conf.setLong(YarnConfiguration.CLIENT_FAILOVER_SLEEPTIME_BASE_MS, 100L);
+
+    System.setProperty(PROP_ZK_ENABLE_SASL_CLIENT, "false");
 
     callbackCalled = new AtomicBoolean(false);
     transitionToActiveCounter = new AtomicInteger(0);

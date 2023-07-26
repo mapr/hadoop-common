@@ -40,6 +40,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import static org.apache.hadoop.registry.client.impl.zk.ZookeeperConfigOptions.PROP_ZK_ENABLE_SASL_CLIENT;
+
 public class TestZKRMStateStoreZKClientConnections {
   private static final Logger LOG =
       LoggerFactory.getLogger(TestZKRMStateStoreZKClientConnections.class);
@@ -79,6 +81,7 @@ public class TestZKRMStateStoreZKClientConnections {
 
       public TestZKRMStateStore(Configuration conf, String workingZnode)
           throws Exception {
+        System.setProperty(PROP_ZK_ENABLE_SASL_CLIENT, "false");
         setResourceManager(new ResourceManager());
         init(conf);
         start();
