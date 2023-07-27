@@ -195,6 +195,11 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcpkix-fips</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>de.ruedigermoeller</groupId>
       <artifactId>fst</artifactId>
       <version>2.50</version>
