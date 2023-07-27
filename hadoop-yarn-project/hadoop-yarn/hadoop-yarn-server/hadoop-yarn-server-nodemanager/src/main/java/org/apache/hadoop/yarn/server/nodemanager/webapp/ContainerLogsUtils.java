@@ -234,8 +234,8 @@ public class ContainerLogsUtils {
     }
 
     ContainerLaunchContext launchContext = container.getLaunchContext();
-    Map<String, String> env = launchContext.getEnvironment();
-    if (env != null) {
+    Map<String, String> env;
+    if (container.getLaunchContext() != null && (env = launchContext.getEnvironment()) != null) {
       if (TaskLogUtil.isDfsLoggingEnabled(env)) {
         return true;
       }
