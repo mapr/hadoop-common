@@ -407,6 +407,16 @@ function ConfigureYarnServices() {
     fi
 }
 
+function ConfigureDisksAsResourceYarnConf() {
+    local YarnSiteFile="${HADOOP_HOME}/etc/hadoop/yarn-site.xml"
+    if [ -f ${YarnSiteFile} ];then
+        if ! grep -q "yarn.resource-types" "${YarnSiteFile}"; then
+            sed -i -e "s|</configuration>|  <property>\n   <name>yarn.resource-types</name>\n    <value>disks</value>\n  </property>\n</configuration>|" "${YarnSiteFile}"
+            sed -i -e "s|</configuration>|  <property>\n   <name>yarn.nodemanager.resource-type.disks</name>\n    <value>0</value>\n    <description>Value 0 means that will be used disks value from Warden</description>\n  </property>\n</configuration>|" "${YarnSiteFile}"
+        fi
+    fi
+}
+
 function ConfigureTimeLineServer() {
     local YarnSiteFile="${HADOOP_HOME}/etc/hadoop/yarn-site.xml"
     local YarnTLProps="${HADOOP_HOME}/etc/hadoop/yarn-timelineserver-properties.xml"
@@ -1062,6 +1072,7 @@ elif [ ! -f ${HADOOP_HOME}/etc/hadoop/yarn-site.xml ] || [ "$isOnlyRoles" != "1"
     # No -RM provided and no -R. Configure MapR-HA for RM.
     ConfigureYarnServices ""
 fi
+ConfigureDisksAsResourceYarnConf
 checkAndConfigureFIPSProperties
 
 if [ ! -z "$hs_ip" ]; then

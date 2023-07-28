@@ -358,7 +358,12 @@ public class NodeManagerHardwareUtils {
     Configuration conf = new Configuration(configuration);
     String memory = ResourceInformation.MEMORY_MB.getName();
     String vcores = ResourceInformation.VCORES.getName();
-
+    long disksProp = conf.getLong("yarn.nodemanager.resource-type.disks", 0L);
+    String diskWarden = System.getProperty("nodemanager.resource.io-spindles");
+    if (conf.get("yarn.resource-types").contains("disks") && disksProp <= 0 && diskWarden != null) {
+      disksProp = (long) (Double.parseDouble(diskWarden) * 1000);
+      conf.set(YarnConfiguration.NM_RESOURCES_PREFIX + "disks", Long.toString(disksProp));
+    }
     Resource ret = Resource.newInstance(0, 0);
     Map<String, ResourceInformation> resourceInformation =
         ResourceUtils.getNodeResourceInformation(conf);
