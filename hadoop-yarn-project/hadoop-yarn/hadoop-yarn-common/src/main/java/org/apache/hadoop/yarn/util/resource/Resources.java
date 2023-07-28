@@ -197,6 +197,12 @@ public class Resources {
     return Resource.newInstance(memory, cores);
   }
 
+  public static Resource createResource(int memory, int cores, long disks) {
+    Resource res = Resource.newInstance(memory, cores);
+    res.setDisks(disks);
+    return res;
+  }
+
   private static final Resource UNBOUNDED =
       new FixedValueResource("UNBOUNDED", Long.MAX_VALUE);
 
