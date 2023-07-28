@@ -53,7 +53,7 @@ public class TestResources {
       return new FixedValueResource("NONE", 0L);
     }
   }
-  private static final String RESOURCE_TYPE_DISKS = "disks";
+
   private static final String EXTRA_RESOURCE_TYPE = "resource2";
   private String resourceTypesFile;
 
@@ -96,22 +96,15 @@ public class TestResources {
     return ret;
   }
 
-  public Resource createResourceWithDisks(long memory, int vCores, long disks) {
-    Resource ret = Resource.newInstance(memory, vCores);
-    ret.setResourceInformation(RESOURCE_TYPE_DISKS,
-            ResourceInformation.newInstance(RESOURCE_TYPE_DISKS, disks));
-    return ret;
-  }
-
   @Test(timeout = 10000)
   public void testCompareToWithUnboundedResource() {
     unsetExtraResourceType();
     Resource unboundedClone = Resources.clone(ExtendedResources.unbounded());
     assertTrue(unboundedClone
-        .compareTo(createResourceWithDisks(Long.MAX_VALUE, Integer.MAX_VALUE, Long.MAX_VALUE)) == 0);
-    assertTrue(unboundedClone.compareTo(createResourceWithDisks(Long.MAX_VALUE, 0, Long.MAX_VALUE)) > 0);
+        .compareTo(createResource(Long.MAX_VALUE, Integer.MAX_VALUE)) == 0);
+    assertTrue(unboundedClone.compareTo(createResource(Long.MAX_VALUE, 0)) > 0);
     assertTrue(
-        unboundedClone.compareTo(createResourceWithDisks(0, Integer.MAX_VALUE, Long.MAX_VALUE)) > 0);
+        unboundedClone.compareTo(createResource(0, Integer.MAX_VALUE)) > 0);
   }
 
   @Test(timeout = 10000)

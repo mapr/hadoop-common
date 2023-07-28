@@ -33,12 +33,12 @@
 
   <property>
     <name>yarn.scheduler.capacity.resource-calculator</name>
-    <value>org.apache.hadoop.yarn.util.resource.DominantResourceCalculator</value>
+    <value>org.apache.hadoop.yarn.util.resource.DefaultResourceCalculator</value>
     <description>
-      The ResourceCalculator implementation to be used to compare
+      The ResourceCalculator implementation to be used to compare 
       Resources in the scheduler.
-      DefaultResourceCalculator only uses Memory while
-      DominantResourceCalculator uses dominant-resource to compare
+      The default i.e. DefaultResourceCalculator only uses Memory while
+      DominantResourceCalculator uses dominant-resource to compare 
       multi-dimensional resources such as Memory, CPU etc.
     </description>
   </property>
