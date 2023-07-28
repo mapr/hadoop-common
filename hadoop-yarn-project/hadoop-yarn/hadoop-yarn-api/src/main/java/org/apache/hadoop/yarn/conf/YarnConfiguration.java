@@ -148,9 +148,6 @@ public class YarnConfiguration extends Configuration {
   public static final String NM_RESOURCES_PREFIX =
       YarnConfiguration.NM_PREFIX + "resource-type.";
 
-  /** Amount of disks as resources */
-  public static final String NM_DISKS_RESOURCES =
-      YarnConfiguration.NM_RESOURCES_PREFIX + "disks";
 
   /** Delay before deleting resource to ease debugging of NM issues */
   public static final String DEBUG_NM_DELETE_DELAY_SEC =

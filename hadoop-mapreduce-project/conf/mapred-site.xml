@@ -35,4 +35,13 @@
       <value>yarn-tez</value>
     </property>
     -->
+    <!-- Set default Disks resource value for Mapper and Reducer-->
+    <property>
+        <name>mapreduce.map.resource.disks</name>
+        <value>500</value>
+    </property>
+    <property>
+        <name>mapreduce.reduce.resource.disks</name>
+        <value>1000</value>
+    </property>
 </configuration>
