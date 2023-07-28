@@ -48,7 +48,6 @@ import org.apache.hadoop.yarn.api.records.NodeState;
 import org.apache.hadoop.yarn.api.records.QueueInfo;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.api.records.ResourceBlacklistRequest;
-import org.apache.hadoop.yarn.api.records.ResourceInformation;
 import org.apache.hadoop.yarn.api.records.ResourceRequest;
 import org.apache.hadoop.yarn.api.records.UpdateContainerError;
 import org.apache.hadoop.yarn.api.records.UpdateContainerRequest;
@@ -106,8 +105,6 @@ public class RMServerUtils {
       RecordFactoryProvider.getRecordFactory(null);
 
   private static Clock clock = SystemClock.getInstance();
-
-  private static Map resourceDisksMap = new HashMap<>();
 
   public static List<RMNode> queryRMNodes(RMContext context,
       EnumSet<NodeState> acceptedStates) {
@@ -511,15 +508,6 @@ public class RMServerUtils {
     }
   }
 
-  private static Map getDummyMapWithDisks() {
-    if (resourceDisksMap.isEmpty()) {
-      resourceDisksMap.put(ResourceInformation.DISKS_URI, 0L);
-      resourceDisksMap.put(ResourceInformation.MEMORY_URI, 0L);
-      resourceDisksMap.put(ResourceInformation.VCORES_URI, 0L);
-    }
-    return resourceDisksMap;
-  }
-
   /**
    * Statically defined dummy ApplicationResourceUsageREport.  Used as
    * a return value when a valid report cannot be found.
@@ -529,11 +517,6 @@ public class RMServerUtils {
       BuilderUtils.newApplicationResourceUsageReport(-1, -1,
           Resources.createResource(-1, -1), Resources.createResource(-1, -1),
           Resources.createResource(-1, -1), new HashMap<>(), new HashMap<>());
-  public static final ApplicationResourceUsageReport
-          DUMMY_DISKS_APPLICATION_RESOURCE_USAGE_REPORT =
-          BuilderUtils.newApplicationResourceUsageReport(-1, -1,
-                  Resources.createResource(-1, -1, 0), Resources.createResource(-1, -1, 0),
-                  Resources.createResource(-1, -1, 0), getDummyMapWithDisks(), getDummyMapWithDisks());
 
 
   /**

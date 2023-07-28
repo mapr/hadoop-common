@@ -18,7 +18,7 @@ limitations under the License. See accompanying LICENSE file.
 
  <property>
    <name>yarn.resource-types</name>
-   <value>resource2,disks</value>
+   <value>resource2</value>
  </property>
 
 </configuration>

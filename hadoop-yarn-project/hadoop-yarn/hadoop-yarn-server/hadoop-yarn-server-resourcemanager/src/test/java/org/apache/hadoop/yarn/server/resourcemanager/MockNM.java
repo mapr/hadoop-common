@@ -77,59 +77,29 @@ public class MockNM {
   public MockNM(String nodeIdStr, int memory, ResourceTrackerService resourceTracker) {
     // scale vcores based on the requested memory
     this(nodeIdStr, memory,
-        Math.max(1, (memory * YarnConfiguration.DEFAULT_NM_VCORES) /
-            YarnConfiguration.DEFAULT_NM_PMEM_MB),
-        Math.max(1, (memory * YarnConfiguration.DEFAULT_NM_VCORES) /
-            YarnConfiguration.DEFAULT_NM_PMEM_MB),
-        resourceTracker);
-  }
-
-  public MockNM(String nodeIdStr, int memory, double disks, ResourceTrackerService resourceTracker) {
-    // scale vcores based on the requested memory
-    this(nodeIdStr, memory,
             Math.max(1, (memory * YarnConfiguration.DEFAULT_NM_VCORES) /
-                    YarnConfiguration.DEFAULT_NM_PMEM_MB), disks,
+              YarnConfiguration.DEFAULT_NM_PMEM_MB),
             resourceTracker);
   }
 
   public MockNM(String nodeIdStr, int memory, int vcores,
       ResourceTrackerService resourceTracker) {
-    this(nodeIdStr, memory, vcores, 0, resourceTracker,
-        YarnVersionInfo.getVersion());
+    this(nodeIdStr, memory, vcores, resourceTracker, YarnVersionInfo.getVersion());
   }
 
-  public MockNM(String nodeIdStr, int memory, int vcores, double disks,
-                ResourceTrackerService resourceTracker) {
-    this(nodeIdStr, memory, vcores, disks, resourceTracker,
-            YarnVersionInfo.getVersion());
-  }
   public MockNM(String nodeIdStr, int memory, int vcores,
       ResourceTrackerService resourceTracker, String version) {
-    this(nodeIdStr, Resource.newInstance(memory, vcores), 0, resourceTracker,
-        version);
-  }
-
-  public MockNM(String nodeIdStr, int memory, int vcores, double disks,
-                ResourceTrackerService resourceTracker, String version) {
-    this(nodeIdStr, Resource.newInstance(memory, vcores), disks, resourceTracker,
-            version);
+    this(nodeIdStr, Resource.newInstance(memory, vcores), resourceTracker, version);
   }
 
   public MockNM(String nodeIdStr, Resource capability,
       ResourceTrackerService resourceTracker) {
-    this(nodeIdStr, capability, 0, resourceTracker,
-        YarnVersionInfo.getVersion());
+    this(nodeIdStr, capability, resourceTracker, YarnVersionInfo.getVersion());
   }
 
   public MockNM(String nodeIdStr, Resource capability,
-                ResourceTrackerService resourceTracker, String version) {
-    this(nodeIdStr, capability, 0, resourceTracker, version);
-  }
-
-  public MockNM(String nodeIdStr, Resource capability, double disks,
       ResourceTrackerService resourceTracker, String version) {
     this.capability = capability;
-    this.capability.setDisks(disks);
     this.resourceTracker = resourceTracker;
     this.version = version;
     String[] splits = nodeIdStr.split(":");
@@ -150,7 +120,7 @@ public class MockNM {
   public int getHttpPort() {
     return httpPort;
   }
-  
+
   public void setHttpPort(int port) {
     httpPort = port;
   }
@@ -160,7 +130,7 @@ public class MockNM {
   }
 
   public void containerStatus(ContainerStatus containerStatus) throws Exception {
-    Map<ApplicationId, List<ContainerStatus>> conts = 
+    Map<ApplicationId, List<ContainerStatus>> conts =
         new HashMap<ApplicationId, List<ContainerStatus>>();
     conts.put(containerStatus.getContainerId().getApplicationAttemptId().getApplicationId(),
         Arrays.asList(new ContainerStatus[] { containerStatus }));
@@ -195,7 +165,7 @@ public class MockNM {
   public RegisterNodeManagerResponse registerNode() throws Exception {
     return registerNode(null, null);
   }
-  
+
   public RegisterNodeManagerResponse registerNode(
       List<ApplicationId> runningApplications) throws Exception {
     return registerNode(null, runningApplications);
