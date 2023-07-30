@@ -2631,7 +2631,7 @@ public class CapacityScheduler extends
       application.setQueue(dest);
       LOG.info("App: " + appId + " successfully moved from " + sourceQueueName
           + " to: " + destQueueName);
-      return targetQueueName;
+      return dest.getQueuePath();
     } finally {
       writeLock.unlock();
     }
