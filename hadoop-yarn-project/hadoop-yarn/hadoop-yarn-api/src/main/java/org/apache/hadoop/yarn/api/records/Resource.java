@@ -395,8 +395,15 @@ public abstract class Resource implements Comparable<Resource> {
    */
   @Public
   @Stable
-  public double getDisks(){
-    return getResourceInformation(ResourceInformation.DISKS_URI).getValue();
+  public double getDisks() {
+    double disks;
+    try {
+      disks = getResourceInformation(ResourceInformation.DISKS_URI).getValue();
+    } catch (ResourceNotFoundException ex) {
+      //Set disks to 0 since like disks is not configured for this cluster
+      disks = 0;
+    }
+    return disks;
   }
 
   /**
