@@ -1343,10 +1343,12 @@ public class FairScheduler extends
     if (context.isPreemptionEnabled()) {
       Resource allocatedResource = rootMetrics.getAllocatedResources();
       Resource clusterResource = getClusterResource();
+      float disks = (allocatedResource.getDisks() > 0 && clusterResource.getDisks() > 0) ?
+              (float) (allocatedResource.getDisks() / clusterResource.getDisks()) : 0;
       return (context.getPreemptionUtilizationThreshold() < Math.max(Math.max(
               (float) allocatedResource.getMemorySize() / clusterResource.getMemorySize(),
               (float) allocatedResource.getVirtualCores() / clusterResource.getVirtualCores()),
-              (float) allocatedResource.getDisks() / clusterResource.getDisks()));
+              disks));
     }
     return false;
   }
@@ -1361,10 +1363,12 @@ public class FairScheduler extends
   private boolean shouldAttemptPreemption(String label, Resource allocatedResource) {
     if (context.isPreemptionEnabled()) {
       Resource clusterResource = getClusterResource(label);
+      float disks = (allocatedResource.getDisks() > 0 && clusterResource.getDisks() > 0) ?
+              (float) (allocatedResource.getDisks() / clusterResource.getDisks()) : 0;
       return (context.getPreemptionUtilizationThreshold() < Math.max(Math.max(
               (float) allocatedResource.getMemorySize() / clusterResource.getMemorySize(),
               (float) allocatedResource.getVirtualCores() / clusterResource.getVirtualCores()),
-              (float) allocatedResource.getDisks() / clusterResource.getDisks()));
+              disks));
     }
     return false;
   }

@@ -391,11 +391,6 @@ public class MockNM {
     return capability.getVirtualCores();
   }
 
-  public double getDisks() {
-    return capability.getDisks();
-  }
-
-
   public Resource getCapability() {
     return capability;
   }
