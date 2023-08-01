@@ -1354,8 +1354,10 @@ public class TestResourceLocalizationService {
     spyService.handle(new ContainerLocalizationRequestEvent(c2, rsrcs1));
 
     dispatcher.await();
-    // Wait for localizers of both container c1 and c2 to begin.
-    exec.waitForLocalizers(2);
+    // Wait for localizers of both container c1 and c2 to begin. - should not work with EEP
+    // Bug 14616: Do not localize same resource more than once on a node.
+    // Therefore, only one container will localized.
+    exec.waitForLocalizers(1);
     LocalizerRunner locC1 =
         spyService.getLocalizerRunner(c1.getContainerId().toString());
 
@@ -2265,8 +2267,12 @@ public class TestResourceLocalizationService {
       dispatcher1.getEventHandler().handle(
         createContainerLocalizationEvent(container2,
           LocalResourceVisibility.PRIVATE, req));
+      /*Changed the expected value.
+      Used the DuplicateFetchResourceTransition instead
+      FetchResourceTransition to handle localize event.
+      Bug 14616: Do not localize same resource more than once on a node.*/
       Assert
-        .assertTrue(waitForPrivateDownloadToStart(rls, localizerId2, 1, 5000));
+        .assertTrue(waitForPrivateDownloadToStart(rls, localizerId2, 0, 5000));
 
       // Retrieving localized resource.
       LocalResourcesTracker tracker =
