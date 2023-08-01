@@ -942,6 +942,8 @@ public class TestNodeStatusUpdater extends NodeManagerTestBase {
     YarnConfiguration conf = new YarnConfiguration();
     conf.setInt(NodeStatusUpdaterImpl.
         YARN_NODEMANAGER_DURATION_TO_TRACK_STOPPED_CONTAINERS, 1);
+    conf.setBoolean(YarnConfiguration.NM_STATUS_SERVER_ENABLED, false);
+    conf.setBoolean(YarnConfiguration.NM_RECOVERY_ENABLED, false);
     nm.init(conf);                                                            
     NodeStatusUpdaterImpl nodeStatusUpdater =                                 
         (NodeStatusUpdaterImpl) nm.getNodeStatusUpdater();                    
@@ -977,6 +979,8 @@ public class TestNodeStatusUpdater extends NodeManagerTestBase {
         NodeStatusUpdaterImpl
             .YARN_NODEMANAGER_DURATION_TO_TRACK_STOPPED_CONTAINERS,
         "10000");
+    conf.setBoolean(YarnConfiguration.NM_STATUS_SERVER_ENABLED, false);
+    conf.setBoolean(YarnConfiguration.NM_RECOVERY_ENABLED, false);
     nm.init(conf);
     NodeStatusUpdaterImpl nodeStatusUpdater =
         (NodeStatusUpdaterImpl) nm.getNodeStatusUpdater();
@@ -1096,6 +1100,8 @@ public class TestNodeStatusUpdater extends NodeManagerTestBase {
     conf.set(NodeStatusUpdaterImpl
             .YARN_NODEMANAGER_DURATION_TO_TRACK_STOPPED_CONTAINERS,
         "1000000");
+    conf.setBoolean(YarnConfiguration.NM_STATUS_SERVER_ENABLED, false);
+    conf.setBoolean(YarnConfiguration.NM_RECOVERY_ENABLED, false);
     nm.init(conf);
 
     NodeStatusUpdaterImpl nodeStatusUpdater =
@@ -1826,6 +1832,8 @@ public class TestNodeStatusUpdater extends NodeManagerTestBase {
     nmConf.setSocketAddr(YarnConfiguration.RM_RESOURCE_TRACKER_ADDRESS,
         resourceTracker.getListenerAddress());
     nmConf.set(YarnConfiguration.NM_LOCALIZER_ADDRESS, "0.0.0.0:0");
+    nmConf.setBoolean(YarnConfiguration.NM_STATUS_SERVER_ENABLED, false);
+    nmConf.setBoolean(YarnConfiguration.NM_RECOVERY_ENABLED, false);
     nodeManager.init(nmConf);
     nodeManager.start();
 
@@ -2018,6 +2026,8 @@ public class TestNodeStatusUpdater extends NodeManagerTestBase {
   public void testExceptionReported() {
     nm = new NodeManager();
     YarnConfiguration conf = new YarnConfiguration();
+    conf.setBoolean(YarnConfiguration.NM_STATUS_SERVER_ENABLED, false);
+    conf.setBoolean(YarnConfiguration.NM_RECOVERY_ENABLED, false);
     nm.init(conf);
     NodeStatusUpdater nodeStatusUpdater = nm.getNodeStatusUpdater();
     NodeHealthCheckerService nodeHealthChecker = nm.getNodeHealthChecker();

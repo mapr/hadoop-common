@@ -90,6 +90,7 @@ public class NodeManagerTestBase {
     conf.set(YarnConfiguration.NM_LOCAL_DIRS, nmLocalDir.getAbsolutePath());
     conf.setLong(YarnConfiguration.NM_LOG_RETAIN_SECONDS, 1);
     conf.setBoolean(YarnConfiguration.NM_STATUS_SERVER_ENABLED, false);
+    conf.setBoolean(YarnConfiguration.NM_RECOVERY_ENABLED, false);
     return conf;
   }
 
