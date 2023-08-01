@@ -265,7 +265,6 @@ public class ContainerLaunch implements Callable<Integer> {
       Map<Path, List<String>> localResources = getLocalizedResources();
 
       final String user = container.getUser();
-      final String group = UserGroupInformation.createRemoteUser(user).getPrimaryGroupName();
       // /////////////////////////// Variable expansion
       // Before the container script gets written out.
       List<String> newCmds = new ArrayList<String>(command.size());
@@ -278,6 +277,7 @@ public class ContainerLaunch implements Callable<Integer> {
       // to reference user or container-defined variables.
       Map<String, String> environment = launchContext.getEnvironment();
       if (TaskLogUtil.isDfsLoggingEnabled(environment)) {
+        final String group = UserGroupInformation.createRemoteUser(user).getPrimaryGroupName();
         containerLogDir = createLogDir(appIdStr, relativeContainerLogDir, user, group);
       } else {
         containerLogDir =
