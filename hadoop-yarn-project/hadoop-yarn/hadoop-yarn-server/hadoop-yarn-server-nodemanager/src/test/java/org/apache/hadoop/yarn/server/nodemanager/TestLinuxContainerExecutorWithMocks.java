@@ -242,7 +242,7 @@ public class TestLinuxContainerExecutorWithMocks {
           YarnConfiguration.DEFAULT_NM_NONSECURE_MODE_LOCAL_USER,
           appSubmitter, cmd, appId, containerId,
           workDir.toString(), scriptPath.toUri().getPath(),
-          tokensPath.toUri().getPath(), "--https",
+          tokensPath.toUri().getPath(), "", "", "--https",
           keystorePath.toUri().getPath(), truststorePath.toUri().getPath(),
           pidFile.toString(),
           StringUtils.join(PrivilegedOperation.LINUX_FILE_PATH_SEPARATOR,
@@ -255,7 +255,7 @@ public class TestLinuxContainerExecutorWithMocks {
           YarnConfiguration.DEFAULT_NM_NONSECURE_MODE_LOCAL_USER,
           appSubmitter, cmd, appId, containerId,
           workDir.toString(), scriptPath.toUri().getPath(),
-          tokensPath.toUri().getPath(), "--http", pidFile.toString(),
+          tokensPath.toUri().getPath(), "", "", "--http", pidFile.toString(),
           StringUtils.join(PrivilegedOperation.LINUX_FILE_PATH_SEPARATOR,
               dirsHandler.getLocalDirs()),
           StringUtils.join(PrivilegedOperation.LINUX_FILE_PATH_SEPARATOR,
@@ -311,34 +311,34 @@ public class TestLinuxContainerExecutorWithMocks {
           .build());
 
       List<String> result=readMockParams();
-      assertThat(result).hasSize(26);
-      assertThat(result.get(0)).isEqualTo(YarnConfiguration.
-          DEFAULT_NM_NONSECURE_MODE_LOCAL_USER);
+      assertThat(result).hasSize(30);
+      // Workaround to handle YARN-1253.
+      assertThat(result.get(0)).isEqualTo("test");
       assertThat(result.get(1)).isEqualTo("test");
       assertThat(result.get(2)).isEqualTo("0");
       assertThat(result.get(3)).isEqualTo("application_0");
       assertThat(result.get(4)).isEqualTo("12345");
       assertThat(result.get(5)).isEqualTo("/bin/nmPrivateCTokensPath");
-      assertThat(result.get(9)).isEqualTo("-classpath");
-      assertThat(result.get(12)).isEqualTo("-Xmx256m");
-      assertThat(result.get(13)).isEqualTo(
+      assertThat(result.get(11)).isEqualTo("-classpath");
+      assertThat(result.get(14)).isEqualTo("-Xmx256m");
+      assertThat(result.get(17)).isEqualTo(
           "-Dlog4j.configuration=container-log4j.properties" );
-      assertThat(result.get(14)).isEqualTo(
+      assertThat(result.get(18)).isEqualTo(
           String.format("-Dyarn.app.container.log.dir=%s/application_0/12345",
           mockExec.getConf().get(YarnConfiguration.NM_LOG_DIRS)));
-      assertThat(result.get(15)).isEqualTo(
+      assertThat(result.get(19)).isEqualTo(
           "-Dyarn.app.container.log.filesize=0");
-      assertThat(result.get(16)).isEqualTo("-Dhadoop.root.logger=INFO,CLA");
-      assertThat(result.get(17)).isEqualTo(
+      assertThat(result.get(20)).isEqualTo("-Dhadoop.root.logger=INFO,CLA");
+      assertThat(result.get(21)).isEqualTo(
           "-Dhadoop.root.logfile=container-localizer-syslog");
-      assertThat(result.get(18)).isEqualTo("org.apache.hadoop.yarn.server." +
+      assertThat(result.get(22)).isEqualTo("org.apache.hadoop.yarn.server." +
           "nodemanager.containermanager.localizer.ContainerLocalizer");
-      assertThat(result.get(19)).isEqualTo("test");
-      assertThat(result.get(20)).isEqualTo("application_0");
-      assertThat(result.get(21)).isEqualTo("12345");
-      assertThat(result.get(22)).isEqualTo("localhost");
-      assertThat(result.get(23)).isEqualTo("8040");
-      assertThat(result.get(24)).isEqualTo("nmPrivateCTokensPath");
+      assertThat(result.get(23)).isEqualTo("test");
+      assertThat(result.get(24)).isEqualTo("application_0");
+      assertThat(result.get(25)).isEqualTo("12345");
+      assertThat(result.get(26)).isEqualTo("localhost");
+      assertThat(result.get(27)).isEqualTo("8040");
+      assertThat(result.get(28)).isEqualTo("nmPrivateCTokensPath");
 
     } catch (InterruptedException e) {
       LOG.error("Error:"+e.getMessage(),e);
@@ -455,7 +455,7 @@ public class TestLinuxContainerExecutorWithMocks {
         assertEquals(Arrays.asList(YarnConfiguration.
                 DEFAULT_NM_NONSECURE_MODE_LOCAL_USER,
             appSubmitter, cmd, appId, containerId,
-            workDir.toString(), "/bin/echo", "/dev/null", "--http",
+            workDir.toString(), "/bin/echo", "/dev/null", "", "", "--http",
             pidFile.toString(),
             StringUtils.join(PrivilegedOperation.LINUX_FILE_PATH_SEPARATOR,
                 dirsHandler.getLocalDirs()),
