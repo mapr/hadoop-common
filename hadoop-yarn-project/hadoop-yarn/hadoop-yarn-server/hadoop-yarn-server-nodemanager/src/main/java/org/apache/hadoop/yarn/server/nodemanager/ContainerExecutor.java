@@ -71,6 +71,7 @@ import org.apache.hadoop.yarn.server.nodemanager.util.ProcessIdFileReader;
 import org.apache.hadoop.util.Shell;
 import org.apache.hadoop.util.StringUtils;
 
+import static org.apache.hadoop.yarn.api.ApplicationConstants.Environment.LD_LIBRARY_PATH;
 import static org.apache.hadoop.yarn.server.nodemanager.containermanager.launcher.ContainerLaunch.CONTAINER_PRE_LAUNCH_STDERR;
 import static org.apache.hadoop.yarn.server.nodemanager.containermanager.launcher.ContainerLaunch.CONTAINER_PRE_LAUNCH_STDOUT;
 
@@ -414,6 +415,15 @@ public abstract class ContainerExecutor implements Configurable {
     // Add "set -o pipefail -e" to validate launch_container script.
     sb.setExitOnFailure();
 
+    // Add LD_LIBRARY_PATH env variable first, because ut requires by maprcp tool
+    if (TaskLogUtil.isDfsLoggingEnabled() && environment.containsKey(LD_LIBRARY_PATH.name())) {
+      sb.env(LD_LIBRARY_PATH.name(), environment.get(LD_LIBRARY_PATH.name()));
+    }
+    //Redirect stdout and stderr for launch_container script
+    sb.stdout(logDir, CONTAINER_PRE_LAUNCH_STDOUT);
+    sb.stderr(logDir, CONTAINER_PRE_LAUNCH_STDERR);
+
+
     if (environment != null) {
       sb.echo("Setting up env variables");
       // Whitelist environment variables are treated specially.
@@ -443,10 +453,6 @@ public abstract class ContainerExecutor implements Configurable {
         }
       }
     }
-
-    //Redirect stdout and stderr for launch_container script
-    sb.stdout(logDir, CONTAINER_PRE_LAUNCH_STDOUT);
-    sb.stderr(logDir, CONTAINER_PRE_LAUNCH_STDERR);
 
     if (resources != null) {
       sb.echo("Setting up job resources");
