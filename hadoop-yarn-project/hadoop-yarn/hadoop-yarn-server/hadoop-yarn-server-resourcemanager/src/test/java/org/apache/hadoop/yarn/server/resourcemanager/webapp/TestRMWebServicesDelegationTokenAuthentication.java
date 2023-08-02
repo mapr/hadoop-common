@@ -40,6 +40,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.minikdc.MiniKdc;
@@ -48,6 +49,8 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.KerberosTestUtils;
 import org.apache.hadoop.security.authentication.server.AuthenticationFilter;
 import org.apache.hadoop.security.authentication.server.KerberosAuthenticationHandler;
+import org.apache.hadoop.security.User;
+import org.apache.hadoop.security.rpcauth.KerberosAuthMethod;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.delegation.web.DelegationTokenAuthenticator;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -168,6 +171,10 @@ public class TestRMWebServicesDelegationTokenAuthentication {
       httpSpnegoKeytabFile.getAbsolutePath());
     rmconf.set(CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION,
       "kerberos");
+    rmconf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+            User.class.getName());
+    rmconf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+            KerberosAuthMethod.class.getName());
     rmconf.setBoolean(YarnConfiguration.RM_WEBAPP_DELEGATION_TOKEN_AUTH_FILTER,
       true);
     rmconf.set("hadoop.http.filter.initializers",
@@ -185,6 +192,8 @@ public class TestRMWebServicesDelegationTokenAuthentication {
     rmconf.setBoolean("mockrm.webapp.enabled", true);
     rmconf.set(RM_PROXY_USER_PREFIX + "client.hosts", "*");
     rmconf.set(RM_PROXY_USER_PREFIX + "client.groups", "*");
+    // skip HadoopCoreAuthenticationFilter in the tests
+    rmconf.setBoolean("hadoop.http.core.filter.enable", false);
     UserGroupInformation.setConfiguration(rmconf);
     rm = new MockRM(rmconf);
     rm.start();

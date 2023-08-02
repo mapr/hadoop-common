@@ -35,8 +35,10 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.minikdc.MiniKdc;
+import org.apache.hadoop.security.User;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.KerberosTestUtils;
+import org.apache.hadoop.security.rpcauth.KerberosAuthMethod;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.server.resourcemanager.MockRM;
@@ -90,6 +92,10 @@ public class TestRMWebappAuthentication {
       CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION, "kerberos");
     kerberosConf.set(YarnConfiguration.RM_KEYTAB,
       httpSpnegoKeytabFile.getAbsolutePath());
+    kerberosConf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+            User.class.getName());
+    kerberosConf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+            KerberosAuthMethod.class.getName());
     kerberosConf.setBoolean("mockrm.webapp.enabled", true);
   }
 
@@ -178,7 +184,7 @@ public class TestRMWebappAuthentication {
           .getMarshalledAppInfo(app);
 
     URL url =
-        new URL("http://localhost:8088/ws/v1/cluster/apps/new-application");
+        new URL("http://localhost:8088/ws/v1/cluster/apps/new-application?user.name=dr.who");
     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
     TestRMWebServicesDelegationTokenAuthentication.setupConn(conn, "POST",
       "application/xml", requestBody);
@@ -190,7 +196,7 @@ public class TestRMWebappAuthentication {
       assertEquals(Status.FORBIDDEN.getStatusCode(), conn.getResponseCode());
     }
 
-    url = new URL("http://localhost:8088/ws/v1/cluster/apps");
+    url = new URL("http://localhost:8088/ws/v1/cluster/apps?user.name=dr.who");
     conn = (HttpURLConnection) url.openConnection();
     TestRMWebServicesDelegationTokenAuthentication.setupConn(conn, "POST",
       "application/xml", requestBody);
@@ -205,7 +211,7 @@ public class TestRMWebappAuthentication {
     requestBody = "{ \"state\": \"KILLED\"}";
     url =
         new URL(
-          "http://localhost:8088/ws/v1/cluster/apps/application_123_0/state");
+          "http://localhost:8088/ws/v1/cluster/apps/application_123_0/state?user.name=dr.who");
     conn = (HttpURLConnection) url.openConnection();
     TestRMWebServicesDelegationTokenAuthentication.setupConn(conn, "PUT",
       "application/json", requestBody);
