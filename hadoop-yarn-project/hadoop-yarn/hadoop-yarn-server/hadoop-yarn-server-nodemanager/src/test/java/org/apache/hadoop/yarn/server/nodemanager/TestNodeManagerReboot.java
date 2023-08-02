@@ -325,6 +325,7 @@ public class TestNodeManagerReboot {
       conf.set(YarnConfiguration.NM_LOG_DIRS, logsDir.getAbsolutePath());
       conf.set(YarnConfiguration.NM_LOCAL_DIRS, nmLocalDir.getAbsolutePath());
       conf.setLong(YarnConfiguration.NM_LOG_RETAIN_SECONDS, 1);
+      conf.set(YarnConfiguration.NM_RECOVERY_ENABLED, "false");
       return conf;
     }
   }
