@@ -51,6 +51,8 @@ public final class LogToolUtils {
   public static final String CONTAINER_ON_NODE_PATTERN =
       "Container: %s on %s";
 
+  private static final int DEFAULT_BUFFER_SIZE = 8192;
+
   /**
    * Formats the header of an aggregated log file.
    */
@@ -155,12 +157,16 @@ public final class LogToolUtils {
 
     if (totalBytesToRead > 0) {
       // output log content
-
       is.skip(toSkip);
-      byte[] buf = new byte[8192];
+      byte[] buf = totalBytesToRead > DEFAULT_BUFFER_SIZE ? new byte[DEFAULT_BUFFER_SIZE] : new byte[(int) totalBytesToRead];
       int length;
       while ((length = is.read(buf)) != -1) {
-        os.write(buf, 0, length);
+        if (length != -1) {
+          os.write(buf, 0, length);
+        }
+        totalBytesToRead -= length;
+        if(totalBytesToRead <= 0) break;
+        buf = totalBytesToRead > DEFAULT_BUFFER_SIZE ? new byte[DEFAULT_BUFFER_SIZE] : new byte[(int) totalBytesToRead];
       }
     }
   }
