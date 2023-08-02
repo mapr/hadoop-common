@@ -46,6 +46,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ContainerId;
+import org.apache.hadoop.yarn.api.records.ContainerLaunchContext;
 import org.apache.hadoop.yarn.api.records.impl.pb.ApplicationAttemptIdPBImpl;
 import org.apache.hadoop.yarn.api.records.impl.pb.ApplicationIdPBImpl;
 import org.apache.hadoop.yarn.api.records.impl.pb.ContainerIdPBImpl;
@@ -142,7 +143,7 @@ public class TestContainerLogsPage {
     nmContext.getContainers().put(container1, container);
     List<Path> dirs =
         ContainerLogsUtils.getContainerLogDirs(container1, user, nmContext);
-    File containerLogDir = new File(absLogDir, appId + "/" + container1);
+    Path containerLogDir = new Path(absLogDir.getAbsolutePath(), appId + "/" + container1);
     Assert.assertTrue(dirs.contains(containerLogDir));
   }
 
@@ -312,7 +313,8 @@ public class TestContainerLogsPage {
     
     ContainerId containerId = mock(ContainerIdPBImpl.class);
     when(containerId.getApplicationAttemptId()).thenReturn(appAttemptId);
-    
+    when(containerId.toString()).thenReturn("container_id_1");
+
     List<Path> logDirFiles = ContainerLogsUtils.getContainerLogDirs(
       containerId, localDirs);
     
@@ -359,7 +361,10 @@ public class TestContainerLogsPage {
     when(context.getLocalDirsHandler()).thenReturn(localDirs);
     when(context.getApplications()).thenReturn(applications);
     when(context.getContainers()).thenReturn(containers);
-    
+
+    ContainerLaunchContext launchContext = mock(ContainerLaunchContext.class);
+    when(container.getLaunchContext()).thenReturn(launchContext);
+
     Path logFile = ContainerLogsUtils.getContainerLogFile(containerId,
       "fileName", null, context);
       
