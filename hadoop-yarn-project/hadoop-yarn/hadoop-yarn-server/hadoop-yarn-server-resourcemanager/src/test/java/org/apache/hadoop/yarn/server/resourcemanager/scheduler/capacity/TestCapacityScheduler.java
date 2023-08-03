@@ -394,6 +394,7 @@ public class TestCapacityScheduler {
         CapacitySchedulerConfiguration.ASSIGN_MULTIPLE_ENABLED, false);
     setupQueueConfiguration(csConf);
     YarnConfiguration conf = new YarnConfiguration(csConf);
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     conf.setClass(YarnConfiguration.RM_SCHEDULER, CapacityScheduler.class,
         ResourceScheduler.class);
     rm.init(conf);
@@ -499,6 +500,7 @@ public class TestCapacityScheduler {
     csConf.setInt(CapacitySchedulerConfiguration.MAX_ASSIGN_PER_HEARTBEAT, 2);
     setupQueueConfiguration(csConf);
     YarnConfiguration conf = new YarnConfiguration(csConf);
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     conf.setClass(YarnConfiguration.RM_SCHEDULER, CapacityScheduler.class,
         ResourceScheduler.class);
     rm.init(conf);
@@ -2956,6 +2958,7 @@ public class TestCapacityScheduler {
     csConf.setUserLimitFactor("root.b", 100);
 
     YarnConfiguration conf=new YarnConfiguration(csConf);
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     conf.setClass(YarnConfiguration.RM_SCHEDULER, CapacityScheduler.class,
         ResourceScheduler.class);
     RMNodeLabelsManager mgr=new NullRMNodeLabelsManager();
