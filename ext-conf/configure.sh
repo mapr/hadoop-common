@@ -180,6 +180,10 @@ function UpdateFileClientConfig() {
         sed -i -e "/yarn.scheduler.capacity.root.default.acl_administer_queue/{n;s|\(<value>\).*\(</value>\)|\1 \2|;}" "$capacitySchedulerConf"
     fi
 
+    if [ -f "$HADOOP_HOME/etc/hadoop/.not_configured_executor" ] && [ -e "$capacitySchedulerConf" ] && grep -q "org.apache.hadoop.yarn.util.resource.DefaultResourceCalculator" "$capacitySchedulerConf"; then
+        sed -i -e 's/'"org.apache.hadoop.yarn.util.resource.DefaultResourceCalculator"'/'"org.apache.hadoop.yarn.util.resource.DominantResourceCalculator"'/' $capacitySchedulerConf
+    fi
+
     # tell mapreduce to use maprfs
     key="<name>mapreduce.use.maprfs<\/name>"
     value="true"
