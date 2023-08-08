@@ -58,6 +58,7 @@ public class TestUnmanagedAMLauncher {
   @BeforeClass
   public static void setup() throws InterruptedException, IOException {
     LOG.info("Starting up YARN cluster");
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     conf.setInt(YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_MB, 128);
     if (yarnCluster == null) {
       yarnCluster = new MiniYARNCluster(

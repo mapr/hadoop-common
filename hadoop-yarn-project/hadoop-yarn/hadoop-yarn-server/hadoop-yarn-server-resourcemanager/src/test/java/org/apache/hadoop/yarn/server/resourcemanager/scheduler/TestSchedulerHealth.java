@@ -66,6 +66,7 @@ public class TestSchedulerHealth {
     YarnConfiguration conf = new YarnConfiguration();
     conf.setClass(YarnConfiguration.RM_SCHEDULER, CapacityScheduler.class,
       ResourceScheduler.class);
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     resourceManager.init(conf);
     resourceManager.getRMContext().getContainerTokenSecretManager()
       .rollMasterKey();

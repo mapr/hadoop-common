@@ -71,6 +71,7 @@ public abstract class ParameterizedSchedulerTestBase {
   public ParameterizedSchedulerTestBase(SchedulerType type)
       throws IOException {
     conf = new YarnConfiguration();
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
 
     QueueMetrics.clearQueueMetrics();
     DefaultMetricsSystem.setMiniClusterMode(true);

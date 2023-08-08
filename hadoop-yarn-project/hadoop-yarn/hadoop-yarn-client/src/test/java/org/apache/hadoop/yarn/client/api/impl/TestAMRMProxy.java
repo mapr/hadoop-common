@@ -68,6 +68,7 @@ public class TestAMRMProxy extends BaseAMRMProxyE2ETest {
         1, 1, 1);
             YarnClient rmClient = YarnClient.createYarnClient()) {
       Configuration conf = new YarnConfiguration();
+      conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
       conf.setBoolean(YarnConfiguration.AMRM_PROXY_ENABLED, true);
       // Make sure if using FairScheduler that we can assign multiple containers
       // in a single heartbeat later
@@ -155,6 +156,7 @@ public class TestAMRMProxy extends BaseAMRMProxyE2ETest {
         new MiniYARNCluster("testE2ETokenRenewal", 1, 1, 1);
            YarnClient rmClient = YarnClient.createYarnClient()) {
       Configuration conf = new YarnConfiguration();
+      conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
       conf.setBoolean(YarnConfiguration.AMRM_PROXY_ENABLED, true);
       conf.setInt(YarnConfiguration.RM_NM_EXPIRY_INTERVAL_MS, 4500);
       conf.setInt(YarnConfiguration.RM_NM_HEARTBEAT_INTERVAL_MS, 4500);
@@ -229,6 +231,7 @@ public class TestAMRMProxy extends BaseAMRMProxyE2ETest {
         1, 1, 1);
             YarnClient rmClient = YarnClient.createYarnClient()) {
       Configuration conf = new YarnConfiguration();
+      conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
       conf.setBoolean(YarnConfiguration.AMRM_PROXY_ENABLED, true);
       cluster.init(conf);
       cluster.start();

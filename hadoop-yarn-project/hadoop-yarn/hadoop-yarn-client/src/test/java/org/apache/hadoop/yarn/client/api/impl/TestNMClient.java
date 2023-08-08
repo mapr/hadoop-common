@@ -162,6 +162,7 @@ public class TestNMClient {
   public void setup() throws YarnException, IOException {
     // start minicluster
     conf = new YarnConfiguration();
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     // Turn on state tracking
     conf.set(YarnConfiguration.NM_CONTAINER_STATE_TRANSITION_LISTENERS,
         DebugSumContainerStateListener.class.getName());

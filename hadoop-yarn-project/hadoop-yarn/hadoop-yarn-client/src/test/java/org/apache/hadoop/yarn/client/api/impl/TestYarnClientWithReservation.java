@@ -127,6 +127,7 @@ public class TestYarnClientWithReservation {
           CapacityScheduler.class.getName());
     }
 
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     conf.setBoolean(YarnConfiguration.RM_RESERVATION_SYSTEM_ENABLE, true);
     return conf;
   }

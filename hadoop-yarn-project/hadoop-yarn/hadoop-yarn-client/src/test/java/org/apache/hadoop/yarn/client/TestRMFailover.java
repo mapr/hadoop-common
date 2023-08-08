@@ -87,6 +87,7 @@ public class TestRMFailover extends ClientBaseWithFixes {
   public void setup() throws IOException {
     fakeAppId = ApplicationId.newInstance(System.currentTimeMillis(), 0);
     conf = new YarnConfiguration();
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     conf.setBoolean(YarnConfiguration.RM_HA_ENABLED, true);
     conf.set(YarnConfiguration.RM_HA_IDS, RM1_NODE_ID + "," + RM2_NODE_ID);
     HATestUtil.setRpcAddressForRM(RM1_NODE_ID, RM1_PORT_BASE, conf);

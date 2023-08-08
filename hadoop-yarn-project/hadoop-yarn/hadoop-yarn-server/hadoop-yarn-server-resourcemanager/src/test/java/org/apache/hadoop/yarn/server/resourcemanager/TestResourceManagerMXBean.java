@@ -40,6 +40,7 @@ public class TestResourceManagerMXBean {
   public void testResourceManagerMXBean() throws Exception {
     try (ResourceManager resourceManager = new ResourceManager()) {
       Configuration conf = new YarnConfiguration();
+      conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
       UserGroupInformation.setConfiguration(conf);
       resourceManager.init(conf);
 

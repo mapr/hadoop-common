@@ -217,7 +217,9 @@ public abstract class DistributedShellBaseTest {
 
   @Before
   public void setup() throws Exception {
-    setupInternal(NUM_NMS, new YarnConfiguration());
+    YarnConfiguration conf = new YarnConfiguration();
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
+    setupInternal(NUM_NMS, conf);
   }
 
   @After

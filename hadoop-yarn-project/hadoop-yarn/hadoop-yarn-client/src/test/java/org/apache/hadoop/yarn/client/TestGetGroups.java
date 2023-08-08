@@ -50,6 +50,7 @@ public class TestGetGroups extends GetGroupsTestBase {
   @BeforeClass
   public static void setUpResourceManager() throws InterruptedException {
     conf = new YarnConfiguration();
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     resourceManager = new ResourceManager() {
       @Override
       protected void doSecureLogin() throws IOException {

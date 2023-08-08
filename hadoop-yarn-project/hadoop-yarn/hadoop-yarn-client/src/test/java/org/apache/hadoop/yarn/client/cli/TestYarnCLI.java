@@ -1744,6 +1744,7 @@ public class TestYarnCLI {
   public void testGetQueueInfoOverrideIntraQueuePreemption() throws Exception {
     CapacitySchedulerConfiguration conf = new CapacitySchedulerConfiguration();
     ReservationSystemTestUtil.setupQueueConfiguration(conf);
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     conf.setClass(YarnConfiguration.RM_SCHEDULER, CapacityScheduler.class,
         ResourceScheduler.class);
     conf.setBoolean(YarnConfiguration.RM_SCHEDULER_ENABLE_MONITORS, true);
@@ -1808,6 +1809,7 @@ public class TestYarnCLI {
   public void testGetQueueInfoPreemptionEnabled() throws Exception {
     CapacitySchedulerConfiguration conf = new CapacitySchedulerConfiguration();
     ReservationSystemTestUtil.setupQueueConfiguration(conf);
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     conf.setClass(YarnConfiguration.RM_SCHEDULER, CapacityScheduler.class,
         ResourceScheduler.class);
     conf.setBoolean(YarnConfiguration.RM_SCHEDULER_ENABLE_MONITORS, true);
@@ -1851,6 +1853,7 @@ public class TestYarnCLI {
   public void testGetQueueInfoPreemptionDisabled() throws Exception {
     CapacitySchedulerConfiguration conf = new CapacitySchedulerConfiguration();
     ReservationSystemTestUtil.setupQueueConfiguration(conf);
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     conf.setClass(YarnConfiguration.RM_SCHEDULER, CapacityScheduler.class,
         ResourceScheduler.class);
     conf.setBoolean(YarnConfiguration.RM_SCHEDULER_ENABLE_MONITORS, true);

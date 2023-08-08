@@ -31,6 +31,11 @@
   <name>Apache Hadoop YARN TimelineService HBase Backend</name>
   <packaging>pom</packaging>
 
+  <properties>
+    <hadoop.common.build.dir>${basedir}/../../../../../hadoop-common-project/hadoop-common/target</hadoop.common.build.dir>
+  </properties>
+
+
   <modules>
     <module>hadoop-yarn-server-timelineservice-hbase-client</module>
     <module>hadoop-yarn-server-timelineservice-hbase-common</module>

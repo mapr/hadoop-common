@@ -80,7 +80,9 @@ public class TestDSWithMultipleNodeManager {
   @Before
   public void setup() throws Exception {
     distShellTest = new TestDSTimelineV10();
-    distShellTest.setupInternal(NUM_NMS, new YarnConfiguration());
+    YarnConfiguration conf = new YarnConfiguration();
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
+    distShellTest.setupInternal(NUM_NMS, conf);
   }
 
   @After

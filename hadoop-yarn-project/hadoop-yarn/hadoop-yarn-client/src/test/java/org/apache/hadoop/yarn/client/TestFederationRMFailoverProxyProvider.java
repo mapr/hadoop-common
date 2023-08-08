@@ -71,6 +71,7 @@ public class TestFederationRMFailoverProxyProvider {
   @Before
   public void setUp() throws IOException, YarnException {
     conf = new YarnConfiguration();
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
 
     // Configure Facade cache to use a very long ttl
     conf.setInt(YarnConfiguration.FEDERATION_CACHE_TIME_TO_LIVE_SECS, 60 * 60);

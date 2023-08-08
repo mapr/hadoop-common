@@ -35,10 +35,13 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 
+import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.minikdc.KerberosSecurityTestcase;
 import org.apache.hadoop.security.SecurityUtil;
+import org.apache.hadoop.security.User;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.rpcauth.KerberosAuthMethod;
 import org.apache.hadoop.security.SaslRpcServer.QualityOfProtection;
 import org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
@@ -136,6 +139,10 @@ public class TestSecureApiServiceClient extends KerberosSecurityTestcase {
         server2Principal);
     SecurityUtil.setAuthenticationMethod(AuthenticationMethod.KERBEROS,
         testConf);
+    testConf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+            User.class.getName());
+    testConf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+            KerberosAuthMethod.class.getName());
     UserGroupInformation.setConfiguration(testConf);
     UserGroupInformation.setShouldRenewImmediatelyForTests(true);
     props = new HashMap<String, String>();

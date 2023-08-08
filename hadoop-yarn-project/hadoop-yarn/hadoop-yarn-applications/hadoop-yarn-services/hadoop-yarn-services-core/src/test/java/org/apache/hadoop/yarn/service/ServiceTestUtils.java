@@ -221,6 +221,7 @@ public class ServiceTestUtils {
       conf.setInt(YarnConfiguration.RM_MAX_COMPLETED_APPLICATIONS,
           YarnConfiguration.DEFAULT_RM_MAX_COMPLETED_APPLICATIONS);
     }
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     conf.setInt(YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_MB, 128);
     // reduce the teardown waiting time
     conf.setLong(YarnConfiguration.DISPATCHER_DRAIN_EVENTS_TIMEOUT, 1000);

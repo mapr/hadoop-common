@@ -122,6 +122,7 @@ public class TestOpportunisticContainerAllocationE2E {
   public static void setup() throws Exception {
     // start minicluster
     conf = new YarnConfiguration();
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     conf.setLong(
         YarnConfiguration.RM_AMRM_TOKEN_MASTER_KEY_ROLLING_INTERVAL_SECS,
         ROLLING_INTERVAL_SEC);

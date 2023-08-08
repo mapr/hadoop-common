@@ -41,6 +41,7 @@ public class TestMiniYarnCluster {
      * and enableAHS flag == false
      */
     conf.setBoolean(YarnConfiguration.TIMELINE_SERVICE_ENABLED, false);
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     enableAHS = false;
     try (MiniYARNCluster cluster =
         new MiniYARNCluster(TestMiniYarnCluster.class.getSimpleName(),
@@ -114,6 +115,7 @@ public class TestMiniYarnCluster {
     String RM1_NODE_ID = "rm1", RM2_NODE_ID = "rm2";
     int RM1_PORT_BASE = 10000, RM2_PORT_BASE = 20000;
     Configuration conf = new YarnConfiguration();
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     conf.set(YarnConfiguration.RM_CLUSTER_ID, "yarn-test-cluster");
     conf.setBoolean(YarnConfiguration.RECOVERY_ENABLED, true);
     conf.setBoolean(YarnConfiguration.RM_HA_ENABLED, true);

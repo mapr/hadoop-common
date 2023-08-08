@@ -77,6 +77,8 @@ public class TestResourceManagerAdministrationProtocolPBClientImpl {
           InterruptedException {
     Configuration.addDefaultResource("config-with-security.xml");
     Configuration configuration = new YarnConfiguration();
+    configuration.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
+
     resourceManager = new ResourceManager() {
       @Override
       protected void doSecureLogin() throws IOException {

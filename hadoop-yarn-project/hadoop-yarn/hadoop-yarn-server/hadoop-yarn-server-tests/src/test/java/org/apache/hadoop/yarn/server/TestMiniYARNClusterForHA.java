@@ -36,6 +36,7 @@ public class TestMiniYARNClusterForHA {
   @Before
   public void setup() throws IOException, InterruptedException {
     Configuration conf = new YarnConfiguration();
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     conf.setBoolean(YarnConfiguration.AUTO_FAILOVER_ENABLED, false);
     conf.set(YarnConfiguration.RM_WEBAPP_ADDRESS, "localhost:0");
 

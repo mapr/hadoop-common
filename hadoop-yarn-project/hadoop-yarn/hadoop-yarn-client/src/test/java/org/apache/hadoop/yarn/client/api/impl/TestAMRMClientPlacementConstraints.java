@@ -66,6 +66,7 @@ public class TestAMRMClientPlacementConstraints extends BaseAMRMClientTest {
   @Before
   public void setup() throws Exception {
     conf = new YarnConfiguration();
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     allocatedContainers = new ArrayList<>();
     rejectedSchedulingRequests = new ArrayList<>();
     pcMapping = new HashMap<>();
