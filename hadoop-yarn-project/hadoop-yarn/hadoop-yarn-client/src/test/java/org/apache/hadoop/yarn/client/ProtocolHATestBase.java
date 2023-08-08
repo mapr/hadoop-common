@@ -169,6 +169,7 @@ public abstract class ProtocolHATestBase extends ClientBaseWithFixes {
     failoverThread = null;
     keepRunning = true;
     conf = new YarnConfiguration();
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     conf.setBoolean(YarnConfiguration.RM_HA_ENABLED, true);
     conf.setInt(YarnConfiguration.CLIENT_FAILOVER_MAX_ATTEMPTS, 10);
     conf.set(YarnConfiguration.RM_HA_IDS, RM1_NODE_ID + "," + RM2_NODE_ID);

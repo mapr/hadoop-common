@@ -68,6 +68,7 @@ public class TestNoHaRMFailoverProxyProvider {
   @Before
   public void setUp() throws IOException, YarnException {
     conf = new YarnConfiguration();
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
   }
 
   /**

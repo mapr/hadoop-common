@@ -34,10 +34,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.io.DataInputBuffer;
 import org.apache.hadoop.minikdc.KerberosSecurityTestcase;
+import org.apache.hadoop.security.User;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.rpcauth.KerberosAuthMethod;
 import org.apache.hadoop.security.token.SecretManager.InvalidToken;
 import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.yarn.api.ContainerManagementProtocol;
@@ -103,6 +106,7 @@ public class TestContainerManagerSecurity extends KerberosSecurityTestcase {
 
   @BeforeEach
   public void setup() throws Exception {
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     testRootDir.mkdirs();
     httpSpnegoKeytabFile.deleteOnExit();
     startMiniKdc();
@@ -133,6 +137,10 @@ public class TestContainerManagerSecurity extends KerberosSecurityTestcase {
     Configuration configurationWithSecurity = new Configuration();
     configurationWithSecurity.set(
         CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION, "kerberos");
+    configurationWithSecurity.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+        User.class.getName());
+    configurationWithSecurity.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+        KerberosAuthMethod.class.getName());
     configurationWithSecurity.set(
         YarnConfiguration.RM_WEBAPP_SPNEGO_USER_NAME_KEY, httpSpnegoPrincipal);
     configurationWithSecurity.set(

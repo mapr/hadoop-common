@@ -73,6 +73,7 @@ public class TestResourceManager {
   @Before
   public void setUp() throws Exception {
     YarnConfiguration conf = new YarnConfiguration();
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     UserGroupInformation.setConfiguration(conf);
     DefaultMetricsSystem.setMiniClusterMode(true);
     resourceManager = new ResourceManager();

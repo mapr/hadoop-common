@@ -78,6 +78,7 @@ public class TestMiniYarnClusterNodeUtilization {
     conf = new YarnConfiguration();
     conf.set(YarnConfiguration.RM_WEBAPP_ADDRESS, "localhost:0");
     conf.setInt(YarnConfiguration.RM_NM_HEARTBEAT_INTERVAL_MS, 100);
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     String name = TestMiniYarnClusterNodeUtilization.class.getName();
     cluster = new MiniYARNCluster(name, NUM_RM, NUM_NM, 1, 1);
     cluster.init(conf);

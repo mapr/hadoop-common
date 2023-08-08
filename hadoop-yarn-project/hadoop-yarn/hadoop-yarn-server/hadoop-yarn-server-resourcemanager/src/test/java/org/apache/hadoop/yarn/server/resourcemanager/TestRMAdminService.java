@@ -128,6 +128,7 @@ public class TestRMAdminService {
     DefaultMetricsSystem.setMiniClusterMode(true);
 
     configuration = new YarnConfiguration();
+    configuration.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     configuration.set(YarnConfiguration.RM_SCHEDULER,
         CapacityScheduler.class.getCanonicalName());
     fs = FileSystem.get(configuration);

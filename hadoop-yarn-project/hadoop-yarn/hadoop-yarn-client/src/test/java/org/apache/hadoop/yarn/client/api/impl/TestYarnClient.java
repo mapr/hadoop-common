@@ -324,6 +324,7 @@ public class TestYarnClient extends ParameterizedSchedulerTestBase {
       YarnConfiguration conf = new YarnConfiguration();
       conf.set(YarnConfiguration.RM_SCHEDULER,
         CapacityScheduler.class.getName());
+      conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
       cluster.init(conf);
       cluster.start();
       final Configuration yarnConf = cluster.getConfig();

@@ -323,6 +323,7 @@ public class TestYarnNativeServices extends ServiceTestUtils {
   @Test(timeout = 200000)
   public void testRecoverComponentsAfterRMRestart() throws Exception {
     YarnConfiguration conf = new YarnConfiguration();
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     conf.setBoolean(YarnConfiguration.RECOVERY_ENABLED, true);
     conf.setBoolean(
         YarnConfiguration.RM_WORK_PRESERVING_RECOVERY_ENABLED, true);
@@ -523,6 +524,7 @@ public class TestYarnNativeServices extends ServiceTestUtils {
     // We need to enable scheduler placement-constraint at the cluster level to
     // let apps use placement policies.
     YarnConfiguration conf = new YarnConfiguration();
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     conf.set(YarnConfiguration.RM_PLACEMENT_CONSTRAINTS_HANDLER,
         YarnConfiguration.SCHEDULER_RM_PLACEMENT_CONSTRAINTS_HANDLER);
     conf.setInt(YarnConfiguration.RM_MAX_COMPLETED_APPLICATIONS,
@@ -734,6 +736,7 @@ public class TestYarnNativeServices extends ServiceTestUtils {
     // We need to enable scheduler placement-constraint at the cluster level to
     // let apps use placement policies.
     YarnConfiguration conf = new YarnConfiguration();
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     conf.set(YarnConfiguration.RM_PLACEMENT_CONSTRAINTS_HANDLER,
         YarnConfiguration.SCHEDULER_RM_PLACEMENT_CONSTRAINTS_HANDLER);
     conf.setInt(YarnConfiguration.RM_MAX_COMPLETED_APPLICATIONS,
@@ -925,6 +928,7 @@ public class TestYarnNativeServices extends ServiceTestUtils {
   @Test (timeout = 200000)
   public void testRestartServiceForNonExistingInRM() throws Exception {
     YarnConfiguration conf = new YarnConfiguration();
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     conf.setInt(YarnConfiguration.RM_MAX_COMPLETED_APPLICATIONS, 0);
     setConf(conf);
     setupInternal(NUM_NMS);

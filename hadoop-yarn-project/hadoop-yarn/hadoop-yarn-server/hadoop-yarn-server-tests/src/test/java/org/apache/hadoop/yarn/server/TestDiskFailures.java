@@ -151,6 +151,7 @@ public class TestDiskFailures {
                                          : YarnConfiguration.NM_LOG_DIRS;
 
     Configuration conf = new Configuration();
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     // set disk health check interval to a large value to effectively disable
     // disk health check done internally in LocalDirsHandlerService"
     conf.setLong(YarnConfiguration.NM_DISK_HEALTH_CHECK_INTERVAL_MS,

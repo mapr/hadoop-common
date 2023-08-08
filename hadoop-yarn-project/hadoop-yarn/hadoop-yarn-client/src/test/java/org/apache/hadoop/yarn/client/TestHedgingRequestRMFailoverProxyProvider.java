@@ -37,6 +37,7 @@ public class TestHedgingRequestRMFailoverProxyProvider {
   public void testHedgingRequestProxyProvider() throws Exception {
     Configuration conf = new YarnConfiguration();
 
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     conf.setBoolean(YarnConfiguration.RM_HA_ENABLED, true);
     conf.setBoolean(YarnConfiguration.AUTO_FAILOVER_ENABLED, false);
     conf.set(YarnConfiguration.RM_CLUSTER_ID, "cluster1");

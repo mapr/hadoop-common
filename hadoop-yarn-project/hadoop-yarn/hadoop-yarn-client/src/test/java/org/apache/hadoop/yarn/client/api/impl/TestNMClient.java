@@ -126,6 +126,7 @@ public class TestNMClient {
 
   public void setup() throws YarnException, IOException, InterruptedException, TimeoutException {
     conf = new YarnConfiguration();
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     conf.set(YarnConfiguration.NM_CONTAINER_STATE_TRANSITION_LISTENERS,
         DebugSumContainerStateListener.class.getName());
     startYarnCluster();

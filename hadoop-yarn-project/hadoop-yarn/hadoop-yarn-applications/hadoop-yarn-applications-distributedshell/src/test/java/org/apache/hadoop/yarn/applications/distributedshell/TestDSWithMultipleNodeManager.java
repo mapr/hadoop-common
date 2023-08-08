@@ -97,6 +97,7 @@ public class TestDSWithMultipleNodeManager {
   private YarnConfiguration getConfiguration(
       boolean multiNodePlacementConfigs) {
     YarnConfiguration conf = new YarnConfiguration();
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     if (multiNodePlacementConfigs) {
       conf.set(CapacitySchedulerConfiguration.RESOURCE_CALCULATOR_CLASS,
           DominantResourceCalculator.class.getName());
