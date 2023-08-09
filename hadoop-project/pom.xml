@@ -2806,8 +2806,8 @@
       </activation>
       <properties>
         <hbase.version>${hbase.one.version}</hbase.version>
-        <hbase-compatible-hadoop.version>2.8.5</hbase-compatible-hadoop.version>
-        <hbase-compatible-guava.version>12.0.1</hbase-compatible-guava.version>
+        <hbase-compatible-hadoop.version>${parent.version}</hbase-compatible-hadoop.version>
+        <hbase-compatible-guava.version>${guava.version}</hbase-compatible-guava.version>
         <hbase-compatible-guice.version>4.0</hbase-compatible-guice.version>
         <hbase-server-artifactid>hadoop-yarn-server-timelineservice-hbase-server-1</hbase-server-artifactid>
       </properties>
