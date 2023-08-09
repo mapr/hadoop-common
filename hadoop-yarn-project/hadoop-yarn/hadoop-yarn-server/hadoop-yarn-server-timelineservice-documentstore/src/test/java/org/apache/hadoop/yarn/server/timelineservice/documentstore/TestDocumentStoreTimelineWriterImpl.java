@@ -77,8 +77,6 @@ public class TestDocumentStoreTimelineWriterImpl {
     entities.addEntity(DocumentStoreTestUtils.bakeTimelineEntityDoc()
         .fetchTimelineEntity());
 
-    PowerMockito.verifyStatic(DocumentStoreFactory.class);
-
     TimelineCollectorContext context = new TimelineCollectorContext();
     context.setFlowName("TestFlow");
     context.setAppId("DUMMY_APP_ID");
