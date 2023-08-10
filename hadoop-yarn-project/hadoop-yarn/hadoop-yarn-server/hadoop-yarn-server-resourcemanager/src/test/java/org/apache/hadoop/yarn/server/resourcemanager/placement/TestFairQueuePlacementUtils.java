@@ -77,7 +77,7 @@ public class TestFairQueuePlacementUtils {
   public void testAssureRoot() {
     // permutations of rooted queue names
     final String queueName = "base";
-    final String rootOnly = "root";
+    final String rootOnly = "root.root";
     final String rootNoDot = "rootbase";
     final String alreadyRoot = "root.base";
 
