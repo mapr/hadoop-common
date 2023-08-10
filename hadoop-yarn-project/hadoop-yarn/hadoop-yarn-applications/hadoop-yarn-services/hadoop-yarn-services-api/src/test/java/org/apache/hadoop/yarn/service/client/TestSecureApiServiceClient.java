@@ -143,6 +143,7 @@ public class TestSecureApiServiceClient extends KerberosSecurityTestcase {
             User.class.getName());
     testConf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
             KerberosAuthMethod.class.getName());
+    System.setProperty("hadoop.login", "kerberos");
     UserGroupInformation.setConfiguration(testConf);
     UserGroupInformation.setShouldRenewImmediatelyForTests(true);
     props = new HashMap<String, String>();
