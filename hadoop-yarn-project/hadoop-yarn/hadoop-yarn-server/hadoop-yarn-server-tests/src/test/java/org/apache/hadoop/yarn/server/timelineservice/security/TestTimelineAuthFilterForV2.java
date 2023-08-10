@@ -154,6 +154,7 @@ public class TestTimelineAuthFilterForV2 {
       conf = new Configuration(false);
       conf.setClass("fs.file.impl", RawLocalFileSystem.class,
           FileSystem.class);
+      System.setProperty("hadoop.login", "kerberos");
       conf.setStrings(TimelineAuthenticationFilterInitializer.PREFIX + "type",
           "kerberos");
       conf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
