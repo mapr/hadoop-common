@@ -66,6 +66,14 @@
           <groupId>org.projectlombok</groupId>
           <artifactId>lombok</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>net.bytebuddy</groupId>
+          <artifactId>byte-buddy</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>net.bytebuddy</groupId>
+          <artifactId>byte-buddy-agent</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
