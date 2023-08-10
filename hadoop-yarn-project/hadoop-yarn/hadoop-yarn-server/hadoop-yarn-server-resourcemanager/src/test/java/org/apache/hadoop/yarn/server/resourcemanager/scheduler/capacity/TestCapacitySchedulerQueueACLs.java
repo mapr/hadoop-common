@@ -126,6 +126,9 @@ public class TestCapacitySchedulerQueueACLs extends QueueACLsTestBase {
     if (rootAcl != null) {
       setAdminAndSubmitACL(csConf, rootAcl,
           CapacitySchedulerConfiguration.ROOT);
+    } else {
+      setAdminAndSubmitACL(csConf, "*",
+              CapacitySchedulerConfiguration.ROOT);
     }
 
     if (queueDAcl != null) {
