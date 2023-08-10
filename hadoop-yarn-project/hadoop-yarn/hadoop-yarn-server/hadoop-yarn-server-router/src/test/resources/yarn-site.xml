@@ -51,4 +51,8 @@
     <name>yarn.router.interceptor.allow-partial-result.enable</name>
     <value>true</value>
   </property>
+  <property>
+    <name>yarn.webapp.api-service.enable</name>
+    <value>false</value>
+  </property>
 </configuration>
