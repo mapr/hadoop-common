@@ -92,7 +92,7 @@ public class ReservationACLsTestBase extends ACLsTestBase {
   @Parameterized.Parameters
   public static Collection<Object[]> data() throws IOException {
     return Arrays.asList(new Object[][] {
-            { createCapacitySchedulerConfiguration(), false },
+            { createCapacitySchedulerConfiguration(), true },
             { createFairSchedulerConfiguration(), true }
     });
   }
