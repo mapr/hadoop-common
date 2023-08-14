@@ -105,7 +105,7 @@
     <findbugs.version>3.0.5</findbugs.version>
     <dnsjava.version>2.1.7</dnsjava.version>
 
-    <guava.version>31.1-jre</guava.version>
+    <guava.version>32.0.1-jre</guava.version>
     <guice.version>4.0</guice.version>
     <joda-time.version>2.9.9</joda-time.version>
 
