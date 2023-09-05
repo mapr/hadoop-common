@@ -203,7 +203,11 @@ function removeDirAtVolumePath() {
 
 function createNewTTVolume() {
     echo `date +"%Y-%m-%d %T"` INFO A new $LONG_NAME volume will be created.  >> $logFile
-    runCommandWithTimeout 1 180 3 1 "maprcli volume create -name $vol -path $mountpath -replication 1 -localvolumehost $hostname -localvolumeport $mfsport -shufflevolume true -rereplicationtimeoutsec 300"
+    if [ $computeNode -eq 0]; then
+        runCommandWithTimeout 1 180 3 1 "maprcli volume create -name $vol -path $mountpath -replication 1 -localvolumehost $hostname -localvolumeport $mfsport -shufflevolume true -rereplicationtimeoutsec 300"
+    else
+        runCommandWithTimeout 1 180 3 1 "maprcli volume create -name $vol -path $mountpath -replication 1 -shufflevolume true -rereplicationtimeoutsec 300"
+    fi
     runCommandWithTimeout 1 180 3 1 "maprcli volume info -name $vol -json"
     mountdir=`grep \"mountdir\": $commandOutputFile | cut -f 4 -d \"`
     mounted=`grep \"mounted\": $commandOutputFile | cut -f 2 -d : | cut -f 1 -d ,`
@@ -257,6 +261,7 @@ commandOutputFile="${INSTALL_DIR}/logs/create${SHORT_NAME}Volume.`id -u`.cmd.out
 . $INSTALL_DIR/server/scripts-common.sh
 exitForUsage=0
 fsUnderMaintenance=0
+computeNode=0
 
 # Parse arguments to script
 hostname=$1
@@ -285,11 +290,22 @@ if [ $exitForUsage -eq 1 ]; then
     exit $BAD_USAGE
 fi
 
-#Detect the MFS port
-mfsconf=$INSTALL_DIR/conf/mfs.conf
-mfsport=$(awk -F= '/^mfs.server.port/ {print $2}' $mfsconf)
-if [ "$mfsport" == "" ]; then
-    echo >&2 "INFO mfs port not present in $mfsconf, using default setting of 5660"
+#Detect computeNode
+if [ ! -f $INSTALL_DIR/roles/fileserver ]; then
+    computeNode=1
+    echo `date +"%Y-%m-%d %T"` INFO This is a compute node. Creating NM volumes on remote MFS >> $logFile
+fi
+
+if [ $computeNode -eq 0 ]; then
+    #Detect the MFS port
+    mfsconf=$INSTALL_DIR/conf/mfs.conf
+    mfsport=$(awk -F= '/^mfs.server.port/ {print $2}' $mfsconf)
+    if [ "$mfsport" == "" ]; then
+        echo >&2 "INFO mfs port not present in $mfsconf, using default setting of 5660"
+        mfsport=5660
+    fi
+else
+    #Set default mfs port for compute node
     mfsport=5660
 fi
 
@@ -344,10 +360,17 @@ keepExistingContent=0
 
 echo `date +"%Y-%m-%d %T"` INFO Checking if MapRFS is online >> $logFile
 runCommandWithTimeout 1 600 1000 1 "hadoop fs -stat /"
-runCommandWithTimeout 1 60 1000 1 "hadoop fs -stat $parentpath"
-echo `date +"%Y-%m-%d %T"` INFO MapRFS is online.  Checking whether MFS on this node is online >> $logFile
-runCommandWithTimeout 1 300 60 3 "$server/mrconfig -p $mfsport info fsstate"
-echo `date +"%Y-%m-%d %T"` INFO MFS on this node is online >> $logFile
+if [ $computeNode -eq 0 ]; then
+    runCommandWithTimeout 1 60 1000 1 "hadoop fs -stat $parentpath"
+    echo `date +"%Y-%m-%d %T"` INFO MapRFS is online.  Checking whether MFS on this node is online >> $logFile
+    runCommandWithTimeout 1 300 60 3 "$server/mrconfig -p $mfsport info fsstate"
+    echo `date +"%Y-%m-%d %T"` INFO MFS on this node is online >> $logFile
+else
+    hadoop fs -test -d $parentpath
+    if [ $? -ne 0 ]; then
+        runCommandWithTimeout 1 60 1000 1 "hadoop fs -mkdir -p $parentpath"
+    fi
+fi
 echo `date +"%Y-%m-%d %T"` INFO Checking for a volume already mounted at the specified mount path >> $logFile
 runCommandWithTimeout 0 60 1 1 "maprcli volume list -filter [p==$mountpath]and[mt==1] -columns volumename,mounted,mountdir -json"
 ret=$?
@@ -401,7 +424,10 @@ if [ $? -eq 0 ]; then
     repairedVolume=1;
 
     if [ $volid -ne 0 ]; then
-      echo `date +"%Y-%m-%d %T"` INFO TaskTracker volume already exists, checking if the volume can be re-used >> $logFile
+      echo `date +"%Y-%m-%d %T"` INFO NodeManager volume already exists, checking if the volume can be re-used >> $logFile
+      echo $volid
+      echo $rootcid
+      echo $mfsport
       runCommandWithTimeout 0 180 1 1 "$server/mrconfig -p $mfsport volume checkrepaired $volid $rootcid"
       repairedVolume=$?
 
@@ -412,7 +438,7 @@ if [ $? -eq 0 ]; then
       fi
     fi
 
-    if [ $repfactor -eq 1 -a $rackpath -eq 1 -a $notreadonly -eq 1 -a $mounted -eq 1 -a "n$mountdir" = "n$mountpath" -a $repairedVolume -eq 0 ]; then
+    if [ $repfactor -eq 1 -a $notreadonly -eq 1 -a $mounted -eq 1 -a "n$mountdir" = "n$mountpath" -a $repairedVolume -eq 0 ] && [[ $rackpath -eq 1 || $computeNode -eq 1 ]]; then
         echo `date +"%Y-%m-%d %T"` INFO Pre-existing volume is healthy and mounted at the correct path >> $logFile
         volumeOK=1
         keepExistingContent=1
@@ -430,8 +456,8 @@ if [ $? -eq 0 ]; then
         if [ $repfactor -ne 1 ]; then
             echo `date +"%Y-%m-%d %T"` INFO Pre-existing volume does not have the expected replication factor >>$logFile
         fi
-        if [ $rackpath -ne 1 ]; then
-            echo `date +"%Y-%m-%d %T"` INFO Pre-existing volume does not have the expected rackpath >> $logFile
+        if [ $rackpath -ne 1 -a $computeNode -ne 1 ]; then
+            echo `date +"%Y-%m-%d %T"` INFO Pre-existing volume does not have the expected rackpath and this is not a compute node >> $logFile
         fi
         if [ $notreadonly -ne 1 ]; then
             echo `date +"%Y-%m-%d %T"` INFO Pre-existing volume is set to read-only >> $logFile
