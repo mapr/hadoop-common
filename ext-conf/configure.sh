@@ -92,21 +92,23 @@ function isFipsConfigured() {
     # Gets the key store type
     #
     keyStoreType=`awk '/ssl.server.keystore.type/{getline; print}' "$HADOOP_SSL_SERVER_FILE" |sed 's/\s*<value>\(.*\)<\/value>/\1/'`
-    if [ "$keyStoreType" != "bcfks" ]; then
-        isFips="false"
-        return
+    if [ "$keyStoreType" == "bcfks" ]; then
+        isFips="true"
     fi
     #
     # Gets the trust store type
     #
     trustStoreType=`awk '/ssl.server.truststore.type/{getline; print}' "$HADOOP_SSL_SERVER_FILE" |sed 's/\s*<value>\(.*\)<\/value>/\1/'`
-    if [ "$trustStoreType" != "bcfks" ]; then
-        isFips="false"
-        return
+    if [ "$trustStoreType" == "bcfks" ]; then
+        isFips="true"
     fi
-    #
-    # If we get here, then both key and trust stores are BCFKS stores
-    isFips="true"
+    #additional check system fips configuration
+    get_fips_mode=$(sysctl crypto.fips_enabled 2> /dev/null)
+    fips_enabled='crypto.fips_enabled = 1'
+    # If this node's system is FIPS-enabled --> turn on FIPS mode
+    if [ "$get_fips_mode" == "$fips_enabled" ]; then
+          isFips="true"
+    fi
     return
 }
 
