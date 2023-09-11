@@ -425,9 +425,6 @@ if [ $? -eq 0 ]; then
 
     if [ $volid -ne 0 ]; then
       echo `date +"%Y-%m-%d %T"` INFO NodeManager volume already exists, checking if the volume can be re-used >> $logFile
-      echo $volid
-      echo $rootcid
-      echo $mfsport
       runCommandWithTimeout 0 180 1 1 "$server/mrconfig -p $mfsport volume checkrepaired $volid $rootcid"
       repairedVolume=$?
 
