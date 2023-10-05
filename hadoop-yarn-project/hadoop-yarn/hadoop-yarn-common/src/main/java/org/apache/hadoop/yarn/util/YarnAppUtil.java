@@ -152,7 +152,8 @@ public class YarnAppUtil {
         if (fs.exists(appIdPath)) {
             return appIdPath;
         }
-        LOG.warn("App dir " + dirSuffix + " is not found for app " + appIdStr);
+        LOG.debug("App dir " + dirSuffix + " is not found for app " + appIdStr + ". " +
+                "It's fine for application submit and RM recovery");
         return null;
     }
 
