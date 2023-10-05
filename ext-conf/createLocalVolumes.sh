@@ -203,7 +203,7 @@ function removeDirAtVolumePath() {
 
 function createNewTTVolume() {
     echo `date +"%Y-%m-%d %T"` INFO A new $LONG_NAME volume will be created.  >> $logFile
-    if [ $computeNode -eq 0]; then
+    if [ $computeNode -eq 0 ]; then
         runCommandWithTimeout 1 180 3 1 "maprcli volume create -name $vol -path $mountpath -replication 1 -localvolumehost $hostname -localvolumeport $mfsport -shufflevolume true -rereplicationtimeoutsec 300"
     else
         runCommandWithTimeout 1 180 3 1 "maprcli volume create -name $vol -path $mountpath -replication 1 -shufflevolume true -rereplicationtimeoutsec 300"
