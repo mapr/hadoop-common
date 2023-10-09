@@ -5890,4 +5890,13 @@
     <value>false</value>
   </property>
 
+  <property>
+    <name>yarn.scheduler.fair.display.overAMinfo</name>
+    <value>false</value>
+    <description>
+      Flag to enable display of over AM allocation tries in info state.
+      By default, it will be shown only in debug mode.
+    </description>
+  </property>
+
 </configuration>
