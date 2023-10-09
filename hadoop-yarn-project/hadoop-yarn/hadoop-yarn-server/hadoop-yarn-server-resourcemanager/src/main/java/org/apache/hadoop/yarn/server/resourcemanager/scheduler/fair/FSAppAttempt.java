@@ -63,6 +63,9 @@ import org.apache.hadoop.yarn.server.utils.BuilderUtils;
 import org.apache.hadoop.yarn.util.resource.DefaultResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.Resources;
 
+import static org.apache.hadoop.yarn.conf.YarnConfiguration.DEFAULT_RM_FAIR_SCHEDULER_OVERAM_INFO;
+import static org.apache.hadoop.yarn.conf.YarnConfiguration.RM_FAIR_SCHEDULER_OVERAM_INFO;
+
 /**
  * Represents an application attempt from the viewpoint of the Fair Scheduler.
  */
@@ -1372,7 +1375,8 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
       PendingAsk amAsk = appSchedulingInfo.getNextPendingAsk();
       updateAMDiagnosticMsg(amAsk.getPerAllocationResource(),
           " exceeds maximum AM resource allowed).");
-      if (LOG.isDebugEnabled()) {
+      if (LOG.isDebugEnabled()||
+              scheduler.getConfig().getBoolean(RM_FAIR_SCHEDULER_OVERAM_INFO, DEFAULT_RM_FAIR_SCHEDULER_OVERAM_INFO)) {
         LOG.debug("AM resource request: " + amAsk.getPerAllocationResource()
             + " exceeds maximum AM resource allowed, "
             + getQueue().dumpState());

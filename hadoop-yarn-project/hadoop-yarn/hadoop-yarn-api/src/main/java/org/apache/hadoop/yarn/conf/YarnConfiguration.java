@@ -280,6 +280,12 @@ public class YarnConfiguration extends Configuration {
       YARN_PREFIX + "scheduler.maximum-allocation-vcores";
   public static final int DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES = 4;
 
+  /** Show over max AM log in info state */
+  public static final String RM_FAIR_SCHEDULER_OVERAM_INFO =
+          YARN_PREFIX + "scheduler.fair.display.overAMinfo";
+  public static final boolean DEFAULT_RM_FAIR_SCHEDULER_OVERAM_INFO = false;
+
+
   /** Number of threads to handle scheduler interface.*/
   public static final String RM_SCHEDULER_CLIENT_THREAD_COUNT =
     RM_PREFIX + "scheduler.client.thread-count";
