@@ -173,7 +173,13 @@ public class JHAdminConfig {
   public static final int DEFAULT_MR_HISTORY_WEBAPP_HTTPS_PORT = 19890;
   public static final String DEFAULT_MR_HISTORY_WEBAPP_HTTPS_ADDRESS =
       "0.0.0.0:" + DEFAULT_MR_HISTORY_WEBAPP_HTTPS_PORT;
-  
+
+  /** Whether to use JobHistory Server IPC address for
+   MapReduce JobHistory Server WebApp host*/
+  public static final String MR_HISTORY_WEBAPP_BIND_ADDRESS =
+      MR_HISTORY_PREFIX + "webapp.bind.address";
+  public static final boolean DEFAULT_MR_HISTORY_WEBAPP_BIND_ADDRESS = false;
+
   /**The kerberos principal to be used for spnego filter for history server*/
   public static final String MR_WEBAPP_SPNEGO_USER_NAME_KEY =
       MR_HISTORY_PREFIX + "webapp.spnego-principal";
