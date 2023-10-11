@@ -137,9 +137,12 @@ public class MRWebAppUtil {
       throw new IllegalArgumentException("MapReduce JobHistory WebApp Address"
         + " does not contain a valid host:port authority: " + addr);
     }
-    // Use hs address to figure out the host for webapp
-    addr = conf.get(JHAdminConfig.MR_HISTORY_ADDRESS,
-        JHAdminConfig.DEFAULT_MR_HISTORY_ADDRESS);
+    if (conf.getBoolean(JHAdminConfig.MR_HISTORY_WEBAPP_BIND_ADDRESS,
+            JHAdminConfig.DEFAULT_MR_HISTORY_WEBAPP_BIND_ADDRESS)) {
+      // Use hs address to figure out the host for webapp
+      addr = conf.get(JHAdminConfig.MR_HISTORY_ADDRESS,
+              JHAdminConfig.DEFAULT_MR_HISTORY_ADDRESS);
+    }
     String host = ADDR_SPLITTER.split(addr).iterator().next();
     String hsAddress = JOINER.join(host, ":", port);
     InetSocketAddress address = NetUtils.createSocketAddr(

@@ -1840,6 +1840,13 @@
 </property>
 
 <property>
+  <name>mapreduce.jobhistory.webapp.bind.address</name>
+  <value>false</value>
+  <description>Whether to use JobHistory Server IPC address for
+    MapReduce JobHistory Server WebApp host</description>
+</property>
+
+<property>
   <name>mapreduce.jobhistory.keytab</name>
   <description>
     Location of the kerberos keytab file for the MapReduce
