@@ -19,7 +19,7 @@
   <parent>
     <groupId>org.apache.hadoop</groupId>
     <artifactId>hadoop-yarn-services</artifactId>
-    <version>3.3.5.100-eep-920-SNAPSHOT</version>
+    <version>3.3.5.200-eep-921-SNAPSHOT</version>
   </parent>
   <artifactId>hadoop-yarn-services-core</artifactId>
   <packaging>jar</packaging>
