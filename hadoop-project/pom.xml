@@ -66,7 +66,7 @@
     <avro.version>1.10.1</avro.version>
 
     <!-- bc version -->
-    <bcfips.version>1.0.2.3</bcfips.version>
+    <bcfips.version>1.0.2.4</bcfips.version>
     <bctlsfips.version>1.0.14.1</bctlsfips.version>
     <bcpkixfips.version>1.0.7</bcpkixfips.version>
 
