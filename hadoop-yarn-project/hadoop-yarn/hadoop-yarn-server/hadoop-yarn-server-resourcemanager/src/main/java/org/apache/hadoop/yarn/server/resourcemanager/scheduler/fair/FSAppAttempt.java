@@ -1377,7 +1377,7 @@ public class FSAppAttempt extends SchedulerApplicationAttempt
           " exceeds maximum AM resource allowed).");
       if (LOG.isDebugEnabled()||
               scheduler.getConfig().getBoolean(RM_FAIR_SCHEDULER_OVERAM_INFO, DEFAULT_RM_FAIR_SCHEDULER_OVERAM_INFO)) {
-        LOG.debug("AM resource request: " + amAsk.getPerAllocationResource()
+        LOG.info("AM resource request: " + amAsk.getPerAllocationResource()
             + " exceeds maximum AM resource allowed, "
             + getQueue().dumpState());
       }
