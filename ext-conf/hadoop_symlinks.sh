@@ -68,6 +68,8 @@ function createSymlinks() {
   ln -sf ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/audience-annotations-0.*.jar ${MAPR_HOME}/lib/
   rm -f ${MAPR_HOME}/lib/commons-cli-1.*.jar
   ln -sf ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/commons-cli-1.*.jar ${MAPR_HOME}/lib/
+  rm -f ${MAPR_HOME}/lib/commons-compress-1.*.jar
+  ln -sf ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/commons-compress-1.*.jar ${MAPR_HOME}/lib/
   rm -f ${MAPR_HOME}/lib/commons-lang3-3.*.jar
   ln -sf ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/commons-lang3-3.*.jar ${MAPR_HOME}/lib/
   rm -f ${MAPR_HOME}/lib/hadoop-auth-*.jar
