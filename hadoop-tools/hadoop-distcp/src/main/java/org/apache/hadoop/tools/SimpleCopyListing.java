@@ -690,10 +690,16 @@ public class SimpleCopyListing extends CopyListing {
     if (!shouldCopy(fileStatus.getPath())) {
       return;
     }
-
-    fileListWriter.append(new Text(DistCpUtils.getRelativePath(sourcePathRoot,
-            (fileStatus.getSourceLink() != null ?
-                    fileStatus.getSourceLink() : fileStatus.getPath()))), fileStatus);
+    FileSystem fs = sourcePathRoot.getFileSystem(getConf());
+    FileStatus srcFileStatus = fs.getFileStatus(sourcePathRoot);
+    if (srcFileStatus.isFile() && !fileStatus.isDirectory() &&
+            sourcePathRoot.equals(fileStatus.getPath())) {
+      fileListWriter.append(new Text(Path.SEPARATOR + fileStatus.getPath().getName()), fileStatus);
+    } else {
+      fileListWriter.append(new Text(DistCpUtils.getRelativePath(sourcePathRoot,
+              (fileStatus.getSourceLink() != null ?
+                      fileStatus.getSourceLink() : fileStatus.getPath()))), fileStatus);
+    }
     fileListWriter.sync();
 
     if (!fileStatus.isDirectory()) {
