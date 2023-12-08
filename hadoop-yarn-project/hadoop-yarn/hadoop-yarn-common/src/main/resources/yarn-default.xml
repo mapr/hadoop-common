@@ -5899,4 +5899,20 @@
     </description>
   </property>
 
+  <property>
+    <name>yarn.nodemanager.oom_score_adj.enabled</name>
+    <value>false</value>
+    <description>
+      Flag to enable custom oom_score_adj for containers started by NodeManager
+    </description>
+  </property>
+
+  <property>
+    <name>yarn.nodemanager.oom_score_adj.value</name>
+    <value>-17</value>
+    <description>
+      oom_score_adj value for containers started by NodeManager
+    </description>
+  </property>
+
 </configuration>

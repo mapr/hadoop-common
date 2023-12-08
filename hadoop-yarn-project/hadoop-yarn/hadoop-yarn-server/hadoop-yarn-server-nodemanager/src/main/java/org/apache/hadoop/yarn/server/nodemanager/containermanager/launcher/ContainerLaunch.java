@@ -136,6 +136,10 @@ public class ContainerLaunch implements Callable<Integer> {
       "--add-exports=java.base/sun.net.dns=ALL-UNNAMED " +
       "--add-exports=java.base/sun.net.util=ALL-UNNAMED";
 
+  private static final String OOM_SCORE_ADJ_VALUE_VARIABLE = "OOM_SCORE_ADJ_VALUE";
+  private static final String OOM_SCORE_ADJ_COMMAND = "echo $" + OOM_SCORE_ADJ_VALUE_VARIABLE + " > /proc/self/oom_score_adj; ";
+
+
   protected final Dispatcher dispatcher;
   protected final ContainerExecutor exec;
   protected final Application app;
@@ -285,10 +289,21 @@ public class ContainerLaunch implements Callable<Integer> {
         // The log dir creation for local FS happens inside container-executor.c
       }
       recordContainerLogDir(containerID, containerLogDir.toString());
+
+      //oom_score_adj options
+      if (!Shell.WINDOWS && conf.getBoolean(YarnConfiguration.YARN_NM_CHILD_OOM_SCORE_ADJ_ENABLED,
+              YarnConfiguration.YARN_NM_CHILD_OOM_SCORE_ADJ_ENABLED_DEFAULT)) {
+        environment.put(OOM_SCORE_ADJ_VALUE_VARIABLE,
+                conf.get(YarnConfiguration.YARN_NM_CHILD_OOM_SCORE_ADJ_VALUE,
+                        String.valueOf(YarnConfiguration.YARN_NM_CHILD_OOM_SCORE_ADJ_VALUE_DEFAULT)));
+        newCmds.add(OOM_SCORE_ADJ_COMMAND);
+      }
+
       for (String str : command) {
         // TODO: Should we instead work via symlinks without this grammar?
         newCmds.add(expandEnvironment(str, containerLogDir));
       }
+
       launchContext.setCommands(newCmds);
 
       // /////////////////////////// End of variable expansion
