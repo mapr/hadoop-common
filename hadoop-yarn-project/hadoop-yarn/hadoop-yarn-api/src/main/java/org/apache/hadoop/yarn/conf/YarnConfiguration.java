@@ -2101,6 +2101,20 @@ public class YarnConfiguration extends Configuration {
   public static final long DEFAULT_NM_CONTAINER_LOG_TOTAL_SIZE_LIMIT_BYTES =
       10000000000L;
 
+  /**
+   * enable custom oom_score_adj for containers started by nm
+   */
+
+  public static final String YARN_NM_CHILD_OOM_SCORE_ADJ = NM_PREFIX + "oom_score_adj.";
+  public static final String YARN_NM_CHILD_OOM_SCORE_ADJ_ENABLED = YARN_NM_CHILD_OOM_SCORE_ADJ + "enabled";
+  public static final boolean YARN_NM_CHILD_OOM_SCORE_ADJ_ENABLED_DEFAULT = false;
+
+  /**
+   * oom_score_adj value for containers started by nm
+   */
+  public static final String YARN_NM_CHILD_OOM_SCORE_ADJ_VALUE = YARN_NM_CHILD_OOM_SCORE_ADJ + "value";
+  public static final int YARN_NM_CHILD_OOM_SCORE_ADJ_VALUE_DEFAULT = -17;
+
   /** Enable/disable container metrics. */
   @Private
   public static final String NM_CONTAINER_METRICS_ENABLE =
