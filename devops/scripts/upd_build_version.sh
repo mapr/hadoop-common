@@ -10,3 +10,4 @@ old_version=$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --n
 echo "$old_version"
 
 find . -type f -name pom.xml -exec sed -i "s|<version>${old_version}</version>|<version>${new_version}</version>|" {} \;
+find . -type f -name pom.xml -exec sed -i "s|<hadoop.version>${old_version}</hadoop.version>|<hadoop.version>${new_version}</hadoop.version>|" {} \;
