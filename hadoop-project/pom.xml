@@ -20,10 +20,10 @@
   <parent>
     <groupId>org.apache.hadoop</groupId>
     <artifactId>hadoop-main</artifactId>
-    <version>3.3.5.200-eep-921-SNAPSHOT</version>
+    <version>3.3.5.300-eep-930-SNAPSHOT</version>
   </parent>
   <artifactId>hadoop-project</artifactId>
-  <version>3.3.5.200-eep-921-SNAPSHOT</version>
+  <version>3.3.5.300-eep-930-SNAPSHOT</version>
   <description>Apache Hadoop Project POM</description>
   <name>Apache Hadoop Project POM</name>
   <packaging>pom</packaging>
@@ -93,7 +93,7 @@
     <hadoop.protobuf.version>3.21.12</hadoop.protobuf.version>
     <protoc.path>${env.HADOOP_PROTOC_PATH}</protoc.path>
 
-    <hadoop-thirdparty.version>1.1.1.500-eep-921-SNAPSHOT</hadoop-thirdparty.version>
+    <hadoop-thirdparty.version>1.1.1.600-eep-930-SNAPSHOT</hadoop-thirdparty.version>
     <hadoop-thirdparty-protobuf.version>${hadoop-thirdparty.version}</hadoop-thirdparty-protobuf.version>
     <hadoop-thirdparty-guava.version>${hadoop-thirdparty.version}</hadoop-thirdparty-guava.version>
     <hadoop-thirdparty-shaded-prefix>org.apache.hadoop.thirdparty</hadoop-thirdparty-shaded-prefix>
@@ -199,7 +199,7 @@
 
     <swagger-annotations-version>1.5.4</swagger-annotations-version>
     <snakeyaml.version>2.0</snakeyaml.version>
-    <hbase.one.version>1.4.14.500-eep-912-SNAPSHOT</hbase.one.version>
+    <hbase.one.version>1.4.14.600-eep-921-SNAPSHOT</hbase.one.version>
     <hbase.two.version>2.0.2</hbase.two.version>
     <junit.version>4.13.2</junit.version>
     <junit.jupiter.version>5.8.2</junit.jupiter.version>
