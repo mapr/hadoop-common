@@ -79,7 +79,7 @@ public class YarnSiteAclXmlBuilder {
     }
 
     String newYarnSiteXml = new YarnSiteAclXmlBuilder(args[0]).build();
-    System.out.println(newYarnSiteXml);
+    System.out.println(newYarnSiteXml.trim());
   }
 }
 

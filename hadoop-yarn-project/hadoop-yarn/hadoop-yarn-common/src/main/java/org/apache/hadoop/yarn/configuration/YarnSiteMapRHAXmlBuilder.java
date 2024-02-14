@@ -82,7 +82,7 @@ public class YarnSiteMapRHAXmlBuilder {
         }
 
         String newYarnSiteXml = new YarnSiteMapRHAXmlBuilder(args[0]).build();
-        System.out.println(newYarnSiteXml);
+        System.out.println(newYarnSiteXml.trim());
     }
 
 }

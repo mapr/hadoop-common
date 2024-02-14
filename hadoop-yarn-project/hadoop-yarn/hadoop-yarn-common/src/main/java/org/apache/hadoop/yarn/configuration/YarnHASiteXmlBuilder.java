@@ -205,7 +205,7 @@ public class YarnHASiteXmlBuilder {
     // for client-only installations, ZK address is not provided to configure.sh
     String zkAddr = args.length > 3 ? args[2] : " ";
     String yarnSiteXmlPath = args.length > 3 ? args[3] : args[2];
-    System.out.println(new YarnHASiteXmlBuilder(rmIPs, args[1], zkAddr, yarnSiteXmlPath).build());
+    System.out.println(new YarnHASiteXmlBuilder(rmIPs, args[1], zkAddr, yarnSiteXmlPath).build().trim());
   }
 
 }
