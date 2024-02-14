@@ -38,6 +38,7 @@ yarn_version="${hadoopVersion}"
 isOnlyRoles=0
 clientNode=0
 isFips="false"
+yarnSiteStatus="false" #should be true if we already changed yarn-site.xml during current execution
 
 if [ -e "${MAPR_HOME}/server/common-ecosystem.sh" ]; then
     . "${MAPR_HOME}/server/common-ecosystem.sh"
@@ -228,12 +229,14 @@ function ConfigureYarnSiteXml() {
         exit 1
     fi
     prevConf=`find ${MAPR_HOME}/hadoop -regextype posix-extended -regex '^.*yarn-site-([0-9]+)\-([0-9]+)\-([0-9]+)\.([0-9]+)\-([0-9]+).xml' | sort -rV | head -n1`
-    if [ -f ${FILE} ] && [[ -z $prevConf || $(diff -q $prevConf $FILE | wc -l) -ne 0 ]]; then
+    if [ "$yarnSiteStatus" = "false" ] && [ -f ${FILE} ] && [[ -z $prevConf || $(diff -qB $prevConf $FILE | wc -l) -ne 0 ]]; then
         logInfo "Backing up \"$HADOOP_HOME/etc/hadoop/yarn-site.xml\" to \"$HADOOP_HOME/etc/hadoop/yarn-site-${TIMESTAMP}.xml\""
         cp ${FILE} $HADOOP_HOME/etc/hadoop/${FILENAME}-${TIMESTAMP}.xml
     fi
 
     $HADOOP_HOME/bin/hadoop jar $phatJar $@ $HADOOP_HOME/etc/hadoop/yarn-site.xml >$TEMP_FILE
+
+    yarnSiteStatus="true" # yarn-site possible was changed, skip backup for this execution
 
     if [ $? -ne 0 ]; then
         echo "ERROR configuring yarn-site.xml."
