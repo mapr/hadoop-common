@@ -58,6 +58,7 @@ import org.apache.hadoop.io.SequenceFile.CompressionType;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.mapred.*;
+import org.apache.hadoop.mapreduce.conf.MapReduceDefaultProperties;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.Tool;
@@ -130,6 +131,7 @@ public class TestDFSIO implements Tool {
     Configuration.addDefaultResource("hdfs-default.xml");
     Configuration.addDefaultResource("hdfs-site.xml");
     Configuration.addDefaultResource("mapred-default.xml");
+    Configuration.addDefaultResource(MapReduceDefaultProperties.getProperties());
     Configuration.addDefaultResource("mapred-site.xml");
   }
 
