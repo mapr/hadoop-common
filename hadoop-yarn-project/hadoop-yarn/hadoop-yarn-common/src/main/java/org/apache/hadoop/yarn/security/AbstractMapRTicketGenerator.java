@@ -34,6 +34,9 @@ public abstract class AbstractMapRTicketGenerator {
 
         ApplicationId appId = appCtx.getApplicationId();
         try {
+            FileSystem fs = FileSystem.get(conf);
+            Path appSystemDir = YarnAppUtil.getRMSystemDirForWrite(appId.toString(), fs, conf);
+            FileSystem.mkdirs(fs, appSystemDir, YarnAppUtil.APP_DIR_PERMISSION);
             generateMapRLoginTicket(appId, username, conf);
         } catch (IOException e) {
             throw new RuntimeException(e);
