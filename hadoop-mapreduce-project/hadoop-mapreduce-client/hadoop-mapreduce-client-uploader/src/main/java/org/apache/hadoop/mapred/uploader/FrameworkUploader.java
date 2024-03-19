@@ -18,6 +18,7 @@
 
 package org.apache.hadoop.mapred.uploader;
 
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.hadoop.thirdparty.com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.OptionBuilder;
@@ -335,7 +336,7 @@ public class FrameworkUploader implements Runnable {
         LOG.info("Adding " + fullPath);
         File file = new File(fullPath);
         try (FileInputStream inputStream = new FileInputStream(file)) {
-          ArchiveEntry entry = out.createArchiveEntry(file, file.getName());
+          TarArchiveEntry entry = out.createArchiveEntry(file, file.getName());
           out.putArchiveEntry(entry);
           IOUtils.copyBytes(inputStream, out, 1024 * 1024);
           out.closeArchiveEntry();
