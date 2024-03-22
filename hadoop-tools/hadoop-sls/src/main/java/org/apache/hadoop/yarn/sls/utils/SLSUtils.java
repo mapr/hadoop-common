@@ -250,4 +250,34 @@ public class SLSUtils {
         StandardCharsets.UTF_8,
         StandardOpenOption.CREATE);
   }
+
+  /**
+   * generate configuration for NM, AM and pool size to be used in sls-runner.xml
+   * @param nmMemory amount of memory for NM.
+   * @param nmVCores amount of vCores for NM.
+   * @param amMemory amount of memory for AM.
+   * @param amVCores amount of vCores for AM.
+   * @param slsRunnerPoolSize thread pool size for simulation AM and NM.
+   */
+  public static Set<String> generateSlsRunnerConfiguration(int nmMemory, int nmVCores,
+                                                           int amMemory, int amVCores,
+                                                           int slsRunnerPoolSize) {
+    Set<String> slsProperties = new HashSet<>();
+    slsProperties.add(SchedulerUtils.generateProperty(
+            "yarn.sls.nm.memory.mb",
+            String.valueOf(nmMemory)));
+    slsProperties.add(SchedulerUtils.generateProperty(
+            "yarn.sls.nm.vcores",
+            String.valueOf(nmVCores)));
+    slsProperties.add(SchedulerUtils.generateProperty(
+            "yarn.sls.container.memory.mb",
+            String.valueOf(amMemory)));
+    slsProperties.add(SchedulerUtils.generateProperty(
+            "yarn.sls.container.vcores",
+            String.valueOf(amVCores)));
+    slsProperties.add(SchedulerUtils.generateProperty(
+            "yarn.sls.runner.pool.size",
+            String.valueOf(slsRunnerPoolSize)));
+    return slsProperties;
+  }
 }

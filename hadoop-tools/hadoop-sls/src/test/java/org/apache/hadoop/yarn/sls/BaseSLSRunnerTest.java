@@ -18,6 +18,7 @@
 package org.apache.hadoop.yarn.sls;
 
 import net.jcip.annotations.NotThreadSafe;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
@@ -131,6 +132,9 @@ public abstract class BaseSLSRunnerTest {
         break;
       }
       timeout--;
+    }
+    if(conf.getBoolean("scheduler.sls.test", false)){
+      FileUtils.copyDirectory(slsOutputDir, new File("target/sls_results", schedulerType));
     }
     shutdownHookInvariantCheck();
   }

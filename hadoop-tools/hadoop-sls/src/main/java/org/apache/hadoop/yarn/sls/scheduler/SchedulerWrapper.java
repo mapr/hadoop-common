@@ -53,4 +53,6 @@ public interface SchedulerWrapper {
   void setSLSRunner(SLSRunner runner);
 
   SLSRunner getSLSRunner();
+
+  public void serviceStop() throws Exception;
 }
