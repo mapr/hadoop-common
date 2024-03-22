@@ -29,4 +29,5 @@ public interface SchedulerWrapper {
   Tracker getTracker();
 
   String getRealQueueName(String queue) throws YarnException;
+  public void serviceStop() throws Exception;
 }
