@@ -97,9 +97,11 @@ public class DelegatingLinuxContainerRuntime implements LinuxContainerRuntime {
     }
     if (isRuntimeAllowed(
         LinuxContainerRuntimeConstants.RuntimeType.RUNC.name())) {
-      runcContainerRuntime = new RuncContainerRuntime(
-          PrivilegedOperationExecutor.getInstance(conf));
-      runcContainerRuntime.initialize(conf, nmContext);
+      throw new ContainerExecutionException("Could not successfully " +
+              "initialize RunC container. This container type doesn't support");
+//      runcContainerRuntime = new RuncContainerRuntime(
+//          PrivilegedOperationExecutor.getInstance(conf));
+//      runcContainerRuntime.initialize(conf, nmContext);
     }
     if (isRuntimeAllowed(
         LinuxContainerRuntimeConstants.RuntimeType.DEFAULT.name())) {

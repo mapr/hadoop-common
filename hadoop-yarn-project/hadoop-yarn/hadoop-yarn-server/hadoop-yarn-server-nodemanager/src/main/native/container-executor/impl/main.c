@@ -438,6 +438,8 @@ static int validate_arguments(int argc, char **argv , int *operation) {
         display_usage(stdout);
         return INVALID_ARGUMENT_NUMBER;
       }
+      fprintf(ERRORFILE, "RunC container doesn't support\n");
+      return ERROR_RUNC_RUN_FAILED;
       optind++;
       cmd_input.command_file = argv[optind++];
       *operation = RUN_RUNC_CONTAINER;
