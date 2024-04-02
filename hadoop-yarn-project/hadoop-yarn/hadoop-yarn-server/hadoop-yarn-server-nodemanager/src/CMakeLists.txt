@@ -159,7 +159,6 @@ add_executable(container-executor
 
 target_link_libraries(container-executor
     container
-    crypto
 )
 
 output_directory(container-executor target/usr/local/bin)
@@ -171,7 +170,6 @@ add_executable(test-container-executor
 target_link_libraries(test-container-executor
     container
     ${EXTRA_LIBS}
-    crypto
 )
 
 output_directory(test-container-executor target/usr/local/bin)
@@ -195,7 +193,6 @@ add_executable(cetest
 target_link_libraries(cetest
         gtest
         container
-        crypto
 )
 
 output_directory(cetest test)

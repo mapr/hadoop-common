@@ -30,8 +30,6 @@
 #include <unistd.h>
 #include <time.h>
 #include "../modules/common/module-configs.h"
-// TODO: Figure out how to address new openssl dependency for container-executor
-#include <openssl/evp.h>
 
 // workaround for building on RHEL6 but running on RHEL7
 #ifndef LOOP_CTL_GET_FREE
@@ -167,44 +165,6 @@ static runc_launch_cmd_ctx* setup_runc_launch_cmd_ctx() {
 }
 
 /**
- * Compute a digest of a layer based on the layer's pathname.
- * Returns the malloc'd digest hexstring or NULL if there was an error.
- */
-static char* compute_layer_hash(const char* path) {
-  char* digest = NULL;
-  EVP_MD_CTX* mdctx = EVP_MD_CTX_create();
-  if (mdctx == NULL) {
-    fputs("Unable to create EVP MD context\n", ERRORFILE);
-    goto cleanup;
-  }
-
-  if (!EVP_DigestInit_ex(mdctx, EVP_sha256(), NULL)) {
-    fputs("Unable to initialize SHA256 digester\n", ERRORFILE);
-    goto cleanup;
-  }
-
-  if (!EVP_DigestUpdate(mdctx, path, strlen(path))) {
-    fputs("Unable to compute layer path digest\n", ERRORFILE);
-    goto cleanup;
-  }
-
-  unsigned char raw_digest[EVP_MAX_MD_SIZE];
-  unsigned int raw_digest_len = 0;
-  if (!EVP_DigestFinal_ex(mdctx, raw_digest, &raw_digest_len)) {
-    fputs("Unable to compute layer path digest\n", ERRORFILE);
-    goto cleanup;
-  }
-
-  digest = to_hexstring(raw_digest, raw_digest_len);
-
-cleanup:
-  if (mdctx != NULL) {
-    EVP_MD_CTX_destroy(mdctx);
-  }
-  return digest;
-}
-
-/**
  * Open the specified path which is expected to be a mount point.
  *
  * Returns an valid file descriptor when the path exists and is a mount point
@@ -275,7 +235,7 @@ static bool init_overlay_descriptor(runc_overlay_desc* desc,
 
 static bool init_layer_mount_ctx(runc_mount_ctx* ctx, const rlc_layer_spec* spec,
     const char* run_root) {
-  char* hash = compute_layer_hash(spec->path);
+  char* hash = NULL;
   if (hash == NULL) {
     return false;
   }
