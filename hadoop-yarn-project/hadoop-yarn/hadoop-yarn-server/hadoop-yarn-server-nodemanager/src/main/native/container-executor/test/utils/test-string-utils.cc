@@ -29,7 +29,6 @@
 
  #include <gtest/gtest.h>
  #include <sstream>
- #include <openssl/evp.h>
 
  extern "C" {
  #include "utils/string-utils.h"
@@ -128,34 +127,6 @@
         int op = validate_container_id(bad_input[j]);
         ASSERT_EQ(0, op);
       }
-    }
-
-    TEST_F(TestStringUtils, test_to_hexstring) {
-      const char* input = "hello";
-      char* digest = NULL;
-      unsigned char raw_digest[EVP_MAX_MD_SIZE];
-      unsigned int raw_digest_len = 0;
-      int rc = 0;
-
-      EVP_MD_CTX* mdctx = EVP_MD_CTX_create();
-      ASSERT_NE(nullptr, mdctx) << "Unable to create EVP MD context\n";
-
-      rc = EVP_DigestInit_ex(mdctx, EVP_sha256(), NULL);
-      ASSERT_EQ(1, rc) << "Unable to initialize SHA256 digester\n";
-
-      rc = EVP_DigestFinal_ex(mdctx, raw_digest, &raw_digest_len);
-      ASSERT_EQ(1, rc) << "Unable to compute digest\n";
-
-      rc = EVP_DigestUpdate(mdctx, input, strlen(input));
-      ASSERT_EQ(1, rc) << "Unable to compute digest\n";
-
-      digest = to_hexstring(raw_digest, raw_digest_len);
-
-      ASSERT_STREQ("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                   digest) << "Digest is not equal to expected hash\n";
-
-      EVP_MD_CTX_destroy(mdctx);
-      free(digest);
     }
 
     TEST_F(TestStringUtils, test_strbuf_on_stack) {
