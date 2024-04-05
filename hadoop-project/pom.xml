@@ -130,8 +130,8 @@
     <commons-text.version>1.10.0</commons-text.version>
 
     <kerby.version>2.0.3</kerby.version>
-    <jcache.version>1.0-alpha-1</jcache.version>
     <ehcache.version>3.3.1</ehcache.version>
+    <cache.api.version>1.1.1</cache.api.version>
     <hikari.version>2.4.12</hikari.version>
     <mssql.version>6.2.1.jre7</mssql.version>
     <okhttp3.version>4.11.0</okhttp3.version>
@@ -1988,11 +1988,6 @@
           <version>${kerby.version}</version>
         </dependency>
         <dependency>
-          <groupId>org.apache.geronimo.specs</groupId>
-          <artifactId>geronimo-jcache_1.0_spec</artifactId>
-          <version>${jcache.version}</version>
-        </dependency>
-        <dependency>
           <groupId>org.ehcache</groupId>
           <artifactId>ehcache</artifactId>
           <version>${ehcache.version}</version>
@@ -2069,6 +2064,11 @@
         <version>${lz4-java.version}</version>
       </dependency>
     </dependencies>
+    <dependency>
+      <groupId>javax.cache</groupId>
+      <artifactId>cache-api</artifactId>
+      <version>${cache.api.version}</version>
+    </dependency>
   </dependencyManagement>
 
   <build>
