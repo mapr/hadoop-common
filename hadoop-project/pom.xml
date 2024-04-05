@@ -129,7 +129,7 @@
     <commons-text.version>1.10.0</commons-text.version>
 
     <kerby.version>2.0.3</kerby.version>
-    <ehcache.version>3.3.1</ehcache.version>
+    <ehcache.version>3.8.2</ehcache.version>
     <cache.api.version>1.1.1</cache.api.version>
     <hikari.version>2.4.12</hikari.version>
     <mssql.version>6.2.1.jre7</mssql.version>
