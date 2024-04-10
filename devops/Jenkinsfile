@@ -112,6 +112,17 @@ pipeline {
                 }
               }
             }
+            stage("RPM Sign") {
+              steps {
+                configFileProvider([configFile(fileId: 'rpmSignSh', variable: 'rpmSignSh')]) {
+                  sh """
+                  cat ${env.rpmSignSh} > rpm_sign.sh
+                  chmod 765 rpm_sign.sh
+                  ./rpm_sign.sh ${env.PROJECT}/dist
+                  """
+                }
+              }
+            }
 
             stage("Upload to Artifactory") {
               steps {
