@@ -46,6 +46,18 @@ function createSymlinks() {
   ln -sf ${MAPR_HOME}/lib/central-logging-*.jar ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
   rm -f  ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/zookeeper-3.*.jar
   ln -sf ${MAPR_HOME}/lib/zookeeper-3.*.jar ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  rm -f  ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/hdfs/lib/zookeeper-3.*.jar
+  ln -sf ${MAPR_HOME}/lib/zookeeper-3.*.jar ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/hdfs/lib/
+  rm -f  ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/zookeeper-jute-3.*.jar
+  ln -sf ${MAPR_HOME}/lib/zookeeper-jute-3.*.jar ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  rm -f  ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/hdfs/lib/zookeeper-jute-3.*.jar
+  ln -sf ${MAPR_HOME}/lib/zookeeper-jute-3.*.jar ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/hdfs/lib/
+  if [ -d ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/yarn/timelineservice/lib/ ]; then
+    rm -f  ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/yarn/timelineservice/lib/zookeeper-3.*.jar
+    ln -sf ${MAPR_HOME}/lib/zookeeper-3.*.jar ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/yarn/timelineservice/lib/
+    rm -f  ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/yarn/timelineservice/lib/zookeeper-jute-3.*.jar
+    ln -sf ${MAPR_HOME}/lib/zookeeper-jute-3.*.jar ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/yarn/timelineservice/lib/
+  fi
   ln -sf ${MAPR_HOME}/lib/libMapRClient.so ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
   if [ -d ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/lib/native/ ]; then
     ln -sf ${MAPR_HOME}/lib/libMapRClient.so ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/lib/native/
