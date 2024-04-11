@@ -324,11 +324,8 @@ public class SecureIOUtils {
   private static boolean checkIfUsersACLMapping(String user, String owner) {
     Configuration conf = new Configuration();
     UsersACLsManager usersAclsManager = new UsersACLsManager(conf);
-    if (usersAclsManager.isUsersACLEnable()
-        && usersAclsManager.checkUserAccess(user, owner)) {
-      return true;
-    }
-    return false;
+    return usersAclsManager.isUsersACLEnable()
+        && usersAclsManager.checkUserAccess(user, owner);
   }
 
   /**

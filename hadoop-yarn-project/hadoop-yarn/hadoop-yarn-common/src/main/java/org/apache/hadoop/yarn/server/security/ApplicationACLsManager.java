@@ -134,7 +134,7 @@ public class ApplicationACLsManager {
     }
     if(applicationAccessType == ApplicationAccessType.VIEW_APP
         && this.usersAclsManager.isUsersACLEnable()
-        && this.usersAclsManager.checkUserAccess(user, applicationOwner)){
+        && this.usersAclsManager.checkUserAccess(callerUGI, applicationOwner)){
       return true;
     }
     return false;
