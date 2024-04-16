@@ -24,7 +24,7 @@ import java.net.URL;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
-import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
+import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.ssl.SSLFactory;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 
@@ -108,12 +108,12 @@ public class WebServiceClient {
           HttpURLConnection.setFollowRedirects(false);
           // If https is chosen, configures SSL client.
           if (isHttps) {
-            conn = new AuthenticatedURL(new KerberosAuthenticator(),
+            conn = new AuthenticatedURL(SecurityUtil.getMaprAuthenticator(),
                 sslFactory).openConnection(url, token);
           } else {
             conn = new AuthenticatedURL().openConnection(url, token);
           }
-        } catch (AuthenticationException e) {
+        } catch (AuthenticationException | InstantiationException | IllegalAccessException e) {
           throw new IOException(e);
         }
         return conn;
