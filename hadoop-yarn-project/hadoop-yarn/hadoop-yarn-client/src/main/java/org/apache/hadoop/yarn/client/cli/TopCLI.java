@@ -43,6 +43,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 
+import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.thirdparty.com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.thirdparty.com.google.common.cache.Cache;
 import org.apache.hadoop.thirdparty.com.google.common.cache.CacheBuilder;
@@ -842,12 +843,12 @@ public class TopCLI extends YarnCLI {
       SSLSocketFactory sslSocktFact = clientSslFactory.createSSLSocketFactory();
 
       authUrl =
-          new AuthenticatedURL(new KerberosAuthenticator(), clientSslFactory);
+          new AuthenticatedURL(SecurityUtil.getMaprAuthenticator(), clientSslFactory);
       connection = authUrl.openConnection(url, token);
       HttpsURLConnection httpsConn = (HttpsURLConnection) connection;
       httpsConn.setSSLSocketFactory(sslSocktFact);
     } else {
-      authUrl = new AuthenticatedURL(new KerberosAuthenticator());
+      authUrl = new AuthenticatedURL(SecurityUtil.getMaprAuthenticator());
       connection = authUrl.openConnection(url, token);
     }
     connection.connect();

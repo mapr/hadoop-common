@@ -32,6 +32,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.thirdparty.com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.thirdparty.com.google.common.base.Charsets;
 import org.apache.commons.logging.Log;
@@ -269,12 +270,12 @@ public class LogLevel {
         SSLSocketFactory sslSocketF = clientSslFactory.createSSLSocketFactory();
 
         aUrl = new AuthenticatedURL(
-            new KerberosAuthenticator(), clientSslFactory);
+            SecurityUtil.getMaprAuthenticator(), clientSslFactory);
         connection = aUrl.openConnection(url, token);
         HttpsURLConnection httpsConn = (HttpsURLConnection) connection;
         httpsConn.setSSLSocketFactory(sslSocketF);
       } else {
-        aUrl = new AuthenticatedURL(new KerberosAuthenticator());
+        aUrl = new AuthenticatedURL(SecurityUtil.getMaprAuthenticator());
         connection = aUrl.openConnection(url, token);
       }
 
