@@ -57,6 +57,7 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.http.HttpConfig.Policy;
+import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
@@ -842,12 +843,12 @@ public class TopCLI extends YarnCLI {
       SSLSocketFactory sslSocktFact = clientSslFactory.createSSLSocketFactory();
 
       authUrl =
-          new AuthenticatedURL(new KerberosAuthenticator(), clientSslFactory);
+          new AuthenticatedURL(SecurityUtil.getMaprAuthenticator(), clientSslFactory);
       connection = authUrl.openConnection(url, token);
       HttpsURLConnection httpsConn = (HttpsURLConnection) connection;
       httpsConn.setSSLSocketFactory(sslSocktFact);
     } else {
-      authUrl = new AuthenticatedURL(new KerberosAuthenticator());
+      authUrl = new AuthenticatedURL(SecurityUtil.getMaprAuthenticator());
       connection = authUrl.openConnection(url, token);
     }
     connection.connect();

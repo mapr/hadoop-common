@@ -50,9 +50,12 @@ import org.apache.hadoop.net.DomainNameResolver;
 import org.apache.hadoop.net.DomainNameResolverFactory;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod;
+import org.apache.hadoop.security.authentication.client.Authenticator;
+import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
 import org.apache.hadoop.security.rpcauth.RpcAuthMethod;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.TokenInfo;
+import org.apache.hadoop.security.token.delegation.web.MaprDelegationTokenAuthenticator;
 import org.apache.hadoop.util.StopWatch;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.ZKUtil;
@@ -905,5 +908,21 @@ public final class SecurityUtil {
                     + " does not extend " + Principal.class.getName(), cce);
         }
         return null;
+    }
+
+    public static Authenticator getMaprAuthenticator() throws InstantiationException, IllegalAccessException {
+        Authenticator maprAuthenticator = null;
+        try {
+            maprAuthenticator = new MaprDelegationTokenAuthenticator();
+        } catch (InstantiationException e) {
+            throw new InstantiationException("Unable to instantiate class " + maprAuthenticator.getClass().getName());
+        } catch (IllegalAccessException e) {
+            throw new IllegalAccessException("Unable to init class " + maprAuthenticator.getClass().getName());
+        } finally {
+            if (maprAuthenticator == null) {
+                return new KerberosAuthenticator();
+            }
+        }
+        return maprAuthenticator;
     }
 }

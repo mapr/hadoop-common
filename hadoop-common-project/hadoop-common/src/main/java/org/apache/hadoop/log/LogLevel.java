@@ -42,6 +42,7 @@ import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.http.HttpServer2;
+import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
 import org.apache.hadoop.security.ssl.SSLFactory;
@@ -270,12 +271,12 @@ public class LogLevel {
         SSLSocketFactory sslSocketF = clientSslFactory.createSSLSocketFactory();
 
         aUrl = new AuthenticatedURL(
-            new KerberosAuthenticator(), clientSslFactory);
+            SecurityUtil.getMaprAuthenticator(), clientSslFactory);
         connection = aUrl.openConnection(url, token);
         HttpsURLConnection httpsConn = (HttpsURLConnection) connection;
         httpsConn.setSSLSocketFactory(sslSocketF);
       } else {
-        aUrl = new AuthenticatedURL(new KerberosAuthenticator());
+        aUrl = new AuthenticatedURL(SecurityUtil.getMaprAuthenticator());
         connection = aUrl.openConnection(url, token);
       }
 
