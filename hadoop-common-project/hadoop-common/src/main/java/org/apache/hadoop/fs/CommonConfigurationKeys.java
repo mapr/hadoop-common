@@ -262,6 +262,7 @@ public class CommonConfigurationKeys extends CommonConfigurationKeysPublic {
       "hadoop.security.token.service.use_ip";
   public static final boolean HADOOP_SECURITY_TOKEN_SERVICE_USE_IP_DEFAULT =
       true;
+  public static final String HADOOP_USERS_ACL = "hadoop.users.acl.mapping";
 
   /**
    * @see
