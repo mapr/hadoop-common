@@ -33,6 +33,7 @@ import org.apache.hadoop.io.nativeio.NativeIO.POSIX.Stat;
 import org.apache.hadoop.security.UserGroupInformation;
 
 import org.apache.hadoop.security.authorize.AccessControlList;
+import org.apache.hadoop.security.authorize.UsersACLsManager;
 import org.apache.hadoop.thirdparty.com.google.common.annotations.VisibleForTesting;
 
 /**
@@ -292,7 +293,7 @@ public class SecureIOUtils {
         final String adminsGroupString = "Administrators";
         success = owner.equals(adminsGroupString)
                 && ugi.getGroups().contains(adminsGroupString);
-      } else if (!checkIfUserYarnAdmin(expectedOwner, ugi.getGroupNames())) {
+      } else if (!checkIfUserYarnAdmin(expectedOwner, ugi.getGroupNames()) && !checkIfUsersACLMapping(expectedOwner, owner)) {
         success = false;
       }
     }
@@ -316,6 +317,16 @@ public class SecureIOUtils {
           }
         }
       }
+    }
+    return false;
+  }
+
+  private static boolean checkIfUsersACLMapping(String user, String owner) {
+    Configuration conf = new Configuration();
+    UsersACLsManager usersAclsManager = new UsersACLsManager(conf);
+    if (usersAclsManager.isUsersACLEnable()
+        && usersAclsManager.checkUserAccess(user, owner)) {
+      return true;
     }
     return false;
   }

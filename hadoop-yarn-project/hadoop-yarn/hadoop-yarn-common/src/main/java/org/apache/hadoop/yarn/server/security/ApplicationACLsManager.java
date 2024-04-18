@@ -27,9 +27,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.AccessControlList;
+import org.apache.hadoop.security.authorize.UsersACLsManager;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ApplicationAccessType;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
@@ -47,6 +47,7 @@ public class ApplicationACLsManager {
     = new AccessControlList(YarnConfiguration.DEFAULT_YARN_APP_ACL);
   private final Configuration conf;
   private final AdminACLsManager adminAclsManager;
+  private final UsersACLsManager usersAclsManager;
   private final ConcurrentMap<ApplicationId, Map<ApplicationAccessType, AccessControlList>> applicationACLS
     = new ConcurrentHashMap<ApplicationId, Map<ApplicationAccessType, AccessControlList>>();
 
@@ -58,6 +59,7 @@ public class ApplicationACLsManager {
   public ApplicationACLsManager(Configuration conf) {
     this.conf = conf;
     this.adminAclsManager = new AdminACLsManager(this.conf);
+    this.usersAclsManager = new UsersACLsManager(this.conf);
   }
 
   public boolean areACLsEnabled() {
@@ -128,6 +130,11 @@ public class ApplicationACLsManager {
     if (this.adminAclsManager.isAdmin(callerUGI)
         || user.equals(applicationOwner)
         || applicationACL.isUserAllowed(callerUGI)) {
+      return true;
+    }
+    if(applicationAccessType == ApplicationAccessType.VIEW_APP
+        && this.usersAclsManager.isUsersACLEnable()
+        && this.usersAclsManager.checkUserAccess(user, applicationOwner)){
       return true;
     }
     return false;
