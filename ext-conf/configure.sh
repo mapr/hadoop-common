@@ -1058,6 +1058,10 @@ fi
 
 #Do something here
 
+if [ -f ${HADOOP_HOME}/etc/hadoop/.client ]; then
+    . ${HADOOP_HOME}/bin/hadoop_client_symlinks.sh
+fi
+
 # check if this is a HA configuration
 if [ ! -z "$rm_ip" ]; then
     IsRMHAConfiguration $rm_ip
