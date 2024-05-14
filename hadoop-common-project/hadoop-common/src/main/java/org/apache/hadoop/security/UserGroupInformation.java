@@ -92,6 +92,7 @@ import org.apache.hadoop.security.rpcauth.RpcAuthRegistry;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.TokenIdentifier;
 import org.apache.hadoop.util.Shell;
+import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.Time;
 
 import org.slf4j.Logger;
@@ -2037,10 +2038,7 @@ public class UserGroupInformation {
   @InterfaceAudience.Public
   @InterfaceStability.Evolving
   public <T> T doAs(PrivilegedAction<T> action) {
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("PrivilegedAction [as: {}][action: {}]", this, action,
-          new Exception());
-    }
+    tracePrivilegedAction(action);
     return Subject.doAs(subject, action);
   }
   
@@ -2060,10 +2058,7 @@ public class UserGroupInformation {
   public <T> T doAs(PrivilegedExceptionAction<T> action
                     ) throws IOException, InterruptedException {
     try {
-      if (LOG.isDebugEnabled()) {
-        LOG.debug("PrivilegedAction [as: {}][action: {}]", this, action,
-            new Exception());
-      }
+      tracePrivilegedAction(action);
       return Subject.doAs(subject, action);
     } catch (PrivilegedActionException pae) {
       Throwable cause = pae.getCause();
@@ -2082,6 +2077,14 @@ public class UserGroupInformation {
       } else {
         throw new UndeclaredThrowableException(cause);
       }
+    }
+  }
+
+  private void tracePrivilegedAction(Object action) {
+    if (LOG.isTraceEnabled()) {
+      // would be nice if action included a descriptive toString()
+      LOG.trace("PrivilegedAction [as: {}][action: {}][from: {}]", this, action,
+          StringUtils.getStackTrace(new Throwable()));
     }
   }
 
