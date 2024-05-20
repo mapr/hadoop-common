@@ -46,12 +46,14 @@ function createSymlinks() {
   ln -sf ${MAPR_HOME}/lib/central-logging-*.jar ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
   rm -f  ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/zookeeper-3.*.jar
   ln -sf ${MAPR_HOME}/lib/zookeeper-3.*.jar ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
-  rm -f  ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/hdfs/lib/zookeeper-3.*.jar
-  ln -sf ${MAPR_HOME}/lib/zookeeper-3.*.jar ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/hdfs/lib/
+  if [ -d ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/hdfs/lib/ ]; then
+    rm -f  ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/hdfs/lib/zookeeper-3.*.jar
+    ln -sf ${MAPR_HOME}/lib/zookeeper-3.*.jar ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/hdfs/lib/
+    rm -f  ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/hdfs/lib/zookeeper-jute-3.*.jar
+    ln -sf ${MAPR_HOME}/lib/zookeeper-jute-3.*.jar ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/hdfs/lib/
+  fi
   rm -f  ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/zookeeper-jute-3.*.jar
   ln -sf ${MAPR_HOME}/lib/zookeeper-jute-3.*.jar ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
-  rm -f  ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/hdfs/lib/zookeeper-jute-3.*.jar
-  ln -sf ${MAPR_HOME}/lib/zookeeper-jute-3.*.jar ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/hdfs/lib/
   if [ -d ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/yarn/timelineservice/lib/ ]; then
     rm -f  ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/yarn/timelineservice/lib/zookeeper-3.*.jar
     ln -sf ${MAPR_HOME}/lib/zookeeper-3.*.jar ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/yarn/timelineservice/lib/
@@ -74,7 +76,9 @@ function createSymlinks() {
   rm -f ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/mapr-security-*.jar
   ln -sf ${MAPR_HOME}/lib/mapr-security-*.jar ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
   rm -f ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/jmxagent*.jar
-  ln -sf ${MAPR_HOME}/lib/jmxagent*.jar ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  if ls ${MAPR_HOME}/lib/jmxagent*.jar 1> /dev/null 2>&1; then
+    ln -sf ${MAPR_HOME}/lib/jmxagent*.jar ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  fi
 
   rm -f ${MAPR_HOME}/lib/audience-annotations-0.*.jar
   ln -sf ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/audience-annotations-0.*.jar ${MAPR_HOME}/lib/
@@ -89,9 +93,13 @@ function createSymlinks() {
   rm -f ${MAPR_HOME}/lib/hadoop-yarn-api-*.jar
   ln -sf ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/yarn/hadoop-yarn-api-__VERSION_3DIGIT__*.jar ${MAPR_HOME}/lib/
   rm -f  ${MAPR_HOME}/lib/hadoop-yarn-client-*.jar
-  ln -sf ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/yarn/hadoop-yarn-client-__VERSION_3DIGIT__*.jar ${MAPR_HOME}/lib/
+  if ls ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/yarn/hadoop-yarn-client-__VERSION_3DIGIT__*.jar 1> /dev/null 2>&1; then
+    ln -sf ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/yarn/hadoop-yarn-client-__VERSION_3DIGIT__*.jar ${MAPR_HOME}/lib/
+  fi
   rm -f  ${MAPR_HOME}/lib/hadoop-yarn-common-*.jar
-  ln -sf ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/yarn/hadoop-yarn-common-__VERSION_3DIGIT__*.jar ${MAPR_HOME}/lib/
+  if ls ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/yarn/hadoop-yarn-common-__VERSION_3DIGIT__*.jar 1> /dev/null 2>&1; then
+    ln -sf ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/yarn/hadoop-yarn-common-__VERSION_3DIGIT__*.jar ${MAPR_HOME}/lib/
+  fi
 
   ln -sf ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/audience-annotations-0.*.jar ${MAPR_HOME}/lib/
 
