@@ -2063,12 +2063,12 @@
         <artifactId>lz4-java</artifactId>
         <version>${lz4-java.version}</version>
       </dependency>
+      <dependency>
+        <groupId>javax.cache</groupId>
+        <artifactId>cache-api</artifactId>
+        <version>${cache.api.version}</version>
+      </dependency>
     </dependencies>
-    <dependency>
-      <groupId>javax.cache</groupId>
-      <artifactId>cache-api</artifactId>
-      <version>${cache.api.version}</version>
-    </dependency>
   </dependencyManagement>
 
   <build>
