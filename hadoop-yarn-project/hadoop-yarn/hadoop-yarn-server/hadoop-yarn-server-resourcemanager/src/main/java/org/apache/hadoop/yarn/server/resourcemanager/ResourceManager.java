@@ -20,10 +20,13 @@ package org.apache.hadoop.yarn.server.resourcemanager;
 
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.security.authorize.UsersACLsManager;
 import org.apache.hadoop.thirdparty.com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.hadoop.classification.VisibleForTesting;
 import com.sun.jersey.spi.container.servlet.ServletContainer;
 
+import org.apache.hadoop.yarn.logaggregation.LogAggregationUtils;
 import org.apache.hadoop.yarn.metrics.GenericEventTypeMetrics;
 import org.apache.hadoop.yarn.server.webproxy.DefaultAppReportFetcher;
 import org.apache.hadoop.yarn.webapp.WebAppException;
@@ -245,6 +248,8 @@ public class ResourceManager extends CompositeService
 
   private ConfigurableAuxServices auxiliaryServices;
 
+  private UsersACLsManager usersAclsManager;
+
   public ResourceManager() {
     super("ResourceManager");
   }
@@ -383,6 +388,24 @@ public class ResourceManager extends CompositeService
         createSystemMetricsPublisher();
     addIfService(systemMetricsPublisher);
     rmContext.setSystemMetricsPublisher(systemMetricsPublisher);
+
+    //initialize ACL mapping for log aggregation
+    usersAclsManager = new UsersACLsManager(conf);
+    Path rootRemoteDir = new Path(conf.get(YarnConfiguration.NM_REMOTE_APP_LOG_DIR,
+            YarnConfiguration.DEFAULT_NM_REMOTE_APP_LOG_DIR));
+
+    LogAggregationUtils.checkACLConf(usersAclsManager.isUsersACLEnable(),
+            conf.getBoolean(CommonConfigurationKeys.HADOOP_USERS_ACL_FORCE_INIT,
+                    CommonConfigurationKeys.HADOOP_USERS_ACL_FORCE_INIT_DEFAULT), conf, rootRemoteDir);
+
+    if (conf.getBoolean(CommonConfigurationKeys.HADOOP_USERS_ACL_FORCE_INIT,
+            CommonConfigurationKeys.HADOOP_USERS_ACL_FORCE_INIT_DEFAULT)) {
+      if (usersAclsManager.isUsersACLEnable()) {
+        LogAggregationUtils.initACLForAggregatedLogs(conf, usersAclsManager, rootRemoteDir);
+      } else {
+        LogAggregationUtils.cleanAllACE(conf, rootRemoteDir);
+      }
+    }
 
     registerMXBean();
 

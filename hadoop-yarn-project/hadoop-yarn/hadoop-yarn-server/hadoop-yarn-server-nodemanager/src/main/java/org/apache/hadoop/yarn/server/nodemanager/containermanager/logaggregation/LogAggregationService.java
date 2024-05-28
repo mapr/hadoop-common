@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.security.token.SecretManager;
 
 import org.slf4j.Logger;
@@ -35,8 +36,10 @@ import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileContext;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.authorize.UsersACLsManager;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.util.concurrent.HadoopExecutors;
 import org.apache.hadoop.yarn.api.records.ApplicationAccessType;
@@ -47,6 +50,7 @@ import org.apache.hadoop.yarn.api.records.NodeId;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.event.Dispatcher;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
+import org.apache.hadoop.yarn.logaggregation.LogAggregationUtils;
 import org.apache.hadoop.yarn.logaggregation.filecontroller.LogAggregationFileController;
 import org.apache.hadoop.yarn.logaggregation.filecontroller.LogAggregationFileControllerFactory;
 import org.apache.hadoop.yarn.server.api.ContainerLogContext;
@@ -67,6 +71,8 @@ import org.apache.hadoop.classification.VisibleForTesting;
 import org.apache.hadoop.thirdparty.com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import static org.apache.hadoop.yarn.conf.YarnConfiguration.NODE_LOCAL_LOG_AGGREGATION_NODE_ID;
+import static org.apache.hadoop.yarn.conf.YarnConfiguration.NODE_LOCAL_LOG_AGGREGATION_REMOTE_APP_LOG_DIR_FMT;
+import static org.apache.hadoop.yarn.conf.YarnConfiguration.DEFAULT_NODE_LOCAL_LOG_AGGREGATION_REMOTE_APP_LOG_DIR_FMT;
 
 public class LogAggregationService extends AbstractService implements
     LogHandler {
@@ -94,7 +100,7 @@ public class LogAggregationService extends AbstractService implements
 
   @VisibleForTesting
   ExecutorService threadPool;
-  
+
   public LogAggregationService(Dispatcher dispatcher, Context context,
       DeletionService deletionService, LocalDirsHandlerService dirsHandler) {
     super(LogAggregationService.class.getName());
@@ -172,6 +178,21 @@ public class LogAggregationService extends AbstractService implements
     this.nodeId = this.context.getNodeId();
     if (YarnConfiguration.isNodeLocalAggregationEnabled(getConfig())) {
       getConfig().set(NODE_LOCAL_LOG_AGGREGATION_NODE_ID, nodeId.getHost());
+      UsersACLsManager usersAclsManager = new UsersACLsManager(getConfig());
+
+      LogAggregationUtils.checkACLConf(usersAclsManager.isUsersACLEnable(),
+              getConfig().getBoolean(CommonConfigurationKeys.HADOOP_USERS_ACL_FORCE_INIT,
+                      CommonConfigurationKeys.HADOOP_USERS_ACL_FORCE_INIT_DEFAULT),
+              getConfig(), getRemoteRootLogDir(nodeId.toString()));
+
+      if (getConfig().getBoolean(CommonConfigurationKeys.HADOOP_USERS_ACL_FORCE_INIT,
+              CommonConfigurationKeys.HADOOP_USERS_ACL_FORCE_INIT_DEFAULT)) {
+        if (usersAclsManager.isUsersACLEnable()) {
+          LogAggregationUtils.initACLForAggregatedLogs(getConfig(), usersAclsManager, getRemoteRootLogDir(nodeId.toString()));
+        } else {
+          LogAggregationUtils.cleanAllACE(getConfig(), getRemoteRootLogDir(nodeId.toString()));
+        }
+      }
     }
     super.serviceStart();
   }
@@ -471,5 +492,22 @@ public class LogAggregationService extends AbstractService implements
     LogAggregationFileController logAggregationFileController = factory
         .getFileControllerForWrite();
     return logAggregationFileController;
+  }
+
+  /**
+   * Getting path to the remote root log directory
+   * @param nodeIdStr the unique identifier for a node
+   * @return Path to the remote root log directory
+   */
+  private Path getRemoteRootLogDir(String nodeIdStr){
+    String remoteDir = getConfig().get(NODE_LOCAL_LOG_AGGREGATION_REMOTE_APP_LOG_DIR_FMT,
+        DEFAULT_NODE_LOCAL_LOG_AGGREGATION_REMOTE_APP_LOG_DIR_FMT);
+    if (remoteDir == null || remoteDir.isEmpty()) {
+      remoteDir = DEFAULT_NODE_LOCAL_LOG_AGGREGATION_REMOTE_APP_LOG_DIR_FMT;
+    }
+    if(nodeIdStr.contains(":")){
+      nodeIdStr = nodeIdStr.substring(0, nodeIdStr.indexOf(":"));
+    }
+    return new Path(String.format(remoteDir, nodeIdStr));
   }
 }

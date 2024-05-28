@@ -22,13 +22,19 @@ import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileContext;
 import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
+import org.apache.hadoop.maprfs.AbstractMapRFileSystem;
+import org.apache.hadoop.security.authorize.UsersACLsManager;
+import org.apache.hadoop.util.Shell;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.NodeId;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 
 import org.apache.hadoop.classification.VisibleForTesting;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -39,6 +45,8 @@ import java.util.NoSuchElementException;
 
 @Private
 public class LogAggregationUtils {
+  public static final Logger LOG =
+          LoggerFactory.getLogger(LogAggregationUtils.class);
 
   public static final String TMP_FILE_SUFFIX = ".tmp";
   private static final String BUCKET_SUFFIX = "bucket-";
@@ -450,4 +458,73 @@ public class LogAggregationUtils {
 
   }
 
+  /**
+   * Set ACE to users log aggregated directories at root log directory based on user ACL mapping
+   * @param conf the configuration
+   * @param usersAclsManager user ACL mapping
+   * @param rootDir the remote root log directory
+   */
+  public static void initACLForAggregatedLogs(Configuration conf, UsersACLsManager usersAclsManager, Path rootDir){
+    //check root log aggregated directory and change ACE for existing users
+    try {
+      LOG.info("Overwrite all ACE for directory: {}", rootDir.toString());
+      FileSystem fs = FileSystem.get(conf);
+      if (fs instanceof AbstractMapRFileSystem && fs.exists(rootDir)) {
+        AbstractMapRFileSystem mfs = (AbstractMapRFileSystem) fs;
+        FileStatus[] directories = mfs.listStatus(rootDir);
+        for (FileStatus dir : directories) {
+          String username = dir.getPath().getName();
+          if (Shell.checkUserExists(username)) {
+            String ace = usersAclsManager.buildACEStrForUser(username);
+            if (!ace.isEmpty()) {
+              //overwrite previous ACE, inherit true, preservebits true
+              mfs.setAces(dir.getPath(), ace, true, 0, 1, true);
+            }
+          }
+        }
+      }
+    } catch (IOException e) {
+      throw new RuntimeException("Can't initialize FS for aggregation logs.", e);
+    }
+  }
+
+  /**
+   * Remove all ACE from users directories at root log directory
+   * @param conf the configuration
+   * @param rootDir the remote root log directory
+   */
+  public static void cleanAllACE(Configuration conf, Path rootDir) {
+    //check root log aggregated
+    LOG.info("Remove all ACE for directory: {}", rootDir.toString());
+    try {
+      FileSystem fs = FileSystem.get(conf);
+      if (fs instanceof AbstractMapRFileSystem && fs.exists(rootDir)) {
+        AbstractMapRFileSystem mfs = (AbstractMapRFileSystem) fs;
+        FileStatus[] directories = mfs.listStatus(rootDir);
+        for (FileStatus dir : directories) {
+          String username = dir.getPath().getName();
+          if (Shell.checkUserExists(username)) {
+            mfs.deleteAces(dir.getPath(), false);
+          }
+        }
+      }
+    } catch (IOException e) {
+      throw new RuntimeException("Can't initialize FS for aggregation logs.", e);
+    }
+  }
+
+  public static void checkACLConf(boolean isUsersACLEnable, boolean forceInit, Configuration conf, Path rootDir){
+    if(isUsersACLEnable && !forceInit){
+      try {
+          FileSystem fs = FileSystem.get(conf);
+          if (fs instanceof AbstractMapRFileSystem && fs.exists(rootDir) && fs.listStatus(rootDir).length > 0) {
+            LOG.warn("ACE for user aggregation log was enabled, but root directory doesn't empty or " +
+                    "hadoop.users.acl.force.init property set to false. " +
+                    "User's mapping ACE for logs possibly will not work. Please check configuration.");
+          }
+        } catch (IOException e) {
+            throw new RuntimeException("Can't initialize FileSystem.", e);
+        }
+    }
+  }
 }

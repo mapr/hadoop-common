@@ -265,6 +265,28 @@ public abstract class Shell {
   }
 
   /**
+   * Check that user exists on the node
+   *
+   * @param user - username
+   * @return True if user exists
+   */
+  public static boolean checkUserExists(final String user) {
+    String quotedUser = bashQuote(user);
+    ShellCommandExecutor shexec;
+    String[] args = {"bash", "-c", "id -u " + quotedUser};
+    shexec = new ShellCommandExecutor(args);
+    try {
+      shexec.execute();
+      if (shexec.getExitCode() == 0) {
+        return true;
+      }
+    } catch (IOException ex) {
+      LOG.warn("Can't get id for user: {}.", user, ex);
+    }
+    return false;
+  }
+
+  /**
    * A command to get a given netgroup's user list.
    *
    * @param netgroup net group.
@@ -1006,7 +1028,7 @@ public abstract class Shell {
     String debug_opts = builder.environment().get(ENV_DEBUG_OPTS);
     if (debug_opts != null) {
       String hadoop_opts = builder.environment().get(ENV_HADOOP_OPTS);
-      hadoop_opts = hadoop_opts.replaceAll(debug_opts, "");
+      hadoop_opts = hadoop_opts.replace(debug_opts, "");
       builder.environment().put(ENV_HADOOP_OPTS, hadoop_opts);
     }
 
