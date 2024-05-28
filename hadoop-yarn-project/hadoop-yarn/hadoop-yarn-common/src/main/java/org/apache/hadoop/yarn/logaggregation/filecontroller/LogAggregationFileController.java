@@ -19,6 +19,8 @@
 package org.apache.hadoop.yarn.logaggregation.filecontroller;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.hadoop.maprfs.AbstractMapRFileSystem;
+import org.apache.hadoop.security.authorize.UsersACLsManager;
 import org.apache.hadoop.thirdparty.com.google.common.annotations.VisibleForTesting;
 
 import java.io.FileNotFoundException;
@@ -108,6 +110,8 @@ public abstract class LogAggregationFileController {
   protected String fileControllerName;
 
   protected boolean fsSupportsChmod = true;
+  protected UsersACLsManager usersAclsManager;
+
 
   public LogAggregationFileController() {}
 
@@ -130,6 +134,7 @@ public abstract class LogAggregationFileController {
       this.retentionSize = configuredRetentionSize;
     }
     this.fileControllerName = controllerName;
+    this.usersAclsManager = new UsersACLsManager(conf);
 
     extractRemoteRootLogDir();
     extractRemoteRootLogDirSuffix();
@@ -494,6 +499,11 @@ public abstract class LogAggregationFileController {
     if (fsSupportsChmod) {
       FsPermission dirPerm = new FsPermission(fsPerm);
       fs.mkdirs(path, dirPerm);
+      if(usersAclsManager.isUsersACLEnable()){
+        AbstractMapRFileSystem mfs = (AbstractMapRFileSystem) fs;
+        String ace = usersAclsManager.buildACEStrForUser(UserGroupInformation.getCurrentUser().getShortUserName());
+        mfs.setAces(path, ace, false, 0, 1, false);
+      }
       FsPermission umask = FsPermission.getUMask(fs.getConf());
       if (!dirPerm.equals(dirPerm.applyUMask(umask))) {
         fs.setPermission(path, new FsPermission(fsPerm));

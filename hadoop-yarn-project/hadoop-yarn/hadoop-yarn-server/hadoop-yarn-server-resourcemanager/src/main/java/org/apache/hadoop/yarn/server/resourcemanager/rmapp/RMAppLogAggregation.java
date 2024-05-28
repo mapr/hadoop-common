@@ -18,10 +18,13 @@ package org.apache.hadoop.yarn.server.resourcemanager.rmapp;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.security.authorize.UsersACLsManager;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.LogAggregationStatus;
 import org.apache.hadoop.yarn.api.records.NodeId;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.apache.hadoop.yarn.logaggregation.LogAggregationUtils;
 import org.apache.hadoop.yarn.server.api.protocolrecords.LogAggregationReport;
 
 import java.util.ArrayList;
@@ -53,6 +56,7 @@ public class RMAppLogAggregation {
   private Map<NodeId, List<String>> logAggregationFailureMessagesForNMs =
       new HashMap<>();
   private final int maxLogAggregationDiagnosticsInMemory;
+  private final UsersACLsManager usersAclsManager;
 
   RMAppLogAggregation(Configuration conf, ReadLock readLock,
       WriteLock writeLock) {
@@ -65,6 +69,15 @@ public class RMAppLogAggregation {
             LogAggregationStatus.DISABLED;
     this.maxLogAggregationDiagnosticsInMemory =
         getMaxLogAggregationDiagnostics(conf);
+    this.usersAclsManager = new UsersACLsManager(conf);
+
+    Path rootRemoteDir = new Path(conf.get(YarnConfiguration.NM_REMOTE_APP_LOG_DIR,
+        YarnConfiguration.DEFAULT_NM_REMOTE_APP_LOG_DIR));
+    if(this.usersAclsManager.isUsersACLEnable()){
+      LogAggregationUtils.initACLForAggregatedLogs(conf, usersAclsManager, rootRemoteDir);
+    } else {
+      LogAggregationUtils.cleanAllACE(conf, rootRemoteDir);
+    }
   }
 
   private long getLogAggregationStatusTimeout(Configuration conf) {

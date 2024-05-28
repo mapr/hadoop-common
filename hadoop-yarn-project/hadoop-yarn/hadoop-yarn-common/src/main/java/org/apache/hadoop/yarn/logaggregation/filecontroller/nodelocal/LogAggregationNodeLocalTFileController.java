@@ -43,6 +43,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -113,9 +114,23 @@ public class LogAggregationNodeLocalTFileController extends LogAggregationFileCo
 
             Path appDir = getRemoteNodeLogFileForAppForNodeLocalAggregator(appId, user);
             appDir = appDir.makeQualified(remoteFS.getUri(), remoteFS.getWorkingDirectory());
-            if (!checkExists(remoteFS, appDir, APP_DIR_PERMISSIONS)) {
-              createDir(remoteFS, appDir, APP_DIR_PERMISSIONS);
+            Path curDir = appDir.makeQualified(remoteFS.getUri(), remoteFS.getWorkingDirectory());
+            Path rootLogDir = remoteRootLogDir.makeQualified(remoteFS.getUri(), remoteFS.getWorkingDirectory());
+
+            LinkedList<Path> pathsToCreate = new LinkedList<>();
+
+            while (!curDir.equals(rootLogDir)) {
+              if (!checkExists(remoteFS, curDir, APP_DIR_PERMISSIONS)) {
+                pathsToCreate.addFirst(curDir);
+                curDir = curDir.getParent();
+              } else {
+                break;
+              }
             }
+            for (Path path : pathsToCreate) {
+              createDir(remoteFS, path, APP_DIR_PERMISSIONS);
+            }
+
           } catch (IOException e) {
             LOG.error("Failed to setup application log directory for "
               + appId, e);

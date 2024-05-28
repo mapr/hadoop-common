@@ -22,8 +22,12 @@ import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileContext;
 import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
+import org.apache.hadoop.maprfs.AbstractMapRFileSystem;
+import org.apache.hadoop.security.authorize.UsersACLsManager;
+import org.apache.hadoop.util.Shell;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.NodeId;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
@@ -369,4 +373,54 @@ public class LogAggregationUtils {
     return nodeFiles;
   }
 
+  /**
+   * Set ACE to users log aggregated directories at root log directory based on user ACL mapping
+   * @param conf the configuration
+   * @param usersAclsManager user ACL mapping
+   * @param rootDir the remote root log directory
+   */
+  public static void initACLForAggregatedLogs(Configuration conf, UsersACLsManager usersAclsManager, Path rootDir){
+    //check root log aggregated directory and change ACE for existing users
+    try {
+      FileSystem fs = FileSystem.get(conf);
+      if (fs instanceof AbstractMapRFileSystem && fs.exists(rootDir)) {
+        AbstractMapRFileSystem mfs = (AbstractMapRFileSystem) fs;
+        FileStatus[] directories = mfs.listStatus(rootDir);
+        for (FileStatus dir : directories) {
+          String username = dir.getPath().getName();
+          if (Shell.checkUserExists(username)) {
+            String ace = usersAclsManager.buildACEStrForUser(username);
+            //overwrite previous ACE, inherit true, preservebits true
+            mfs.setAces(dir.getPath(), ace, true, 0, 1, true);
+          }
+        }
+      }
+    } catch (IOException e) {
+      throw new RuntimeException("Can't initialize FS for aggregation logs.", e);
+    }
+  }
+
+  /**
+   * Remove all ACE from users directories at root log directory
+   * @param conf the configuration
+   * @param rootDir the remote root log directory
+   */
+  public static void cleanAllACE(Configuration conf, Path rootDir) {
+    //check root log aggregated
+    try {
+      FileSystem fs = FileSystem.get(conf);
+      if (fs instanceof AbstractMapRFileSystem && fs.exists(rootDir)) {
+        AbstractMapRFileSystem mfs = (AbstractMapRFileSystem) fs;
+        FileStatus[] directories = mfs.listStatus(rootDir);
+        for (FileStatus dir : directories) {
+          String username = dir.getPath().getName();
+          if (Shell.checkUserExists(username)) {
+            mfs.deleteAces(dir.getPath(), true);
+          }
+        }
+      }
+    } catch (IOException e) {
+      throw new RuntimeException("Can't initialize FS for aggregation logs.", e);
+    }
+  }
 }

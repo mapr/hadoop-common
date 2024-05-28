@@ -29,6 +29,34 @@ public class UsersACLsManager {
   private Map<String, UserGroupMapping> groupAclMapping =
       new HashMap<>();
 
+  private Map<String, UserGroupMapping> invertedUsersAclMapping =
+      new HashMap<>();
+
+  private Map<String, UserGroupMapping> invertedGroupAclMapping =
+      new HashMap<>();
+
+  public enum ACE {
+
+    READ_FILE("rf"),
+    WRITE_FILE("wf"),
+    EXECUTE_FILE("ef"),
+    READ_DIR("rd"),
+    LOOKUP_DIR("ld"),
+    ADD_CHILD("ac"),
+    DELETE_CHILD("dc");
+
+    ACE(String name) {
+      this.name = name;
+    }
+
+    private final String name;
+
+    @Override
+    public String toString() {
+      return this.name;
+    }
+  }
+
   public UsersACLsManager(Configuration conf) {
     String userACLs = conf.get(CommonConfigurationKeys.HADOOP_USERS_ACL, "").trim();
     if (!userACLs.isEmpty()) {
@@ -71,6 +99,54 @@ public class UsersACLsManager {
             mapLists.get(EntityType.USER), mapLists.get(EntityType.GROUP));
 
         groupAclMapping.put(groupName, userGroupValue);
+      }
+    }
+    invertAclMappring(usersAclMapping);
+    invertAclMappring(groupAclMapping);
+  }
+
+  /**
+   * Invert users ACL mapping. Inverted Map uses for log aggregation permissions
+   * @param mapAclMapping ACL user mapping
+   */
+  private void invertAclMappring(Map<String, UserGroupMapping> mapAclMapping) {
+    for (Map.Entry<String, UserGroupMapping> userSet : mapAclMapping.entrySet()) {
+      List<String> ownerUserList = userSet.getValue().getUserList();
+      for (String ownerUser : ownerUserList) {
+        if (invertedUsersAclMapping.get(ownerUser) != null) {
+          if (userSet.getValue().getType().equals(UserGroupMapping.EntityType.USER)) {
+            invertedUsersAclMapping.get(ownerUser).addToUserList(userSet.getKey());
+          } else if (userSet.getValue().getType().equals(UserGroupMapping.EntityType.GROUP)) {
+            invertedUsersAclMapping.get(ownerUser).addToGroupList(userSet.getKey());
+          }
+        } else {
+          UserGroupMapping userACLInfo = new UserGroupMapping(UserGroupMapping.EntityType.USER, ownerUser);
+          if (userSet.getValue().getType().equals(UserGroupMapping.EntityType.USER)) {
+            userACLInfo.addToUserList(userSet.getKey());
+          } else if (userSet.getValue().getType().equals(UserGroupMapping.EntityType.GROUP)) {
+            userACLInfo.addToGroupList(userSet.getKey());
+          }
+          invertedUsersAclMapping.put(ownerUser, userACLInfo);
+        }
+      }
+
+      List<String> ownerGroupList = userSet.getValue().getGroupList();
+      for (String ownerGroup : ownerGroupList) {
+        if (invertedGroupAclMapping.get(ownerGroup) != null) {
+          if (userSet.getValue().getType().equals(UserGroupMapping.EntityType.USER)) {
+            invertedGroupAclMapping.get(ownerGroup).addToUserList(userSet.getKey());
+          } else if (userSet.getValue().getType().equals(UserGroupMapping.EntityType.GROUP)) {
+            invertedGroupAclMapping.get(ownerGroup).addToGroupList(userSet.getKey());
+          }
+        } else {
+          UserGroupMapping userACLInfo = new UserGroupMapping(UserGroupMapping.EntityType.GROUP, ownerGroup);
+          if (userSet.getValue().getType().equals(UserGroupMapping.EntityType.USER)) {
+            userACLInfo.addToUserList(userSet.getKey());
+          } else if (userSet.getValue().getType().equals(UserGroupMapping.EntityType.GROUP)) {
+            userACLInfo.addToGroupList(userSet.getKey());
+          }
+          invertedGroupAclMapping.put(ownerGroup, userACLInfo);
+        }
       }
     }
   }
@@ -168,4 +244,81 @@ public class UsersACLsManager {
 
     return false;
   }
+
+  /**
+   * Build string with ACE to allow other users access to owner logs
+   * @param owner - username of application owner
+   * @return ACE in string format
+   */
+  public String buildACEStrForUser(String owner) {
+    List<String> accessUser = invertedUsersAclMapping.get(owner).getUserList();
+    List<String> accessGroup = invertedUsersAclMapping.get(owner).getGroupList();
+    if (accessUser == null && accessGroup == null) {
+      return "";
+    }
+    StringBuilder sb = new StringBuilder();
+
+    //read owner and all allow users
+    sb.append(ACE.READ_FILE);
+    sb.append(":(");
+    if (accessUser != null) {
+      for (String user : accessUser) {
+        sb.append("u:").append(user).append("|");
+      }
+    }
+    if (accessGroup != null) {
+      for (String user : accessGroup) {
+        sb.append("g:").append(user).append("|");
+      }
+    }
+    sb.append("u:").append(owner).append(")");
+
+    //write only for owner
+    sb.append(",").append(ACE.WRITE_FILE);
+    sb.append(":(u:").append(owner).append(")");
+    //execute only for owner
+    sb.append(",").append(ACE.EXECUTE_FILE);
+    sb.append(":(u:").append(owner).append(")");
+
+    //read dir owner and all allow users
+    sb.append(",").append(ACE.READ_DIR);
+    sb.append(":(");
+    if (accessUser != null) {
+      for (String user : accessUser) {
+        sb.append("u:").append(user).append("|");
+      }
+    }
+    if (accessGroup != null) {
+      for (String user : accessGroup) {
+        sb.append("g:").append(user).append("|");
+      }
+    }
+    sb.append("u:").append(owner).append(")");
+
+    //lookup dir owner and all allow users
+    sb.append(",").append(ACE.LOOKUP_DIR);
+    sb.append(":(");
+    if (accessUser != null) {
+      for (String user : accessUser) {
+        sb.append("u:").append(user).append("|");
+      }
+    }
+    if (accessGroup != null) {
+      for (String user : accessGroup) {
+        sb.append("g:").append(user).append("|");
+      }
+    }
+    sb.append("u:").append(owner).append(")");
+
+    //add child only for owner
+    sb.append(",").append(ACE.ADD_CHILD);
+    sb.append(":(u:").append(owner).append(")");
+
+    //delete child only for owner
+    sb.append(",").append(ACE.DELETE_CHILD);
+    sb.append(":(u:").append(owner).append(")");
+
+    return sb.toString();
+  }
+
 }
