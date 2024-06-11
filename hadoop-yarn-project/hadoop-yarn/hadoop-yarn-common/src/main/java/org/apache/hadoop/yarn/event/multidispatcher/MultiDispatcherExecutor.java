@@ -80,6 +80,8 @@ public class MultiDispatcherExecutor {
       log.debug("Not all event queue is empty, waiting to drain ...");
       Thread.sleep(1_000);
     }
+    //Additional sleep to process the latest event
+    Thread.sleep(2_000);
     for (MultiDispatcherExecutorThread thread : threads) {
       thread.interrupt();
     }
