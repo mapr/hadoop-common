@@ -502,7 +502,9 @@ public abstract class LogAggregationFileController {
       if(usersAclsManager.isUsersACLEnable()){
         AbstractMapRFileSystem mfs = (AbstractMapRFileSystem) fs;
         String ace = usersAclsManager.buildACEStrForUser(UserGroupInformation.getCurrentUser().getShortUserName());
-        mfs.setAces(path, ace, false, 0, 1, false);
+        if (!ace.isEmpty()) {
+          mfs.setAces(path, ace, false, 0, 1, false);
+        }
       }
       FsPermission umask = FsPermission.getUMask(fs.getConf());
       if (!dirPerm.equals(dirPerm.applyUMask(umask))) {

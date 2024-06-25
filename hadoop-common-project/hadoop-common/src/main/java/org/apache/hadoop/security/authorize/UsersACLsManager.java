@@ -251,11 +251,12 @@ public class UsersACLsManager {
    * @return ACE in string format
    */
   public String buildACEStrForUser(String owner) {
-    List<String> accessUser = invertedUsersAclMapping.get(owner).getUserList();
-    List<String> accessGroup = invertedUsersAclMapping.get(owner).getGroupList();
-    if (accessUser == null && accessGroup == null) {
+    if (invertedUsersAclMapping.get(owner) == null && invertedUsersAclMapping.get(owner) == null) {
       return "";
     }
+    List<String> accessUser = invertedUsersAclMapping.get(owner).getUserList();
+    List<String> accessGroup = invertedUsersAclMapping.get(owner).getGroupList();
+
     StringBuilder sb = new StringBuilder();
 
     //read owner and all allow users

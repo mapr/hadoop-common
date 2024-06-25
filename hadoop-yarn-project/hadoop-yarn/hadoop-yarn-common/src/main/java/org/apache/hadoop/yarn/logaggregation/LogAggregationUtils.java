@@ -390,8 +390,10 @@ public class LogAggregationUtils {
           String username = dir.getPath().getName();
           if (Shell.checkUserExists(username)) {
             String ace = usersAclsManager.buildACEStrForUser(username);
-            //overwrite previous ACE, inherit true, preservebits true
-            mfs.setAces(dir.getPath(), ace, true, 0, 1, true);
+            if (!ace.isEmpty()) {
+              //overwrite previous ACE, inherit true, preservebits true
+              mfs.setAces(dir.getPath(), ace, true, 0, 1, true);
+            }
           }
         }
       }
