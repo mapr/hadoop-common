@@ -251,11 +251,26 @@ public class UsersACLsManager {
    * @return ACE in string format
    */
   public String buildACEStrForUser(String owner) {
-    if (invertedUsersAclMapping.get(owner) == null && invertedUsersAclMapping.get(owner) == null) {
+    List<String> accessUser = new ArrayList<>();
+    List<String> accessGroup = new ArrayList<>();
+    if (invertedUsersAclMapping.get(owner) != null) {
+      if (invertedUsersAclMapping.get(owner).getUserList() != null)
+        accessUser.addAll(invertedUsersAclMapping.get(owner).getUserList());
+      if (invertedUsersAclMapping.get(owner).getGroupList() != null)
+        accessGroup.addAll(invertedUsersAclMapping.get(owner).getGroupList());
+    }
+    List<String> ownerGroups = UserGroupInformation.createRemoteUser(owner).getGroups();
+    for (String group : ownerGroups) {
+      if (invertedGroupAclMapping.get(group) != null) {
+        if (invertedGroupAclMapping.get(group).getUserList() != null)
+          accessUser.addAll(invertedGroupAclMapping.get(group).getUserList());
+        if (invertedGroupAclMapping.get(group).getGroupList() != null)
+          accessGroup.addAll(invertedGroupAclMapping.get(group).getGroupList());
+      }
+    }
+    if (accessUser.isEmpty() && accessGroup.isEmpty()) {
       return "";
     }
-    List<String> accessUser = invertedUsersAclMapping.get(owner).getUserList();
-    List<String> accessGroup = invertedUsersAclMapping.get(owner).getGroupList();
 
     StringBuilder sb = new StringBuilder();
 
