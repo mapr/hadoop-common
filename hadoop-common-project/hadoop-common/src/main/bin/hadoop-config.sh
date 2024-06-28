@@ -264,7 +264,7 @@ function configure_jmx() {
 
 enable_debug() {
   PORT=$1
-  DEBUG_OPTS="-Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=$PORT,suspend=n"
+  DEBUG_OPTS="-Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=*:$PORT,suspend=n"
   hadoop_add_param HADOOP_OPTS service.debug_config "$DEBUG_OPTS"
   export DEBUG_OPTS="${DEBUG_OPTS}"
 }
