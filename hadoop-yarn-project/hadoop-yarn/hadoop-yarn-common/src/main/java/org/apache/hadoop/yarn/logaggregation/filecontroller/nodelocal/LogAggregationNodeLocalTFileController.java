@@ -108,33 +108,43 @@ public class LogAggregationNodeLocalTFileController extends LogAggregationFileCo
       userUgi.doAs(new PrivilegedExceptionAction<Object>() {
         @Override
         public Object run() throws Exception {
-          try {
-            // TODO: Reuse FS for user?
-            FileSystem remoteFS = getFileSystem(conf);
+          int retry = 0;
+          while (retry < maxRetry) {
+            try {
+              // TODO: Reuse FS for user?
+              FileSystem remoteFS = getFileSystem(conf);
 
-            Path appDir = getRemoteNodeLogFileForAppForNodeLocalAggregator(appId, user);
-            appDir = appDir.makeQualified(remoteFS.getUri(), remoteFS.getWorkingDirectory());
-            Path curDir = appDir.makeQualified(remoteFS.getUri(), remoteFS.getWorkingDirectory());
-            Path rootLogDir = remoteRootLogDir.makeQualified(remoteFS.getUri(), remoteFS.getWorkingDirectory());
+              Path appDir = getRemoteNodeLogFileForAppForNodeLocalAggregator(appId, user);
+              appDir = appDir.makeQualified(remoteFS.getUri(), remoteFS.getWorkingDirectory());
+              Path curDir = appDir.makeQualified(remoteFS.getUri(), remoteFS.getWorkingDirectory());
+              Path rootLogDir = remoteRootLogDir.makeQualified(remoteFS.getUri(), remoteFS.getWorkingDirectory());
 
-            LinkedList<Path> pathsToCreate = new LinkedList<>();
+              LinkedList<Path> pathsToCreate = new LinkedList<>();
 
-            while (!curDir.equals(rootLogDir)) {
-              if (!checkExists(remoteFS, curDir, APP_DIR_PERMISSIONS)) {
-                pathsToCreate.addFirst(curDir);
-                curDir = curDir.getParent();
+              while (!curDir.equals(rootLogDir)) {
+                if (!checkExists(remoteFS, curDir, APP_DIR_PERMISSIONS)) {
+                  pathsToCreate.addFirst(curDir);
+                  curDir = curDir.getParent();
+                } else {
+                  break;
+                }
+              }
+              for (Path path : pathsToCreate) {
+                createDir(remoteFS, path, APP_DIR_PERMISSIONS);
+              }
+              break;
+            } catch (IOException e) {
+              retry++;
+              if (retry >= maxRetry) {
+                LOG.error("Failed to setup application log directory for "
+                    + appId, e);
+                throw e;
               } else {
-                break;
+                LOG.warn("Can't create directories for aggregation logs. Sleep " + retryTimeout + "ms and try again. " +
+                    "Number of try: " + retry);
+                Thread.sleep(retryTimeout);
               }
             }
-            for (Path path : pathsToCreate) {
-              createDir(remoteFS, path, APP_DIR_PERMISSIONS);
-            }
-
-          } catch (IOException e) {
-            LOG.error("Failed to setup application log directory for "
-              + appId, e);
-            throw e;
           }
           return null;
         }

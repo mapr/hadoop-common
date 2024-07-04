@@ -1660,6 +1660,20 @@ public class YarnConfiguration extends Configuration {
       DEFAULT_NM_LOG_AGGREGATION_NUM_LOG_FILES_SIZE_PER_APP = 30;
 
   /**
+   * Number of tries to create log aggregation directory for the application if it failed.
+   */
+  public static final String NM_LOG_AGGREGATION_RETRY_NUM_LOG_DIRECTORY =
+      NM_PREFIX +  "log-aggregation.retry-directory-count";
+  public static final int DEFAULT_NM_LOG_AGGREGATION_RETRY_NUM_LOG_DIRECTORY = 3;
+
+  /**
+   * Timeout for retry to create log aggregation directory for the application if it failed
+   */
+  public static final String NM_LOG_AGGREGATION_RETRY_LOG_DIRECTORY_TIMEOUT =
+      NM_PREFIX +  "log-aggregation.retry-directory-timeout";
+  public static final int DEFAULT_NM_LOG_AGGREGATION_RETRY_LOG_DIRECTORY_TIMEOUT = 2000;
+
+  /**
    * Number of threads used in log cleanup. Only applicable if Log aggregation
    * is disabled
    */

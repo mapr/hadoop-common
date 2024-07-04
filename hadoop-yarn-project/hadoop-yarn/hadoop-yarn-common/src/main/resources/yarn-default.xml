@@ -3719,6 +3719,22 @@
   </property>
 
   <property>
+    <description>Number of tries to create log aggregation directory for the application if it failed.
+      By default, the total number of retries is 3.
+    </description>
+    <name>yarn.nodemanager.log-aggregation.retry-directory-count</name>
+    <value>3</value>
+  </property>
+
+  <property>
+    <description>Timeout for retry to create log aggregation directory for the application if it failed.
+      By default, timeout is 2000ms for try.
+    </description>
+    <name>yarn.nodemanager.log-aggregation.retry-directory-timeout</name>
+    <value>2000</value>
+  </property>
+
+  <property>
     <description>
     Enable/disable intermediate-data encryption at YARN level. For now,
     this only is used by the FileSystemRMStateStore to setup right

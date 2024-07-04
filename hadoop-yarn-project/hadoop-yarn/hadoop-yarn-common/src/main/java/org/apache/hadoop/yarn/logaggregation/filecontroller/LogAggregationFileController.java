@@ -111,6 +111,8 @@ public abstract class LogAggregationFileController {
 
   protected boolean fsSupportsChmod = true;
   protected UsersACLsManager usersAclsManager;
+  protected int maxRetry;
+  protected long retryTimeout;
 
 
   public LogAggregationFileController() {}
@@ -133,6 +135,14 @@ public abstract class LogAggregationFileController {
     } else {
       this.retentionSize = configuredRetentionSize;
     }
+    this.maxRetry = conf.getInt(
+        YarnConfiguration.NM_LOG_AGGREGATION_RETRY_NUM_LOG_DIRECTORY,
+        YarnConfiguration
+            .DEFAULT_NM_LOG_AGGREGATION_RETRY_NUM_LOG_DIRECTORY);
+    this.retryTimeout = conf.getLong(
+        YarnConfiguration.NM_LOG_AGGREGATION_RETRY_LOG_DIRECTORY_TIMEOUT,
+        YarnConfiguration
+            .DEFAULT_NM_LOG_AGGREGATION_RETRY_LOG_DIRECTORY_TIMEOUT);
     this.fileControllerName = controllerName;
     this.usersAclsManager = new UsersACLsManager(conf);
 
@@ -445,37 +455,48 @@ public abstract class LogAggregationFileController {
       userUgi.doAs(new PrivilegedExceptionAction<Object>() {
         @Override
         public Object run() throws Exception {
-          try {
-            // TODO: Reuse FS for user?
-            FileSystem remoteFS = getFileSystem(conf);
+          int retry = 0;
+          while (retry < maxRetry) {
+            try {
+              // TODO: Reuse FS for user?
+              FileSystem remoteFS = getFileSystem(conf);
 
-            // Only creating directories if they are missing to avoid
-            // unnecessary load on the filesystem from all of the nodes
-            Path appDir = LogAggregationUtils.getRemoteAppLogDir(
-                remoteRootLogDir, appId, user, remoteRootLogDirSuffix);
-            Path curDir = appDir.makeQualified(remoteFS.getUri(),
-                remoteFS.getWorkingDirectory());
-            Path rootLogDir = remoteRootLogDir.makeQualified(remoteFS.getUri(),
-                remoteFS.getWorkingDirectory());
+              // Only creating directories if they are missing to avoid
+              // unnecessary load on the filesystem from all of the nodes
+              Path appDir = LogAggregationUtils.getRemoteAppLogDir(
+                  remoteRootLogDir, appId, user, remoteRootLogDirSuffix);
+              Path curDir = appDir.makeQualified(remoteFS.getUri(),
+                  remoteFS.getWorkingDirectory());
+              Path rootLogDir = remoteRootLogDir.makeQualified(remoteFS.getUri(),
+                  remoteFS.getWorkingDirectory());
 
-            LinkedList<Path> pathsToCreate = new LinkedList<>();
+              LinkedList<Path> pathsToCreate = new LinkedList<>();
 
-            while (!curDir.equals(rootLogDir)) {
-              if (!checkExists(remoteFS, curDir, APP_DIR_PERMISSIONS)) {
-                pathsToCreate.addFirst(curDir);
-                curDir = curDir.getParent();
+              while (!curDir.equals(rootLogDir)) {
+                if (!checkExists(remoteFS, curDir, APP_DIR_PERMISSIONS)) {
+                  pathsToCreate.addFirst(curDir);
+                  curDir = curDir.getParent();
+                } else {
+                  break;
+                }
+              }
+
+              for (Path path : pathsToCreate) {
+                createDir(remoteFS, path, APP_DIR_PERMISSIONS);
+              }
+              break;
+            } catch (IOException e) {
+              retry++;
+              if (retry >= maxRetry) {
+                LOG.error("Failed to setup application log directory for "
+                    + appId, e);
+                throw e;
               } else {
-                break;
+                LOG.warn("Can't create directories for aggregation logs. Sleep " + retryTimeout + "ms and try again. " +
+                    "Number of try: " + retry);
+                Thread.sleep(retryTimeout);
               }
             }
-
-            for (Path path : pathsToCreate) {
-              createDir(remoteFS, path, APP_DIR_PERMISSIONS);
-            }
-          } catch (IOException e) {
-            LOG.error("Failed to setup application log directory for "
-                + appId, e);
-            throw e;
           }
           return null;
         }
