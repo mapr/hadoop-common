@@ -227,8 +227,8 @@ com.fasterxml.uuid:java-uuid-generator:3.1.4
 com.fasterxml.woodstox:woodstox-core:5.4.0
 com.github.davidmoten:rxjava-extras:0.8.0.17
 com.github.stephenc.jcip:jcip-annotations:1.0-1
-com.google:guice:4.0
-com.google:guice-servlet:4.0
+com.google:guice:5.1.0
+com.google:guice-servlet:5.1.0
 com.google.android:annotations:jar:4.1.1.4
 com.google.api.grpc:proto-google-common-protos:1.12.0
 com.google.code.findbugs:jsr305:3.0.2
