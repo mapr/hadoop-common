@@ -19,10 +19,10 @@
   <parent>
     <artifactId>hadoop-yarn-server</artifactId>
     <groupId>org.apache.hadoop</groupId>
-    <version>3.3.5.400-eep-930-SNAPSHOT</version>
+    <version>3.3.5.500-eep-931-SNAPSHOT</version>
   </parent>
   <artifactId>hadoop-yarn-server-tests</artifactId>
-  <version>3.3.5.400-eep-930-SNAPSHOT</version>
+  <version>3.3.5.500-eep-931-SNAPSHOT</version>
   <name>Apache Hadoop YARN Server Tests</name>
 
   <properties>
