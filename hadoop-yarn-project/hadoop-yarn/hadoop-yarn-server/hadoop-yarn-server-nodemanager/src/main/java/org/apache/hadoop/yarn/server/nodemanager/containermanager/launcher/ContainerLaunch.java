@@ -293,10 +293,6 @@ public class ContainerLaunch implements Callable<Integer> {
 
       launchContext.setCommands(newCmds);
 
-      // The actual expansion of environment variables happens after calling
-      // sanitizeEnv.  This allows variables specified in NM_ADMIN_USER_ENV
-      // to reference user or container-defined variables.
-      Map<String, String> environment = launchContext.getEnvironment();
       // /////////////////////////// End of variable expansion
 
       // Use this to track variables that are added to the environment by nm.
