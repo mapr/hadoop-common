@@ -615,7 +615,7 @@ public class AppSchedulingInfo {
         activeLabel = null;
       }
 
-      LabelExpressionHandlingHelper.LabelApplicabilityStatus blackListStatus = LabelExpressionHandlingHelper.isNodeApplicableForApp(resourceName, activeLabel, rmContext.getNodeLabelManager());
+      LabelExpressionHandlingHelper.LabelApplicabilityStatus blackListStatus = LabelExpressionHandlingHelper.getInstance(rmContext.getNodeLabelManager()).isNodeApplicableForApp(resourceName, activeLabel);
       return blackListStatus.equals(LabelExpressionHandlingHelper.LabelApplicabilityStatus.NODE_DOES_NOT_HAVE_LABEL);
     }
     return false;
