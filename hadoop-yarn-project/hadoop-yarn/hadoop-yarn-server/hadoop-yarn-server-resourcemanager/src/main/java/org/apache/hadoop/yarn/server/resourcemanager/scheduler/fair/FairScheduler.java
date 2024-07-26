@@ -1750,6 +1750,9 @@ public class FairScheduler extends
   public void reinitialize(Configuration conf, RMContext rmContext)
       throws IOException {
     try {
+      if (conf.getBoolean(YarnConfiguration.NODE_LABELS_ENABLED, YarnConfiguration.DEFAULT_NODE_LABELS_ENABLED)){
+        LabelExpressionHandlingHelper.getInstance(rmContext.getNodeLabelManager()).reloadLabels();
+      }
       allocsLoader.reloadAllocations();
       super.reinitialize(conf, rmContext);
     } catch (Exception e) {
