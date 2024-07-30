@@ -197,7 +197,7 @@ export HADOOP_OS_TYPE=${HADOOP_OS_TYPE:-$(uname -s)}
 # export HADOOP_IDENT_STRING=$USER
 
 # How many seconds to pause after stopping a daemon
-# export HADOOP_STOP_TIMEOUT=5
+# export HADOOP_STOP_TIMEOUT=60
 
 # Where pid files are stored.  /tmp by default.
 # export HADOOP_PID_DIR=/tmp

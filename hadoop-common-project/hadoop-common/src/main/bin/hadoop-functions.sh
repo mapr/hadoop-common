@@ -885,7 +885,7 @@ function hadoop_basic_init
   HADOOP_LOGFILE=${HADOOP_LOGFILE:-hadoop.log}
   HADOOP_LOGLEVEL=${HADOOP_LOGLEVEL:-INFO}
   HADOOP_NICENESS=${HADOOP_NICENESS:-0}
-  HADOOP_STOP_TIMEOUT=${HADOOP_STOP_TIMEOUT:-5}
+  HADOOP_STOP_TIMEOUT=${HADOOP_STOP_TIMEOUT:-60}
   HADOOP_PID_DIR=${HADOOP_PID_DIR:-/opt/mapr/pid}
   HADOOP_ROOT_LOGGER=${HADOOP_ROOT_LOGGER:-${HADOOP_LOGLEVEL},console}
   HADOOP_DAEMON_ROOT_LOGGER=${HADOOP_DAEMON_ROOT_LOGGER:-${HADOOP_LOGLEVEL},RFA}
@@ -2133,8 +2133,13 @@ function hadoop_stop_daemon
     wait_process_to_die_or_timeout "${pid}" "${HADOOP_STOP_TIMEOUT}"
 
     if kill -0 "${pid}" > /dev/null 2>&1; then
-      hadoop_error "WARNING: ${cmd} did not stop gracefully after ${HADOOP_STOP_TIMEOUT} seconds: Trying to kill with kill -9"
-      kill -9 "${pid}" >/dev/null 2>&1
+      hadoop_error "WARNING: ${cmd} did not stop gracefully after ${HADOOP_STOP_TIMEOUT} seconds: Trying to save dump and kill with kill -9"
+      kill -3 "${pid}" >/dev/null 2>&1
+      wait_process_to_die_or_timeout "${pid}" 1
+      if kill -0 "${pid}" > /dev/null 2>&1; then
+        hadoop_error "WARNING: Trying to kill with kill -9"
+        kill -9 "${pid}" >/dev/null 2>&1
+      fi
     fi
     wait_process_to_die_or_timeout "${pid}" "${HADOOP_STOP_TIMEOUT}"
     if ps -p "${pid}" > /dev/null 2>&1; then
