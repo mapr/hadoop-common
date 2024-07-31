@@ -1,10 +1,10 @@
 package org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair;
 
-import org.apache.hadoop.yarn.api.records.NodeId;
 import org.apache.hadoop.yarn.server.resourcemanager.nodelabels.RMNodeLabelsManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -22,18 +22,22 @@ public class LabelExpressionHandlingHelper {
       LOG.debug("Initializing LabelExpressionHandlingHelper for Scheduler");
       labelHelper = new LabelExpressionHandlingHelper();
       localLabelsManager = labelsManager;
-      nodeLabelsMap = labelsManager.getNodeLabels().entrySet().stream().collect(Collectors.toMap(
+      nodeLabelsMap = labelsManager.getNodeLabels().entrySet().stream()
+              .sorted(Comparator.comparingInt(entry -> entry.getKey().getPort())).
+              collect(Collectors.toMap(
               entry -> entry.getKey().getHost(),
-              entry -> entry.getValue()));
+              entry -> entry.getValue(), (e1, e2) -> e1));
     }
     return labelHelper;
   }
 
   public void reloadLabels(){
     LOG.info("Labels information are reloaded for Scheduler");
-    nodeLabelsMap = localLabelsManager.getNodeLabels().entrySet().stream().collect(Collectors.toMap(
+    nodeLabelsMap = localLabelsManager.getNodeLabels().entrySet().stream().
+            sorted(Comparator.comparingInt(entry -> entry.getKey().getPort())).
+            collect(Collectors.toMap(
             entry -> entry.getKey().getHost(),
-            entry -> entry.getValue()));
+            entry -> entry.getValue(), (e1, e2) -> e1));
   }
 
   public LabelApplicabilityStatus isNodeApplicableForApp(String node, String appLabel) {
