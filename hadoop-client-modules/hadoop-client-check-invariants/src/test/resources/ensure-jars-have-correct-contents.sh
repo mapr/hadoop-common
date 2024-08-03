@@ -55,6 +55,8 @@ allowed_expr+="|^yarn-.*.template$"
 allowed_expr+="|^[^-]*-version-info.properties$"
 #   * Hadoop's application classloader properties file.
 allowed_expr+="|^org.apache.hadoop.application-classloader.properties$"
+# Comes from dnsjava, not sure if relocatable.
+allowed_expr+="|^messages.properties$"
 # public suffix list used by httpcomponents
 allowed_expr+="|^mozilla/$"
 allowed_expr+="|^mozilla/public-suffix-list.txt$"
