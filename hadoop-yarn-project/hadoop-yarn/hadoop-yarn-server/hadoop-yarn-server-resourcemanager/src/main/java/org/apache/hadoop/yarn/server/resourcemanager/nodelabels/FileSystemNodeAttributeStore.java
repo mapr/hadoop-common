@@ -17,6 +17,7 @@
  */
 package org.apache.hadoop.yarn.server.resourcemanager.nodelabels;
 
+import org.apache.hadoop.yarn.conf.YarnDefaultProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -55,9 +56,15 @@ public class FileSystemNodeAttributeStore
   }
 
   private String getDefaultFSNodeAttributeRootDir() throws IOException {
-    // default is in local: /tmp/hadoop-yarn-${user}/node-attribute/
-    return "file:///tmp/hadoop-yarn-" + UserGroupInformation.getCurrentUser()
-        .getShortUserName() + "/" + DEFAULT_DIR_NAME;
+    // default is in maprfs: maprfs:///var/mapr/cluster/yarn/node-attribute/
+    // for test default is local: /tmp/hadoop-yarn-${user}/node-attribute/
+    String defaultRootDir = "file:///tmp/hadoop-yarn-" + UserGroupInformation.getCurrentUser()
+            .getShortUserName() + "/" + DEFAULT_DIR_NAME;
+    if(System.getenv("SKIP_MAPR_SPECIFIC_PROPERTIES") == null ||
+            System.getenv("SKIP_MAPR_SPECIFIC_PROPERTIES").equals("false") ){
+      defaultRootDir = "maprfs://" + YarnDefaultProperties.DEFAULT_YARN_DIR + "/" + DEFAULT_DIR_NAME;
+    }
+    return defaultRootDir;
   }
 
   @Override
