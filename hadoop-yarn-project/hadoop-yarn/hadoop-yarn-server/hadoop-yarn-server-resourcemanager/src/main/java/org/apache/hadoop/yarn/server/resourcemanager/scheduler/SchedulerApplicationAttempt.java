@@ -38,6 +38,7 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.lang3.time.FastDateFormat;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CSQueue;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacityScheduler;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.FairScheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
@@ -1251,6 +1252,10 @@ public class SchedulerApplicationAttempt implements SchedulableEntity {
       if (rmContainer.getExecutionType() == ExecutionType.GUARANTEED) {
         attemptResourceUsage.incUsed(node.getPartition(),
             rmContainer.getContainer().getResource());
+        if (this.rmContext.getScheduler() instanceof FairScheduler && !node.getPartition().isEmpty()) {
+          attemptResourceUsage.incUsed(RMNodeLabelsManager.NO_LABEL,
+                  rmContainer.getContainer().getResource());
+        }
       }
 
       // resourceLimit: updated when LeafQueue#recoverContainer#allocateResource
