@@ -18,6 +18,7 @@
 
 package org.apache.hadoop.yarn.nodelabels;
 
+import org.apache.hadoop.conf.CoreDefaultProperties;
 import org.apache.hadoop.yarn.conf.YarnDefaultProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
