@@ -380,7 +380,10 @@ function ConfigureYarnServices() {
     local YarnSiteFile="${HADOOP_HOME}/etc/hadoop/yarn-site.xml"
     if [ "$MAPR_SECURITY_STATUS" = "true" ]; then
         ConfigureYarnSiteXml org.apache.hadoop.yarn.configuration.YarnSiteAclXmlBuilder
-
+        if !( grep -FA 1 'yarn.admin.acl' "$YarnSiteFile" | grep -q $MAPR_USER ); then
+            sed -i -e "/<name>yarn.admin.acl<\/name>/!b;n;c\ \ \ \ <value>$MAPR_USER<\/value>" ${YarnSiteFile}
+            yarnSiteChange=1
+        fi
         if [ "$MAPR_USER" != "mapr" ]; then
             local tmpFile="/tmp/rmp.$$"
             if ! grep -Fq 'yarn.resourcemanager.principal' "$YarnSiteFile"; then
