@@ -165,7 +165,7 @@ public class LogLevel {
 
       // if protocol is unspecified, set it as http.
       if (protocol == null) {
-        protocol = PROTOCOL_HTTP;
+        protocol = PROTOCOL_HTTPS;
       }
     }
 
