@@ -68,7 +68,9 @@ function createSymlinks() {
   rm -f ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/maprdb-*.jar
   ln -sf ${MAPR_HOME}/lib/maprdb-*.jar ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
   rm -f ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/mapr-stream*.jar
-  ln -sf ${MAPR_HOME}/lib/mapr-stream*.jar ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  if ls ${MAPR_HOME}/lib/mapr-stream*.jar 1> /dev/null 2>&1; then
+    ln -sf ${MAPR_HOME}/lib/mapr-stream*.jar ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  fi
   rm -f ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/antlr4-runtime-*.jar
   ln -sf ${MAPR_HOME}/lib/antlr4-runtime-*.jar ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
   rm -f ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/ojai-*.jar
