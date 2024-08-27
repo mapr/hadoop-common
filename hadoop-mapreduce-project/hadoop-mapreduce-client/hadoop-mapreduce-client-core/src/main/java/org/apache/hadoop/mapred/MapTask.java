@@ -520,6 +520,7 @@ public class MapTask extends Task {
       FileSplit fileSplit = (FileSplit) inputSplit;
       job.set(JobContext.MAP_INPUT_FILE, fileSplit.getPath().toString());
       job.setLong(JobContext.MAP_INPUT_START, fileSplit.getStart());
+      job.setLong(JobContext.MAP_INPUT_PATH, fileSplit.getLength());
 
       if (LOG.isInfoEnabled())
         LOG.info("Processing Split: File = " + fileSplit.getPath().toString() +

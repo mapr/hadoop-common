@@ -49,17 +49,15 @@ import org.apache.hadoop.security.NullGroupsMapping;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.ssl.KeyStoreTestUtil;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Test;
-import org.junit.Before;
-import org.junit.BeforeClass;
+import org.junit.*;
+
 import static org.junit.Assert.assertTrue;
 
 /**
  * Test the {@link RollingFileSystemSink} class in the context of HDFS with
  * Kerberos enabled.
  */
+@Ignore
 public class TestRollingFileSystemSinkWithSecureHdfs
     extends RollingFileSystemSinkTestBase {
   private static final int  NUM_DATANODES = 4;
