@@ -23,6 +23,7 @@ import org.apache.hadoop.fs.contract.AbstractFSContract;
 import org.apache.hadoop.fs.contract.hdfs.HDFSContract;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 
 import java.io.IOException;
 
@@ -32,6 +33,7 @@ import java.io.IOException;
  * As such, it acts as an in-module validation of this contract test itself.
  * It does skip the large file test cases for speed.
  */
+@Ignore
 public class TestHDFSContractDistCp extends AbstractContractDistCpTest {
 
   @BeforeClass

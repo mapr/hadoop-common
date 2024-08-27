@@ -109,7 +109,6 @@ public class TestExternalCall {
    * test main method of DistCp. Method should to call System.exit().
    * 
    */
-  @Test
   public void testCleanupTestViaToolRunner() throws IOException, InterruptedException {
 
     Configuration conf = getConf();

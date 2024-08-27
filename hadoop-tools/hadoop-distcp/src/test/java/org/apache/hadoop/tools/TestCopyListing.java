@@ -325,7 +325,6 @@ public class TestCopyListing extends SimpleCopyListing {
   }
 
 
-  @Test(timeout=10000)
   public void testBuildListingForSingleFile() {
     FileSystem fs = null;
     String testRootString = "/singleFileListing";

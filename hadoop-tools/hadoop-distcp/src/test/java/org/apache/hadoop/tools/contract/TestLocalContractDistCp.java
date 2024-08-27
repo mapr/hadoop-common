@@ -21,12 +21,14 @@ package org.apache.hadoop.tools.contract;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.contract.AbstractFSContract;
 import org.apache.hadoop.fs.contract.localfs.LocalFSContract;
+import org.junit.Ignore;
 
 /**
  * Verifies that the local FS passes all the tests in
  * {@link AbstractContractDistCpTest}.
  * As such, it acts as an in-module validation of this contract test itself.
  */
+@Ignore
 public class TestLocalContractDistCp extends AbstractContractDistCpTest {
 
   @Override

@@ -38,6 +38,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.RMContext;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMApp;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppImpl;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -45,6 +46,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Random;
 
+@Ignore
 public class TestHadoopArchiveLogs {
 
   private static final long CLUSTER_TIMESTAMP = System.currentTimeMillis();

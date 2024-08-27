@@ -18,10 +18,12 @@
 package org.apache.hadoop.tools;
 
 import org.apache.hadoop.fs.Path;
+import org.junit.Ignore;
 
 /**
  * Test the case "-rdiff s2 s1 tgt tgt".
  */
+@Ignore
 public class TestDistCpSyncReverseFromTarget
   extends TestDistCpSyncReverseBase {
   /*

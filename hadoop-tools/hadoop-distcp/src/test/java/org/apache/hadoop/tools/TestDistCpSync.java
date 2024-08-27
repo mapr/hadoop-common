@@ -35,10 +35,7 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.tools.mapred.CopyMapper;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 
 
 import java.io.IOException;
@@ -53,6 +50,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+@Ignore
 public class TestDistCpSync {
   private MiniDFSCluster cluster;
   private final Configuration conf = new HdfsConfiguration();

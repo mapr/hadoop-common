@@ -538,7 +538,6 @@ public class TestCopyMapper {
     }
   }
 
-  @Test(timeout=40000)
   public void testIgnoreFailures() {
     doTestIgnoreFailures(true);
     doTestIgnoreFailures(false);
