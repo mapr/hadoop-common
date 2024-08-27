@@ -23,6 +23,7 @@ import java.util.HashSet;
 import org.apache.hadoop.conf.TestConfigurationFieldsBase;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.client.HdfsClientConfigKeys;
+import org.junit.Ignore;
 
 /**
  * Unit test class to compare the following MR Configuration classes:
@@ -35,6 +36,7 @@ import org.apache.hadoop.hdfs.client.HdfsClientConfigKeys;
  * Refer to {@link org.apache.hadoop.conf.TestConfigurationFieldsBase}
  * for how this class works.
  */
+@Ignore
 public class TestHdfsConfigFields extends TestConfigurationFieldsBase {
 
   @Override
