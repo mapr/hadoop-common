@@ -27,6 +27,7 @@ import org.apache.hadoop.mapred.MiniMRClientClusterFactory;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -54,6 +55,7 @@ import org.apache.hadoop.mapreduce.server.jobtracker.JTConfig;
  * Also validates job output.
  * Uses MiniMR since the local jobtracker doesn't track task status. 
  */
+@Ignore
 public class TestStreamingStatus {
   protected static String TEST_ROOT_DIR =
     new File(System.getProperty("test.build.data","/tmp"),

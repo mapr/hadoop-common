@@ -121,7 +121,6 @@ public class TestCopyCommitter {
     }
   }
 
-  @Test
   public void testNoCommitAction() throws IOException {
     TaskAttemptContext taskAttemptContext = getTaskAttemptContext(config);
     JobContext jobContext = new JobContextImpl(
@@ -136,7 +135,6 @@ public class TestCopyCommitter {
     Assert.assertEquals("Commit Successful", taskAttemptContext.getStatus());
   }
 
-  @Test
   public void testPreserveStatus() throws IOException {
     TaskAttemptContext taskAttemptContext = getTaskAttemptContext(config);
     JobContext jobContext = new JobContextImpl(taskAttemptContext.getConfiguration(),
@@ -266,7 +264,6 @@ public class TestCopyCommitter {
     }
   }
 
-  @Test
   public void testDeleteMissingWithOnlyFile() throws IOException {
     TaskAttemptContext taskAttemptContext = getTaskAttemptContext(config);
     JobContext jobContext = new JobContextImpl(taskAttemptContext

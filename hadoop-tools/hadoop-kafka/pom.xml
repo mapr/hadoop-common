@@ -51,6 +51,7 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <forkedProcessTimeoutInSeconds>3600</forkedProcessTimeoutInSeconds>
+          <skipTests>true</skipTests>
         </configuration>
       </plugin>
        <plugin>

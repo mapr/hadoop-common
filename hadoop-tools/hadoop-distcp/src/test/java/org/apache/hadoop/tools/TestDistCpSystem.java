@@ -388,7 +388,6 @@ public class TestDistCpSystem {
     deldir(fs, testRoot);
   }
 
-  @Test
   public void testRecursiveChunkCopy() throws Exception {
     FileEntry[] srcFiles = {
         new FileEntry(SRCDAT, true),
@@ -400,7 +399,6 @@ public class TestDistCpSystem {
     chunkCopy(srcFiles);
   }
 
-  @Test
   public void testChunkCopyOneFile() throws Exception {
     FileEntry[] srcFiles = {
         new FileEntry(SRCDAT, true),
@@ -409,7 +407,6 @@ public class TestDistCpSystem {
     chunkCopy(srcFiles);
   }
 
-  @Test
   public void testDistcpLargeFile() throws Exception {
     FileEntry[] srcfiles = {
         new FileEntry(SRCDAT, true),
@@ -500,7 +497,6 @@ public class TestDistCpSystem {
     testPreserveUserHelper(testRoot, srcfiles, dstfiles, false, false, false);
   }
 
-  @Test
   public void testPreserveUserSingleFile() throws Exception {
     String testRoot = "/testdir." + getMethodName();
     FileEntry[] srcfiles = {

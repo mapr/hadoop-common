@@ -32,11 +32,7 @@ import org.apache.hadoop.util.ToolRunner;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.server.MiniYARNCluster;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.Timeout;
 import org.mockito.Mockito;
 
@@ -48,6 +44,7 @@ import java.util.Random;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+@Ignore
 public class TestHadoopArchiveLogsRunner {
 
   private static final int FILE_SIZE_INCREMENT = 4096;

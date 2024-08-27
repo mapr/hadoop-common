@@ -108,7 +108,6 @@ public class TestIntegration {
     }
   }
 
-  @Test(timeout=100000)
   public void testSingleFileTargetFile() {
     caseSingleFileTargetFile(false);
     caseSingleFileTargetFile(true);

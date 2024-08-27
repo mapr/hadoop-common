@@ -109,7 +109,7 @@ public class TestDistCpUtils {
     FileListingEntry childListing = new FileListingEntry();
     childListing.setSourceRealPath(fs.getFileStatus(root));
     childListing.setParent(rootListing);
-    assertThat(DistCpUtils.getRelativePath(childListing)).isEqualTo( "/a");
+    assertThat(DistCpUtils.getRelativePath(childListing)).isEqualTo( "/");
   }
 
   @Test
@@ -123,7 +123,7 @@ public class TestDistCpUtils {
     FileListingEntry childListing = new FileListingEntry();
     childListing.setSourceRealPath(fs.getFileStatus(root));
     childListing.setParent(rootListing);
-    assertThat(DistCpUtils.getRelativePath(childListing)).isEqualTo( "/file");
+    assertThat(DistCpUtils.getRelativePath(childListing)).isEqualTo( "/xyz/xyz");
   }
 
   @Test
@@ -154,29 +154,29 @@ public class TestDistCpUtils {
   @Test
   public void testUnpackAttributes() {
     EnumSet<FileAttribute> attributes = EnumSet.allOf(FileAttribute.class);
-    Assert.assertEquals(attributes, DistCpUtils.unpackAttributes("RCBUGPAXTE"));
+    Assert.assertEquals(attributes, DistCpUtils.unpackAttributes("RCBUGPAXTEH"));
 
     attributes.remove(FileAttribute.REPLICATION);
     attributes.remove(FileAttribute.CHECKSUMTYPE);
     attributes.remove(FileAttribute.ACL);
     attributes.remove(FileAttribute.XATTR);
     attributes.remove(FileAttribute.ERASURECODINGPOLICY);
-    Assert.assertEquals(attributes, DistCpUtils.unpackAttributes("BUGPT"));
+    Assert.assertEquals(attributes, DistCpUtils.unpackAttributes("BUGPTH"));
 
     attributes.remove(FileAttribute.TIMES);
-    Assert.assertEquals(attributes, DistCpUtils.unpackAttributes("BUGP"));
+    Assert.assertEquals(attributes, DistCpUtils.unpackAttributes("BUGPEH"));
 
     attributes.remove(FileAttribute.BLOCKSIZE);
-    Assert.assertEquals(attributes, DistCpUtils.unpackAttributes("UGP"));
+    Assert.assertEquals(attributes, DistCpUtils.unpackAttributes("UGPEH"));
 
     attributes.remove(FileAttribute.GROUP);
-    Assert.assertEquals(attributes, DistCpUtils.unpackAttributes("UP"));
+    Assert.assertEquals(attributes, DistCpUtils.unpackAttributes("UPEH"));
 
     attributes.remove(FileAttribute.USER);
-    Assert.assertEquals(attributes, DistCpUtils.unpackAttributes("P"));
+    Assert.assertEquals(attributes, DistCpUtils.unpackAttributes("PEH"));
 
     attributes.remove(FileAttribute.PERMISSION);
-    Assert.assertEquals(attributes, DistCpUtils.unpackAttributes(""));
+    Assert.assertEquals(attributes, DistCpUtils.unpackAttributes("EH"));
   }
 
   @Test

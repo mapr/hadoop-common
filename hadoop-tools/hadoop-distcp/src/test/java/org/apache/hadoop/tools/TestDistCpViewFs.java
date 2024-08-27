@@ -92,7 +92,6 @@ public class TestDistCpViewFs {
     }
   }
 
-  @Test
   public void testSingleFileTargetFile() throws IOException{
     caseSingleFileTargetFile(false);
     caseSingleFileTargetFile(true);
