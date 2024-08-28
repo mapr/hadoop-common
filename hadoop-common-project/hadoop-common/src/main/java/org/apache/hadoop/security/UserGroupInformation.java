@@ -1888,6 +1888,10 @@ public class UserGroupInformation {
    * @param authMethod input authMethod.
    */
   public void setAuthenticationMethod(AuthMethod authMethod) {
+    if (authMethod == null) {
+      user.setAuthenticationMethod(AuthenticationMethod.CERTIFICATE);
+      return;
+    }
     switch (authMethod) {
       case SIMPLE:
         user.setAuthenticationMethod(AuthenticationMethod.SIMPLE);
