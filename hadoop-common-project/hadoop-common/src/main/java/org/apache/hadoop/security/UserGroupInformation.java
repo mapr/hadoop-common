@@ -1942,6 +1942,10 @@ public class UserGroupInformation {
    * @param authMethod authMethod.
    */
   public void setAuthenticationMethod(AuthMethod authMethod) {
+    if (authMethod == null) {
+      user.setAuthenticationMethod(AuthenticationMethod.CERTIFICATE);
+      return;
+    }
     switch (authMethod) {
       case SIMPLE:
         user.setAuthenticationMethod(AuthenticationMethod.SIMPLE);
