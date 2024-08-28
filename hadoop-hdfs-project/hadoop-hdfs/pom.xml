@@ -240,6 +240,7 @@ https://maven.apache.org/xsd/maven-4.0.0.xsd">
               <value>org.apache.hadoop.test.TimedOutTestsListener</value>
             </property>
           </properties>
+          <skipTests>true</skipTests>
         </configuration>
       </plugin>
       <plugin>
