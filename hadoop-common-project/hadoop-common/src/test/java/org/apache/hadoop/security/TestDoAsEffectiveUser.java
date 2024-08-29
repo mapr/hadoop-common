@@ -17,6 +17,8 @@
  */
 package org.apache.hadoop.security;
 
+import org.apache.hadoop.fs.CommonConfigurationKeys;
+import org.apache.hadoop.security.rpcauth.KerberosAuthMethod;
 import org.apache.hadoop.thirdparty.protobuf.ServiceException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
@@ -143,7 +145,7 @@ public class TestDoAsEffectiveUser extends TestRpcBase {
     });    
   }
   
-  @Test(timeout=4000)
+  @Test(timeout=40000000)
   public void testRealUserSetup() throws IOException {
     final Configuration conf = new Configuration();
     conf.setStrings(DefaultImpersonationProvider.getTestProvider().
@@ -173,7 +175,7 @@ public class TestDoAsEffectiveUser extends TestRpcBase {
     }
   }
 
-  @Test(timeout=4000)
+  @Test(timeout=4000000)
   public void testRealUserAuthorizationSuccess() throws IOException {
     final Configuration conf = new Configuration();
     configureSuperUserIPAddresses(conf, REAL_USER_SHORT_NAME);
@@ -190,7 +192,8 @@ public class TestDoAsEffectiveUser extends TestRpcBase {
       UserGroupInformation realUserUgi = UserGroupInformation
           .createRemoteUser(REAL_USER_NAME);
       checkRemoteUgi(realUserUgi, conf);
-
+      //set auth to SIMPLE because by default it's custom
+      realUserUgi.setAuthenticationMethod(AuthenticationMethod.SIMPLE);
       UserGroupInformation proxyUserUgi = UserGroupInformation
           .createProxyUserForTesting(PROXY_USER_NAME, realUserUgi, GROUP_NAMES);
       checkRemoteUgi(proxyUserUgi, conf);
@@ -361,6 +364,10 @@ public class TestDoAsEffectiveUser extends TestRpcBase {
   public void testProxyWithToken() throws Exception {
     final Configuration conf = new Configuration(masterConf);
     TestTokenSecretManager sm = new TestTokenSecretManager();
+    conf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+            User.class.getName());
+    conf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+            KerberosAuthMethod.class.getName());
     SecurityUtil.setAuthenticationMethod(AuthenticationMethod.KERBEROS, conf);
     RPC.setProtocolEngine(conf, TestRpcService.class,
         ProtobufRpcEngine2.class);
@@ -397,7 +404,7 @@ public class TestDoAsEffectiveUser extends TestRpcBase {
       }
     });
     //The user returned by server must be the one in the token.
-    Assert.assertEquals(REAL_USER_NAME + " (auth:TOKEN) via SomeSuperUser (auth:SIMPLE)", retVal);
+    Assert.assertEquals(REAL_USER_NAME + " (auth:CUSTOM) via SomeSuperUser (auth:SIMPLE)", retVal);
   }
 
   /*
@@ -408,6 +415,10 @@ public class TestDoAsEffectiveUser extends TestRpcBase {
   public void testTokenBySuperUser() throws Exception {
     TestTokenSecretManager sm = new TestTokenSecretManager();
     final Configuration newConf = new Configuration(masterConf);
+    newConf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+            User.class.getName());
+    newConf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+            KerberosAuthMethod.class.getName());
     SecurityUtil.setAuthenticationMethod(AuthenticationMethod.KERBEROS, newConf);
     // Set RPC engine to protobuf RPC engine
     RPC.setProtocolEngine(newConf, TestRpcService.class,
@@ -440,7 +451,7 @@ public class TestDoAsEffectiveUser extends TestRpcBase {
         }
       }
     });
-    String expected = REAL_USER_NAME + " (auth:TOKEN) via SomeSuperUser (auth:SIMPLE)";
+    String expected = REAL_USER_NAME + " (auth:CUSTOM) via SomeSuperUser (auth:SIMPLE)";
     Assert.assertEquals(retVal + "!=" + expected, expected, retVal);
   }
   

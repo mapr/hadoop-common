@@ -33,10 +33,12 @@ import javax.security.sasl.SaslClient;
 import javax.security.sasl.SaslException;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.minikdc.KerberosSecurityTestcase;
 import org.apache.hadoop.security.SaslRpcServer.AuthMethod;
 import org.apache.hadoop.security.SaslRpcServer.QualityOfProtection;
 import org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod;
+import org.apache.hadoop.security.rpcauth.KerberosAuthMethod;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -68,6 +70,11 @@ public class TestFixKerberosTicketOrder extends KerberosSecurityTestcase {
     keytabFile = new File(getWorkDir(), "keytab");
     getKdc().createPrincipal(keytabFile, clientPrincipal, server1Principal,
         server2Principal);
+    conf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+            User.class.getName());
+    conf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+            KerberosAuthMethod.class.getName());
+    System.setProperty("hadoop.login", "kerberos");
     SecurityUtil.setAuthenticationMethod(AuthenticationMethod.KERBEROS, conf);
     UserGroupInformation.setConfiguration(conf);
     UserGroupInformation.setShouldRenewImmediatelyForTests(true);

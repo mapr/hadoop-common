@@ -33,10 +33,12 @@ import javax.security.sasl.Sasl;
 import javax.security.sasl.SaslClient;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.minikdc.KerberosSecurityTestcase;
 import org.apache.hadoop.security.SaslRpcServer.AuthMethod;
 import org.apache.hadoop.security.SaslRpcServer.QualityOfProtection;
 import org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod;
+import org.apache.hadoop.security.rpcauth.KerberosAuthMethod;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -82,6 +84,10 @@ public class TestRaceWhenRelogin extends KerberosSecurityTestcase {
     principals[numThreads] = serverPrincipal;
     principals[numThreads + 1] = clientPrincipal;
     getKdc().createPrincipal(keytabFile, principals);
+    conf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+            User.class.getName());
+    conf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+            KerberosAuthMethod.class.getName());
     SecurityUtil.setAuthenticationMethod(AuthenticationMethod.KERBEROS, conf);
     UserGroupInformation.setConfiguration(conf);
     UserGroupInformation.setShouldRenewImmediatelyForTests(true);

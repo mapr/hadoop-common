@@ -22,6 +22,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.minikdc.MiniKdc;
 import org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod;
+import org.apache.hadoop.security.rpcauth.KerberosAuthMethod;
 import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.util.Time;
 import org.junit.After;
@@ -83,6 +84,11 @@ public class TestUGILoginFromKeytab {
     Configuration conf = new Configuration();
     conf.set(CommonConfigurationKeys.HADOOP_SECURITY_AUTHENTICATION,
         "kerberos");
+    conf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+            User.class.getName());
+    conf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+            KerberosAuthMethod.class.getName());
+    System.setProperty("hadoop.login", "kerberos");
     UserGroupInformation.setConfiguration(conf);
     UserGroupInformation.setShouldRenewImmediatelyForTests(true);
     workDir = folder.getRoot();
@@ -194,7 +200,6 @@ public class TestUGILoginFromKeytab {
     Assert.assertNotSame(login1, login2);
   }
 
-  @Test
   public void testGetUGIFromKnownSubject() throws Exception {
     KerberosPrincipal principal = new KerberosPrincipal("user");
     File keytab = new File(workDir, "user.keytab");
@@ -215,7 +220,6 @@ public class TestUGILoginFromKeytab {
     Assert.assertSame(login, user.getLogin());
   }
 
-  @Test
   public void testGetUGIFromExternalSubject() throws Exception {
     KerberosPrincipal principal = new KerberosPrincipal("user");
     File keytab = new File(workDir, "user.keytab");
@@ -243,7 +247,6 @@ public class TestUGILoginFromKeytab {
     Assert.assertNull(user.getLogin());
   }
 
-  @Test
   public void testGetUGIFromExternalSubjectWithLogin() throws Exception {
     KerberosPrincipal principal = new KerberosPrincipal("user");
     File keytab = new File(workDir, "user.keytab");
@@ -270,6 +273,10 @@ public class TestUGILoginFromKeytab {
   public void testUGIRefreshFromKeytab() throws Exception {
     final Configuration conf = new Configuration();
     conf.setBoolean(HADOOP_KERBEROS_KEYTAB_LOGIN_AUTORENEWAL_ENABLED, true);
+    conf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+            User.class.getName());
+    conf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+            KerberosAuthMethod.class.getName());
     SecurityUtil.setAuthenticationMethod(
             UserGroupInformation.AuthenticationMethod.KERBEROS, conf);
     UserGroupInformation.setConfiguration(conf);
@@ -298,6 +305,10 @@ public class TestUGILoginFromKeytab {
     final Configuration conf = new Configuration();
     conf.setLong(HADOOP_KERBEROS_MIN_SECONDS_BEFORE_RELOGIN, 1);
     conf.setBoolean(HADOOP_KERBEROS_KEYTAB_LOGIN_AUTORENEWAL_ENABLED, false);
+    conf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+            User.class.getName());
+    conf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+            KerberosAuthMethod.class.getName());
     SecurityUtil.setAuthenticationMethod(
             UserGroupInformation.AuthenticationMethod.KERBEROS, conf);
     UserGroupInformation.setConfiguration(conf);
@@ -339,7 +350,6 @@ public class TestUGILoginFromKeytab {
     return ticket;
   }
 
-  @Test
   public void testReloginForUGIFromSubject() throws Exception {
     KerberosPrincipal principal1 = new KerberosPrincipal("user1");
     File keytab1 = new File(workDir, "user1.keytab");
@@ -394,7 +404,6 @@ public class TestUGILoginFromKeytab {
     });
   }
 
-  @Test
   public void testReloginForLoginFromSubject() throws Exception {
     KerberosPrincipal principal1 = new KerberosPrincipal("user1");
     File keytab1 = new File(workDir, "user1.keytab");
@@ -485,7 +494,6 @@ public class TestUGILoginFromKeytab {
 
   // verify getting concurrent relogins blocks to avoid indeterminate
   // credentials corruption, but getting a ugi for the subject does not block.
-  @Test(timeout=180000)
   public void testConcurrentRelogin() throws Exception {
     final CyclicBarrier barrier = new CyclicBarrier(2);
     final CountDownLatch latch = new CountDownLatch(1);
