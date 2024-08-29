@@ -38,6 +38,7 @@ import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.alias.CredentialProvider;
 import org.apache.hadoop.security.alias.CredentialProviderFactory;
 import org.apache.hadoop.security.alias.LocalJavaKeyStoreProvider;
+import org.apache.hadoop.security.rpcauth.KerberosAuthMethod;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.TokenIdentifier;
 import org.apache.hadoop.util.StringUtils;
@@ -134,6 +135,11 @@ public class TestSecurityUtil {
   @Test
   public void testStartsWithIncorrectSettings() throws IOException {
     Configuration conf = new Configuration();
+    conf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+            User.class.getName());
+    conf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+            KerberosAuthMethod.class.getName());
+    System.setProperty("hadoop.login", "kerberos");
     SecurityUtil.setAuthenticationMethod(KERBEROS, conf);
     String keyTabKey="key";
     conf.set(keyTabKey, "");
@@ -392,18 +398,26 @@ public class TestSecurityUtil {
   public void testGetAuthenticationMethod() {
     Configuration conf = new Configuration();
     // default is simple
+    conf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+            User.class.getName());
+    conf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+            KerberosAuthMethod.class.getName());
     conf.unset(HADOOP_SECURITY_AUTHENTICATION);
+    UserGroupInformation.setConfiguration(conf);
     assertEquals(SIMPLE, SecurityUtil.getAuthenticationMethod(conf));
     // simple
     conf.set(HADOOP_SECURITY_AUTHENTICATION, "simple");
+    UserGroupInformation.setConfiguration(conf);
     assertEquals(SIMPLE, SecurityUtil.getAuthenticationMethod(conf));
     // kerberos
     conf.set(HADOOP_SECURITY_AUTHENTICATION, "kerberos");
+    UserGroupInformation.setConfiguration(conf);
     assertEquals(KERBEROS, SecurityUtil.getAuthenticationMethod(conf));
     // bad value
     conf.set(HADOOP_SECURITY_AUTHENTICATION, "kaboom");
     String error = null;
     try {
+      UserGroupInformation.setConfiguration(conf);
       SecurityUtil.getAuthenticationMethod(conf);
     } catch (Exception e) {
       error = e.toString();
