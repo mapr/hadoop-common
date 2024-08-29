@@ -20,7 +20,9 @@ package org.apache.hadoop.security;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.minikdc.MiniKdc;
+import org.apache.hadoop.security.rpcauth.KerberosAuthMethod;
 import org.apache.hadoop.test.GenericTestUtils;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -75,6 +77,11 @@ public class TestKDiag extends Assert {
     keytab = createKeytab("foo");
     conf = new Configuration();
     conf.set(HADOOP_SECURITY_AUTHENTICATION, "KERBEROS");
+    conf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+            User.class.getName());
+    conf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+            KerberosAuthMethod.class.getName());
+    System.setProperty("hadoop.login", "kerberos");
   }
 
   @AfterClass
@@ -122,7 +129,9 @@ public class TestKDiag extends Assert {
 
   @Test
   public void testBasicLoginFailure() throws Throwable {
+    System.clearProperty("hadoop.login");
     kdiagFailure(CAT_LOGIN, ARG_KEYLEN, KEYLEN);
+    System.setProperty("hadoop.login", "kerberos");
   }
 
   @Test
@@ -155,7 +164,7 @@ public class TestKDiag extends Assert {
   @Test
   public void testConfIsSecure() throws Throwable {
     Assert.assertFalse(SecurityUtil.getAuthenticationMethod(conf)
-        .equals(UserGroupInformation.AuthenticationMethod.SIMPLE));
+        .equals(UserGroupInformation.AuthenticationMethod.CUSTOM));
   }
 
   @Test
