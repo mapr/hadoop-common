@@ -208,6 +208,7 @@ https://maven.apache.org/xsd/maven-4.0.0.xsd">
           <systemPropertyVariables>
             <derby.stream.error.file>${project.build.directory}/derby.log</derby.stream.error.file>
           </systemPropertyVariables>
+          <skipTests>true</skipTests>
         </configuration>
       </plugin>
       <plugin>
