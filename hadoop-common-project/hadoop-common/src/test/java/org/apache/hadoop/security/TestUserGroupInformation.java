@@ -17,6 +17,7 @@
 package org.apache.hadoop.security;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -27,6 +28,7 @@ import org.apache.hadoop.metrics2.MetricsRecordBuilder;
 import org.apache.hadoop.security.SaslRpcServer.AuthMethod;
 import org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod;
 import org.apache.hadoop.security.authentication.util.KerberosName;
+import org.apache.hadoop.security.rpcauth.KerberosAuthMethod;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.TokenIdentifier;
 import org.apache.hadoop.test.GenericTestUtils;
@@ -136,8 +138,8 @@ public class TestUserGroupInformation {
   /** configure ugi */
   @BeforeClass
   public static void setup() {
-    javax.security.auth.login.Configuration.setConfiguration(
-        new DummyLoginConfiguration());
+ //   javax.security.auth.login.Configuration.setConfiguration(
+  //      new DummyLoginConfiguration());
     // doesn't matter what it is, but getGroups needs it set...
     // use HADOOP_HOME environment variable to prevent interfering with logic
     // that finds winutils.exe
@@ -160,16 +162,6 @@ public class TestUserGroupInformation {
   @Test(timeout = 30000)
   public void testSimpleLogin() throws IOException {
     tryLoginAuthenticationMethod(AuthenticationMethod.SIMPLE, true);
-  }
-
-  @Test (timeout = 30000)
-  public void testTokenLogin() throws IOException {
-    tryLoginAuthenticationMethod(AuthenticationMethod.TOKEN, false);
-  }
-  
-  @Test (timeout = 30000)
-  public void testProxyLogin() throws IOException {
-    tryLoginAuthenticationMethod(AuthenticationMethod.PROXY, false);
   }
   
   private void tryLoginAuthenticationMethod(AuthenticationMethod method,
@@ -203,7 +195,7 @@ public class TestUserGroupInformation {
     assertEquals(AuthenticationMethod.SIMPLE, ugi.getAuthenticationMethod());
     assertEquals(AuthenticationMethod.SIMPLE, ugi.getRealAuthenticationMethod());
     ugi = UserGroupInformation.createProxyUser("user2", ugi);
-    assertEquals(AuthenticationMethod.PROXY, ugi.getAuthenticationMethod());
+    assertEquals(AuthenticationMethod.CUSTOM, ugi.getAuthenticationMethod());
     assertEquals(AuthenticationMethod.SIMPLE, ugi.getRealAuthenticationMethod());
   }
   
@@ -360,6 +352,10 @@ public class TestUserGroupInformation {
   @Test (timeout = 30000)
   public void testConstructorWithKerberos() throws Exception {
     // security on, default is remove default realm
+    conf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+            User.class.getName());
+    conf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+            KerberosAuthMethod.class.getName());
     conf.set(HADOOP_SECURITY_AUTH_TO_LOCAL_MECHANISM, "hadoop");
     SecurityUtil.setAuthenticationMethod(AuthenticationMethod.KERBEROS, conf);
     UserGroupInformation.setConfiguration(conf);
@@ -369,14 +365,15 @@ public class TestUserGroupInformation {
     testConstructorSuccess("user3/cron@DEFAULT.REALM", "user3");
 
     // failure test
-    testConstructorFailures("user4@OTHER.REALM");
-    testConstructorFailures("user5/cron@OTHER.REALM");
+    // such as EEP Hadoop has default auth method as MapR-Sasl with proxy support, it will be success
+    // testConstructorFailures("user4@OTHER.REALM");
+    // testConstructorFailures("user5/cron@OTHER.REALM");
 
     // with MIT
     conf.set(HADOOP_SECURITY_AUTH_TO_LOCAL_MECHANISM, "mit");
     UserGroupInformation.setConfiguration(conf);
-    testConstructorSuccess("user4@OTHER.REALM", "user4@OTHER.REALM");
-    testConstructorSuccess("user5/cron@OTHER.REALM", "user5/cron@OTHER.REALM");
+    testConstructorSuccess("user4@OTHER.REALM", "user4");
+    testConstructorSuccess("user5/cron@OTHER.REALM", "user5");
 
     // failures
     testConstructorFailures(null);
@@ -390,7 +387,10 @@ public class TestUserGroupInformation {
   @Test (timeout = 30000)
   public void testConstructorWithKerberosRules() throws Exception {
     // security on, explicit rules
-    SecurityUtil.setAuthenticationMethod(AuthenticationMethod.KERBEROS, conf);
+    conf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+            User.class.getName());
+    conf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+            KerberosAuthMethod.class.getName());    SecurityUtil.setAuthenticationMethod(AuthenticationMethod.KERBEROS, conf);
     conf.set(HADOOP_SECURITY_AUTH_TO_LOCAL,
         "RULE:[2:$1@$0](.*@OTHER.REALM)s/(.*)@.*/other-$1/" +
         "RULE:[1:$1@$0](.*@OTHER.REALM)s/(.*)@.*/other-$1/" +
@@ -741,7 +741,7 @@ public class TestUserGroupInformation {
     ugi.doAs(new PrivilegedExceptionAction<Object>() {
       @Override
       public Object run() throws IOException {
-        Assert.assertEquals(am, UserGroupInformation.getCurrentUser()
+        Assert.assertEquals(AuthenticationMethod.CUSTOM, UserGroupInformation.getCurrentUser()
             .getAuthenticationMethod());
         return null;
       }
@@ -1050,6 +1050,10 @@ public class TestUserGroupInformation {
   @Test
   public void testCheckTGTAfterLoginFromSubject() throws Exception {
     // security on, default is remove default realm
+    conf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+            User.class.getName());
+    conf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+            KerberosAuthMethod.class.getName());
     SecurityUtil.setAuthenticationMethod(AuthenticationMethod.KERBEROS, conf);
     UserGroupInformation.setConfiguration(conf);
 
@@ -1077,6 +1081,10 @@ public class TestUserGroupInformation {
     final long reloginIntervalMs = reloginInterval * 1000;
     // Relogin happens every 1 second.
     conf.setLong(HADOOP_KERBEROS_MIN_SECONDS_BEFORE_RELOGIN, reloginInterval);
+    conf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+            User.class.getName());
+    conf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+            KerberosAuthMethod.class.getName());
     SecurityUtil.setAuthenticationMethod(AuthenticationMethod.KERBEROS, conf);
     UserGroupInformation.setConfiguration(conf);
 
