@@ -240,11 +240,7 @@ public class TestPathData {
     String dirString = "file:///tmp";
     Path tmpDir = new Path(dirString);
     PathData item = new PathData(dirString, conf);
-    // this may fail some day if Path is fixed to not crunch the uri
-    // if the authority is null, however we need to test that the PathData
-    // toString() returns the given string, while Path toString() does
-    // the crunching
-    assertEquals("file:/tmp", tmpDir.toString());
+    assertEquals("file:///tmp", tmpDir.toString());
     checkPathData(dirString, item);
   }
 
