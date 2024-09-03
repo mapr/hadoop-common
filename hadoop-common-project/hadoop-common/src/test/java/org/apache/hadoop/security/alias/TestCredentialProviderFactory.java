@@ -247,15 +247,16 @@ public class TestCredentialProviderFactory {
   }
 
   @Test
-  public void testLocalBCFKSProvider() {
+  public void testLocalBCFKSProvider() throws Exception {
     Configuration conf = new Configuration();
     final Path ksPath = new Path(tmpDir.toString(), "test.bcfks");
     final String ourUrl = LocalBouncyCastleFipsKeyStoreProvider.SCHEME_NAME +
         "://file" + ksPath.toUri();
     conf.set(CredentialProviderFactory.CREDENTIAL_PROVIDER_PATH, ourUrl);
-    Exception exception = assertThrows(IOException.class,
-        () -> CredentialProviderFactory.getProviders(conf));
-    assertEquals("Can't create keystore", exception.getMessage());
+
+    List<CredentialProvider> providers = CredentialProviderFactory.getProviders(conf);
+    assertEquals(1, providers.size());
+    assertTrue(providers.get(0) instanceof LocalBouncyCastleFipsKeyStoreProvider);
   }
 
   public void checkPermissionRetention(Configuration conf, String ourUrl,
