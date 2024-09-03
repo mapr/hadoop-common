@@ -502,18 +502,31 @@ public class TestRpcBase {
     }
 
     @Override
-    public TestProtos.AuthMethodResponseProto getAuthMethod(org.apache.hadoop.thirdparty.protobuf.RpcController controller, TestProtos.EmptyRequestProto request) throws org.apache.hadoop.thirdparty.protobuf.ServiceException {
-      return null;
-    }
-/*
-    @Override
     public TestProtos.AuthMethodResponseProto getAuthMethod(
         RpcController controller, TestProtos.EmptyRequestProto request)
         throws ServiceException {
+      UserGroupInformation.AuthenticationMethod authenticationMethod = null;
       AuthMethod authMethod = null;
       try {
-        authMethod = UserGroupInformation.getCurrentUser()
-            .getAuthenticationMethod().getAuthMethod();
+        authenticationMethod = UserGroupInformation.getCurrentUser()
+                .getAuthenticationMethod();
+        if (authenticationMethod == null) {
+          authMethod = AuthMethod.SIMPLE;
+        } else {
+          switch (authenticationMethod) {
+            case SIMPLE:
+              authMethod = AuthMethod.SIMPLE;
+              break;
+            case KERBEROS:
+              authMethod = AuthMethod.KERBEROS;
+              break;
+            case TOKEN:
+              authMethod = AuthMethod.TOKEN;
+              break;
+            default:
+              authMethod = AuthMethod.SIMPLE;
+          }
+        }
       } catch (IOException e) {
         throw new ServiceException(e);
       }
@@ -523,7 +536,7 @@ public class TestRpcBase {
           .setMechanismName(authMethod.getMechanismName())
           .build();
     }
-*/
+
     @Override
     public TestProtos.UserResponseProto getAuthUser(
         RpcController controller, TestProtos.EmptyRequestProto request)
