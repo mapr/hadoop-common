@@ -254,9 +254,9 @@ public class TestCredentialProviderFactory {
         "://file" + ksPath.toUri();
     conf.set(CredentialProviderFactory.CREDENTIAL_PROVIDER_PATH, ourUrl);
 
-    IOException e = assertThrows(IOException.class,
-        () -> CredentialProviderFactory.getProviders(conf));
-    assertTrue(e.getMessage().contains("Can't create keystore"));
+    List<CredentialProvider> providers = CredentialProviderFactory.getProviders(conf);
+    assertEquals(1, providers.size());
+    assertTrue(providers.get(0) instanceof LocalBouncyCastleFipsKeyStoreProvider);
   }
 
   public void checkPermissionRetention(Configuration conf, String ourUrl,
