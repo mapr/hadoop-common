@@ -114,9 +114,9 @@ public class TestPath {
     assertEquals("/", new Path("/").toString());
     assertEquals("/", new Path("//").toString());
     assertEquals("/", new Path("///").toString());
-    assertEquals("//foo/", new Path("//foo/").toString());
-    assertEquals("//foo/", new Path("//foo//").toString());
-    assertEquals("//foo/bar", new Path("//foo//bar").toString());
+    assertEquals("/foo", new Path("//foo/").toString());
+    assertEquals("/foo", new Path("//foo//").toString());
+    assertEquals("/foo/bar", new Path("//foo//bar").toString());
     assertEquals("/foo", new Path("/foo/").toString());
     assertEquals("/foo", new Path("/foo/").toString());
     assertEquals("foo", new Path("foo/").toString());
