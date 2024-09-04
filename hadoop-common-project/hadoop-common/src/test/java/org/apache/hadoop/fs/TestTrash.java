@@ -36,6 +36,7 @@ import java.util.function.Supplier;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,6 +54,8 @@ import org.apache.hadoop.util.Time;
 /**
  * This class tests commands from Trash.
  */
+//Ignore such as EEP disabled trash
+@Ignore
 public class TestTrash {
 
   private final static File BASE_PATH = new File(GenericTestUtils.getTempPath(

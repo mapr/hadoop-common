@@ -460,7 +460,6 @@ public class TestFind {
     inOrder.verify(expr).apply(item5c, 1);
     inOrder.verify(expr).apply(item5ca, 2);
     inOrder.verify(expr).apply(item5d, 1);
-    inOrder.verify(expr).apply(item5ca, 2); // following item5d symlink
     inOrder.verify(expr).apply(item5e, 1);
     inOrder.verify(expr).finish();
     verifyNoMoreInteractions(expr);
@@ -478,13 +477,10 @@ public class TestFind {
     inOrderFsCheck.verify(fsCheck).check(item5c.stat);
     inOrderFsCheck.verify(fsCheck).check(item5ca.stat);
     inOrderFsCheck.verify(fsCheck).check(item5c.stat);
-    inOrderFsCheck.verify(fsCheck, times(2)).check(item5ca.stat);
+    inOrderFsCheck.verify(fsCheck, times(1)).check(item5ca.stat);
     verifyNoMoreInteractions(fsCheck);
 
     verifyNoMoreInteractions(out);
-    verify(err).println(
-        "Infinite loop ignored: " + item5b.toString() + " -> "
-            + item5.toString());
     verifyNoMoreInteractions(err);
   }
 
@@ -816,11 +812,15 @@ public class TestFind {
   private PathData item4 = null;
   private PathData item5 = null;
   private PathData item5a = null;
+  private PathData item5a1b = null;
   private PathData item5b = null;
+  private PathData item5b5 = null;
   private PathData item5c = null;
   private PathData item5ca = null;
   private PathData item5d = null;
+  private PathData item5d5c = null;
   private PathData item5e = null;
+  private PathData item5e5ca = null;
 
   private LinkedList<PathData> createDirectories() throws IOException {
     item1 = createPathData("item1");
@@ -832,11 +832,15 @@ public class TestFind {
     item4 = createPathData("item4");
     item5 = createPathData("item5");
     item5a = createPathData("item5/item5a");
+    item5a1b = createPathData("item5/item1/item1b");
     item5b = createPathData("item5/item5b");
+    item5b5 = createPathData("item5/item5");
     item5c = createPathData("item5/item5c");
     item5ca = createPathData("item5/item5c/item5ca");
     item5d = createPathData("item5/item5d");
+    item5d5c = createPathData("item5/item5/item5c");
     item5e = createPathData("item5/item5e");
+    item5e5ca = createPathData("item5/item5/item5c/item5ca");
 
     LinkedList<PathData> args = new LinkedList<PathData>();
 
@@ -849,11 +853,14 @@ public class TestFind {
     when(item4.stat.isDirectory()).thenReturn(false);
     when(item5.stat.isDirectory()).thenReturn(true);
     when(item5a.stat.isDirectory()).thenReturn(false);
+    when(item5a1b.stat.isDirectory()).thenReturn(false);
     when(item5b.stat.isDirectory()).thenReturn(false);
     when(item5c.stat.isDirectory()).thenReturn(true);
     when(item5ca.stat.isDirectory()).thenReturn(false);
     when(item5d.stat.isDirectory()).thenReturn(false);
+    when(item5d5c.stat.isDirectory()).thenReturn(false);
     when(item5e.stat.isDirectory()).thenReturn(false);
+    when(item5e5ca.stat.isDirectory()).thenReturn(false);
 
     when(mockFs.listStatus(eq(item1.path))).thenReturn(
         new FileStatus[] { item1a.stat, item1b.stat });

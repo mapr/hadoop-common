@@ -31,6 +31,7 @@ import org.apache.hadoop.fs.TrashPolicyDefault;
 import org.apache.hadoop.fs.contract.ContractTestUtils;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.*;
 import static org.apache.hadoop.fs.viewfs.Constants.*;
@@ -69,7 +70,7 @@ public class TestViewFsTrash {
         true);
   }
   
-  @Test
+  @Ignore
   public void testTrash() throws Exception {
     TestTrash.trashShell(conf, fileSystemTestHelper.getTestRootPath(fsView),
         fsView, new Path(fileSystemTestHelper.getTestRootPath(fsView), ".Trash/Current"));

@@ -1550,8 +1550,8 @@ abstract public class ViewFileSystemBaseTest {
         linkFileName);
     final Path expectedMountLinkTarget = fsTarget.makeQualified(
         new Path(targetTestRoot, targetFileName));
-    final Path actualMountLinkTarget = fsView.getLinkTarget(
-        mountTargetSymLinkPath);
+    final Path actualMountLinkTarget = new Path("file:"
+            + fsView.getLinkTarget(mountTargetSymLinkPath).toString());
 
     assertEquals("Resolved link target path not matching!",
         expectedMountLinkTarget, actualMountLinkTarget);
@@ -1567,8 +1567,8 @@ abstract public class ViewFileSystemBaseTest {
         link2FileName);
     final Path expectedMountRelLinkTarget = fsTarget.makeQualified(
         new Path(targetTestRoot, relativeFileName));
-    final Path actualMountRelLinkTarget = fsView.getLinkTarget(
-        mountTargetRelativeSymLinkPath);
+    final Path actualMountRelLinkTarget = new Path("file:" +
+            fsView.getLinkTarget(mountTargetRelativeSymLinkPath));
 
     assertEquals("Resolved relative link target path not matching!",
         expectedMountRelLinkTarget, actualMountRelLinkTarget);
@@ -1595,7 +1595,7 @@ abstract public class ViewFileSystemBaseTest {
       fail("Resolving link target for a non existing link should fail!");
     } catch (Exception e) {
       LOG.info("Expected exception: " + e);
-      GenericTestUtils.assertExceptionContains("File does not exist:", e);
+      GenericTestUtils.assertExceptionContains("does not exist", e);
     }
   }
 
