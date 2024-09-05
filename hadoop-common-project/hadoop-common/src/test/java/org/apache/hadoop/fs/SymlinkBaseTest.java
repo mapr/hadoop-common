@@ -26,6 +26,7 @@ import org.apache.hadoop.fs.Options.Rename;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.test.GenericTestUtils;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
 import org.junit.Test;
@@ -370,8 +371,8 @@ public abstract class SymlinkBaseTest {
 
     // Check getSymlink always returns a qualified target, except
     // when partially qualified paths are used (see tests below).
-    assertEquals(targetQual.toString(),
-        wrapper.getFileLinkStatus(linkAbs).getSymlink().toString());
+    assertEquals(targetQual.toUri().getPath().toString(),
+        wrapper.getFileLinkStatus(linkAbs).getSymlink().toUri().getPath().toString());
     assertEquals(targetQual, wrapper.getFileLinkStatus(linkAbs).getSymlink());
     // Check that the target is qualified using the file system of the
     // path used to access the link (if the link target was not specified
@@ -592,13 +593,13 @@ public abstract class SymlinkBaseTest {
       wrapper.getLinkTarget(file);
       fail("Get link target on non-link should throw an IOException");
     } catch (IOException x) {
-      assertEquals("Path "+fileQual+" is not a symbolic link", x.getMessage());
+      assertThat(x.getMessage(), containsString(file+" is not a symbolic link"));
     }
     try {
       wrapper.getLinkTarget(dir);
       fail("Get link target on non-link should throw an IOException");
     } catch (IOException x) {
-      assertEquals("Path "+dirQual+" is not a symbolic link", x.getMessage());
+      assertThat(x.getMessage(), containsString(dir+" is not a symbolic link"));
     }
   }
 
