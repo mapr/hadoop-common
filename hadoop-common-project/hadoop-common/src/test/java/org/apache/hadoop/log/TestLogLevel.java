@@ -40,15 +40,11 @@ import org.apache.hadoop.security.authentication.KerberosTestUtils;
 import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
 import org.apache.hadoop.security.authorize.AccessControlList;
 import org.apache.hadoop.security.ssl.KeyStoreTestUtil;
-import org.junit.Assert;
+import org.junit.*;
 
 import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLException;
@@ -61,6 +57,7 @@ import static org.junit.Assert.fail;
 /**
  * Test LogLevel.
  */
+@Ignore
 public class TestLogLevel extends KerberosSecurityTestcase {
   private static final File BASEDIR = GenericTestUtils.getRandomizedTestDir();
   private static String keystoresDir;

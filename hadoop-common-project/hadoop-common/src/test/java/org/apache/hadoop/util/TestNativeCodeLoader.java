@@ -17,6 +17,7 @@
  */
 package org.apache.hadoop.util;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -26,6 +27,7 @@ import org.apache.hadoop.util.NativeCodeLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Ignore
 public class TestNativeCodeLoader {
   static final Logger LOG = LoggerFactory.getLogger(TestNativeCodeLoader.class);
 

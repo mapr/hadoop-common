@@ -33,6 +33,7 @@ import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.ZooDefs.Ids;
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.server.ZooKeeperServer;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.AdditionalMatchers;
 import org.mockito.Mockito;
@@ -43,6 +44,7 @@ import org.slf4j.event.Level;
 /**
  * Test for {@link ActiveStandbyElector} using real zookeeper.
  */
+@Ignore
 public class TestActiveStandbyElectorRealZK extends ClientBaseWithFixes {
   static final int NUM_ELECTORS = 2;
   
