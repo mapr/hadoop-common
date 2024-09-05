@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Iterator;
@@ -259,6 +260,35 @@ public class TestHarFileSystem {
     Path getEnclosingRoot(Path path) throws IOException;
 
     BulkDelete createBulkDelete(Path path) throws IllegalArgumentException, IOException;
+
+    public PathId createPathId();
+
+    public FSDataInputStream openFid2(PathId pfid, String file,  int readAheadBytesHint)
+            throws IOException;
+
+    public FSDataOutputStream createFid(String pfid, String file)
+            throws IOException;
+
+    public boolean deleteFid(String pfid, String dir)
+            throws IOException;
+
+    public String mkdirsFid(Path p) throws IOException;
+
+    public String mkdirsFid(String pfid, String dir)
+            throws IOException;
+
+    public void setOwnerFid(String fid, String user, String group) throws IOException;
+
+    public FSDataInputStream openFid(String fid, long[] ips,
+                                     long chunkSize, long fileSize) throws IOException;
+
+    public FSDataInputStream openFid(String pfid, String file, long [] ips)
+            throws IOException;
+
+    public String getZkConnectString() throws IOException;
+
+    public InetSocketAddress[] getJobTrackerAddrs(Configuration conf)
+            throws IOException;
   }
 
   @Test
