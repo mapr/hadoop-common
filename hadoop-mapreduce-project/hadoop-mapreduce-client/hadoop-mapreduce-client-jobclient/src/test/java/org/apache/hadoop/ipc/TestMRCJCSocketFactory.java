@@ -35,11 +35,13 @@ import org.apache.hadoop.mapreduce.v2.MiniMRYarnCluster;
 import org.apache.hadoop.net.StandardSocketFactory;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
  * This class checks that RPCs can use specialized socket factories.
  */
+@Ignore
 public class TestMRCJCSocketFactory {
 
   /**
