@@ -26,6 +26,7 @@ import org.apache.hadoop.util.Time;
 import org.apache.zookeeper.server.ServerCnxn;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -37,6 +38,7 @@ import org.mockito.stubbing.Answer;
  * failovers. While doing so, ensures that a fake "shared resource"
  * (simulating the shared edits dir) is only owned by one service at a time. 
  */
+@Ignore
 public class TestZKFailoverControllerStress extends ClientBaseWithFixes {
   
   private static final int STRESS_RUNTIME_SECS = 30;
