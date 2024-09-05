@@ -324,7 +324,7 @@
       <comparators>
         <comparator>
           <type>RegexpComparator</type>
-          <expected-output>^-cp \[-f\] \[-p \| -p\[topax\]\] \[-d\] \[-t &lt;thread count&gt;\] \[-q &lt;thread pool queue size&gt;\] &lt;src&gt; \.\.\. &lt;dst&gt; :\s*</expected-output>
+          <expected-output>^-cp \[-f\] \[-p \| -p\[topax\]\] \[-P\] \[-d\] \[-t &lt;thread count&gt;\] \[-q &lt;thread pool queue size&gt;\] &lt;src&gt; \.\.\. &lt;dst&gt; :\s*</expected-output>
         </comparator>
         <comparator>
           <type>RegexpComparator</type>
