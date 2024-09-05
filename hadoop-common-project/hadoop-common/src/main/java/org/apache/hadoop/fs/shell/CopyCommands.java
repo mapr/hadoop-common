@@ -156,24 +156,23 @@ class CopyCommands {
         "[-f] [-p | -p[topax]] [-P] [-d] [-t <thread count>]"
             + " [-q <thread pool queue size>] <src> ... <dst>";
     public static final String DESCRIPTION =
-        "Copy files that match the file pattern <src> to a destination."
-            + " When copying multiple files, the destination must be a "
-            + "directory.\nFlags :\n"
-            + "  -p[topax] : Preserve file attributes [topx] (timestamps, "
-            + "ownership, permission, ACL, XAttr). If -p is specified with "
-            + "no arg, then preserves timestamps, ownership, permission. "
-            + "If -pa is specified, then preserves permission also because "
-            + "ACL is a super-set of permission. Determination of whether raw "
-            + "namespace extended attributes are preserved is independent of "
-            + "the -p flag.\n"
-            + "  -f : Overwrite the destination if it already exists.\n"
-            + "Passing -P disables traverse by symbolic link, symbolic link"
-            + " will be copied instead."
-            + "  -d : Skip creation of temporary file(<dst>._COPYING_).\n"
-            + "  -t <thread count> : Number of threads to be used, "
-            + "default is 1.\n"
-            + "  -q <thread pool queue size> : Thread pool queue size to be "
-            + "used, default is 1024.\n";
+            "Copy files that match the file pattern <src> to a destination."
+                    + " When copying multiple files, the destination must be a "
+                    + "directory.\nFlags :\n"
+                    + "  -p[topax] : Preserve file attributes [topx] (timestamps, "
+                    + "ownership, permission, ACL, XAttr). If -p is specified with "
+                    + "no arg, then preserves timestamps, ownership, permission. "
+                    + "If -pa is specified, then preserves permission also because "
+                    + "ACL is a super-set of permission. Determination of whether raw "
+                    + "namespace extended attributes are preserved is independent of "
+                    + "the -p flag.\n"
+                    + "  -f : Overwrite the destination if it already exists.\n"
+                    + "  -P : Disables traverse by symbolic link, symbolic link will be copied instead.\n"
+                    + "  -d : Skip creation of temporary file(<dst>._COPYING_).\n"
+                    + "  -t <thread count> : Number of threads to be used, "
+                    + "default is 1.\n"
+                    + "  -q <thread pool queue size> : Thread pool queue size to be "
+                    + "used, default is 1024.\n";
 
     @Override
     protected void processOptions(LinkedList<String> args) throws IOException {

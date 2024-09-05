@@ -72,7 +72,7 @@ public class TestGenericOptionsParser {
     String files = conf.get("tmpfiles");
     assertNotNull("files is null", files);
     assertEquals("files option does not match",
-      localFs.makeQualified(tmpPath).toString(), files);
+        tmpPath.toUri().getPath().toString(), new Path(files).toUri().getPath().toString());
     
     // pass file as uri
     Configuration conf1 = new Configuration();
@@ -119,7 +119,7 @@ public class TestGenericOptionsParser {
     String libjars = conf.get("tmpjars");
     assertNotNull("libjars is null", libjars);
     assertEquals("libjars does not match",
-        localFs.makeQualified(tmpJarPath).toString(), libjars);
+        tmpJarPath.toUri().getPath().toString(), new Path(libjars).toUri().getPath().toString());
 
     // now test the wildcard
     args[1] = testDir.toURI().toString() + "*";
@@ -127,7 +127,7 @@ public class TestGenericOptionsParser {
     libjars = conf.get("tmpjars");
     assertNotNull("libjars is null", libjars);
     assertEquals("libjars does not match",
-        localFs.makeQualified(tmpJarPath).toString(), libjars);
+        tmpJarPath.toUri().getPath().toString(), new Path(libjars).toUri().getPath().toString());
   }
 
   /**
@@ -285,8 +285,9 @@ public class TestGenericOptionsParser {
     new GenericOptionsParser(conf, args);
     String fileName = conf.get("mapreduce.job.credentials.binary");
     assertNotNull("files is null", fileName);
-    assertEquals("files option does not match", tmpPath.toString(), fileName);
-    
+    assertEquals("files option does not match",
+        tmpPath.toUri().getPath().toString(), new Path(fileName).toUri().getPath().toString());
+
     Credentials ugiCreds =
         UserGroupInformation.getCurrentUser().getCredentials();
     assertEquals(1, ugiCreds.numberOfTokens());
