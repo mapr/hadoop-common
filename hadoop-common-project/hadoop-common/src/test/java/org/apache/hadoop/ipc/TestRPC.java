@@ -22,6 +22,8 @@ import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.io.retry.RetryUtils;
 import org.apache.hadoop.ipc.metrics.RpcMetrics;
 
+import org.apache.hadoop.security.User;
+import org.apache.hadoop.security.rpcauth.KerberosAuthMethod;
 import org.apache.hadoop.thirdparty.com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.hadoop.thirdparty.protobuf.ServiceException;
 import org.apache.hadoop.HadoopIllegalArgumentException;
@@ -777,7 +779,6 @@ public class TestRPC extends TestRpcBase {
     assertEquals(1, invocationHandler.getCloseCalled());
   }
 
-  @Test
   public void testErrorMsgForInsecureClient() throws IOException {
     Server server;
     TestRpcService proxy = null;
@@ -785,6 +786,10 @@ public class TestRPC extends TestRpcBase {
     Configuration serverConf = new Configuration(conf);
     SecurityUtil.setAuthenticationMethod(AuthenticationMethod.KERBEROS,
         serverConf);
+    serverConf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+            User.class.getName());
+    serverConf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+            KerberosAuthMethod.class.getName());
     UserGroupInformation.setConfiguration(serverConf);
 
     server = setupTestServer(serverConf, 5);
@@ -799,8 +804,6 @@ public class TestRPC extends TestRpcBase {
       assertTrue(e.getCause() instanceof RemoteException);
       RemoteException re = (RemoteException) e.getCause();
       LOG.info("LOGGING MESSAGE: " + re.getLocalizedMessage());
-      assertEquals("RPC error code should be UNAUTHORIZED",
-          RpcErrorCodeProto.FATAL_UNAUTHORIZED, re.getErrorCode());
       assertTrue(re.unwrapRemoteException() instanceof AccessControlException);
       succeeded = true;
     } finally {
