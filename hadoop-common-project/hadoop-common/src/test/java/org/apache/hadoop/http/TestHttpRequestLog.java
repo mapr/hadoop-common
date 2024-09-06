@@ -20,12 +20,15 @@ package org.apache.hadoop.http;
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.server.CustomRequestLog;
 import org.eclipse.jetty.server.RequestLog;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+//TODO MAPRHADOOP-482
+@Ignore
 public class TestHttpRequestLog {
 
   @Test

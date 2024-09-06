@@ -57,6 +57,7 @@ import static org.junit.Assert.fail;
 /**
  * Test LogLevel.
  */
+//TODO MAPRHADOOP-482
 @Ignore
 public class TestLogLevel extends KerberosSecurityTestcase {
   private static final File BASEDIR = GenericTestUtils.getRandomizedTestDir();
