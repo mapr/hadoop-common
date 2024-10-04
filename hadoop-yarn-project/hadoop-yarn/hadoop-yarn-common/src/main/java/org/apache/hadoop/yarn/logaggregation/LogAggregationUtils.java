@@ -33,6 +33,9 @@ import org.apache.hadoop.yarn.api.records.NodeId;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 
 import org.apache.hadoop.thirdparty.com.google.common.annotations.VisibleForTesting;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,6 +43,8 @@ import java.util.List;
 
 @Private
 public class LogAggregationUtils {
+  public static final Logger LOG =
+          LoggerFactory.getLogger(LogAggregationUtils.class);
 
   public static final String TMP_FILE_SUFFIX = ".tmp";
   private static final String BUCKET_SUFFIX = "bucket-";
@@ -382,6 +387,7 @@ public class LogAggregationUtils {
   public static void initACLForAggregatedLogs(Configuration conf, UsersACLsManager usersAclsManager, Path rootDir){
     //check root log aggregated directory and change ACE for existing users
     try {
+      LOG.info("Overwrite all ACE for directory: {}", rootDir.toString());
       FileSystem fs = FileSystem.get(conf);
       if (fs instanceof AbstractMapRFileSystem && fs.exists(rootDir)) {
         AbstractMapRFileSystem mfs = (AbstractMapRFileSystem) fs;
@@ -409,6 +415,7 @@ public class LogAggregationUtils {
    */
   public static void cleanAllACE(Configuration conf, Path rootDir) {
     //check root log aggregated
+    LOG.info("Remove all ACE for directory: {}", rootDir.toString());
     try {
       FileSystem fs = FileSystem.get(conf);
       if (fs instanceof AbstractMapRFileSystem && fs.exists(rootDir)) {
@@ -417,12 +424,27 @@ public class LogAggregationUtils {
         for (FileStatus dir : directories) {
           String username = dir.getPath().getName();
           if (Shell.checkUserExists(username)) {
-            mfs.deleteAces(dir.getPath(), true);
+            mfs.deleteAces(dir.getPath(), false);
           }
         }
       }
     } catch (IOException e) {
       throw new RuntimeException("Can't initialize FS for aggregation logs.", e);
+    }
+  }
+
+  public static void checkACLConf(boolean isUsersACLEnable, boolean forceInit, Configuration conf, Path rootDir){
+    if(isUsersACLEnable && !forceInit){
+      try {
+          FileSystem fs = FileSystem.get(conf);
+          if (fs instanceof AbstractMapRFileSystem && fs.exists(rootDir) && fs.listStatus(rootDir).length > 0) {
+            LOG.warn("ACE for user aggregation log was enabled, but root directory doesn't empty or " +
+                    "hadoop.users.acl.force.change property set to false. " +
+                    "User's mapping ACE for logs possibly will not work. Please check configuration.");
+          }
+        } catch (IOException e) {
+            throw new RuntimeException("Can't initialize FileSystem.", e);
+        }
     }
   }
 }

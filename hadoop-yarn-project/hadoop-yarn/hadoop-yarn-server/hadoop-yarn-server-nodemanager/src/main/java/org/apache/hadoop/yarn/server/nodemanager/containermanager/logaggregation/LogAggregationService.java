@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.security.token.SecretManager;
 
 import org.slf4j.Logger;
@@ -178,10 +179,19 @@ public class LogAggregationService extends AbstractService implements
     if (YarnConfiguration.isNodeLocalAggregationEnabled(getConfig())) {
       getConfig().set(NODE_LOCAL_LOG_AGGREGATION_NODE_ID, nodeId.getHost());
       UsersACLsManager usersAclsManager = new UsersACLsManager(getConfig());
-      if(usersAclsManager.isUsersACLEnable()){
-        LogAggregationUtils.initACLForAggregatedLogs(getConfig(), usersAclsManager, getRemoteRootLogDir(nodeId.toString()));
-      } else {
-        LogAggregationUtils.cleanAllACE(getConfig(), getRemoteRootLogDir(nodeId.toString()));
+
+      LogAggregationUtils.checkACLConf(usersAclsManager.isUsersACLEnable(),
+              getConfig().getBoolean(CommonConfigurationKeys.HADOOP_USERS_ACL_FORCE_INIT,
+                      CommonConfigurationKeys.HADOOP_USERS_ACL_FORCE_INIT_DEFAULT),
+              getConfig(), getRemoteRootLogDir(nodeId.toString()));
+
+      if (getConfig().getBoolean(CommonConfigurationKeys.HADOOP_USERS_ACL_FORCE_INIT,
+              CommonConfigurationKeys.HADOOP_USERS_ACL_FORCE_INIT_DEFAULT)) {
+        if (usersAclsManager.isUsersACLEnable()) {
+          LogAggregationUtils.initACLForAggregatedLogs(getConfig(), usersAclsManager, getRemoteRootLogDir(nodeId.toString()));
+        } else {
+          LogAggregationUtils.cleanAllACE(getConfig(), getRemoteRootLogDir(nodeId.toString()));
+        }
       }
     }
     super.serviceStart();
