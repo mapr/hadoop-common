@@ -439,7 +439,7 @@ public class LogAggregationUtils {
           FileSystem fs = FileSystem.get(conf);
           if (fs instanceof AbstractMapRFileSystem && fs.exists(rootDir) && fs.listStatus(rootDir).length > 0) {
             LOG.warn("ACE for user aggregation log was enabled, but root directory doesn't empty or " +
-                    "hadoop.users.acl.force.change property set to false. " +
+                    "hadoop.users.acl.force.init property set to false. " +
                     "User's mapping ACE for logs possibly will not work. Please check configuration.");
           }
         } catch (IOException e) {
