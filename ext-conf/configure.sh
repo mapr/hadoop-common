@@ -808,6 +808,44 @@ function installWardenConfFile() {
 }
 
 #############################################################################
+# Function to configure Warden conf file
+#
+#############################################################################
+function configureWardenConfFile() {
+    local serviceName=$1
+    isSecureEnable isSecure
+    case ${serviceName} in
+        resourcemanager)
+            updatePort resourcemanager service.ui.port 8088 8090
+        ;;
+        nodemanager)
+            updatePort nodemanager service.ui.port 8042 8044
+        ;;
+        historyserver)
+            updatePort historyserver service.ui.port 19888 19890
+        ;;
+        timelineserver)
+            updatePort timelineserver service.ui.port 8188 8190
+        ;;
+        timelineserverv1)
+            updatePort timelineserverv1 service.ui.port 8188 8190
+        ;;
+    esac
+}
+
+function updatePort() {
+    local serviceName=$1
+    local propepryName=$2
+    local unsecurePort=$3
+    local securePort=$4
+    if [ "$isSecure" == "true" ] || [ "$secureCluster" == "1" ]; then
+        sed -i -e "s/^${propepryName}=.*$/${propepryName}=${securePort}/" ${MAPR_CONF_CONFD_DIR}/warden.${serviceName}.conf
+    else
+        sed -i -e "s/^${propepryName}=.*$/${propepryName}=${unsecurePort}/" ${MAPR_CONF_CONFD_DIR}/warden.${serviceName}.conf
+    fi
+}
+
+#############################################################################
 # Function to check and register port availablilty
 #
 #############################################################################
@@ -1111,18 +1149,23 @@ ConfigureJMXForHadoop
 
 if hasRole "nodemanager"; then
     installWardenConfFile nodemanager
+    configureWardenConfFile nodemanager
 fi
 if hasRole "resourcemanager"; then
     installWardenConfFile resourcemanager
+    configureWardenConfFile resourcemanager
 fi
 if hasRole "historyserver"; then
     installWardenConfFile historyserver
+    configureWardenConfFile historyserver
 fi
 if hasRole "timelineserver"; then
     installWardenConfFile timelineserver
+    configureWardenConfFile timelineserver
 fi
 if hasRole "timelineserverv1"; then
     installWardenConfFile timelineserverv1
+    configureWardenConfFile timelineserverv1
 fi
 if hasRole "httpfs"; then
     installWardenConfFile httpfs
