@@ -95,7 +95,7 @@ pipeline {
                         source /etc/profile.d/proto-profile.sh
                         rm -rf ${env.PROJECT}; git clone git@github.com:mapr/private-pkg.git ${env.PROJECT}; \
                         cd ${env.PROJECT}; \
-                        git checkout MEP-9.3.1 ; \
+                        git checkout MEP-9.3.2 ; \
                         make mapr-hadoop-util-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS} ; \
                         make mapr-hadoop-client-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS} ; \
                         make mapr-hadoop-core-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS} ; \
@@ -179,7 +179,7 @@ pipeline {
                       sh """
                         rm -rf ${env.PROJECT}; git clone git@github.com:mapr/private-pkg.git ${env.PROJECT}; \
                         cd ${env.PROJECT}; \
-                        git checkout MEP-9.3.1 ; \
+                        git checkout MEP-9.3.2 ; \
                         make mapr-hadoop-util-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS} ; \
                         make mapr-hadoop-client-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS} ; \
                         make mapr-hadoop-core-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS} ; \
@@ -252,7 +252,7 @@ pipeline {
                       sh """
                         rm -rf ${env.PROJECT}; git clone git@github.com:mapr/private-pkg.git ${env.PROJECT}; \
                         cd ${env.PROJECT}; \
-                        git checkout MEP-9.3.1 ; \
+                        git checkout MEP-9.3.2 ; \
                         source /opt/rh/gcc-toolset-9/enable ; \
                         make mapr-hadoop-util-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS} ; \
                         make mapr-hadoop-client-${COMPONENT_VERSION}-${MEP_VER} TIMESTAMP=${ID} ${MAKEFILE_ARGS} ; \
