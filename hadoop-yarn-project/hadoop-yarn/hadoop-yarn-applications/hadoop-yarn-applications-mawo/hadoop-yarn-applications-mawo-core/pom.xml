@@ -15,7 +15,7 @@
     <parent>
         <artifactId>hadoop-yarn-applications-mawo</artifactId>
         <groupId>org.apache.hadoop.applications.mawo</groupId>
-        <version>3.3.5.500-eep-931-SNAPSHOT</version>
+        <version>3.3.5.600-eep-932-SNAPSHOT</version>
     </parent>
   <modelVersion>4.0.0</modelVersion>
 
