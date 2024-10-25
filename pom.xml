@@ -189,7 +189,6 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/x
                     <reason>Use Fasterxml Jackson 2 dependency in place of org.codehaus Jackson 1</reason>
                     <bannedImports>
                       <bannedImport>org.codehaus.jackson.**</bannedImport>
-                      <bannedImport>static org.codehaus.jackson.**</bannedImport>
                     </bannedImports>
                   </restrictImports>
                   <restrictImports>
