@@ -315,10 +315,10 @@ public class TestAuditLogs {
   private void verifyAuditLogsRepeat(boolean expectSuccess, int ndupe)
       throws IOException {
     // Turn off the logs
-    Logger logger = FSNamesystem.AUDIT_LOG;
-    logger.setLevel(Level.OFF);
+    disableAuditLog();
 
     // Close the appenders and force all logs to be flushed
+    Logger logger = FSNamesystem.AUDIT_LOG;
     Enumeration<?> appenders = logger.getAllAppenders();
     while (appenders.hasMoreElements()) {
       Appender appender = (Appender)appenders.nextElement();
@@ -348,10 +348,10 @@ public class TestAuditLogs {
   private void verifyAuditLogsCheckPattern(boolean expectSuccess, int ndupe, Pattern pattern)
       throws IOException {
     // Turn off the logs
-    Logger logger = FSNamesystem.AUDIT_LOG;
-    logger.setLevel(Level.OFF);
+    disableAuditLog();
 
     // Close the appenders and force all logs to be flushed
+    Logger logger = FSNamesystem.AUDIT_LOG;
     Enumeration<?> appenders = logger.getAllAppenders();
     while (appenders.hasMoreElements()) {
       Appender appender = (Appender)appenders.nextElement();
