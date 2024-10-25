@@ -18,8 +18,8 @@
 
 package org.apache.hadoop.mapreduce.v2.app.speculate.forecast;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
+import org.junit.Assert;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
