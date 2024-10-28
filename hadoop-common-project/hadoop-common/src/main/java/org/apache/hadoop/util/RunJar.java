@@ -291,9 +291,13 @@ public class RunJar {
 
     final File workDir;
     try {
-      FileAttribute<Set<PosixFilePermission>> perms = PosixFilePermissions
-          .asFileAttribute(PosixFilePermissions.fromString("rwx------"));
-      workDir = Files.createTempDirectory(tmpDir.toPath(), "hadoop-unjar", perms).toFile();
+      if (Shell.WINDOWS) {
+        workDir = File.createTempFile("hadoop-unjar", "", tmpDir);
+      } else {
+        FileAttribute<Set<PosixFilePermission>> perms = PosixFilePermissions
+                .asFileAttribute(PosixFilePermissions.fromString("rwx------"));
+        workDir = Files.createTempDirectory(tmpDir.toPath(), "hadoop-unjar", perms).toFile();
+      }
     } catch (IOException | SecurityException e) {
       // If user has insufficient perms to write to tmpDir, default
       // "Permission denied" message doesn't specify a filename.
@@ -301,6 +305,11 @@ public class RunJar {
                          + tmpDir + " due to " + e.getMessage());
       System.exit(-1);
       return;
+    }
+
+    if (Shell.WINDOWS && !workDir.delete()) {
+      System.err.println("Delete failed for " + workDir);
+      System.exit(-1);
     }
 
     ensureDirectory(workDir);
