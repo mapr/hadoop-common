@@ -64,14 +64,13 @@ public class MapRCommonSecurityUtil {
         String filePath;
         String euid_;
 
-        filePath= System.getenv("MAPR_TICKETFILE_LOCATION");
+        filePath = System.getenv("MAPR_TICKETFILE_LOCATION");
         if (filePath != null) {
             if (!filePath.isEmpty()) {
                 return filePath;
             }
         }
-        String osName=System.getProperty("os.name");
-        if (osName.equalsIgnoreCase("Windows")) {
+        if (System.getProperty("os.name").startsWith("Windows")) {
             mapRDefaultKeyFileLocation_ = System.getenv("TEMP");
             mapRFileNameSuffix_ = System.getProperty("user.name");
         } else {
@@ -80,19 +79,19 @@ public class MapRCommonSecurityUtil {
              * The default file name is /tmp/maprticket_<uid>. For example, if this ticket is for
              * user mapr and the UID of mapr is 5000, then the default file name is /tmp/maprticket_<uid>
              */
-            String userName = System.getProperty ("user.name");
+            String userName = System.getProperty("user.name");
             ArrayList<String> command = new ArrayList<String>();
-            command.add ("id");
-            command.add ("-u");
-            command.add (userName);
+            command.add("id");
+            command.add("-u");
+            command.add(userName);
             try {
                 euid_ = executeCommandAndReturnOutput(command);
             } catch (IOException e) {
                 LOG.error("Unable to obtain effective UID for user " + userName + ":" + e.getMessage());
-                throw new MapRCommonSecurityException ("Unable to obtain effective UID for user " + userName + ":" + e.getMessage());
+                throw new MapRCommonSecurityException("Unable to obtain effective UID for user " + userName + ":" + e.getMessage());
             } catch (InterruptedException e) {
                 LOG.error("Error executing command id -u " + userName + ": " + e.getMessage());
-                throw new MapRCommonSecurityException ("Error execuring command id -u " + userName + ": " + e.getMessage());
+                throw new MapRCommonSecurityException("Error execuring command id -u " + userName + ": " + e.getMessage());
             }
             mapRFileNameSuffix_ = euid_;
         }
