@@ -1,0 +1,31 @@
+<!--TIMELINE SERVER SECTION-->
+<property>
+    <description>Indicate to clients whether Timeline service is enabled or not. If enabled, the TimelineClient library used by end-users will post entities and events to the Timeline server.</description>
+    <name>yarn.timeline-service.enabled</name>
+    <value>true</value>
+</property>
+<property>
+    <name>yarn.timeline-service.hostname</name>
+    <value>${TIMELINESERVER_HOST}</value>
+</property>
+<property>
+    <name>yarn.timeline-service.version</name>
+    <value>2.0f</value>
+</property>
+<property>
+    <name>yarn.timeline-service.http-cross-origin.enabled</name>
+    <value>true</value>
+</property>
+<property>
+    <name>yarn.system-metrics-publisher.enabled</name>
+    <value>true</value>
+</property>
+<property>
+    <name>yarn.rm.system-metrics-publisher.emit-container-events</name>
+    <value>true</value>
+</property>
+<property>
+    <name>yarn.nodemanager.aux-services.timeline_collector.class</name>
+    <value>org.apache.hadoop.yarn.server.timelineservice.collector.PerNodeTimelineCollectorsAuxService</value>
+</property>
+<!--TIMELINE SERVER SECTION END-->
