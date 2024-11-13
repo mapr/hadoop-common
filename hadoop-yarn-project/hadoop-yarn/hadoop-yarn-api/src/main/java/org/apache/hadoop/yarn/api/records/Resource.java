@@ -400,9 +400,9 @@ public abstract class Resource implements Comparable<Resource> {
   }
 
   /**
-   * Set <em>number of disks</em> of the resource.
+   * Set number of disks of the resource.
    * Multiples to 1000 because disks handle as milli value
-   * @param memory <em>number of disks</em> of the resource
+   * @param disks number of disks of the resource
    */
   @Public
   @Stable

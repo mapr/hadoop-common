@@ -375,7 +375,6 @@ public class DistCpUtils {
    * @param preserveXAttrs boolean true if preserving XAttrs
    * @param preserveRawXAttrs boolean true if preserving raw.* XAttrs
    * @param blocksPerChunk size of chunks when copying chunks in parallel
-   * @return list of CopyListingFileStatus
    * @throws IOException if there is an I/O error
    */
   public static void toCopyListingFileStatus(

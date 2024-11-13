@@ -250,8 +250,7 @@ public abstract class CopyListing extends Configured {
 
   /**
    * Returns the key for an entry in the copy listing sequence file.
-   * @param sourcePathRoot the root source path for determining the relative
-   *                       target path
+   * @param listingEntry linting of the relative target path
    * @param fileStatus the copy listing file status
    * @return the key for the sequence file entry
    */
