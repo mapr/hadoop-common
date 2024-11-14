@@ -2808,7 +2808,7 @@
         <hbase.version>${hbase.one.version}</hbase.version>
         <hbase-compatible-hadoop.version>${parent.version}</hbase-compatible-hadoop.version>
         <hbase-compatible-guava.version>${guava.version}</hbase-compatible-guava.version>
-        <hbase-compatible-guice.version>4.0</hbase-compatible-guice.version>
+        <hbase-compatible-guice.version>${guice.version}</hbase-compatible-guice.version>
         <hbase-server-artifactid>hadoop-yarn-server-timelineservice-hbase-server-1</hbase-server-artifactid>
       </properties>
       <dependencyManagement>

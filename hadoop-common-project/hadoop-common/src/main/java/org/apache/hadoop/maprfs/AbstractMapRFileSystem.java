@@ -49,7 +49,7 @@ public abstract class AbstractMapRFileSystem extends FileSystem implements Fid {
      * This method fully replaces ACEs of a file or directory recursively,
      * discarding all existing ones.
      * Accepts ACE parameter as String in short format.
-     * [rf:<ace>],[wf:<ace>],[ef:<ace>],[rd:<ace>],[ac:<ace>],[dc:<ace>],[ld:<ace>]
+     * [rf:ace],[wf:ace],[ef:ace],[rd:ace],[ac:ace],[dc:ace],[ld:ace]
      * @param path path to set ACEs
      * @param strAces string of file ACEs in short format
      * @param isSet fully replace or stay existing ACE
