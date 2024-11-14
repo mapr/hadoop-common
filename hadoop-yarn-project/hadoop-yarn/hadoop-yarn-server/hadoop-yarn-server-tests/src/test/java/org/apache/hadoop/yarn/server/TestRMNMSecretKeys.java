@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.UUID;
 
+import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

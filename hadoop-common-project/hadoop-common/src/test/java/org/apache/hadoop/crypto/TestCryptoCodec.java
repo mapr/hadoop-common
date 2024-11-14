@@ -49,7 +49,7 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
 import org.apache.hadoop.thirdparty.com.google.common.primitives.Longs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -110,7 +110,7 @@ public class TestCryptoCodec {
     conf.set(HADOOP_SECURITY_CRYPTO_CODEC_CLASSES_SM4_CTR_NOPADDING_KEY,
         JceSm4CtrCryptoCodec.class.getName());
     conf.set(HADOOP_SECURITY_CRYPTO_JCE_PROVIDER_KEY,
-            BouncyCastleProvider.PROVIDER_NAME);
+            BouncyCastleFipsProvider.PROVIDER_NAME);
     cryptoCodecTest(conf, seed, 0,
         jceSm4CodecClass, jceSm4CodecClass, iv);
     cryptoCodecTest(conf, seed, count,
@@ -156,7 +156,7 @@ public class TestCryptoCodec {
     }
     Assume.assumeTrue(OpensslCipher.isSupported(CipherSuite.SM4_CTR_NOPADDING));
     conf.set(HADOOP_SECURITY_CRYPTO_JCE_PROVIDER_KEY,
-            BouncyCastleProvider.PROVIDER_NAME);
+            BouncyCastleFipsProvider.PROVIDER_NAME);
     Assert.assertEquals(null, OpensslCipher.getLoadingFailureReason());
     cryptoCodecTest(conf, seed, 0,
         opensslSm4CodecClass, opensslSm4CodecClass, iv);

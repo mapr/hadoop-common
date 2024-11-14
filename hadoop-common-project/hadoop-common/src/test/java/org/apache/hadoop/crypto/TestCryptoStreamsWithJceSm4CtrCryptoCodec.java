@@ -17,7 +17,7 @@
  */
 package org.apache.hadoop.crypto;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.junit.BeforeClass;
@@ -36,7 +36,7 @@ public class TestCryptoStreamsWithJceSm4CtrCryptoCodec extends
     Configuration conf = new Configuration();
     conf.set(HADOOP_SECURITY_CRYPTO_CIPHER_SUITE_KEY, "SM4/CTR/NoPadding");
     conf.set(HADOOP_SECURITY_CRYPTO_JCE_PROVIDER_KEY,
-            BouncyCastleProvider.PROVIDER_NAME);
+            BouncyCastleFipsProvider.PROVIDER_NAME);
     conf.set(
          CommonConfigurationKeysPublic.
              HADOOP_SECURITY_CRYPTO_CODEC_CLASSES_SM4_CTR_NOPADDING_KEY,

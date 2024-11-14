@@ -17,7 +17,7 @@
  */
 package org.apache.hadoop.crypto;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
 import org.apache.hadoop.util.Preconditions;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
@@ -83,8 +83,8 @@ public abstract class JceCtrCryptoCodec extends CryptoCodec{
   public void setConf(Configuration conf) {
     this.conf = conf;
     setProvider(conf.get(HADOOP_SECURITY_CRYPTO_JCE_PROVIDER_KEY));
-    if (BouncyCastleProvider.PROVIDER_NAME.equals(provider)) {
-      Security.addProvider(new BouncyCastleProvider());
+    if (BouncyCastleFipsProvider.PROVIDER_NAME.equals(provider)) {
+      Security.addProvider(new BouncyCastleFipsProvider());
     }
     final String secureRandomAlg =
           conf.get(

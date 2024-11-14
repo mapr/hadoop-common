@@ -17,6 +17,7 @@
  */
 package org.apache.hadoop.fs;
 
+import java.util.EnumMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
