@@ -286,11 +286,6 @@
     </dependency>
     <!-- Needed for compilation, though no longer in production.  -->
     <dependency>
-      <groupId>com.google.protobuf</groupId>
-      <artifactId>protobuf-java</artifactId>
-      <scope>${common.protobuf2.scope}</scope>
-    </dependency>
-    <dependency>
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
     </dependency>
