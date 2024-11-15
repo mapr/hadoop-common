@@ -2223,7 +2223,7 @@ function hadoop_daemon_handler
   case ${daemonmode} in
     status)
       hadoop_status_daemon "${daemon_pidfile}"
-      exit_code = $?
+      exit_code=$?
       if [[ $exit_code == 0 ]]; then
         echo "${daemonname} is running as process $(cat "${daemon_pidfile}")."
         exit $exit_code
