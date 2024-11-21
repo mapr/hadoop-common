@@ -2,9 +2,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,36 +13,50 @@
  */
 package org.apache.hadoop.security.authentication.server;
 
-import java.io.IOException;
+import java.io.*;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import java.net.InetAddress;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.MalformedURLException;
+import java.nio.charset.StandardCharsets;
+import java.security.InvalidParameterException;
+import java.security.interfaces.RSAPublicKey;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Properties;
-import java.text.ParseException;
 
-import java.security.interfaces.RSAPublicKey;
-
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.hadoop.classification.VisibleForTesting;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
-import org.apache.hadoop.security.authentication.util.CertificateUtil;
+import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
+import org.apache.hadoop.security.authentication.util.SsoConfigurationUtil;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.nimbusds.jwt.SignedJWT;
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWSObject;
-import com.nimbusds.jose.JWSVerifier;
-import com.nimbusds.jose.crypto.RSASSAVerifier;
+import com.auth0.jwk.JwkException;
+import com.auth0.jwk.JwkProvider;
+import com.auth0.jwk.UrlJwkProvider;
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import com.auth0.jwt.interfaces.JWTVerifier;
+
 
 /**
  * The {@link JWTRedirectAuthenticationHandler} extends
- * AltKerberosAuthenticationHandler to add WebSSO behavior for UIs. The expected
+ * MultiMechsAuthenticationHandler to add WebSSO behavior for UIs. The expected
  * SSO token is a JsonWebToken (JWT). The supported algorithm is RS256 which
  * uses PKI between the token issuer and consumer. The flow requires a redirect
  * to a configured authentication server URL and a subsequent request with the
@@ -57,76 +71,64 @@ import com.nimbusds.jose.crypto.RSASSAVerifier;
  * <li>authentication.provider.url: the full URL to the authentication server.
  * This is the URL that the handler will redirect the browser to in order to
  * authenticate the user. It does not have a default value.</li>
- * <li>public.key.pem: This is the PEM formatted public key of the issuer of the
- * JWT token. It is required for verifying that the issuer is a trusted party.
- * DO NOT include the PEM header and footer portions of the PEM encoded
- * certificate. It does not have a default value.</li>
  * <li>expected.jwt.audiences: This is a list of strings that identify
  * acceptable audiences for the JWT token. The audience is a way for the issuer
  * to indicate what entity/s that the token is intended for. Default value is
  * null which indicates that all audiences will be accepted.</li>
- * <li>jwt.cookie.name: the name of the cookie that contains the JWT token.
- * Default value is "hadoop-jwt".</li>
  * </ul>
  */
 public class JWTRedirectAuthenticationHandler extends
-    AltKerberosAuthenticationHandler {
+    MultiMechsAuthenticationHandler {
   private static Logger LOG = LoggerFactory
       .getLogger(JWTRedirectAuthenticationHandler.class);
 
   public static final String AUTHENTICATION_PROVIDER_URL =
       "authentication.provider.url";
-  public static final String PUBLIC_KEY_PEM = "public.key.pem";
   public static final String EXPECTED_JWT_AUDIENCES = "expected.jwt.audiences";
-  public static final String JWT_COOKIE_NAME = "jwt.cookie.name";
-  private static final String ORIGINAL_URL_QUERY_PARAM = "originalUrl=";
+  public static final String JWT_CLIENT_ID = "jwt.client.id";
+  public static final String JWT_CLIENT_SECRET = "jwt.client.secret";
+  private static final String REDIRECT_URI_QUERY_PARAM = "redirect_uri=";
   private String authenticationProviderUrl = null;
-  private RSAPublicKey publicKey = null;
   private List<String> audiences = null;
-  private String cookieName = "hadoop-jwt";
+  private String cookieName = null;
+  private String clientId = null;
+  private String clientSecret = null;
+  private final String delimiter = "&";
+  private String cookieDomain;
+  private String cookiePath;
 
-  /**
-   * Primarily for testing, this provides a way to set the publicKey for
-   * signature verification without needing to get a PEM encoded value.
-   *
-   * @param pk publicKey for the token signtature verification
-   */
-  public void setPublicKey(RSAPublicKey pk) {
-    publicKey = pk;
-  }
+  private final String CODE = "code";
 
   /**
    * Initializes the authentication handler instance.
    * <p>
    * This method is invoked by the {@link AuthenticationFilter#init} method.
    * </p>
-   * @param config
-   *          configuration properties to initialize the handler.
    *
-   * @throws ServletException
-   *           thrown if the handler could not be initialized.
+   * @param config configuration properties to initialize the handler.
+   * @throws ServletException thrown if the handler could not be initialized.
    */
   @Override
   public void init(Properties config) throws ServletException {
-    super.init(config);
     // setup the URL to redirect to for authentication
     authenticationProviderUrl = config
-        .getProperty(AUTHENTICATION_PROVIDER_URL);
+        .getProperty(AUTHENTICATION_PROVIDER_URL, SsoConfigurationUtil.getInstance().getClientIssuer());
     if (authenticationProviderUrl == null) {
       throw new ServletException(
           "Authentication provider URL must not be null - configure: "
               + AUTHENTICATION_PROVIDER_URL);
     }
-
-    // setup the public key of the token issuer for verification
-    if (publicKey == null) {
-      String pemPublicKey = config.getProperty(PUBLIC_KEY_PEM);
-      if (pemPublicKey == null) {
-        throw new ServletException(
-            "Public key for signature validation must be provisioned.");
-      }
-      publicKey = CertificateUtil.parseRSAPublicKey(pemPublicKey);
+    if (authenticationProviderUrl.endsWith("/")) {
+      authenticationProviderUrl = authenticationProviderUrl.substring(0, authenticationProviderUrl.length() - 1);
     }
+
+    clientId = config.getProperty(JWT_CLIENT_ID, SsoConfigurationUtil.getInstance().getClientId());
+    clientSecret = config.getProperty(JWT_CLIENT_SECRET, SsoConfigurationUtil.getInstance().getClientSecret());
+
+    cookieDomain = SsoConfigurationUtil.getInstance().getCookieDomain();
+    cookiePath = SsoConfigurationUtil.getInstance().getCookiePath();
+    cookieName = SsoConfigurationUtil.getInstance().getCookieName();
+
     // setup the list of valid audiences for token validation
     String auds = config.getProperty(EXPECTED_JWT_AUDIENCES);
     if (auds != null) {
@@ -137,43 +139,32 @@ public class JWTRedirectAuthenticationHandler extends
         audiences.add(a);
       }
     }
-
-    // setup custom cookie name if configured
-    String customCookieName = config.getProperty(JWT_COOKIE_NAME);
-    if (customCookieName != null) {
-      cookieName = customCookieName;
-    }
   }
 
   @Override
-  public AuthenticationToken alternateAuthenticate(HttpServletRequest request,
-      HttpServletResponse response) throws IOException,
+  public AuthenticationToken postauthenticate(HttpServletRequest request,
+                                              HttpServletResponse response) throws IOException,
       AuthenticationException {
     AuthenticationToken token = null;
-
     String serializedJWT = null;
-    HttpServletRequest req = (HttpServletRequest) request;
+    HttpServletRequest req = request;
     serializedJWT = getJWTFromCookie(req);
-    if (serializedJWT == null) {
+    if (serializedJWT == null && request.getParameter(CODE) == null) {
       String loginURL = constructLoginURL(request);
-      LOG.info("sending redirect to: " + loginURL);
-      ((HttpServletResponse) response).sendRedirect(loginURL);
-    } else {
+      LOG.debug("Sending redirect to: " + loginURL);
+      response.sendRedirect(loginURL);
+    } else if (serializedJWT == null && request.getParameter(CODE) != null) {
+      String jwt = getJWTTokenFromCode(request.getParameter(CODE), request);
+      response.addCookie(initCookies(jwt));
+      response.sendRedirect(constructURLWithHostname(request.getRequestURL().toString()));
+    } else if (serializedJWT != null) {
       String userName = null;
-      SignedJWT jwtToken = null;
-      boolean valid = false;
-      try {
-        jwtToken = SignedJWT.parse(serializedJWT);
-        valid = validateToken(jwtToken);
-        if (valid) {
-          userName = jwtToken.getJWTClaimsSet().getSubject();
-          LOG.info("USERNAME: " + userName);
-        } else {
-          LOG.warn("jwtToken failed validation: " + jwtToken.serialize());
-        }
-      } catch(ParseException pe) {
-        // unable to parse the token let's try and get another one
-        LOG.warn("Unable to parse the JWT token", pe);
+      DecodedJWT jwtToken = JWT.decode(serializedJWT);
+      boolean valid = validateToken(jwtToken);
+      if (valid) {
+        userName = jwtToken.getClaim(SsoConfigurationUtil.getInstance().getUserAttrName()).asString();
+      } else {
+        LOG.warn("jwtToken failed validation: " + jwtToken.getToken());
       }
       if (valid) {
         LOG.debug("Issuing AuthenticationToken for user.");
@@ -181,10 +172,68 @@ public class JWTRedirectAuthenticationHandler extends
       } else {
         String loginURL = constructLoginURL(request);
         LOG.info("token validation failed - sending redirect to: " + loginURL);
-        ((HttpServletResponse) response).sendRedirect(loginURL);
+        response.sendRedirect(loginURL);
       }
+    } else {
+      LOG.info("JWT can't be found in cookies or get from the authentication server");
     }
     return token;
+  }
+
+  private Cookie initCookies(String jwt) {
+    Cookie cookie = null;
+    try {
+      ObjectMapper mapper = new ObjectMapper();
+      JsonNode node = mapper.readTree(jwt);
+      cookie = createCookie(cookieName, node.get("access_token").asText(), node.get("expires_in").asInt());
+    } catch (Exception ex) {
+      LOG.error("Can't parse JWT JSON response.");
+      LOG.debug("JWT: {}", jwt);
+      return null;
+    }
+    cookie.setPath(cookiePath);
+    cookie.setDomain(cookieDomain);
+    return cookie;
+  }
+
+  private static Cookie createCookie(String name, String val, int exp) {
+    Cookie cookie = new Cookie(name, val);
+    cookie.setHttpOnly(true);
+    cookie.setSecure(true);
+    cookie.setMaxAge(exp);
+    return cookie;
+  }
+
+  public String getJWTTokenFromCode(String code, HttpServletRequest request) throws IOException {
+    String urlParameters = "grant_type=authorization_code" + delimiter + "client_id=" + clientId + delimiter +
+        "code=" + code + "&client_secret=" + clientSecret + delimiter +
+        REDIRECT_URI_QUERY_PARAM + constructURLWithHostname(request.getRequestURL().toString());
+
+    byte[] postData = urlParameters.getBytes(StandardCharsets.UTF_8);
+    URL myurl = URI.create(getTokenUrl()).toURL();
+    HttpURLConnection con = (HttpURLConnection) myurl.openConnection();
+    StringBuilder content;
+    try {
+      con.setDoOutput(true);
+      con.setRequestMethod("POST");
+      con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+
+      try (DataOutputStream wr = new DataOutputStream(con.getOutputStream())) {
+        wr.write(postData);
+      }
+
+      try (BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream()))) {
+        String line;
+        content = new StringBuilder();
+        while ((line = br.readLine()) != null) {
+          content.append(line);
+          content.append(System.lineSeparator());
+        }
+      }
+    } finally {
+      con.disconnect();
+    }
+    return content.toString();
   }
 
   /**
@@ -210,6 +259,15 @@ public class JWTRedirectAuthenticationHandler extends
     return serializedJWT;
   }
 
+  public String getTokenUrl() {
+    return authenticationProviderUrl + "/protocol/openid-connect/token";
+  }
+
+  public String getAuthUrl() {
+    return authenticationProviderUrl + "/protocol/openid-connect/auth";
+  }
+
+
   /**
    * Create the URL to be used for authentication of the user in the absence of
    * a JWT token within the incoming request.
@@ -219,19 +277,43 @@ public class JWTRedirectAuthenticationHandler extends
    */
   @VisibleForTesting
   String constructLoginURL(HttpServletRequest request) {
-    String delimiter = "?";
-    if (authenticationProviderUrl.contains("?")) {
-      delimiter = "&";
-    }
-    String loginURL = authenticationProviderUrl + delimiter
-        + ORIGINAL_URL_QUERY_PARAM
-        + request.getRequestURL().toString() + getOriginalQueryString(request);
-    return loginURL;
+    return getAuthUrl() + "?" +
+        "response_type=code" + delimiter + "client_id=" + clientId + delimiter + "scope=openid" + delimiter +
+        REDIRECT_URI_QUERY_PARAM + constructURLWithHostname(request.getRequestURL().toString());
   }
 
-  private String getOriginalQueryString(HttpServletRequest request) {
-    String originalQueryString = request.getQueryString();
-    return (originalQueryString == null) ? "" : "?" + originalQueryString;
+
+  /**
+   * Replace hostname in URL
+   * @param originalUri old hostname
+   * @param newAuthority new hostname
+   * @return URL with replaced hostname
+   * */
+  private String replaceHostInUrl(URI originalUri, String newAuthority) {
+    URI uri;
+    try {
+      uri = new URI(originalUri.getScheme().toLowerCase(Locale.US), newAuthority,
+          originalUri.getPath(), originalUri.getQuery(), originalUri.getFragment());
+    } catch (URISyntaxException ex) {
+      LOG.warn("Can't create new URI with hostname for host {}", newAuthority);
+      ex.printStackTrace();
+      return originalUri.toString();
+    }
+    return uri.toString();
+  }
+
+  private String constructURLWithHostname(String originalUrl) {
+    try {
+      URI originalUri = new URI(originalUrl);
+      InetAddress address = InetAddress.getByName(new URL(originalUrl).getHost());
+      if (originalUrl.contains(address.getHostAddress())) {
+        return replaceHostInUrl(originalUri, address.getHostName() + ":" + originalUri.getPort());
+      }
+    } catch (Exception ex) {
+      LOG.warn("Can't create new URL from request hostname {}. Use URL from request.",
+          originalUrl);
+    }
+    return originalUrl;
   }
 
   /**
@@ -243,52 +325,57 @@ public class JWTRedirectAuthenticationHandler extends
    * @param jwtToken the token to validate
    * @return true if valid
    */
-  protected boolean validateToken(SignedJWT jwtToken) {
-    boolean sigValid = validateSignature(jwtToken);
-    if (!sigValid) {
-      LOG.warn("Signature could not be verified");
-    }
-    boolean audValid = validateAudiences(jwtToken);
-    if (!audValid) {
-      LOG.warn("Audience validation failed.");
-    }
-    boolean expValid = validateExpiration(jwtToken);
-    if (!expValid) {
-      LOG.info("Expiration validation failed.");
-    }
+  protected boolean validateToken(DecodedJWT jwtToken) throws InvalidParameterException {
+    try {
+      DecodedJWT verifiedToken = verifyToken(jwtToken);
+      if (verifiedToken == null) {
+        LOG.warn("Token validation failed.");
+      }
+      boolean audValid = validateAudiences(jwtToken);
+      if (!audValid) {
+        LOG.warn("Audience validation failed.");
+      }
+      boolean expValid = validateExpiration(jwtToken);
+      if (!expValid) {
+        LOG.info("Expiration validation failed.");
+      }
+      return verifiedToken != null && audValid && expValid;
 
-    return sigValid && audValid && expValid;
-  }
-
-  /**
-   * Verify the signature of the JWT token in this method. This method depends
-   * on the public key that was established during init based upon the
-   * provisioned public key. Override this method in subclasses in order to
-   * customize the signature verification behavior.
-   *
-   * @param jwtToken the token that contains the signature to be validated
-   * @return valid true if signature verifies successfully; false otherwise
-   */
-  protected boolean validateSignature(SignedJWT jwtToken) {
-    boolean valid = false;
-    if (JWSObject.State.SIGNED == jwtToken.getState()) {
-      LOG.debug("JWT token is in a SIGNED state");
-      if (jwtToken.getSignature() != null) {
-        LOG.debug("JWT token signature is not null");
-        try {
-          JWSVerifier verifier = new RSASSAVerifier(publicKey);
-          if (jwtToken.verify(verifier)) {
-            valid = true;
-            LOG.debug("JWT token has been successfully verified");
-          } else {
-            LOG.warn("JWT signature verification failed.");
-          }
-        } catch (JOSEException je) {
-          LOG.warn("Error while validating signature", je);
-        }
+    } catch (Exception e) {
+      LOG.error("Exception while validating/introspecting jwt token, check debug logs for more details");
+      if (LOG.isDebugEnabled()) {
+        e.printStackTrace();
       }
     }
-    return valid;
+    return false;
+  }
+
+  public static DecodedJWT verifyToken(DecodedJWT jwt) throws InvalidParameterException {
+    try {
+      RSAPublicKey publicKey = loadPublicKey(jwt);
+      Algorithm algorithm = Algorithm.RSA256(publicKey, null);
+      JWTVerifier verifier = JWT.require(algorithm)
+          .withIssuer(jwt.getIssuer())
+          .build();
+
+      return verifier.verify(jwt);
+    } catch (Exception e) {
+      if (LOG.isDebugEnabled()) {
+        e.printStackTrace();
+      }
+      LOG.error("Unable to authenticate: {}", e.getMessage());
+      throw new InvalidParameterException("Unable to authenticate: " + e.getMessage());
+    }
+  }
+
+  private static RSAPublicKey loadPublicKey(DecodedJWT token) throws JwkException, MalformedURLException {
+    final String url = getKeycloakCertificateUrl(token);
+    JwkProvider provider = new UrlJwkProvider(new URL(url));
+    return (RSAPublicKey) provider.get(token.getKeyId()).getPublicKey();
+  }
+
+  private static String getKeycloakCertificateUrl(DecodedJWT token) {
+    return token.getIssuer() + "/protocol/openid-connect/certs";
   }
 
   /**
@@ -296,36 +383,30 @@ public class JWTRedirectAuthenticationHandler extends
    * issued token claims list for audience. Override this method in subclasses
    * in order to customize the audience validation behavior.
    *
-   * @param jwtToken
-   *          the JWT token where the allowed audiences will be found
+   * @param jwtToken the JWT token where the allowed audiences will be found
    * @return true if an expected audience is present, otherwise false
    */
-  protected boolean validateAudiences(SignedJWT jwtToken) {
+  protected boolean validateAudiences(DecodedJWT jwtToken) {
     boolean valid = false;
-    try {
-      List<String> tokenAudienceList = jwtToken.getJWTClaimsSet()
-          .getAudience();
-      // if there were no expected audiences configured then just
-      // consider any audience acceptable
-      if (audiences == null) {
-        valid = true;
-      } else {
-        // if any of the configured audiences is found then consider it
-        // acceptable
-        boolean found = false;
-        for (String aud : tokenAudienceList) {
-          if (audiences.contains(aud)) {
-            LOG.debug("JWT token audience has been successfully validated");
-            valid = true;
-            break;
-          }
-        }
-        if (!valid) {
-          LOG.warn("JWT audience validation failed.");
+    List<String> tokenAudienceList = jwtToken.getClaim("aud").asList(String.class);
+    // if there were no expected audiences configured then just
+    // consider any audience acceptable
+    if (audiences == null) {
+      valid = true;
+    } else {
+      // if any of the configured audiences is found then consider it
+      // acceptable
+      boolean found = false;
+      for (String aud : tokenAudienceList) {
+        if (audiences.contains(aud)) {
+          LOG.debug("JWT token audience has been successfully validated");
+          valid = true;
+          break;
         }
       }
-    } catch (ParseException pe) {
-      LOG.warn("Unable to parse the JWT token.", pe);
+      if (!valid) {
+        LOG.warn("JWT audience validation failed.");
+      }
     }
     return valid;
   }
@@ -338,20 +419,21 @@ public class JWTRedirectAuthenticationHandler extends
    * @param jwtToken the token that contains the expiration date to validate
    * @return valid true if the token has not expired; false otherwise
    */
-  protected boolean validateExpiration(SignedJWT jwtToken) {
+  protected boolean validateExpiration(DecodedJWT jwtToken) {
     boolean valid = false;
-    try {
-      Date expires = jwtToken.getJWTClaimsSet().getExpirationTime();
-      if (expires == null || new Date().before(expires)) {
-        LOG.debug("JWT token expiration date has been "
-            + "successfully validated");
-        valid = true;
-      } else {
-        LOG.warn("JWT expiration date validation failed.");
-      }
-    } catch (ParseException pe) {
-      LOG.warn("JWT expiration date validation failed.", pe);
+    Date expires = jwtToken.getClaim("exp").asDate();
+    if (expires == null || new Date().before(expires)) {
+      LOG.debug("JWT token expiration date has been "
+          + "successfully validated");
+      valid = true;
+    } else {
+      LOG.warn("JWT expiration date validation failed.");
     }
     return valid;
+  }
+
+  @Override
+  public void addHeader(HttpServletResponse response) {
+    response.addHeader(KerberosAuthenticator.WWW_AUTHENTICATE, "Bearer realm=\"master\"");
   }
 }

@@ -52,4 +52,9 @@ public final class HttpConstants {
    */
   public static final String DIGEST = "Digest";
 
+  /**
+   * HTTP header prefix used during the Bearer authentication sequence.
+   */
+  public static final String BEARER = "Bearer";
+
 }

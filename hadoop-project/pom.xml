@@ -220,6 +220,8 @@
     <apache-ant.version>1.10.13</apache-ant.version>
     <jmh.version>1.20</jmh.version>
     <jpam.version>1.1</jpam.version>
+    <auth0-version>4.4.0</auth0-version>
+    <jwks-version>0.22.1</jwks-version>
   </properties>
 
   <dependencyManagement>
@@ -1444,6 +1446,16 @@
         <groupId>net.sf.jpam</groupId>
         <artifactId>jpam</artifactId>
         <version>${jpam.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.auth0</groupId>
+        <artifactId>java-jwt</artifactId>
+        <version>${auth0-version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.auth0</groupId>
+        <artifactId>jwks-rsa</artifactId>
+        <version>${jwks-version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.ant</groupId>
