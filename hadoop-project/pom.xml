@@ -37,7 +37,7 @@
     <!--Whether to proceed to next module if any test failures exist-->
     <maven.test.failure.ignore>true</maven.test.failure.ignore>
     <maven.test.redirectTestOutputToFile>true</maven.test.redirectTestOutputToFile>
-    <jetty.version>9.4.55.v20240627</jetty.version>
+    <jetty.version>9.4.56.v20240826</jetty.version>
     <test.exclude>_</test.exclude>
     <test.exclude.pattern>_</test.exclude.pattern>
 
@@ -2832,7 +2832,7 @@
         <hbase-compatible-guava.version>11.0.2</hbase-compatible-guava.version>
         <hbase-server-artifactid>hadoop-yarn-server-timelineservice-hbase-server-2</hbase-server-artifactid>
         <hbase-compatible-guice.version>4.0</hbase-compatible-guice.version>
-        <hbase-compatible-jetty.version>9.3.27.v20190418</hbase-compatible-jetty.version>
+        <hbase-compatible-jetty.version>9.4.56.v20240826</hbase-compatible-jetty.version>
       </properties>
       <dependencyManagement>
         <dependencies>
