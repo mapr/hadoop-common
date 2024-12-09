@@ -13,6 +13,7 @@ import java.util.Map;
  */
 public class SsoConfigurationUtil {
   private static final Logger LOG = LoggerFactory.getLogger(SsoConfigurationUtil.class);
+  public static final String HADOOP_JWT_ENABLED = "hadoop.http.authentication.jwt.enabled";
   private static Map<String, String> ssoConfigMap = null;
   private static SsoConfigurationUtil ssoConfigInstance = null;
   private final String CLIENT_ID = "clientid";

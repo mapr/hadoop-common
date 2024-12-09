@@ -28,7 +28,7 @@ public class JWTConfiguration {
       InetAddress localHost = InetAddress.getLocalHost();
       String fqdn = localHost.getCanonicalHostName();
       if (fqdn != null && fqdn.contains(".")) {
-        domainName = fqdn.substring(fqdn.indexOf("."));
+        domainName = fqdn.substring(fqdn.indexOf(".") + 1);
       }
     } catch (UnknownHostException e) {
       LOG.warn("Can't initialize hostname for the service");
