@@ -25,6 +25,7 @@ import org.apache.hadoop.security.authentication.server.AbstractMaprAuthenticati
 import org.apache.hadoop.security.authentication.server.AuthenticationFilter;
 import org.apache.hadoop.security.authentication.server.KerberosAuthenticationHandler;
 import org.apache.hadoop.security.authentication.server.MultiMechsAuthenticationHandler;
+import org.apache.hadoop.security.authentication.util.MapRSignerSecretProvider;
 import org.apache.hadoop.security.authentication.util.RandomSignerSecretProvider;
 import org.apache.hadoop.security.authentication.util.SignerSecretProvider;
 import org.apache.hadoop.security.token.delegation.web.DelegationTokenAuthenticationFilter;
@@ -136,6 +137,7 @@ public class HttpFSAuthenticationFilter
     if (secretProvider == null) {
       return false;
     }
-    return secretProvider.getClass() == RandomSignerSecretProvider.class;
+    return secretProvider.getClass() == RandomSignerSecretProvider.class ||
+        secretProvider.getClass() == MapRSignerSecretProvider.class;
   }
 }

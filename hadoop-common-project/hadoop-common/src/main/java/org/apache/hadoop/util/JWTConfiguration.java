@@ -17,6 +17,7 @@ public class JWTConfiguration {
   private static final String COOKIE_PATH = "jwt.cookie.path";
   private static final String COOKIE_NAME = "jwt.cookie.name";
   private static final String USER_ATTRIBUTE_NAME = "jwt.user.attribute.name";
+  private static final String EXPECTED_JWT_AUDIENCES = "hadoop.http.authentication.expected.jwt.audiences";
 
   public static Map<String, String> getJWTConfiguration() {
     LOG.debug("Getting JWT configuration from Configuration or init default.");
@@ -32,6 +33,12 @@ public class JWTConfiguration {
       }
     } catch (UnknownHostException e) {
       LOG.warn("Can't initialize hostname for the service");
+    }
+
+    // setup the list of valid audiences for token validation
+    String auds = conf.get(EXPECTED_JWT_AUDIENCES, null);
+    if (auds != null) {
+      jwtConfigMap.put(EXPECTED_JWT_AUDIENCES, auds);
     }
 
     String cookieDomain = conf.get(COOKIE_DOMAIN, domainName);

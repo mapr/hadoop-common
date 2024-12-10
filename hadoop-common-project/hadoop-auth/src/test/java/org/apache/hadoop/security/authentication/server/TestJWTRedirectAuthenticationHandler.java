@@ -35,6 +35,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.hadoop.minikdc.KerberosSecurityTestcase;
 import org.apache.hadoop.security.authentication.KerberosTestUtils;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
+import org.apache.hadoop.security.authentication.util.SsoConfigurationUtil;
 import org.junit.*;
 import org.mockito.Mockito;
 
@@ -280,7 +281,7 @@ public class TestJWTRedirectAuthenticationHandler extends
 
       Properties props = getProperties();
       props
-          .put(JWTRedirectAuthenticationHandler.EXPECTED_JWT_AUDIENCES, "foo");
+          .put(SsoConfigurationUtil.EXPECTED_JWT_AUDIENCES, "foo");
       handler.init(props);
 
       SignedJWT jwt = getJWT("bob", new Date(new Date().getTime() + 5000),
@@ -311,7 +312,7 @@ public class TestJWTRedirectAuthenticationHandler extends
 
       Properties props = getProperties();
       props
-          .put(JWTRedirectAuthenticationHandler.EXPECTED_JWT_AUDIENCES, "bar");
+          .put(SsoConfigurationUtil.EXPECTED_JWT_AUDIENCES, "bar");
       handler.init(props);
 
       SignedJWT jwt = getJWT("bob", new Date(new Date().getTime() + 5000),

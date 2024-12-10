@@ -5,15 +5,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-
 /**
  * Tool to getting all configuration for SSO configuration using JWT token from keycloak
  */
 public class SsoConfigurationUtil {
   private static final Logger LOG = LoggerFactory.getLogger(SsoConfigurationUtil.class);
   public static final String HADOOP_JWT_ENABLED = "hadoop.http.authentication.jwt.enabled";
+  public static final String EXPECTED_JWT_AUDIENCES = "hadoop.http.authentication.expected.jwt.audiences";
+  private static List<String> audiences = null;
   private static Map<String, String> ssoConfigMap = null;
   private static SsoConfigurationUtil ssoConfigInstance = null;
   private final String CLIENT_ID = "clientid";
@@ -59,6 +63,11 @@ public class SsoConfigurationUtil {
       throw new RuntimeException(e);
     }
     if (jwtMapConf != null && !jwtMapConf.isEmpty()) {
+      if(jwtMapConf.get(EXPECTED_JWT_AUDIENCES) != null){
+        // parse into the list
+        audiences = new ArrayList<String>();
+        audiences.addAll(Arrays.asList(jwtMapConf.get(EXPECTED_JWT_AUDIENCES).split(",")));
+      }
       ssoConfigMap.put(COOKIE_DOMAIN, jwtMapConf.get(COOKIE_DOMAIN));
       ssoConfigMap.put(COOKIE_PATH, jwtMapConf.get(COOKIE_PATH));
       ssoConfigMap.put(COOKIE_NAME, jwtMapConf.get(COOKIE_NAME));
@@ -110,6 +119,10 @@ public class SsoConfigurationUtil {
 
   public String getUserAttrName() {
     return ssoConfigMap.get(USER_ATTRIBUTE_NAME);
+  }
+
+  public List<String> getAudiences() {
+    return audiences;
   }
 
 }

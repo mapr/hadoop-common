@@ -43,6 +43,19 @@ public class MultiMechsAuthenticationHandler implements AuthenticationHandler {
 
   // We can later do may be factory based one class registration
   public static enum AuthHandlerEnum {
+    BEARER {
+      public String getType() {
+        return "bearer";
+      }
+
+      public Class<? extends MultiMechsAuthenticationHandler> getMyClass() {
+        return JWTAuthHandler.class;
+      }
+
+      public int getOrder() {
+        return 3;
+      }
+    },
     BASIC {
       public String getType() {
         return "basic";
