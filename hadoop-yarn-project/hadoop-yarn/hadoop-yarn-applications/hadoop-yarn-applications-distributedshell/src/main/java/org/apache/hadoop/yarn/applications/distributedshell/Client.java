@@ -602,7 +602,7 @@ public class Client {
           + " exiting. Specified numContainer=" + numContainers);
     }
     
-    nodeLabelExpression = cliParser.getOptionValue("node_label_expression", null);
+    nodeLabelExpression = cliParser.getOptionValue("node_label_expression", () -> null);
 
     clientTimeout = Integer.parseInt(cliParser.getOptionValue("timeout", "600000"));
 
