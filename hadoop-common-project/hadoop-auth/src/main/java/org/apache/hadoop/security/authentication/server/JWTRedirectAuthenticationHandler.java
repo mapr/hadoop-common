@@ -13,25 +13,22 @@
  */
 package org.apache.hadoop.security.authentication.server;
 
-import java.io.*;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.InputStreamReader;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidParameterException;
-import java.security.interfaces.RSAPublicKey;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 
@@ -46,13 +43,8 @@ import org.apache.hadoop.security.authentication.util.SsoConfigurationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.auth0.jwk.JwkException;
-import com.auth0.jwk.JwkProvider;
-import com.auth0.jwk.UrlJwkProvider;
 import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.auth0.jwt.interfaces.JWTVerifier;
 
 
 /**
@@ -138,15 +130,27 @@ public class JWTRedirectAuthenticationHandler extends
     AuthenticationToken token = null;
     String serializedJWT = null;
     HttpServletRequest req = request;
-    serializedJWT = getJWTFromCookie(req);
+    serializedJWT = JWTUtils.getJWTFromCookie(req);
     if (serializedJWT == null && request.getParameter(CODE) == null) {
       String loginURL = constructLoginURL(request);
       LOG.debug("Sending redirect to: " + loginURL);
       response.sendRedirect(loginURL);
     } else if (serializedJWT == null && request.getParameter(CODE) != null) {
-      String jwt = getJWTTokenFromCode(request.getParameter(CODE), request);
-      response.addCookie(initCookies(jwt));
-      response.sendRedirect(constructURLWithHostname(request.getRequestURL().toString()));
+      String jsonJWT = getJWTTokenFromCode(request.getParameter(CODE), request);
+      ObjectMapper mapper = new ObjectMapper();
+      JsonNode node = mapper.readTree(jsonJWT);
+      String jwtStr = node.get("access_token").asText();
+      DecodedJWT jwt = JWT.decode(jwtStr);
+      if (JWTUtils.validateToken(jwt)) {
+        AuthenticationFilter.createAuthCookie(response, jwtStr,
+            SsoConfigurationUtil.getInstance().getCookieDomain(), SsoConfigurationUtil.getInstance().getCookiePath(),
+            0, false, true, true, jwt.getExpiresAt());
+        response.sendRedirect(constructURLWithHostname(request.getRequestURL().toString()));
+      } else {
+        String loginURL = constructLoginURL(request);
+        LOG.info("Can't add token to cookie, because validating failed.");
+        response.sendRedirect(loginURL);
+      }
     } else if (serializedJWT != null) {
       String userName = null;
       DecodedJWT jwtToken = JWT.decode(serializedJWT);
@@ -168,30 +172,6 @@ public class JWTRedirectAuthenticationHandler extends
       LOG.info("JWT can't be found in cookies or get from the authentication server");
     }
     return token;
-  }
-
-  private Cookie initCookies(String jwt) {
-    Cookie cookie = null;
-    try {
-      ObjectMapper mapper = new ObjectMapper();
-      JsonNode node = mapper.readTree(jwt);
-      cookie = createCookie(cookieName, node.get("access_token").asText(), node.get("expires_in").asInt());
-    } catch (Exception ex) {
-      LOG.error("Can't parse JWT JSON response.");
-      LOG.debug("JWT: {}", jwt);
-      return null;
-    }
-    cookie.setPath(cookiePath);
-    cookie.setDomain(cookieDomain);
-    return cookie;
-  }
-
-  private static Cookie createCookie(String name, String val, int exp) {
-    Cookie cookie = new Cookie(name, val);
-    cookie.setHttpOnly(true);
-    cookie.setSecure(true);
-    cookie.setMaxAge(exp);
-    return cookie;
   }
 
   public String getJWTTokenFromCode(String code, HttpServletRequest request) throws IOException {
@@ -224,29 +204,6 @@ public class JWTRedirectAuthenticationHandler extends
       con.disconnect();
     }
     return content.toString();
-  }
-
-  /**
-   * Encapsulate the acquisition of the JWT token from HTTP cookies within the
-   * request.
-   *
-   * @param req servlet request to get the JWT token from
-   * @return serialized JWT token
-   */
-  protected String getJWTFromCookie(HttpServletRequest req) {
-    String serializedJWT = null;
-    Cookie[] cookies = req.getCookies();
-    if (cookies != null) {
-      for (Cookie cookie : cookies) {
-        if (cookieName.equals(cookie.getName())) {
-          LOG.info(cookieName
-              + " cookie has been found and is being processed");
-          serializedJWT = cookie.getValue();
-          break;
-        }
-      }
-    }
-    return serializedJWT;
   }
 
   public String getTokenUrl() {

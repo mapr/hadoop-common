@@ -13,6 +13,7 @@
  */
 package org.apache.hadoop.security.authentication.server;
 
+import com.auth0.jwt.JWT;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
@@ -601,9 +602,14 @@ public class AuthenticationFilter implements Filter {
           if (newToken && !token.isExpired()
               && token != AuthenticationToken.ANONYMOUS) {
             String signedToken = signer.sign(token.toString());
+            String jwtToken = JWTUtils.getJWTFromCookie((HttpServletRequest) request);
+            Date expireJWT = null;
+            if(jwtToken != null && !jwtToken.isEmpty()){
+              expireJWT = JWT.decode(jwtToken).getExpiresAt();
+            }
             createAuthCookie(httpResponse, signedToken, getCookieDomain(),
                     getCookiePath(), token.getExpires(),
-                    isCookiePersistent(), isHttps);
+                    isCookiePersistent(), isHttps, false, expireJWT);
           }
           doFilter(filterChain, httpRequest, httpResponse);
         }
@@ -627,7 +633,7 @@ public class AuthenticationFilter implements Filter {
     if (unauthorizedResponse) {
       if (!httpResponse.isCommitted()) {
         createAuthCookie(httpResponse, "", getCookieDomain(),
-                getCookiePath(), 0, isCookiePersistent(), isHttps);
+                getCookiePath(), 0, isCookiePersistent(), isHttps, false, null);
         // If response code is 401. Then WWW-Authenticate Header should be
         // present.. reset to 403 if not found..
         if ((errCode == HttpServletResponse.SC_UNAUTHORIZED)
@@ -687,9 +693,14 @@ public class AuthenticationFilter implements Filter {
   public static void createAuthCookie(HttpServletResponse resp, String token,
                                       String domain, String path, long expires,
                                       boolean isCookiePersistent,
-                                      boolean isSecure) {
+                                      boolean isSecure, boolean jwt, Date jwtExp) {
     StringBuilder sb = new StringBuilder(AuthenticatedURL.AUTH_COOKIE)
-                           .append("=");
+        .append("=");
+    if (jwt) {
+      sb = new StringBuilder(SsoConfigurationUtil.getInstance().getCookieName())
+          .append("=");
+    }
+
     if (token != null && token.length() > 0) {
       sb.append("\"").append(token).append("\"");
     }
@@ -701,8 +712,12 @@ public class AuthenticationFilter implements Filter {
     if (domain != null) {
       sb.append("; Domain=").append(domain);
     }
-
-    if (expires >= 0 && isCookiePersistent) {
+    if (jwtExp != null) {
+      SimpleDateFormat df = new SimpleDateFormat("EEE, " +
+          "dd-MMM-yyyy HH:mm:ss zzz", Locale.US);
+      df.setTimeZone(TimeZone.getTimeZone("GMT"));
+      sb.append("; Expires=").append(df.format(jwtExp));
+    } else if (expires >= 0 && isCookiePersistent) {
       Date date = new Date(expires);
       SimpleDateFormat df = new SimpleDateFormat("EEE, " +
               "dd-MMM-yyyy HH:mm:ss zzz", Locale.US);

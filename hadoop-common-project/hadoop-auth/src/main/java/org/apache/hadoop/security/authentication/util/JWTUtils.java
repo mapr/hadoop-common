@@ -11,6 +11,8 @@ import com.auth0.jwt.interfaces.JWTVerifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.InvalidParameterException;
@@ -135,5 +137,28 @@ public class JWTUtils {
       }
     }
     return valid;
+  }
+
+  /**
+   * Encapsulate the acquisition of the JWT token from HTTP cookies within the
+   * request.
+   *
+   * @param req servlet request to get the JWT token from
+   * @return serialized JWT token
+   */
+  public static String getJWTFromCookie(HttpServletRequest req) {
+    String serializedJWT = null;
+    Cookie[] cookies = req.getCookies();
+    String cookieName = SsoConfigurationUtil.getInstance().getCookieName();
+    if (cookies != null) {
+      for (Cookie cookie : cookies) {
+        if (cookieName.equals(cookie.getName())) {
+          LOG.info("{} cookie has been found and is being processed", cookieName);
+          serializedJWT = cookie.getValue();
+          break;
+        }
+      }
+    }
+    return serializedJWT;
   }
 }

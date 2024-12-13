@@ -59,7 +59,7 @@ public class TestAuthenticationSessionCookie {
                                                    ServletException {
       HttpServletResponse resp = (HttpServletResponse) response;
       AuthenticationFilter.createAuthCookie(resp, "token", null, null, expires,
-              isCookiePersistent, true);
+              isCookiePersistent, true, false, null);
       chain.doFilter(request, resp);
     }
 
