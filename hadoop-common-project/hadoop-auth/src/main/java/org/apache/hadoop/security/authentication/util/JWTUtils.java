@@ -13,14 +13,20 @@ import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.InvalidParameterException;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class JWTUtils {
+
+  public static String SSO_LOGIN_PARAM = "ssoLogin";
 
   private static Logger LOG = LoggerFactory.getLogger(JWTUtils.class);
 
@@ -160,5 +166,43 @@ public class JWTUtils {
       }
     }
     return serializedJWT;
+  }
+
+  /**
+   * Replace IP to hostname in URL
+   * @param originalUrl original URL
+   * @return URL with replaced hostname if there is IP instead of hostname
+   * */
+  public static String constructURLWithHostname(String originalUrl) {
+    try {
+      URI originalUri = new URI(originalUrl);
+      InetAddress address = InetAddress.getByName(new URL(originalUrl).getHost());
+      if (originalUrl.contains(address.getHostAddress())) {
+        return replaceHostInUrl(originalUri, address.getHostName() + ":" + originalUri.getPort());
+      }
+    } catch (Exception ex) {
+      LOG.warn("Can't create new URL from request hostname {}. Use URL from request.",
+          originalUrl);
+    }
+    return originalUrl;
+  }
+
+  /**
+   * Replace hostname in URL
+   * @param originalUri old hostname
+   * @param newAuthority new hostname
+   * @return URL with replaced hostname
+   * */
+  public static String replaceHostInUrl(URI originalUri, String newAuthority) {
+    URI uri;
+    try {
+      uri = new URI(originalUri.getScheme().toLowerCase(Locale.US), newAuthority,
+          originalUri.getPath(), originalUri.getQuery(), originalUri.getFragment());
+    } catch (URISyntaxException ex) {
+      LOG.warn("Can't create new URI with hostname for host {}", newAuthority);
+      ex.printStackTrace();
+      return originalUri.toString();
+    }
+    return uri.toString();
   }
 }

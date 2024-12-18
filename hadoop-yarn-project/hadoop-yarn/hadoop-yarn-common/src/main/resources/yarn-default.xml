@@ -304,7 +304,7 @@
   <property>
     <description>To enable RM web ui2 application.</description>
     <name>yarn.webapp.ui2.enable</name>
-    <value>true</value>
+    <value>false</value>
   </property>
 
   <property>

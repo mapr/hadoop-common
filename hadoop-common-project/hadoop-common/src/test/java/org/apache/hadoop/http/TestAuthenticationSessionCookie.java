@@ -58,8 +58,8 @@ public class TestAuthenticationSessionCookie {
                          FilterChain chain) throws IOException,
                                                    ServletException {
       HttpServletResponse resp = (HttpServletResponse) response;
-      AuthenticationFilter.createAuthCookie(resp, "token", null, null, expires,
-              isCookiePersistent, true, false, null);
+      AuthenticationFilter.createAuthCookie(resp, null, "token", null, null, expires,
+              isCookiePersistent, true, -1);
       chain.doFilter(request, resp);
     }
 

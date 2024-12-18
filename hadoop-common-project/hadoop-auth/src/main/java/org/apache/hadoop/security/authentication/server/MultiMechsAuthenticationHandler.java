@@ -32,11 +32,12 @@ import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.hadoop.security.authentication.util.JWTUtils.SSO_LOGIN_PARAM;
+
 public class MultiMechsAuthenticationHandler implements AuthenticationHandler {
 
   private static Logger LOG = LoggerFactory.getLogger(MultiMechsAuthenticationHandler.class);
   public static final String MTYPE = "multiauth";
-  public static final String HADOOP_JWT_ENABLED = "jwt.enabled";
   private JWTRedirectAuthenticationHandler jwt;
 
   private boolean jwtEnabled = false;
@@ -142,11 +143,8 @@ public class MultiMechsAuthenticationHandler implements AuthenticationHandler {
 
   @Override
   public void init(Properties config) throws ServletException {
-    jwtEnabled = Boolean.parseBoolean(config.getProperty(HADOOP_JWT_ENABLED, "False"));
-    if (jwtEnabled) {
-      jwt = new JWTRedirectAuthenticationHandler();
-      jwt.init(config);
-    }
+    jwt = new JWTRedirectAuthenticationHandler();
+    jwt.init(config);
 
     int i = 0;
     String kerberosDisable = String.valueOf(config.get("kerberos.disable"));
@@ -223,14 +221,18 @@ public class MultiMechsAuthenticationHandler implements AuthenticationHandler {
       // if we are here - it is an unknown auth header
       LOG.error("Unknown Authorization: " + authorization + " please check your config files settings");
       throw new AuthenticationException("Unknown Authorization: " + authorization + " please check your config files settings");
-    } else if (jwtEnabled && request.getHeader("User-agent").startsWith("Mozilla/5.0")) {
-      return jwt.postauthenticate(request, response);
     } else {
-      // do all
-      for (MultiMechsAuthenticationHandler child : children) {
-        child.addHeader(response);
-      }
-      response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+      if (request.getParameter(SSO_LOGIN_PARAM) != null &&
+          request.getParameter(SSO_LOGIN_PARAM).equals("processCode")) {
+            return jwt.postauthenticate(request, response);
+        }
+
+        // do all
+        for (MultiMechsAuthenticationHandler child : children) {
+          child.addHeader(response);
+        }
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+
     }
     return token;
   }

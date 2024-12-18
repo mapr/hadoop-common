@@ -20,10 +20,10 @@ public class SsoConfigurationUtil {
   private static List<String> audiences = null;
   private static Map<String, String> ssoConfigMap = null;
   private static SsoConfigurationUtil ssoConfigInstance = null;
-  private final String CLIENT_ID = "clientid";
+  public static final String CLIENT_ID = "clientid";
   private final String CLIENT_SECRET = "clientsecret";
   private final String PROVIDER = "providername";
-  private final String ISSUER = "issuerendpoint";
+  public static final String ISSUER = "issuerendpoint";
   private final String COOKIE_DOMAIN = "jwt.cookie.domain";
   private final String COOKIE_PATH = "jwt.cookie.path";
   private final String COOKIE_NAME = "jwt.cookie.name";

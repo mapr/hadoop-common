@@ -2,9 +2,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,13 +13,22 @@
  */
 package org.apache.hadoop.security.authentication.server;
 
-import com.auth0.jwt.JWT;
+import org.apache.hadoop.classification.VisibleForTesting;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
-import org.apache.hadoop.security.authentication.util.*;
+import org.apache.hadoop.security.authentication.util.FileSignerSecretProvider;
+import org.apache.hadoop.security.authentication.util.JWTUtils;
+import org.apache.hadoop.security.authentication.util.RandomSignerSecretProvider;
+import org.apache.hadoop.security.authentication.util.Signer;
+import org.apache.hadoop.security.authentication.util.SignerException;
+import org.apache.hadoop.security.authentication.util.SignerSecretProvider;
+import org.apache.hadoop.security.authentication.util.SsoConfigurationUtil;
+import org.apache.hadoop.security.authentication.util.ZKSignerSecretProvider;
+import org.apache.hadoop.thirdparty.com.google.common.net.HttpHeaders;
+import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,9 +47,20 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.Principal;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
+import java.util.TimeZone;
+
+import static org.apache.hadoop.security.authentication.util.JWTUtils.SSO_LOGIN_PARAM;
 
 /**
  * The {@link AuthenticationFilter} enables protecting web application
@@ -125,7 +145,7 @@ public class AuthenticationFilter implements Filter {
    * implementation will be used.
    */
   public static final String SIGNER_SECRET_PROVIDER =
-          "signer.secret.provider";
+      "signer.secret.provider";
 
   /**
    * Constant for the ServletContext attribute that can be used for providing a
@@ -169,7 +189,7 @@ public class AuthenticationFilter implements Filter {
     String authHandlerClassName;
     if (authHandlerName == null) {
       throw new ServletException("Authentication type must be specified: " +
-          PseudoAuthenticationHandler.TYPE + "|" + 
+          PseudoAuthenticationHandler.TYPE + "|" +
           KerberosAuthenticationHandler.TYPE + "|<class>");
     }
     authHandlerClassName =
@@ -199,7 +219,7 @@ public class AuthenticationFilter implements Filter {
     cookieDomain = config.getProperty(COOKIE_DOMAIN, domainName);
     cookiePath = config.getProperty(COOKIE_PATH, "/");
     isCookiePersistent = Boolean.parseBoolean(
-            config.getProperty(COOKIE_PERSISTENT, "false"));
+        config.getProperty(COOKIE_PERSISTENT, "false"));
 
   }
 
@@ -210,7 +230,7 @@ public class AuthenticationFilter implements Filter {
       authHandler = (AuthenticationHandler) klass.newInstance();
       authHandler.init(config);
     } catch (ClassNotFoundException | InstantiationException |
-        IllegalAccessException ex) {
+             IllegalAccessException ex) {
       throw new ServletException(ex);
     }
   }
@@ -239,7 +259,7 @@ public class AuthenticationFilter implements Filter {
       boolean disallowFallbackToRandomSecretProvider) throws Exception {
     String name = config.getProperty(SIGNER_SECRET_PROVIDER, "file");
     long validity = Long.parseLong(config.getProperty(AUTH_TOKEN_VALIDITY,
-                                                      "36000")) * 1000;
+        "36000")) * 1000;
 
     if (!disallowFallbackToRandomSecretProvider
         && "file".equals(name)
@@ -490,8 +510,8 @@ public class AuthenticationFilter implements Filter {
    *         false  Otherwise
    */
   protected boolean verifyTokenType(AuthenticationHandler handler,
-      AuthenticationToken token) {
-    if(!(handler instanceof CompositeAuthenticationHandler)) {
+                                    AuthenticationToken token) {
+    if (!(handler instanceof CompositeAuthenticationHandler)) {
       return handler.getType().equals(token.getType());
     }
     boolean match = false;
@@ -521,7 +541,7 @@ public class AuthenticationFilter implements Filter {
   public void doFilter(ServletRequest request,
                        ServletResponse response,
                        FilterChain filterChain)
-                           throws IOException, ServletException {
+      throws IOException, ServletException {
     boolean unauthorizedResponse = true;
     int errCode = HttpServletResponse.SC_UNAUTHORIZED;
     AuthenticationException authenticationEx = null;
@@ -537,8 +557,7 @@ public class AuthenticationFilter implements Filter {
           LOG.debug("Got token {} from httpRequest {}", token,
               getRequestURL(httpRequest));
         }
-      }
-      catch (AuthenticationException ex) {
+      } catch (AuthenticationException ex) {
         LOG.warn("AuthenticationToken ignored: " + ex.getMessage());
         // will be sent back in a 401 unless filter authenticates
         authenticationEx = ex;
@@ -546,6 +565,30 @@ public class AuthenticationFilter implements Filter {
       }
       if (authHandler.managementOperation(token, httpRequest, httpResponse)) {
         if (token == null) {
+          if (httpRequest.getHeader(KerberosAuthenticator.AUTHORIZATION) == null &&
+              httpRequest.getHeader(HttpHeaders.USER_AGENT).startsWith("Mozilla/5.0") &&
+              !httpRequest.getRequestURI().equals("/login") &&
+              httpRequest.getParameter(SSO_LOGIN_PARAM) == null) {
+            String redirect;
+            try {
+              URI origin = new URI(httpRequest.getRequestURL().toString());
+              redirect = origin.getScheme() + "://" + origin.getHost() + ":" + origin.getPort() + "/login";
+            } catch (URISyntaxException e) {
+              throw new RuntimeException(e);
+            }
+            httpResponse.addHeader("Location", redirect);
+            httpResponse.setStatus(HttpServletResponse.SC_TEMPORARY_REDIRECT);
+            return;
+          } else if (httpRequest.getParameter(SSO_LOGIN_PARAM) != null
+              && httpRequest.getParameter(SSO_LOGIN_PARAM).equals("initProcess")) {
+            Map<String, String> ssoMap = new HashMap<>();
+            ssoMap.put("loginURL", constructLoginURL(httpRequest));
+            JSONObject ssoJson = new JSONObject(ssoMap);
+            httpResponse.setContentType("application/json");
+            httpResponse.getWriter().write(ssoJson.toJSONString());
+            httpResponse.setStatus(HttpServletResponse.SC_OK);
+            return;
+          }
           if (LOG.isDebugEnabled()) {
             LOG.debug("Request [{}] triggering authentication. handler: {}",
                 getRequestURL(httpRequest), authHandler.getClass());
@@ -602,21 +645,16 @@ public class AuthenticationFilter implements Filter {
           if (newToken && !token.isExpired()
               && token != AuthenticationToken.ANONYMOUS) {
             String signedToken = signer.sign(token.toString());
-            String jwtToken = JWTUtils.getJWTFromCookie((HttpServletRequest) request);
-            Date expireJWT = null;
-            if(jwtToken != null && !jwtToken.isEmpty()){
-              expireJWT = JWT.decode(jwtToken).getExpiresAt();
-            }
-            createAuthCookie(httpResponse, signedToken, getCookieDomain(),
-                    getCookiePath(), token.getExpires(),
-                    isCookiePersistent(), isHttps, false, expireJWT);
+            createAuthCookie(httpResponse, httpRequest, signedToken, getCookieDomain(),
+                getCookiePath(), token.getExpires(),
+                isCookiePersistent(), isHttps, token.getJWTExpires());
           }
           doFilter(filterChain, httpRequest, httpResponse);
         }
       } else {
         if (LOG.isDebugEnabled()) {
           LOG.debug("managementOperation returned false for request {}."
-                  + " token: {}", getRequestURL(httpRequest), token);
+              + " token: {}", getRequestURL(httpRequest), token);
         }
         unauthorizedResponse = false;
       }
@@ -632,15 +670,15 @@ public class AuthenticationFilter implements Filter {
     }
     if (unauthorizedResponse) {
       if (!httpResponse.isCommitted()) {
-        createAuthCookie(httpResponse, "", getCookieDomain(),
-                getCookiePath(), 0, isCookiePersistent(), isHttps, false, null);
+        createAuthCookie(httpResponse, httpRequest, "", getCookieDomain(),
+            getCookiePath(), 0, isCookiePersistent(), isHttps, -1);
         // If response code is 401. Then WWW-Authenticate Header should be
         // present.. reset to 403 if not found..
         if ((errCode == HttpServletResponse.SC_UNAUTHORIZED)
             && (!httpResponse.containsHeader(
-                KerberosAuthenticator.WWW_AUTHENTICATE)
-                && !httpResponse.containsHeader(
-                KerberosAuthenticator.WWW_AUTHENTICATE.toLowerCase()))) {
+            KerberosAuthenticator.WWW_AUTHENTICATE)
+            && !httpResponse.containsHeader(
+            KerberosAuthenticator.WWW_AUTHENTICATE.toLowerCase()))) {
           errCode = HttpServletResponse.SC_FORBIDDEN;
         }
         // After Jetty 9.4.21, sendError() no longer allows a custom message.
@@ -670,7 +708,7 @@ public class AuthenticationFilter implements Filter {
    * @throws ServletException thrown if a processing error occurred.
    */
   protected void doFilter(FilterChain filterChain, HttpServletRequest request,
-      HttpServletResponse response) throws IOException, ServletException {
+                          HttpServletResponse response) throws IOException, ServletException {
     filterChain.doFilter(request, response);
   }
 
@@ -690,16 +728,12 @@ public class AuthenticationFilter implements Filter {
    * because of the fact that Hadoop is stuck at servlet 2.5 and jetty 6
    * right now.
    */
-  public static void createAuthCookie(HttpServletResponse resp, String token,
+  public static void createAuthCookie(HttpServletResponse resp, HttpServletRequest req, String token,
                                       String domain, String path, long expires,
                                       boolean isCookiePersistent,
-                                      boolean isSecure, boolean jwt, Date jwtExp) {
+                                      boolean isSecure, long jwtExp) {
     StringBuilder sb = new StringBuilder(AuthenticatedURL.AUTH_COOKIE)
         .append("=");
-    if (jwt) {
-      sb = new StringBuilder(SsoConfigurationUtil.getInstance().getCookieName())
-          .append("=");
-    }
 
     if (token != null && token.length() > 0) {
       sb.append("\"").append(token).append("\"");
@@ -709,18 +743,22 @@ public class AuthenticationFilter implements Filter {
       sb.append("; Path=").append(path);
     }
 
-    if (domain != null) {
+    if (domain != null &&
+        (req == null || req.getRequestURL().toString().contains(domain))) {
+      if(domain.startsWith(".")){
+        domain = domain.substring(1);
+      }
       sb.append("; Domain=").append(domain);
     }
-    if (jwtExp != null) {
+    if ((expires >= 0 && isCookiePersistent) || jwtExp >= 0) {
+      Date date;
+      if (jwtExp < expires && jwtExp >= 0) {
+        date = new Date(jwtExp);
+      } else {
+        date = new Date(expires);
+      }
       SimpleDateFormat df = new SimpleDateFormat("EEE, " +
           "dd-MMM-yyyy HH:mm:ss zzz", Locale.US);
-      df.setTimeZone(TimeZone.getTimeZone("GMT"));
-      sb.append("; Expires=").append(df.format(jwtExp));
-    } else if (expires >= 0 && isCookiePersistent) {
-      Date date = new Date(expires);
-      SimpleDateFormat df = new SimpleDateFormat("EEE, " +
-              "dd-MMM-yyyy HH:mm:ss zzz", Locale.US);
       df.setTimeZone(TimeZone.getTimeZone("GMT"));
       sb.append("; Expires=").append(df.format(date));
     }
@@ -731,5 +769,17 @@ public class AuthenticationFilter implements Filter {
 
     sb.append("; HttpOnly");
     resp.addHeader("Set-Cookie", sb.toString());
+  }
+
+  @VisibleForTesting
+  String constructLoginURL(HttpServletRequest request) {
+    String delimiter = "&";
+    return getAuthUrl() + "?" +
+        "response_type=code" + delimiter + "client_id=" + SsoConfigurationUtil.getInstance().getClientId() + delimiter + "scope=openid" + delimiter +
+        "redirect_uri=" + JWTUtils.constructURLWithHostname(request.getRequestURL().toString()) + "?" + SSO_LOGIN_PARAM + "=processCode";
+  }
+
+  public String getAuthUrl() {
+    return SsoConfigurationUtil.getInstance().getClientIssuer() + "/protocol/openid-connect/auth";
   }
 }

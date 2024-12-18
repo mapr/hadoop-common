@@ -14,21 +14,19 @@
 package org.apache.hadoop.security.authentication.server;
 
 
-import javax.servlet.http.Cookie;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 
@@ -40,6 +38,12 @@ import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
 import org.apache.hadoop.security.authentication.util.JWTUtils;
 import org.apache.hadoop.security.authentication.util.SsoConfigurationUtil;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.message.BasicNameValuePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,12 +85,8 @@ public class JWTRedirectAuthenticationHandler extends
   public static final String JWT_CLIENT_SECRET = "jwt.client.secret";
   private static final String REDIRECT_URI_QUERY_PARAM = "redirect_uri=";
   private String authenticationProviderUrl = null;
-  private String cookieName = null;
   private String clientId = null;
-  private String clientSecret = null;
   private final String delimiter = "&";
-  private String cookieDomain;
-  private String cookiePath;
 
   private final String CODE = "code";
 
@@ -114,13 +114,6 @@ public class JWTRedirectAuthenticationHandler extends
     }
 
     clientId = config.getProperty(JWT_CLIENT_ID, SsoConfigurationUtil.getInstance().getClientId());
-    clientSecret = config.getProperty(JWT_CLIENT_SECRET, SsoConfigurationUtil.getInstance().getClientSecret());
-
-    cookieDomain = SsoConfigurationUtil.getInstance().getCookieDomain();
-    cookiePath = SsoConfigurationUtil.getInstance().getCookiePath();
-    cookieName = SsoConfigurationUtil.getInstance().getCookieName();
-
-
   }
 
   @Override
@@ -142,10 +135,9 @@ public class JWTRedirectAuthenticationHandler extends
       String jwtStr = node.get("access_token").asText();
       DecodedJWT jwt = JWT.decode(jwtStr);
       if (JWTUtils.validateToken(jwt)) {
-        AuthenticationFilter.createAuthCookie(response, jwtStr,
-            SsoConfigurationUtil.getInstance().getCookieDomain(), SsoConfigurationUtil.getInstance().getCookiePath(),
-            0, false, true, true, jwt.getExpiresAt());
-        response.sendRedirect(constructURLWithHostname(request.getRequestURL().toString()));
+        String userName = jwt.getClaim(SsoConfigurationUtil.getInstance().getUserAttrName()).asString();
+        token = new AuthenticationToken(userName, userName, getType());
+        token.setJWTExpires(jwt.getExpiresAt().getTime());
       } else {
         String loginURL = constructLoginURL(request);
         LOG.info("Can't add token to cookie, because validating failed.");
@@ -175,24 +167,19 @@ public class JWTRedirectAuthenticationHandler extends
   }
 
   public String getJWTTokenFromCode(String code, HttpServletRequest request) throws IOException {
-    String urlParameters = "grant_type=authorization_code" + delimiter + "client_id=" + clientId + delimiter +
-        "code=" + code + "&client_secret=" + clientSecret + delimiter +
-        REDIRECT_URI_QUERY_PARAM + constructURLWithHostname(request.getRequestURL().toString());
-
-    byte[] postData = urlParameters.getBytes(StandardCharsets.UTF_8);
-    URL myurl = URI.create(getTokenUrl()).toURL();
-    HttpURLConnection con = (HttpURLConnection) myurl.openConnection();
     StringBuilder content;
-    try {
-      con.setDoOutput(true);
-      con.setRequestMethod("POST");
-      con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+    HttpClient client = HttpClientBuilder.create().build();
+    HttpPost post = new HttpPost(getTokenUrl());
+    List<BasicNameValuePair> urlParameters = new ArrayList<>();
+    urlParameters.add(new BasicNameValuePair("grant_type", "authorization_code"));
+    urlParameters.add(new BasicNameValuePair("client_id", SsoConfigurationUtil.getInstance().getClientId()));
+    urlParameters.add(new BasicNameValuePair("code", code));
+    urlParameters.add(new BasicNameValuePair("client_secret", SsoConfigurationUtil.getInstance().getClientSecret()));
+    urlParameters.add(new BasicNameValuePair("redirect_uri", request.getRequestURL().toString()+"?ssoLogin=processCode"));
+    post.setEntity(new UrlEncodedFormEntity(urlParameters));
+    HttpResponse response = client.execute(post);
 
-      try (DataOutputStream wr = new DataOutputStream(con.getOutputStream())) {
-        wr.write(postData);
-      }
-
-      try (BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream()))) {
+      try (BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
         String line;
         content = new StringBuilder();
         while ((line = br.readLine()) != null) {
@@ -200,9 +187,7 @@ public class JWTRedirectAuthenticationHandler extends
           content.append(System.lineSeparator());
         }
       }
-    } finally {
-      con.disconnect();
-    }
+
     return content.toString();
   }
 
@@ -226,41 +211,7 @@ public class JWTRedirectAuthenticationHandler extends
   String constructLoginURL(HttpServletRequest request) {
     return getAuthUrl() + "?" +
         "response_type=code" + delimiter + "client_id=" + clientId + delimiter + "scope=openid" + delimiter +
-        REDIRECT_URI_QUERY_PARAM + constructURLWithHostname(request.getRequestURL().toString());
-  }
-
-
-  /**
-   * Replace hostname in URL
-   * @param originalUri old hostname
-   * @param newAuthority new hostname
-   * @return URL with replaced hostname
-   * */
-  private String replaceHostInUrl(URI originalUri, String newAuthority) {
-    URI uri;
-    try {
-      uri = new URI(originalUri.getScheme().toLowerCase(Locale.US), newAuthority,
-          originalUri.getPath(), originalUri.getQuery(), originalUri.getFragment());
-    } catch (URISyntaxException ex) {
-      LOG.warn("Can't create new URI with hostname for host {}", newAuthority);
-      ex.printStackTrace();
-      return originalUri.toString();
-    }
-    return uri.toString();
-  }
-
-  private String constructURLWithHostname(String originalUrl) {
-    try {
-      URI originalUri = new URI(originalUrl);
-      InetAddress address = InetAddress.getByName(new URL(originalUrl).getHost());
-      if (originalUrl.contains(address.getHostAddress())) {
-        return replaceHostInUrl(originalUri, address.getHostName() + ":" + originalUri.getPort());
-      }
-    } catch (Exception ex) {
-      LOG.warn("Can't create new URL from request hostname {}. Use URL from request.",
-          originalUrl);
-    }
-    return originalUrl;
+        REDIRECT_URI_QUERY_PARAM + JWTUtils.constructURLWithHostname(request.getRequestURL().toString());
   }
 
   @Override

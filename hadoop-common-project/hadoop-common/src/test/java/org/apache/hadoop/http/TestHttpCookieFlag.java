@@ -57,8 +57,8 @@ public class TestHttpCookieFlag {
                                                    ServletException {
       HttpServletResponse resp = (HttpServletResponse) response;
       boolean isHttps = "https".equals(request.getScheme());
-      AuthenticationFilter.createAuthCookie(resp, "token", null, null, -1,
-              true, isHttps, false, null);
+      AuthenticationFilter.createAuthCookie(resp, null,"token", null, null, -1,
+              true, isHttps, -1);
       chain.doFilter(request, resp);
     }
 

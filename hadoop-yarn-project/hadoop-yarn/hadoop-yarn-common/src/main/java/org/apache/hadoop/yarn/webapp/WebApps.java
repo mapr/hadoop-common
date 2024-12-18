@@ -478,6 +478,13 @@ public class WebApps {
     public WebApp start(WebApp webapp, WebAppContext ui2Context) {
       WebApp webApp = build(webapp);
       HttpServer2 httpServer = webApp.httpServer();
+      WebAppContext loginContext = new WebAppContext();
+      loginContext.setContextPath("/login");
+      URL url = getClass().getClassLoader().getResource("webapps/login");
+      if (url != null) {
+        loginContext.setResourceBase(url.toString());
+        httpServer.addHandlerAtFront(loginContext);
+      }
       if (ui2Context != null) {
         addFiltersForNewContext(ui2Context);
         httpServer.addHandlerAtFront(ui2Context);

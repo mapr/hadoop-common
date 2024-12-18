@@ -46,6 +46,7 @@ public class AuthToken implements Principal {
   private String type;
   private long maxInactives;
   private long expires;
+  private long expiresJWT;
   private String tokenStr;
 
   protected AuthToken() {
@@ -54,6 +55,7 @@ public class AuthToken implements Principal {
     type = null;
     maxInactives = -1;
     expires = -1;
+    expiresJWT = -1;
     tokenStr = "ANONYMOUS";
     generateToken();
   }
@@ -78,6 +80,7 @@ public class AuthToken implements Principal {
     this.type = type;
     this.maxInactives = -1;
     this.expires = -1;
+    this.expiresJWT = -1;
   }
   
   /**
@@ -111,6 +114,16 @@ public class AuthToken implements Principal {
     this.expires = expires;
       generateToken();
   }
+
+  /**
+   * Sets the expiration of JWT. This is internal time and don't add to HTTP token
+   *
+   * @param expiresJWT expiration time of JWT in milliseconds since the epoch.
+   */
+  public void setJWTExpires(long expiresJWT) {
+    this.expiresJWT = expiresJWT;
+  }
+
 
   /**
    * Returns true if the token has expired.
@@ -186,6 +199,14 @@ public class AuthToken implements Principal {
     return expires;
   }
 
+  /**
+   * Returns the expiration time of JWT.
+   *
+   * @return the expiration time of JWT, in milliseconds since Epoc.
+   */
+  public long getJWTExpires() {
+    return expiresJWT;
+  }
   /**
    * Returns the string representation of the token.
    * <p>
