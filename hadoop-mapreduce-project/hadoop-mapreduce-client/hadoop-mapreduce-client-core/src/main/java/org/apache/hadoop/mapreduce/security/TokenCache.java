@@ -31,6 +31,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.Master;
+import org.apache.hadoop.mapreduce.MRConfig;
 import org.apache.hadoop.mapreduce.MRJobConfig;
 import org.apache.hadoop.mapreduce.security.token.JobTokenIdentifier;
 import org.apache.hadoop.security.Credentials;
@@ -75,7 +76,8 @@ public class TokenCache {
    */
   public static void obtainTokensForNamenodes(Credentials credentials,
       Path[] ps, Configuration conf) throws IOException {
-    if (!UserGroupInformation.isSecurityEnabled()) {
+    if (!UserGroupInformation.isSecurityEnabled() || conf.get(MRConfig.FRAMEWORK_NAME,
+        MRConfig.YARN_FRAMEWORK_NAME).equals("local")) {
       return;
     }
     obtainTokensForNamenodesInternal(credentials, ps, conf);
