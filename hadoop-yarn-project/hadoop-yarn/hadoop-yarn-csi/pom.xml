@@ -27,8 +27,8 @@
 
     <properties>
         <protobuf.version>3.21.12</protobuf.version>
-        <grpc.version>1.57.2</grpc.version>
-        <animal-sniffer.version>1.21</animal-sniffer.version>
+        <grpc.version>1.69.0</grpc.version>
+        <animal-sniffer.version>1.24</animal-sniffer.version>
     </properties>
 
     <dependencies>
