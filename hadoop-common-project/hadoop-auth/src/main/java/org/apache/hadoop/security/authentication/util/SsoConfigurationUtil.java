@@ -47,8 +47,7 @@ public class SsoConfigurationUtil {
     LOG.debug("Getting SSO configuration from maprcli command.");
     JsonArray result = null;
     String[] ssoConfigCommand = new String[]{"cluster", "getssoconf"};
-    Map<String, String> jwtMapConf;
-
+    Map<String, String> jwtMapConf = new HashMap<>();
     try {
       Class<?> jwtKlass = Class.forName("org.apache.hadoop.util.JWTConfiguration");
       Method executeJWTConf = jwtKlass.getMethod("getJWTConfiguration");
@@ -59,8 +58,9 @@ public class SsoConfigurationUtil {
       Method execute = klass.getMethod("execute", String[].class, Map.class, boolean.class);
       Object maprShell = klass.getDeclaredConstructor().newInstance();
       result = (JsonArray) execute.invoke(maprShell, ssoConfigCommand, null, false);
-    } catch (Exception e) {
-      throw new RuntimeException(e);
+    } catch (Exception ex) {
+      LOG.debug("Failed to get SSO configuration from maprcli. Please check 'maprcli cluster getssoconf' command.", ex);
+      putEmptyMap();
     }
     if (jwtMapConf != null && !jwtMapConf.isEmpty()) {
       if(jwtMapConf.get(EXPECTED_JWT_AUDIENCES) != null){
@@ -78,7 +78,16 @@ public class SsoConfigurationUtil {
       ssoConfigMap.put(CLIENT_SECRET, result.get(0).getAsJsonObject().get(CLIENT_SECRET).getAsString());
       ssoConfigMap.put(PROVIDER, result.get(0).getAsJsonObject().get(PROVIDER).getAsString());
       ssoConfigMap.put(ISSUER, result.get(0).getAsJsonObject().get(ISSUER).getAsString());
+    } else {
+      putEmptyMap();
     }
+  }
+
+  private void putEmptyMap(){
+    ssoConfigMap.put(CLIENT_ID, "");
+    ssoConfigMap.put(CLIENT_SECRET, "");
+    ssoConfigMap.put(PROVIDER, "");
+    ssoConfigMap.put(ISSUER, "");
   }
 
   public Map<String, String> getFullSsoConfig() {
