@@ -204,7 +204,14 @@
       <directory>${project.build.directory}/site</directory>
       <outputDirectory>/share/doc/hadoop/${hadoop.component}</outputDirectory>
     </fileSet>
-      <fileSet>
+    <fileSet>
+    <directory>hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-common/target/webapp</directory>
+    <outputDirectory>/share/hadoop/${hadoop.component}/webapps/login</outputDirectory>
+    <includes>
+      <include>**/*</include>
+    </includes>
+    </fileSet>
+    <fileSet>
       <directory>hadoop-yarn/hadoop-yarn-ui/target/hadoop-yarn-ui-${project.version}</directory>
       <outputDirectory>/share/hadoop/${hadoop.component}/webapps/ui2</outputDirectory>
       <includes>
