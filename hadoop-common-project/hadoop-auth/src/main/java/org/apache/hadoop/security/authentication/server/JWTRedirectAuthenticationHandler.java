@@ -21,13 +21,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Properties;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -49,6 +44,8 @@ import org.slf4j.LoggerFactory;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
+
+import static org.apache.hadoop.security.authentication.server.AuthenticationFilter.ACTION_PARAM;
 
 
 /**
@@ -138,6 +135,7 @@ public class JWTRedirectAuthenticationHandler extends
         String userName = jwt.getClaim(SsoConfigurationUtil.getInstance().getUserAttrName()).asString();
         token = new AuthenticationToken(userName, userName, getType());
         token.setJWTExpires(jwt.getExpiresAt().getTime());
+        token.setJWTBasedToken(true);
       } else {
         String loginURL = constructLoginURL(request);
         LOG.info("Can't add token to cookie, because validating failed.");
@@ -175,7 +173,8 @@ public class JWTRedirectAuthenticationHandler extends
     urlParameters.add(new BasicNameValuePair("client_id", SsoConfigurationUtil.getInstance().getClientId()));
     urlParameters.add(new BasicNameValuePair("code", code));
     urlParameters.add(new BasicNameValuePair("client_secret", SsoConfigurationUtil.getInstance().getClientSecret()));
-    urlParameters.add(new BasicNameValuePair("redirect_uri", request.getRequestURL().toString()+"?ssoLogin=processCode"));
+    urlParameters.add(new BasicNameValuePair("redirect_uri",
+        request.getRequestURL().toString()+"?" + ACTION_PARAM +"=processCode"));
     post.setEntity(new UrlEncodedFormEntity(urlParameters));
     HttpResponse response = client.execute(post);
 

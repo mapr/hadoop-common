@@ -47,6 +47,7 @@ public class AuthToken implements Principal {
   private long maxInactives;
   private long expires;
   private long expiresJWT;
+  private boolean isJWTBasedToken;
   private String tokenStr;
 
   protected AuthToken() {
@@ -56,6 +57,7 @@ public class AuthToken implements Principal {
     maxInactives = -1;
     expires = -1;
     expiresJWT = -1;
+    isJWTBasedToken = false;
     tokenStr = "ANONYMOUS";
     generateToken();
   }
@@ -81,6 +83,7 @@ public class AuthToken implements Principal {
     this.maxInactives = -1;
     this.expires = -1;
     this.expiresJWT = -1;
+    this.isJWTBasedToken = false;
   }
   
   /**
@@ -122,6 +125,15 @@ public class AuthToken implements Principal {
    */
   public void setJWTExpires(long expiresJWT) {
     this.expiresJWT = expiresJWT;
+  }
+
+  /**
+   * Sets flag that token was generated from JWT. This is internal value and don't add to HTTP token
+   *
+   * @param isJWTBasedToken value for that check token was generated from JWT or not.
+   */
+  public void setJWTBasedToken(boolean isJWTBasedToken) {
+    this.isJWTBasedToken = isJWTBasedToken;
   }
 
 
@@ -207,6 +219,16 @@ public class AuthToken implements Principal {
   public long getJWTExpires() {
     return expiresJWT;
   }
+
+  /**
+   * Returns the is JWT generated token ot not .
+   *
+   * @return boolean value for JWT token based.
+   */
+  public boolean isJWTBasedToken() {
+    return isJWTBasedToken;
+  }
+
   /**
    * Returns the string representation of the token.
    * <p>

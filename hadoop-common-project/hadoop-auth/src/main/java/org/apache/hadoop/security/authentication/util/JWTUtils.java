@@ -26,8 +26,6 @@ import java.util.Locale;
 
 public class JWTUtils {
 
-  public static String SSO_LOGIN_PARAM = "ssoLogin";
-
   private static Logger LOG = LoggerFactory.getLogger(JWTUtils.class);
 
   /**

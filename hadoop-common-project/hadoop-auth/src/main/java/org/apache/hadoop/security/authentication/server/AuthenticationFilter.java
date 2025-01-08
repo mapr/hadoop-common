@@ -60,7 +60,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
 
-import static org.apache.hadoop.security.authentication.util.JWTUtils.SSO_LOGIN_PARAM;
 
 /**
  * The {@link AuthenticationFilter} enables protecting web application
@@ -155,6 +154,10 @@ public class AuthenticationFilter implements Filter {
    */
   public static final String SIGNER_SECRET_PROVIDER_ATTRIBUTE =
       "signer.secret.provider.object";
+
+  public static final String SSO_LOGIN_COOKIE = "isSsoLogin";
+  public static final String ACTION_PARAM = "action";
+
 
   private Properties config;
   private Signer signer;
@@ -465,6 +468,7 @@ public class AuthenticationFilter implements Filter {
     AuthenticationToken token = null;
     String tokenStr = null;
     Cookie[] cookies = request.getCookies();
+    boolean isJWTBasedToken = false;
     if (cookies != null) {
       for (Cookie cookie : cookies) {
         if (cookie.getName().equals(AuthenticatedURL.AUTH_COOKIE)) {
@@ -477,7 +481,9 @@ public class AuthenticationFilter implements Filter {
           } catch (SignerException ex) {
             throw new AuthenticationException(ex);
           }
-          break;
+        }
+        if (cookie.getName().equals(SSO_LOGIN_COOKIE) && cookie.getValue().equals("1")) {
+          isJWTBasedToken = true;
         }
       }
     }
@@ -489,6 +495,9 @@ public class AuthenticationFilter implements Filter {
       }
       if (token.isExpired()) {
         throw new AuthenticationException("AuthenticationToken expired");
+      }
+      if(isJWTBasedToken){
+        token.setJWTBasedToken(true);
       }
     }
     return token;
@@ -568,19 +577,12 @@ public class AuthenticationFilter implements Filter {
           if (httpRequest.getHeader(KerberosAuthenticator.AUTHORIZATION) == null &&
               httpRequest.getHeader(HttpHeaders.USER_AGENT).startsWith("Mozilla/5.0") &&
               !httpRequest.getRequestURI().equals("/login") &&
-              httpRequest.getParameter(SSO_LOGIN_PARAM) == null) {
-            String redirect;
-            try {
-              URI origin = new URI(httpRequest.getRequestURL().toString());
-              redirect = origin.getScheme() + "://" + origin.getHost() + ":" + origin.getPort() + "/login";
-            } catch (URISyntaxException e) {
-              throw new RuntimeException(e);
-            }
-            httpResponse.addHeader("Location", redirect);
+              httpRequest.getParameter(ACTION_PARAM) == null) {
+            httpResponse.addHeader(HttpHeaders.LOCATION, getLoginURL(httpRequest));
             httpResponse.setStatus(HttpServletResponse.SC_TEMPORARY_REDIRECT);
             return;
-          } else if (httpRequest.getParameter(SSO_LOGIN_PARAM) != null
-              && httpRequest.getParameter(SSO_LOGIN_PARAM).equals("initProcess")) {
+          } else if (httpRequest.getParameter(ACTION_PARAM) != null
+              && httpRequest.getParameter(ACTION_PARAM).equals("initSSO")) {
             Map<String, String> ssoMap = new HashMap<>();
             ssoMap.put("loginURL", constructLoginURL(httpRequest));
             JSONObject ssoJson = new JSONObject(ssoMap);
@@ -607,6 +609,39 @@ public class AuthenticationFilter implements Filter {
           newToken = true;
         }
         if (token != null) {
+          if (request.getParameter(ACTION_PARAM) != null && request.getParameter(ACTION_PARAM).equals("logout")) {
+            Cookie ssoCookie = null;
+            if (token.isJWTBasedToken()) {
+              ssoCookie = new Cookie(SSO_LOGIN_COOKIE, "");
+              ssoCookie.setMaxAge(0);
+              ssoCookie.setPath(getCookiePath());
+            }
+            Cookie cleanAuthCookie = new Cookie(AuthenticatedURL.AUTH_COOKIE, "");
+            cleanAuthCookie.setMaxAge(0);
+            cleanAuthCookie.setPath(getCookiePath());
+            String domain = getCookieDomain();
+            if (domain != null && httpRequest.getRequestURL().toString().contains(domain)) {
+              if (domain.startsWith(".")) {
+                domain = domain.substring(1);
+              }
+              if (ssoCookie != null) {
+                ssoCookie.setDomain(domain);
+              }
+              cleanAuthCookie.setDomain(domain);
+            }
+            if (ssoCookie != null) {
+              httpResponse.addCookie(ssoCookie);
+            }
+            httpResponse.addCookie(cleanAuthCookie);
+            if (token.isJWTBasedToken()) {
+              httpResponse.addHeader(HttpHeaders.LOCATION, getLogoutUrl());
+              httpResponse.setStatus(HttpServletResponse.SC_OK);
+            } else {
+              httpResponse.addHeader(HttpHeaders.LOCATION, getLoginURL(httpRequest));
+              httpResponse.setStatus(HttpServletResponse.SC_TEMPORARY_REDIRECT);
+            }
+            return;
+          }
           unauthorizedResponse = false;
           if (LOG.isDebugEnabled()) {
             LOG.debug("Request [{}] user [{}] authenticated",
@@ -648,6 +683,10 @@ public class AuthenticationFilter implements Filter {
             createAuthCookie(httpResponse, httpRequest, signedToken, getCookieDomain(),
                 getCookiePath(), token.getExpires(),
                 isCookiePersistent(), isHttps, token.getJWTExpires());
+            if(token.isJWTBasedToken()){
+              createSSOLoginCookie(httpResponse, httpRequest, getCookieDomain(),
+                  getCookiePath(), token.getExpires(), isHttps, token.getJWTExpires());
+            }
           }
           doFilter(filterChain, httpRequest, httpResponse);
         }
@@ -694,6 +733,31 @@ public class AuthenticationFilter implements Filter {
         httpResponse.sendError(errCode, reason);
       }
     }
+  }
+
+  private void createSSOLoginCookie(HttpServletResponse res, HttpServletRequest req, String cookieDomain, String cookiePath,
+                                    long expires, boolean isHttps, long jwtExpires) {
+    Cookie ssoLoginCookie = new Cookie(SSO_LOGIN_COOKIE, "1");
+    if (cookieDomain != null &&
+        (req == null || req.getRequestURL().toString().contains(cookieDomain))) {
+      if(cookieDomain.startsWith(".")){
+        cookieDomain = cookieDomain.substring(1);
+      }
+      ssoLoginCookie.setDomain(cookieDomain);
+    }
+    if(cookiePath != null){
+      ssoLoginCookie.setPath(cookiePath);
+    }
+    if( expires >= 0 || jwtExpires >= 0){
+      long exp = Math.min(expires, jwtExpires);
+      int maxAge = (int) (exp - System.currentTimeMillis()) / 1000;
+      ssoLoginCookie.setMaxAge(maxAge);
+    }
+    if(isHttps){
+      ssoLoginCookie.setSecure(true);
+    }
+    ssoLoginCookie.setHttpOnly(true);
+    res.addCookie(ssoLoginCookie);
   }
 
   /**
@@ -776,10 +840,25 @@ public class AuthenticationFilter implements Filter {
     String delimiter = "&";
     return getAuthUrl() + "?" +
         "response_type=code" + delimiter + "client_id=" + SsoConfigurationUtil.getInstance().getClientId() + delimiter + "scope=openid" + delimiter +
-        "redirect_uri=" + JWTUtils.constructURLWithHostname(request.getRequestURL().toString()) + "?" + SSO_LOGIN_PARAM + "=processCode";
+        "redirect_uri=" + JWTUtils.constructURLWithHostname(request.getRequestURL().toString()) + "?" + ACTION_PARAM + "=processCode";
   }
 
   public String getAuthUrl() {
     return SsoConfigurationUtil.getInstance().getClientIssuer() + "/protocol/openid-connect/auth";
+  }
+
+  public String getLogoutUrl() {
+    return SsoConfigurationUtil.getInstance().getClientIssuer() + "/protocol/openid-connect/logout";
+  }
+
+  private String getLoginURL(HttpServletRequest httpRequest){
+    String redirect;
+    try {
+      URI origin = new URI(httpRequest.getRequestURL().toString());
+      redirect = origin.getScheme() + "://" + origin.getHost() + ":" + origin.getPort() + "/login";
+    } catch (URISyntaxException e) {
+      throw new RuntimeException(e);
+    }
+    return redirect;
   }
 }

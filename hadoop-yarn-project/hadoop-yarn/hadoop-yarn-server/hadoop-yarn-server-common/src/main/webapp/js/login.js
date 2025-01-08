@@ -32,10 +32,9 @@ function signIn() {
 }
 
 function ssoProceed() {
-    fetch(window.location.origin + "?ssoLogin=initProcess", {
+    fetch(window.location.origin + "?action=initSSO", {
         headers: {
-            'Content-Type': 'application/json',
-            'Request-Type': "startSSO",
+            'Content-Type': 'application/json'
         },
     }).then((response) => {
         if (!response.ok) {

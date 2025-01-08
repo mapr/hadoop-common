@@ -32,7 +32,7 @@ import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.apache.hadoop.security.authentication.util.JWTUtils.SSO_LOGIN_PARAM;
+import static org.apache.hadoop.security.authentication.server.AuthenticationFilter.ACTION_PARAM;
 
 public class MultiMechsAuthenticationHandler implements AuthenticationHandler {
 
@@ -222,8 +222,8 @@ public class MultiMechsAuthenticationHandler implements AuthenticationHandler {
       LOG.error("Unknown Authorization: " + authorization + " please check your config files settings");
       throw new AuthenticationException("Unknown Authorization: " + authorization + " please check your config files settings");
     } else {
-      if (request.getParameter(SSO_LOGIN_PARAM) != null &&
-          request.getParameter(SSO_LOGIN_PARAM).equals("processCode")) {
+      if (request.getParameter(ACTION_PARAM) != null &&
+          request.getParameter(ACTION_PARAM).equals("processCode")) {
             return jwt.postauthenticate(request, response);
         }
 

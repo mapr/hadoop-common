@@ -34,6 +34,7 @@ td.table { padding: 0 }
 /* styles for common objects */
 #logo { float: left; position: relative; line-height: 0.5em; top: -1.3em }
 #user { float: right; position: relative; top: -1.5em; font-size: 0.77em }
+#logout { float: right; position: relative; font-size: 0.77em; right: -10em }
 #header { padding: 1.5em 0.5em; text-align: center }
 #nav h3 { padding: 0 0 0 1.6em }
 #nav ul {
