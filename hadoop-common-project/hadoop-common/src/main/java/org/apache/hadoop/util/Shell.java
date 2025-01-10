@@ -1003,7 +1003,9 @@ public abstract class Shell {
       builder.environment().clear();
     }
 
-    builder.environment().putAll(this.environment);
+    if (!environment.isEmpty()) {
+      builder.environment().putAll(this.environment);
+    }
 
     // Remove all env vars from the Builder to prevent leaking of env vars from
     // the parent process.
