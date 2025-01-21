@@ -271,6 +271,12 @@ public class QueueCLI extends YarnCLI {
       stringBuilder.append("\tQueue Preemption : ")
           .append(queuePreemption ? "enabled" : "disabled").append("\n");
     }
+
+    String queueLabel = queueInfo.getQueueLabel();
+    if(queueLabel != null && !queueLabel.trim().isEmpty()) {
+      stringBuilder.append("\tLabel : ")
+          .append(queueLabel).append("\n");;
+    }
     return stringBuilder.toString();
   }
 
@@ -320,12 +326,6 @@ public class QueueCLI extends YarnCLI {
       labelList.append(nodeLabel);
     }
     writer.println(labelList);
-
-    String queueLabel = queueInfo.getQueueLabel();
-    if(queueLabel != null && !queueLabel.trim().isEmpty()) {
-      writer.print("\tLabel : ");
-      writer.println(queueLabel);
-    }
 
     Boolean preemptStatus = queueInfo.getPreemptionDisabled();
     if (preemptStatus != null) {
