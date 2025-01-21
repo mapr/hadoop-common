@@ -16,5 +16,6 @@
     <queue name="root">
         <aclSubmitApps>*</aclSubmitApps>
         <aclAdministerApps> </aclAdministerApps>
+        <queue name="default"></queue>
     </queue>
 </allocations>
