@@ -1,6 +1,7 @@
 package org.apache.hadoop.security.authentication.util;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,8 +75,10 @@ public class SsoConfigurationUtil {
       ssoConfigMap.put(USER_ATTRIBUTE_NAME, jwtMapConf.get(USER_ATTRIBUTE_NAME));
     }
     if (result != null && !result.isEmpty()) {
-      ssoConfigMap.put(CLIENT_ID, result.get(0).getAsJsonObject().get(CLIENT_ID).getAsString());
-      ssoConfigMap.put(CLIENT_SECRET, result.get(0).getAsJsonObject().get(CLIENT_SECRET).getAsString());
+      JsonElement clientIdJson = result.get(0).getAsJsonObject().get(CLIENT_ID);
+      JsonElement clientSecretJson = result.get(0).getAsJsonObject().get(CLIENT_SECRET);
+      ssoConfigMap.put(CLIENT_ID, clientIdJson != null ? clientIdJson.getAsString() : "");
+      ssoConfigMap.put(CLIENT_SECRET, clientSecretJson != null ? clientSecretJson.getAsString() : "");
       ssoConfigMap.put(PROVIDER, result.get(0).getAsJsonObject().get(PROVIDER).getAsString());
       ssoConfigMap.put(ISSUER, result.get(0).getAsJsonObject().get(ISSUER).getAsString());
     } else {
