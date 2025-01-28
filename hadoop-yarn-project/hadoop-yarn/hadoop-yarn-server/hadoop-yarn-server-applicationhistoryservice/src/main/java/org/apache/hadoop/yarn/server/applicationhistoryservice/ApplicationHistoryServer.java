@@ -21,6 +21,7 @@ package org.apache.hadoop.yarn.server.applicationhistoryservice;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.net.URL;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -315,6 +316,13 @@ public class ApplicationHistoryServer extends CompositeService {
         }
         LOG.info("Hosting " + name + " from " + onDiskPath + " at " + webPath);
         httpServer.addHandlerAtFront(uiWebAppContext);
+      }
+      WebAppContext loginContext = new WebAppContext();
+      loginContext.setContextPath("/login");
+      URL url = getClass().getClassLoader().getResource("webapps/login");
+      if (url != null) {
+        loginContext.setResourceBase(url.toString());
+        httpServer.addHandlerAtFront(loginContext);
       }
        httpServer.start();
        conf.updateConnectAddr(YarnConfiguration.TIMELINE_SERVICE_BIND_HOST,
