@@ -18,6 +18,7 @@
 
 package org.apache.hadoop.yarn.server.nodemanager.recovery;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.thirdparty.com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.thirdparty.com.google.common.collect.ArrayListMultimap;
 import org.apache.hadoop.thirdparty.com.google.common.collect.ListMultimap;
@@ -1683,19 +1684,18 @@ public class NMLeveldbStateStoreService extends NMStateStoreService {
     try {
       db = JniDBFactory.factory.open(dbfile, options);
     } catch (NativeDB.DBException e) {
-      if (e.isNotFound() || e.getMessage().contains(" does not exist ")) {
-        LOG.info("Creating state database at " + dbfile);
-        isNewlyCreated = true;
-        options.createIfMissing(true);
-        try {
-          db = JniDBFactory.factory.open(dbfile, options);
-          // store version
-          storeVersion();
-        } catch (DBException dbErr) {
-          throw new IOException(dbErr.getMessage(), dbErr);
-        }
-      } else {
-        throw e;
+      LOG.warn("Can't open existing recovery database. Trying to delete the old one and create a new one");
+      File rootRecoveryDir = new File(storeRoot.toString());
+      FileUtils.deleteDirectory(rootRecoveryDir);
+      LOG.info("Creating state database at {}", dbfile);
+      isNewlyCreated = true;
+      options.createIfMissing(true);
+      try {
+        db = JniDBFactory.factory.open(dbfile, options);
+        // store version
+        storeVersion();
+      } catch (DBException dbErr) {
+        throw new IOException(dbErr.getMessage(), dbErr);
       }
     }
     return db;
