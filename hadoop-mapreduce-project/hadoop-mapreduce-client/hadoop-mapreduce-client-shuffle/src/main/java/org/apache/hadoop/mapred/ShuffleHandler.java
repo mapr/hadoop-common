@@ -50,6 +50,7 @@ import io.netty.util.concurrent.GlobalEventExecutor;
 
 import javax.annotation.Nonnull;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.thirdparty.com.google.common.cache.CacheBuilder;
 import org.apache.hadoop.thirdparty.com.google.common.cache.CacheLoader;
 import org.apache.hadoop.thirdparty.com.google.common.cache.LoadingCache;
@@ -511,17 +512,16 @@ public class ShuffleHandler extends AuxiliaryService {
     try {
       stateDb = JniDBFactory.factory.open(dbfile, options);
     } catch (NativeDB.DBException e) {
-      if (e.isNotFound() || e.getMessage().contains(" does not exist ")) {
-        LOG.info("Creating state database at " + dbfile);
-        options.createIfMissing(true);
-        try {
-          stateDb = JniDBFactory.factory.open(dbfile, options);
-          storeVersion();
-        } catch (DBException dbExc) {
-          throw new IOException("Unable to create state store", dbExc);
-        }
-      } else {
-        throw e;
+      LOG.warn("Can't open existing recovery database. Trying to delete the old one and create a new one");
+      File rootRecoveryDir = new File(dbPath.toString());
+      FileUtils.deleteDirectory(rootRecoveryDir);
+      LOG.info("Creating state database at {}", dbfile);
+      options.createIfMissing(true);
+      try {
+        stateDb = JniDBFactory.factory.open(dbfile, options);
+        storeVersion();
+      } catch (DBException dbExc) {
+        throw new IOException("Unable to create state store", dbExc);
       }
     }
     checkVersion();
