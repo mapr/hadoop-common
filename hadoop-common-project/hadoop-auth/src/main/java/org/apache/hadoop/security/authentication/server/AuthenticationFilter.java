@@ -576,7 +576,7 @@ public class AuthenticationFilter implements Filter {
         if (token == null) {
           if (httpRequest.getHeader(KerberosAuthenticator.AUTHORIZATION) == null &&
               httpRequest.getHeader(HttpHeaders.USER_AGENT).startsWith("Mozilla/5.0") &&
-              !httpRequest.getRequestURI().equals("/login") &&
+              !httpRequest.getRequestURI().replace("/", "").equals("login") &&
               httpRequest.getParameter(ACTION_PARAM) == null) {
             httpResponse.addHeader(HttpHeaders.LOCATION, getLoginURL(httpRequest));
             httpResponse.setStatus(HttpServletResponse.SC_TEMPORARY_REDIRECT);
