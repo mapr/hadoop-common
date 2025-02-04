@@ -18,7 +18,7 @@ public class SsoConfigurationUtil {
   private static final Logger LOG = LoggerFactory.getLogger(SsoConfigurationUtil.class);
   public static final String HADOOP_JWT_ENABLED = "hadoop.http.authentication.jwt.enabled";
   public static final String EXPECTED_JWT_AUDIENCES = "hadoop.http.authentication.expected.jwt.audiences";
-  private static List<String> audiences = null;
+  private static List<String> audiences = new ArrayList<String>();
   private static Map<String, String> ssoConfigMap = null;
   private static SsoConfigurationUtil ssoConfigInstance = null;
   public static final String CLIENT_ID = "clientid";
@@ -66,7 +66,6 @@ public class SsoConfigurationUtil {
     if (jwtMapConf != null && !jwtMapConf.isEmpty()) {
       if(jwtMapConf.get(EXPECTED_JWT_AUDIENCES) != null){
         // parse into the list
-        audiences = new ArrayList<String>();
         audiences.addAll(Arrays.asList(jwtMapConf.get(EXPECTED_JWT_AUDIENCES).split(",")));
       }
       ssoConfigMap.put(COOKIE_DOMAIN, jwtMapConf.get(COOKIE_DOMAIN));
