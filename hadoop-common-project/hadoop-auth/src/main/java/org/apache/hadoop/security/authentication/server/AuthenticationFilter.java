@@ -471,7 +471,7 @@ public class AuthenticationFilter implements Filter {
     boolean isJWTBasedToken = false;
     if (cookies != null) {
       for (Cookie cookie : cookies) {
-        if (cookie.getName().equals(AuthenticatedURL.AUTH_COOKIE)) {
+        if (cookie.getName().equals(getCookieTokenName())) {
           tokenStr = cookie.getValue();
           if (tokenStr.isEmpty()) {
             throw new AuthenticationException("Unauthorized access");
@@ -616,9 +616,12 @@ public class AuthenticationFilter implements Filter {
               ssoCookie.setMaxAge(0);
               ssoCookie.setPath(getCookiePath());
             }
-            Cookie cleanAuthCookie = new Cookie(AuthenticatedURL.AUTH_COOKIE, "");
+            Cookie cleanAuthCookie = new Cookie(getCookieTokenName(), "");
+            Cookie cleanAuthTLCookie = new Cookie("hadoop.tl.auth", "");
             cleanAuthCookie.setMaxAge(0);
+            cleanAuthTLCookie.setMaxAge(0);
             cleanAuthCookie.setPath(getCookiePath());
+            cleanAuthTLCookie.setPath(getCookiePath());
             String domain = getCookieDomain();
             if (domain != null && httpRequest.getRequestURL().toString().contains(domain)) {
               if (domain.startsWith(".")) {
@@ -628,11 +631,13 @@ public class AuthenticationFilter implements Filter {
                 ssoCookie.setDomain(domain);
               }
               cleanAuthCookie.setDomain(domain);
+              cleanAuthTLCookie.setDomain(domain);
             }
             if (ssoCookie != null) {
               httpResponse.addCookie(ssoCookie);
             }
             httpResponse.addCookie(cleanAuthCookie);
+            httpResponse.addCookie(cleanAuthTLCookie);
             if (token.isJWTBasedToken()) {
               httpResponse.addHeader(HttpHeaders.LOCATION, getLogoutUrl());
               httpResponse.setStatus(HttpServletResponse.SC_OK);
@@ -680,7 +685,7 @@ public class AuthenticationFilter implements Filter {
           if (newToken && !token.isExpired()
               && token != AuthenticationToken.ANONYMOUS) {
             String signedToken = signer.sign(token.toString());
-            createAuthCookie(httpResponse, httpRequest, signedToken, getCookieDomain(),
+            createAuthCookie(getCookieTokenName(), httpResponse, httpRequest, signedToken, getCookieDomain(),
                 getCookiePath(), token.getExpires(),
                 isCookiePersistent(), isHttps, token.getJWTExpires());
             if(token.isJWTBasedToken()){
@@ -709,7 +714,7 @@ public class AuthenticationFilter implements Filter {
     }
     if (unauthorizedResponse) {
       if (!httpResponse.isCommitted()) {
-        createAuthCookie(httpResponse, httpRequest, "", getCookieDomain(),
+        createAuthCookie(getCookieTokenName(), httpResponse, httpRequest, "", getCookieDomain(),
             getCookiePath(), 0, isCookiePersistent(), isHttps, -1);
         // If response code is 401. Then WWW-Authenticate Header should be
         // present.. reset to 403 if not found..
@@ -792,11 +797,11 @@ public class AuthenticationFilter implements Filter {
    * because of the fact that Hadoop is stuck at servlet 2.5 and jetty 6
    * right now.
    */
-  public static void createAuthCookie(HttpServletResponse resp, HttpServletRequest req, String token,
+  public static void createAuthCookie(String name, HttpServletResponse resp, HttpServletRequest req, String token,
                                       String domain, String path, long expires,
                                       boolean isCookiePersistent,
                                       boolean isSecure, long jwtExp) {
-    StringBuilder sb = new StringBuilder(AuthenticatedURL.AUTH_COOKIE)
+    StringBuilder sb = new StringBuilder(name)
         .append("=");
 
     if (token != null && token.length() > 0) {
@@ -860,5 +865,8 @@ public class AuthenticationFilter implements Filter {
       throw new RuntimeException(e);
     }
     return redirect;
+  }
+  public String getCookieTokenName(){
+    return AuthenticatedURL.AUTH_COOKIE;
   }
 }

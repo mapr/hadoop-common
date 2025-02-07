@@ -52,4 +52,10 @@ public class TimelineAuthenticationFilter
           <TimelineDelegationTokenIdentifier> secretMgr) {
     TimelineAuthenticationFilter.secretManager = secretMgr;
   }
+
+  @Override
+  public String getCookieTokenName(){
+    return "hadoop.tl.auth";
+  }
+
 }

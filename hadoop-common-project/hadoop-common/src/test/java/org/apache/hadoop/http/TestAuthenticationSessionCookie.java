@@ -13,6 +13,7 @@
  */
 package org.apache.hadoop.http;
 
+import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.junit.Assert;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileUtil;
@@ -58,8 +59,8 @@ public class TestAuthenticationSessionCookie {
                          FilterChain chain) throws IOException,
                                                    ServletException {
       HttpServletResponse resp = (HttpServletResponse) response;
-      AuthenticationFilter.createAuthCookie(resp, null, "token", null, null, expires,
-              isCookiePersistent, true, -1);
+      AuthenticationFilter.createAuthCookie(AuthenticatedURL.AUTH_COOKIE, resp, null, "token", null,
+          null, expires, isCookiePersistent, true, -1);
       chain.doFilter(request, resp);
     }
 
