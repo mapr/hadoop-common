@@ -23,6 +23,7 @@ import javax.servlet.ServletException;
 
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
+import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.apache.hadoop.security.token.delegation.AbstractDelegationTokenSecretManager;
 import org.apache.hadoop.security.token.delegation.web.DelegationTokenAuthenticationFilter;
 import org.apache.hadoop.yarn.security.client.TimelineDelegationTokenIdentifier;
@@ -55,7 +56,7 @@ public class TimelineAuthenticationFilter
 
   @Override
   public String getCookieTokenName(){
-    return "hadoop.tl.auth";
+    return AuthenticatedURL.AUTH_TL_COOKIE;
   }
 
 }

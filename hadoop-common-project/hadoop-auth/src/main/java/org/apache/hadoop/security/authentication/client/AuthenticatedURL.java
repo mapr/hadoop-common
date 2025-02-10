@@ -74,6 +74,7 @@ public class AuthenticatedURL {
    * Name of the HTTP cookie used for the authentication token between the client and the server.
    */
   public static final String AUTH_COOKIE = "hadoop.auth";
+  public static final String AUTH_TL_COOKIE = "hadoop.auth.tl";
 
   // a lightweight cookie handler that will be attached to url connections.
   // client code is not required to extract or inject auth cookies.
@@ -109,7 +110,7 @@ public class AuthenticatedURL {
             continue;
           }
           for (HttpCookie cookie : cookies) {
-            if (AUTH_COOKIE.equals(cookie.getName())) {
+            if (cookie.getName().startsWith(AUTH_COOKIE)) {
               setAuthCookie(cookie);
             }
           }
