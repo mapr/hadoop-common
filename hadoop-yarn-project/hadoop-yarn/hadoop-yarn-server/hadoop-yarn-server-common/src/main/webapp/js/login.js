@@ -3,6 +3,7 @@ let loginPasswordInput = document.getElementById("loginPassword");
 let loginBtn = document.getElementById("loginBtn");
 let ssoBtn = document.getElementById("ssoBtn");
 let error = document.getElementById("error");
+let serviceName = document.getElementById("serviceName");
 
 function signIn() {
     let userName = loginUserInput.value;
@@ -79,4 +80,25 @@ ssoBtn.addEventListener("click", function () {
 
 window.addEventListener("DOMContentLoaded", (event) => {
     checkRedirect();
+    console.log(window.location.port)
+    switch (window.location.port) {
+        case "8088":
+        case "8090":
+            serviceName.textContent = "YARN Resource Manager";
+            break;
+        case "8042":
+        case "8044":
+            serviceName.textContent = "YARN Node Manager";
+            break;
+        case "19888":
+        case "19890":
+            serviceName.textContent = "YARN Job History Server";
+            break;
+        case "8188":
+        case "8190":
+            serviceName.textContent = "YARN Timeline Server";
+            break;
+        default:
+            serviceName.textContent = "YARN service";
+    }
 });
