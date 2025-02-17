@@ -124,7 +124,7 @@ public class JWTUtils {
     List<String> tokenAudienceList = jwtToken.getClaim("aud").asList(String.class);
     // if there were no expected audiences configured then just
     // consider any audience acceptable
-    if (SsoConfigurationUtil.getInstance().getAudiences() == null) {
+    if (SsoConfigurationUtil.getInstance().getAudiences().isEmpty()) {
       valid = true;
     } else {
       // if any of the configured audiences is found then consider it
