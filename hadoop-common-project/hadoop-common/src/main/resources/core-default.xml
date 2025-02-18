@@ -1390,6 +1390,12 @@
 </property>
 
 <property>
+  <name>fs.s3a.metrics.log.level</name>
+  <value>WARN</value>
+  <description>Log level for S3A metrics instrument.</description>
+</property>
+
+<property>
   <name>fs.s3a.access.key</name>
   <description>AWS access key ID used by S3A file system. Omit for IAM role-based or provider-based authentication.</description>
 </property>

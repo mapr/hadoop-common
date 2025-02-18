@@ -553,6 +553,10 @@ public class S3AFileSystem extends FileSystem implements StreamCapabilities,
    */
   public void initialize(URI name, Configuration originalConf)
       throws IOException {
+    // set log level for metrics log
+    org.apache.log4j.Logger metricLog = org.apache.log4j.Logger.getLogger("org.apache.hadoop.metrics2");
+    metricLog.setLevel(org.apache.log4j.Level.toLevel(originalConf.get("fs.s3a.metrics.log.level", "WARN")));
+
     // get the host; this is guaranteed to be non-null, non-empty
     bucket = name.getHost();
     AuditSpan span = null;
