@@ -223,7 +223,7 @@ public class MultiMechsAuthenticationHandler implements AuthenticationHandler {
       throw new AuthenticationException("Unknown Authorization: " + authorization + " please check your config files settings");
     } else {
       if (request.getParameter(ACTION_PARAM) != null &&
-          request.getParameter(ACTION_PARAM).equals("processCode")) {
+          request.getParameter(ACTION_PARAM).equalsIgnoreCase("processCode")) {
             return jwt.postauthenticate(request, response);
         }
 

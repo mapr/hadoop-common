@@ -57,6 +57,16 @@ function checkRedirect() {
     });
 }
 
+function checkCheckSsoButton() {
+    fetch(window.location.origin + "?action=ssoEnable", {}).then((response) => {
+        if (!response.ok) {
+            ssoBtn.disabled = true;
+        } else {
+            button.disabled = false;
+        }
+    });``
+}
+
 loginBtn.addEventListener("click", function () {
     checkRedirect()
     signIn();
@@ -80,7 +90,7 @@ ssoBtn.addEventListener("click", function () {
 
 window.addEventListener("DOMContentLoaded", (event) => {
     checkRedirect();
-    console.log(window.location.port)
+    checkCheckSsoButton();
     switch (window.location.port) {
         case "8088":
         case "8090":

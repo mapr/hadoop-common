@@ -557,6 +557,14 @@ public class AuthenticationFilter implements Filter {
     HttpServletRequest httpRequest = (HttpServletRequest) request;
     HttpServletResponse httpResponse = (HttpServletResponse) response;
     boolean isHttps = "https".equals(httpRequest.getScheme());
+    if (checkSsoEnableRequest(httpRequest)) {
+      if (SsoConfigurationUtil.getInstance().getClientIssuer().isEmpty()) {
+        httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
+      } else {
+        httpResponse.setStatus(HttpServletResponse.SC_OK);
+      }
+      return;
+    }
     try {
       boolean newToken = false;
       AuthenticationToken token;
@@ -574,15 +582,12 @@ public class AuthenticationFilter implements Filter {
       }
       if (authHandler.managementOperation(token, httpRequest, httpResponse)) {
         if (token == null) {
-          if (httpRequest.getHeader(KerberosAuthenticator.AUTHORIZATION) == null &&
-              httpRequest.getHeader(HttpHeaders.USER_AGENT).startsWith("Mozilla/5.0") &&
-              !httpRequest.getRequestURI().replace("/", "").equals("login") &&
-              httpRequest.getParameter(ACTION_PARAM) == null) {
+          if (checkRedirectToLogin(httpRequest)) {
             httpResponse.addHeader(HttpHeaders.LOCATION, getLoginURL(httpRequest));
             httpResponse.setStatus(HttpServletResponse.SC_TEMPORARY_REDIRECT);
             return;
           } else if (httpRequest.getParameter(ACTION_PARAM) != null
-              && httpRequest.getParameter(ACTION_PARAM).equals("initSSO")) {
+              && httpRequest.getParameter(ACTION_PARAM).equalsIgnoreCase("initSso")) {
             Map<String, String> ssoMap = new HashMap<>();
             ssoMap.put("loginURL", constructLoginURL(httpRequest));
             JSONObject ssoJson = new JSONObject(ssoMap);
@@ -738,6 +743,19 @@ public class AuthenticationFilter implements Filter {
         httpResponse.sendError(errCode, reason);
       }
     }
+  }
+
+  private boolean checkSsoEnableRequest(HttpServletRequest httpRequest) {
+    return httpRequest.getHeader(HttpHeaders.USER_AGENT).startsWith("Mozilla/5.0") &&
+        httpRequest.getParameter(ACTION_PARAM) != null &&
+        httpRequest.getParameter(ACTION_PARAM).equalsIgnoreCase("ssoEnable");
+  }
+
+  private boolean checkRedirectToLogin(HttpServletRequest httpRequest) {
+    return httpRequest.getHeader(KerberosAuthenticator.AUTHORIZATION) == null &&
+        httpRequest.getHeader(HttpHeaders.USER_AGENT).startsWith("Mozilla/5.0") &&
+        !httpRequest.getRequestURI().replace("/", "").equals("login") &&
+        httpRequest.getParameter(ACTION_PARAM) == null;
   }
 
   private void createSSOLoginCookie(HttpServletResponse res, HttpServletRequest req, String cookieDomain, String cookiePath,

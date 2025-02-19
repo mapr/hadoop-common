@@ -53,6 +53,16 @@ body {
 
 .btn-main:hover { background: #04AA6D; }
 
+.btn-main:disabled {
+  cursor: not-allowed;
+  opacity: .65;
+  background-color: transparent;
+  color: #606b7d !important;
+  border-color: #606b7d;
+  border: 1px solid #bbb;
+  pointer-events: all !important;
+}
+
 .boxContainer {
   display: block;
   unicode-bidi: isolate;
