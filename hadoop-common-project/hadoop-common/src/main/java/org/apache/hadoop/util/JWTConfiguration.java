@@ -14,7 +14,7 @@ public class JWTConfiguration {
   private static final Logger LOG = LoggerFactory.getLogger(JWTConfiguration.class);
 
   private static final String JWS_SSO_ALGORITHM = "jws.sso.algorithm";
-  private static final String DEFAULT_JWS_SSO_ALGORITHM = "RSA256";
+  private static final String DEFAULT_JWS_SSO_ALGORITHM = "RS256";
   private static final String COOKIE_DOMAIN = "jwt.cookie.domain";
   private static final String COOKIE_PATH = "jwt.cookie.path";
   private static final String DEFAULT_COOKIE_PATH = "/";
