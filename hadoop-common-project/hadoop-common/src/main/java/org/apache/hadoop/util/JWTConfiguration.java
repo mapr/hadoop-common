@@ -13,10 +13,15 @@ public class JWTConfiguration {
 
   private static final Logger LOG = LoggerFactory.getLogger(JWTConfiguration.class);
 
+  private static final String JWS_SSO_ALGORITHM = "jws.sso.algorithm";
+  private static final String DEFAULT_JWS_SSO_ALGORITHM = "RSA256";
   private static final String COOKIE_DOMAIN = "jwt.cookie.domain";
   private static final String COOKIE_PATH = "jwt.cookie.path";
+  private static final String DEFAULT_COOKIE_PATH = "/";
   private static final String COOKIE_NAME = "jwt.cookie.name";
+  private static final String DEFAULT_COOKIE_NAME = "hadoop-jwt";
   private static final String USER_ATTRIBUTE_NAME = "jwt.user.attribute.name";
+  private static final String DEFAULT_USER_ATTRIBUTE_NAME = "preferred_username";
   private static final String EXPECTED_JWT_AUDIENCES = "hadoop.http.authentication.expected.jwt.audiences";
 
   public static Map<String, String> getJWTConfiguration() {
@@ -41,15 +46,11 @@ public class JWTConfiguration {
       jwtConfigMap.put(EXPECTED_JWT_AUDIENCES, auds);
     }
 
-    String cookieDomain = conf.get(COOKIE_DOMAIN, domainName);
-    String cookiePath = conf.get(COOKIE_PATH, "/");
-    String cookieName = conf.get(COOKIE_NAME, "hadoop-jwt");
-    String userAttrName = conf.get(USER_ATTRIBUTE_NAME, "preferred_username");
-
-    jwtConfigMap.put(COOKIE_DOMAIN, cookieDomain);
-    jwtConfigMap.put(COOKIE_PATH, cookiePath);
-    jwtConfigMap.put(COOKIE_NAME, cookieName);
-    jwtConfigMap.put(USER_ATTRIBUTE_NAME, userAttrName);
+    jwtConfigMap.put(JWS_SSO_ALGORITHM, conf.get(JWS_SSO_ALGORITHM, DEFAULT_JWS_SSO_ALGORITHM));
+    jwtConfigMap.put(COOKIE_DOMAIN, conf.get(COOKIE_DOMAIN, domainName));
+    jwtConfigMap.put(COOKIE_PATH, conf.get(COOKIE_PATH, DEFAULT_COOKIE_PATH));
+    jwtConfigMap.put(COOKIE_NAME, conf.get(COOKIE_NAME, DEFAULT_COOKIE_NAME));
+    jwtConfigMap.put(USER_ATTRIBUTE_NAME, conf.get(USER_ATTRIBUTE_NAME, DEFAULT_USER_ATTRIBUTE_NAME));
 
     return jwtConfigMap;
   }

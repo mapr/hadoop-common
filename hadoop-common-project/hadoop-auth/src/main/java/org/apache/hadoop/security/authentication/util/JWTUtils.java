@@ -65,7 +65,7 @@ public class JWTUtils {
   public static DecodedJWT verifyToken(DecodedJWT jwt) throws InvalidParameterException {
     try {
       RSAPublicKey publicKey = loadPublicKey(jwt);
-      Algorithm algorithm = Algorithm.RSA256(publicKey, null);
+      Algorithm algorithm = getSigntureAlgorithm(SsoConfigurationUtil.getInstance().getJwsSsoAlgorithm(), publicKey);
       JWTVerifier verifier = JWT.require(algorithm)
           .withIssuer(jwt.getIssuer())
           .build();
@@ -78,6 +78,22 @@ public class JWTUtils {
       LOG.error("Unable to authenticate: {}", e.getMessage());
       throw new InvalidParameterException("Unable to authenticate: " + e.getMessage());
     }
+  }
+
+  private static Algorithm getSigntureAlgorithm(String algorithmConf, RSAPublicKey publicKey){
+    Algorithm alg;
+    switch (algorithmConf){
+      case "RS384":
+        alg = Algorithm.RSA384(publicKey, null);
+        break;
+      case "RS512":
+        alg = Algorithm.RSA512(publicKey, null);
+        break;
+      case "RS256":
+      default:
+        alg = Algorithm.RSA256(publicKey, null);
+    }
+    return alg;
   }
 
   private static RSAPublicKey loadPublicKey(DecodedJWT token) throws JwkException, MalformedURLException {

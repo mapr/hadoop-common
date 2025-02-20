@@ -25,6 +25,7 @@ public class SsoConfigurationUtil {
   private final String CLIENT_SECRET = "clientsecret";
   private final String PROVIDER = "providername";
   public static final String ISSUER = "issuerendpoint";
+  private final String JWS_SSO_ALGORITHM = "jws.sso.algorithm";
   private final String COOKIE_DOMAIN = "jwt.cookie.domain";
   private final String COOKIE_PATH = "jwt.cookie.path";
   private final String COOKIE_NAME = "jwt.cookie.name";
@@ -68,6 +69,7 @@ public class SsoConfigurationUtil {
         // parse into the list
         audiences.addAll(Arrays.asList(jwtMapConf.get(EXPECTED_JWT_AUDIENCES).split(",")));
       }
+      ssoConfigMap.put(JWS_SSO_ALGORITHM, jwtMapConf.get(JWS_SSO_ALGORITHM));
       ssoConfigMap.put(COOKIE_DOMAIN, jwtMapConf.get(COOKIE_DOMAIN));
       ssoConfigMap.put(COOKIE_PATH, jwtMapConf.get(COOKIE_PATH));
       ssoConfigMap.put(COOKIE_NAME, jwtMapConf.get(COOKIE_NAME));
@@ -134,6 +136,10 @@ public class SsoConfigurationUtil {
 
   public List<String> getAudiences() {
     return audiences;
+  }
+
+  public String getJwsSsoAlgorithm(){
+    return ssoConfigMap.get(JWS_SSO_ALGORITHM);
   }
 
 }
