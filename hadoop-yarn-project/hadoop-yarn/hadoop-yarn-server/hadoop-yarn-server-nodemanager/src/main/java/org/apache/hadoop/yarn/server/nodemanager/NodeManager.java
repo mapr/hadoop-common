@@ -141,6 +141,7 @@ public class NodeManager extends CompositeService
   private NodeStatusUpdater nodeStatusUpdater;
   private AtomicBoolean resyncingWithRM = new AtomicBoolean(false);
   private NodeResourceMonitor nodeResourceMonitor;
+  private NodeLocalVolumeMonitor nodeLocalVolumeMonitor;
   private static CompositeServiceShutdownHook nodeManagerShutdownHook;
   private NMStateStoreService nmStore = null;
   private HttpServer2 statusServer;
@@ -247,6 +248,10 @@ public class NodeManager extends CompositeService
 
   protected NodeResourceMonitor createNodeResourceMonitor() {
     return new NodeResourceMonitorImpl(context);
+  }
+
+  protected NodeLocalVolumeMonitor createNodeLocalVolumeMonitor() {
+    return new NodeLocalVolumeMonitorImpl(context);
   }
 
   protected ContainerManagerImpl createContainerManager(Context context,
@@ -455,6 +460,10 @@ public class NodeManager extends CompositeService
     addService(nodeResourceMonitor);
     ((NMContext) context).setNodeResourceMonitor(nodeResourceMonitor);
 
+    nodeLocalVolumeMonitor = createNodeLocalVolumeMonitor();
+    addService(nodeLocalVolumeMonitor);
+    ((NMContext) context).setNodeLocalVolumeMonitor(nodeLocalVolumeMonitor);
+
     containerManager =
         createContainerManager(context, exec, del, nodeStatusUpdater,
         this.aclsManager, dirsHandler);
@@ -662,6 +671,7 @@ public class NodeManager extends CompositeService
     private final NMTokenSecretManagerInNM nmTokenSecretManager;
     private ContainerManager containerManager;
     private NodeResourceMonitor nodeResourceMonitor;
+    private NodeLocalVolumeMonitor nodeLocalVolumeMonitor;
     private final LocalDirsHandlerService dirsHandler;
     private final ApplicationACLsManager aclsManager;
     private WebServer webServer;
@@ -768,6 +778,15 @@ public class NodeManager extends CompositeService
 
     public void setNodeResourceMonitor(NodeResourceMonitor nodeResourceMonitor) {
       this.nodeResourceMonitor = nodeResourceMonitor;
+    }
+
+    @Override
+    public NodeLocalVolumeMonitor getNodeLocalVolumeMonitor() {
+      return this.nodeLocalVolumeMonitor;
+    }
+
+    public void setNodeLocalVolumeMonitor(NodeLocalVolumeMonitor nodeLocalVolumeMonitor) {
+      this.nodeLocalVolumeMonitor = nodeLocalVolumeMonitor;
     }
 
     @Override
