@@ -2050,6 +2050,21 @@ public class YarnConfiguration extends Configuration {
       NM_PREFIX + "resource-monitor.interval-ms";
   public static final int DEFAULT_NM_RESOURCE_MON_INTERVAL_MS = 3000;
 
+  /** How often to monitor local volume in a node.*/
+  public static final String NM_LOCAL_VOLUME_MON_INTERVAL_SECS =
+      NM_PREFIX + "local-volume.monitor.interval-secs";
+  public static final int DEFAULT_NM_LOCAL_VOLUME_MON_INTERVAL_SECS = 86400;
+
+  /** How long to local volume data can be saved in a node.*/
+  public static final String NM_LOCAL_VOLUME_MON_EXPIRE_SECS =
+      NM_PREFIX + "local-volume.monitor.expire-secs";
+  public static final int DEFAULT_NM_LOCAL_VOLUME_MON_EXPIRE_SECS = 86400;
+
+  /** Sleep time before node local volume monitor starts clean data.*/
+  public static final String NM_LOCAL_VOLUME_MON_START_SLEEP_SECS =
+      NM_PREFIX + "local-volume.monitor.start-sleep-secs";
+  public static final int DEFAULT_NM_LOCAL_VOLUME_MON_START_SLEEP_SECS = 600;
+
   public static final String NM_CONTAINER_MONITOR_ENABLED =
       NM_PREFIX + "container-monitor.enabled";
   public static final boolean DEFAULT_NM_CONTAINER_MONITOR_ENABLED = true;
