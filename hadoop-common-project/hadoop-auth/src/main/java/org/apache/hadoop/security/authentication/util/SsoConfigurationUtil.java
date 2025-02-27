@@ -142,4 +142,13 @@ public class SsoConfigurationUtil {
     return ssoConfigMap.get(JWS_SSO_ALGORITHM);
   }
 
+  /**
+   * Return true only if process has access to all main SSO configuration - issuer, client id,
+   * client secret and provider name.
+   * */
+  public boolean isSsoEnabled() {
+    return !(getClientIssuer().isEmpty() || getClientId().isEmpty() ||
+        getClientSecret().isEmpty() || getProvider().isEmpty());
+  }
+
 }
