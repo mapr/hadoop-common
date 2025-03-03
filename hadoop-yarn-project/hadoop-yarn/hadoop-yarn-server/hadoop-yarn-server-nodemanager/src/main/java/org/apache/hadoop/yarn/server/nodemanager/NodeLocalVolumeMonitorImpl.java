@@ -240,7 +240,7 @@ public class NodeLocalVolumeMonitorImpl extends AbstractService implements
    * */
   private void cleanUpDirectory(FileStatus[] dirs) {
     long borderToDelete = new Date().getTime() - TimeUnit.SECONDS.toMillis(monitorExpiration);
-    if (dirs != null && dirs.length > 1) {
+    if (dirs != null && dirs.length > 0) {
       for (FileStatus dir : dirs) {
         if (dir.getModificationTime() < borderToDelete && !jobSet.contains(dir.getPath().getName())) {
           try {
