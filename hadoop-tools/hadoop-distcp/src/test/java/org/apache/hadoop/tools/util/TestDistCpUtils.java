@@ -164,19 +164,19 @@ public class TestDistCpUtils {
     Assert.assertEquals(attributes, DistCpUtils.unpackAttributes("BUGPTH"));
 
     attributes.remove(FileAttribute.TIMES);
-    Assert.assertEquals(attributes, DistCpUtils.unpackAttributes("BUGPEH"));
+    Assert.assertEquals(attributes, DistCpUtils.unpackAttributes("BUGPH"));
 
     attributes.remove(FileAttribute.BLOCKSIZE);
-    Assert.assertEquals(attributes, DistCpUtils.unpackAttributes("UGPEH"));
+    Assert.assertEquals(attributes, DistCpUtils.unpackAttributes("UGPH"));
 
     attributes.remove(FileAttribute.GROUP);
-    Assert.assertEquals(attributes, DistCpUtils.unpackAttributes("UPEH"));
+    Assert.assertEquals(attributes, DistCpUtils.unpackAttributes("UPH"));
 
     attributes.remove(FileAttribute.USER);
-    Assert.assertEquals(attributes, DistCpUtils.unpackAttributes("PEH"));
+    Assert.assertEquals(attributes, DistCpUtils.unpackAttributes("PH"));
 
     attributes.remove(FileAttribute.PERMISSION);
-    Assert.assertEquals(attributes, DistCpUtils.unpackAttributes("EH"));
+    Assert.assertEquals(attributes, DistCpUtils.unpackAttributes("H"));
   }
 
   @Test

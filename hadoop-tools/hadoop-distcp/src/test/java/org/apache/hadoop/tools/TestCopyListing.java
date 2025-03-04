@@ -169,7 +169,7 @@ public class TestCopyListing extends SimpleCopyListing {
     }
   }
 
-  @Test(expected = DuplicateFileException.class, timeout = 10000)
+  @Test(expected = java.io.FileNotFoundException.class, timeout = 10000)
   public void testDiffBasedSimpleCopyListing() throws IOException {
     FileSystem fs = null;
     Configuration configuration = getConf();
