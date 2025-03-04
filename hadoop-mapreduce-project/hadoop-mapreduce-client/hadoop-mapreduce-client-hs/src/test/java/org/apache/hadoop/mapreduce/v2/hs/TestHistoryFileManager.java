@@ -77,8 +77,6 @@ public class TestHistoryFileManager {
     new File(coreSitePath).delete();
     dfsCluster.getFileSystem().setSafeMode(
         SafeModeAction.LEAVE);
-    dfsCluster2.getFileSystem().setSafeMode(
-        SafeModeAction.LEAVE);
   }
 
   private String getDoneDirNameForTest() {
