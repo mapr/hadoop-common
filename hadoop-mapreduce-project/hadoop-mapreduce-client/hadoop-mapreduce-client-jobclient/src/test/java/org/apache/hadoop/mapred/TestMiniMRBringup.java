@@ -47,6 +47,7 @@ public class TestMiniMRBringup {
     try {
       final Configuration conf = new Configuration();
       conf.setBoolean(MiniMRYarnCluster.MR_HISTORY_MINICLUSTER_ENABLED, false);
+      conf.setBoolean("yarn.webapp.api-service.enable", false);
       mr = new MiniMRYarnCluster("testMiniMRYarnClusterWithoutJHS");
       mr.init(conf);
       mr.start();
