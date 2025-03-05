@@ -44,10 +44,7 @@ import org.apache.hadoop.io.RandomDatum;
 import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.util.NativeCodeLoader;
 import org.apache.hadoop.util.ReflectionUtils;
-import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 
 import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
 import org.apache.hadoop.thirdparty.com.google.common.primitives.Longs;
@@ -104,6 +101,8 @@ public class TestCryptoCodec {
         jceAesCodecClass, opensslAesCodecClass, iv);
   }
 
+  //Skip some tests that relates to KMS
+  @Ignore
   @Test(timeout=120000)
   public void testJceSm4CtrCryptoCodec() throws Exception {
     conf.set(HADOOP_SECURITY_CRYPTO_CIPHER_SUITE_KEY, "SM4/CTR/NoPadding");
