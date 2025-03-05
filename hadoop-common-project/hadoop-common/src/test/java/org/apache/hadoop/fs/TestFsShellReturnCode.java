@@ -522,7 +522,7 @@ public class TestFsShellReturnCode {
     @Override
     public void setOwner(Path p, String username, String groupname)
         throws IOException {
-      String f = makeQualified(p).toString();
+      String f = p.toUri().getPath().toString();
       if (username != null)  {
         owners.put(f, username);
       }
@@ -533,7 +533,7 @@ public class TestFsShellReturnCode {
 
     @Override
     public FileStatus getFileStatus(Path p) throws IOException {
-      String f = makeQualified(p).toString();
+      String f = p.toUri().getPath().toString();
       FileStatus stat = super.getFileStatus(p);
       
       stat.getPermission();

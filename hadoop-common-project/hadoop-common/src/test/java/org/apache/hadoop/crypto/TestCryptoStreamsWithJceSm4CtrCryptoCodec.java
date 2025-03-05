@@ -21,13 +21,15 @@ import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 
 import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.
     HADOOP_SECURITY_CRYPTO_CIPHER_SUITE_KEY;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.HADOOP_SECURITY_CRYPTO_JCE_PROVIDER_KEY;
-
+//Skip these tests such as KMS doesn't support in EEP
+@Ignore
 public class TestCryptoStreamsWithJceSm4CtrCryptoCodec extends
     TestCryptoStreams {
 
