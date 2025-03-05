@@ -33,7 +33,8 @@ HADOOP_LIB_JARS=$(get_files_in_folder $HADOOP_HOME/share/hadoop/common/lib\
     "commons-cli-*.jar"\
     "commons-codec-*.jar"\
     "commons-io-*.jar"\
-    "re2j-*.jar")
+    "re2j-*.jar"\
+    "http*")
 echo $HADOOP_LIB_JARS
 }
 
