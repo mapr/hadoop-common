@@ -130,6 +130,7 @@ public final class CapacitySchedulerTestUtilities {
     YarnConfiguration conf = new YarnConfiguration(csConf);
     conf.setClass(YarnConfiguration.RM_SCHEDULER,
         CapacityScheduler.class, ResourceScheduler.class);
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     resourceManager.init(conf);
     resourceManager.getRMContext().getContainerTokenSecretManager().rollMasterKey();
     resourceManager.getRMContext().getNMTokenSecretManager().rollMasterKey();

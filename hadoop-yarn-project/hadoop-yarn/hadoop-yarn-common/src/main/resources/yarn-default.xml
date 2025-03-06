@@ -5889,6 +5889,12 @@
   </property>
 
   <property>
+    <description>Auxiliary services class</description>
+    <name>yarn.resourcemanager.aux-services.%s.class</name>
+    <value></value>
+  </property>
+
+  <property>
     <description>Enablig DF custome RM HA</description>
     <name>yarn.resourcemanager.ha.custom-ha-enabled</name>
     <value></value>
@@ -5928,6 +5934,30 @@
     <value>-17</value>
     <description>
       oom_score_adj value for containers started by NodeManager
+    </description>
+  </property>
+
+  <property>
+    <name>yarn.nodemanager.local-volume.monitor.start-sleep-secs</name>
+    <value>600</value>
+    <description>
+      Sleep time before node local volume monitor starts clean data
+    </description>
+  </property>
+
+  <property>
+    <name>yarn.nodemanager.local-volume.monitor.interval-secs</name>
+    <value>86400</value>
+    <description>
+      How often to monitor local volume in a node
+    </description>
+  </property>
+
+  <property>
+    <name>yarn.nodemanager.local-volume.monitor.expire-secs</name>
+    <value>86400</value>
+    <description>
+      How long to local volume data can be saved in a node
     </description>
   </property>
 

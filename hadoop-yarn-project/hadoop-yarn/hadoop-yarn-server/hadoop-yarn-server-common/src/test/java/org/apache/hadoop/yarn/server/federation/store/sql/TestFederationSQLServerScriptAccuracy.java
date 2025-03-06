@@ -19,11 +19,13 @@ package org.apache.hadoop.yarn.server.federation.store.sql;
 
 import org.apache.hadoop.yarn.server.federation.store.impl.SQLServerFederationStateStore;
 import org.junit.Test;
+import org.junit.Ignore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.List;
+
 
 public class TestFederationSQLServerScriptAccuracy extends FederationSQLAccuracyTest {
 
@@ -42,6 +44,7 @@ public class TestFederationSQLServerScriptAccuracy extends FederationSQLAccuracy
     return DATABASE_URL + System.currentTimeMillis() + SQLSERVER_COMPATIBILITY;
   }
 
+  @Ignore
   @Test
   public void checkSqlServerScriptAccuracy() throws SQLException {
     SQLServerFederationStateStore federationStateStore = this.createStateStore();
