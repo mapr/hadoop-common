@@ -106,7 +106,6 @@ public class TestContainerManagerSecurity extends KerberosSecurityTestcase {
 
   @BeforeEach
   public void setup() throws Exception {
-    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     testRootDir.mkdirs();
     httpSpnegoKeytabFile.deleteOnExit();
     startMiniKdc();
@@ -151,6 +150,8 @@ public class TestContainerManagerSecurity extends KerberosSecurityTestcase {
     configurationWithSecurity.set(
         YarnConfiguration.NM_WEBAPP_SPNEGO_KEYTAB_FILE_KEY,
         httpSpnegoKeytabFile.getAbsolutePath());
+    configurationWithoutSecurity.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
+    configurationWithSecurity.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
 
     return Arrays.asList(new Object[][]{
         {"Simple", configurationWithoutSecurity},

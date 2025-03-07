@@ -101,6 +101,7 @@ public class TestPolicyGenerator {
   public TestPolicyGenerator() {
     conf = new Configuration();
     conf.setInt(YarnConfiguration.FEDERATION_CACHE_TIME_TO_LIVE_SECS, 0);
+    conf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
     facade = FederationStateStoreFacade.getInstance(conf);
     gpgContext = new GPGContextImpl();
     gpgContext.setPolicyFacade(new GPGPolicyFacade(facade, conf));
@@ -288,6 +289,7 @@ public class TestPolicyGenerator {
     csConf.setUserLimitFactor(b3, 100.0f);
 
     YarnConfiguration rmConf = new YarnConfiguration(csConf);
+    rmConf.setBoolean(YarnConfiguration.YARN_API_SERVICES_ENABLE, false);
 
     ResourceManager resourceManager = new ResourceManager();
     rmConf.setClass(YarnConfiguration.RM_SCHEDULER, CapacityScheduler.class,

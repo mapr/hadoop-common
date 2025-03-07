@@ -767,7 +767,7 @@ static DataInputBuffer createFakeCredentials(Random r, int nTok)
         "adminOption1 adminOption2");
     List<String> javaOpts = localizer.getJavaOpts(conf);
 
-    Assert.assertEquals(3, javaOpts.size());
+    Assert.assertEquals(5, javaOpts.size());
     Assert.assertTrue(javaOpts.get(0).equals("adminOption1"));
     Assert.assertTrue(javaOpts.get(1).equals("adminOption2"));
     Assert.assertTrue(javaOpts.get(2).equals("-Xmx256m"));
@@ -796,7 +796,7 @@ static DataInputBuffer createFakeCredentials(Random r, int nTok)
     Configuration conf = new Configuration();
     List<String> javaOpts = localizer.getJavaOpts(conf);
 
-    Assert.assertEquals(1, javaOpts.size());
+    Assert.assertEquals(3, javaOpts.size());
     Assert.assertTrue(javaOpts.get(0).equals("-Xmx256m"));
   }
 }

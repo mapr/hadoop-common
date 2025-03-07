@@ -20,10 +20,13 @@ package org.apache.hadoop.yarn.server.globalpolicygenerator.secure;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 import org.apache.hadoop.minikdc.MiniKdc;
+import org.apache.hadoop.security.User;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.rpcauth.KerberosAuthMethod;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.server.federation.store.impl.MemoryFederationStateStore;
 import org.apache.hadoop.yarn.server.federation.utils.FederationStateStoreFacade;
@@ -82,7 +85,10 @@ public abstract class AbstractGlobalPolicyGeneratorTest {
     // Router Kerberos KeyTab configuration
     conf.set(YarnConfiguration.GPG_PRINCIPAL, GPG_LOCALHOST_REALM);
     conf.set(YarnConfiguration.GPG_KEYTAB, routerKeytab.getAbsolutePath());
-
+    conf.set(CommonConfigurationKeys.CUSTOM_AUTH_METHOD_PRINCIPAL_CLASS_KEY,
+        User.class.getName());
+    conf.set(CommonConfigurationKeys.CUSTOM_RPC_AUTH_METHOD_CLASS_KEY,
+        KerberosAuthMethod.class.getName());
     DefaultMetricsSystem.setMiniClusterMode(true);
   }
 
