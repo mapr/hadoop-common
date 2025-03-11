@@ -876,7 +876,7 @@
           "queueAcls" : {
             "queueAcl" : [ {
               "accessType" : "ADMINISTER_QUEUE",
-              "accessControlList" : "*"
+              "accessControlList" : " "
             }, {
               "accessType" : "APPLICATION_MAX_PRIORITY",
               "accessControlList" : "*"
@@ -2992,7 +2992,7 @@
       "queueAcls" : {
         "queueAcl" : [ {
           "accessType" : "ADMINISTER_QUEUE",
-          "accessControlList" : "*"
+          "accessControlList" : " "
         }, {
           "accessType" : "APPLICATION_MAX_PRIORITY",
           "accessControlList" : "*"

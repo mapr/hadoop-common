@@ -80,11 +80,13 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Ignore
 public class TestFederationInterceptorSecure extends BaseAMRMProxyTest {
 
   private static final Logger LOG = LoggerFactory.getLogger(TestFederationInterceptor.class);

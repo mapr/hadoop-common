@@ -2039,7 +2039,7 @@
     <queueAcls>
       <queueAcl>
         <accessType>ADMINISTER_QUEUE</accessType>
-        <accessControlList>*</accessControlList>
+        <accessControlList> </accessControlList>
       </queueAcl>
       <queueAcl>
         <accessType>APPLICATION_MAX_PRIORITY</accessType>

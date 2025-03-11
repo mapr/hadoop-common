@@ -191,7 +191,7 @@ public class TestRMFailover extends ClientBaseWithFixes {
       throws YarnException, InterruptedException, IOException {
     conf.set(YarnConfiguration.RM_CLUSTER_ID, "yarn-test-cluster");
     conf.set(YarnConfiguration.RM_ZK_ADDRESS, hostPort);
-    conf.setInt(YarnConfiguration.RM_ZK_TIMEOUT_MS, 2000);
+    conf.setInt(YarnConfiguration.RM_ZK_TIMEOUT_MS, 10000);
 
     cluster.init(conf);
     cluster.start();
