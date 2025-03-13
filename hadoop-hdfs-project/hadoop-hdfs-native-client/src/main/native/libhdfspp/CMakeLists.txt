@@ -224,6 +224,9 @@ if(HADOOP_BUILD)
 
   # Gather the Hadoop files and resources that libhdfs++ needs to build
   copy_on_demand(../libhdfs/include/*.h* ${HADOOP_IMPORT_DIR}/include)
+  if(MSVC)
+    copy_on_demand(../libhdfs/os/windows/unistd.h ${HADOOP_IMPORT_DIR}/include)
+  endif(MSVC)
   copy_on_demand(${CMAKE_CURRENT_LIST_DIR}/../../../../../hadoop-hdfs-client/src/main/proto/*.proto ${HADOOP_IMPORT_DIR}/proto/hdfs)
   copy_on_demand(${CMAKE_CURRENT_LIST_DIR}/../../../../../../hadoop-common-project/hadoop-common/src/main/proto/*.proto  ${HADOOP_IMPORT_DIR}/proto/hadoop)
   copy_on_demand(${CMAKE_CURRENT_LIST_DIR}/../../../../../../hadoop-common-project/hadoop-common/src/test/proto/*.proto  ${HADOOP_IMPORT_DIR}/proto/hadoop_test)
@@ -301,10 +304,10 @@ else (HADOOP_BUILD AND NOT MSVC)
     ${SASL_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
     ${Boost_LIBRARIES})
-  if(BUILD_SHARED_HDFSPP)
+  if(BUILD_SHARED_HDFSPP AND NOT MSVC)
     add_library(hdfspp SHARED ${EMPTY_FILE_CC} ${LIBHDFSPP_ALL_OBJECTS})
     set_target_properties(hdfspp PROPERTIES SOVERSION ${LIBHDFSPP_VERSION})
-  endif(BUILD_SHARED_HDFSPP)
+  endif(BUILD_SHARED_HDFSPP AND NOT MSVC)
 endif (HADOOP_BUILD AND NOT MSVC)
 
 # Set up make install targets
@@ -315,9 +318,9 @@ install(FILES ${LIBHDFSPP_HEADER_FILES} DESTINATION include/hdfspp)
 install(FILES ${LIBHDFS_HEADER_FILES} DESTINATION include/hdfs)
 
 install(TARGETS hdfspp_static ARCHIVE DESTINATION lib)
-if(BUILD_SHARED_HDFSPP)
+if(BUILD_SHARED_HDFSPP AND NOT MSVC)
   install(TARGETS hdfspp LIBRARY DESTINATION lib)
-endif(BUILD_SHARED_HDFSPP)
+endif(BUILD_SHARED_HDFSPP AND NOT MSVC)
 
 add_custom_target(
     InstallToBuildDirectory
