@@ -61,10 +61,8 @@ function checkCheckSsoButton() {
     fetch(window.location.origin + "?action=ssoEnable", {}).then((response) => {
         if (!response.ok) {
             ssoBtn.disabled = true;
-        } else {
-            button.disabled = false;
         }
-    });``
+    });
 }
 
 loginBtn.addEventListener("click", function () {
