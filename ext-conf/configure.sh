@@ -947,6 +947,17 @@ function checkAndConfigureFIPSProperties() {
   fi
 }
 
+function checkClusterSSOConf() {
+  export MAPR_TICKETFILE_LOCATION="${MAPR_HOME}/conf/mapruserticket"
+  jwt_conf=$(maprcli cluster getssoconf -json)
+  issuer=$(echo $jwt_conf | grep -o '"issuerendpoint":"[^"]*' | grep -o '[^"]*$')
+  if [ -z ${issuer} ];then
+    sed -i -r "s|^\s*ssoEnabled\s*=.*$|ssoEnabled=false|" ${HADOOP_HOME}/etc/hadoop/ssoConf
+  else
+    sed -i -r "s|^\s*ssoEnabled\s*=.*$|ssoEnabled=true|" ${HADOOP_HOME}/etc/hadoop/ssoConf
+  fi
+}
+
 # typically called from master configure.sh with the following arguments
 #
 # configure.sh  ....
@@ -1144,6 +1155,7 @@ ConfigureHadoopDir
 ConfigureHadoop
 UpdateFileClientConfig
 ConfigureJMHadoopProperties "${INSTALL_DIR}/conf/hadoop-metrics.properties"
+checkClusterSSOConf
 if [ "$(uname)" != "Darwin" ] && [[ "$isOnlyRoles" != "1" || -f "$HADOOP_HOME/etc/hadoop/.not_configured_executor" ]]; then
     ConfigureYarnLinuxContainerExecutor
     if [ -f "$HADOOP_HOME/etc/hadoop/.not_configured_executor" ]; then
