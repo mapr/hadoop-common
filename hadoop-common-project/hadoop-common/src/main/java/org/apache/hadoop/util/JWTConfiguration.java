@@ -9,19 +9,20 @@ import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.apache.hadoop.security.authentication.util.SsoConfigurationUtil.DEFAULT_COOKIE_NAME;
+import static org.apache.hadoop.security.authentication.util.SsoConfigurationUtil.DEFAULT_COOKIE_PATH;
+import static org.apache.hadoop.security.authentication.util.SsoConfigurationUtil.DEFAULT_JWS_SSO_ALGORITHM;
+import static org.apache.hadoop.security.authentication.util.SsoConfigurationUtil.DEFAULT_USER_ATTRIBUTE_NAME;
+
 public class JWTConfiguration {
 
   private static final Logger LOG = LoggerFactory.getLogger(JWTConfiguration.class);
 
   private static final String JWS_SSO_ALGORITHM = "jws.sso.algorithm";
-  private static final String DEFAULT_JWS_SSO_ALGORITHM = "RS256";
   private static final String COOKIE_DOMAIN = "jwt.cookie.domain";
   private static final String COOKIE_PATH = "jwt.cookie.path";
-  private static final String DEFAULT_COOKIE_PATH = "/";
   private static final String COOKIE_NAME = "jwt.cookie.name";
-  private static final String DEFAULT_COOKIE_NAME = "hadoop-jwt";
   private static final String USER_ATTRIBUTE_NAME = "jwt.user.attribute.name";
-  private static final String DEFAULT_USER_ATTRIBUTE_NAME = "preferred_username";
   private static final String EXPECTED_JWT_AUDIENCES = "hadoop.http.authentication.expected.jwt.audiences";
 
   public static Map<String, String> getJWTConfiguration() {

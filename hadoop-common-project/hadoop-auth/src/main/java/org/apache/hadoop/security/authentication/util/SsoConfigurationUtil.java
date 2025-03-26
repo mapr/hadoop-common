@@ -5,12 +5,19 @@ import com.google.gson.JsonElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.lang.reflect.Method;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 /**
  * Tool to getting all configuration for SSO configuration using JWT token from keycloak
  */
@@ -21,15 +28,32 @@ public class SsoConfigurationUtil {
   private static List<String> audiences = new ArrayList<String>();
   private static Map<String, String> ssoConfigMap = null;
   private static SsoConfigurationUtil ssoConfigInstance = null;
+
+  //SSO configuration relates to cluster config, service get it from maprcli command
   public static final String CLIENT_ID = "clientid";
   private final String CLIENT_SECRET = "clientsecret";
   private final String PROVIDER = "providername";
   public static final String ISSUER = "issuerendpoint";
+
+  //SSO configuration relates to Hadoop configuration
   private final String JWS_SSO_ALGORITHM = "jws.sso.algorithm";
+  public static final String DEFAULT_JWS_SSO_ALGORITHM = "RS256";
+
   private final String COOKIE_DOMAIN = "jwt.cookie.domain";
+
   private final String COOKIE_PATH = "jwt.cookie.path";
+  public static final String DEFAULT_COOKIE_PATH = "/";
+
   private final String COOKIE_NAME = "jwt.cookie.name";
+  public static final String DEFAULT_COOKIE_NAME = "hadoop-jwt";
+
   private final String USER_ATTRIBUTE_NAME = "jwt.user.attribute.name";
+  public static final String DEFAULT_USER_ATTRIBUTE_NAME = "preferred_username";
+
+  private static final String HADOOP_HOME_PROPERTY = "hadoop.home.dir";
+  private static final String YARN_HOME_PROPERTY = "yarn.home.dir";
+  public static boolean useDefaultConf = true;
+  public static boolean ssoConfEnabled = false;
 
 
   private SsoConfigurationUtil() {
@@ -37,6 +61,7 @@ public class SsoConfigurationUtil {
 
   public static SsoConfigurationUtil getInstance() {
     if (ssoConfigInstance == null) {
+      readHadoopSsoConf();
       LOG.debug("Initializing SSO configuration.");
       ssoConfigInstance = new SsoConfigurationUtil();
       ssoConfigMap = new HashMap<>();
@@ -50,22 +75,28 @@ public class SsoConfigurationUtil {
     JsonArray result = null;
     String[] ssoConfigCommand = new String[]{"cluster", "getssoconf"};
     Map<String, String> jwtMapConf = new HashMap<>();
-    try {
-      Class<?> jwtKlass = Class.forName("org.apache.hadoop.util.JWTConfiguration");
-      Method executeJWTConf = jwtKlass.getMethod("getJWTConfiguration");
-      Object jwtConf = jwtKlass.getDeclaredConstructor().newInstance();
-      jwtMapConf = (Map) executeJWTConf.invoke(jwtConf);
+    if (ssoConfEnabled) {
+      try {
+        if(!useDefaultConf) {
+          Class<?> jwtKlass = Class.forName("org.apache.hadoop.util.JWTConfiguration");
+          Method executeJWTConf = jwtKlass.getMethod("getJWTConfiguration");
+          Object jwtConf = jwtKlass.getDeclaredConstructor().newInstance();
+          jwtMapConf = (Map) executeJWTConf.invoke(jwtConf);
+        }
+        Class<?> klass = Class.forName("org.apache.hadoop.util.MaprShellCommandExecutor");
+        Method execute = klass.getMethod("execute", String[].class, Map.class, boolean.class);
+        Object maprShell = klass.getDeclaredConstructor().newInstance();
+        result = (JsonArray) execute.invoke(maprShell, ssoConfigCommand, null, false);
 
-      Class<?> klass = Class.forName("org.apache.hadoop.util.MaprShellCommandExecutor");
-      Method execute = klass.getMethod("execute", String[].class, Map.class, boolean.class);
-      Object maprShell = klass.getDeclaredConstructor().newInstance();
-      result = (JsonArray) execute.invoke(maprShell, ssoConfigCommand, null, false);
-    } catch (Exception ex) {
-      LOG.debug("Failed to get SSO configuration from maprcli. Please check 'maprcli cluster getssoconf' command.", ex);
-      putEmptyMap();
+      } catch (Exception ex) {
+        LOG.debug("Failed to get SSO configuration from maprcli. Please check 'maprcli cluster getssoconf' command.", ex);
+        putEmptyMap();
+      }
     }
-    if (jwtMapConf != null && !jwtMapConf.isEmpty()) {
-      if(jwtMapConf.get(EXPECTED_JWT_AUDIENCES) != null){
+    if (useDefaultConf) {
+      defineDefaultSsoConfMap();
+    } else if (jwtMapConf != null && !jwtMapConf.isEmpty()) {
+      if (jwtMapConf.get(EXPECTED_JWT_AUDIENCES) != null) {
         // parse into the list
         audiences.addAll(Arrays.asList(jwtMapConf.get(EXPECTED_JWT_AUDIENCES).split(",")));
       }
@@ -87,7 +118,54 @@ public class SsoConfigurationUtil {
     }
   }
 
-  private void putEmptyMap(){
+  public static void readHadoopSsoConf() {
+    String hadoopHome = System.getProperty(HADOOP_HOME_PROPERTY);
+    if (hadoopHome == null) {
+      hadoopHome = System.getProperty(YARN_HOME_PROPERTY);
+      if (hadoopHome == null) {
+        LOG.warn("Can't find Hadoop SSO configuration file. SSO is disabled");
+      }
+    }
+    String ssoConfFile = hadoopHome + "/etc/hadoop/ssoConf";
+    try {
+      File file = new File(ssoConfFile);
+      FileReader fileReader = new FileReader(file);
+      BufferedReader bufferedReader = new BufferedReader(fileReader);
+      String line;
+      while ((line = bufferedReader.readLine()) != null) {
+        if (line.trim().startsWith("ssoEnabled=")) {
+          ssoConfEnabled = Boolean.parseBoolean(line.trim().split("=")[1]);
+        } else if (line.trim().startsWith("useDefaultConf=")) {
+          useDefaultConf = Boolean.parseBoolean(line.trim().split("=")[1]);
+        }
+      }
+    } catch (IOException ex) {
+      LOG.error("Failed to parse ssoConf file: {}", ex.getMessage());
+    }
+  }
+
+
+  private void defineDefaultSsoConfMap() {
+    LOG.debug("Initializing default Hadoop SSO configuration");
+    String domainName = null;
+    try {
+      InetAddress localHost = InetAddress.getLocalHost();
+      String fqdn = localHost.getCanonicalHostName();
+      if (fqdn != null && fqdn.contains(".")) {
+        domainName = fqdn.substring(fqdn.indexOf(".") + 1);
+      }
+    } catch (UnknownHostException e) {
+      LOG.warn("Can't initialize hostname for the service");
+    }
+    ssoConfigMap.put(JWS_SSO_ALGORITHM, DEFAULT_JWS_SSO_ALGORITHM);
+    ssoConfigMap.put(COOKIE_DOMAIN, domainName);
+    ssoConfigMap.put(COOKIE_PATH, DEFAULT_COOKIE_PATH);
+    ssoConfigMap.put(COOKIE_NAME, DEFAULT_COOKIE_NAME);
+    ssoConfigMap.put(USER_ATTRIBUTE_NAME, DEFAULT_USER_ATTRIBUTE_NAME);
+
+  }
+
+  private void putEmptyMap() {
     ssoConfigMap.put(CLIENT_ID, "");
     ssoConfigMap.put(CLIENT_SECRET, "");
     ssoConfigMap.put(PROVIDER, "");
@@ -138,14 +216,14 @@ public class SsoConfigurationUtil {
     return audiences;
   }
 
-  public String getJwsSsoAlgorithm(){
+  public String getJwsSsoAlgorithm() {
     return ssoConfigMap.get(JWS_SSO_ALGORITHM);
   }
 
   /**
    * Return true only if process has access to all main SSO configuration - issuer, client id,
    * client secret and provider name.
-   * */
+   */
   public boolean isSsoEnabled() {
     return !(getClientIssuer().isEmpty() || getClientId().isEmpty() ||
         getClientSecret().isEmpty() || getProvider().isEmpty());

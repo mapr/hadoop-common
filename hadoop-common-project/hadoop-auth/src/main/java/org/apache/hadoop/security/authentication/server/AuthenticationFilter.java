@@ -622,11 +622,8 @@ public class AuthenticationFilter implements Filter {
               ssoCookie.setPath(getCookiePath());
             }
             Cookie cleanAuthCookie = new Cookie(getCookieTokenName(), "");
-            Cookie cleanAuthTLCookie = new Cookie("hadoop.tl.auth", "");
             cleanAuthCookie.setMaxAge(0);
-            cleanAuthTLCookie.setMaxAge(0);
             cleanAuthCookie.setPath(getCookiePath());
-            cleanAuthTLCookie.setPath(getCookiePath());
             String domain = getCookieDomain();
             if (domain != null && httpRequest.getRequestURL().toString().contains(domain)) {
               if (domain.startsWith(".")) {
@@ -636,13 +633,11 @@ public class AuthenticationFilter implements Filter {
                 ssoCookie.setDomain(domain);
               }
               cleanAuthCookie.setDomain(domain);
-              cleanAuthTLCookie.setDomain(domain);
             }
             if (ssoCookie != null) {
               httpResponse.addCookie(ssoCookie);
             }
             httpResponse.addCookie(cleanAuthCookie);
-            httpResponse.addCookie(cleanAuthTLCookie);
             if (token.isJWTBasedToken()) {
               httpResponse.addHeader(HttpHeaders.LOCATION, getLogoutUrl());
               httpResponse.setStatus(HttpServletResponse.SC_OK);
