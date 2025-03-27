@@ -50,8 +50,13 @@ public class SsoConfigurationUtil {
   private final String USER_ATTRIBUTE_NAME = "jwt.user.attribute.name";
   public static final String DEFAULT_USER_ATTRIBUTE_NAME = "preferred_username";
 
+  //Hadoop home related variables
   private static final String HADOOP_HOME_PROPERTY = "hadoop.home.dir";
   private static final String YARN_HOME_PROPERTY = "yarn.home.dir";
+  private static final String MAPR_ENV_VAR = "MAPR_HOME";
+  private static final String MAPR_PROPERTY_HOME = "mapr.home.dir";
+  private static final String MAPR_HOME_PATH_DEFAULT = "/opt/mapr";
+
   public static boolean useDefaultConf = true;
   public static boolean ssoConfEnabled = false;
 
@@ -123,14 +128,26 @@ public class SsoConfigurationUtil {
     if (hadoopHome == null) {
       hadoopHome = System.getProperty(YARN_HOME_PROPERTY);
       if (hadoopHome == null) {
-        LOG.warn("Can't find Hadoop SSO configuration file. SSO is disabled");
+        String maprHome = System.getenv(MAPR_ENV_VAR);
+        if (maprHome == null) {
+          maprHome = System.getProperty(MAPR_PROPERTY_HOME);
+          if (maprHome == null) {
+            maprHome = MAPR_HOME_PATH_DEFAULT;
+          }
+        }
+        String hadoopVer = "";
+        try (BufferedReader bufferedReader =
+                 new BufferedReader(new FileReader(maprHome + "/hadoop/hadoopversion"))) {
+          //hadoopversion must always be one line file
+          hadoopVer = bufferedReader.readLine().trim();
+        } catch (Exception ex) {
+          LOG.warn("Can't read hadoopversion file: {}", ex.getMessage());
+        }
+        hadoopHome = maprHome + "/hadoop/hadoop-" + hadoopVer;
       }
     }
-    String ssoConfFile = hadoopHome + "/etc/hadoop/ssoConf";
-    try {
-      File file = new File(ssoConfFile);
-      FileReader fileReader = new FileReader(file);
-      BufferedReader bufferedReader = new BufferedReader(fileReader);
+    try (BufferedReader bufferedReader =
+             new BufferedReader(new FileReader(hadoopHome + "/etc/hadoop/ssoConf"))) {
       String line;
       while ((line = bufferedReader.readLine()) != null) {
         if (line.trim().startsWith("ssoEnabled=")) {
