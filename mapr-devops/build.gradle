@@ -106,7 +106,7 @@ task copyHdfsSources(type: Copy) {
 }
 
 task copyHdfsBinaries(type: Copy) {
-    from "${hdfsDir}/target/clang/native"
+    from "${hdfsDir}/target/native"
     into "hadoop-hdfs/target/native"
 }
 
