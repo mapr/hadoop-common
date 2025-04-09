@@ -105,8 +105,8 @@ public class DirectShuffleMergeManagerImpl<K, V> implements MergeManager<K, V> {
   private final long memoryLimit;
   private long usedMemory;
   private long commitMemory;
-  private final long maxSingleShuffleLimit;
-  
+  final long maxSingleShuffleLimit;
+
   private final int memToMemMergeOutputsThreshold; 
   private final long mergeThreshold;
   
@@ -189,11 +189,17 @@ public class DirectShuffleMergeManagerImpl<K, V> implements MergeManager<K, V> {
 
     usedMemory = 0L;
     commitMemory = 0L;
-    this.maxSingleShuffleLimit = 
-      (long)(memoryLimit * singleShuffleMemoryLimitPercent);
-    this.memToMemMergeOutputsThreshold = 
-            jobConf.getInt(MRJobConfig.REDUCE_MEMTOMEM_THRESHOLD, ioSortFactor);
-    this.mergeThreshold = (long)(this.memoryLimit * 
+    long maxSingleShuffleLimitConfiged =
+        (long)(memoryLimit * singleShuffleMemoryLimitPercent);
+    if(maxSingleShuffleLimitConfiged > Integer.MAX_VALUE) {
+      maxSingleShuffleLimitConfiged = Integer.MAX_VALUE;
+      LOG.info("The max number of bytes for a single in-memory shuffle cannot" +
+          " be larger than Integer.MAX_VALUE. Setting it to Integer.MAX_VALUE");
+    }
+    this.maxSingleShuffleLimit = maxSingleShuffleLimitConfiged;
+    this.memToMemMergeOutputsThreshold =
+        jobConf.getInt(MRJobConfig.REDUCE_MEMTOMEM_THRESHOLD, ioSortFactor);
+    this.mergeThreshold = (long)(this.memoryLimit *
                           jobConf.getFloat(MRJobConfig.SHUFFLE_MERGE_PERCENT, 
                                            0.90f));
     LOG.info("MergerManager: memoryLimit=" + memoryLimit + ", " +

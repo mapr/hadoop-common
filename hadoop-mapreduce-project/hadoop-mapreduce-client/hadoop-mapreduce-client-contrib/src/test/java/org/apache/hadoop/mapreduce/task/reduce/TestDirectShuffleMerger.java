@@ -144,10 +144,26 @@ public class TestDirectShuffleMerger {
     Assert.assertEquals(keys, Arrays.asList("apple", "banana", "carrot"));
     Assert.assertEquals(values, Arrays.asList("disgusting", "pretty good", "delicious"));
 
+    verifyReservedMapOutputType(mergeManager, 10L, "MEMORY", mapId1);
+    try {
+      verifyReservedMapOutputType(mergeManager, 1L + Integer.MAX_VALUE, "DISK", mapId1);
+    } catch (Exception ex){
+      Assert.assertEquals(NullPointerException.class, ex.getClass());
+    }
+
+
     mergeManager.close();
     Assert.assertEquals(0, mergeManager.inMemoryMapOutputs.size());
     Assert.assertEquals(0, mergeManager.inMemoryMergedMapOutputs.size());
     Assert.assertEquals(0, mergeManager.onDiskMapOutputs.size());
+  }
+
+  private void verifyReservedMapOutputType(DirectShuffleMergeManagerImpl<Text, Text> mgr,
+                                           long size, String expectedShuffleMode, TaskAttemptID mapId) throws IOException {
+    final MapOutput<Text, Text> mapOutput = mgr.reserve(mapId, size, 1);
+    Assert.assertEquals("Shuffled bytes: " + size, expectedShuffleMode,
+        mapOutput.getDescription());
+    mgr.unreserve(size);
   }
   
   private byte[] writeMapOutput(Configuration conf, Map<String, String> keysToValues)
