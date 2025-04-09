@@ -50,7 +50,7 @@
     <!-- Version number for xerces used by JDiff -->
     <xerces.jdiff.version>2.12.2</xerces.jdiff.version>
 
-    <kafka.version>3.6.1.100-eep-932</kafka.version>
+    <kafka.version>3.6.1.200-eep-940</kafka.version>
 
     <commons-daemon.version>1.0.13</commons-daemon.version>
 
@@ -102,7 +102,7 @@
     <hadoop-thirdparty-shaded-protobuf-prefix>${hadoop-thirdparty-shaded-prefix}.protobuf</hadoop-thirdparty-shaded-protobuf-prefix>
     <hadoop-thirdparty-shaded-guava-prefix>${hadoop-thirdparty-shaded-prefix}.com.google.common</hadoop-thirdparty-shaded-guava-prefix>
 
-    <zookeeper.version>3.8.3.0-mapr-2410</zookeeper.version>
+    <zookeeper.version>3.8.3.0-mapr-2504</zookeeper.version>
     <curator.version>5.2.0</curator.version>
     <findbugs.version>3.0.5</findbugs.version>
     <dnsjava.version>3.6.1</dnsjava.version>
@@ -201,7 +201,7 @@
     <swagger-annotations-version>1.5.4</swagger-annotations-version>
     <snakeyaml.version>2.0</snakeyaml.version>
     <sshd.version>2.11.0</sshd.version>
-    <hbase.one.version>1.4.14.700-eep-922</hbase.one.version>
+    <hbase.one.version>1.4.14.750-eep-940</hbase.one.version>
     <hbase.two.version>2.2.4</hbase.two.version>
     <junit.version>4.13.2</junit.version>
     <junit.jupiter.version>5.8.2</junit.jupiter.version>
