@@ -20,10 +20,10 @@
   <parent>
     <groupId>org.apache.hadoop</groupId>
     <artifactId>hadoop-main</artifactId>
-    <version>3.4.1.0-eep-940-SNAPSHOT</version>
+    <version>3.4.1.100-eep-941-SNAPSHOT</version>
   </parent>
   <artifactId>hadoop-project</artifactId>
-  <version>3.4.1.0-eep-940-SNAPSHOT</version>
+  <version>3.4.1.100-eep-941-SNAPSHOT</version>
   <description>Apache Hadoop Project POM</description>
   <name>Apache Hadoop Project POM</name>
   <packaging>pom</packaging>
@@ -50,7 +50,7 @@
     <!-- Version number for xerces used by JDiff -->
     <xerces.jdiff.version>2.12.2</xerces.jdiff.version>
 
-    <kafka.version>3.6.1.0-eep-930-SNAPSHOT</kafka.version>
+    <kafka.version>3.6.1.200-eep-940-SNAPSHOT</kafka.version>
 
     <commons-daemon.version>1.0.13</commons-daemon.version>
 
@@ -201,7 +201,7 @@
     <swagger-annotations-version>1.5.4</swagger-annotations-version>
     <snakeyaml.version>2.0</snakeyaml.version>
     <sshd.version>2.11.0</sshd.version>
-    <hbase.one.version>1.4.14.300-eep-910-SNAPSHOT</hbase.one.version>
+    <hbase.one.version>1.4.14.750-eep-940-SNAPSHOT</hbase.one.version>
     <hbase.two.version>2.2.4</hbase.two.version>
     <junit.version>4.13.2</junit.version>
     <junit.jupiter.version>5.8.2</junit.jupiter.version>
