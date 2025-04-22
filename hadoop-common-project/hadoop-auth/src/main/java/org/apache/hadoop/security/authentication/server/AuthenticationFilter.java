@@ -856,9 +856,10 @@ public class AuthenticationFilter implements Filter {
   @VisibleForTesting
   String constructLoginURL(HttpServletRequest request) {
     String delimiter = "&";
+    String ui2 = request.getParameter("ui2") != null ? "ui2" : "";
     return getAuthUrl() + "?" +
         "response_type=code" + delimiter + "client_id=" + SsoConfigurationUtil.getInstance().getClientId() + delimiter + "scope=openid" + delimiter +
-        "redirect_uri=" + JWTUtils.constructURLWithHostname(request.getRequestURL().toString()) + "?" + ACTION_PARAM + "=processCode";
+        "redirect_uri=" + JWTUtils.constructURLWithHostname(request.getRequestURL().toString()) + ui2 + "?" + ACTION_PARAM + "=processCode";
   }
 
   public String getAuthUrl() {

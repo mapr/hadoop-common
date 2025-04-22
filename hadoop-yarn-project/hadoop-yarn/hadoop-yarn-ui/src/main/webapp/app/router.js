@@ -96,6 +96,7 @@ Router.map(function() {
   this.route('notauth');
   this.route('notfound');
   this.route('error', { path: '*:' });
+  this.route('login');
 });
 
 export default Router;

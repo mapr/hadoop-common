@@ -170,114 +170,161 @@ function transformURL(url, hostname) {
 
 function updateConfigs(application) {
   var hostname = window.location.hostname;
-  var rmhost = hostname + (window.location.port ? ':' + window.location.port: '') +
+  var rmhost = hostname + (window.location.port ? ':' + window.location.port : '') +
     skipTrailingSlash(window.location.pathname);
 
   window.ENV = window.ENV || {};
   window.ENV.hosts = window.ENV.hosts || {};
 
-  if(!ENV.hosts.rmWebAddress) {
+  if (!ENV.hosts.rmWebAddress) {
     ENV.hosts.rmWebAddress = rmhost;
     ENV.hosts.protocolScheme = window.location.protocol;
   } else {
     rmhost = ENV.hosts.rmWebAddress;
   }
 
-  Ember.Logger.log("RM Address: " + rmhost);
+  var params = new URLSearchParams(window.location.search);
+  var action = params.get("action");
+  var code = params.get("code");
 
-  var protocolSchemeFromRM = getYarnHttpProtocolScheme(rmhost, application);
-  Ember.Logger.log("Is protocol scheme https? " + (protocolSchemeFromRM == "HTTPS_ONLY"));
-  var isHttpsSchemeEnabled = (protocolSchemeFromRM == "HTTPS_ONLY");
-
-  var clusterIdFromYARN = getClusterIdFromYARN(rmhost, application);
-  ENV.clusterId = clusterIdFromYARN;
-
-  var nodeManagerPort = getNodeManagerPort(rmhost, application);
-  Ember.Logger.log("NodeMananger port: " + nodeManagerPort);
-  ENV.nodeManagerPort = nodeManagerPort;
-
-  var timelineServiceEnabled = getYarnTimelineEnabled(rmhost, application);
-  Ember.Logger.log("Timeline Service enabled: " + timelineServiceEnabled);
-  ENV.timelineServiceEnabled = (timelineServiceEnabled.toLowerCase() === 'true');
-
-  if (!ENV.hosts.jhsAddress) {
-    var jhsAddress = getJHSURL(rmhost, application, isHttpsSchemeEnabled);
-    jhsAddress = transformURL(jhsAddress, hostname);
-    Ember.Logger.log("The JHS address is " + jhsAddress);
-    ENV.hosts.jhsAddress = jhsAddress;
-  }
-
-  if(!ENV.hosts.timelineWebAddress) {
-    var timelinehost = "";
+  if(action != null && code != null && window.localStorage.getItem("logToUI") !== "1"){
+    var reqSSOurl = window.location.origin + "/?ui2=true&action=" + action + "&code=" + code;
     $.ajax({
       type: 'GET',
       dataType: 'json',
       async: false,
       context: this,
-      url: getTimeLineURL(rmhost, isHttpsSchemeEnabled),
-      success: function(data) {
-        timelinehost = data.property.value;
-        timelinehost = transformURL(timelinehost, hostname);
-        ENV.hosts.timelineWebAddress = timelinehost;
-        Ember.Logger.log("Timeline Address from RM: " + timelinehost);
-
-        application.advanceReadiness();
-      },
-      error: function() {
-        application.advanceReadiness();
-      }
+      url: reqSSOurl,
+    }).always(function(data, textStatus, jqXHR){
+          Ember.Logger.log("Sent JWT code exchange.");
+          const url = new URL(window.location);
+          url.searchParams.delete('action');
+          url.searchParams.delete('code');
+          url.searchParams.delete('session_state');
+          history.replaceState(null, null, url)
     });
-  } else {
-    Ember.Logger.log("Timeline Address: " + ENV.hosts.timelineWebAddress);
-    application.advanceReadiness();
   }
 
-  if(!ENV.hosts.timelineV1WebAddress) {
-    var timelinehost = "";
-    $.ajax({
-      type: 'GET',
-      dataType: 'json',
-      async: false,
-      context: this,
-      url: getTimeLineV1URL(rmhost, isHttpsSchemeEnabled),
-      success: function(data) {
-        timelinehost = data.property.value;
-        timelinehost = transformURL(timelinehost, hostname);
-        ENV.hosts.timelineV1WebAddress = timelinehost;
-        Ember.Logger.log("Timeline V1 Address from RM: " + timelinehost);
+  var isSecurityEnabled = "";
+  var load = true;
 
-        application.advanceReadiness();
-      },
-      error: function() {
-        application.advanceReadiness();
-      }
-    });
-  } else {
-    Ember.Logger.log("Timeline V1 Address: " + ENV.hosts.timelineV1WebAddress);
-    application.advanceReadiness();
-  }
+  $.ajax({
+    type: 'GET',
+    dataType: 'json',
+    async: false,
+    context: this,
+    url: getSecurityURL(rmhost),
+    success: function (data) {
+      isSecurityEnabled = data.property.value;
+      ENV.hosts.isSecurityEnabled = isSecurityEnabled;
+      Ember.Logger.log("success security check : " + isSecurityEnabled);
+      window.localStorage.setItem("logToUI", "1");
+      application.advanceReadiness();
+    },
+    error: function () {
+      window.localStorage.setItem("logToUI", "0");
+      Ember.Logger.log("Error check security");
+      load = false;
+      application.advanceReadiness();
+    }
+  });
+  if (load) {
+    Ember.Logger.log("RM Address: " + rmhost);
 
-  if(!ENV.hosts.isSecurityEnabled) {
-    var isSecurityEnabled = "";
-    $.ajax({
-      type: 'GET',
-      dataType: 'json',
-      async: false,
-      context: this,
-      url: getSecurityURL(rmhost),
-      success: function(data) {
-        isSecurityEnabled = data.property.value;
-        ENV.hosts.isSecurityEnabled = isSecurityEnabled;
-        Ember.Logger.log("Security mode is : " + isSecurityEnabled);
-        application.advanceReadiness();
-      },
-      error: function() {
-        application.advanceReadiness();
-      }
-    });
-  } else {
-    Ember.Logger.log("Security mode is: " + ENV.hosts.isSecurityEnabled);
-    application.advanceReadiness();
+    var protocolSchemeFromRM = getYarnHttpProtocolScheme(rmhost, application);
+    Ember.Logger.log("Is protocol scheme https? " + (protocolSchemeFromRM == "HTTPS_ONLY"));
+    var isHttpsSchemeEnabled = (protocolSchemeFromRM == "HTTPS_ONLY");
+
+    var clusterIdFromYARN = getClusterIdFromYARN(rmhost, application);
+    ENV.clusterId = clusterIdFromYARN;
+
+    var nodeManagerPort = getNodeManagerPort(rmhost, application);
+    Ember.Logger.log("NodeMananger port: " + nodeManagerPort);
+    ENV.nodeManagerPort = nodeManagerPort;
+
+    var timelineServiceEnabled = getYarnTimelineEnabled(rmhost, application);
+    Ember.Logger.log("Timeline Service enabled: " + timelineServiceEnabled);
+    ENV.timelineServiceEnabled = (timelineServiceEnabled.toLowerCase() === 'true');
+
+    if (!ENV.hosts.jhsAddress) {
+      var jhsAddress = getJHSURL(rmhost, application, isHttpsSchemeEnabled);
+      jhsAddress = transformURL(jhsAddress, hostname);
+      Ember.Logger.log("The JHS address is " + jhsAddress);
+      ENV.hosts.jhsAddress = jhsAddress;
+    }
+
+    if (!ENV.hosts.timelineWebAddress) {
+      var timelinehost = "";
+      $.ajax({
+        type: 'GET',
+        dataType: 'json',
+        async: false,
+        context: this,
+        url: getTimeLineURL(rmhost, isHttpsSchemeEnabled),
+        success: function (data) {
+          timelinehost = data.property.value;
+          timelinehost = transformURL(timelinehost, hostname);
+          ENV.hosts.timelineWebAddress = timelinehost;
+          Ember.Logger.log("Timeline Address from RM: " + timelinehost);
+
+          application.advanceReadiness();
+        },
+        error: function () {
+          application.advanceReadiness();
+        }
+      });
+    } else {
+      Ember.Logger.log("Timeline Address: " + ENV.hosts.timelineWebAddress);
+      application.advanceReadiness();
+    }
+
+    if (!ENV.hosts.timelineV1WebAddress) {
+      var timelinehost = "";
+      $.ajax({
+        type: 'GET',
+        dataType: 'json',
+        async: false,
+        context: this,
+        url: getTimeLineV1URL(rmhost, isHttpsSchemeEnabled),
+        success: function (data) {
+          timelinehost = data.property.value;
+          timelinehost = transformURL(timelinehost, hostname);
+          ENV.hosts.timelineV1WebAddress = timelinehost;
+          Ember.Logger.log("Timeline V1 Address from RM: " + timelinehost);
+
+          application.advanceReadiness();
+        },
+        error: function () {
+          application.advanceReadiness();
+        }
+      });
+    } else {
+      Ember.Logger.log("Timeline V1 Address: " + ENV.hosts.timelineV1WebAddress);
+      application.advanceReadiness();
+    }
+
+    if (!ENV.hosts.isSecurityEnabled) {
+      var isSecurityEnabled = "";
+      $.ajax({
+        type: 'GET',
+        dataType: 'json',
+        async: false,
+        context: this,
+        url: getSecurityURL(rmhost),
+        success: function (data) {
+          isSecurityEnabled = data.property.value;
+          ENV.hosts.isSecurityEnabled = isSecurityEnabled;
+          Ember.Logger.log("Security mode is : " + isSecurityEnabled);
+          application.advanceReadiness();
+        },
+        error: function () {
+          application.advanceReadiness();
+        }
+      });
+    } else {
+      Ember.Logger.log("Security mode is: " + ENV.hosts.isSecurityEnabled);
+      application.advanceReadiness();
+    }
   }
 }
 

@@ -169,12 +169,13 @@ public class JWTRedirectAuthenticationHandler extends
     HttpClient client = HttpClientBuilder.create().build();
     HttpPost post = new HttpPost(getTokenUrl());
     List<BasicNameValuePair> urlParameters = new ArrayList<>();
+    String ui2 = request.getParameter("ui2") != null ? "ui2" : "";
     urlParameters.add(new BasicNameValuePair("grant_type", "authorization_code"));
     urlParameters.add(new BasicNameValuePair("client_id", SsoConfigurationUtil.getInstance().getClientId()));
     urlParameters.add(new BasicNameValuePair("code", code));
     urlParameters.add(new BasicNameValuePair("client_secret", SsoConfigurationUtil.getInstance().getClientSecret()));
     urlParameters.add(new BasicNameValuePair("redirect_uri",
-        request.getRequestURL().toString()+"?" + ACTION_PARAM +"=processCode"));
+        request.getRequestURL().toString() + ui2 + "?" + ACTION_PARAM +"=processCode"));
     post.setEntity(new UrlEncodedFormEntity(urlParameters));
     HttpResponse response = client.execute(post);
 

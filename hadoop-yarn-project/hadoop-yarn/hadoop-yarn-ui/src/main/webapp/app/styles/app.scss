@@ -773,3 +773,32 @@ table.active-user-table {
     border: 1px solid #dcdcdc !important;
   }
 }
+
+.boxContainer {
+  display: block;
+  unicode-bidi: isolate;
+  box-sizing: border-box;
+  top: 35%;
+  left: 50%;
+  position: absolute;
+  width: 450px;
+  margin: -100px 0 0 -230px;
+}
+
+.customForm {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.centerContainer {
+  display: flex;
+  justify-content: center;
+}
+
+.input {
+  font-size: 20px;
+}
+
+.loginButton {
+  width: 55%;
+}

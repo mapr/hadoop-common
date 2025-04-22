@@ -15,15 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import Ember from 'ember';
 
 export default Ember.Route.extend({
-  /**
-   * Redirect root URL to cluster overview page.
-   */
-  beforeModel: function() {
-    this.replaceWith('login');
+  model() {
+    return {};
+  },
+  beforeModel(/* transition */) {
+    if (window.localStorage.getItem('logToUI') === '1') {
+      this.router.transitionTo('cluster-overview');
+    }
+  },
+  afterModel(model/*, transition*/) {
+    model.error_id = "error";
+    model.isValidErrorCode = false;
+    if (model.errorCode && model.errorCode !== "0") {
+      model.isValidErrorCode = true;
+    }
   }
 });
 
