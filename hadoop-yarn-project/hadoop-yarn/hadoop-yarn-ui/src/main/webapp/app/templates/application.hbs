@@ -75,6 +75,7 @@
         {{#if userInfo}}
         <div class="loggedin-user">
           Logged in as: <span class="username">{{userInfo.requestedUser}}</span>
+          <button type="button" class="btn btn-main btn-primary logoutBtn" {{action 'logout'}}>Logout</button>
         </div>
         {{/if}}
       </div><!-- /.navbar-collapse -->

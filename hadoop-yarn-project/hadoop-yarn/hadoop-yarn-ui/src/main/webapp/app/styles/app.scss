@@ -796,9 +796,14 @@ table.active-user-table {
 }
 
 .input {
-  font-size: 20px;
+  font-size: 18px;
 }
 
-.loginButton {
-  width: 55%;
+.loginBtn {
+  width: 50%;
+}
+
+.logoutBtn {
+  padding: 4px 8px;
+  font-size: 12px;
 }

@@ -60,7 +60,21 @@ export default AbstractRoute.extend({
       } else {
         this.intermediateTransitionTo('/error');
       }
+    },
+
+    logout: function () {
+      fetch(window.location.origin + "?action=logout", {}).then((response) => {
+        if (!response.ok) {
+          throw new Error(`Response status: ${response.status}`);
+        }
+        window.localStorage.setItem('logToUI', '0');
+        this.store.unloadAll('cluster-user-info');
+        this.refresh();
+        this.router.transitionTo('login');
+
+      });
     }
+    
   },
 
   unloadAll: function() {

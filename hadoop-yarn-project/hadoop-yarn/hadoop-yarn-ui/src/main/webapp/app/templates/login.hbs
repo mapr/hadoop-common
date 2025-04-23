@@ -23,12 +23,11 @@ limitations under the License.
       {{input type="password" placeholder="Enter password" value=password }}
   </div>
   <div class="centerContainer customForm">
-      <button type="button" class="btn btn-main btn-primary loginButton" {{action "signIn"}}>Log In</button>
+      <button type="button" class="btn btn-main btn-primary loginBtn" {{action "signIn"}}>Log In</button>
   </div>
-
-<br>
-<div class="centerContainer customForm">
-  <button type="button" class="btn btn-main btn-primary loginButton" disabled={{isSsoDisabled}} {{action 'signSSO' }}>Log In with SSO</button>
-</div>
+  <br>
+  <div class="centerContainer customForm">
+    <button type="button" class="btn btn-main btn-primary loginBtn" disabled={{isSsoDisabled}} {{action 'signSSO'}}>Log In with SSO</button>
+  </div>
 </div>
 
