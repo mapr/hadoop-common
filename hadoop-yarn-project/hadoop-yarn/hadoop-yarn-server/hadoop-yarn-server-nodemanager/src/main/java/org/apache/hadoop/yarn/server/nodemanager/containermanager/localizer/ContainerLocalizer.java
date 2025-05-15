@@ -113,7 +113,8 @@ public class ContainerLocalizer {
    */
   private static final String ADDITIONAL_JDK17_PLUS_OPTIONS =
     "--add-exports=java.base/sun.net.dns=ALL-UNNAMED " +
-    "--add-exports=java.base/sun.net.util=ALL-UNNAMED";
+    "--add-exports=java.base/sun.net.util=ALL-UNNAMED " +
+    "--add-opens java.base/java.lang=ALL-UNNAMED";
 
   private static final String LOG_FILE_NAME = "container-localizer-syslog";
 

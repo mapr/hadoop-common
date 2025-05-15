@@ -915,21 +915,21 @@ function checkAndConfigureFIPSProperties() {
           sed -i -e "s|</configuration>|  <property>\n   <name>hadoop.security.token.authentication.method</name>\n    <value>SCRAM-SHA-256</value>\n    <description>\n      SASL mechanism for token authentication.\n    </description>\n  </property>\n</configuration>|" "${HADOOP_HOME}/etc/hadoop/core-site.xml"
       fi
       if ! grep -q "yarn.nodemanager.container-localizer.java.opts" "${HADOOP_HOME}/etc/hadoop/yarn-site.xml"; then
-          sed -i -e "s|</configuration>|  <property>\n   <name>yarn.nodemanager.container-localizer.java.opts</name>\n    <value>-Xmx256m --add-opens java.base/java.lang=ALL-UNNAMED -Djava.security.properties=/opt/mapr/conf/java.security.fips</value>\n  </property>\n</configuration>|" "${HADOOP_HOME}/etc/hadoop/yarn-site.xml"
+          sed -i -e "s|</configuration>|  <property>\n   <name>yarn.nodemanager.container-localizer.java.opts</name>\n    <value>-Xmx256m -Djava.security.properties=/opt/mapr/conf/java.security.fips</value>\n  </property>\n</configuration>|" "${HADOOP_HOME}/etc/hadoop/yarn-site.xml"
       fi
   fi
   if [ "$isFips" == "true" ] || grep -q "<value>SCRAM-SHA-256</value>" "${HADOOP_HOME}/etc/hadoop/core-site.xml"; then
       if [ -f ${HADOOP_HOME}/etc/hadoop/yarn-site.xml ];then
           if ! grep -q "yarn.app.mapreduce.am.command-opts" "${HADOOP_HOME}/etc/hadoop/yarn-site.xml"; then
-              sed -i -e "s|</configuration>|  <property>\n   <name>yarn.app.mapreduce.am.command-opts</name>\n    <value>-Xmx1024m --add-opens java.base/java.lang=ALL-UNNAMED -XX:+UseParallelGC -Djava.security.properties=/opt/mapr/conf/java.security.fips</value>\n  </property>\n</configuration>|" "${HADOOP_HOME}/etc/hadoop/yarn-site.xml"
+              sed -i -e "s|</configuration>|  <property>\n   <name>yarn.app.mapreduce.am.command-opts</name>\n    <value>-Xmx1024m -XX:+UseParallelGC -Djava.security.properties=/opt/mapr/conf/java.security.fips</value>\n  </property>\n</configuration>|" "${HADOOP_HOME}/etc/hadoop/yarn-site.xml"
           fi
       fi
       if [ -f ${HADOOP_HOME}/etc/hadoop/mapred-site.xml ];then
           if ! grep -q "mapreduce.map.java.opts" "${HADOOP_HOME}/etc/hadoop/mapred-site.xml"; then
-              sed -i -e "s|</configuration>|  <property>\n   <name>mapreduce.map.java.opts</name>\n    <value>-Xmx900m --add-opens java.base/java.lang=ALL-UNNAMED -XX:+UseParallelGC -Djava.security.properties=/opt/mapr/conf/java.security.fips</value>\n  </property>\n</configuration>|" "${HADOOP_HOME}/etc/hadoop/mapred-site.xml"
+              sed -i -e "s|</configuration>|  <property>\n   <name>mapreduce.map.java.opts</name>\n    <value>-Xmx900m -XX:+UseParallelGC -Djava.security.properties=/opt/mapr/conf/java.security.fips</value>\n  </property>\n</configuration>|" "${HADOOP_HOME}/etc/hadoop/mapred-site.xml"
           fi
           if ! grep -q "mapreduce.reduce.java.opts" "${HADOOP_HOME}/etc/hadoop/mapred-site.xml"; then
-              sed -i -e "s|</configuration>|  <property>\n   <name>mapreduce.reduce.java.opts</name>\n    <value>-Xmx2560m --add-opens java.base/java.lang=ALL-UNNAMED -XX:+UseParallelGC -Djava.security.properties=/opt/mapr/conf/java.security.fips</value>\n  </property>\n</configuration>|" "${HADOOP_HOME}/etc/hadoop/mapred-site.xml"
+              sed -i -e "s|</configuration>|  <property>\n   <name>mapreduce.reduce.java.opts</name>\n    <value>-Xmx2560m -XX:+UseParallelGC -Djava.security.properties=/opt/mapr/conf/java.security.fips</value>\n  </property>\n</configuration>|" "${HADOOP_HOME}/etc/hadoop/mapred-site.xml"
           fi
       fi
       if [ -f ${HADOOP_HOME}/etc/hadoop/scram/scram-site.xml ];then
