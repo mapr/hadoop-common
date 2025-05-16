@@ -77,6 +77,7 @@ public class SimpleCopyListing extends CopyListing {
 
   public static final int DEFAULT_FILE_STATUS_SIZE = 1000;
   public static final boolean DEFAULT_RANDOMIZE_FILE_LISTING = true;
+  public static final boolean DEFAULT_LISTING_CHECK = false;
 
   private long totalPaths = 0;
   private long totalDirs = 0;
@@ -87,6 +88,7 @@ public class SimpleCopyListing extends CopyListing {
   private final int maxRetries = 3;
   private CopyFilter copyFilter;
   private DistCpSync distCpSync;
+  private boolean listingCheck = false;
   public static Map<String, Set<String>> loopLocator = new HashMap<>();
   private final Random rnd = new Random();
 
@@ -99,6 +101,7 @@ public class SimpleCopyListing extends CopyListing {
    */
   protected SimpleCopyListing(Configuration configuration, Credentials credentials) {
     super(configuration, credentials);
+    listingCheck = getConf().getBoolean(DistCpConstants.CONF_LABEL_LISTING_CHECK, DEFAULT_LISTING_CHECK);
     numListstatusThreads = getConf().getInt(
         DistCpConstants.CONF_LABEL_LISTSTATUS_THREADS,
         DistCpConstants.DEFAULT_LISTSTATUS_THREADS);
@@ -837,6 +840,9 @@ public class SimpleCopyListing extends CopyListing {
               } else {
                 LOG.error("Giving up on {} after {} retries.", child.getSourceRealPath().getPath(),
                     retry);
+                if (listingCheck) {
+                  throw new IOException("Can't process copy listing file. Check files/directories from error message.");
+                }
               }
             }
           } catch (InterruptedException ie) {

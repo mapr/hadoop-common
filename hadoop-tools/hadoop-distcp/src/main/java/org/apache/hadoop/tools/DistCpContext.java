@@ -87,6 +87,10 @@ public class DistCpContext {
     return options.shouldIgnoreFailures();
   }
 
+  public boolean shouldListingCheck() {
+    return options.shouldListingCheck();
+  }
+
   public boolean shouldOverwrite() {
     return options.shouldOverwrite();
   }

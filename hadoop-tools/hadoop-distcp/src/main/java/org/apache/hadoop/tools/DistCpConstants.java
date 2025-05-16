@@ -54,6 +54,7 @@ public final class DistCpConstants {
   public static final String CONF_LABEL_LOG_PATH = "distcp.log.path";
   public static final String CONF_LABEL_VERBOSE_LOG = "distcp.verbose.log";
   public static final String CONF_LABEL_IGNORE_FAILURES = "distcp.ignore.failures";
+  public static final String CONF_LABEL_LISTING_CHECK = "distcp.listing.check";
   public static final String CONF_LABEL_PRESERVE_STATUS = "distcp.preserve.status";
   public static final String CONF_LABEL_PRESERVE_RAWXATTRS =
       "distcp.preserve.rawxattrs";

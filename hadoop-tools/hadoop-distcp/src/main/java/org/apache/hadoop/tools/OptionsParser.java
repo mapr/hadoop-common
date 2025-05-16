@@ -104,6 +104,8 @@ public class OptionsParser {
             command.hasOption(DistCpOptionSwitch.DELETE_MISSING.getSwitch()))
         .withIgnoreFailures(
             command.hasOption(DistCpOptionSwitch.IGNORE_FAILURES.getSwitch()))
+        .withListingCheck(
+            command.hasOption(DistCpOptionSwitch.LISTING_CHECK.getSwitch()))
         .withOverwrite(
             command.hasOption(DistCpOptionSwitch.OVERWRITE.getSwitch()))
         .withAppend(

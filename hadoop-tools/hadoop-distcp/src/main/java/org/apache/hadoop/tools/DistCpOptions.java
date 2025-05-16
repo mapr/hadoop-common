@@ -83,6 +83,9 @@ public final class DistCpOptions {
   /** Whether failures during copy be ignored. */
   private final boolean ignoreFailures;
 
+  /** Whether failures if copy listing has errors. */
+  private final boolean listingCheck;
+
   /** Whether files should always be overwritten on target. */
   private final boolean overwrite;
 
@@ -205,6 +208,7 @@ public final class DistCpOptions {
     this.syncFolder = builder.syncFolder;
     this.deleteMissing = builder.deleteMissing;
     this.ignoreFailures = builder.ignoreFailures;
+    this.listingCheck = builder.listingCheck;
     this.overwrite = builder.overwrite;
     this.append = builder.append;
     this.skipCRC = builder.skipCRC;
@@ -282,6 +286,10 @@ public final class DistCpOptions {
 
   public boolean shouldIgnoreFailures() {
     return ignoreFailures;
+  }
+
+  public boolean shouldListingCheck() {
+    return listingCheck;
   }
 
   public boolean shouldOverwrite() {
@@ -402,6 +410,8 @@ public final class DistCpOptions {
         String.valueOf(atomicCommit));
     DistCpOptionSwitch.addToConf(conf, DistCpOptionSwitch.IGNORE_FAILURES,
         String.valueOf(ignoreFailures));
+    DistCpOptionSwitch.addToConf(conf, DistCpOptionSwitch.LISTING_CHECK,
+        String.valueOf(listingCheck));
     DistCpOptionSwitch.addToConf(conf, DistCpOptionSwitch.SYNC_FOLDERS,
         String.valueOf(syncFolder));
     DistCpOptionSwitch.addToConf(conf, DistCpOptionSwitch.DELETE_MISSING,
@@ -465,6 +475,7 @@ public final class DistCpOptions {
         ", syncFolder=" + syncFolder +
         ", deleteMissing=" + deleteMissing +
         ", ignoreFailures=" + ignoreFailures +
+        ", listingCheck=" + listingCheck +
         ", overwrite=" + overwrite +
         ", append=" + append +
         ", useDiff=" + useDiff +
@@ -511,6 +522,7 @@ public final class DistCpOptions {
     private boolean syncFolder = false;
     private boolean deleteMissing = false;
     private boolean ignoreFailures = false;
+    private boolean listingCheck = false;
     private boolean overwrite = false;
     private boolean append = false;
     private boolean skipCRC = false;
@@ -687,6 +699,11 @@ public final class DistCpOptions {
 
     public Builder withIgnoreFailures(boolean newIgnoreFailures) {
       this.ignoreFailures = newIgnoreFailures;
+      return this;
+    }
+
+    public Builder withListingCheck(boolean newListingCheck) {
+      this.listingCheck = newListingCheck;
       return this;
     }
 

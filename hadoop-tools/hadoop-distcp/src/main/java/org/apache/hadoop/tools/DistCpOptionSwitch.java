@@ -36,6 +36,13 @@ public enum DistCpOptionSwitch {
       new Option("i", false, "Ignore failures during copy")),
 
   /**
+   * Abort job if copy listing has errors
+   */
+  LISTING_CHECK(DistCpConstants.CONF_LABEL_LISTING_CHECK,
+      new Option("listingCheck", false, "Check copy listing process and abort job if " +
+          "any files can't be added")),
+
+  /**
    * Preserves status of file/path in the target.
    * Default behavior with -p, is to preserve replication,
    * block size, user, group, permission, checksum type and timestamps on the 
