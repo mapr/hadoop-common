@@ -32,6 +32,7 @@ export default Ember.Controller.extend({
 
   actions: {
     signIn: function () {
+      var error = document.getElementById("error");
       var reqURL = window.location.origin;
       $.ajax({
         type: 'GET',
@@ -47,11 +48,14 @@ export default Ember.Controller.extend({
           case 200:
           case 302:
           case 307:
+            error.textContent = "";
             Ember.Logger.log("Login with PAM successful.");
             window.localStorage.setItem("logToUI", "1");
             window.location.reload();
             break;
           default:
+            error.textContent = "Invalid username or password"
+            error.style.color = "red"
             Ember.Logger.log("Login with PAM error.");
             break;
         }
