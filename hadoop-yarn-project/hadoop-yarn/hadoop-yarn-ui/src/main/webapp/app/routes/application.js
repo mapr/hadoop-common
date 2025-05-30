@@ -70,8 +70,12 @@ export default AbstractRoute.extend({
         window.localStorage.setItem('logToUI', '0');
         this.store.unloadAll('cluster-user-info');
         this.refresh();
-        this.router.transitionTo('login');
-
+        var location = response.headers.get("location");
+        if (location !== undefined && location !== null){
+          window.location.href = response.headers.get("Location");
+        } else{
+          this.router.transitionTo('login');
+        }
       });
     }
     
