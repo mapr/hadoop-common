@@ -130,6 +130,10 @@
           <groupId>io.netty</groupId>
           <artifactId>netty-handler-proxy</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>commons-beanutils</groupId>
+          <artifactId>commons-beanutils</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
   </dependencies>
