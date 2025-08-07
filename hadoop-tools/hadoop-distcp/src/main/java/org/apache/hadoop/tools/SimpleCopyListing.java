@@ -715,6 +715,7 @@ public class SimpleCopyListing extends CopyListing {
 
   private void writeToFileListing(SequenceFile.Writer fileListWriter,
                                   FileListingEntry listingEntry, String path, boolean isRelative) throws IOException {
+    String lastPath = "";
     for (CopyListingFileStatus fileStatus : listingEntry.getCopyListingFileStatus()) {
       if (LOG.isDebugEnabled()) {
         LOG.debug("RELATIVE TARGET PATH: " + path
@@ -724,9 +725,10 @@ public class SimpleCopyListing extends CopyListing {
       if (!shouldCopy(fileStatus.getPath())) {
         return;
       }
-      if(!isRelative && !path.isBlank()){
+      if(!isRelative && !path.isBlank() && !lastPath.equals(fileStatus.getPath().toString())){
         path = DistCpUtils.getRelativePath(new Path(path), listingEntry.getSourceLinkPath() == null ?
                 fileStatus.getPath() : listingEntry.getSourceLinkPath());
+        lastPath = fileStatus.getPath().toString();
       }
       fileListWriter.append(new Text(path),
               getFileListingValue(fileStatus));
