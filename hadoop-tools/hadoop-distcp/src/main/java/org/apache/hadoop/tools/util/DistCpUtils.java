@@ -775,21 +775,4 @@ public class DistCpUtils {
         + "." + srcFileStatus.getChunkLength());
   }
 
-  /*
-   * Returns path for Tmp files
-   * */
-  public static Path getTmpFile(Path target, Mapper.Context context, boolean splitSource) {
-    Path targetWorkPath = new Path(context.getConfiguration().
-            get(DistCpConstants.CONF_LABEL_TARGET_WORK_PATH));
-
-    Path root = target.equals(targetWorkPath) ? targetWorkPath.getParent() : targetWorkPath;
-    Path tmpPath = null;
-    if (!splitSource) {
-      tmpPath = new Path(root, ".distcp.tmp." + context.getTaskAttemptID().toString());
-    } else {
-      tmpPath = new Path(root, ".distcp.tmp." + target.getName() + "." + context.getJobID().toString());
-    }
-    LOG.info("Creating temp file: " + tmpPath.toString());
-    return tmpPath;
-  }
 }

@@ -256,16 +256,8 @@ public class CopyMapper extends Mapper<Text, CopyListingFileStatus, Text, Text> 
         copyFileWithRetry(description, sourceCurrStatus, tmpTarget,
             targetStatus, context, action, fileAttributes);
       }
-      if (!sourceCurrStatus.isSplit()) {
-        DistCpUtils.preserve(target.getFileSystem(conf), tmpTarget,
-                sourceCurrStatus, fileAttributes, preserveRawXattrs);
-      } else {
-        if (targetFS instanceof AbstractMapRFileSystem) {
-          tmpTarget = DistCpUtils.getTmpFile(target, context, sourceCurrStatus.isSplit());
-          DistCpUtils.preserve(tmpTarget.getFileSystem(conf), tmpTarget,
-                  sourceCurrStatus, fileAttributes, preserveRawXattrs);
-        }
-      }
+      DistCpUtils.preserve(target.getFileSystem(conf), tmpTarget,
+              sourceCurrStatus, fileAttributes, preserveRawXattrs);
     } catch (IOException exception) {
       handleFailures(exception, sourceFileStatus, target, context);
     }
