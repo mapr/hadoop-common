@@ -38,9 +38,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.net.ssl.SSLHandshakeException;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
+import javax.net.ssl.SSLHandshakeException;
+import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -536,17 +537,23 @@ public class WebAppProxyServlet extends HttpServlet {
       }
       try {
         proxyLink(req, resp, toFetch, c, getProxyHost(), method, id);
-      }catch (SSLHandshakeException ex) {
+      } catch (SSLHandshakeException ex) {
         LOG.warn("Proxy server got SSLHandshake error for " + toFetch);
-        if(conf.getBoolean(YarnConfiguration.PROXY_REDIRECT_SSLHANDSHAKE, true)) {
-          LOG.info("Trying to redirect to " + toFetch);
+        if (conf.getBoolean(YarnConfiguration.PROXY_REDIRECT_SSLHANDSHAKE, true)) {
+          ProxyUtils.sendRedirect(req, resp, toFetch.toString());
+        } else {
+          throw ex;
+        }
+      } catch (SSLPeerUnverifiedException ex) {
+        LOG.warn("Proxy server got SSLPeerUnverifiedException error for " + toFetch);
+        if (conf.getBoolean(YarnConfiguration.PROXY_REDIRECT_SSLPEERUNVERIFIED, true)) {
           ProxyUtils.sendRedirect(req, resp, toFetch.toString());
         } else {
           throw ex;
         }
       }
-    } catch(URISyntaxException | YarnException e) {
-      throw new IOException(e); 
+    } catch (URISyntaxException | YarnException e) {
+      throw new IOException(e);
     }
   }
 

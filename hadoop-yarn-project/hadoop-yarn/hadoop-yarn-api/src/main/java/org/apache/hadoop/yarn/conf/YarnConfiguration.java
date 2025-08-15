@@ -3098,10 +3098,13 @@ public class YarnConfiguration extends Configuration {
   public static final String PROXY_BIND_HOST =
       PROXY_PREFIX + "bind-host";
 
-  /** Redirect from proxy server */
+  /** Redirect from proxy server if SSLHandshakeException */
   public static final String PROXY_REDIRECT_SSLHANDSHAKE =
       PROXY_PREFIX + "redirect.sslhandshake";
 
+  /** Redirect from proxy server if SSLPeerUnverifiedException */
+  public static final String PROXY_REDIRECT_SSLPEERUNVERIFIED =
+          PROXY_PREFIX + "redirect.sslpeerunverified";
   /**
    * YARN Service Level Authorization
    */
