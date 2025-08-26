@@ -173,6 +173,7 @@
                         <exclude>com/sun/management/**/*</exclude>
                         <exclude>com/ibm/security/*</exclude>
                         <exclude>com/ibm/security/**/*</exclude>
+                        <exclude>com/mapr/**/*</exclude>
                       </excludes>
                     </relocation>
                     <relocation>
