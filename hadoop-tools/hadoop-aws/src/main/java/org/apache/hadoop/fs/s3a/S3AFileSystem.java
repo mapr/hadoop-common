@@ -54,6 +54,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import javax.annotation.Nullable;
 
+import org.apache.hadoop.security.alias.BouncyCastleProviderFactory;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -276,7 +277,6 @@ import static org.apache.hadoop.util.RateLimitingFactory.unlimitedRate;
 import static org.apache.hadoop.util.functional.RemoteIterators.foreach;
 import static org.apache.hadoop.util.functional.RemoteIterators.typeCastingRemoteIterator;
 
-import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
 import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
 
 /**
@@ -647,7 +647,7 @@ public class S3AFileSystem extends FileSystem implements StreamCapabilities,
         if (logLevel == null || logLevel.isEmpty()) logLevel = "WARNING";
         java.util.logging.Logger parent = java.util.logging.Logger.getLogger("org.bouncycastle.jsse.provider");
         parent.setLevel(Level.parse(logLevel));
-        Security.addProvider(new BouncyCastleFipsProvider());
+        Security.addProvider(BouncyCastleProviderFactory.getBouncyCastleProvider());
         Security.addProvider(new BouncyCastleJsseProvider());
       }
 

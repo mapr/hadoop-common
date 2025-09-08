@@ -75,12 +75,12 @@ import org.apache.hadoop.log.LogLevel;
 import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 import org.apache.hadoop.metrics2.sink.PrometheusMetricsSink;
 import org.apache.hadoop.security.alias.BouncyCastleFipsKeyStoreProvider;
+import org.apache.hadoop.security.alias.BouncyCastleProviderFactory;
 import org.apache.hadoop.security.AuthenticationFilterInitializer;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.server.AuthenticationFilter;
 import org.apache.hadoop.security.authentication.server.ProxyUserAuthenticationFilterInitializer;
-import org.apache.hadoop.security.authentication.server.PseudoAuthenticationHandler;
 import org.apache.hadoop.security.authentication.util.SignerSecretProvider;
 import org.apache.hadoop.security.authorize.AccessControlList;
 import org.apache.hadoop.security.ssl.FileBasedKeyStoresFactory;
@@ -90,8 +90,6 @@ import org.apache.hadoop.util.Lists;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.Shell;
 import org.apache.hadoop.util.StringUtils;
-import org.apache.zookeeper.common.KeyStoreFileType;
-import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
 import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
 import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.server.ConnectionFactory;
@@ -610,7 +608,7 @@ public final class HttpServer2 implements FilterContainer {
       SslContextFactory.Server sslContextFactory =
           new SslContextFactory.Server();
       if (keyStoreType.equalsIgnoreCase(BouncyCastleFipsKeyStoreProvider.KEYSTORE_TYPE)) {
-        Security.addProvider(new BouncyCastleFipsProvider());
+        Security.addProvider(BouncyCastleProviderFactory.getBouncyCastleProvider());
         Security.addProvider(new BouncyCastleJsseProvider());
         sslContextFactory.setProvider(BouncyCastleJsseProvider.PROVIDER_NAME);
       }

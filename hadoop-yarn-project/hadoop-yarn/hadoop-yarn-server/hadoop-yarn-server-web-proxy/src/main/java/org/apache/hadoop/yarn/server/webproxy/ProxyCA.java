@@ -20,6 +20,7 @@ import org.apache.hadoop.classification.VisibleForTesting;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
+import org.apache.hadoop.security.alias.BouncyCastleProviderFactory;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 import org.apache.http.conn.ssl.DefaultHostnameVerifier;
@@ -32,7 +33,6 @@ import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
-import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
@@ -98,7 +98,7 @@ public class ProxyCA {
     srand = new SecureRandom();
 
     // This only has to be done once
-    Security.addProvider(new BouncyCastleFipsProvider());
+    Security.addProvider(BouncyCastleProviderFactory.getBouncyCastleProvider());
   }
 
   public void init() throws GeneralSecurityException, IOException {

@@ -29,10 +29,10 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
+import org.apache.hadoop.security.alias.BouncyCastleProviderFactory;
 import org.apache.hadoop.security.authentication.server.KerberosAuthenticationHandler;
 import org.apache.hadoop.security.authentication.server.PseudoAuthenticationHandler;
 import org.apache.hadoop.security.alias.BouncyCastleFipsKeyStoreProvider;
-import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
 import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -201,7 +201,8 @@ public class TimelineClientImpl extends TimelineClient {
     sslConf.addResource("core-site.xml");
     sslConf.addResource("ssl-client.xml");
     String keystoreType = sslConf.get(SSL_CLIENT_TRUSTSTORE_TYPE);
-    if (keystoreType != null && keystoreType.equalsIgnoreCase(BouncyCastleFipsKeyStoreProvider.KEYSTORE_TYPE)) {
+    if (keystoreType != null && keystoreType.equalsIgnoreCase(
+            BouncyCastleFipsKeyStoreProvider.KEYSTORE_TYPE)) {
       String log_level =  conf.get(YarnConfiguration.BCFKS_LOG_LEVEL, YarnConfiguration.DEFAULT_BCFKS_LOG_LEVEL);
       if (log_level == null || log_level.isEmpty()){
         log_level = YarnConfiguration.DEFAULT_BCFKS_LOG_LEVEL;
@@ -209,7 +210,7 @@ public class TimelineClientImpl extends TimelineClient {
       java.util.logging.Logger parent = java.util.logging.Logger.getLogger("org.bouncycastle.jsse");
       parent.setLevel(Level.parse(log_level));
 
-      java.security.Security.addProvider(new BouncyCastleFipsProvider());
+      java.security.Security.addProvider(BouncyCastleProviderFactory.getBouncyCastleProvider());
       java.security.Security.addProvider(new BouncyCastleJsseProvider());
 
       String trustorePass = new String(sslConf.getPassword(SSL_CLIENT_TRUSTSTORE_PASSWORD));

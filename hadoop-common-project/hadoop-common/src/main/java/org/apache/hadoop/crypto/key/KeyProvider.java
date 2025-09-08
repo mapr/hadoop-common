@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
+import org.apache.hadoop.security.alias.BouncyCastleProviderFactory;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import org.apache.hadoop.classification.InterfaceAudience;
@@ -411,8 +411,8 @@ public abstract class KeyProvider implements Closeable {
       System.setProperty(JCEKS_KEY_SERIAL_FILTER, serialFilter);
     }
     String jceProvider = conf.get(HADOOP_SECURITY_CRYPTO_JCE_PROVIDER_KEY);
-    if (BouncyCastleFipsProvider.PROVIDER_NAME.equals(jceProvider)) {
-      Security.addProvider(new BouncyCastleFipsProvider());
+    if (jceProvider.equals("BCFIPS") || jceProvider.equals("BC")) {
+      Security.addProvider(BouncyCastleProviderFactory.getBouncyCastleProvider());
     }
   }
 
