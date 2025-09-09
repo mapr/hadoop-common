@@ -25,7 +25,13 @@ function createSymlinks() {
   rm -f ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/mapr-hbase-*
   ln -sf ${MAPR_HOME}/lib/mapr-hbase-* ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
   rm -f ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/mysql-connector-java-*.jar
-  ln -sf ${MAPR_HOME}/lib/mysql-connector-java-*.jar ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  if ls ${MAPR_HOME}/lib/mysql-connector-java-*.jar 1> /dev/null 2>&1; then
+    ln -sf ${MAPR_HOME}/lib/mysql-connector-java-*.jar ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  fi
+  rm -f ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/mysql-connector-j-*.jar
+  if ls ${MAPR_HOME}/lib/mysql-connector-j-*.jar 1> /dev/null 2>&1; then
+    ln -sf ${MAPR_HOME}/lib/mysql-connector-j-*.jar ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
+  fi
   rm -f ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/maprfs-*.jar
   ln -sf ${MAPR_HOME}/lib/maprfs-*.jar ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/
   rm -f ${MAPR_HOME}/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/mapr-java-utils-*.jar
