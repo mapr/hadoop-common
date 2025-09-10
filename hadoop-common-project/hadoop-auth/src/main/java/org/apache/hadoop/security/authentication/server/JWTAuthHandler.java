@@ -83,5 +83,10 @@ public class JWTAuthHandler extends MultiMechsAuthenticationHandler {
     return null;
   }
 
+  @Override
+  public String getAuthorizationHeaderName() {
+    return BEARER_AUTH;
+  }
+
 }
 

@@ -76,4 +76,8 @@ public class BasicAuthHandler extends MultiMechsAuthenticationHandler {
         return null;
     }
 
+    @Override
+    public String getAuthorizationHeaderName() {
+        return BASIC_AUTH;
+    }
 }

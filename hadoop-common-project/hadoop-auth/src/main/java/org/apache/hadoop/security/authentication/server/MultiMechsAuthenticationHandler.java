@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -219,8 +220,15 @@ public class MultiMechsAuthenticationHandler implements AuthenticationHandler {
         }
       }
       // if we are here - it is an unknown auth header
-      LOG.error("Unknown Authorization: " + authorization + " please check your config files settings");
-      throw new AuthenticationException("Unknown Authorization: " + authorization + " please check your config files settings");
+      LOG.error("Unknown Authorization header. Please check your config file settings and request headers");
+      if (LOG.isDebugEnabled()){
+        LOG.debug("Authorization header: {}", authorization);
+        LOG.debug("Enabled authorization headers: {}", children.stream()
+                .map(MultiMechsAuthenticationHandler::getAuthorizationHeaderName)
+                .collect(Collectors.joining(", ")));
+      }
+      throw new AuthenticationException("Unknown Authorization header. " +
+              "Please check that request has correct authorization header that is supported by your config file settings");
     } else {
       if (request.getParameter(ACTION_PARAM) != null &&
           request.getParameter(ACTION_PARAM).equalsIgnoreCase("processCode")) {
@@ -277,7 +285,7 @@ public class MultiMechsAuthenticationHandler implements AuthenticationHandler {
    * @return
    */
   protected MultiMechsAuthenticationHandler getAuthBasedEntity(String authorization) {
-    throw new UnsupportedOperationException("Each child of this class has to implement \'getAuthBasedEntity\' method");
+    throw new UnsupportedOperationException("Each child of this class has to implement 'getAuthBasedEntity' method");
   }
 
   @Override
@@ -285,6 +293,9 @@ public class MultiMechsAuthenticationHandler implements AuthenticationHandler {
     return MTYPE;
   }
 
+  public String getAuthorizationHeaderName(){
+    throw new UnsupportedOperationException("Each child of this class has to implement 'getAuthorizationHeaderName' method");
+  }
   /**
    * Returns true by default.
    * Sub classes can override this method if they need to do any operations
