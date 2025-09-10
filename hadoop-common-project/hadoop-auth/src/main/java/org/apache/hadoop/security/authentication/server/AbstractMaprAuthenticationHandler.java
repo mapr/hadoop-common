@@ -80,4 +80,9 @@ public abstract class AbstractMaprAuthenticationHandler extends MultiMechsAuthen
         return null;
     }
 
+    @Override
+    public String getAuthorizationHeaderName() {
+        return AbstractMaprAuthenticator.NEGOTIATE;
+    }
+
 }
