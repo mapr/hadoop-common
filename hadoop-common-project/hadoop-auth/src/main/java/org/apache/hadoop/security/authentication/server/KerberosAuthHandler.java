@@ -213,4 +213,8 @@ public class KerberosAuthHandler extends MultiMechsAuthenticationHandler {
         return keytab;
     }
 
+    @Override
+    public String getAuthorizationHeaderName() {
+        return KerberosAuthenticator.NEGOTIATE;
+    }
 }
