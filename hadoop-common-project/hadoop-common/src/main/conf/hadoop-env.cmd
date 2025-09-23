@@ -59,6 +59,12 @@ set HADOOP_SECONDARYNAMENODE_OPTS=-Dhadoop.security.logger=%HADOOP_SECURITY_LOGG
 
 @rem The following applies to multiple commands (fs, dfs, fsck, distcp etc)
 set HADOOP_CLIENT_OPTS=-Xmx512m %HADOOP_CLIENT_OPTS%
+set HADOOP_CLIENT_OPTS=%HADOOP_CLIENT_OPTS% -XX:+IgnoreUnrecognizedVMOptions --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED
+set HADOOP_CLIENT_OPTS=%HADOOP_CLIENT_OPTS% --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.math=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED
+set HADOOP_CLIENT_OPTS=%HADOOP_CLIENT_OPTS% --add-opens=java.base/java.text=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.util.concurrent=ALL-UNNAMED
+set HADOOP_CLIENT_OPTS=%HADOOP_CLIENT_OPTS% --add-opens=java.base/java.util.zip=ALL-UNNAMED --add-opens=java.base/sun.security.util=ALL-UNNAMED --add-opens=java.base/sun.security.x509=ALL-UNNAMED
+set HADOOP_CLIENT_OPTS=%HADOOP_CLIENT_OPTS% --enable-native-access=ALL-UNNAMED
+
 @rem set HADOOP_JAVA_PLATFORM_OPTS="-XX:-UsePerfData %HADOOP_JAVA_PLATFORM_OPTS%"
 
 @rem On secure datanodes, user to run the datanode as after dropping privileges
