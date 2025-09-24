@@ -115,6 +115,11 @@
       <artifactId>guice</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>com.github.stephenc.jcip</groupId>
+      <artifactId>jcip-annotations</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
