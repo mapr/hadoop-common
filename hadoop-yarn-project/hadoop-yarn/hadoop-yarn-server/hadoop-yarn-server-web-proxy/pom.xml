@@ -127,6 +127,10 @@
     </dependency>
     <dependency>
       <groupId>org.bouncycastle</groupId>
+      <artifactId>bcutil-fips</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
       <artifactId>bcpkix-fips</artifactId>
     </dependency>
   </dependencies>

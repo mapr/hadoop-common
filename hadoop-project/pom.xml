@@ -66,9 +66,10 @@
     <avro.version>1.11.4</avro.version>
 
     <!-- bc version -->
-    <bcfips.version>1.0.2.5</bcfips.version>
-    <bctlsfips.version>1.0.19</bctlsfips.version>
-    <bcpkixfips.version>1.0.7</bcpkixfips.version>
+    <bcfips.version>2.1.2</bcfips.version>
+    <bctlsfips.version>2.1.22</bctlsfips.version>
+    <bcpkixfips.version>2.1.10</bcpkixfips.version>
+    <bcutilfips.version>2.1.5</bcutilfips.version>
 
     <!-- jersey version -->
     <jersey.version>1.19.4</jersey.version>
@@ -1880,6 +1881,11 @@
         <groupId>org.bouncycastle</groupId>
         <artifactId>bcpkix-fips</artifactId>
         <version>${bcpkixfips.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcutil-fips</artifactId>
+        <version>${bcutilfips.version}</version>
       </dependency>
 
       <dependency>
