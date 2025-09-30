@@ -70,7 +70,7 @@ pipeline {
                     sh "cat ${env.mvn_settings} > settings.xml"
                   }
                   withCredentials([usernamePassword(credentialsId: 'artifactory_user_pass', passwordVariable: 'pass', usernameVariable: 'user')]) {
-                    docker.image("dfdkr.mip.storage.hpecorp.net/suse-leap15-java11-gcc9:hadoop341").inside (
+                    docker.image("dfdkr.mip.storage.hpecorp.net/suse-leap15-java11-gcc9:hadoop341_zstd").inside (
                     "-e MAPR_MIRROR=${MAPR_MIRROR} \
                     -e MAPR_CENTRAL=${MAPR_CENTRAL} \
                     -e MAVEN_CENTRAL=${MAVEN_CENTRAL} \
@@ -155,7 +155,7 @@ pipeline {
                     sh "cat ${env.mvn_settings} > settings.xml"
                   }
                   withCredentials([usernamePassword(credentialsId: 'artifactory_user_pass', passwordVariable: 'pass', usernameVariable: 'user')]) {
-                    docker.image("dfdkr.mip.storage.hpecorp.net/ubuntu18-java11-gcc9:hadoop341").inside (
+                    docker.image("dfdkr.mip.storage.hpecorp.net/ubuntu18-java11-gcc9:hadoop341_zstd").inside (
                     "-e MAPR_MIRROR=${MAPR_MIRROR} \
                     -e MAPR_CENTRAL=${MAPR_CENTRAL} \
                     -e MAVEN_CENTRAL=${MAVEN_CENTRAL} \
@@ -228,7 +228,7 @@ pipeline {
                     sh "cat ${env.mvn_settings} > settings.xml"
                   }
                   withCredentials([usernamePassword(credentialsId: 'artifactory_user_pass', passwordVariable: 'pass', usernameVariable: 'user')]) {
-                    docker.image("dfdkr.mip.storage.hpecorp.net/centos8-java11-gcc9:hadoop341").inside (
+                    docker.image("dfdkr.mip.storage.hpecorp.net/centos8-java11-gcc9:hadoop341_zstd").inside (
                     "-e MAPR_MIRROR=${MAPR_MIRROR} \
                     -e MAPR_CENTRAL=${MAPR_CENTRAL} \
                     -e MAVEN_CENTRAL=${MAVEN_CENTRAL} \
