@@ -1,0 +1,36 @@
+#!/bin/bash
+
+[ -n "$VERBOSE" ] && echo "prerm called with argument \`$1'" >&2
+[ -n "$VERBOSE" ] && set -x
+
+
+# 
+# summary of how this script can be called:
+#        * <prerm> `remove'
+#        * <old-prerm> `upgrade' <new-version>
+#        * <new-prerm> `failed-upgrade' <old-version>
+#        * <conflictor's-prerm> `remove' `in-favour' <package> <new-version>
+#        * <deconfigured's-prerm> `deconfigure' `in-favour'
+#          <package-being-installed> <version> `removing'
+#          <conflicting-package> <version>
+#   
+case "$1" in
+    upgrade)
+    ;;
+
+    remove|deconfigure)
+        export daemon_user=$(awk -F = '$1 == "mapr.daemon.user" { print $2 }' __PREFIX__/conf/daemon.conf)
+        sudo su -c "__INSTALL_3DIGIT__/bin/mapred --daemon stop historyserver" -s /bin/sh $daemon_user
+        rm -f __PREFIX__/conf/conf.d/warden.historyserver.conf
+    ;;
+        
+    failed-upgrade)
+    ;;
+
+    *)
+        echo "prerm called with unknown argument \`$1'" >&2
+        exit 1
+    ;;  
+esac    
+
+

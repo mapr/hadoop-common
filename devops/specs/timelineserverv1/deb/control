@@ -1,0 +1,11 @@
+Package: mapr-timelineserverv1
+Version: __RELEASE_VERSION__
+Section: base
+Priority: optional
+Architecture: amd64
+Depends: mapr-hadoop-core (>= __RELEASE_VERSION__)
+Conflicts: mapr-timelineserver
+Maintainer: Hewlett Packard Enterprise
+Description: Apache Hadoop Timelineserver v1 distribution included in HPE DataFabric Software Ecosystem Pack
+Commit: __GIT_COMMIT__
+Branch: __RELEASE_BRANCH__

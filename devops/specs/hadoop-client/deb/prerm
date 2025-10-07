@@ -1,0 +1,63 @@
+#!/bin/bash
+
+[ -n "$VERBOSE" ] && echo "postrm called with argument \`$1'" >&2
+[ -n "$VERBOSE" ] && set -x
+
+#
+# summary of how this script can be called:
+#        * <postrm> `remove' 
+#        * <postrm> `purge'
+#        * <old-postrm> `upgrade' <new-version>
+#        * <new-postrm> `failed-upgrade' <old-version>
+#        * <new-postrm> `abort-install'
+#        * <new-postrm> `abort-install' <old-version>
+#        * <new-postrm> `abort-upgrade' <old-version>
+#        * <disappearer's-postrm> `disappear' <overwriter>
+#          <overwriter-version>
+#
+case "$1" in
+    upgrade)
+        #
+        # preserve /opt/mapr/hadoop/hadoop-2.X.X/etc/hadoop/container-executor.cfg
+        #
+        if [ -f  __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/etc/hadoop/container-executor.cfg ]; then
+            cp -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/etc/hadoop/container-executor.cfg __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/etc/hadoop/container-executor.cfg.bak
+        fi
+
+    ;;
+
+    remove|purge|disappear)
+        #
+        # When doing a uninstall, remove all the symlinks, backup, and
+        # post-install generated files that were created during installation.
+        #
+        rm -f  /usr/bin/yarn
+        rm -f  /usr/bin/mapred
+        rm -f __PREFIX__/bin/hadoop_version_util.sh
+
+        rm -f  __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/etc/hadoop/yarn-site.xml
+       
+        rm -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/aws*.jar
+        rm -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/azure*.jar
+        rm -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/hadoop-aws*.jar
+        rm -f __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/common/lib/hadoop-azure*.jar
+
+        rm -f  __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/etc/hadoop/container-executor.cfg.bak
+
+        rm -f  __PREFIX__/lib/hadoop-yarn-client-*.jar
+        rm -f  __PREFIX__/lib/hadoop-yarn-common-*.jar
+
+
+
+    ;;
+
+    abort-install|abort-upgrade|failed-upgrade)
+    ;;  
+        
+    *)
+        echo "postrm called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+

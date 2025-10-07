@@ -1,0 +1,77 @@
+#!/bin/bash
+
+[ -n "$VERBOSE" ] && echo "postinst called with argument \`$1'" >&2
+[ -n "$VERBOSE" ] && set -x
+
+MY_HD_HOME=__PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__
+SSL_SERVER="$MY_HD_HOME/etc/hadoop/ssl-server.xml"
+SSL_CLIENT="$MY_HD_HOME/etc/hadoop/ssl-client.xml"
+if [ -f "$SSL_CLIENT".bak ]; then
+  storePass=$(awk '/ssl.client.truststore.password/{getline; print}' "$SSL_CLIENT".bak | sed 's/\s*<value>\(.*\)<\/value>/\1/')
+  sed -i -e "s/^\([[:blank:]]*\)<value>mapr123<\/value>.*$/\1<value>$storePass<\/value>/g" "$SSL_CLIENT"
+
+  #Verify if above command worked
+  storePassDest=$(awk '/ssl.client.truststore.password/{getline; print}' "$SSL_CLIENT" | sed 's/\s*<value>\(.*\)<\/value>/\1/')
+  if [ "$storePass" = "$storePassDest" ]; then
+    rm -f "$SSL_CLIENT".bak
+  fi
+fi
+if [ -f "$SSL_SERVER".bak ]; then
+  storePass=$(awk '/ssl.server.keystore.password/{getline; print}' "$SSL_SERVER".bak | sed 's/\s*<value>\(.*\)<\/value>/\1/')
+  sed -i -e "s/^\([[:blank:]]*\)<value>mapr123<\/value>.*$/\1<value>$storePass<\/value>/g" "$SSL_SERVER"
+
+  #Verify if above command worked
+  storePassDest=$(awk '/ssl.server.keystore.password/{getline; print}' "$SSL_SERVER" | sed 's/\s*<value>\(.*\)<\/value>/\1/')
+  if [ "$storePass" = "$storePassDest" ]; then
+    rm -f "$SSL_SERVER".bak
+  fi
+fi
+
+#
+# summary of how this script can be called:
+#        * <postinst> `configure' <most-recently-configured-version>
+#        * <old-postinst> `abort-upgrade' <new version>
+#        * <conflictor's-postinst> `abort-remove' `in-favour' <package>
+#          <new-version>
+#        * <postinst> `abort-remove'
+#        * <deconfigured's-postinst> `abort-deconfigure' `in-favour'
+#          <failed-install-package> <version> `removing'
+#          <conflicting-package> <version>
+#
+case "$1" in
+    configure)
+        find __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/ -type f -exec \
+            sed -i "s|__PREFIX_INSTALL__|__PREFIX__|g" {} \;
+        touch "__PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/etc/hadoop/.not_configured_yet"
+        ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/bin/hadoop /usr/bin/hadoop
+        ln -sf __PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/libexec/mapred-config.sh /usr/bin/mapred-config.sh
+
+        #
+        # during upgrade from 2.7.0 hadoop-core is removing the hadoopversion file
+        #
+        if [ ! -f __PREFIX__/hadoop/hadoopversion ]; then
+            touch __PREFIX__/hadoop/hadoopversion
+            echo __VERSION_3DIGIT__ > __PREFIX__/hadoop/hadoopversion
+        fi
+
+        #
+        # clean up any old hadoop directories
+        #
+        if [ -n "$(find __PREFIX__/hadoop -name 'hadoop-[2-9].[0-9].[0-9].*' | head -1)" ] && [ -f __PREFIX__/hadoop/hadoopversion ]; then
+            CURRENT_VERSION=$(cat __PREFIX__/hadoop/hadoopversion)
+            for DIR in $(find __PREFIX__/hadoop/ -maxdepth 1 -type d -name "hadoop-[2-9].[0-9].[0-9]" | grep -v "$CURRENT_VERSION")
+            do
+                BASENAME=$(basename $DIR)
+                rm -rf __PREFIX__/hadoop/$BASENAME
+            done
+        fi
+    ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac

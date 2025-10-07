@@ -1,0 +1,33 @@
+#!/bin/bash
+
+[ -n "$VERBOSE" ] && echo "postrm called with argument \`$1'" >&2
+[ -n "$VERBOSE" ] && set -x
+
+#
+# summary of how this script can be called:
+#        * <postrm> `remove'
+#        * <postrm> `purge'
+#        * <old-postrm> `upgrade' <new-version>
+#        * <new-postrm> `failed-upgrade' <old-version>
+#        * <new-postrm> `abort-install'
+#        * <new-postrm> `abort-install' <old-version>
+#        * <new-postrm> `abort-upgrade' <old-version>
+#        * <disappearer's-postrm> `disappear' <overwriter>
+#          <overwriter-version>
+#
+case "$1" in
+    upgrade)
+    ;;
+
+    remove|purge|disappear)
+    ;;
+
+    abort-install|abort-upgrade|failed-upgrade)
+    ;;
+
+    *)
+        echo "postrm called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+

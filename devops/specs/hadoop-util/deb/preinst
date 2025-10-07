@@ -1,0 +1,91 @@
+#!/bin/sh
+MY_HD_VERSION="__VERSION_3DIGIT__"
+MY_HD_HOME="__INSTALL_3DIGIT__"
+MAPR_HOME="__PREFIX__"
+[ -n "$VERBOSE" ] && echo "preinst called with argument \`$1'" >&2
+[ -n "$VERBOSE" ] && set -x
+
+before_upgrade() {
+    #
+    # Backup of old configuration files
+    #
+    echo "Saving old config files"
+    MY_OLD_VERSION=$1
+    MY_OLD_HD_RVER="$( echo $MY_OLD_VERSION | cut -d'.' -f1-3 )"
+    MY_OLD_HD_HOME="$( dirname $MY_HD_HOME )/hadoop-$MY_OLD_HD_RVER"
+
+    mkdir -p __PREFIX__/hadoop/hadoop-$MY_OLD_VERSION/etc/hadoop
+    cp -r $MY_OLD_HD_HOME/etc/hadoop/* __PREFIX__/hadoop/hadoop-${MY_OLD_VERSION}/etc/hadoop
+
+    DAEMON_CONF=__PREFIX__/conf/daemon.conf
+    if [ -f "$DAEMON_CONF" ]; then
+        MAPR_USER=$( awk -F = '$1 == "mapr.daemon.user" { print $2 }' $DAEMON_CONF)
+        MAPR_GROUP=$( awk -F = '$1 == "mapr.daemon.group" { print $2 }' $DAEMON_CONF)
+        if [ ! -z "$MAPR_USER" ]; then
+            chown -R ${MAPR_USER}:${MAPR_GROUP} __PREFIX__/hadoop/hadoop-${MY_OLD_VERSION}
+        fi
+    fi
+}
+
+SSL_CLIENT=__PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/etc/hadoop/ssl-client.xml
+SSL_SERVER=__PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/etc/hadoop/ssl-server.xml
+if [ -f "$SSL_CLIENT" ] && [ ! -f "$SSL_CLIENT".bak ]; then
+  storePass=$(awk '/ssl.client.truststore.password/{getline; print}' "$SSL_CLIENT" | sed 's/\s*<value>\(.*\)<\/value>/\1/')
+  if [ "$storePass" != "mapr123" ]; then
+    cp "$SSL_CLIENT" "$SSL_CLIENT".bak
+  fi
+fi
+
+if [ -f "$SSL_SERVER" ] && [ ! -f "$SSL_SERVER".bak ]; then
+  storePass=$(awk '/ssl.server.keystore.password/{getline; print}' "$SSL_SERVER" | sed 's/\s*<value>\(.*\)<\/value>/\1/')
+  if [ "$storePass" != "mapr123" ]; then
+    cp "$SSL_SERVER" "$SSL_SERVER".bak
+  fi
+fi
+
+#
+# summary of how this script can be called:
+#        * <new-preinst> `install'
+#        * <new-preinst> `install' <old-version>
+#        * <new-preinst> `upgrade' <old-version>
+#
+case "$1" in
+    install)
+        if [ $(dpkg-query -W -f='${Status}' mapr-hadoop-core 2>/dev/null | grep -c "ok installed") -eq 1 ]; then
+            echo "Saving old config files"
+            # Version can be in the format of 2.7.0 or 2.7.0.201901301309
+            MY_OLD_HD_VERSION="$(dpkg -s mapr-hadoop-core | awk -F': ' '/Version/ {print $2}')"
+            before_upgrade $MY_OLD_HD_VERSION
+        elif [ -d __PREFIX__/hadoop/hadoop-2.7.0 ]; then
+            #copy configuration files at the client node for 6.1 release and below
+            MY_OLD_HD_VERSION="2.7.0.old"
+            before_upgrade $MY_OLD_HD_VERSION
+        fi
+        ;;
+
+    upgrade)
+        # Version can be in the format of 2.7.0 or 2.7.0.202001301309
+        MY_OLD_HD_VERSION=$2
+        before_upgrade $MY_OLD_HD_VERSION
+
+        # "configure.sh -R" needs to know from which old hadoop version (directory) to upgrade
+        echo __PREFIX__/hadoop/hadoop-$MY_OLD_HD_VERSION > __PREFIX__/hadoop/prior_hadoop_dir
+
+        #
+        # Clean up any broken symlinks
+        #
+        for brokenFile in $(find __PREFIX__ -type l -exec sh -c "file -b {} | grep -q ^broken" \; -print)
+        do
+            rm ${brokenFile}
+        done
+
+        ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+        ;;
+
+    *)
+        echo "preinst called with unknown argument \`$1'" >&2
+        exit 1
+        ;;
+esac

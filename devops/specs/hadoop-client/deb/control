@@ -1,0 +1,10 @@
+Package: mapr-hadoop-client
+Version: __RELEASE_VERSION__
+Section: base
+Priority: optional
+Architecture: amd64
+Depends: mapr-client, mapr-hadoop-util (>= __RELEASE_VERSION__)
+Maintainer: Hewlett Packard Enterprise
+Description: Apache Hadoop client distribution included in HPE DataFabric Software Ecosystem Pack
+Commit: __GIT_COMMIT__
+Branch: __RELEASE_BRANCH__

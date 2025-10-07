@@ -1,0 +1,10 @@
+Package: mapr-hadoop-util
+Version: __RELEASE_VERSION__
+Section: base
+Priority: optional
+Architecture: amd64
+Replaces:  mapr-hadoop-core (<< 2.7.4),  mapr-httpfs (<< 1.2.0)
+Maintainer: Hewlett Packard Enterprise
+Description: Apache Hadoop util distribution included in HPE DataFabric Software Ecosystem Pack
+Commit: __GIT_COMMIT__
+Branch: __RELEASE_BRANCH__

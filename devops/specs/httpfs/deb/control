@@ -1,0 +1,10 @@
+Package: mapr-httpfs
+Version: __RELEASE_VERSION__
+Section: base
+Priority: optional
+Architecture: all
+Depends: mapr-client, mapr-hadoop-client (>= __RELEASE_VERSION__)
+Maintainer: Hewlett Packard Enterprise
+Description: Apache Hadoop HttpFS distribution included in HPE DataFabric Software Ecosystem Pack
+Commit: __GIT_COMMIT__
+Branch: __RELEASE_BRANCH__
