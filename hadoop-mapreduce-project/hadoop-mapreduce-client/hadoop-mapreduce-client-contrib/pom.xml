@@ -19,12 +19,12 @@
   <parent>
     <artifactId>hadoop-mapreduce-client</artifactId>
     <groupId>org.apache.hadoop</groupId>
-    <version>3.4.1.200-dep-1000-SNAPSHOT</version>
+    <version>3.4.1.300-dep-1001-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.hadoop</groupId>
   <artifactId>hadoop-mapreduce-client-contrib</artifactId>
-  <version>3.4.1.200-dep-1000-SNAPSHOT</version>
+  <version>3.4.1.300-dep-1001-SNAPSHOT</version>
   <name>Apache Hadoop MapReduce Direct Shuffle</name>
 
   <properties>

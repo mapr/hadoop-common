@@ -23,7 +23,7 @@
   <parent>
     <artifactId>hadoop-yarn-applications-catalog</artifactId>
     <groupId>org.apache.hadoop</groupId>
-    <version>3.4.1.200-dep-1000-SNAPSHOT</version>
+    <version>3.4.1.300-dep-1001-SNAPSHOT</version>
   </parent>
 
   <name>Apache Hadoop YARN Application Catalog Webapp</name>
