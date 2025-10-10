@@ -1155,7 +1155,9 @@ ConfigureHadoopDir
 ConfigureHadoop
 UpdateFileClientConfig
 ConfigureJMHadoopProperties "${INSTALL_DIR}/conf/hadoop-metrics.properties"
-checkClusterSSOConf
+if command -v maprcli &>/dev/null; then
+  checkClusterSSOConf
+fi
 if [ "$(uname)" != "Darwin" ] && [[ "$isOnlyRoles" != "1" || -f "$HADOOP_HOME/etc/hadoop/.not_configured_executor" ]]; then
     ConfigureYarnLinuxContainerExecutor
     if [ -f "$HADOOP_HOME/etc/hadoop/.not_configured_executor" ]; then
