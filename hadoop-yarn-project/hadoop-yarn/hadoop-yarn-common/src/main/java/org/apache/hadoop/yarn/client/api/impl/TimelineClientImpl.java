@@ -61,6 +61,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.hadoop.classification.VisibleForTesting;
 import com.sun.jersey.api.client.Client;
 
+import static org.apache.hadoop.security.ssl.SSLFactory.SSL_CLIENT_TRUSTSTORE_TYPE;
+import static org.apache.hadoop.security.ssl.SSLFactory.SSL_CLIENT_TRUSTSTORE_PASSWORD;
+import static org.apache.hadoop.security.ssl.SSLFactory.TRUSTNAME_SERVICE_JAVA_PROPERTY;
+import static org.apache.hadoop.security.ssl.SSLFactory.TRUSTSTORE_PASS_JAVA_PROPERTY;
+import static org.apache.hadoop.security.ssl.SSLFactory.TRUSTSTORE_TYPE_JAVA_PROPERTY;
+
 @Private
 @Evolving
 public class TimelineClientImpl extends TimelineClient {
@@ -73,11 +79,6 @@ public class TimelineClientImpl extends TimelineClient {
   private static Options opts;
   private static final String ENTITY_DATA_TYPE = "entity";
   private static final String DOMAIN_DATA_TYPE = "domain";
-  private static final String TRUSTSTORE_TYPE_JAVA_PROPERTY = "javax.net.ssl.trustStoreType";
-  private static final String TRUSTSTORE_PASS_JAVA_PROPERTY = "javax.net.ssl.trustStorePassword";
-  private static final String SSL_CLIENT_TRUSTSTORE_TYPE = "ssl.client.truststore.type";
-  private static final String SSL_CLIENT_TRUSTSTORE_PASSWORD = "ssl.client.truststore.password";
-  private static final String TRUSTNAME_SERVICE_JAVA_PROPERTY = "jdk.tls.trustNameService";
 
   static {
     opts = new Options();

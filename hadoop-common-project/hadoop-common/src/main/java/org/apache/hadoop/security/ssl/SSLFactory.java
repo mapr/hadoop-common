@@ -21,9 +21,12 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.security.alias.BouncyCastleFipsKeyStoreProvider;
+import org.apache.hadoop.security.alias.BouncyCastleProviderFactory;
 import org.apache.hadoop.security.authentication.client.ConnectionConfigurator;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.StringUtils;
+import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import static org.apache.hadoop.util.PlatformName.IBM_JAVA;
@@ -119,7 +122,14 @@ public class SSLFactory implements ConnectionConfigurator {
   public static final String KEYSTORES_FACTORY_CLASS_KEY =
       "hadoop.ssl.keystores.factory.class";
 
+  public static final String SSL_CLIENT_TRUSTSTORE_PASSWORD = "ssl.client.truststore.password";
+  public static final String SSL_CLIENT_TRUSTSTORE_TYPE = "ssl.client.truststore.type";
+  public static final String TRUSTNAME_SERVICE_JAVA_PROPERTY = "jdk.tls.trustNameService";
+  public static final String TRUSTSTORE_PASS_JAVA_PROPERTY = "javax.net.ssl.trustStorePassword";
+  public static final String TRUSTSTORE_TYPE_JAVA_PROPERTY = "javax.net.ssl.trustStoreType";
+
   private Configuration conf;
+  private Configuration sslConf;
   private Mode mode;
   private boolean requireClientCert;
   private SSLContext context;
@@ -147,7 +157,7 @@ public class SSLFactory implements ConnectionConfigurator {
       throw new IllegalArgumentException("mode cannot be NULL");
     }
     this.mode = mode;
-    Configuration sslConf = readSSLConfiguration(conf, mode);
+    sslConf = readSSLConfiguration(conf, mode);
 
     requireClientCert = sslConf.getBoolean(SSL_REQUIRE_CLIENT_CERT_KEY,
         SSL_REQUIRE_CLIENT_CERT_DEFAULT);
@@ -209,6 +219,17 @@ public class SSLFactory implements ConnectionConfigurator {
     context.init(keystoresFactory.getKeyManagers(),
                  keystoresFactory.getTrustManagers(), null);
     context.getDefaultSSLParameters().setProtocols(enabledProtocols);
+    String keystoreType = sslConf.get(SSL_CLIENT_TRUSTSTORE_TYPE);
+    if (keystoreType != null && keystoreType.equalsIgnoreCase(
+            BouncyCastleFipsKeyStoreProvider.KEYSTORE_TYPE)) {
+      LOG.debug("Set BC FIPS providers and Truststore properties.");
+      java.security.Security.addProvider(BouncyCastleProviderFactory.getBouncyCastleProvider());
+      java.security.Security.addProvider(new BouncyCastleJsseProvider());
+      String trustorePass = new String(sslConf.getPassword(SSL_CLIENT_TRUSTSTORE_PASSWORD));
+      System.setProperty(TRUSTSTORE_TYPE_JAVA_PROPERTY, BouncyCastleFipsKeyStoreProvider.KEYSTORE_TYPE);
+      System.setProperty(TRUSTSTORE_PASS_JAVA_PROPERTY, trustorePass);
+    }
+
     if (mode == Mode.CLIENT) {
       socketFactory = context.getSocketFactory();
     }
@@ -339,6 +360,15 @@ public class SSLFactory implements ConnectionConfigurator {
           "Factory is not in CLIENT mode. Actual mode is " + mode.toString());
     }
     return hostnameVerifier;
+  }
+
+  /**
+   * Returns SSL configuration.
+   *
+   * @return SSL configuration.
+   */
+  public Configuration getSslConf() {
+    return sslConf;
   }
 
   /**

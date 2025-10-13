@@ -20,7 +20,10 @@ package org.apache.hadoop.yarn.server.webproxy.amfilter;
 
 import org.apache.hadoop.classification.VisibleForTesting;
 import org.apache.hadoop.classification.InterfaceAudience.Public;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.alias.BouncyCastleFipsKeyStoreProvider;
+import org.apache.hadoop.security.ssl.SSLFactory;
 import org.apache.hadoop.util.Time;
 import org.apache.hadoop.yarn.api.ApplicationConstants;
 import org.apache.hadoop.yarn.conf.HAUtil;
@@ -31,6 +34,9 @@ import org.apache.hadoop.yarn.webapp.util.WebAppUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -41,11 +47,19 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -54,6 +68,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+
+import static org.apache.hadoop.security.ssl.SSLFactory.SSL_CLIENT_TRUSTSTORE_TYPE;
 
 @Public
 public class AmIpFilter implements Filter {
@@ -74,12 +90,21 @@ public class AmIpFilter implements Filter {
   private List<String> proxyHosts = new ArrayList<>();
   private Set<String> proxyAddresses = null;
   private long lastUpdate;
+  private boolean isFips;
   @VisibleForTesting
   Map<String, String> proxyUriBases;
   String rmUrls[] = null;
 
   @Override
   public void init(FilterConfig conf) throws ServletException {
+    isFips = false;
+    SSLFactory sslFactory = new SSLFactory(SSLFactory.Mode.CLIENT, new Configuration());
+    String keystoreType = sslFactory.getSslConf().get(SSL_CLIENT_TRUSTSTORE_TYPE);
+    if (keystoreType != null && keystoreType.equalsIgnoreCase(
+            BouncyCastleFipsKeyStoreProvider.KEYSTORE_TYPE)) {
+      isFips = true;
+    }
+
     // Maintain for backwards compatibility
     if (conf.getInitParameter(PROXY_HOST) != null
         && conf.getInitParameter(PROXY_URI_BASE) != null) {
@@ -252,24 +277,59 @@ public class AmIpFilter implements Filter {
   @VisibleForTesting
   public boolean isValidUrl(String url) {
     boolean isValid = false;
+    int code = -1;
     try {
-      HttpURLConnection conn = (HttpURLConnection) new URL(url)
-          .openConnection();
-      conn.connect();
-      isValid = conn.getResponseCode() == HttpURLConnection.HTTP_OK;
+      if (!isFips) {
+        LOG.debug("Non-FIPS mode. Check URL using HttpURLConnection with for AM");
+        HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
+        conn.connect();
+        code = conn.getResponseCode();
+      } else {
+        LOG.debug("FIPS mode. Custom checking URL with skip TLS");
+        code = checkUrlWithSkipSSL(url);
+      }
+      isValid = code == HttpURLConnection.HTTP_OK;
       // If security is enabled, any valid RM which can give 401 Unauthorized is
       // good enough to access. Since AM doesn't have enough credential, auth
       // cannot be completed and hence 401 is fine in such case.
       if (!isValid && UserGroupInformation.isSecurityEnabled()) {
-        isValid = (conn
-            .getResponseCode() == HttpURLConnection.HTTP_UNAUTHORIZED)
-            || (conn.getResponseCode() == HttpURLConnection.HTTP_FORBIDDEN);
+        isValid = (code == HttpURLConnection.HTTP_UNAUTHORIZED)
+            || (code == HttpURLConnection.HTTP_FORBIDDEN);
         return isValid;
       }
     } catch (Exception e) {
-      LOG.warn("Failed to connect to " + url + ": " + e.toString());
+        LOG.warn("Failed to connect to {}: {}", url, e.toString());
     }
     return isValid;
+  }
+
+  /**
+   * Validate that URL is valid. Skip any SSL verification
+   *
+   * @return status code
+   */
+  public int checkUrlWithSkipSSL(String url) throws NoSuchAlgorithmException, KeyManagementException, IOException,
+          InterruptedException {
+    // for FIPS mode SSL verification will be applied to all HttpURLConnection, even we tried to unsecure.
+    // this method is only to check that URL is valid, we don't verify any certificate at this moment.
+    TrustManager[] trustAllCerts = new TrustManager[]{
+            new X509TrustManager() {
+              public X509Certificate[] getAcceptedIssuers() {
+                return new X509Certificate[0];
+              }
+              public void checkClientTrusted(X509Certificate[] certs, String authType) {
+              }
+              public void checkServerTrusted(X509Certificate[] certs, String authType) {
+              }
+            }
+    };
+    SSLContext sc = SSLContext.getInstance("TLS");
+    sc.init(null, trustAllCerts, new SecureRandom());
+    HttpClient insecureClient = HttpClient.newBuilder().sslContext(sc).build();
+    HttpRequest request = HttpRequest.newBuilder().uri(URI.create(url)).GET().build();
+    HttpResponse<String> response = insecureClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+    return response.statusCode();
   }
 
   @VisibleForTesting
