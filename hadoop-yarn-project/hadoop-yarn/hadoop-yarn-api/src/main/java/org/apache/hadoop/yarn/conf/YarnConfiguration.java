@@ -3105,6 +3105,11 @@ public class YarnConfiguration extends Configuration {
   /** Redirect from proxy server if SSLPeerUnverifiedException */
   public static final String PROXY_REDIRECT_SSLPEERUNVERIFIED =
           PROXY_PREFIX + "redirect.sslpeerunverified";
+
+  /** Redirect from proxy server if org.bouncycastle.tls.TlsFatalAlert */
+  public static final String PROXY_REDIRECT_BC_TLSFATALERROR =
+      PROXY_PREFIX + "redirect.bc.tlsfatalerror";
+
   /**
    * YARN Service Level Authorization
    */

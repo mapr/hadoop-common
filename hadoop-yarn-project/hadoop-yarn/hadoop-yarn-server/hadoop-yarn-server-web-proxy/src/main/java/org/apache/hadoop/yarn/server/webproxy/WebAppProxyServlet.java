@@ -76,6 +76,7 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.bouncycastle.tls.TlsFatalAlert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -547,6 +548,13 @@ public class WebAppProxyServlet extends HttpServlet {
       } catch (SSLPeerUnverifiedException ex) {
         LOG.warn("Proxy server got SSLPeerUnverifiedException error for " + toFetch);
         if (conf.getBoolean(YarnConfiguration.PROXY_REDIRECT_SSLPEERUNVERIFIED, true)) {
+          ProxyUtils.sendRedirect(req, resp, toFetch.toString());
+        } else {
+          throw ex;
+        }
+      } catch (TlsFatalAlert ex) {
+        LOG.warn("Proxy server got org.bouncycastle.tls.TlsFatalAlert error for " + toFetch);
+        if (conf.getBoolean(YarnConfiguration.PROXY_REDIRECT_BC_TLSFATALERROR, true)) {
           ProxyUtils.sendRedirect(req, resp, toFetch.toString());
         } else {
           throw ex;
