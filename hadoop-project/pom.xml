@@ -50,7 +50,7 @@
     <!-- Version number for xerces used by JDiff -->
     <xerces.jdiff.version>2.12.2</xerces.jdiff.version>
 
-    <kafka.version>3.6.1.200-eep-940-SNAPSHOT</kafka.version>
+    <kafka.version>3.6.1.300-dep-1000-SNAPSHOT</kafka.version>
 
     <commons-daemon.version>1.0.13</commons-daemon.version>
 
@@ -219,7 +219,7 @@
     <swagger-annotations-version>1.5.4</swagger-annotations-version>
     <snakeyaml.version>2.0</snakeyaml.version>
     <sshd.version>2.11.0</sshd.version>
-    <hbase.one.version>1.4.14.850-dep-1000-SNAPSHOT</hbase.one.version>
+    <hbase.one.version>1.4.14.900-dep-1001-SNAPSHOT</hbase.one.version>
     <hbase.two.version>2.2.4</hbase.two.version>
     <junit.version>4.13.2</junit.version>
     <junit.jupiter.version>5.8.2</junit.jupiter.version>
