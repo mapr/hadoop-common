@@ -356,7 +356,7 @@ org.eclipse.jetty.websocket:javax-websocket-client-impl:9.4.58.v20250814
 org.eclipse.jetty.websocket:javax-websocket-server-impl:9.4.58.v20250814
 org.ehcache:ehcache:3.8.2
 org.ini4j:ini4j:0.5.4
-org.lz4:lz4-java:1.7.1
+at.yawk.lz4:lz4-java:1.9.0
 org.objenesis:objenesis:2.6
 org.xerial.snappy:snappy-java:1.1.10.8
 org.yaml:snakeyaml:2.0
