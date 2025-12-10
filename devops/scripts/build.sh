@@ -209,7 +209,6 @@ deploy() {
 	cd "mapr-devops" && \
 		./gradlew publish \
 		"${GRADLE_OPTS}" \
-		--debug \
 		-PhadoopVersion="${ARTIFACTS_VERSION}" \
 		-PplatformString="${OS}" \
 		-PdistPath="${root_path}/${HADOOP_IMAGE_DIST}/${HADOOP_IMAGE_NAME}" \
