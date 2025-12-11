@@ -22,12 +22,22 @@ import java.io.CharArrayWriter;
 import java.io.PrintWriter;
 
 import org.apache.hadoop.classification.InterfaceAudience;
+import org.apache.hadoop.conf.Configuration;
+
+import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.DEFAULT_HADOOP_HTTP_UI_RENDER_ERROR;
+import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.HADOOP_HTTP_UI_RENDER_ERROR;
 
 /**
  * A jquery-ui themeable error page
  */
 @InterfaceAudience.LimitedPrivate({"YARN", "MapReduce"})
 public class ErrorPage extends HtmlPage {
+
+  private final Configuration conf;
+
+  public ErrorPage() {
+    conf = new Configuration();
+  }
 
   @Override
   protected void render(Page.HTML<__> html) {
@@ -51,13 +61,16 @@ public class ErrorPage extends HtmlPage {
   }
 
   protected String errorDetails() {
-    if (!$(ERROR_DETAILS).isEmpty()) {
-      return $(ERROR_DETAILS);
+    if (conf.getBoolean(HADOOP_HTTP_UI_RENDER_ERROR, DEFAULT_HADOOP_HTTP_UI_RENDER_ERROR)) {
+      if (!$(ERROR_DETAILS).isEmpty()) {
+        return $(ERROR_DETAILS);
+      }
+      if (error() != null) {
+        return toStackTrace(error(), 1024 * 64);
+      }
+      return "No exception was thrown.";
     }
-    if (error() != null) {
-      return toStackTrace(error(), 1024 * 64);
-    }
-    return "No exception was thrown.";
+    return "Detailed stacktrace is disabled by cluster configuration.";
   }
 
   public static String toStackTrace(Throwable error, int cutoff) {

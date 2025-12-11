@@ -3274,6 +3274,12 @@ The switch to turn S3A auditing on or off.
 </property>
 
 <property>
+  <name>hadoop.http.ui.render-error</name>
+  <value>false</value>
+  <description>Property to display detailed error or stacktrace in UI for exceptions</description>
+</property>
+
+<property>
   <name>dfs.ha.fencing.methods</name>
   <value></value>
   <description>

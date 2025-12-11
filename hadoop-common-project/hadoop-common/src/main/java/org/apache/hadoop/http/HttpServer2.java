@@ -124,6 +124,8 @@ import org.slf4j.LoggerFactory;
 
 import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.JMX_NAN_FILTER;
 import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.JMX_NAN_FILTER_DEFAULT;
+import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.HADOOP_HTTP_UI_RENDER_ERROR;
+import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.DEFAULT_HADOOP_HTTP_UI_RENDER_ERROR;
 
 /**
  * Create a Jetty embedded server to answer http requests. The primary goal is
@@ -735,7 +737,9 @@ public final class HttpServer2 implements FilterContainer {
     this.xFrameOptionIsEnabled = b.xFrameEnabled;
     this.xFrameOption = b.xFrameOption;
     this.configurationChangeMonitor = b.configurationChangeMonitor;
-
+    if (!b.conf.getBoolean(HADOOP_HTTP_UI_RENDER_ERROR, DEFAULT_HADOOP_HTTP_UI_RENDER_ERROR)) {
+      webServer.setErrorHandler(new HadoopHttpServerErrorHandler());
+    }
     try {
       this.secretProvider =
           constructSecretProvider(b, webAppContext.getServletContext());
@@ -898,6 +902,9 @@ public final class HttpServer2 implements FilterContainer {
     ctx.getServletContext().setAttribute(CONF_CONTEXT_ATTRIBUTE, b.conf);
     ctx.getServletContext().setAttribute(ADMINS_ACL, adminsAcl);
     addNoCacheFilter(ctx);
+    if (!b.conf.getBoolean(HADOOP_HTTP_UI_RENDER_ERROR, DEFAULT_HADOOP_HTTP_UI_RENDER_ERROR)) {
+      ctx.setErrorHandler(new HadoopHttpServerErrorHandler());
+    }
     return ctx;
   }
 
