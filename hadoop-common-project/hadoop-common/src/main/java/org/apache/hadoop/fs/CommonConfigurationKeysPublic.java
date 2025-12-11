@@ -715,6 +715,13 @@ public class CommonConfigurationKeysPublic {
   public static final String HADOOP_WEBAPPS_CUSTOM_HEADERS_PATH = "hadoop.webapps.custom.headers.path";
 
   /**
+   * Property to display detailed error or stacktrace in UI for exceptions
+   * */
+  public static final String HADOOP_HTTP_UI_RENDER_ERROR = "hadoop.http.ui.render-error";
+  public static final boolean DEFAULT_HADOOP_HTTP_UI_RENDER_ERROR = false;
+
+
+  /**
    * @see
    * <a href="{@docRoot}/../hadoop-project-dist/hadoop-common/core-default.xml">
    * core-default.xml</a>
