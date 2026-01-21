@@ -1,17 +1,24 @@
 package org.apache.hadoop.security.authentication.util;
 
+import com.auth0.jwk.InvalidPublicKeyException;
+import com.auth0.jwk.Jwk;
+import com.auth0.jwk.SigningKeyNotFoundException;
+import com.auth0.jwk.UrlJwkProvider;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.security.interfaces.RSAPublicKey;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,7 +34,8 @@ public class SsoConfigurationUtil {
   public static final String EXPECTED_JWT_AUDIENCES = "hadoop.http.authentication.expected.jwt.audiences";
   private static List<String> audiences = new ArrayList<String>();
   private static Map<String, String> ssoConfigMap = null;
-  private static SsoConfigurationUtil ssoConfigInstance = null;
+  private static volatile SsoConfigurationUtil ssoConfigInstance = null;
+  private Map<String, RSAPublicKey> keysMap = new HashMap<>();
 
   //SSO configuration relates to cluster config, service get it from maprcli command
   public static final String CLIENT_ID = "clientid";
@@ -66,11 +74,16 @@ public class SsoConfigurationUtil {
 
   public static SsoConfigurationUtil getInstance() {
     if (ssoConfigInstance == null) {
-      readHadoopSsoConf();
-      LOG.debug("Initializing SSO configuration.");
-      ssoConfigInstance = new SsoConfigurationUtil();
-      ssoConfigMap = new HashMap<>();
-      ssoConfigInstance.init();
+      synchronized (SsoConfigurationUtil.class) {
+        if (ssoConfigInstance == null) {
+          readHadoopSsoConf();
+          LOG.debug("Initializing SSO configuration.");
+          ssoConfigInstance = new SsoConfigurationUtil();
+          ssoConfigMap = new HashMap<>();
+          ssoConfigInstance.init();
+          ssoConfigInstance.initializePublicKeys();
+        }
+      }
     }
     return ssoConfigInstance;
   }
@@ -120,6 +133,31 @@ public class SsoConfigurationUtil {
       ssoConfigMap.put(ISSUER, result.get(0).getAsJsonObject().get(ISSUER).getAsString());
     } else {
       putEmptyMap();
+    }
+  }
+
+  /**
+   * Initialize Map with full list of possible public keys that can be used in IdP
+   * */
+  private void initializePublicKeys() {
+    String certUrl = ssoConfigMap.get(ISSUER) + "/protocol/openid-connect/certs";
+    try {
+      UrlJwkProvider provider = new UrlJwkProvider(new URI(certUrl).toURL());
+      List<Jwk> jwks = provider.getAll();
+      for (Jwk jwk : jwks) {
+        putKeyIntoMap(jwk);
+      }
+    } catch (SigningKeyNotFoundException | URISyntaxException | MalformedURLException ex) {
+      LOG.error("Service can't get public keys from IdP endpoint.", ex);
+    }
+  }
+
+  private void putKeyIntoMap(Jwk jwk) {
+    try {
+      RSAPublicKey publicKey = (RSAPublicKey) jwk.getPublicKey();
+      keysMap.put(jwk.getId(), publicKey);
+    } catch (InvalidPublicKeyException ex) {
+      LOG.error("PublicKey can't be converted to RSAPublicKey.", ex);
     }
   }
 
@@ -235,6 +273,14 @@ public class SsoConfigurationUtil {
 
   public String getJwsSsoAlgorithm() {
     return ssoConfigMap.get(JWS_SSO_ALGORITHM);
+  }
+
+  public Map<String, RSAPublicKey> getKeysMap() {
+    return keysMap;
+  }
+
+  public RSAPublicKey getPublicKey(String kid){
+    return keysMap.get(kid);
   }
 
   /**

@@ -1,8 +1,5 @@
 package org.apache.hadoop.security.authentication.util;
 
-import com.auth0.jwk.JwkException;
-import com.auth0.jwk.JwkProvider;
-import com.auth0.jwk.UrlJwkProvider;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
@@ -14,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import java.net.InetAddress;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -64,7 +60,7 @@ public class JWTUtils {
 
   public static DecodedJWT verifyToken(DecodedJWT jwt) throws InvalidParameterException {
     try {
-      RSAPublicKey publicKey = loadPublicKey(jwt);
+      RSAPublicKey publicKey = SsoConfigurationUtil.getInstance().getPublicKey(jwt.getKeyId());
       Algorithm algorithm = getSigntureAlgorithm(SsoConfigurationUtil.getInstance().getJwsSsoAlgorithm(), publicKey);
       JWTVerifier verifier = JWT.require(algorithm)
           .withIssuer(jwt.getIssuer())
@@ -94,16 +90,6 @@ public class JWTUtils {
         alg = Algorithm.RSA256(publicKey, null);
     }
     return alg;
-  }
-
-  private static RSAPublicKey loadPublicKey(DecodedJWT token) throws JwkException, MalformedURLException {
-    final String url = getKeycloakCertificateUrl(token);
-    JwkProvider provider = new UrlJwkProvider(new URL(url));
-    return (RSAPublicKey) provider.get(token.getKeyId()).getPublicKey();
-  }
-
-  private static String getKeycloakCertificateUrl(DecodedJWT token) {
-    return token.getIssuer() + "/protocol/openid-connect/certs";
   }
 
   /**
