@@ -81,7 +81,9 @@ public class SsoConfigurationUtil {
           ssoConfigInstance = new SsoConfigurationUtil();
           ssoConfigMap = new HashMap<>();
           ssoConfigInstance.init();
-          ssoConfigInstance.initializePublicKeys();
+          if (!ssoConfigMap.get(ISSUER).isEmpty()) {
+            ssoConfigInstance.initializePublicKeys();
+          }
         }
       }
     }
@@ -147,6 +149,8 @@ public class SsoConfigurationUtil {
       for (Jwk jwk : jwks) {
         putKeyIntoMap(jwk);
       }
+    } catch (IllegalArgumentException ex){
+      LOG.error("IdP endpoint url is not absolute: {}.", certUrl, ex);
     } catch (SigningKeyNotFoundException | URISyntaxException | MalformedURLException ex) {
       LOG.error("Service can't get public keys from IdP endpoint.", ex);
     }
