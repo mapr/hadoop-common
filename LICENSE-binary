@@ -210,11 +210,9 @@ hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/data
 
 at.yawk.lz4:lz4-java:1.10.2
 ch.qos.reload4j:reload4j:1.2.22
-com.aliyun:aliyun-java-sdk-core:4.5.10
-com.aliyun:aliyun-java-sdk-kms:2.11.0
+com.aliyun:aliyun-java-sdk-core:4.7.8
 com.aliyun:aliyun-java-sdk-ram:3.1.0
-com.aliyun:aliyun-java-sdk-sts:3.0.0
-com.aliyun.oss:aliyun-sdk-oss:3.13.2
+com.aliyun.oss:aliyun-sdk-oss:3.18.5
 com.amazonaws:aws-java-sdk-bundle:1.12.726
 com.cedarsoftware:java-util:1.9.0
 com.cedarsoftware:json-io:2.5.1
