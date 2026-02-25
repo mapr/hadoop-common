@@ -132,6 +132,7 @@ def buildStage(yamlCurrentBuildItem) {
   -e MAPR_SNAPSHOTS_REPO=${MAPR_SNAPSHOTS_REPO} \
   -e MAPR_MAVEN_USER=${user} \
   -e MAPR_MAVEN_PASS=${pass} \
+  -e GRADLE_OPTS=\"-Dhttp.proxyHost=${HPE_PROXY_HOST} -Dhttp.proxyPort=${HPE_PROXY_PORT} -Dhttps.proxyHost=${HPE_PROXY_HOST} -Dhttps.proxyPort=${HPE_PROXY_PORT} -Dhttp.nonProxyHosts='${HPE_PROXY_EXCEPTIONS}'\" \
   -v /root/.m2:/root/.m2:rw \
   -v /root/yum-proxy.conf:/etc/yum.conf:ro \
   -v /etc/hosts:/etc/hosts:ro \
