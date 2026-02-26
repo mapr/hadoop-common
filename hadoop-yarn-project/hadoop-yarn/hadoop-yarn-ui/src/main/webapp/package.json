@@ -59,7 +59,6 @@
     "em-table": "0.12.0"
   },
   "resolutions": {
-    "graceful-fs": "^4.2.4",
-    "mktemp": "0.4.0"
+    "graceful-fs": "^4.2.4"
   }
 }
