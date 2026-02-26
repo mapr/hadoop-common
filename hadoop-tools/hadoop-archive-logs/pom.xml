@@ -115,6 +115,12 @@
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-yarn-server-resourcemanager</artifactId>
       <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.glassfish.jaxb</groupId>
+          <artifactId>jaxb-runtime</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <!-- 'mvn dependency:analyze' fails to detect use of this dependency -->
     <dependency>

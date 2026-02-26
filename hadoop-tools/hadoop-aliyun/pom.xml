@@ -153,6 +153,12 @@
       <artifactId>hadoop-yarn-server-tests</artifactId>
       <scope>test</scope>
       <type>test-jar</type>
+      <exclusions>
+        <exclusion>
+          <groupId>org.ehcache</groupId>
+          <artifactId>ehcache</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>

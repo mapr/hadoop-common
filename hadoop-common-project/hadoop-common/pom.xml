@@ -426,6 +426,16 @@
       <groupId>org.wildfly.openssl</groupId>
       <artifactId>wildfly-openssl-java</artifactId>
       <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jboss.logging</groupId>
+          <artifactId>jboss-logging-annotations</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.logging</groupId>
+          <artifactId>jboss-logging-processor</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.xerial.snappy</groupId>
