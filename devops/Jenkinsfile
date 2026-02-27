@@ -71,7 +71,8 @@ pipeline {
                   }
                   withCredentials([usernamePassword(credentialsId: 'artifactory_user_pass', passwordVariable: 'pass', usernameVariable: 'user')]) {
                     docker.image("dfdkr.mip.storage.hpecorp.net/suse-leap15-java11-gcc9:hadoop33_zstd").inside (
-                    "-e MAPR_MIRROR=${MAPR_MIRROR} \
+                    "--network host \
+                    -e MAPR_MIRROR=${MAPR_MIRROR} \
                     -e MAPR_CENTRAL=${MAPR_CENTRAL} \
                     -e MAVEN_CENTRAL=${MAVEN_CENTRAL} \
                     -e MAPR_MAVEN_REPO=${MAPR_MAVEN_REPO} \
@@ -80,8 +81,6 @@ pipeline {
                     -e BUILD_NUMBER=${ID}.${BUILD_NUMBER} \
                     -e MAPR_RELEASES_REPO=${MAPR_RELEASES_REPO} \
                     -e MAPR_SNAPSHOTS_REPO=${MAPR_SNAPSHOTS_REPO} \
-                    -e ANT_OPTS=\"-Dhttp.proxyHost=${HPE_PROXY_HOST} -Dhttp.proxyPort=${HPE_PROXY_PORT} -Dhttps.proxyHost=${HPE_PROXY_HOST} -Dhttps.proxyPort=${HPE_PROXY_PORT} -Dhttp.nonProxyHosts='${HPE_PROXY_EXCEPTIONS}'\" \
-                    -e MAVEN_OPTS=\"-Dhttp.proxyHost=${HPE_PROXY_HOST} -Dhttp.proxyPort=${HPE_PROXY_PORT} -Dhttps.proxyHost=${HPE_PROXY_HOST} -Dhttps.proxyPort=${HPE_PROXY_PORT} -Dhttp.nonProxyHosts='${HPE_PROXY_EXCEPTIONS}'\" \
                     -v /root/.m2:/root/.m2:rw \
                     -v /root/yum-proxy.conf:/etc/yum.conf:ro \
                     -v /etc/hosts:/etc/hosts:ro \
@@ -156,7 +155,8 @@ pipeline {
                   }
                   withCredentials([usernamePassword(credentialsId: 'artifactory_user_pass', passwordVariable: 'pass', usernameVariable: 'user')]) {
                     docker.image("dfdkr.mip.storage.hpecorp.net/ubuntu18-java11-gcc9:hadoop33_zstd").inside (
-                    "-e MAPR_MIRROR=${MAPR_MIRROR} \
+                    "--network host \
+                    -e MAPR_MIRROR=${MAPR_MIRROR} \
                     -e MAPR_CENTRAL=${MAPR_CENTRAL} \
                     -e MAVEN_CENTRAL=${MAVEN_CENTRAL} \
                     -e MAPR_MAVEN_REPO=${MAPR_MAVEN_REPO} \
@@ -165,8 +165,6 @@ pipeline {
                     -e BUILD_NUMBER=${ID}.${BUILD_NUMBER} \
                     -e MAPR_RELEASES_REPO=${MAPR_RELEASES_REPO} \
                     -e MAPR_SNAPSHOTS_REPO=${MAPR_SNAPSHOTS_REPO} \
-                    -e ANT_OPTS=\"-Dhttp.proxyHost=${HPE_PROXY_HOST} -Dhttp.proxyPort=${HPE_PROXY_PORT} -Dhttps.proxyHost=${HPE_PROXY_HOST} -Dhttps.proxyPort=${HPE_PROXY_PORT} -Dhttp.nonProxyHosts='${HPE_PROXY_EXCEPTIONS}'\" \
-                    -e MAVEN_OPTS=\"-Dhttp.proxyHost=${HPE_PROXY_HOST} -Dhttp.proxyPort=${HPE_PROXY_PORT} -Dhttps.proxyHost=${HPE_PROXY_HOST} -Dhttps.proxyPort=${HPE_PROXY_PORT} -Dhttp.nonProxyHosts='${HPE_PROXY_EXCEPTIONS}'\" \
                     -v /root/.m2:/root/.m2:rw \
                     -v /root/yum-proxy.conf:/etc/yum.conf:ro \
                     -v /etc/hosts:/etc/hosts:ro \
@@ -229,7 +227,8 @@ pipeline {
                   }
                   withCredentials([usernamePassword(credentialsId: 'artifactory_user_pass', passwordVariable: 'pass', usernameVariable: 'user')]) {
                     docker.image("dfdkr.mip.storage.hpecorp.net/centos8-java11-gcc9:hadoop33_zstd").inside (
-                    "-e MAPR_MIRROR=${MAPR_MIRROR} \
+                    "--network host \
+                    -e MAPR_MIRROR=${MAPR_MIRROR} \
                     -e MAPR_CENTRAL=${MAPR_CENTRAL} \
                     -e MAVEN_CENTRAL=${MAVEN_CENTRAL} \
                     -e MAPR_MAVEN_REPO=${MAPR_MAVEN_REPO} \
@@ -238,8 +237,6 @@ pipeline {
                     -e BUILD_NUMBER=${ID}.${BUILD_NUMBER} \
                     -e MAPR_RELEASES_REPO=${MAPR_RELEASES_REPO} \
                     -e MAPR_SNAPSHOTS_REPO=${MAPR_SNAPSHOTS_REPO} \
-                    -e ANT_OPTS=\"-Dhttp.proxyHost=${HPE_PROXY_HOST} -Dhttp.proxyPort=${HPE_PROXY_PORT} -Dhttps.proxyHost=${HPE_PROXY_HOST} -Dhttps.proxyPort=${HPE_PROXY_PORT} -Dhttp.nonProxyHosts='${HPE_PROXY_EXCEPTIONS}'\" \
-                    -e MAVEN_OPTS=\"-Dhttp.proxyHost=${HPE_PROXY_HOST} -Dhttp.proxyPort=${HPE_PROXY_PORT} -Dhttps.proxyHost=${HPE_PROXY_HOST} -Dhttps.proxyPort=${HPE_PROXY_PORT} -Dhttp.nonProxyHosts='${HPE_PROXY_EXCEPTIONS}'\" \
                     -v /root/.m2:/root/.m2:rw \
                     -v /root/yum-proxy.conf:/etc/yum.conf:ro \
                     -v /etc/hosts:/etc/hosts:ro \
