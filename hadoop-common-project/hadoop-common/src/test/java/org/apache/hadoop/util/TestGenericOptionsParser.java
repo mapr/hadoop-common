@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.math3.util.Pair;
 import org.apache.hadoop.conf.Configuration;
@@ -197,11 +198,10 @@ public class TestGenericOptionsParser {
   @Test
   public void testCreateWithOptions() throws Exception {
     // Create new option newOpt
-
-    Option opt = Option.builder("newOpt").argName("int")
-        .hasArg()
-        .desc("A new option")
-        .build();
+    Option opt = OptionBuilder.withArgName("int")
+    .hasArg()
+    .withDescription("A new option")
+    .create("newOpt");
     Options opts = new Options();
     opts.addOption(opt);
 

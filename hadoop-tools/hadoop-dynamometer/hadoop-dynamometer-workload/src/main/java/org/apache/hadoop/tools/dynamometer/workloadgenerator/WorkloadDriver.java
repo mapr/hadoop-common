@@ -26,6 +26,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
@@ -63,28 +64,28 @@ public class WorkloadDriver extends Configured implements Tool {
             + " argument to show help for a specific mapper class.");
     Options options = new Options();
     options.addOption(helpOption);
-    options.addOption(Option.builder(NN_URI).argName("NN URI").hasArg()
-        .desc("URI of the NameNode under test").required()
-        .build());
+    options.addOption(OptionBuilder.withArgName("NN URI").hasArg()
+        .withDescription("URI of the NameNode under test").isRequired()
+        .create(NN_URI));
     OptionGroup startTimeOptions = new OptionGroup();
-    startTimeOptions.addOption(Option.builder(START_TIMESTAMP_MS).argName("Start Timestamp")
-        .hasArg().desc("Mapper start UTC timestamp in ms")
-        .build());
+    startTimeOptions.addOption(OptionBuilder.withArgName("Start Timestamp")
+        .hasArg().withDescription("Mapper start UTC timestamp in ms")
+        .create(START_TIMESTAMP_MS));
     startTimeOptions
-        .addOption(Option.builder(START_TIME_OFFSET_DEFAULT).argName("Start Time Offset").hasArg()
-            .desc("Mapper start time as an offset from current "
+        .addOption(OptionBuilder.withArgName("Start Time Offset").hasArg()
+            .withDescription("Mapper start time as an offset from current "
                 + "time. Human-readable formats accepted, e.g. 10m (default "
                 + START_TIME_OFFSET_DEFAULT + ").")
-            .build());
+            .create(START_TIME_OFFSET));
     options.addOptionGroup(startTimeOptions);
-    Option mapperClassOption = Option.builder(MAPPER_CLASS_NAME).argName("Mapper ClassName")
+    Option mapperClassOption = OptionBuilder.withArgName("Mapper ClassName")
         .hasArg()
-        .desc("Class name of the mapper; must be a WorkloadMapper "
+        .withDescription("Class name of the mapper; must be a WorkloadMapper "
             + "subclass. Mappers supported currently: \n"
             + "1. AuditReplayMapper \n"
             + "2. CreateFileMapper \n"
             + "Fully specified class names are also supported.")
-        .required().build();
+        .isRequired().create(MAPPER_CLASS_NAME);
     options.addOption(mapperClassOption);
 
     Options helpOptions = new Options();

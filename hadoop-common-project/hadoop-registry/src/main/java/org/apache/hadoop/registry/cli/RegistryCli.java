@@ -32,6 +32,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.hadoop.conf.Configuration;
@@ -245,29 +246,29 @@ public class RegistryCli extends Configured implements Tool, Closeable {
   }
 
   public int bind(String[] args) {
-    Option rest = Option.builder("rest").argName("rest")
+    Option rest = OptionBuilder.withArgName("rest")
                                .hasArg()
-                               .desc("rest Option")
-                               .build();
-    Option webui = Option.builder("webui").argName("webui")
+                               .withDescription("rest Option")
+                               .create("rest");
+    Option webui = OptionBuilder.withArgName("webui")
                                 .hasArg()
-                                .desc("webui Option")
-                                .build();
-    Option inet = Option.builder("inet").argName("inet")
-                               .desc("inet Option")
-                               .build();
-    Option port = Option.builder("p").argName("port")
+                                .withDescription("webui Option")
+                                .create("webui");
+    Option inet = OptionBuilder.withArgName("inet")
+                               .withDescription("inet Option")
+                               .create("inet");
+    Option port = OptionBuilder.withArgName("port")
                                .hasArg()
-                               .desc("port to listen on [9999]")
-                               .build();
-    Option host = Option.builder("h").argName("host")
+                               .withDescription("port to listen on [9999]")
+                               .create("p");
+    Option host = OptionBuilder.withArgName("host")
                                .hasArg()
-                               .desc("host name")
-                               .build();
-    Option apiOpt = Option.builder("api").argName("api")
+                               .withDescription("host name")
+                               .create("h");
+    Option apiOpt = OptionBuilder.withArgName("api")
                                  .hasArg()
-                                 .desc("api")
-                                 .build();
+                                 .withDescription("api")
+                                 .create("api");
     Options inetOption = new Options();
     inetOption.addOption(inet);
     inetOption.addOption(port);
@@ -411,9 +412,9 @@ public class RegistryCli extends Configured implements Tool, Closeable {
 
   @SuppressWarnings("unchecked")
   public int rm(String[] args) {
-    Option recursive = Option.builder("r").argName("recursive")
-                                    .desc("delete recursively")
-                                    .build();
+    Option recursive = OptionBuilder.withArgName("recursive")
+                                    .withDescription("delete recursively")
+                                    .create("r");
 
     Options rmOption = new Options();
     rmOption.addOption(recursive);

@@ -19,6 +19,7 @@ package org.apache.hadoop.hdfs.tools;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.HadoopIllegalArgumentException;
 import org.apache.hadoop.conf.Configuration;
@@ -278,34 +279,34 @@ public class DiskBalancerCLI extends Configured implements Tool {
    */
   private void addPlanCommands(Options opt) {
 
-    Option plan = Option.builder().longOpt(PLAN)
-        .desc("Hostname, IP address or UUID of datanode " +
+    Option plan = OptionBuilder.withLongOpt(PLAN)
+        .withDescription("Hostname, IP address or UUID of datanode " +
             "for which a plan is created.")
         .hasArg()
-        .build();
+        .create();
     getPlanOptions().addOption(plan);
     opt.addOption(plan);
 
 
-    Option outFile = Option.builder().longOpt(OUTFILE).hasArg()
-        .desc(
+    Option outFile = OptionBuilder.withLongOpt(OUTFILE).hasArg()
+        .withDescription(
             "Local path of file to write output to, if not specified "
                 + "defaults will be used.")
-        .build();
+        .create();
     getPlanOptions().addOption(outFile);
     opt.addOption(outFile);
 
-    Option bandwidth = Option.builder().longOpt(BANDWIDTH).hasArg()
-        .desc(
+    Option bandwidth = OptionBuilder.withLongOpt(BANDWIDTH).hasArg()
+        .withDescription(
             "Maximum disk bandwidth (MB/s) in integer to be consumed by "
                 + "diskBalancer. e.g. 10 MB/s.")
-        .build();
+        .create();
     getPlanOptions().addOption(bandwidth);
     opt.addOption(bandwidth);
 
-    Option threshold = Option.builder().longOpt(THRESHOLD)
+    Option threshold = OptionBuilder.withLongOpt(THRESHOLD)
         .hasArg()
-        .desc("Percentage of data skew that is tolerated before"
+        .withDescription("Percentage of data skew that is tolerated before"
             + " disk balancer starts working. For example, if"
             + " total data on a 2 disk node is 100 GB then disk"
             + " balancer calculates the expected value on each disk,"
@@ -313,22 +314,22 @@ public class DiskBalancerCLI extends Configured implements Tool {
             + " on a single disk needs to be more than 60 GB"
             + " (50 GB + 10% tolerance value) for Disk balancer to"
             + " balance the disks.")
-        .build();
+        .create();
     getPlanOptions().addOption(threshold);
     opt.addOption(threshold);
 
 
-    Option maxError = Option.builder().longOpt(MAXERROR)
+    Option maxError = OptionBuilder.withLongOpt(MAXERROR)
         .hasArg()
-        .desc("Describes how many errors " +
+        .withDescription("Describes how many errors " +
             "can be tolerated while copying between a pair of disks.")
-        .build();
+        .create();
     getPlanOptions().addOption(maxError);
     opt.addOption(maxError);
 
-    Option verbose = Option.builder().longOpt(VERBOSE)
-        .desc("Print out the summary of the plan on console")
-        .build();
+    Option verbose = OptionBuilder.withLongOpt(VERBOSE)
+        .withDescription("Print out the summary of the plan on console")
+        .create();
     getPlanOptions().addOption(verbose);
     opt.addOption(verbose);
   }
@@ -337,11 +338,11 @@ public class DiskBalancerCLI extends Configured implements Tool {
    * Adds Help to the options.
    */
   private void addHelpCommands(Options opt) {
-    Option help =  Option.builder().longOpt(HELP)
-        .optionalArg(true)
-        .desc("valid commands are plan | execute | query | cancel" +
+    Option help = OptionBuilder.withLongOpt(HELP)
+        .hasOptionalArg()
+        .withDescription("valid commands are plan | execute | query | cancel" +
             " | report")
-        .build();
+        .create();
     getHelpOptions().addOption(help);
     opt.addOption(help);
   }
@@ -352,17 +353,17 @@ public class DiskBalancerCLI extends Configured implements Tool {
    * @param opt Options
    */
   private void addExecuteCommands(Options opt) {
-    Option execute = Option.builder().longOpt(EXECUTE)
+    Option execute = OptionBuilder.withLongOpt(EXECUTE)
         .hasArg()
-        .desc("Takes a plan file and " +
+        .withDescription("Takes a plan file and " +
             "submits it for execution by the datanode.")
-        .build();
+        .create();
     getExecuteOptions().addOption(execute);
 
 
-    Option skipDateCheck = Option.builder().longOpt(SKIPDATECHECK)
-        .desc("skips the date check and force execute the plan")
-        .build();
+    Option skipDateCheck = OptionBuilder.withLongOpt(SKIPDATECHECK)
+        .withDescription("skips the date check and force execute the plan")
+        .create();
     getExecuteOptions().addOption(skipDateCheck);
 
     opt.addOption(execute);
@@ -375,20 +376,20 @@ public class DiskBalancerCLI extends Configured implements Tool {
    * @param opt Options
    */
   private void addQueryCommands(Options opt) {
-    Option query = Option.builder().longOpt(QUERY)
+    Option query = OptionBuilder.withLongOpt(QUERY)
         .hasArg()
-        .desc("Queries the disk balancer " +
+        .withDescription("Queries the disk balancer " +
             "status of a given datanode.")
-        .build();
+        .create();
     getQueryOptions().addOption(query);
     opt.addOption(query);
 
     // Please note: Adding this only to Query options since -v is already
     // added to global table.
-    Option verbose = Option.builder().longOpt(VERBOSE)
-        .desc("Prints details of the plan that is being executed " +
+    Option verbose = OptionBuilder.withLongOpt(VERBOSE)
+        .withDescription("Prints details of the plan that is being executed " +
             "on the node.")
-        .build();
+        .create();
     getQueryOptions().addOption(verbose);
   }
 
@@ -398,17 +399,17 @@ public class DiskBalancerCLI extends Configured implements Tool {
    * @param opt Options
    */
   private void addCancelCommands(Options opt) {
-    Option cancel = Option.builder().longOpt(CANCEL)
+    Option cancel = OptionBuilder.withLongOpt(CANCEL)
         .hasArg()
-        .desc("Cancels a running plan using a plan file.")
-        .build();
+        .withDescription("Cancels a running plan using a plan file.")
+        .create();
     getCancelOptions().addOption(cancel);
     opt.addOption(cancel);
 
-    Option node = Option.builder().longOpt(NODE)
+    Option node = OptionBuilder.withLongOpt(NODE)
         .hasArg()
-        .desc("Cancels a running plan using a plan ID and hostName")
-        .build();
+        .withDescription("Cancels a running plan using a plan ID and hostName")
+        .create();
 
     getCancelOptions().addOption(node);
     opt.addOption(node);
@@ -420,26 +421,26 @@ public class DiskBalancerCLI extends Configured implements Tool {
    * @param opt Options
    */
   private void addReportCommands(Options opt) {
-    Option report = Option.builder().longOpt(REPORT)
-        .desc("List nodes that will benefit from running " +
+    Option report = OptionBuilder.withLongOpt(REPORT)
+        .withDescription("List nodes that will benefit from running " +
             "DiskBalancer.")
-        .build();
+        .create();
     getReportOptions().addOption(report);
     opt.addOption(report);
 
-    Option top = Option.builder().longOpt(TOP)
+    Option top = OptionBuilder.withLongOpt(TOP)
         .hasArg()
-        .desc("specify the number of nodes to be listed which has" +
+        .withDescription("specify the number of nodes to be listed which has" +
             " data imbalance.")
-        .build();
+        .create();
     getReportOptions().addOption(top);
     opt.addOption(top);
 
-    Option node =  Option.builder().longOpt(NODE)
+    Option node =  OptionBuilder.withLongOpt(NODE)
         .hasArg()
-        .desc("Datanode address, " +
+        .withDescription("Datanode address, " +
             "it can be DataNodeID, IP or hostname.")
-        .build();
+        .create();
     getReportOptions().addOption(node);
     opt.addOption(node);
   }

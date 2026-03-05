@@ -26,7 +26,7 @@ import java.nio.file.Paths;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
@@ -177,10 +177,16 @@ public class OfflineImageViewer {
 
     // Build in/output file arguments, which are required, but there is no 
     // addOption method that can specify this
-    options.addOption(Option.builder("o").required().hasArgs().longOpt("outputFile").build());
-
-    options.addOption(Option.builder("i").required().hasArgs().longOpt("inputFile").build());
-
+    OptionBuilder.isRequired();
+    OptionBuilder.hasArgs();
+    OptionBuilder.withLongOpt("outputFile");
+    options.addOption(OptionBuilder.create("o"));
+    
+    OptionBuilder.isRequired();
+    OptionBuilder.hasArgs();
+    OptionBuilder.withLongOpt("inputFile");
+    options.addOption(OptionBuilder.create("i"));
+    
     options.addOption("p", "processor", true, "");
     options.addOption("h", "help", false, "");
     options.addOption("maxSize", true, "");

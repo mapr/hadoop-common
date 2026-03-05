@@ -34,6 +34,7 @@ import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -381,17 +382,16 @@ public class StreamJob implements Tool {
 
   private Option createOption(String name, String desc,
                               String argName, int max, boolean required){
-    return Option.builder(name)
-           .argName(argName)
-           .hasArgs()
-           .numberOfArgs(max)
-           .desc(desc)
-           .required(required)
-           .build();
+    return OptionBuilder
+           .withArgName(argName)
+           .hasArgs(max)
+           .withDescription(desc)
+           .isRequired(required)
+           .create(name);
   }
 
   private Option createBoolOption(String name, String desc){
-    return Option.builder(name).desc(desc).build();
+    return OptionBuilder.withDescription(desc).create(name);
   }
 
   private void validate(final Path path) throws IOException {
