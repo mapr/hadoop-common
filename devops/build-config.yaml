@@ -1,5 +1,5 @@
 ---
-initialReleaseTag: '' # Use only for release build
+initialReleaseTag: '3.4.1.400-dep-1010' # Use only for release build
 whitesourceScan: true
 build:
   - name: ubuntu
