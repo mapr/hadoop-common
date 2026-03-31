@@ -151,7 +151,7 @@ prepare_hadoop_client() {
 
 	mkdir -p ${HADOOP_CLIENT_INSTALL_3DIGIT_DIR}/bin
 	mkdir -p ${HADOOP_CLIENT_INSTALL_3DIGIT_DIR}/share/hadoop
-	mkdir -p ${HADOOP_CLIENT_INSTALL_3DIGIT_DIR}/share/hadoop/yarn
+	mkdir -p ${HADOOP_CLIENT_INSTALL_3DIGIT_DIR}/share/hadoop/yarn/lib
 	mkdir -p ${HADOOP_CLIENT_INSTALL_3DIGIT_DIR}/etc/hadoop
 	mkdir -p ${HADOOP_CLIENT_INSTALL_3DIGIT_DIR}/etc/hadoop/scram
 	cat ${WORK_DIR}/ext-conf/configure.sh | sed -e "s|__INSTALL__|${PKG_INSTALL_ROOT}|g;s|__VERSION_3DIGIT__|${PKG_3DIGIT_VERSION}|g;s|__PREFIX__|${INSTALLATION_PREFIX}|g" > ${HADOOP_CLIENT_INSTALL_3DIGIT_DIR}/bin/configure.sh
@@ -176,6 +176,7 @@ prepare_hadoop_client() {
 	cp -r ${BUILD_ROOT}/distribution/${HADOOP_DEST_NAME}/share/hadoop/client ${HADOOP_CLIENT_INSTALL_3DIGIT_DIR}/share/hadoop/.
 	cp ${BUILD_ROOT}/distribution/${HADOOP_DEST_NAME}/share/hadoop/yarn/hadoop-yarn-client* ${HADOOP_CLIENT_INSTALL_3DIGIT_DIR}/share/hadoop/yarn/.
 	cp ${BUILD_ROOT}/distribution/${HADOOP_DEST_NAME}/share/hadoop/yarn/hadoop-yarn-common* ${HADOOP_CLIENT_INSTALL_3DIGIT_DIR}/share/hadoop/yarn/.
+	cp ${BUILD_ROOT}/distribution/${HADOOP_DEST_NAME}/share/hadoop/yarn/lib/jersey* ${HADOOP_CLIENT_INSTALL_3DIGIT_DIR}/share/hadoop/yarn/lib/.
 	find ${HADOOP_CLIENT_INSTALL_3DIGIT_DIR} -name "*.cmd" -exec rm -fv {} \;
 	find ${HADOOP_CLIENT_INSTALL_3DIGIT_DIR} -name "*.bat" -exec rm -fv {} \;
 }
