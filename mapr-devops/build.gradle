@@ -17,6 +17,8 @@ apply plugin: "maven-publish"
 
 group = "org.apache.hadoop"
 
+import org.gradle.internal.os.OperatingSystem
+
 if (!hasProperty("hadoopVersion")) {
     logger.error "need property hadoopVersion"
     throw new GradleException("need property hadoopVersion - one example is '2.7.0-mapr-1506-SNAPSHOT'")
@@ -106,7 +108,8 @@ task copyHdfsSources(type: Copy) {
 }
 
 task copyHdfsBinaries(type: Copy) {
-    from "${hdfsDir}/target/native"
+    def isMacOs = OperatingSystem.current().isMacOsX()
+    from isMacOs ? "${hdfsDir}/target/clang/native" : "${hdfsDir}/target/native"
     into "hadoop-hdfs/target/native"
 }
 
