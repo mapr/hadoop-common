@@ -70,7 +70,7 @@ pipeline {
                     sh "cat ${env.mvn_settings} > settings.xml"
                   }
                   withCredentials([usernamePassword(credentialsId: 'artifactory_user_pass', passwordVariable: 'pass', usernameVariable: 'user')]) {
-                    docker.image("dfdkr-vm.ftc.hcocto.hpecorp.net/docker/suse-leap15-java11-gcc9:hadoop341_zstd").inside (
+                    docker.image("${DOCKER_REGISTRY}/suse-leap15-java11-gcc9:hadoop341_zstd").inside (
                     "-e MAPR_MIRROR=${MAPR_MIRROR} \
                     -e MAPR_CENTRAL=${MAPR_CENTRAL} \
                     -e MAVEN_CENTRAL=${MAVEN_CENTRAL} \
@@ -155,7 +155,7 @@ pipeline {
                     sh "cat ${env.mvn_settings} > settings.xml"
                   }
                   withCredentials([usernamePassword(credentialsId: 'artifactory_user_pass', passwordVariable: 'pass', usernameVariable: 'user')]) {
-                    docker.image("dfdkr-vm.ftc.hcocto.hpecorp.net/docker/ubuntu18-java11-gcc9:hadoop341_zstd").inside (
+                    docker.image("${DOCKER_REGISTRY}/ubuntu18-java11-gcc9:hadoop341_zstd").inside (
                     "-e MAPR_MIRROR=${MAPR_MIRROR} \
                     -e MAPR_CENTRAL=${MAPR_CENTRAL} \
                     -e MAVEN_CENTRAL=${MAVEN_CENTRAL} \
@@ -228,7 +228,7 @@ pipeline {
                     sh "cat ${env.mvn_settings} > settings.xml"
                   }
                   withCredentials([usernamePassword(credentialsId: 'artifactory_user_pass', passwordVariable: 'pass', usernameVariable: 'user')]) {
-                    docker.image("dfdkr-vm.ftc.hcocto.hpecorp.net/docker/centos8-java11-gcc9:hadoop341_zstd").inside (
+                    docker.image("${DOCKER_REGISTRY}/centos8-java11-gcc9:hadoop341_zstd").inside (
                     "-e MAPR_MIRROR=${MAPR_MIRROR} \
                     -e MAPR_CENTRAL=${MAPR_CENTRAL} \
                     -e MAVEN_CENTRAL=${MAVEN_CENTRAL} \
@@ -294,36 +294,36 @@ pipeline {
               }
             }
 
-            stage("Whitesource scan") {
-              steps {
-                script {
-                   ws.dockerScan()
-                }
-              }
-            }
+            // stage("Whitesource scan") {
+            //   steps {
+            //     script {
+            //        ws.dockerScan()
+            //     }
+            //   }
+            // }
 
-            stage("Push Whitesource reports") {
-              steps {
-                script {
-                  withCredentials([string(credentialsId: 'wsApiKey', variable: 'wsApiKey'), string(credentialsId: 'wsUserKey', variable: 'wsUserKey')]) {
-                    catchError {
-                      /*Get token of product. We have to communicate with WS API only using 64-digits project's token.
-                        We are sending request to API and get ALL "project+token" pairs. Then parse this information and find token for current project*/
-                        productToken = ws.getWSProductToken(PROJECT)
+            // stage("Push Whitesource reports") {
+            //   steps {
+            //     script {
+            //       withCredentials([string(credentialsId: 'wsApiKey', variable: 'wsApiKey'), string(credentialsId: 'wsUserKey', variable: 'wsUserKey')]) {
+            //         catchError {
+            //           /*Get token of product. We have to communicate with WS API only using 64-digits project's token.
+            //             We are sending request to API and get ALL "project+token" pairs. Then parse this information and find token for current project*/
+            //             productToken = ws.getWSProductToken(PROJECT)
 
-                        //Get reports (Excel and json) from WS site and save these reports to files. Once for each format
-                        ws.getWSReports(productToken)
+            //             //Get reports (Excel and json) from WS site and save these reports to files. Once for each format
+            //             ws.getWSReports(productToken)
 
-                        //Move latest reports to the "old" folder in Artifactory
-                        ws.moveOldWsReports(ARTIFACTORY_SERVER)
+            //             //Move latest reports to the "old" folder in Artifactory
+            //             ws.moveOldWsReports(ARTIFACTORY_SERVER)
 
-                        //Upload reports (Excel and json) to the Artifactory (to the latest folder)
-                        ws.uploadToArtifactory(ARTIFACTORY_SERVER)
-                    }
-                  }
-                }
-              }
-            }
+            //             //Upload reports (Excel and json) to the Artifactory (to the latest folder)
+            //             ws.uploadToArtifactory(ARTIFACTORY_SERVER)
+            //         }
+            //       }
+            //     }
+            //   }
+            // }
           }
         }
       }
