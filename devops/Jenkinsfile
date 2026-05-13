@@ -8,6 +8,7 @@ env.MAPR_MAVEN_REPO="${MAPR_SNAPSHOTS_REPO_COMMON}"
 
 ARTIFACTORY_SERVER=''
 DIST_DIR='devops/dist'
+BUILDMETA_DIR='devops/buildmeta'
 YAML_CONFIG=''
 env.REPOSITORY_NAME=''
 env.GIT_REPO_URL=''
@@ -62,6 +63,7 @@ pipeline {
                   if(it.rpmSign == true)
                     signing.rpmSign(DIST_DIR)
                   getVersionAndUploadToArtifactory()
+                  printBuildmeta()
                 }
               }
             }
@@ -168,4 +170,14 @@ def validateBuildImage(yamlCurrentBuildItem) {
 def getVersionAndUploadToArtifactory() {
   def osVersionContainerRaw = sh script: 'cat os_release_version.txt', returnStdout:true
   artifactory.uploadToArtifactoryWithOSVersions(ARTIFACTORY_SERVER, osVersionContainerRaw, DIST_DIR)
+}
+
+def printBuildmeta() {
+  def files = findFiles(glob: "${BUILDMETA_DIR}/**")
+  files.each { f ->
+    if (!f.directory) {
+      echo "Content of: ${f.path}"
+      echo readFile(f.path)
+    }
+  }
 }

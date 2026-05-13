@@ -18,6 +18,7 @@
 .settings
 target
 build
+buildmeta
 dependency-reduced-pom.xml
 make-build-debug
 

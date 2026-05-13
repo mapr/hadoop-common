@@ -1,5 +1,5 @@
 #!/bin/bash
-set -ex
+set -exo pipefail
 
 SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
 WORK_DIR=${SCRIPT_DIR}/../..
@@ -218,6 +218,9 @@ deploy() {
 		-PmavenUser="${MAPR_MAVEN_USER}" \
     -PmavenPass="${MAPR_MAVEN_PASS}" ;
   cd "${root_path}"
+
+  mkdir -p devops/buildmeta
+  mvn -B dependency:tree -DskipTests -Dmaven.javadoc.skip=true -Dmaven.source.skip=true -Pdist -Pnative -Pyarn-ui 2>&1 | tee devops/buildmeta/dependency-tree.txt
 }
 
 main() {
