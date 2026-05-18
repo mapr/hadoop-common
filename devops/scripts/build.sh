@@ -196,6 +196,7 @@ prepare_hadoop_core() {
 	rm -f ${HADOOP_CORE_INSTALL_3DIGIT_DIR}/share/hadoop/yarn/hadoop-yarn-client*
 	rm -f ${HADOOP_CORE_INSTALL_3DIGIT_DIR}/share/hadoop/yarn/hadoop-yarn-common*
 	rm -f ${HADOOP_CORE_INSTALL_3DIGIT_DIR}/share/hadoop/yarn/lib/websocket-{api,client}-*
+	rm -f ${HADOOP_CORE_INSTALL_3DIGIT_DIR}/share/hadoop/yarn/lib/jersey*
 	find ${HADOOP_CORE_INSTALL_3DIGIT_DIR} -name "*.cmd" -exec rm -fv {} \;
 	find ${HADOOP_CORE_INSTALL_3DIGIT_DIR} -name "*.bat" -exec rm -fv {} \;
 }
