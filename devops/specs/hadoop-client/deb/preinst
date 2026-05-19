@@ -11,10 +11,11 @@
 #        * <new-preinst> `upgrade' <old-version>
 #
 case "$1" in
-    install)
-        ;;
-
-    upgrade)
+    install|upgrade)
+        CONFLICT_DIR="__PREFIX__/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/yarn/lib"
+        if [ -d "${CONFLICT_DIR}" ]; then
+            rm -f "${CONFLICT_DIR}"/jersey-*.jar
+        fi
         ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
