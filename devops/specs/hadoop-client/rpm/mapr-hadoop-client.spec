@@ -38,6 +38,11 @@ if [ "$RPM_INSTALL_PREFIX" != "/" ]; then
 else
     PREFIX_INSTALL=__PREFIX__
 fi
+# jersey jars moved from mapr-hadoop-core to mapr-hadoop-client; remove to avoid file conflicts
+CONFLICT_DIR="$PREFIX_INSTALL/hadoop/hadoop-__VERSION_3DIGIT__/share/hadoop/yarn/lib"
+if [ -d "${CONFLICT_DIR}" ]; then
+    rm -f "${CONFLICT_DIR}"/jersey-*.jar
+fi
 #
 # Clean up any broken symlinks
 #
