@@ -65,8 +65,7 @@ public class TestConfigurationHelper extends AbstractHadoopTestBase {
       final Class<E> enumClass,
       final boolean ignoreUnknown) {
     final Set<E> enumSet = parseEnumSet("key", valueString, enumClass, ignoreUnknown);
-    final IterableAssert<E> assertion = Assertions.assertThat(enumSet);
-    return assertion.describedAs("parsed enum set '%s'", valueString);
+    return Assertions.assertThat((Iterable<E>) enumSet).describedAs("parsed enum set '%s'", valueString);
   }
 
 
