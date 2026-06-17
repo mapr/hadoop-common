@@ -220,8 +220,8 @@ deploy() {
     -PmavenPass="${MAPR_MAVEN_PASS}" ;
   cd "${root_path}"
 
-  mkdir -p devops/buildmeta
-  mvn -B dependency:tree -DskipTests -Dmaven.javadoc.skip=true -Dmaven.source.skip=true -Pdist -Pnative -Pyarn-ui 2>&1 | tee devops/buildmeta/dependency-tree.txt
+  #mkdir -p devops/buildmeta
+  #mvn -B dependency:tree -DskipTests -Dmaven.javadoc.skip=true -Dmaven.source.skip=true -Pdist -Pnative -Pyarn-ui 2>&1 | tee devops/buildmeta/dependency-tree.txt
 }
 
 main() {

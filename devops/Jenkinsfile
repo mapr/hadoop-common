@@ -63,7 +63,6 @@ pipeline {
                   if(it.rpmSign == true)
                     signing.rpmSign(DIST_DIR)
                   getVersionAndUploadToArtifactory()
-                  printBuildmeta()
                 }
               }
             }
