@@ -1,6 +1,6 @@
 ---
 initialReleaseTag: '' # Use only for release build
-whitesourceScan: true
+whitesourceScan: false
 build:
   - name: ubuntu
     image: _DOCKER_REGISTRY_/ubuntu18-java11-gcc9:hadoop341_zstd
