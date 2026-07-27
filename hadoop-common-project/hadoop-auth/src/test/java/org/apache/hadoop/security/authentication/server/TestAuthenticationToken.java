@@ -27,4 +27,15 @@ public class TestAuthenticationToken {
     Assert.assertEquals(-1, AuthenticationToken.ANONYMOUS.getExpires());
     Assert.assertFalse(AuthenticationToken.ANONYMOUS.isExpired());
   }
+
+  @Test
+  public void testIdTokenIsTransient() throws Exception {
+    AuthenticationToken token = new AuthenticationToken(
+        "user", "principal", "type");
+    token.setIdToken("sensitive-id-token");
+
+    Assert.assertEquals("sensitive-id-token", token.getIdToken());
+    Assert.assertFalse(token.toString().contains("sensitive-id-token"));
+    Assert.assertNull(AuthenticationToken.parse(token.toString()).getIdToken());
+  }
 }

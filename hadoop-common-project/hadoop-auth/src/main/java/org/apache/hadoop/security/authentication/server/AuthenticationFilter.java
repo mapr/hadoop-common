@@ -29,6 +29,13 @@ import org.apache.hadoop.security.authentication.util.SsoConfigurationUtil;
 import org.apache.hadoop.security.authentication.util.ZKSignerSecretProvider;
 import org.apache.hadoop.thirdparty.com.google.common.net.HttpHeaders;
 import org.json.simple.JSONObject;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.message.BasicNameValuePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,6 +59,7 @@ import java.net.URISyntaxException;
 import java.security.Principal;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -156,7 +164,9 @@ public class AuthenticationFilter implements Filter {
       "signer.secret.provider.object";
 
   public static final String SSO_LOGIN_COOKIE = "isSsoLogin";
+  public static final String ID_TOKEN_COOKIE = "hadoop.id_token";
   public static final String ACTION_PARAM = "action";
+  private static final int SSO_LOGOUT_TIMEOUT_MILLIS = 5000;
 
 
   private Properties config;
@@ -615,11 +625,18 @@ public class AuthenticationFilter implements Filter {
         }
         if (token != null) {
           if (request.getParameter(ACTION_PARAM) != null && request.getParameter(ACTION_PARAM).equals("logout")) {
-            Cookie ssoCookie = null;
+            Cookie ssoCookie = new Cookie(SSO_LOGIN_COOKIE, "");
+            ssoCookie.setMaxAge(0);
+            ssoCookie.setPath(getCookiePath());
+            Cookie idTokenCookie = new Cookie(ID_TOKEN_COOKIE, "");
+            idTokenCookie.setMaxAge(0);
+            idTokenCookie.setPath(getCookiePath());
+            boolean providerLogoutSucceeded = false;
             if (token.isJWTBasedToken()) {
-              ssoCookie = new Cookie(SSO_LOGIN_COOKIE, "");
-              ssoCookie.setMaxAge(0);
-              ssoCookie.setPath(getCookiePath());
+              String idToken = getCookieValue(httpRequest, ID_TOKEN_COOKIE);
+              if (idToken != null && !idToken.isEmpty()) {
+                providerLogoutSucceeded = logoutFromIdentityProvider(idToken);
+              }
             }
             Cookie cleanAuthCookie = new Cookie(getCookieTokenName(), "");
             cleanAuthCookie.setMaxAge(0);
@@ -629,18 +646,20 @@ public class AuthenticationFilter implements Filter {
               if (domain.startsWith(".")) {
                 domain = domain.substring(1);
               }
-              if (ssoCookie != null) {
-                ssoCookie.setDomain(domain);
-              }
+              ssoCookie.setDomain(domain);
+              idTokenCookie.setDomain(domain);
               cleanAuthCookie.setDomain(domain);
             }
-            if (ssoCookie != null) {
-              httpResponse.addCookie(ssoCookie);
-            }
+            httpResponse.addCookie(ssoCookie);
+            httpResponse.addCookie(idTokenCookie);
             httpResponse.addCookie(cleanAuthCookie);
             if (token.isJWTBasedToken()) {
-              httpResponse.addHeader(HttpHeaders.LOCATION, getLogoutUrl());
-              httpResponse.setStatus(HttpServletResponse.SC_OK);
+              if (providerLogoutSucceeded) {
+                httpResponse.setStatus(HttpServletResponse.SC_NO_CONTENT);
+              } else {
+                httpResponse.sendError(HttpServletResponse.SC_BAD_GATEWAY,
+                    "Unable to terminate the SSO session");
+              }
             } else {
               httpResponse.addHeader(HttpHeaders.LOCATION, getLoginURL(httpRequest));
               httpResponse.setStatus(HttpServletResponse.SC_TEMPORARY_REDIRECT);
@@ -691,6 +710,11 @@ public class AuthenticationFilter implements Filter {
             if(token.isJWTBasedToken()){
               createSSOLoginCookie(httpResponse, httpRequest, getCookieDomain(),
                   getCookiePath(), token.getExpires(), isHttps, token.getJWTExpires());
+              if (token.getIdToken() != null) {
+                createAuthCookie(ID_TOKEN_COOKIE, httpResponse, httpRequest,
+                    token.getIdToken(), getCookieDomain(), getCookiePath(),
+                    token.getExpires(), true, isHttps, token.getJWTExpires());
+              }
             }
           }
           doFilter(filterChain, httpRequest, httpResponse);
@@ -868,6 +892,45 @@ public class AuthenticationFilter implements Filter {
 
   public String getLogoutUrl() {
     return SsoConfigurationUtil.getInstance().getClientIssuer() + "/protocol/openid-connect/logout";
+  }
+
+  private static String getCookieValue(HttpServletRequest request,
+                                       String cookieName) {
+    Cookie[] cookies = request.getCookies();
+    if (cookies != null) {
+      for (Cookie cookie : cookies) {
+        if (cookieName.equals(cookie.getName())) {
+          return cookie.getValue();
+        }
+      }
+    }
+    return null;
+  }
+
+  @VisibleForTesting
+  protected boolean logoutFromIdentityProvider(String idToken) {
+    RequestConfig requestConfig = RequestConfig.custom()
+        .setConnectTimeout(SSO_LOGOUT_TIMEOUT_MILLIS)
+        .setConnectionRequestTimeout(SSO_LOGOUT_TIMEOUT_MILLIS)
+        .setSocketTimeout(SSO_LOGOUT_TIMEOUT_MILLIS)
+        .build();
+    HttpPost post = new HttpPost(getLogoutUrl());
+    try {
+      post.setEntity(new UrlEncodedFormEntity(Collections.singletonList(
+          new BasicNameValuePair("id_token_hint", idToken))));
+      try (CloseableHttpClient client = HttpClientBuilder.create()
+          .setDefaultRequestConfig(requestConfig)
+          .disableRedirectHandling()
+          .build();
+           CloseableHttpResponse response = client.execute(post)) {
+        int status = response.getStatusLine().getStatusCode();
+        return status >= 200 && status < 300;
+      }
+    } catch (IOException | RuntimeException e) {
+      LOG.warn("Unable to terminate the SSO session at the identity provider: {}",
+          e.getMessage());
+      return false;
+    }
   }
 
   private String getLoginURL(HttpServletRequest httpRequest){

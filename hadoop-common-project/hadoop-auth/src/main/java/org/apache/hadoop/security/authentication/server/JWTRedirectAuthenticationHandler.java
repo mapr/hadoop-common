@@ -22,6 +22,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
@@ -43,6 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.auth0.jwt.JWT;
+import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 
 import static org.apache.hadoop.security.authentication.server.AuthenticationFilter.ACTION_PARAM;
@@ -129,13 +131,32 @@ public class JWTRedirectAuthenticationHandler extends
       String jsonJWT = getJWTTokenFromCode(request.getParameter(CODE), request);
       ObjectMapper mapper = new ObjectMapper();
       JsonNode node = mapper.readTree(jsonJWT);
-      String jwtStr = node.get("access_token").asText();
-      DecodedJWT jwt = JWT.decode(jwtStr);
-      if (JWTUtils.validateToken(jwt)) {
+      JsonNode accessTokenNode = node.get("access_token");
+      JsonNode idTokenNode = node.get("id_token");
+      if (accessTokenNode == null || idTokenNode == null
+          || accessTokenNode.asText().isEmpty() || idTokenNode.asText().isEmpty()) {
+        throw new AuthenticationException(
+            "OIDC token response does not contain the required tokens");
+      }
+      String jwtStr = accessTokenNode.asText();
+      String idTokenStr = idTokenNode.asText();
+      DecodedJWT jwt;
+      DecodedJWT idToken;
+      try {
+        jwt = JWT.decode(jwtStr);
+        idToken = JWT.decode(idTokenStr);
+      } catch (JWTDecodeException e) {
+        throw new AuthenticationException("OIDC token response contains a malformed token");
+      }
+      Date accessTokenExpiration = jwt.getExpiresAt();
+      Date idTokenExpiration = idToken.getExpiresAt();
+      if (validateAccessToken(jwt) && validateIdToken(idToken)) {
         String userName = jwt.getClaim(SsoConfigurationUtil.getInstance().getUserAttrName()).asString();
         token = new AuthenticationToken(userName, userName, getType());
-        token.setJWTExpires(jwt.getExpiresAt().getTime());
+        token.setJWTExpires(Math.min(accessTokenExpiration.getTime(),
+            idTokenExpiration.getTime()));
         token.setJWTBasedToken(true);
+        token.setIdToken(idTokenStr);
       } else {
         String loginURL = constructLoginURL(request);
         LOG.info("Can't add token to cookie, because validating failed.");
@@ -197,6 +218,18 @@ public class JWTRedirectAuthenticationHandler extends
 
   public String getAuthUrl() {
     return authenticationProviderUrl + "/protocol/openid-connect/auth";
+  }
+
+  @VisibleForTesting
+  protected boolean validateAccessToken(DecodedJWT jwt) {
+    return authenticationProviderUrl.equals(jwt.getIssuer())
+        && jwt.getExpiresAt() != null && JWTUtils.validateToken(jwt);
+  }
+
+  @VisibleForTesting
+  protected boolean validateIdToken(DecodedJWT idToken) {
+    return JWTUtils.validateIdToken(idToken, authenticationProviderUrl,
+        clientId);
   }
 
 

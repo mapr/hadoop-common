@@ -31,6 +31,8 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class AuthenticationToken extends AuthToken {
 
+  private String idToken;
+
   /**
    * Constant that identifies an anonymous request.
    */
@@ -89,6 +91,25 @@ public class AuthenticationToken extends AuthToken {
    */
   public boolean isExpired() {
     return super.isExpired();
+  }
+
+  /**
+   * Sets the transient OIDC ID token used to terminate the provider session.
+   * The value is not included in the serialized authentication token.
+   *
+   * @param idToken serialized OIDC ID token
+   */
+  public void setIdToken(String idToken) {
+    this.idToken = idToken;
+  }
+
+  /**
+   * Returns the transient OIDC ID token used for provider logout.
+   *
+   * @return serialized OIDC ID token, or {@code null}
+   */
+  public String getIdToken() {
+    return idToken;
   }
 
   /**

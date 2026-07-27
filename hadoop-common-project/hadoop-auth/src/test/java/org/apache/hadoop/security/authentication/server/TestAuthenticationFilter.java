@@ -39,6 +39,7 @@ import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.hadoop.security.authentication.util.Signer;
 import org.apache.hadoop.security.authentication.util.SignerSecretProvider;
 import org.apache.hadoop.security.authentication.util.StringSignerSecretProviderCreator;
+import org.apache.hadoop.thirdparty.com.google.common.net.HttpHeaders;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -1311,4 +1312,116 @@ public class TestAuthenticationFilter {
     }
   }
 
+  @Test
+  public void testIdTokenCookieAttributes() {
+    HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+    Mockito.when(request.getRequestURL()).thenReturn(
+        new StringBuffer("https://foo.com/bar"));
+    HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
+    long localExpiration = System.currentTimeMillis() + 60000;
+    long jwtExpiration = localExpiration - 10000;
+    AuthenticationFilter.createAuthCookie(
+        AuthenticationFilter.ID_TOKEN_COOKIE, response, request, "id-token",
+        "foo.com", "/bar", localExpiration, true, true, jwtExpiration);
+    Mockito.verify(response).addHeader(Mockito.eq("Set-Cookie"),
+        Mockito.argThat(header -> header.startsWith("hadoop.id_token=\"id-token\"")
+            && header.contains("; Path=/bar")
+            && header.contains("; Domain=foo.com")
+            && header.contains("; Expires=")
+            && header.contains("; Secure")
+            && header.endsWith("; HttpOnly")));
+  }
+
+  @Test
+  public void testSsoLogoutClearsCookiesWithoutRedirect() throws Exception {
+    testLogout(true, "id-token", true);
+  }
+
+  @Test
+  public void testFailedSsoLogoutStillClearsCookies() throws Exception {
+    testLogout(false, "id-token", true);
+  }
+
+  @Test
+  public void testSsoLogoutWithoutIdTokenReturnsBadGateway() throws Exception {
+    testLogout(false, null, true);
+  }
+
+  @Test
+  public void testNonSsoLogoutKeepsLocalRedirect() throws Exception {
+    testLogout(true, null, false);
+  }
+
+  private void testLogout(final boolean providerResult, String idToken,
+                          boolean jwtBased) throws Exception {
+    final String[] logoutHint = new String[1];
+    final AuthenticationToken token = new AuthenticationToken(
+        "user", "principal", DummyAuthenticationHandler.TYPE);
+    token.setExpires(System.currentTimeMillis() + TOKEN_VALIDITY_SEC);
+    token.setJWTBasedToken(jwtBased);
+    AuthenticationFilter filter = new AuthenticationFilter() {
+      @Override
+      protected AuthenticationToken getToken(HttpServletRequest request) {
+        return token;
+      }
+      @Override
+      protected boolean logoutFromIdentityProvider(String hint) {
+        logoutHint[0] = hint;
+        return providerResult;
+      }
+    };
+    FilterConfig config = Mockito.mock(FilterConfig.class);
+    Mockito.when(config.getInitParameter("management.operation.return"))
+        .thenReturn("true");
+    Mockito.when(config.getInitParameter(AuthenticationFilter.AUTH_TYPE))
+        .thenReturn(DummyAuthenticationHandler.class.getName());
+    Mockito.when(config.getInitParameter(AuthenticationFilter.SIGNATURE_SECRET))
+        .thenReturn("secret");
+    Mockito.when(config.getInitParameterNames()).thenReturn(new Vector<String>(
+        Arrays.asList(AuthenticationFilter.AUTH_TYPE,
+            AuthenticationFilter.SIGNATURE_SECRET,
+            "management.operation.return")).elements());
+    getMockedServletContextWithStringSigner(config);
+    filter.init(config);
+    try {
+      HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+      Mockito.when(request.getParameter(AuthenticationFilter.ACTION_PARAM))
+          .thenReturn("logout");
+      Mockito.when(request.getRequestURL()).thenReturn(
+          new StringBuffer("https://foo.com/bar"));
+      if (idToken != null) {
+        Mockito.when(request.getCookies()).thenReturn(new Cookie[] {
+            new Cookie(AuthenticationFilter.ID_TOKEN_COOKIE, idToken)});
+      }
+      HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
+      filter.doFilter(request, response, Mockito.mock(FilterChain.class));
+      Assert.assertEquals(jwtBased ? idToken : null, logoutHint[0]);
+      Mockito.verify(response).addCookie(Mockito.argThat(cookie ->
+          AuthenticationFilter.ID_TOKEN_COOKIE.equals(cookie.getName())
+              && cookie.getMaxAge() == 0));
+      Mockito.verify(response).addCookie(Mockito.argThat(cookie ->
+          AuthenticationFilter.SSO_LOGIN_COOKIE.equals(cookie.getName())
+              && cookie.getMaxAge() == 0));
+      Mockito.verify(response).addCookie(Mockito.argThat(cookie ->
+          AuthenticatedURL.AUTH_COOKIE.equals(cookie.getName())
+              && cookie.getMaxAge() == 0));
+      if (jwtBased) {
+        Mockito.verify(response, Mockito.never()).addHeader(
+            Mockito.eq(HttpHeaders.LOCATION), Mockito.anyString());
+        if (providerResult && idToken != null) {
+          Mockito.verify(response).setStatus(HttpServletResponse.SC_NO_CONTENT);
+        } else {
+          Mockito.verify(response).sendError(HttpServletResponse.SC_BAD_GATEWAY,
+              "Unable to terminate the SSO session");
+        }
+      } else {
+        Mockito.verify(response).setStatus(
+            HttpServletResponse.SC_TEMPORARY_REDIRECT);
+        Mockito.verify(response).addHeader(Mockito.eq(HttpHeaders.LOCATION),
+            Mockito.anyString());
+      }
+    } finally {
+      filter.destroy();
+    }
+  }
 }

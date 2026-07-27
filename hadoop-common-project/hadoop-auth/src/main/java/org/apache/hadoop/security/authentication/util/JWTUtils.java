@@ -58,6 +58,36 @@ public class JWTUtils {
     return false;
   }
 
+  /**
+   * Validates an OIDC ID token independently of access-token audiences.
+   *
+   * @param jwtToken decoded ID token
+   * @param expectedIssuer configured trusted issuer
+   * @param clientId configured OIDC client ID
+   * @return true when metadata and signature are valid
+   */
+  public static boolean validateIdToken(DecodedJWT jwtToken,
+                                        String expectedIssuer,
+                                        String clientId) {
+    boolean verified = false;
+    Date expiresAt = jwtToken != null ? jwtToken.getExpiresAt() : null;
+    if (jwtToken != null && expectedIssuer != null && clientId != null
+        && expectedIssuer.equals(jwtToken.getIssuer())
+        && expiresAt != null && new Date().before(expiresAt)
+        && jwtToken.getAudience() != null
+        && jwtToken.getAudience().contains(clientId)) {
+      try {
+        verified = verifyToken(jwtToken) != null;
+      } catch (InvalidParameterException e) {
+        LOG.debug("ID token signature verification failed.", e);
+      }
+    }
+    if (!verified) {
+      LOG.warn("ID token validation failed.");
+    }
+    return verified;
+  }
+
   public static DecodedJWT verifyToken(DecodedJWT jwt) throws InvalidParameterException {
     try {
       RSAPublicKey publicKey = SsoConfigurationUtil.getInstance().getPublicKey(jwt.getKeyId());
