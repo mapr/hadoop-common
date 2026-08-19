@@ -315,7 +315,7 @@ org.apache.htrace:htrace-core:3.1.0-incubating
 org.apache.htrace:htrace-core4:4.1.0-incubating
 org.apache.httpcomponents:httpclient:4.5.14
 org.apache.httpcomponents:httpcore:4.4.16
-org.apache.kafka:kafka-clients:3.6.1.0-eep-930
+org.apache.kafka:kafka-clients:3.6.1.300-dep-1000
 org.apache.kerby:kerb-admin:2.0.3
 org.apache.kerby:kerb-client:2.0.3
 org.apache.kerby:kerb-common:2.0.3
@@ -354,7 +354,7 @@ org.eclipse.jetty.websocket:javax-websocket-client-impl:9.4.60.v20260717-df
 org.eclipse.jetty.websocket:javax-websocket-server-impl:9.4.60.v20260717-df
 org.ehcache:ehcache:3.8.2
 org.ini4j:ini4j:0.5.4
-at.yawk.lz4:lz4-java:1.9.0
+at.yawk.lz4:lz4-java:1.10.4
 org.objenesis:objenesis:2.6
 org.xerial.snappy:snappy-java:1.1.10.8
 org.yaml:snakeyaml:2.0
