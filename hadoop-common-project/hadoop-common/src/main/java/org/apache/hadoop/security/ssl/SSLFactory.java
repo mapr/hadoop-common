@@ -122,6 +122,8 @@ public class SSLFactory implements ConnectionConfigurator {
   public static final String KEYSTORES_FACTORY_CLASS_KEY =
       "hadoop.ssl.keystores.factory.class";
 
+  public static final String SSL_CLIENT_TRUSTSTORE_LOCATION =
+      "ssl.client.truststore.location";
   public static final String SSL_CLIENT_TRUSTSTORE_PASSWORD = "ssl.client.truststore.password";
   public static final String SSL_CLIENT_TRUSTSTORE_TYPE = "ssl.client.truststore.type";
   public static final String TRUSTNAME_SERVICE_JAVA_PROPERTY = "jdk.tls.trustNameService";

@@ -19,6 +19,7 @@
 package org.apache.hadoop.yarn.server.resourcemanager.security;
 
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.server.resourcemanager.RMContext;
 import org.apache.hadoop.yarn.server.resourcemanager.recovery.RMStateStore;
@@ -30,6 +31,7 @@ import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -49,7 +51,7 @@ public class TestProxyCAManager {
     Assert.assertEquals(proxyCA, proxyCAManager.getProxyCA());
     verify(rmContext, times(0)).getStateStore();
     verify(rmStateStore, times(0)).storeProxyCACert(any(), any());
-    verify(proxyCA, times(0)).init();
+    verify(proxyCA, times(0)).init(any(Configuration.class));
     Assert.assertNull(proxyCA.getCaCert());
     Assert.assertNull(proxyCA.getCaKeyPair());
 
@@ -57,7 +59,7 @@ public class TestProxyCAManager {
     verify(rmContext, times(1)).getStateStore();
     verify(rmStateStore, times(1)).storeProxyCACert(proxyCA.getCaCert(),
         proxyCA.getCaKeyPair().getPrivate());
-    verify(proxyCA, times(1)).init();
+    verify(proxyCA, times(1)).init(any(Configuration.class));
     Assert.assertNotNull(proxyCA.getCaCert());
     Assert.assertNotNull(proxyCA.getCaKeyPair());
   }
@@ -73,7 +75,7 @@ public class TestProxyCAManager {
     Assert.assertEquals(proxyCA, proxyCAManager.getProxyCA());
     verify(rmContext, times(0)).getStateStore();
     verify(rmStateStore, times(0)).storeProxyCACert(any(), any());
-    verify(proxyCA, times(0)).init();
+    verify(proxyCA, times(0)).init(any(Configuration.class));
     Assert.assertNull(proxyCA.getCaCert());
     Assert.assertNull(proxyCA.getCaKeyPair());
 
@@ -90,7 +92,8 @@ public class TestProxyCAManager {
     when(proxyCAState.getCaPrivateKey()).thenReturn(privateKey);
     when(rmState.getProxyCAState()).thenReturn(proxyCAState);
     proxyCAManager.recover(rmState);
-    verify(proxyCA, times(1)).init(certificate, privateKey);
+    verify(proxyCA, times(1)).init(any(Configuration.class),
+        eq(certificate), eq(privateKey));
     Assert.assertEquals(certificate, proxyCA.getCaCert());
     Assert.assertEquals(privateKey, proxyCA.getCaKeyPair().getPrivate());
 
@@ -98,7 +101,7 @@ public class TestProxyCAManager {
     verify(rmContext, times(1)).getStateStore();
     verify(rmStateStore, times(1)).storeProxyCACert(proxyCA.getCaCert(),
         proxyCA.getCaKeyPair().getPrivate());
-    verify(proxyCA, times(0)).init();
+    verify(proxyCA, times(0)).init(any(Configuration.class));
     Assert.assertEquals(certificate, proxyCA.getCaCert());
     Assert.assertEquals(privateKey, proxyCA.getCaKeyPair().getPrivate());
   }
