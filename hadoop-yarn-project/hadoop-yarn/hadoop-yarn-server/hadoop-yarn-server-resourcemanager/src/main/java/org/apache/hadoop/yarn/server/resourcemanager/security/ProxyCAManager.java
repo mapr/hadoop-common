@@ -57,7 +57,7 @@ public class ProxyCAManager extends AbstractService implements Recoverable {
   @Override
   protected void serviceStart() throws Exception {
     if (!wasRecovered) {
-      proxyCA.init();
+      proxyCA.init(getConfig());
     }
     wasRecovered = false;
     rmContext.getStateStore().storeProxyCACert(
@@ -79,7 +79,7 @@ public class ProxyCAManager extends AbstractService implements Recoverable {
     LOG.info("Recovering CA Certificate and Private Key");
     X509Certificate caCert = state.getProxyCAState().getCaCert();
     PrivateKey caPrivateKey = state.getProxyCAState().getCaPrivateKey();
-    proxyCA.init(caCert, caPrivateKey);
+    proxyCA.init(getConfig(), caCert, caPrivateKey);
     wasRecovered = true;
   }
 }

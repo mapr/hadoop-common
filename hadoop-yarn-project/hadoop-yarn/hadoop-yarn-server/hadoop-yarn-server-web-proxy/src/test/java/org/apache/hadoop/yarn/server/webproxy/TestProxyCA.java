@@ -18,6 +18,8 @@
 
 package org.apache.hadoop.yarn.server.webproxy;
 
+import java.io.FileOutputStream;
+import java.nio.file.Path;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.KeyPair;
@@ -46,10 +48,12 @@ import javax.net.ssl.X509TrustManager;
 import javax.security.auth.x500.X500Principal;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.ssl.KeyStoreTestUtil;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 
@@ -64,6 +68,9 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 public class TestProxyCA {
 
+  @TempDir
+  private Path tempDir;
+
   @Test
   void testInit() throws Exception {
     ProxyCA proxyCA = new ProxyCA();
@@ -77,6 +84,44 @@ public class TestProxyCA {
     assertNotNull(proxyCA.getCaKeyPair());
     assertNotNull(proxyCA.getX509KeyManager());
     assertNotNull(proxyCA.getHostnameVerifier());
+  }
+
+  @Test
+  void testInitUsesConfiguredClientTrustStore() throws Exception {
+    String password = "truststore-password";
+    CertKeyPair trustedPair = createCertAndKeyPair();
+    Path trustStorePath = tempDir.resolve("client-truststore.jks");
+    KeyStore trustStore = KeyStore.getInstance("JKS");
+    trustStore.load(null, password.toCharArray());
+    trustStore.setCertificateEntry("trusted-ca", trustedPair.getCert());
+    try (FileOutputStream output =
+        new FileOutputStream(trustStorePath.toFile())) {
+      trustStore.store(output, password.toCharArray());
+    }
+
+    Configuration conf = new Configuration(false);
+    conf.set("hadoop.ssl.client.conf", "missing-ssl-client.xml");
+    conf.set("ssl.client.truststore.location", trustStorePath.toString());
+    conf.set("ssl.client.truststore.type", "JKS");
+    conf.set("ssl.client.truststore.password", password);
+
+    ProxyCA proxyCA = new ProxyCA();
+    proxyCA.init(conf);
+
+    assertArrayEquals(new X509Certificate[]{trustedPair.getCert()},
+        proxyCA.getDefaultTrustManager().getAcceptedIssuers());
+  }
+
+  @Test
+  void testInitWithoutConfiguredClientTrustStoreUsesJvmDefault()
+      throws Exception {
+    Configuration conf = new Configuration(false);
+    conf.set("hadoop.ssl.client.conf", "missing-ssl-client.xml");
+
+    ProxyCA proxyCA = new ProxyCA();
+    proxyCA.init(conf);
+
+    assertNotNull(proxyCA.getDefaultTrustManager());
   }
 
   @Test

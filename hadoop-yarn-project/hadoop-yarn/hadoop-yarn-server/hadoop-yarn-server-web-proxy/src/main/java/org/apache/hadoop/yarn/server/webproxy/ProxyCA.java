@@ -20,6 +20,8 @@ import org.apache.hadoop.classification.VisibleForTesting;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.security.ssl.SSLFactory;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 import org.apache.http.conn.ssl.DefaultHostnameVerifier;
@@ -49,7 +51,9 @@ import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509KeyManager;
 import javax.net.ssl.X509TrustManager;
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigInteger;
 import java.net.Socket;
 import java.security.GeneralSecurityException;
@@ -70,11 +74,16 @@ import java.security.SignatureException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Random;
 import java.util.UUID;
+
+import static org.apache.hadoop.security.ssl.SSLFactory.SSL_CLIENT_TRUSTSTORE_LOCATION;
+import static org.apache.hadoop.security.ssl.SSLFactory.SSL_CLIENT_TRUSTSTORE_PASSWORD;
+import static org.apache.hadoop.security.ssl.SSLFactory.SSL_CLIENT_TRUSTSTORE_TYPE;
 
 /**
  * Allows for the generation and acceptance of specialized HTTPS Certificates to
@@ -102,12 +111,22 @@ public class ProxyCA {
   }
 
   public void init() throws GeneralSecurityException, IOException {
+    init(null);
+  }
+
+  public void init(Configuration conf)
+      throws GeneralSecurityException, IOException {
     createCACertAndKeyPair();
-    initInternal();
+    initInternal(conf);
   }
 
   public void init(X509Certificate caCert, PrivateKey caPrivateKey)
       throws GeneralSecurityException, IOException {
+    init(null, caCert, caPrivateKey);
+  }
+
+  public void init(Configuration conf, X509Certificate caCert,
+      PrivateKey caPrivateKey) throws GeneralSecurityException, IOException {
     if (caCert == null || caPrivateKey == null
         || !verifyCertAndKeys(caCert, caPrivateKey)) {
       LOG.warn("Could not verify Certificate, Public Key, and Private Key: " +
@@ -117,14 +136,15 @@ public class ProxyCA {
       this.caCert = caCert;
       this.caKeyPair = new KeyPair(caCert.getPublicKey(), caPrivateKey);
     }
-    initInternal();
+    initInternal(conf);
   }
 
-  private void initInternal() throws GeneralSecurityException, IOException {
+  private void initInternal(Configuration conf)
+      throws GeneralSecurityException, IOException {
     defaultTrustManager = null;
     TrustManagerFactory factory = TrustManagerFactory.getInstance(
         TrustManagerFactory.getDefaultAlgorithm());
-    factory.init((KeyStore) null);
+    factory.init(loadClientTrustStore(conf));
     for (TrustManager manager : factory.getTrustManagers()) {
       if (manager instanceof X509TrustManager) {
         defaultTrustManager = (X509TrustManager) manager;
@@ -139,6 +159,44 @@ public class ProxyCA {
     this.x509KeyManager = createKeyManager();
     this.hostnameVerifier = createHostnameVerifier();
     this.childTrustStore = createTrustStore("client", caCert);
+  }
+
+  private KeyStore loadClientTrustStore(Configuration conf)
+      throws GeneralSecurityException, IOException {
+    if (conf == null) {
+      return null;
+    }
+
+    Configuration sslConf =
+        SSLFactory.readSSLConfiguration(conf, SSLFactory.Mode.CLIENT);
+    String location = sslConf.getTrimmed(SSL_CLIENT_TRUSTSTORE_LOCATION);
+    if (location == null || location.isEmpty()) {
+      LOG.debug("No SSL client truststore configured; using the JVM default");
+      return null;
+    }
+
+    String type = sslConf.getTrimmed(SSL_CLIENT_TRUSTSTORE_TYPE,
+        KeyStore.getDefaultType());
+    char[] password = conf.getPassword(SSL_CLIENT_TRUSTSTORE_PASSWORD);
+    if (password == null) {
+      password = sslConf.getPassword(SSL_CLIENT_TRUSTSTORE_PASSWORD);
+    }
+
+    try {
+      KeyStore trustStore = "BCFKS".equalsIgnoreCase(type)
+          ? KeyStore.getInstance("BCFKS", "BCFIPS")
+          : KeyStore.getInstance(type);
+      try (InputStream input = new FileInputStream(location)) {
+        trustStore.load(input, password);
+      }
+      LOG.info("Loaded ProxyCA truststore from {} with type {}",
+          location, type);
+      return trustStore;
+    } finally {
+      if (password != null) {
+        Arrays.fill(password, '\0');
+      }
+    }
   }
 
   private X509Certificate createCert(boolean isCa, String issuerStr,
@@ -403,6 +461,11 @@ public class ProxyCA {
   @VisibleForTesting
   void setDefaultTrustManager(X509TrustManager trustManager) {
     this.defaultTrustManager = trustManager;
+  }
+
+  @VisibleForTesting
+  X509TrustManager getDefaultTrustManager() {
+    return defaultTrustManager;
   }
 
   @VisibleForTesting
